@@ -1,0 +1,136 @@
+import 'server-only';
+
+import { FineractHttpError } from '@mifos/api-client';
+import { getFineractServerConfig } from '@/lib/fineract/server-config';
+import type { ServerSession } from '@/lib/session/types';
+
+/** Fineract POST /authentication response (subset). */
+export interface FineractAuthenticationResponse {
+  username: string;
+  userId: number;
+  base64EncodedAuthenticationKey?: string;
+  accessToken?: string;
+  authenticated?: boolean;
+  officeId: number;
+  officeName?: string;
+  permissions: string[];
+  roles?: unknown;
+  isTwoFactorAuthenticationRequired?: boolean;
+  shouldRenewPassword?: boolean;
+}
+
+export interface AuthenticateParams {
+  username: string;
+  password: string;
+  remember?: boolean;
+}
+
+export class AuthenticationError extends Error {
+  constructor(
+    message: string,
+    public readonly code?: 'INVALID_CREDENTIALS' | 'TWO_FACTOR' | 'PASSWORD_EXPIRED' | 'SERVER'
+  ) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
+export function mapAuthenticationToSession(data: FineractAuthenticationResponse): ServerSession {
+  return {
+    userId: data.userId,
+    username: data.username,
+    officeId: data.officeId,
+    officeName: data.officeName,
+    permissions: data.permissions ?? [],
+    roles: data.roles,
+    authenticated: data.authenticated ?? true,
+    base64EncodedAuthenticationKey: data.base64EncodedAuthenticationKey,
+    accessToken: data.accessToken
+  };
+}
+
+/**
+ * Authenticate against the active Fineract server (BFF — never from the browser).
+ */
+export async function authenticateFineract(
+  params: AuthenticateParams
+): Promise<ServerSession> {
+  const { baseUrl, tenantId } = await getFineractServerConfig();
+  const url = `${baseUrl.replace(/\/$/, '')}/authentication`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Fineract-Platform-TenantId': tenantId
+      },
+      body: JSON.stringify({
+        username: params.username,
+        password: params.password,
+        remember: params.remember ?? false
+      }),
+      cache: 'no-store'
+    });
+  } catch {
+    throw new AuthenticationError(
+      'Could not reach the Fineract server. Check the server URL and try again.',
+      'SERVER'
+    );
+  }
+
+  if (!res.ok) {
+    let body: { defaultUserMessage?: string } | null = null;
+    try {
+      body = (await res.json()) as { defaultUserMessage?: string };
+    } catch {
+      body = null;
+    }
+    if (res.status === 401 || res.status === 403) {
+      throw new AuthenticationError(
+        body?.defaultUserMessage ?? 'Invalid username or password.',
+        'INVALID_CREDENTIALS'
+      );
+    }
+    throw new AuthenticationError(
+      body?.defaultUserMessage ?? `Authentication failed (HTTP ${res.status}).`,
+      'SERVER'
+    );
+  }
+
+  const data = (await res.json()) as FineractAuthenticationResponse;
+
+  if (data.isTwoFactorAuthenticationRequired) {
+    throw new AuthenticationError(
+      'Two-factor authentication is required. This client does not support 2FA yet.',
+      'TWO_FACTOR'
+    );
+  }
+
+  if (data.shouldRenewPassword) {
+    throw new AuthenticationError(
+      'Your password has expired. Reset it in Fineract before signing in here.',
+      'PASSWORD_EXPIRED'
+    );
+  }
+
+  if (!data.base64EncodedAuthenticationKey && !data.accessToken) {
+    throw new AuthenticationError('Authentication response was incomplete.', 'SERVER');
+  }
+
+  return mapAuthenticationToSession(data);
+}
+
+export function toLoginErrorMessage(error: unknown): string {
+  if (error instanceof AuthenticationError) {
+    return error.message;
+  }
+  if (error instanceof FineractHttpError) {
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Sign in failed. Please try again.';
+}

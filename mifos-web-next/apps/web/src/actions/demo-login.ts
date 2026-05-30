@@ -8,13 +8,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { SESSION_COOKIE_NAME } from '@/lib/session/constants';
 import { isDemoSessionEnabled } from '@/lib/session/demo-session';
+import { setSessionCookie } from '@/lib/session/cookie';
 import { parseServerSessionJson } from '@/lib/session/sanitize';
-
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 
 export async function enterDemoSessionAction(redirectTo = '/') {
   if (!isDemoSessionEnabled()) {
@@ -28,13 +25,6 @@ export async function enterDemoSessionAction(redirectTo = '/') {
   if (!session) {
     throw new Error('Invalid RBAC_DEV_SESSION JSON');
   }
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, raw, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: COOKIE_MAX_AGE,
-    secure: process.env.NODE_ENV === 'production'
-  });
+  await setSessionCookie(session);
   redirect(redirectTo);
 }

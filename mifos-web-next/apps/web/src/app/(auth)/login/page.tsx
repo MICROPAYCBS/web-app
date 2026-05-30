@@ -1,16 +1,47 @@
-import { AppLink } from '@/components/routes/app-link';
-import { Button } from '@/components/ui/button';
-import { getActiveFineractServer } from '@/lib/servers/catalog-store';
-import { redirect } from 'next/navigation';
-import { DemoLoginButton } from '@/components/auth/demo-login-button';
-import { isDemoSessionEnabled } from '@/lib/session/demo-session';
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-export default async function LoginPage() {
-  const demoEnabled = isDemoSessionEnabled();
+import { AppLink } from '@/components/routes/app-link';
+import { LoginForm } from '@/components/auth/login-form';
+import { getActiveFineractServer } from '@/lib/servers/catalog-store';
+import { isDemoSessionEnabled } from '@/lib/session/demo-session';
+import { getServerSession } from '@/lib/session/server';
+import { redirect } from 'next/navigation';
+
+function safeRedirectPath(value: string | undefined): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+    return '/';
+  }
+  if (value.startsWith('/login') || value.startsWith('/connect')) {
+    return '/';
+  }
+  return value;
+}
+
+export default async function LoginPage({
+  searchParams
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const params = await searchParams;
+  const redirectTo = safeRedirectPath(params.from);
+  const session = await getServerSession();
+
+  if (session) {
+    redirect(redirectTo);
+  }
+
   const active = await getActiveFineractServer();
   if (!active) {
     redirect('/connect');
   }
+
+  const demoEnabled = isDemoSessionEnabled();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6">
@@ -30,24 +61,14 @@ export default async function LoginPage() {
         </div>
 
         <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
-          <div>
+          <div className="mb-6">
             <h1 className="text-xl font-semibold">Sign in</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Authentication will connect to this server via the app backend (not from your
-              browser).
+              Your credentials are sent to Fineract through this app&apos;s server only — never
+              from the browser directly.
             </p>
           </div>
-          <Button className="w-full" disabled>
-            Continue (coming soon)
-          </Button>
-          {demoEnabled ? (
-            <DemoLoginButton className="mt-3 w-full" />
-          ) : null}
-          {demoEnabled ? (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              Preview deployment — demo session only. Do not use in production.
-            </p>
-          ) : null}
+          <LoginForm redirectTo={redirectTo} demoEnabled={demoEnabled} />
         </div>
       </div>
     </div>

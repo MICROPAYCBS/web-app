@@ -18,7 +18,7 @@ Living backlog for **mifos-web-next**. Parity counts come from `npm run routes:p
 
 | Item | Status |
 |------|--------|
-| Fineract authentication (basic auth → httpOnly session) | Todo |
+| Fineract authentication (basic auth → httpOnly session) | Done |
 | Clients list (DataTable + TanStack Query + BFF) | Todo |
 | Client detail route | Todo |
 | Form composites (`SelectField`, `DateField`, `MoneyField`) | Todo |

@@ -12,6 +12,7 @@ import { Search } from 'lucide-react';
 import { AppLink } from '@/components/routes/app-link';
 import { useNavigation } from '@/components/platform/navigation-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { UserMenu } from '@/components/platform/user-menu';
 import { Kbd } from '@/components/ui/kbd';
 
 export function PlatformHeader({ serverName }: { serverName?: string | null }) {
@@ -34,7 +35,10 @@ export function PlatformHeader({ serverName }: { serverName?: string | null }) {
             </p>
           ) : null}
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </div>
       <button
         type="button"
