@@ -26,10 +26,14 @@ export async function selectServerAction(serverId: string): Promise<ServerAction
   }
 }
 
+function missingRequiredServerFields(input: UpsertServerInput): boolean {
+  return !input.name?.trim() || !input.baseUrl?.trim() || !input.tenantId?.trim();
+}
+
 export async function addServerAction(input: UpsertServerInput): Promise<ServerActionResult> {
   try {
-    if (!input.name?.trim() || !input.baseUrl?.trim()) {
-      return { ok: false, message: 'Name and API URL are required' };
+    if (missingRequiredServerFields(input)) {
+      return { ok: false, message: 'Name, server URL, and tenant are required' };
     }
     await addFineractServer(input);
     revalidateServerPaths();
@@ -44,6 +48,9 @@ export async function updateServerAction(
   input: UpsertServerInput
 ): Promise<ServerActionResult> {
   try {
+    if (missingRequiredServerFields(input)) {
+      return { ok: false, message: 'Name, server URL, and tenant are required' };
+    }
     await updateFineractServer(serverId, input);
     revalidateServerPaths();
     return { ok: true };
