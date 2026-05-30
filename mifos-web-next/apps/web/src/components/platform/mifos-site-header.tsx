@@ -10,12 +10,11 @@
 
 import { Search } from 'lucide-react';
 import { useNavigation } from '@/components/platform/navigation-provider';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Kbd } from '@/components/ui/kbd';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
-/** dashboard-01 header with Quick Find and theme controls. */
+/** dashboard-01 header with Quick Find. Theme controls live in the user menu. */
 export function MifosSiteHeader() {
   const { openQuickFind } = useNavigation();
 
@@ -37,7 +36,6 @@ export function MifosSiteHeader() {
             <Kbd>K</Kbd>
           </span>
         </button>
-        <ThemeToggle />
       </div>
     </header>
   );
