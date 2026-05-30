@@ -14,3 +14,8 @@ export {
   removeServer,
   setActiveServerId
 } from './catalog';
+export {
+  getFineractApiHost,
+  isDeprecatedDemoFineractHost,
+  deprecatedDemoFineractHint
+} from './fineract-host';

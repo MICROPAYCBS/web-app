@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isDeprecatedDemoFineractHost } from '@mifos/servers';
 import type { ServerActionResult } from '@/actions/servers';
 
 export interface ServerFormValues {
@@ -30,6 +31,7 @@ export function ServerForm({
   const [values, setValues] = useState(initialValues);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const demoHostWarning = isDeprecatedDemoFineractHost(values.baseUrl);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +82,11 @@ export function ServerForm({
           required
         />
       </div>
+      {demoHostWarning ? (
+        <p className="text-sm text-amber-800 dark:text-amber-300" role="status">
+          demo.mifos.community no longer accepts mifos/password. Use https://sandbox.mifos.community.
+        </p>
+      ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? 'Saving…' : submitLabel}

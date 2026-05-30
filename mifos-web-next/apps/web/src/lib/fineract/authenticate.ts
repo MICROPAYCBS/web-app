@@ -2,6 +2,11 @@ import 'server-only';
 
 import { FineractHttpError } from '@mifos/api-client';
 import { getFineractServerConfig } from '@/lib/fineract/server-config';
+import {
+  deprecatedDemoFineractHint,
+  getFineractApiHost,
+  isDeprecatedDemoFineractHost
+} from '@mifos/servers';
 import type { ServerSession } from '@/lib/session/types';
 
 /** Fineract POST /authentication response (subset). */
@@ -49,9 +54,21 @@ export function mapAuthenticationToSession(data: FineractAuthenticationResponse)
   };
 }
 
-function invalidCredentialsMessage(serverName: string, tenantId: string, fineractMessage?: string): string {
+function invalidCredentialsMessage(
+  serverName: string,
+  baseUrl: string,
+  tenantId: string,
+  fineractMessage?: string
+): string {
+  const host = getFineractApiHost(baseUrl);
   const base = fineractMessage?.trim() || 'Invalid username or password.';
-  return `${base} (${serverName}, tenant: ${tenantId}). Confirm credentials, tenant, and server URL — host-only URLs like https://my-server are OK and match the legacy web app.`;
+  let message = `${base} (${serverName} at ${host}, tenant: ${tenantId}).`;
+  if (isDeprecatedDemoFineractHost(baseUrl)) {
+    message += ` ${deprecatedDemoFineractHint()}`;
+  } else {
+    message += ' Check credentials and tenant, or edit the server URL under Manage servers.';
+  }
+  return message;
 }
 
 /**
@@ -94,7 +111,7 @@ export async function authenticateFineract(
     }
     if (res.status === 401 || res.status === 403) {
       throw new AuthenticationError(
-        invalidCredentialsMessage(serverName, tenantId, body?.defaultUserMessage),
+        invalidCredentialsMessage(serverName, baseUrl, tenantId, body?.defaultUserMessage),
         'INVALID_CREDENTIALS'
       );
     }

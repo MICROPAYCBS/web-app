@@ -9,6 +9,7 @@
  */
 
 import { useTransition } from 'react';
+import { getFineractApiHost } from '@mifos/servers';
 import type { FineractServerProfile } from '@mifos/servers';
 import {
   SERVER_STATUS_LIGHT_CLASS,
@@ -40,11 +41,16 @@ export function ServerManagerRow({
         <ServerRowDetailsTooltip server={server} health={health} isActive={isActive}>
           <span className="flex min-w-0 flex-1 items-center gap-3">
             <ServerStatusLight health={health} />
-            <span className="min-w-0 truncate font-medium">
-              {server.name}
-              {isActive ? (
-                <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
-              ) : null}
+            <span className="min-w-0">
+              <span className="block truncate font-medium">
+                {server.name}
+                {isActive ? (
+                  <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
+                ) : null}
+              </span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {getFineractApiHost(server.baseUrl)}
+              </span>
             </span>
           </span>
         </ServerRowDetailsTooltip>
