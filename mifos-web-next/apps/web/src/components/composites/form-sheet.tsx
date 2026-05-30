@@ -1,0 +1,101 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+'use client';
+
+import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
+
+/** Recommended maximum logical fields — see docs/COMPONENTS.md */
+export const FORM_SHEET_MAX_FIELDS = 7;
+
+export interface FormSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  children: ReactNode;
+  /** Cancel label */
+  cancelLabel?: string;
+  submitLabel?: string;
+  onCancel?: () => void;
+  /** Called when Submit is pressed; use with form id + requestSubmit for RHF */
+  onSubmit?: () => void;
+  submitDisabled?: boolean;
+  submitLoading?: boolean;
+  /** Optional form id — wires footer Submit to <form id={formId}> */
+  formId?: string;
+  side?: 'left' | 'right';
+  className?: string;
+}
+
+/**
+ * Standard side panel for simple forms (1–7 logical fields).
+ * Footer: Cancel (outline) + Submit (primary), sticky at bottom.
+ */
+export function FormSheet({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  cancelLabel = 'Cancel',
+  submitLabel = 'Submit',
+  onCancel,
+  onSubmit,
+  submitDisabled = false,
+  submitLoading = false,
+  formId,
+  side = 'right',
+  className
+}: FormSheetProps) {
+  function handleCancel() {
+    onCancel?.();
+    onOpenChange(false);
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side={side}
+        showCloseButton
+        className={cn('flex w-full flex-col gap-0 p-0 sm:max-w-md', className)}
+      >
+        <SheetHeader className="shrink-0 border-b border-border">
+          <SheetTitle>{title}</SheetTitle>
+          {description ? <SheetDescription>{description}</SheetDescription> : null}
+        </SheetHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
+
+        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background">
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={submitLoading}>
+            {cancelLabel}
+          </Button>
+          <Button
+            type={formId ? 'submit' : 'button'}
+            form={formId}
+            disabled={submitDisabled || submitLoading}
+            onClick={formId ? undefined : onSubmit}
+          >
+            {submitLoading ? 'Saving…' : submitLabel}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}

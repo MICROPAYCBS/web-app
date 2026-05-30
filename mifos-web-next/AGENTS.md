@@ -27,8 +27,9 @@ Instructions for AI agents working in this repository.
 3. **Validate on server** (Server Actions) with the same Zod schema as the client.
 4. **Map Fineract API errors** via `mapFineractErrors` + `translateFineractCode`.
 5. Use **decimal.js** (via `@mifos/domain`) for money — never JavaScript `number` for amounts.
-6. Update **parity matrix** (`docs/parity/`) when shipping a route.
-7. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
+6. **Simple forms (1–7 fields)** use `FormSheet` (shadcn Sheet) with Cancel/Submit in the footer — see `docs/COMPONENTS.md` and ADR-006.
+7. Update **parity matrix** (`docs/parity/`) when shipping a route.
+8. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
 
 ## Reference repos
 
