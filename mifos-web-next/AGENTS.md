@@ -18,6 +18,7 @@ Instructions for AI agents working in this repository.
 | `@mifos/domain` | Pure TS (money, permissions helpers) |
 | `@mifos/i18n` | Fineract globalisation codes |
 | `@mifos/themes` | CSS presets — swap LAF via `data-preset` on `<html>` |
+| `@mifos/routes` | Canonical `APP_ROUTES` registry |
 | `@mifos/auth` | RBAC: `can`, `<Can>`, nav/route manifests |
 | `@mifos/ui` | Composite UI (AppShell, DataTable, …) |
 
@@ -29,10 +30,11 @@ Instructions for AI agents working in this repository.
 4. **Map Fineract API errors** via `mapFineractErrors` + `translateFineractCode`.
 5. Use **decimal.js** (via `@mifos/domain`) for money — never JavaScript `number` for amounts.
 6. **Simple forms (1–7 fields)** use `FormSheet` (shadcn Sheet) with Cancel/Submit in the footer — see `docs/COMPONENTS.md` and ADR-006.
-7. **RBAC:** register permissions in `@mifos/auth`; use `<Can>` + `assertCan()` — see `docs/RBAC.md`.
-8. Update **parity matrix** (`docs/parity/`) when shipping a route.
-9. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md and `docs/SERVERS.md``).
-10. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
+7. Add new pages to `packages/routes/src/app-routes.ts` and run `npm run routes:parity`.
+8. **RBAC:** register permissions in `@mifos/auth`; use `<Can>` + `assertCan()` — see `docs/RBAC.md`.
+9. Update **parity matrix** (`docs/parity/`) when shipping a route.
+10. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md and `docs/SERVERS.md``).
+11. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
 
 ## Reference repos
 

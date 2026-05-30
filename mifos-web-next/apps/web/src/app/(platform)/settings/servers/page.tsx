@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { AppLink } from '@/components/routes/app-link';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { ServerForm } from '@/components/servers/server-form';
 import { addServerAction } from '@/actions/servers';
@@ -12,9 +12,9 @@ export default async function ServerSettingsPage() {
   return (
     <div className="mx-auto max-w-lg space-y-8">
       <div>
-        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+        <AppLink route="dashboard" className="text-sm text-muted-foreground hover:text-foreground">
           ← Back
-        </Link>
+        </AppLink>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight">Fineract servers</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Manage named backends and tenants. Sign out to switch servers before logging in again.
@@ -32,9 +32,9 @@ export default async function ServerSettingsPage() {
         {catalog.servers.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No servers yet.{' '}
-            <Link href="/connect" className="text-primary underline-offset-4 hover:underline">
+            <AppLink route="connect" className="text-primary underline-offset-4 hover:underline">
               Add one on the connect screen
-            </Link>
+            </AppLink>
             .
           </p>
         ) : (

@@ -1,18 +1,10 @@
-/**
- * Copyright since 2026 Mifos Initiative
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { AppLink } from '@/components/routes/app-link';
 import { buttonVariants } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,17 +45,18 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
         <p className="mt-2 text-muted-foreground">
-          Greenfield Fineract client on Next.js 16.2.6 with preset-driven shadcn theming,
-          Fineract-first validation, and FormSheet for simple forms (≤7 fields).
+          Greenfield Fineract client on Next.js 16.2.6. Routes are typed via{' '}
+          <code className="text-sm">@mifos/routes</code> and Next{' '}
+          <code className="text-sm">strictRouteTypes</code>.
         </p>
       </div>
       <div className="flex flex-wrap gap-3">
-        <Link href="/clients" className={cn(buttonVariants())}>
+        <AppLink route="clients" className={cn(buttonVariants())}>
           Clients
-        </Link>
-        <Link href="/login" className={cn(buttonVariants({ variant: 'outline' }))}>
+        </AppLink>
+        <AppLink route="login" className={cn(buttonVariants({ variant: 'outline' }))}>
           Login
-        </Link>
+        </AppLink>
         <Button type="button" variant="secondary" onClick={() => setSheetOpen(true)}>
           Open FormSheet demo
         </Button>

@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { ServerList } from '@/components/servers/server-list';
 import { ServerForm } from '@/components/servers/server-form';
 import { addServerAction } from '@/actions/servers';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
+import { AppLink } from '@/components/routes/app-link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -50,9 +50,9 @@ export default async function ConnectPage() {
 
         {!isEmpty && catalog.activeServerId ? (
           <div className="text-center">
-            <Link href="/login" className={cn(buttonVariants())}>
+            <AppLink route="login" className={cn(buttonVariants())}>
               Continue to sign in
-            </Link>
+            </AppLink>
           </div>
         ) : null}
       </div>

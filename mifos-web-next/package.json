@@ -2,7 +2,7 @@
   "name": "mifos-web-next",
   "version": "0.1.0",
   "private": true,
-  "description": "Next.js Fineract web client — greenfield replacement for Mifos X Web App",
+  "description": "Next.js Fineract web client \u2014 greenfield replacement for Mifos X Web App",
   "license": "MPL-2.0",
   "workspaces": [
     "apps/*",
@@ -14,7 +14,8 @@
     "start": "npm run start -w web",
     "lint": "npm run lint -w web",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "routes:parity": "npx tsx tooling/routes-inventory/generate-parity.ts"
   },
   "engines": {
     "node": ">=20"

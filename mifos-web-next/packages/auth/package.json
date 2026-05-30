@@ -7,11 +7,16 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./permissions.manifest.json": "./permissions.manifest.json"
+    "./manifest.schema.json": "./manifest.schema.json"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test src/can.test.ts"
+  },
+  "dependencies": {
+    "@mifos/api-client": "0.1.0",
+    "@mifos/routes": "0.1.0",
+    "zod": "^3.24.2"
   },
   "peerDependencies": {
     "react": "^19.0.0"

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { AppLink } from '@/components/routes/app-link';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 
@@ -28,9 +28,12 @@ export function PlatformHeader({
         {serverName ? (
           <p className="truncate text-xs text-muted-foreground">
             {serverName} ·{' '}
-            <Link href="/settings/servers" className="underline-offset-4 hover:underline">
+            <AppLink
+              route="settingsServers"
+              className="underline-offset-4 hover:underline"
+            >
               Server settings
-            </Link>
+            </AppLink>
           </p>
         ) : null}
       </div>

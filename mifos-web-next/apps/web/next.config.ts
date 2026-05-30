@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: [
     '@mifos/auth',
+    '@mifos/routes',
     '@mifos/api-client',
     '@mifos/domain',
     '@mifos/i18n',

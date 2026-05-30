@@ -1,7 +1,5 @@
-import Link from 'next/link';
+import { AppLink } from '@/components/routes/app-link';
 import { Button } from '@/components/ui/button';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { getActiveFineractServer } from '@/lib/servers/catalog-store';
 import { redirect } from 'next/navigation';
 
@@ -20,12 +18,12 @@ export default async function LoginPage() {
           </p>
           <p className="mt-1 font-medium">{active.name}</p>
           <p className="text-xs text-muted-foreground">Tenant: {active.tenantId}</p>
-          <Link
-            href="/connect"
+          <AppLink
+            route="connect"
             className="mt-3 inline-block text-sm text-primary underline-offset-4 hover:underline"
           >
             Change server
-          </Link>
+          </AppLink>
         </div>
 
         <div className="rounded-lg border border-border bg-card p-8 shadow-sm">

@@ -1,3 +1,4 @@
+import { buildNavManifest } from '@mifos/routes/server';
 import type { PermissionInput, PermissionRule, SessionUser } from './types';
 import { can } from './can';
 import type { PermissionKey } from './permissions-map';
@@ -7,23 +8,15 @@ export interface NavItem {
   id: string;
   href: string;
   label: string;
-  /** Semantic key into permissions.manifest.json */
   permissionKey?: PermissionKey;
-  /** Raw Fineract permission(s) — used when no semantic key */
   permission?: PermissionInput;
 }
 
-/** Primary sidebar entries — extend as domains are built. */
-export const NAV_MANIFEST: NavItem[] = [
-  { id: 'dashboard', href: '/', label: 'Dashboard' },
-  { id: 'clients', href: '/clients', label: 'Clients', permissionKey: 'clients.list' },
-  {
-    id: 'checker',
-    href: '/checker-inbox-and-tasks',
-    label: 'Checker inbox',
-    permissionKey: 'checkerInbox'
-  }
-];
+/** Derived from @mifos/routes APP_ROUTES — do not edit manually. */
+export const NAV_MANIFEST: NavItem[] = buildNavManifest().map((item) => ({
+  ...item,
+  permissionKey: item.permissionKey as PermissionKey | undefined
+}));
 
 export function getNavPermission(item: NavItem): PermissionInput | PermissionRule | undefined {
   if (item.permissionKey) {

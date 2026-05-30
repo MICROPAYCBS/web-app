@@ -1,0 +1,19 @@
+{
+  "name": "@mifos/routes",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MPL-2.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./parity": "./src/parity-export.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
