@@ -8,15 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import Image from 'next/image';
 import { useActionState } from 'react';
 import { ServerIcon } from 'lucide-react';
 import { loginAction, type LoginFormState } from '@/actions/auth';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
+import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator
@@ -57,12 +59,22 @@ export function LoginForm({
     <div className={cn('flex flex-col gap-6', className)}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form action={formAction} className="p-6 md:p-8">
-            <input type="hidden" name="redirectTo" value={redirectTo} />
+          <div className="flex flex-col p-6 md:p-8">
+            <div className="mb-6 flex justify-center">
+              <Image
+                src="/images/default_home.png"
+                alt="Mifos"
+                width={160}
+                height={48}
+                className="h-12 w-auto object-contain"
+                priority
+              />
+            </div>
+
             <FieldGroup>
               {signedOut ? (
                 <div
-                  className="rounded-lg border border-border bg-background px-3 py-2 text-center text-sm text-muted-foreground"
+                  className="mb-4 rounded-lg border border-border bg-background px-3 py-2 text-center text-sm text-muted-foreground"
                   role="status"
                 >
                   You have been signed out.
@@ -76,108 +88,113 @@ export function LoginForm({
                 </p>
               </div>
 
-              <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-sm">
-                <p className="font-medium">{serverName}</p>
-                <p className="text-xs text-muted-foreground">Tenant: {tenantId}</p>
+              {canSignIn ? (
+                <form action={formAction} className="mt-4 space-y-4">
+                  <input type="hidden" name="redirectTo" value={redirectTo} />
+
+                  <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-sm">
+                    <p className="font-medium">{serverName}</p>
+                    <p className="text-xs text-muted-foreground">Tenant: {tenantId}</p>
+                  </div>
+
+                  <Field>
+                    <FieldLabel htmlFor="username">Username</FieldLabel>
+                    <Input
+                      id="username"
+                      name="username"
+                      type="text"
+                      autoComplete="username"
+                      required
+                      disabled={signInDisabled}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      disabled={signInDisabled}
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <input
+                      type="checkbox"
+                      id="remember"
+                      name="remember"
+                      value="on"
+                      disabled={signInDisabled}
+                      className="size-4 rounded border border-input"
+                    />
+                    <FieldLabel htmlFor="remember" className="font-normal">
+                      Remember me for 14 days
+                    </FieldLabel>
+                  </Field>
+
+                  {state.ok === false && state.message ? (
+                    <p className="text-sm text-destructive" role="alert">
+                      {state.message}
+                    </p>
+                  ) : null}
+
+                  <Field>
+                    <Button type="submit" className="w-full" disabled={signInDisabled}>
+                      {pending ? 'Signing in…' : 'Sign in'}
+                    </Button>
+                  </Field>
+
+                  {demoEnabled ? (
+                    <>
+                      <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                        Preview only
+                      </FieldSeparator>
+                      <Field>
+                        <DemoLoginButton className="w-full" />
+                      </Field>
+                    </>
+                  ) : null}
+                </form>
+              ) : (
+                <div className="mt-4">
+                  <LoginNoServerEmpty />
+                </div>
+              )}
+
+              {canSignIn ? (
+                <FieldSeparator className="my-6 *:data-[slot=field-separator-content]:bg-card">
+                  Or continue with
+                </FieldSeparator>
+              ) : null}
+
+              <div className={cn('grid grid-cols-2 gap-3', !canSignIn && 'mt-6')}>
                 <Button
                   type="button"
-                  variant="link"
-                  size="sm"
-                  className="mt-1 h-auto p-0 text-xs"
+                  variant="outline"
+                  className="h-10 w-full"
                   onClick={onManageServers}
                 >
-                  <ServerIcon className="size-3.5" />
+                  <ServerIcon className="size-4" />
                   Manage servers
                 </Button>
-                {!canSignIn ? (
-                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                    Select or add a Fineract server before signing in.
-                  </p>
-                ) : null}
+                <ThemeToggle variant="loginRow" className="h-10 w-full" />
               </div>
-
-              <Field>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  disabled={signInDisabled}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  disabled={signInDisabled}
-                />
-              </Field>
-              <Field orientation="horizontal">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  name="remember"
-                  value="on"
-                  disabled={signInDisabled}
-                  className="size-4 rounded border border-input"
-                />
-                <FieldLabel htmlFor="remember" className="font-normal">
-                  Remember me for 14 days
-                </FieldLabel>
-              </Field>
-
-              {state.ok === false && state.message ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {state.message}
-                </p>
-              ) : null}
-
-              <Field>
-                <Button type="submit" className="w-full" disabled={signInDisabled}>
-                  {pending ? 'Signing in…' : 'Sign in'}
-                </Button>
-              </Field>
-
-              {demoEnabled ? (
-                <>
-                  <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                    Preview only
-                  </FieldSeparator>
-                  <Field>
-                    <DemoLoginButton className="w-full" disabled={!canSignIn} />
-                  </Field>
-                </>
-              ) : null}
             </FieldGroup>
-          </form>
+          </div>
 
-          <div className="relative hidden flex-col justify-between bg-muted p-8 md:flex">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Mifos Web
-              </p>
-              <p className="mt-4 text-2xl font-semibold tracking-tight">Apache Fineract®</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Modern client for microfinance and core banking — built with Next.js and
-                shadcn/ui.
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Preset <span className="font-mono">bJMSkfGi</span> · stone / nova
-            </p>
+          <div className="relative hidden min-h-[min(100%,32rem)] md:block">
+            <Image
+              src="/images/cover_image_resized.webp"
+              alt=""
+              fill
+              className="object-cover"
+              sizes="(min-width: 768px) 50vw, 0vw"
+              priority
+            />
           </div>
         </CardContent>
       </Card>
-      <FieldDescription className="px-2 text-center text-xs">
-        Use <span className="font-medium">Manage servers</span> to choose or configure your
-        Fineract backend.
-      </FieldDescription>
     </div>
   );
 }

@@ -19,13 +19,21 @@ const MODES: { value: ThemeSetting; label: string; icon: typeof Sun }[] = [
   { value: 'system', label: 'System', icon: Monitor }
 ];
 
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({
+  className,
+  variant = 'default'
+}: {
+  className?: string;
+  variant?: 'default' | 'loginRow';
+}) {
   const { theme, setTheme } = useTheme();
+  const isLoginRow = variant === 'loginRow';
 
   return (
     <div
       className={cn(
         'inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5',
+        isLoginRow && 'h-10 w-full',
         className
       )}
       role="group"
@@ -38,15 +46,16 @@ export function ThemeToggle({ className }: { className?: string }) {
           variant="ghost"
           size="sm"
           className={cn(
-            'h-8 gap-1.5 px-2.5 text-muted-foreground',
+            'text-muted-foreground',
+            isLoginRow ? 'h-9 min-w-0 flex-1 gap-1 px-1.5' : 'h-8 gap-1.5 px-2.5',
             theme === value && 'bg-background text-foreground shadow-sm'
           )}
           aria-pressed={theme === value}
           aria-label={label}
           onClick={() => setTheme(value)}
         >
-          <Icon className="size-4" aria-hidden />
-          <span className="hidden sm:inline">{label}</span>
+          <Icon className="size-4 shrink-0" aria-hidden />
+          <span className={cn(isLoginRow ? 'sr-only' : 'hidden sm:inline')}>{label}</span>
         </Button>
       ))}
     </div>

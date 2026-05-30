@@ -9,11 +9,9 @@
  */
 
 import { useState } from 'react';
-import { ServerIcon } from 'lucide-react';
 import type { ServerCatalog } from '@mifos/servers';
 import { LoginForm } from '@/components/auth/login-form';
 import { ServerManagerSheet } from '@/components/servers/server-manager-sheet';
-import { Button } from '@/components/ui/button';
 
 export function LoginShell({
   catalog,
@@ -33,12 +31,6 @@ export function LoginShell({
 
   return (
     <>
-      <div className="mb-4 flex justify-center">
-        <Button type="button" variant="outline" size="sm" onClick={() => setServersOpen(true)}>
-          <ServerIcon className="size-4" />
-          Manage Fineract servers
-        </Button>
-      </div>
       <LoginForm
         redirectTo={redirectTo}
         signedOut={signedOut}
