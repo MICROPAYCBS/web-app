@@ -58,6 +58,7 @@ Open [http://localhost:3000](http://localhost:3000). Use **Cycle preset** in the
 ## Documentation
 
 - [Project charter (private)](docs/PROJECT.md)
+- [RBAC](docs/RBAC.md)
 - [UI components & FormSheet](docs/COMPONENTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [ADR index](docs/adr/README.md)

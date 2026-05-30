@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     root: '../..'
   },
   transpilePackages: [
+    '@mifos/auth',
     '@mifos/api-client',
     '@mifos/domain',
     '@mifos/i18n',

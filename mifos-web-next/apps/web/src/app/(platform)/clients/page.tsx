@@ -6,13 +6,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { Can, resolvePermission } from '@mifos/auth';
+import { Button } from '@/components/ui/button';
+
 export default function ClientsPage() {
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold tracking-tight">Clients</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl font-semibold tracking-tight">Clients</h2>
+        <Can permission={resolvePermission('clients.create')}>
+          <Button type="button" disabled>
+            New client (coming soon)
+          </Button>
+        </Can>
+      </div>
       <p className="text-muted-foreground">
-        Client list and create flows will be implemented here with parity tracking against{' '}
-        <code className="text-sm">openMF/web-app</code>.
+        Client list will be implemented here. The &quot;New client&quot; button is visible only with{' '}
+        <code className="text-sm">CREATE_CLIENT</code> (or superuser permissions).
       </p>
     </div>
   );

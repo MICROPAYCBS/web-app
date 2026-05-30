@@ -8,18 +8,18 @@
 
 import Link from 'next/link';
 
-const NAV = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/clients', label: 'Clients' }
-] as const;
+export interface PlatformNavItem {
+  href: string;
+  label: string;
+}
 
-export function PlatformSidebar() {
+export function PlatformSidebar({ items }: { items: PlatformNavItem[] }) {
   return (
     <nav className="flex flex-col gap-1 p-4">
       <p className="mb-4 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Mifos
       </p>
-      {NAV.map((item) => (
+      {items.map((item) => (
         <Link
           key={item.href}
           href={item.href}
