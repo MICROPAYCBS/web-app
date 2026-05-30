@@ -9,17 +9,26 @@
  */
 
 import { useRouter } from 'next/navigation';
-import type { ServerCatalog } from '@mifos/servers';
-import { addServerAction } from '@/actions/servers';
-import { ServerSettingsRow } from '@/components/servers/server-settings-row';
-import { ServerForm } from '@/components/servers/server-form';
+import { useState } from 'react';
+import { PlusIcon } from 'lucide-react';
+import type { FineractServerProfile, ServerCatalog } from '@mifos/servers';
+import { addServerAction, updateServerAction } from '@/actions/servers';
+import { ServerManagerRow } from '@/components/servers/server-manager-row';
+import { ServerForm, type ServerFormValues } from '@/components/servers/server-form';
+import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle
 } from '@/components/ui/sheet';
+
+type SheetView =
+  | { mode: 'list' }
+  | { mode: 'add' }
+  | { mode: 'edit'; server: FineractServerProfile };
 
 export function ServerManagerSheet({
   catalog,
@@ -31,63 +40,111 @@ export function ServerManagerSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
+  const [view, setView] = useState<SheetView>({ mode: 'list' });
   const isEmpty = catalog.servers.length === 0;
 
   function refreshAfterMutation() {
     router.refresh();
   }
 
+  function showList() {
+    setView({ mode: 'list' });
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setView({ mode: 'list' });
+    }
+    onOpenChange(next);
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-md">
-        <SheetHeader className="border-b border-border pb-4">
-          <SheetTitle>Fineract servers</SheetTitle>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
+      >
+        <SheetHeader className="border-b border-border px-4 py-4">
+          <SheetTitle>
+            {view.mode === 'add'
+              ? 'Add server'
+              : view.mode === 'edit'
+                ? 'Edit server'
+                : 'Fineract servers'}
+          </SheetTitle>
           <SheetDescription>
-            Add, edit, or remove backends. The active server is used when you sign in.
+            {view.mode === 'list'
+              ? 'Choose the active backend for sign-in. Add, edit, or remove servers as needed.'
+              : view.mode === 'add'
+                ? 'Enter the Fineract API URL and tenant for this instance.'
+                : `Update ${view.server.name}.`}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-6 py-4">
-          <section className="space-y-3 px-4">
-            <h3 className="text-sm font-medium text-muted-foreground">Your servers</h3>
-            {isEmpty ? (
-              <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
-                No servers yet. Add a Fineract instance below.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {catalog.servers.map((server) => (
-                  <ServerSettingsRow
-                    key={server.id}
-                    server={server}
-                    isActive={server.id === catalog.activeServerId}
-                    onChanged={refreshAfterMutation}
-                  />
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="space-y-3 border-t border-border px-4 pt-4">
-            <h3 className="text-sm font-medium">
-              {isEmpty ? 'Add your first server' : 'Add another server'}
-            </h3>
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {view.mode === 'list' ? (
+            <div className="space-y-3">
+              {isEmpty ? (
+                <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
+                  No servers yet. Use <span className="font-medium">Add server</span> below.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {catalog.servers.map((server) => (
+                    <ServerManagerRow
+                      key={server.id}
+                      server={server}
+                      isActive={server.id === catalog.activeServerId}
+                      onEdit={(s) => setView({ mode: 'edit', server: s })}
+                      onChanged={refreshAfterMutation}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
             <ServerForm
-              submitLabel={isEmpty ? 'Save server' : 'Add server'}
-              onSubmit={(values) =>
-                addServerAction(values).then((result) => {
-                  if (result.ok) {
-                    refreshAfterMutation();
-                    if (isEmpty) {
-                      onOpenChange(false);
+              key={view.mode === 'edit' ? view.server.id : 'add'}
+              initialValues={
+                view.mode === 'edit'
+                  ? {
+                      name: view.server.name,
+                      baseUrl: view.server.baseUrl,
+                      tenantId: view.server.tenantId
                     }
-                  }
-                  return result;
-                })
+                  : undefined
               }
+              submitLabel={view.mode === 'add' ? 'Save server' : 'Save changes'}
+              onSubmit={async (values: ServerFormValues) => {
+                const result =
+                  view.mode === 'add'
+                    ? await addServerAction(values)
+                    : await updateServerAction(view.server.id, values);
+                if (result.ok) {
+                  refreshAfterMutation();
+                  showList();
+                  if (view.mode === 'add' && isEmpty) {
+                    onOpenChange(false);
+                  }
+                }
+                return result;
+              }}
             />
-          </section>
+          )}
         </div>
+
+        <SheetFooter className="mt-auto border-t border-border px-4 py-4">
+          {view.mode === 'list' ? (
+            <Button type="button" className="w-full" onClick={() => setView({ mode: 'add' })}>
+              <PlusIcon className="size-4" />
+              Add server
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" className="w-full" onClick={showList}>
+              Back to server list
+            </Button>
+          )}
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

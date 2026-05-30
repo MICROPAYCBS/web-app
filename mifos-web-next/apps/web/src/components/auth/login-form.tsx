@@ -60,17 +60,6 @@ export function LoginForm({
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <div className="flex flex-col p-6 md:p-8">
-            <div className="mb-6 flex justify-center">
-              <Image
-                src="/images/default_home.png"
-                alt="Mifos"
-                width={160}
-                height={48}
-                className="h-12 w-auto object-contain"
-                priority
-              />
-            </div>
-
             <FieldGroup>
               {signedOut ? (
                 <div
