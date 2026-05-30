@@ -1,10 +1,8 @@
 import Link from 'next/link';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
-import { ServerList } from '@/components/servers/server-list';
 import { ServerForm } from '@/components/servers/server-form';
 import { addServerAction } from '@/actions/servers';
 import { logoutAction } from '@/actions/auth';
-import { buttonVariants } from '@/components/ui/button';
 import { Button } from '@/components/ui/button';
 import { ServerSettingsRow } from '@/components/servers/server-settings-row';
 

@@ -33,7 +33,7 @@ export function getRoutePermission(pathname: string): PermissionInput | Permissi
 }
 
 /** Paths that never require authentication. */
-export const PUBLIC_PATH_PREFIXES = ['/login', '/callback'];
+export const PUBLIC_PATH_PREFIXES = ['/login', '/connect', '/callback'];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATH_PREFIXES.some(
