@@ -20,6 +20,8 @@ import { setSessionCookie } from '@/lib/session/cookie';
 export type LoginFormState = {
   ok: boolean;
   message?: string;
+  /** Set on success; client navigates (useActionState + redirect() is unreliable). */
+  redirectTo?: string;
 };
 
 function safeRedirectPath(value: string | null | undefined): string {
@@ -57,7 +59,7 @@ export async function loginAction(
   }
 
   revalidatePath('/', 'layout');
-  redirect(redirectTo);
+  return { ok: true, redirectTo };
 }
 
 /**

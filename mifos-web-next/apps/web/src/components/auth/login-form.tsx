@@ -9,7 +9,8 @@
  */
 
 import Image from 'next/image';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ServerIcon } from 'lucide-react';
 import { loginAction, type LoginFormState } from '@/actions/auth';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
@@ -55,8 +56,16 @@ export function LoginForm({
   serverHealth,
   className
 }: LoginFormProps) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const signInDisabled = pending || !canSignIn;
+
+  useEffect(() => {
+    if (state.ok && state.redirectTo) {
+      router.replace(state.redirectTo);
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
@@ -124,7 +133,7 @@ export function LoginForm({
                     </FieldLabel>
                   </Field>
 
-                  {state.ok === false && state.message ? (
+                  {state.ok === false && state.message && !pending ? (
                     <p className="text-sm text-destructive" role="alert">
                       {state.message}
                     </p>
