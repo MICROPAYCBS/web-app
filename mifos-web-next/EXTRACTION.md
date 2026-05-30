@@ -1,13 +1,16 @@
-# Extracting to a standalone repository
+# Standalone private repository
 
-This project is bootstrapped under `openMF/web-app` for convenience. To publish as its own GitHub repository:
+This folder may live inside another git tree temporarily. For a **private** remote of your own:
 
 ```bash
-# From a clean directory
-git clone --no-local /path/to/web-app mifos-web-next-standalone
-cd mifos-web-next-standalone
-git filter-repo --subdirectory-filter mifos-web-next  # requires git-filter-repo
-# Or copy mifos-web-next/ only into a new repo root
+# Option A: new repo with only this tree
+mkdir ../my-fineract-ui && cp -R mifos-web-next/. ../my-fineract-ui/
+cd ../my-fineract-ui
+git init
+git remote add origin git@github.com:<you>/<private-repo>.git
+
+# Option B: filter from a parent clone (if nested in web-app)
+git filter-repo --subdirectory-filter mifos-web-next
 ```
 
-Then set the remote to the new `openMF/mifos-web-next` (or your org) repository.
+Point `origin` at your private host (GitHub private, GitLab, self-hosted). No requirement to publish to openMF or announce to the Mifos community.

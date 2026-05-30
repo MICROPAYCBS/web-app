@@ -1,5 +1,10 @@
 # Architecture
 
+
+## Governance
+
+Private, solo-maintained — see [PROJECT.md](PROJECT.md) and [ADR-004](adr/004-private-solo-maintained.md). Functional parity with web-app is a **personal delivery goal**, not a community commitment.
+
 ## Goals
 
 1. Full functional parity with [openMF/web-app](https://github.com/openMF/web-app).

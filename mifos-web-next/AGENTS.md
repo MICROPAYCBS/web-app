@@ -2,9 +2,11 @@
 
 Instructions for AI agents working in this repository.
 
-## Project
+## Project context
 
-Greenfield Fineract UI replacing [openMF/web-app](https://github.com/openMF/web-app). **Next.js 16.2.6**, App Router only, **shadcn/ui** with **preset-based** theming (`@mifos/themes`).
+**Private, solo-maintained** Fineract UI. Not a community contribution to [openMF/web-app](https://github.com/openMF/web-app). See [docs/PROJECT.md](docs/PROJECT.md).
+
+**Next.js 16.2.6**, App Router only, **shadcn/ui** with **preset-based** theming (`@mifos/themes`).
 
 ## Monorepo
 
@@ -25,14 +27,14 @@ Greenfield Fineract UI replacing [openMF/web-app](https://github.com/openMF/web-
 3. **Validate on server** (Server Actions) with the same Zod schema as the client.
 4. **Map Fineract API errors** via `mapFineractErrors` + `translateFineractCode`.
 5. Use **decimal.js** (via `@mifos/domain`) for money — never JavaScript `number` for amounts.
-6. Add **MPL-2.0 file headers** to new `.ts` / `.tsx` files.
-7. Update **parity matrix** (`docs/parity/`) when shipping a route.
+6. Update **parity matrix** (`docs/parity/`) when shipping a route.
+7. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
 
 ## Reference repos
 
 Pin in `reference/` (not committed):
 
-- `reference/web-app` — behavior and routes
+- `reference/web-app` — behavior and routes (reference only)
 - `reference/fineract` — validation source of truth
 
 ## Commands

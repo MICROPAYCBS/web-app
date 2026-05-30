@@ -1,4 +1,4 @@
-# ADR-001: Greenfield repository
+# ADR-001: Greenfield private repository
 
 ## Status
 
@@ -6,13 +6,14 @@ Accepted
 
 ## Context
 
-The legacy Mifos X Web App is a large Angular codebase. We need a modern stack with better UX and stricter validation without blocking ongoing Angular maintenance.
+The legacy [openMF/web-app](https://github.com/openMF/web-app) is a large Angular codebase maintained by the community. The maintainer wants a modern Next.js client with better UX and Fineract-first validation, **without** community involvement at this stage.
 
 ## Decision
 
-Create **mifos-web-next** as a separate greenfield repository. Use [openMF/web-app](https://github.com/openMF/web-app) as a **functional reference** only.
+Create **mifos-web-next** as an independent, **private**, solo-maintained repository. Use web-app as a **read-only functional reference** only. Do not plan merges or coordination with the community Angular app.
 
 ## Consequences
 
-- No big-bang cutover; parity is tracked per domain.
-- Two codebases may coexist until feature-complete.
+- Parity is tracked privately in `docs/parity/` for personal delivery goals.
+- The community web-app continues on its own roadmap unaffected.
+- License and contribution model are maintainer-controlled (see ADR-004).

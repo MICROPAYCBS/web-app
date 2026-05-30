@@ -1,6 +1,11 @@
 # Mifos Web Next
 
-Greenfield [Apache Fineract](https://fineract.apache.org/) web client built with **Next.js 16.2.6**, **shadcn/ui**, and a **preset-driven** design system. Functional reference: [openMF/web-app](https://github.com/openMF/web-app). Validation source of truth: **Fineract** Java/API rules (not web-app-only checks).
+> **Private project** — solo-maintained. Not affiliated with or contributed to the [Mifos community](https://mifos.org) web-app at this stage. See [docs/PROJECT.md](docs/PROJECT.md).
+
+Greenfield [Apache Fineract](https://fineract.apache.org/) web client built with **Next.js 16.2.6**, **shadcn/ui**, and a **preset-driven** design system.
+
+- **Behavioral reference:** [openMF/web-app](https://github.com/openMF/web-app) (read-only)
+- **Validation source of truth:** Fineract Java/API rules (not web-app-only checks)
 
 ## Stack
 
@@ -52,10 +57,11 @@ Open [http://localhost:3000](http://localhost:3000). Use **Cycle preset** in the
 
 ## Documentation
 
+- [Project charter (private)](docs/PROJECT.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [ADR index](docs/adr/README.md)
 - [Parity tracking](docs/parity/README.md)
 
 ## License
 
-MPL-2.0 — see [LICENSE](LICENSE).
+Private repository. All rights reserved by the maintainer unless otherwise noted in [LICENSE](LICENSE).
