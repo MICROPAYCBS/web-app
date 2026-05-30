@@ -15,7 +15,7 @@ import {
   AuthenticationError,
   toLoginErrorMessage
 } from '@/lib/fineract/authenticate';
-import { clearSessionCookie, setSessionCookie } from '@/lib/session/cookie';
+import { setSessionCookie } from '@/lib/session/cookie';
 
 export type LoginFormState = {
   ok: boolean;
@@ -61,11 +61,9 @@ export async function loginAction(
 }
 
 /**
- * Clears the httpOnly session cookie and redirects to login.
- * Server catalog is kept so the user can switch backends without re-adding URLs.
+ * @deprecated Prefer navigation to `/api/auth/logout` (see `SignOutButton`).
+ * Kept for any legacy forms still posting to this action.
  */
 export async function logoutAction(): Promise<void> {
-  await clearSessionCookie();
-  revalidatePath('/', 'layout');
-  redirect('/login?signedOut=1');
+  redirect('/api/auth/logout');
 }

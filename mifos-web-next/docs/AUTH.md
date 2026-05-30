@@ -41,17 +41,16 @@ Disable demo flags in production.
 
 ## Sign out
 
-`logoutAction` (via `SignOutButton` / `SignOutMenuItem`):
+Use **`GET /api/auth/logout`** (via `SignOutButton` / `SignOutMenuItem`):
 
-1. Clears the `mifos-session` httpOnly cookie (same path/`secure` flags as login).
-2. Revalidates the app layout cache.
-3. Redirects to `/login?signedOut=1`.
+1. Clears `mifos-session` on the **Route Handler redirect response** (reliable on Vercel; server actions + `redirect()` can drop `Set-Cookie`).
+2. Redirects to `/login?signedOut=1`.
 
 The Fineract server catalog cookie is **kept** so users can switch backends without re-entering URLs.
 
-**Important:** Session is read **only** from `mifos-session`. Implicit `RBAC_DEV_SESSION` fallback was removed so sign-out works on preview deployments; use **Continue with demo session** on the login page when `DEMO_SESSION_ENABLED=true`.
+**Important:** Session is read **only** from `mifos-session`. Implicit `RBAC_DEV_SESSION` fallback was removed; use **Continue with demo session** when `DEMO_SESSION_ENABLED=true`.
 
-Client-side TanStack Query caches are cleared on submit before the server action runs.
+Client-side TanStack Query caches are cleared before navigating to `/api/auth/logout`.
 
 ## Code
 

@@ -10,50 +10,21 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { LogOutIcon } from 'lucide-react';
-import { useFormStatus } from 'react-dom';
 import type { ComponentProps, ReactNode } from 'react';
-import { logoutAction } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+
+/** Full-page navigation so the Route Handler can set cleared cookies on the response. */
+export const LOGOUT_URL = '/api/auth/logout';
 
 function clearClientAuthState(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.clear();
   queryClient.cancelQueries();
 }
 
-function SignOutFormShell({
-  children,
-  className,
-  onSubmit
-}: {
-  children: ReactNode;
-  className?: string;
-  onSubmit: () => void;
-}) {
-  return (
-    <form action={logoutAction} className={className} onSubmit={onSubmit}>
-      {children}
-    </form>
-  );
-}
-
-function SignOutSubmitButton({
-  children,
-  variant = 'outline',
-  className
-}: {
-  children: ReactNode;
-  variant?: ComponentProps<typeof Button>['variant'];
-  className?: string;
-}) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" variant={variant} className={className} disabled={pending}>
-      {pending ? 'Signing out…' : children}
-    </Button>
-  );
+function signOut(queryClient: ReturnType<typeof useQueryClient>) {
+  clearClientAuthState(queryClient);
+  window.location.assign(LOGOUT_URL);
 }
 
 export function SignOutButton({
@@ -68,45 +39,35 @@ export function SignOutButton({
   const queryClient = useQueryClient();
 
   return (
-    <SignOutFormShell onSubmit={() => clearClientAuthState(queryClient)}>
-      <SignOutSubmitButton variant={variant} className={className}>
-        {children}
-      </SignOutSubmitButton>
-    </SignOutFormShell>
-  );
-}
-
-function SignOutMenuSubmit() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="flex w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive outline-none hover:bg-destructive/10"
+    <Button
+      type="button"
+      variant={variant}
+      className={className}
+      onClick={() => signOut(queryClient)}
     >
-      <LogOutIcon className="size-4" />
-      {pending ? 'Signing out…' : 'Sign out'}
-    </button>
+      {children}
+    </Button>
   );
 }
 
-/** Destructive sidebar / header menu row wired to {@link logoutAction}. */
+/** Destructive sidebar user menu row — native link to {@link LOGOUT_URL}. */
 export function SignOutMenuItem({ className }: { className?: string }) {
   const queryClient = useQueryClient();
 
   return (
     <DropdownMenuItem
       variant="destructive"
-      className={cn('p-0 focus:bg-transparent', className)}
-      onSelect={(event) => event.preventDefault()}
+      className={className}
+      render={
+        <a
+          href={LOGOUT_URL}
+          className="flex w-full items-center gap-2"
+          onClick={() => clearClientAuthState(queryClient)}
+        />
+      }
     >
-      <SignOutFormShell
-        className="w-full"
-        onSubmit={() => clearClientAuthState(queryClient)}
-      >
-        <SignOutMenuSubmit />
-      </SignOutFormShell>
+      <LogOutIcon className="size-4" />
+      Sign out
     </DropdownMenuItem>
   );
 }

@@ -8,6 +8,7 @@ import type { ServerCatalog } from '@mifos/servers';
 
 const CONNECT_PATH = '/connect';
 const LOGIN_PATH = '/login';
+const LOGOUT_PATH = '/api/auth/logout';
 
 function readCatalog(request: NextRequest): ServerCatalog | null {
   const raw = request.cookies.get(SERVER_CATALOG_COOKIE)?.value;
@@ -41,7 +42,7 @@ function readSession(request: NextRequest) {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith('/forbidden')) {
+  if (pathname.startsWith('/forbidden') || pathname === LOGOUT_PATH) {
     return NextResponse.next();
   }
 

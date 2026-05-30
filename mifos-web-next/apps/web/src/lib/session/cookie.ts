@@ -1,21 +1,11 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-import { SESSION_COOKIE_NAME } from './constants';
 import type { ServerSession } from './types';
+import { sessionCookieAttributes } from './cookie-options';
 
 const SESSION_MAX_AGE_DEFAULT = 60 * 60 * 8; // 8 hours
 const SESSION_MAX_AGE_REMEMBER = 60 * 60 * 24 * 14; // 14 days
-
-function sessionCookieOptions(maxAge: number) {
-  return {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAge,
-    secure: process.env.NODE_ENV === 'production'
-  };
-}
 
 export async function setSessionCookie(
   session: ServerSession,
@@ -23,14 +13,16 @@ export async function setSessionCookie(
 ): Promise<void> {
   const cookieStore = await cookies();
   const maxAge = options?.remember ? SESSION_MAX_AGE_REMEMBER : SESSION_MAX_AGE_DEFAULT;
-  cookieStore.set(SESSION_COOKIE_NAME, JSON.stringify(session), sessionCookieOptions(maxAge));
+  const attrs = sessionCookieAttributes(maxAge);
+  cookieStore.set(attrs.name, JSON.stringify(session), attrs);
 }
 
 /** Expire session cookie using the same attributes as {@link setSessionCookie}. */
 export async function clearSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, '', {
-    ...sessionCookieOptions(0),
+  const attrs = sessionCookieAttributes(0);
+  cookieStore.set(attrs.name, '', {
+    ...attrs,
     maxAge: 0,
     expires: new Date(0)
   });
