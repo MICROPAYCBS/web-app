@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
 import { Button } from '@/components/ui/button';
+import { ServerListRowActions } from '@/components/servers/server-list-row-actions';
 import { ServerForm, type ServerFormValues } from '@/components/servers/server-form';
 import { ServerRowDetailsTooltip } from '@/components/servers/server-row-details-tooltip';
 import {
@@ -48,45 +49,27 @@ export function ServerSettingsRow({
               ) : null}
             </span>
           </ServerRowDetailsTooltip>
-          <div className="flex flex-wrap gap-2">
-            {!isActive ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    const result = await selectServerAction(server.id);
-                    if (result.ok) {
-                      afterSuccess();
-                    }
-                  })
+          <ServerListRowActions
+            isActive={isActive}
+            pending={pending}
+            onUse={() =>
+              startTransition(async () => {
+                const result = await selectServerAction(server.id);
+                if (result.ok) {
+                  afterSuccess();
                 }
-              >
-                Use this server
-              </Button>
-            ) : null}
-            <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
-              Edit
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  const result = await deleteServerAction(server.id);
-                  if (result.ok) {
-                    afterSuccess();
-                  }
-                })
-              }
-            >
-              Remove
-            </Button>
-          </div>
+              })
+            }
+            onEdit={() => setEditing(true)}
+            onRemove={() =>
+              startTransition(async () => {
+                const result = await deleteServerAction(server.id);
+                if (result.ok) {
+                  afterSuccess();
+                }
+              })
+            }
+          />
         </div>
       ) : (
         <div className="space-y-3">

@@ -14,8 +14,8 @@ import {
   SERVER_STATUS_LIGHT_CLASS,
   type ServerHealthSnapshot
 } from '@/components/servers/server-health-indicator';
+import { ServerListRowActions } from '@/components/servers/server-list-row-actions';
 import { ServerRowDetailsTooltip } from '@/components/servers/server-row-details-tooltip';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { deleteServerAction, selectServerAction } from '@/actions/servers';
 
@@ -38,53 +38,37 @@ export function ServerManagerRow({
     <li className="rounded-lg border border-border p-3">
       <div className="flex items-center gap-2">
         <ServerRowDetailsTooltip server={server} health={health} isActive={isActive}>
-          <ServerStatusLight health={health} />
-          <span className="min-w-0 flex-1 truncate font-medium">
-            {server.name}
-            {isActive ? (
-              <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
-            ) : null}
+          <span className="flex min-w-0 flex-1 items-center gap-3">
+            <ServerStatusLight health={health} />
+            <span className="min-w-0 truncate font-medium">
+              {server.name}
+              {isActive ? (
+                <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
+              ) : null}
+            </span>
           </span>
         </ServerRowDetailsTooltip>
-        <div className="flex shrink-0 flex-wrap justify-end gap-1">
-          {!isActive ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  const result = await selectServerAction(server.id);
-                  if (result.ok) {
-                    onChanged();
-                  }
-                })
+        <ServerListRowActions
+          isActive={isActive}
+          pending={pending}
+          onUse={() =>
+            startTransition(async () => {
+              const result = await selectServerAction(server.id);
+              if (result.ok) {
+                onChanged();
               }
-            >
-              Use this server
-            </Button>
-          ) : null}
-          <Button type="button" size="sm" variant="outline" onClick={() => onEdit(server)}>
-            Edit
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="destructive"
-            disabled={pending}
-            onClick={() =>
-              startTransition(async () => {
-                const result = await deleteServerAction(server.id);
-                if (result.ok) {
-                  onChanged();
-                }
-              })
-            }
-          >
-            Remove
-          </Button>
-        </div>
+            })
+          }
+          onEdit={() => onEdit(server)}
+          onRemove={() =>
+            startTransition(async () => {
+              const result = await deleteServerAction(server.id);
+              if (result.ok) {
+                onChanged();
+              }
+            })
+          }
+        />
       </div>
     </li>
   );

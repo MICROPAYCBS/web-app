@@ -14,6 +14,7 @@ import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
 import { LoginActiveServer } from '@/components/auth/login-active-server';
 import type { ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
+import { ServerRowIconButton } from '@/components/servers/server-row-icon-button';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -151,17 +152,16 @@ export function LoginForm({
                 </FieldSeparator>
               ) : null}
 
-              <div className={cn('grid grid-cols-2 gap-3', !canSignIn && 'mt-6')}>
-                <Button
-                  type="button"
+              <div className={cn('flex gap-2', !canSignIn && 'mt-6')}>
+                <ServerRowIconButton
+                  label="Manage servers"
                   variant="outline"
-                  className="h-10 w-full"
                   onClick={onManageServers}
+                  className="size-10"
                 >
                   <ServerIcon className="size-4" />
-                  Manage servers
-                </Button>
-                <ThemeToggle variant="loginRow" className="h-10 w-full" />
+                </ServerRowIconButton>
+                <ThemeToggle variant="loginRow" className="h-10 min-w-0 flex-1" />
               </div>
             </FieldGroup>
           </div>
