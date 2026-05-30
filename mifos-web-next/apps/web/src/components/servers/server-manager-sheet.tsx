@@ -75,13 +75,9 @@ export function ServerManagerSheet({
                 ? 'Edit server'
                 : 'Fineract servers'}
           </SheetTitle>
-          <SheetDescription>
-            {view.mode === 'list'
-              ? 'Choose the active backend for sign-in. Add, edit, or remove servers as needed.'
-              : view.mode === 'add'
-                ? 'Enter the Fineract API URL and tenant for this instance.'
-                : `Update ${view.server.name}.`}
-          </SheetDescription>
+          {view.mode === 'list' ? (
+            <SheetDescription>Tap a server to use it for sign-in.</SheetDescription>
+          ) : null}
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-4">

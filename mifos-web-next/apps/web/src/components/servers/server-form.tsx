@@ -1,10 +1,17 @@
 'use client';
 
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { isDeprecatedDemoFineractHost } from '@mifos/servers';
 import type { ServerActionResult } from '@/actions/servers';
 
 export interface ServerFormValues {
@@ -15,7 +22,7 @@ export interface ServerFormValues {
 
 const DEFAULT_VALUES: ServerFormValues = {
   name: '',
-  baseUrl: 'https://sandbox.mifos.community',
+  baseUrl: '',
   tenantId: 'default'
 };
 
@@ -31,7 +38,6 @@ export function ServerForm({
   const [values, setValues] = useState(initialValues);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const demoHostWarning = isDeprecatedDemoFineractHost(values.baseUrl);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +53,7 @@ export function ServerForm({
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="server-name">Display name</Label>
+        <Label htmlFor="server-name">Name</Label>
         <Input
           id="server-name"
           placeholder="Production, Sandbox, Local…"
@@ -57,23 +63,21 @@ export function ServerForm({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="server-url">API base URL</Label>
+        <Label htmlFor="server-url">Server URL</Label>
         <Input
           id="server-url"
-          placeholder="https://sandbox.mifos.community or https://host:8443"
+          placeholder="https://my-server.org"
           value={values.baseUrl}
           onChange={(e) => setValues((v) => ({ ...v, baseUrl: e.target.value }))}
           required
           autoComplete="off"
         />
         <p className="text-xs text-muted-foreground">
-          Host only (same as the legacy web app) or full path ending in
-          /fineract-provider/api/v1. Tenant must match your Fineract instance. For the public sandbox
-          use https://sandbox.mifos.community with tenant default and mifos / password.
+          Hostname only, or include the path (e.g. …/fineract-provider/api/v1).
         </p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="server-tenant">Tenant ID</Label>
+        <Label htmlFor="server-tenant">Tenant</Label>
         <Input
           id="server-tenant"
           placeholder="default"
@@ -82,11 +86,6 @@ export function ServerForm({
           required
         />
       </div>
-      {demoHostWarning ? (
-        <p className="text-sm text-amber-800 dark:text-amber-300" role="status">
-          demo.mifos.community no longer accepts mifos/password. Use https://sandbox.mifos.community.
-        </p>
-      ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? 'Saving…' : submitLabel}
