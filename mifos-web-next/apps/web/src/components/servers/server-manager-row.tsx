@@ -1,11 +1,20 @@
 'use client';
 
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 import { useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
 import {
-  ServerHealthIndicator,
+  SERVER_STATUS_LIGHT_CLASS,
   type ServerHealthSnapshot
 } from '@/components/servers/server-health-indicator';
+import { ServerRowDetailsTooltip } from '@/components/servers/server-row-details-tooltip';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { deleteServerAction, selectServerAction } from '@/actions/servers';
@@ -26,23 +35,18 @@ export function ServerManagerRow({
   const [pending, startTransition] = useTransition();
 
   return (
-    <li className="rounded-lg border border-border p-4">
-      <div className="flex flex-col gap-3">
-        <div className="flex gap-3">
-          <ServerStatusLight health={health} className="mt-1" />
-          <div className="min-w-0 flex-1">
-            <p className="font-medium">
-              {server.name}
-              {isActive ? (
-                <span className="ml-2 text-xs font-normal text-primary">(active)</span>
-              ) : null}
-            </p>
-            <ServerHealthIndicator health={health} className="mt-1" />
-            <p className="mt-1 text-xs text-muted-foreground">Tenant: {server.tenantId}</p>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">{server.baseUrl}</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 pl-5">
+    <li className="rounded-lg border border-border p-3">
+      <div className="flex items-center gap-2">
+        <ServerRowDetailsTooltip server={server} health={health} isActive={isActive}>
+          <ServerStatusLight health={health} />
+          <span className="min-w-0 flex-1 truncate font-medium">
+            {server.name}
+            {isActive ? (
+              <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
+            ) : null}
+          </span>
+        </ServerRowDetailsTooltip>
+        <div className="flex shrink-0 flex-wrap justify-end gap-1">
           {!isActive ? (
             <Button
               type="button"
@@ -97,17 +101,20 @@ function ServerStatusLight({
     return (
       <span
         className={cn('size-3 shrink-0 rounded-full bg-muted-foreground/30', className)}
-        title="Status not checked yet"
+        aria-hidden
       />
     );
   }
 
-  const lampClass =
-    health.status === 'probing'
-      ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.75)] animate-pulse'
-      : health.status === 'healthy'
-        ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.55)]'
-        : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.55)]';
-
-  return <span className={cn('size-3 shrink-0 rounded-full', lampClass, className)} />;
+  return (
+    <span
+      className={cn(
+        'size-3 shrink-0 rounded-full',
+        SERVER_STATUS_LIGHT_CLASS[health.status],
+        className
+      )}
+      role="status"
+      aria-label={health.status}
+    />
+  );
 }

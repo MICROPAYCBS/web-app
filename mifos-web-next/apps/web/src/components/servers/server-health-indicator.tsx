@@ -24,7 +24,7 @@ const LIGHT_CLASS: Record<Exclude<ServerHealthUiStatus, 'idle'>, string> = {
   unhealthy: 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]'
 };
 
-function statusLabel(health: ServerHealthSnapshot): string {
+export function getServerHealthLabel(health: ServerHealthSnapshot): string | null {
   switch (health.status) {
     case 'probing':
       return 'Checking Fineract…';
@@ -33,9 +33,11 @@ function statusLabel(health: ServerHealthSnapshot): string {
     case 'unhealthy':
       return health.message ?? 'Fineract unreachable';
     default:
-      return '';
+      return null;
   }
 }
+
+export const SERVER_STATUS_LIGHT_CLASS = LIGHT_CLASS;
 
 export function ServerHealthIndicator({
   health,
@@ -48,16 +50,16 @@ export function ServerHealthIndicator({
     return null;
   }
 
-  const label = statusLabel(health);
+  const label = getServerHealthLabel(health);
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <span
         className={cn('size-2.5 shrink-0 rounded-full', LIGHT_CLASS[health.status])}
         role="status"
-        aria-label={label}
+        aria-label={label ?? undefined}
       />
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs text-muted-foreground">{label ?? ''}</span>
     </div>
   );
 }
