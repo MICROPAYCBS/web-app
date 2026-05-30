@@ -2,7 +2,6 @@
 
 import { useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
-import { Button } from '@/components/ui/button';
 import { selectServerAndGoToLoginAction } from '@/actions/servers';
 import { cn } from '@/lib/utils';
 

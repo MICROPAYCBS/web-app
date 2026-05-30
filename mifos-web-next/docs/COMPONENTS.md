@@ -90,3 +90,16 @@ Use plain shadcn `Select` only for static enums with **≤4** options (e.g. Yes/
 
 - [ADR-005](adr/005-ui-composites.md) — composites-only in features
 - [ADR-006](adr/006-form-sheet-pattern.md) — FormSheet decision
+
+## Layout blocks (shadcn)
+
+Installed via `npx shadcn add dashboard-01 login-04` and adapted to Mifos rules (no OAuth, BFF-only auth, nav from `@mifos/routes`).
+
+| Block | Mifos implementation | Notes |
+|-------|----------------------|-------|
+| **login-04** | `app/(auth)/login/page.tsx` + `components/auth/login-form.tsx` | Split card, `Field`/`Card`; Fineract username/password + remember-me; server banner + link to `/connect`; demo block only when `DEMO_SESSION_ENABLED`. |
+| **dashboard-01** | `components/platform/platform-shell.tsx` | `SidebarProvider` + `SidebarInset`; `mifos-app-sidebar`, `mifos-site-header`, `mifos-nav-user`; Quick Find + theme toggle in header. |
+
+**Do not** re-add stock shadcn scaffold routes (`app/login`, `app/dashboard`) or OAuth/sign-up from the block templates.
+
+Primitives added for these blocks live under `components/ui/` (sidebar, field, card, etc.). Feature screens still use **composites** for domain UI; the platform shell is the exception for global chrome.

@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { AppLink } from '@/components/routes/app-link';
 import { LoginForm } from '@/components/auth/login-form';
 import { getActiveFineractServer } from '@/lib/servers/catalog-store';
 import { isDemoSessionEnabled } from '@/lib/session/demo-session';
@@ -23,6 +22,7 @@ function safeRedirectPath(value: string | undefined): string {
   return value;
 }
 
+/** login-04 page shell */
 export default async function LoginPage({
   searchParams
 }: {
@@ -41,35 +41,15 @@ export default async function LoginPage({
     redirect('/connect');
   }
 
-  const demoEnabled = isDemoSessionEnabled();
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="rounded-lg border border-border bg-muted/40 p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Fineract server
-          </p>
-          <p className="mt-1 font-medium">{active.name}</p>
-          <p className="text-xs text-muted-foreground">Tenant: {active.tenantId}</p>
-          <AppLink
-            route="connect"
-            className="mt-3 inline-block text-sm text-primary underline-offset-4 hover:underline"
-          >
-            Change server
-          </AppLink>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
-          <div className="mb-6">
-            <h1 className="text-xl font-semibold">Sign in</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Your credentials are sent to Fineract through this app&apos;s server only — never
-              from the browser directly.
-            </p>
-          </div>
-          <LoginForm redirectTo={redirectTo} demoEnabled={demoEnabled} />
-        </div>
+    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+      <div className="w-full max-w-sm md:max-w-4xl">
+        <LoginForm
+          redirectTo={redirectTo}
+          demoEnabled={isDemoSessionEnabled()}
+          serverName={active.name}
+          tenantId={active.tenantId}
+        />
       </div>
     </div>
   );

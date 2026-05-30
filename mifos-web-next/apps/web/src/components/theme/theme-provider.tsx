@@ -43,17 +43,22 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 /** Runs before paint to avoid theme flash (injected via useServerInsertedHTML). */
 const THEME_BLOCKING_SCRIPT = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}')||'system';var d=document.documentElement;var r=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';d.classList.remove('light','dark');d.classList.add(r);d.style.colorScheme=r}catch(e){}})();`;
 
-function resolveTheme(theme: ThemeSetting): ResolvedTheme {
+function readStoredTheme(): ThemeSetting | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY) as ThemeSetting | null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveTheme(theme: ThemeSetting, systemPrefersDark: boolean): ResolvedTheme {
   if (theme === 'dark') {
     return 'dark';
   }
   if (theme === 'light') {
     return 'light';
   }
-  if (typeof window === 'undefined') {
-    return 'light';
-  }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return systemPrefersDark ? 'dark' : 'light';
 }
 
 function applyResolvedTheme(resolved: ResolvedTheme) {
@@ -69,7 +74,8 @@ export function ThemeProvider({
   enableSystem = true
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<ThemeSetting>(defaultTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme | undefined>(undefined);
+  const [systemPrefersDark, setSystemPrefersDark] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useServerInsertedHTML(() => (
     <script
@@ -79,43 +85,44 @@ export function ThemeProvider({
   ));
 
   useEffect(() => {
-    let stored: ThemeSetting | null = null;
-    try {
-      stored = localStorage.getItem(STORAGE_KEY) as ThemeSetting | null;
-    } catch {
-      stored = null;
-    }
-    const initial = stored ?? defaultTheme;
-    const resolved = resolveTheme(initial);
-    setThemeState(initial);
-    setResolvedTheme(resolved);
-    applyResolvedTheme(resolved);
+    queueMicrotask(() => {
+      const stored = readStoredTheme();
+      setThemeState(stored ?? defaultTheme);
+      setHydrated(true);
+    });
   }, [defaultTheme]);
 
   useEffect(() => {
-    const resolved = resolveTheme(theme);
-    setResolvedTheme(resolved);
-    applyResolvedTheme(resolved);
+    if (!enableSystem) {
+      return;
+    }
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => {
+      setSystemPrefersDark(media.matches);
+    };
+    onChange();
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, [enableSystem]);
+
+  const resolvedTheme = useMemo((): ResolvedTheme | undefined => {
+    if (!hydrated) {
+      return undefined;
+    }
+    return resolveTheme(theme, systemPrefersDark);
+  }, [hydrated, theme, systemPrefersDark]);
+
+  useEffect(() => {
+    if (resolvedTheme === undefined) {
+      return;
+    }
+    applyResolvedTheme(resolvedTheme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
     } catch {
       /* private mode */
     }
-  }, [theme]);
-
-  useEffect(() => {
-    if (!enableSystem || theme !== 'system') {
-      return;
-    }
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = () => {
-      const resolved = resolveTheme('system');
-      setResolvedTheme(resolved);
-      applyResolvedTheme(resolved);
-    };
-    media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
-  }, [theme, enableSystem]);
+  }, [resolvedTheme, theme]);
 
   const setTheme = useCallback((next: ThemeSetting) => {
     setThemeState(next);
