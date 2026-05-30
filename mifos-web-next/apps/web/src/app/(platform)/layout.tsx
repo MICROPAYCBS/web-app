@@ -3,16 +3,21 @@ import { filterNavForUser } from '@mifos/auth';
 import { PlatformHeader } from '@/components/platform/platform-header';
 import { PlatformSidebar } from '@/components/platform/platform-sidebar';
 import { getPublicSession } from '@/lib/session/server';
+import { getActiveFineractServer } from '@/lib/servers/catalog-store';
 import { isRbacEnabled } from '@/lib/session/dev-user';
 import { SessionProvider } from '@/providers/session-provider';
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   const user = await getPublicSession();
+  const activeServer = await getActiveFineractServer();
   const navItems = filterNavForUser(user).map(({ href, label }) => ({ href, label }));
 
   return (
     <SessionProvider user={user} rbacEnabled={isRbacEnabled()}>
-      <AppShell sidebar={<PlatformSidebar items={navItems} />} header={<PlatformHeader />}>
+      <AppShell
+        sidebar={<PlatformSidebar items={navItems} />}
+        header={<PlatformHeader serverName={activeServer?.name} />}
+      >
         {children}
       </AppShell>
     </SessionProvider>

@@ -6,10 +6,9 @@ import { getFineractServerConfig } from './server-config';
 
 /**
  * Fineract HTTP client for server-side use only (RSC, Route Handlers, Server Actions).
- * Auth headers are taken from the httpOnly session — never from the browser.
  */
 export async function createFineractClient(): Promise<FineractClient> {
-  const { baseUrl, tenantId } = getFineractServerConfig();
+  const { baseUrl, tenantId } = await getFineractServerConfig();
   const session = await getServerSession();
 
   return new FineractClient({

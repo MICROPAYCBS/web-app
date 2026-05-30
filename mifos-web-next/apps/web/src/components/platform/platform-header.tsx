@@ -1,19 +1,16 @@
-/**
- * Copyright since 2026 Mifos Initiative
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 'use client';
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 
 const PRESETS = ['default', 'ocean', 'finance'] as const;
 
-export function PlatformHeader() {
+export function PlatformHeader({
+  serverName
+}: {
+  serverName?: string | null;
+}) {
   const { theme, setTheme } = useTheme();
 
   function cyclePreset() {
@@ -25,9 +22,19 @@ export function PlatformHeader() {
   }
 
   return (
-    <div className="flex items-center justify-between px-6 py-3">
-      <h1 className="text-lg font-semibold">Mifos Web</h1>
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-4 px-6 py-3">
+      <div className="min-w-0">
+        <h1 className="text-lg font-semibold">Mifos Web</h1>
+        {serverName ? (
+          <p className="truncate text-xs text-muted-foreground">
+            {serverName} ·{' '}
+            <Link href="/settings/servers" className="underline-offset-4 hover:underline">
+              Server settings
+            </Link>
+          </p>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
         <Button type="button" variant="outline" size="sm" onClick={cyclePreset}>
           Cycle preset
         </Button>
