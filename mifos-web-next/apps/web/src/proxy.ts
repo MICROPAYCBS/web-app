@@ -59,7 +59,9 @@ export function proxy(request: NextRequest) {
   }
 
   if (pathname === CONNECT_PATH) {
-    return NextResponse.redirect(loginUrl(request, { servers: true }));
+    return NextResponse.redirect(
+      loginUrl(request, { servers: !hasActiveServer(request) })
+    );
   }
 
   if (isPublicPath(pathname) || pathname === LOGIN_PATH) {
