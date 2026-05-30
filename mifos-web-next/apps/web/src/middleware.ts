@@ -5,6 +5,7 @@ import { SESSION_COOKIE_NAME } from '@/lib/session/constants';
 import { SERVER_CATALOG_COOKIE } from '@/lib/servers/constants';
 import { parseServerSessionJson } from '@/lib/session/sanitize';
 import type { ServerCatalog } from '@mifos/servers';
+import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 
 const CONNECT_PATH = '/connect';
 const LOGIN_PATH = '/login';
@@ -39,8 +40,10 @@ function readSession(request: NextRequest) {
   if (session) {
     return session;
   }
-  if (process.env.NODE_ENV !== 'production' && process.env.RBAC_DEV_SESSION) {
-    return parseServerSessionJson(process.env.RBAC_DEV_SESSION);
+  if (process.env.RBAC_DEV_SESSION) {
+    if (process.env.NODE_ENV !== 'production' || isDemoSessionEnabled()) {
+      return parseServerSessionJson(process.env.RBAC_DEV_SESSION);
+    }
   }
   return null;
 }

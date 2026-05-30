@@ -59,3 +59,12 @@ cd apps/web && npx shadcn@latest add <component>
 ```
 
 Prefer composites in `@mifos/ui` for patterns used across domains.
+
+
+## Deploy on Vercel
+
+1. Import the repo at [vercel.com/new](https://vercel.com/new).
+2. **Root Directory:** `mifos-web-next/apps/web`
+3. Add environment variables from `apps/web/.env.vercel.example`.
+
+Full guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).

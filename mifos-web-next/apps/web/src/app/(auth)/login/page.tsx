@@ -2,8 +2,11 @@ import { AppLink } from '@/components/routes/app-link';
 import { Button } from '@/components/ui/button';
 import { getActiveFineractServer } from '@/lib/servers/catalog-store';
 import { redirect } from 'next/navigation';
+import { DemoLoginButton } from '@/components/auth/demo-login-button';
+import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 
 export default async function LoginPage() {
+  const demoEnabled = isDemoSessionEnabled();
   const active = await getActiveFineractServer();
   if (!active) {
     redirect('/connect');
@@ -34,9 +37,17 @@ export default async function LoginPage() {
               browser).
             </p>
           </div>
-          <Button className="mt-6 w-full" disabled>
+          <Button className="w-full" disabled>
             Continue (coming soon)
           </Button>
+          {demoEnabled ? (
+            <DemoLoginButton className="mt-3 w-full" />
+          ) : null}
+          {demoEnabled ? (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Preview deployment — demo session only. Do not use in production.
+            </p>
+          ) : null}
         </div>
       </div>
     </div>
