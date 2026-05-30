@@ -15,7 +15,8 @@
     "lint": "npm run lint -w web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write .",
-    "routes:parity": "npx tsx tooling/routes-inventory/generate-parity.ts"
+    "routes:parity": "npx tsx tooling/routes-inventory/generate-parity.ts",
+    "vercel-build": "npm run build -w web"
   },
   "engines": {
     "node": ">=20"

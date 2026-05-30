@@ -18,10 +18,23 @@ If you see **“Mifos® X WebApp”** with **Username / Password** fields and UR
 ## 1. Connect the repository
 
 1. Open [vercel.com/new](https://vercel.com/new) and import your Git repository (`MICROPAYCBS/web-app` or your fork).
-2. Set **Root Directory** to `mifos-web-next/apps/web` (required for the npm workspaces monorepo).
-3. Vercel reads `apps/web/vercel.json` for install/build commands that run from the monorepo root.
+2. Set **Root Directory** (see table below — this fixes “does not have any build scripts”).
+3. Framework preset: **Next.js**. Leave the default **Build Command** empty so `vercel.json` is used, or use the override in the table.
 
-Framework preset should be **Next.js**. No custom output directory is needed.
+### Root Directory (important)
+
+| Your repo layout | Vercel **Root Directory** | Build runs |
+|------------------|---------------------------|------------|
+| `web-app` repo with `mifos-web-next/` folder (this repo) | **`mifos-web-next`** | `npm run build` at monorepo root |
+| Standalone clone of only `mifos-web-next` | **`.`** (leave empty) | same |
+| Only if the above fails | `apps/web` | `npm run build` in `apps/web` (install still runs from monorepo root via `vercel.json`) |
+
+Do **not** use `mifos-web-next/apps/web` when the project is the full `web-app` repository — Vercel often cannot see workspace `build` scripts there. Use **`mifos-web-next`** instead.
+
+Config files:
+
+- `mifos-web-next/vercel.json` — used when Root Directory is `mifos-web-next`
+- `mifos-web-next/apps/web/vercel.json` — used when Root Directory is `apps/web`
 
 ## 2. Environment variables
 
