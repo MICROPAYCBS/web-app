@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { resolveFineractApiBaseUrl } from '@mifos/servers';
 import { getActiveFineractServer } from '@/lib/servers/catalog-store';
 
 export interface FineractServerConfig {
@@ -17,7 +18,7 @@ export async function getFineractServerConfig(): Promise<FineractServerConfig> {
     throw new Error('NO_ACTIVE_SERVER');
   }
   return {
-    baseUrl: active.baseUrl,
+    baseUrl: resolveFineractApiBaseUrl(active.baseUrl),
     tenantId: active.tenantId,
     serverName: active.name
   };

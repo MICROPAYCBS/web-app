@@ -1,5 +1,10 @@
 export type { FineractServerProfile, ServerCatalog, UpsertServerInput } from './types';
-export { normalizeBaseUrl, normalizeServerInput, createServerId } from './normalize';
+export {
+  normalizeBaseUrl,
+  normalizeServerInput,
+  createServerId,
+  resolveFineractApiBaseUrl
+} from './normalize';
 export {
   emptyCatalog,
   getActiveServer,

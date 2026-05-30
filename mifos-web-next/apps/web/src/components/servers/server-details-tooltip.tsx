@@ -18,6 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 export type ServerDetails = Pick<FineractServerProfile, 'name' | 'tenantId' | 'baseUrl'>;
 
@@ -47,18 +48,23 @@ export function ServerDetailsTooltip({
   health,
   isActive,
   side = 'left',
+  className,
   children
 }: {
   server: ServerDetails;
   health?: ServerHealthSnapshot;
   isActive?: boolean;
   side?: 'top' | 'right' | 'bottom' | 'left';
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
     <Tooltip>
       <TooltipTrigger
-        className="w-full cursor-default rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className={cn(
+          'w-full cursor-default rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          className
+        )}
         type="button"
       >
         {children}

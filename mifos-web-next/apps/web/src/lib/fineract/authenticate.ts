@@ -93,6 +93,12 @@ export async function authenticateFineract(
         'INVALID_CREDENTIALS'
       );
     }
+    if (res.status === 404) {
+      throw new AuthenticationError(
+        'Fineract sign-in URL was not found. Use an API base URL ending in /fineract-provider/api/v1.',
+        'SERVER'
+      );
+    }
     throw new AuthenticationError(
       body?.defaultUserMessage ?? `Authentication failed (HTTP ${res.status}).`,
       'SERVER'

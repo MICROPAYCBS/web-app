@@ -80,13 +80,13 @@ export function LoginForm({
                 </p>
               </div>
 
+              {canSignIn && activeServer ? (
+                <LoginActiveServer server={activeServer} health={serverHealth} className="mt-4" />
+              ) : null}
+
               {canSignIn ? (
                 <form action={formAction} className="mt-4 space-y-4">
                   <input type="hidden" name="redirectTo" value={redirectTo} />
-
-                  {activeServer ? (
-                    <LoginActiveServer server={activeServer} health={serverHealth} />
-                  ) : null}
 
                   <Field>
                     <FieldLabel htmlFor="username">Username</FieldLabel>
