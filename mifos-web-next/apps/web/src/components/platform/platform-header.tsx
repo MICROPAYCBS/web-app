@@ -13,12 +13,12 @@ import { AppLink } from '@/components/routes/app-link';
 import { useNavigation } from '@/components/platform/navigation-provider';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/theme/theme-provider';
 
 const PRESETS = ['default', 'ocean', 'finance'] as const;
 
 export function PlatformHeader({ serverName }: { serverName?: string | null }) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const { openQuickFind } = useNavigation();
 
   function cyclePreset() {
@@ -54,7 +54,7 @@ export function PlatformHeader({ serverName }: { serverName?: string | null }) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
           >
             Toggle theme
           </Button>

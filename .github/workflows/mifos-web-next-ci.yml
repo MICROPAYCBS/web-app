@@ -1,0 +1,29 @@
+name: mifos-web-next CI
+
+on:
+  push:
+    paths:
+      - 'mifos-web-next/**'
+      - '.github/workflows/mifos-web-next-ci.yml'
+  pull_request:
+    paths:
+      - 'mifos-web-next/**'
+      - '.github/workflows/mifos-web-next-ci.yml'
+
+defaults:
+  run:
+    working-directory: mifos-web-next
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mifos-web-next/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build

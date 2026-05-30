@@ -66,6 +66,7 @@ npx vercel --prod        # production deploy
 
 | Issue | Fix |
 |-------|-----|
+| `middleware` deprecation warning | Use `src/proxy.ts` and export `proxy` (see Next.js 16 docs) |
 | Build fails “workspace not found” | Root Directory must be `mifos-web-next/apps/web` |
 | Stuck on Connect | Set `FINERACT_SERVERS` or add a server manually |
 | Stuck on Login | Enable `DEMO_SESSION_ENABLED` + `RBAC_DEV_SESSION` on Preview |

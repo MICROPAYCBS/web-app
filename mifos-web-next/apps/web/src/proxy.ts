@@ -48,7 +48,7 @@ function readSession(request: NextRequest) {
   return null;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/forbidden')) {
