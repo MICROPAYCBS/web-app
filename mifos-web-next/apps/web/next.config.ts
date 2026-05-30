@@ -6,11 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
+
+/** `mifos-web-next/` — workspace packages and lockfile live here, not under `apps/web`. */
+const monorepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: '../..'
+    root: monorepoRoot
   },
   transpilePackages: [
     '@mifos/auth',
