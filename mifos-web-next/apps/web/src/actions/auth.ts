@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {
   authenticateFineract,
@@ -55,11 +56,16 @@ export async function loginAction(
     return { ok: false, message: toLoginErrorMessage(error) };
   }
 
+  revalidatePath('/', 'layout');
   redirect(redirectTo);
 }
 
-/** Clears auth session; keeps server catalog so user can pick another backend. */
+/**
+ * Clears the httpOnly session cookie and redirects to login.
+ * Server catalog is kept so the user can switch backends without re-adding URLs.
+ */
 export async function logoutAction(): Promise<void> {
   await clearSessionCookie();
-  redirect('/login');
+  revalidatePath('/', 'layout');
+  redirect('/login?signedOut=1');
 }

@@ -11,6 +11,10 @@ import { isDemoSessionEnabled } from './demo-session';
 import { parseServerSessionJson, toPublicSession } from './sanitize';
 import type { ServerSession } from './types';
 
+/**
+ * Parses `RBAC_DEV_SESSION` for explicit demo login only (`enterDemoSessionAction`).
+ * Not used as an automatic fallback — sign-out must fully clear access.
+ */
 export function getDevServerSession(): ServerSession | null {
   const raw = process.env.RBAC_DEV_SESSION;
   if (!raw) {
@@ -25,7 +29,7 @@ export function getDevServerSession(): ServerSession | null {
   return null;
 }
 
-/** @deprecated Use getDevServerSession — kept for middleware env parity */
+/** @deprecated Use getDevServerSession — kept for tooling that reads env session JSON */
 export function getDevSessionUser(): SessionUser | null {
   return toPublicSession(getDevServerSession());
 }

@@ -31,6 +31,7 @@ export interface LoginFormProps {
   demoEnabled: boolean;
   serverName: string;
   tenantId: string;
+  signedOut?: boolean;
   className?: string;
 }
 
@@ -42,6 +43,7 @@ export function LoginForm({
   demoEnabled,
   serverName,
   tenantId,
+  signedOut = false,
   className
 }: LoginFormProps) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
@@ -53,6 +55,15 @@ export function LoginForm({
           <form action={formAction} className="p-6 md:p-8">
             <input type="hidden" name="redirectTo" value={redirectTo} />
             <FieldGroup>
+              {signedOut ? (
+                <div
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-center text-sm text-muted-foreground"
+                  role="status"
+                >
+                  You have been signed out.
+                </div>
+              ) : null}
+
               <div className="flex flex-col gap-2 text-center">
                 <h1 className="text-2xl font-bold">Sign in</h1>
                 <p className="text-balance text-sm text-muted-foreground">

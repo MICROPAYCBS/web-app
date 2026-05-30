@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 import { setSessionCookie } from '@/lib/session/cookie';
@@ -26,5 +27,6 @@ export async function enterDemoSessionAction(redirectTo = '/') {
     throw new Error('Invalid RBAC_DEV_SESSION JSON');
   }
   await setSessionCookie(session);
+  revalidatePath('/', 'layout');
   redirect(redirectTo);
 }

@@ -26,10 +26,11 @@ function safeRedirectPath(value: string | undefined): string {
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<{ from?: string; signedOut?: string }>;
 }) {
   const params = await searchParams;
   const redirectTo = safeRedirectPath(params.from);
+  const signedOut = params.signedOut === '1';
   const session = await getServerSession();
 
   if (session) {
@@ -46,6 +47,7 @@ export default async function LoginPage({
       <div className="w-full max-w-sm md:max-w-4xl">
         <LoginForm
           redirectTo={redirectTo}
+          signedOut={signedOut}
           demoEnabled={isDemoSessionEnabled()}
           serverName={active.name}
           tenantId={active.tenantId}

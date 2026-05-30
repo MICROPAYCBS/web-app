@@ -5,7 +5,6 @@ import { SESSION_COOKIE_NAME } from '@/lib/session/constants';
 import { SERVER_CATALOG_COOKIE } from '@/lib/servers/constants';
 import { parseServerSessionJson } from '@/lib/session/sanitize';
 import type { ServerCatalog } from '@mifos/servers';
-import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 
 const CONNECT_PATH = '/connect';
 const LOGIN_PATH = '/login';
@@ -36,16 +35,7 @@ function hasActiveServer(request: NextRequest): boolean {
 
 function readSession(request: NextRequest) {
   const raw = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = parseServerSessionJson(raw);
-  if (session) {
-    return session;
-  }
-  if (process.env.RBAC_DEV_SESSION) {
-    if (process.env.NODE_ENV !== 'production' || isDemoSessionEnabled()) {
-      return parseServerSessionJson(process.env.RBAC_DEV_SESSION);
-    }
-  }
-  return null;
+  return parseServerSessionJson(raw);
 }
 
 export function proxy(request: NextRequest) {

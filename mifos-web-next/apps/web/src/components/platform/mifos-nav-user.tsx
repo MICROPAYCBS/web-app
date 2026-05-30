@@ -8,15 +8,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { useTransition } from 'react';
-import { LogOutIcon, MoreVerticalIcon } from 'lucide-react';
-import { logoutAction } from '@/actions/auth';
+import { MoreVerticalIcon } from 'lucide-react';
 import { useSession } from '@mifos/auth';
+import { SignOutMenuItem } from '@/components/auth/sign-out-control';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
@@ -31,7 +29,6 @@ import {
 export function MifosNavUser() {
   const { user } = useSession();
   const { isMobile } = useSidebar();
-  const [pending, startTransition] = useTransition();
 
   if (!user) {
     return null;
@@ -44,13 +41,7 @@ export function MifosNavUser() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="aria-expanded:bg-muted"
-                disabled={pending}
-              />
-            }
+            render={<SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />}
           >
             <Avatar className="size-8 rounded-lg">
               <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
@@ -76,13 +67,7 @@ export function MifosNavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => startTransition(() => logoutAction())}
-            >
-              <LogOutIcon className="size-4" />
-              Sign out
-            </DropdownMenuItem>
+            <SignOutMenuItem />
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

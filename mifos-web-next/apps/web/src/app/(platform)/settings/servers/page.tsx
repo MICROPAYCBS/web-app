@@ -2,8 +2,7 @@ import { AppLink } from '@/components/routes/app-link';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { ServerForm } from '@/components/servers/server-form';
 import { addServerAction } from '@/actions/servers';
-import { logoutAction } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
+import { SignOutButton } from '@/components/auth/sign-out-control';
 import { ServerSettingsRow } from '@/components/servers/server-settings-row';
 
 export default async function ServerSettingsPage() {
@@ -21,11 +20,7 @@ export default async function ServerSettingsPage() {
         </p>
       </div>
 
-      <form action={logoutAction}>
-        <Button type="submit" variant="outline">
-          Sign out
-        </Button>
-      </form>
+      <SignOutButton variant="outline" />
 
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Configured servers</h3>
