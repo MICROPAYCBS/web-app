@@ -7,14 +7,16 @@
  */
 
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono, Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { AppProviders } from '@/providers/app-providers';
+import { SHADCN_PRESET_CODE } from '@/lib/theme-config';
+import { cn } from '@/lib/utils';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin']
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans'
 });
 
 const geistMono = Geist_Mono({
@@ -35,8 +37,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      data-preset="default"
+      className={cn('h-full antialiased font-sans', inter.variable, geistMono.variable)}
+      data-shadcn-preset={SHADCN_PRESET_CODE}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

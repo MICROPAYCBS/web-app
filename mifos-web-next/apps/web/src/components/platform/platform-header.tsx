@@ -11,23 +11,11 @@
 import { Search } from 'lucide-react';
 import { AppLink } from '@/components/routes/app-link';
 import { useNavigation } from '@/components/platform/navigation-provider';
-import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Kbd } from '@/components/ui/kbd';
-import { useTheme } from '@/components/theme/theme-provider';
-
-const PRESETS = ['default', 'ocean', 'finance'] as const;
 
 export function PlatformHeader({ serverName }: { serverName?: string | null }) {
-  const { resolvedTheme, setTheme } = useTheme();
   const { openQuickFind } = useNavigation();
-
-  function cyclePreset() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-preset') ?? 'default';
-    const idx = PRESETS.indexOf(current as (typeof PRESETS)[number]);
-    const next = PRESETS[(idx + 1) % PRESETS.length];
-    html.setAttribute('data-preset', next);
-  }
 
   return (
     <div className="flex flex-col gap-3 px-4 py-3 sm:px-6">
@@ -46,19 +34,7 @@ export function PlatformHeader({ serverName }: { serverName?: string | null }) {
             </p>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={cyclePreset}>
-            Cycle preset
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-          >
-            Toggle theme
-          </Button>
-        </div>
+        <ThemeToggle />
       </div>
       <button
         type="button"
