@@ -11,21 +11,21 @@
 import type { FineractServerProfile } from '@mifos/servers';
 import type { ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
 import { ServerDetailsTooltip } from '@/components/servers/server-details-tooltip';
+import { ServerHealthBadge } from '@/components/servers/server-health-badge';
 
-export function ServerRowDetailsTooltip({
+export function LoginActiveServer({
   server,
-  health,
-  isActive,
-  children
+  health
 }: {
   server: FineractServerProfile;
   health?: ServerHealthSnapshot;
-  isActive?: boolean;
-  children: React.ReactNode;
 }) {
   return (
-    <ServerDetailsTooltip server={server} health={health} isActive={isActive}>
-      <span className="flex min-w-0 flex-1 items-center gap-3">{children}</span>
+    <ServerDetailsTooltip server={server} health={health} side="top">
+      <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+        <span className="min-w-0 truncate font-medium">{server.name}</span>
+        <ServerHealthBadge health={health} />
+      </div>
     </ServerDetailsTooltip>
   );
 }

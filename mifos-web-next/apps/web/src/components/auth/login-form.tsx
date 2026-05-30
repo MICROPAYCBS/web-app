@@ -14,7 +14,8 @@ import { ServerIcon } from 'lucide-react';
 import { loginAction, type LoginFormState } from '@/actions/auth';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
-import { ServerHealthIndicator, type ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
+import { LoginActiveServer } from '@/components/auth/login-active-server';
+import type { ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,6 +26,7 @@ import {
   FieldSeparator
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import type { FineractServerProfile } from '@mifos/servers';
 import { cn } from '@/lib/utils';
 
 const initialState: LoginFormState = { ok: true };
@@ -32,8 +34,7 @@ const initialState: LoginFormState = { ok: true };
 export interface LoginFormProps {
   redirectTo: string;
   demoEnabled: boolean;
-  serverName: string;
-  tenantId: string;
+  activeServer?: FineractServerProfile;
   signedOut?: boolean;
   canSignIn?: boolean;
   onManageServers: () => void;
@@ -47,8 +48,7 @@ export interface LoginFormProps {
 export function LoginForm({
   redirectTo,
   demoEnabled,
-  serverName,
-  tenantId,
+  activeServer,
   signedOut = false,
   canSignIn = true,
   onManageServers,
@@ -84,13 +84,9 @@ export function LoginForm({
                 <form action={formAction} className="mt-4 space-y-4">
                   <input type="hidden" name="redirectTo" value={redirectTo} />
 
-                  <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-sm">
-                    <p className="font-medium">{serverName}</p>
-                    {serverHealth && serverHealth.status !== 'idle' ? (
-                      <ServerHealthIndicator health={serverHealth} className="mt-1" />
-                    ) : null}
-                    <p className="mt-1 text-xs text-muted-foreground">Tenant: {tenantId}</p>
-                  </div>
+                  {activeServer ? (
+                    <LoginActiveServer server={activeServer} health={serverHealth} />
+                  ) : null}
 
                   <Field>
                     <FieldLabel htmlFor="username">Username</FieldLabel>

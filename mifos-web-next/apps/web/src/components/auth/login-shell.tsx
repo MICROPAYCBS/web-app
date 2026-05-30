@@ -39,8 +39,7 @@ export function LoginShell({
         signedOut={signedOut}
         demoEnabled={demoEnabled}
         canSignIn={Boolean(active)}
-        serverName={active?.name ?? 'No server selected'}
-        tenantId={active?.tenantId ?? '—'}
+        activeServer={active}
         onManageServers={() => setServersOpen(true)}
         serverHealth={active ? getHealth(active.id) : undefined}
       />
