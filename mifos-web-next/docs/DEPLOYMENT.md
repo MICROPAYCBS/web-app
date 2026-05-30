@@ -2,6 +2,19 @@
 
 Host **mifos-web-next** on [Vercel](https://vercel.com) for preview URLs on every push and a stable production URL as the app matures.
 
+
+## Wrong app on your Vercel URL?
+
+If you see **“Mifos® X WebApp”** with **Username / Password** fields and URLs like `/#/login`, that is the **legacy Angular** app from the repo root — **not** `mifos-web-next`.
+
+| Legacy (Angular) | Greenfield (this app) |
+|------------------|------------------------|
+| `https://yoursite.vercel.app/#/login` | `https://yoursite.vercel.app/login` |
+| Username + password on page | Connect → server picker → demo session / future OAuth |
+| Title “Mifos® X WebApp” | Title “Mifos Web” |
+
+**Fix:** In Vercel → Project → Settings → General, set **Root Directory** to `mifos-web-next/apps/web`, redeploy. Or create a **new** Vercel project for the Next app so Angular and Next can coexist.
+
 ## 1. Connect the repository
 
 1. Open [vercel.com/new](https://vercel.com/new) and import your Git repository (`MICROPAYCBS/web-app` or your fork).
