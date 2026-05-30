@@ -23,21 +23,21 @@ Private, solo-maintained — see [PROJECT.md](PROJECT.md) and [ADR-004](adr/004-
 ## Layered architecture
 
 ```text
+ Browser ──► /api/* & Server Actions (same origin)
+                    │
+                    ▼
 ┌─────────────────────────────────────────┐
-│  apps/web (routes, Server Actions)      │
+│  apps/web server (BFF, RBAC, session)   │
+│  createFineractClient() [server-only]   │
 ├─────────────────────────────────────────┤
-│  @mifos/ui (AppShell, DataTable, …)     │
-├─────────────────────────────────────────┤
-│  @mifos/validation (Zod + manifests)    │
-│  @mifos/api-client (Fineract HTTP)      │
-│  @mifos/domain (money, helpers)         │
-│  @mifos/i18n (error codes)              │
-│  @mifos/themes (CSS presets)            │
+│  @mifos/validation · @mifos/auth · …    │
 └─────────────────────────────────────────┘
-           │
+           │ server-to-server
            ▼
     Apache Fineract REST API
 ```
+
+See [BFF.md](BFF.md). The browser never calls Fineract directly.
 
 ## Validation pipeline
 

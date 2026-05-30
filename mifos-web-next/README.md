@@ -1,69 +1,61 @@
-# Mifos Web Next
+# AGENTS.md — Mifos Web Next
 
-> **Private project** — solo-maintained. Not affiliated with or contributed to the [Mifos community](https://mifos.org) web-app at this stage. See [docs/PROJECT.md](docs/PROJECT.md).
+Instructions for AI agents working in this repository.
 
-Greenfield [Apache Fineract](https://fineract.apache.org/) web client built with **Next.js 16.2.6**, **shadcn/ui**, and a **preset-driven** design system.
+## Project context
 
-- **Behavioral reference:** [openMF/web-app](https://github.com/openMF/web-app) (read-only)
-- **Validation source of truth:** Fineract Java/API rules (not web-app-only checks)
+**Private, solo-maintained** Fineract UI. Not a community contribution to [openMF/web-app](https://github.com/openMF/web-app). See [docs/PROJECT.md](docs/PROJECT.md).
 
-## Stack
+**Next.js 16.2.6**, App Router only, **shadcn/ui** with **preset-based** theming (`@mifos/themes`).
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Next.js 16.2.6 (App Router, Turbopack) |
-| UI | shadcn/ui + Tailwind CSS v4 |
-| Theming | `@mifos/themes` presets (`data-preset` + `next-themes`) |
-| Forms | React Hook Form + Zod (`@mifos/validation`) |
-| API | `@mifos/api-client` |
-| Data fetching | TanStack Query + Server Components |
+## Monorepo
 
-## Repository layout
+| Package | Purpose |
+|---------|---------|
+| `apps/web` | Next.js app — routes, providers, shadcn components |
+| `@mifos/api-client` | Fineract REST client |
+| `@mifos/validation` | Zod schemas + `manifests/*.json` (Fineract-sourced rules) |
+| `@mifos/domain` | Pure TS (money, permissions helpers) |
+| `@mifos/i18n` | Fineract globalisation codes |
+| `@mifos/themes` | CSS presets — swap LAF via `data-preset` on `<html>` |
+| `@mifos/auth` | RBAC: `can`, `<Can>`, nav/route manifests |
+| `@mifos/ui` | Composite UI (AppShell, DataTable, …) |
 
-```
-mifos-web-next/
-├── apps/web/              # Next.js application
-├── packages/
-│   ├── api-client/        # Fineract HTTP client
-│   ├── domain/            # Money, dates, pure helpers
-│   ├── i18n/              # Fineract error code messages
-│   ├── themes/            # LAF CSS presets
-│   ├── ui/                # Composite components (AppShell, …)
-│   └── validation/        # Zod schemas + Fineract manifests
-├── docs/                  # Architecture, ADRs, parity matrix
-├── tooling/               # Route inventory, Fineract rule extractor
-└── reference/             # Pin web-app + fineract clones (gitignored)
-```
+## Rules
 
-## Getting started
+1. **No hardcoded colors** in components — use semantic Tailwind tokens (`bg-background`, `text-primary`, …).
+2. **Every write form** must have a Zod schema in `@mifos/validation` and a manifest entry citing Fineract Java sources.
+3. **Validate on server** (Server Actions) with the same Zod schema as the client.
+4. **Map Fineract API errors** via `mapFineractErrors` + `translateFineractCode`.
+5. Use **decimal.js** (via `@mifos/domain`) for money — never JavaScript `number` for amounts.
+6. **Simple forms (1–7 fields)** use `FormSheet` (shadcn Sheet) with Cancel/Submit in the footer — see `docs/COMPONENTS.md` and ADR-006.
+7. **RBAC:** register permissions in `@mifos/auth`; use `<Can>` + `assertCan()` — see `docs/RBAC.md`.
+8. Update **parity matrix** (`docs/parity/`) when shipping a route.
+9. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md`).
+10. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
+
+## Reference repos
+
+Pin in `reference/` (not committed):
+
+- `reference/web-app` — behavior and routes (reference only)
+- `reference/fineract` — validation source of truth
+
+## Commands
 
 ```bash
-cd mifos-web-next
-npm install
-cp apps/web/.env.example apps/web/.env.local
 npm run dev
+npm run build
+npm run lint
+npm run typecheck
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Use **Cycle preset** in the header to switch `default` / `ocean` / `finance` LAF presets.
+## UI
 
-## Scripts
+Add shadcn components from `apps/web`:
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start `apps/web` with Turbopack |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript across workspaces |
+```bash
+cd apps/web && npx shadcn@latest add <component>
+```
 
-## Documentation
-
-- [Project charter (private)](docs/PROJECT.md)
-- [RBAC](docs/RBAC.md)
-- [UI components & FormSheet](docs/COMPONENTS.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [ADR index](docs/adr/README.md)
-- [Parity tracking](docs/parity/README.md)
-
-## License
-
-Private repository. All rights reserved by the maintainer unless otherwise noted in [LICENSE](LICENSE).
+Prefer composites in `@mifos/ui` for patterns used across domains.

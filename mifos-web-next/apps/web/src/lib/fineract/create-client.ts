@@ -1,0 +1,31 @@
+import 'server-only';
+
+import { FineractClient } from '@mifos/api-client';
+import { getServerSession } from '@/lib/session/server';
+import { getFineractServerConfig } from './server-config';
+
+/**
+ * Fineract HTTP client for server-side use only (RSC, Route Handlers, Server Actions).
+ * Auth headers are taken from the httpOnly session — never from the browser.
+ */
+export async function createFineractClient(): Promise<FineractClient> {
+  const { baseUrl, tenantId } = getFineractServerConfig();
+  const session = await getServerSession();
+
+  return new FineractClient({
+    baseUrl,
+    tenantId,
+    getAuthHeader: async () => {
+      if (!session) {
+        return null;
+      }
+      if (session.accessToken) {
+        return `Bearer ${session.accessToken}`;
+      }
+      if (session.base64EncodedAuthenticationKey) {
+        return `Basic ${session.base64EncodedAuthenticationKey}`;
+      }
+      return null;
+    }
+  });
+}

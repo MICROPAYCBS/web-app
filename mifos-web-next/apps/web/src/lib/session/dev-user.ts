@@ -1,11 +1,8 @@
-import { parseSessionJson } from '@mifos/auth';
 import type { SessionUser } from '@mifos/auth';
+import { parseServerSessionJson, toPublicSession } from './sanitize';
+import type { ServerSession } from './types';
 
-/**
- * Development-only session when login is not implemented yet.
- * Set RBAC_DEV_SESSION to JSON matching SessionUser.
- */
-export function getDevSessionUser(): SessionUser | null {
+export function getDevServerSession(): ServerSession | null {
   if (process.env.NODE_ENV === 'production') {
     return null;
   }
@@ -13,7 +10,12 @@ export function getDevSessionUser(): SessionUser | null {
   if (!raw) {
     return null;
   }
-  return parseSessionJson(raw);
+  return parseServerSessionJson(raw);
+}
+
+/** @deprecated Use getDevServerSession — kept for middleware env parity */
+export function getDevSessionUser(): SessionUser | null {
+  return toPublicSession(getDevServerSession());
 }
 
 export function isRbacEnabled(): boolean {

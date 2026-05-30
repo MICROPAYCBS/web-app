@@ -1,21 +1,17 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import {
-  can,
-  getRoutePermission,
-  isPublicPath,
-  parseSessionJson
-} from '@mifos/auth';
+import { can, getRoutePermission, isPublicPath } from '@mifos/auth';
 import { SESSION_COOKIE_NAME } from '@/lib/session/constants';
+import { parseServerSessionJson } from '@/lib/session/sanitize';
 
 function readSession(request: NextRequest) {
   const raw = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = parseSessionJson(raw);
+  const session = parseServerSessionJson(raw);
   if (session) {
     return session;
   }
   if (process.env.NODE_ENV !== 'production' && process.env.RBAC_DEV_SESSION) {
-    return parseSessionJson(process.env.RBAC_DEV_SESSION);
+    return parseServerSessionJson(process.env.RBAC_DEV_SESSION);
   }
   return null;
 }
@@ -42,9 +38,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const required = getRoutePermission(pathname);
-  if (required && !can(session, required)) {
-    return NextResponse.redirect(new URL('/forbidden', request.url));
+  // UI routes — API routes enforce permissions in Route Handlers
+  if (!pathname.startsWith('/api')) {
+    const required = getRoutePermission(pathname);
+    if (required && !can(session, required)) {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
   }
 
   return NextResponse.next();
