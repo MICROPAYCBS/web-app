@@ -1,0 +1,18 @@
+/**
+ * Ocean preset — swap LAF by setting data-preset="ocean" on <html>.
+ */
+[data-preset='ocean'] {
+  --primary: oklch(0.55 0.18 250);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.55 0.18 250);
+  --sidebar-primary: oklch(0.55 0.18 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+}
+
+[data-preset='ocean'].dark {
+  --primary: oklch(0.72 0.14 250);
+  --primary-foreground: oklch(0.15 0.02 250);
+  --ring: oklch(0.72 0.14 250);
+  --sidebar-primary: oklch(0.72 0.14 250);
+  --sidebar-primary-foreground: oklch(0.15 0.02 250);
+}

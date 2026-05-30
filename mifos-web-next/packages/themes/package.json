@@ -1,0 +1,12 @@
+{
+  "name": "@mifos/themes",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MPL-2.0",
+  "exports": {
+    "./presets/default.css": "./presets/default.css",
+    "./presets/ocean.css": "./presets/ocean.css",
+    "./presets/finance.css": "./presets/finance.css"
+  },
+  "files": ["presets"]
+}
