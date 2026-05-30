@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
@@ -60,14 +61,18 @@ export function MifosNavUser() {
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="px-2 py-1.5 text-sm">
-                <p className="font-medium">{user.username}</p>
-                <p className="text-xs text-muted-foreground">User ID {user.userId}</p>
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="px-2 py-1.5 text-sm">
+                  <p className="font-medium">{user.username}</p>
+                  <p className="text-xs text-muted-foreground">User ID {user.userId}</p>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <SignOutMenuItem />
+            <DropdownMenuGroup>
+              <SignOutMenuItem />
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
