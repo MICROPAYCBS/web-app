@@ -5,8 +5,7 @@ Fineract **basic authentication** via the app BFF. The browser never calls `POST
 ## Flow
 
 ```text
-1. /connect     — pick Fineract server (catalog cookie)
-2. /login       — username + password form
+1. /login       — pick Fineract server (sheet) + username + password form
 3. Server Action — POST {baseUrl}/authentication (tenant header)
 4. httpOnly cookie mifos-session — user + permissions + base64EncodedAuthenticationKey
 5. BFF routes   — Authorization: Basic {key} on server-side fetch

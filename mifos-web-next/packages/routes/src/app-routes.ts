@@ -29,7 +29,7 @@ export const APP_ROUTES = {
     quickFind: false,
     requiresServer: false,
     requiresAuth: false,
-    parity: { status: 'done', notes: 'Greenfield server selection' }
+    parity: { status: 'done', notes: 'Redirects to /login?servers=1' }
   },
   login: {
     id: 'login',
@@ -39,7 +39,7 @@ export const APP_ROUTES = {
     domain: 'auth',
     public: true,
     quickFind: false,
-    requiresServer: true,
+    requiresServer: false,
     requiresAuth: false,
     parity: { status: 'in_progress', webAppRef: 'login' }
   },

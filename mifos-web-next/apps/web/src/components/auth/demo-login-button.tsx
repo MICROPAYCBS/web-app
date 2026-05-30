@@ -12,7 +12,7 @@ import { useTransition } from 'react';
 import { enterDemoSessionAction } from '@/actions/demo-login';
 import { Button } from '@/components/ui/button';
 
-export function DemoLoginButton({ className }: { className?: string }) {
+export function DemoLoginButton({ className, disabled }: { className?: string; disabled?: boolean }) {
   const [pending, startTransition] = useTransition();
 
   return (
@@ -20,7 +20,7 @@ export function DemoLoginButton({ className }: { className?: string }) {
       type="button"
       variant="secondary"
       className={className}
-      disabled={pending}
+      disabled={pending || disabled}
       onClick={() => startTransition(() => enterDemoSessionAction('/'))}
     >
       {pending ? 'Starting demo…' : 'Continue with demo session'}

@@ -5,17 +5,17 @@ Users work with a **named list** of Fineract backends (URL + tenant). The active
 ## UX flow
 
 ```text
-First visit → /connect (empty state → add server)
+First visit → /login (Manage Fineract servers sheet)
            → select server → /login
            → (future) authenticate → app
 
 Signed in  → header shows server name → /settings/servers
-Sign out   → /login (same server pre-selected) → Change server → /connect
+Sign out   → /login (same server pre-selected) → Manage servers sheet
 ```
 
 | Screen | Purpose |
 |--------|---------|
-| `/connect` | Empty state + list + add server (required before first login) |
+| `/login?servers=1` | Opens server manager sheet (add / edit / delete) |
 | `/login` | Sign in to **active** server; link to change server |
 | `/settings/servers` | Add / edit / remove / switch active; sign out |
 
@@ -37,8 +37,8 @@ Used only when the catalog cookie is empty (first visit).
 
 ## Middleware
 
-1. No active server → redirect `/connect` (except `/connect`, `/login` checks)
-2. `/login` without active server → `/connect`
+1. No active server → redirect `/login?servers=1`
+2. `/connect` → `/login?servers=1` (legacy URL)
 3. No auth session → `/login`
 4. Otherwise → app + RBAC
 

@@ -39,6 +39,17 @@ function readSession(request: NextRequest) {
   return parseServerSessionJson(raw);
 }
 
+function loginUrl(request: NextRequest, options?: { from?: string; servers?: boolean }) {
+  const login = new URL(LOGIN_PATH, request.url);
+  if (options?.from) {
+    login.searchParams.set('from', options.from);
+  }
+  if (options?.servers) {
+    login.searchParams.set('servers', '1');
+  }
+  return login;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -46,22 +57,23 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isPublicPath(pathname) || pathname === CONNECT_PATH) {
-    if (pathname === LOGIN_PATH && !hasActiveServer(request)) {
-      return NextResponse.redirect(new URL(CONNECT_PATH, request.url));
-    }
+  if (pathname === CONNECT_PATH) {
+    return NextResponse.redirect(loginUrl(request, { servers: true }));
+  }
+
+  if (isPublicPath(pathname) || pathname === LOGIN_PATH) {
     return NextResponse.next();
   }
 
   if (!hasActiveServer(request)) {
-    return NextResponse.redirect(new URL(CONNECT_PATH, request.url));
+    return NextResponse.redirect(
+      loginUrl(request, { from: pathname, servers: true })
+    );
   }
 
   const session = readSession(request);
   if (!session) {
-    const login = new URL(LOGIN_PATH, request.url);
-    login.searchParams.set('from', pathname);
-    return NextResponse.redirect(login);
+    return NextResponse.redirect(loginUrl(request, { from: pathname }));
   }
 
   if (process.env.RBAC_ENABLED === 'false') {

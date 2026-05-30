@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
 import { Button } from '@/components/ui/button';
@@ -12,11 +13,14 @@ import {
 
 export function ServerSettingsRow({
   server,
-  isActive
+  isActive,
+  onChanged
 }: {
   server: FineractServerProfile;
   isActive: boolean;
+  onChanged?: () => void;
 }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -26,11 +30,16 @@ export function ServerSettingsRow({
     tenantId: server.tenantId
   };
 
+  function afterSuccess() {
+    router.refresh();
+    onChanged?.();
+  }
+
   return (
     <li className="rounded-lg border border-border p-4">
       {!editing ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="font-medium">
               {server.name}
               {isActive ? (
@@ -49,7 +58,10 @@ export function ServerSettingsRow({
                 disabled={pending}
                 onClick={() =>
                   startTransition(async () => {
-                    await selectServerAction(server.id);
+                    const result = await selectServerAction(server.id);
+                    if (result.ok) {
+                      afterSuccess();
+                    }
                   })
                 }
               >
@@ -66,7 +78,10 @@ export function ServerSettingsRow({
               disabled={pending}
               onClick={() =>
                 startTransition(async () => {
-                  await deleteServerAction(server.id);
+                  const result = await deleteServerAction(server.id);
+                  if (result.ok) {
+                    afterSuccess();
+                  }
                 })
               }
             >
@@ -83,6 +98,7 @@ export function ServerSettingsRow({
               const result = await updateServerAction(server.id, values);
               if (result.ok) {
                 setEditing(false);
+                afterSuccess();
               }
               return result;
             }}

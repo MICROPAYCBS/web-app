@@ -27,9 +27,9 @@ export default async function ServerSettingsPage() {
         {catalog.servers.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No servers yet.{' '}
-            <AppLink route="connect" className="text-primary underline-offset-4 hover:underline">
-              Add one on the connect screen
-            </AppLink>
+            <a href="/login?servers=1" className="text-primary underline-offset-4 hover:underline">
+              Add one when signing in
+            </a>
             .
           </p>
         ) : (

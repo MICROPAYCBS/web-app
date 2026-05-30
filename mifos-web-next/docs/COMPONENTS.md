@@ -97,7 +97,7 @@ Installed via `npx shadcn add dashboard-01 login-04` and adapted to Mifos rules 
 
 | Block | Mifos implementation | Notes |
 |-------|----------------------|-------|
-| **login-04** | `app/(auth)/login/page.tsx` + `components/auth/login-form.tsx` | Split card, `Field`/`Card`; Fineract username/password + remember-me; server banner + link to `/connect`; demo block only when `DEMO_SESSION_ENABLED`. |
+| **login-04** | `app/(auth)/login/page.tsx` + `components/auth/login-form.tsx` | Split card, `Field`/`Card`; Fineract username/password + remember-me; server banner + Manage servers sheet; demo block only when `DEMO_SESSION_ENABLED`. |
 | **dashboard-01** | `components/platform/platform-shell.tsx` | `SidebarProvider` + `SidebarInset`; `mifos-app-sidebar`, `mifos-site-header`, `mifos-nav-user`; Quick Find + theme toggle in header. |
 
 **Do not** re-add stock shadcn scaffold routes (`app/login`, `app/dashboard`) or OAuth/sign-up from the block templates.

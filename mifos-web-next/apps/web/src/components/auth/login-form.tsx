@@ -9,9 +9,9 @@
  */
 
 import { useActionState } from 'react';
+import { ServerIcon } from 'lucide-react';
 import { loginAction, type LoginFormState } from '@/actions/auth';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
-import { AppLink } from '@/components/routes/app-link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -32,6 +32,8 @@ export interface LoginFormProps {
   serverName: string;
   tenantId: string;
   signedOut?: boolean;
+  canSignIn?: boolean;
+  onManageServers: () => void;
   className?: string;
 }
 
@@ -44,9 +46,12 @@ export function LoginForm({
   serverName,
   tenantId,
   signedOut = false,
+  canSignIn = true,
+  onManageServers,
   className
 }: LoginFormProps) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
+  const signInDisabled = pending || !canSignIn;
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
@@ -74,12 +79,21 @@ export function LoginForm({
               <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-sm">
                 <p className="font-medium">{serverName}</p>
                 <p className="text-xs text-muted-foreground">Tenant: {tenantId}</p>
-                <AppLink
-                  route="connect"
-                  className="mt-1 inline-block text-xs text-primary underline-offset-4 hover:underline"
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="mt-1 h-auto p-0 text-xs"
+                  onClick={onManageServers}
                 >
-                  Change server
-                </AppLink>
+                  <ServerIcon className="size-3.5" />
+                  Manage servers
+                </Button>
+                {!canSignIn ? (
+                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                    Select or add a Fineract server before signing in.
+                  </p>
+                ) : null}
               </div>
 
               <Field>
@@ -90,7 +104,7 @@ export function LoginForm({
                   type="text"
                   autoComplete="username"
                   required
-                  disabled={pending}
+                  disabled={signInDisabled}
                 />
               </Field>
               <Field>
@@ -101,11 +115,18 @@ export function LoginForm({
                   type="password"
                   autoComplete="current-password"
                   required
-                  disabled={pending}
+                  disabled={signInDisabled}
                 />
               </Field>
               <Field orientation="horizontal">
-                <input type="checkbox" id="remember" name="remember" value="on" disabled={pending} className="size-4 rounded border border-input" />
+                <input
+                  type="checkbox"
+                  id="remember"
+                  name="remember"
+                  value="on"
+                  disabled={signInDisabled}
+                  className="size-4 rounded border border-input"
+                />
                 <FieldLabel htmlFor="remember" className="font-normal">
                   Remember me for 14 days
                 </FieldLabel>
@@ -118,7 +139,7 @@ export function LoginForm({
               ) : null}
 
               <Field>
-                <Button type="submit" className="w-full" disabled={pending}>
+                <Button type="submit" className="w-full" disabled={signInDisabled}>
                   {pending ? 'Signing in…' : 'Sign in'}
                 </Button>
               </Field>
@@ -129,7 +150,7 @@ export function LoginForm({
                     Preview only
                   </FieldSeparator>
                   <Field>
-                    <DemoLoginButton className="w-full" />
+                    <DemoLoginButton className="w-full" disabled={!canSignIn} />
                   </Field>
                 </>
               ) : null}
@@ -141,9 +162,7 @@ export function LoginForm({
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Mifos Web
               </p>
-              <p className="mt-4 text-2xl font-semibold tracking-tight">
-                Apache Fineract®
-              </p>
+              <p className="mt-4 text-2xl font-semibold tracking-tight">Apache Fineract®</p>
               <p className="mt-2 text-sm text-muted-foreground">
                 Modern client for microfinance and core banking — built with Next.js and
                 shadcn/ui.
@@ -156,7 +175,8 @@ export function LoginForm({
         </CardContent>
       </Card>
       <FieldDescription className="px-2 text-center text-xs">
-        By signing in you connect to the Fineract instance selected on the previous step.
+        Use <span className="font-medium">Manage servers</span> to choose or configure your
+        Fineract backend.
       </FieldDescription>
     </div>
   );

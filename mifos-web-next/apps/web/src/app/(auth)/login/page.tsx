@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { LoginForm } from '@/components/auth/login-form';
-import { getActiveFineractServer } from '@/lib/servers/catalog-store';
+import { LoginShell } from '@/components/auth/login-shell';
+import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 import { getServerSession } from '@/lib/session/server';
 import { redirect } from 'next/navigation';
@@ -22,35 +22,33 @@ function safeRedirectPath(value: string | undefined): string {
   return value;
 }
 
-/** login-04 page shell */
+/** login-04 page shell with integrated Fineract server manager sheet */
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ from?: string; signedOut?: string }>;
+  searchParams: Promise<{ from?: string; signedOut?: string; servers?: string }>;
 }) {
   const params = await searchParams;
   const redirectTo = safeRedirectPath(params.from);
   const signedOut = params.signedOut === '1';
+  const openServers = params.servers === '1';
   const session = await getServerSession();
 
   if (session) {
     redirect(redirectTo);
   }
 
-  const active = await getActiveFineractServer();
-  if (!active) {
-    redirect('/connect');
-  }
+  const catalog = await getServerCatalog();
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
       <div className="w-full max-w-sm md:max-w-4xl">
-        <LoginForm
+        <LoginShell
+          catalog={catalog}
           redirectTo={redirectTo}
           signedOut={signedOut}
           demoEnabled={isDemoSessionEnabled()}
-          serverName={active.name}
-          tenantId={active.tenantId}
+          initialServersOpen={openServers}
         />
       </div>
     </div>
