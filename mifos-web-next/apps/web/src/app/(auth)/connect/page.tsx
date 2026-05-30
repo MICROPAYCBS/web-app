@@ -1,6 +1,5 @@
 import { ServerList } from '@/components/servers/server-list';
-import { ServerForm } from '@/components/servers/server-form';
-import { addServerAction } from '@/actions/servers';
+import { ConnectServerForm } from '@/components/servers/connect-server-form';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { AppLink } from '@/components/routes/app-link';
 import { buttonVariants } from '@/components/ui/button';
@@ -40,12 +39,7 @@ export default async function ConnectPage() {
           <h2 className="mb-4 text-sm font-semibold">
             {isEmpty ? 'Add your first server' : 'Add another server'}
           </h2>
-          <ServerForm
-            submitLabel={isEmpty ? 'Save and continue' : 'Add server'}
-            onSubmit={async (values) =>
-              addServerAction(values, { redirectToLogin: isEmpty })
-            }
-          />
+          <ConnectServerForm isEmpty={isEmpty} />
         </div>
 
         {!isEmpty && catalog.activeServerId ? (
