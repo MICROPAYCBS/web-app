@@ -9,9 +9,7 @@
  */
 
 import Image from 'next/image';
-import { useActionState, useEffect, useRef } from 'react';
 import { ServerIcon } from 'lucide-react';
-import { loginAction, type LoginFormState } from '@/actions/auth';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
 import { LoginActiveServer } from '@/components/auth/login-active-server';
@@ -29,13 +27,12 @@ import { Input } from '@/components/ui/input';
 import type { FineractServerProfile } from '@mifos/servers';
 import { cn } from '@/lib/utils';
 
-const initialLoginState: LoginFormState = { ok: true };
-
 export interface LoginFormProps {
   redirectTo: string;
   demoEnabled: boolean;
   activeServer?: FineractServerProfile;
   signedOut?: boolean;
+  loginError?: string | null;
   canSignIn?: boolean;
   onManageServers: () => void;
   serverHealth?: ServerHealthSnapshot;
@@ -43,32 +40,19 @@ export interface LoginFormProps {
 }
 
 /**
- * login-04 layout — Fineract credentials via server action (no OAuth / sign-up).
+ * login-04 layout — credentials POST to /api/auth/login (Route Handler, not server action).
  */
 export function LoginForm({
   redirectTo,
   demoEnabled,
   activeServer,
   signedOut = false,
+  loginError = null,
   canSignIn = true,
   onManageServers,
   serverHealth,
   className
 }: LoginFormProps) {
-  const [state, formAction, pending] = useActionState(loginAction, initialLoginState);
-  const navigatedRef = useRef(false);
-  const signInDisabled = pending || !canSignIn;
-
-  useEffect(() => {
-    if (!state.ok || !state.redirectTo || navigatedRef.current) {
-      return;
-    }
-    navigatedRef.current = true;
-    window.location.assign(state.redirectTo);
-  }, [state]);
-
-  const errorMessage = !pending && state.ok === false ? state.message : null;
-
   return (
     <div className={cn('flex flex-col gap-6', className)}>
       <Card className="overflow-hidden p-0">
@@ -96,7 +80,7 @@ export function LoginForm({
               ) : null}
 
               {canSignIn ? (
-                <form action={formAction} className="mt-4 space-y-4">
+                <form method="post" action="/api/auth/login" className="mt-4 space-y-4">
                   <input type="hidden" name="redirectTo" value={redirectTo} />
 
                   <Field>
@@ -107,7 +91,6 @@ export function LoginForm({
                       type="text"
                       autoComplete="username"
                       required
-                      disabled={signInDisabled}
                     />
                   </Field>
                   <Field>
@@ -118,7 +101,6 @@ export function LoginForm({
                       type="password"
                       autoComplete="current-password"
                       required
-                      disabled={signInDisabled}
                     />
                   </Field>
                   <Field orientation="horizontal">
@@ -127,7 +109,6 @@ export function LoginForm({
                       id="remember"
                       name="remember"
                       value="on"
-                      disabled={signInDisabled}
                       className="size-4 rounded border border-input"
                     />
                     <FieldLabel htmlFor="remember" className="font-normal">
@@ -135,15 +116,15 @@ export function LoginForm({
                     </FieldLabel>
                   </Field>
 
-                  {errorMessage ? (
+                  {loginError ? (
                     <p className="text-sm text-destructive" role="alert">
-                      {errorMessage}
+                      {loginError}
                     </p>
                   ) : null}
 
                   <Field>
-                    <Button type="submit" className="w-full" disabled={signInDisabled}>
-                      {pending ? 'Signing in…' : 'Sign in'}
+                    <Button type="submit" className="w-full">
+                      Sign in
                     </Button>
                   </Field>
 

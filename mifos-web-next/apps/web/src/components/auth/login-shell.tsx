@@ -20,12 +20,14 @@ export function LoginShell({
   redirectTo,
   signedOut,
   demoEnabled,
+  loginError = null,
   initialServersOpen = false
 }: {
   catalog: ServerCatalog;
   redirectTo: string;
   signedOut: boolean;
   demoEnabled: boolean;
+  loginError?: string | null;
   /** Only true when URL has ?servers=1 and no active server (see login page). */
   initialServersOpen?: boolean;
 }) {
@@ -60,6 +62,7 @@ export function LoginShell({
         redirectTo={redirectTo}
         signedOut={signedOut}
         demoEnabled={demoEnabled}
+        loginError={loginError}
         canSignIn={Boolean(active)}
         activeServer={active}
         onManageServers={() => setServersOpen(true)}

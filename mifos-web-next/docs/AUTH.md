@@ -57,6 +57,7 @@ Client-side TanStack Query caches are cleared before navigating to `/api/auth/lo
 |-------|----------|
 | Fineract login | `apps/web/src/lib/fineract/authenticate.ts` |
 | Cookie helpers | `apps/web/src/lib/session/cookie.ts` |
-| Server Action | `apps/web/src/actions/auth.ts` |
+| Login Route Handler | `apps/web/src/app/api/auth/login/route.ts` |
+| Legacy server action | `apps/web/src/actions/auth.ts` |
 | Login UI | `apps/web/src/components/auth/login-form.tsx` |
 | Route guard | `apps/web/src/proxy.ts` |

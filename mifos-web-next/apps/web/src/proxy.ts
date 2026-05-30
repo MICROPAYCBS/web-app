@@ -9,6 +9,7 @@ import type { ServerCatalog } from '@mifos/servers';
 const CONNECT_PATH = '/connect';
 const LOGIN_PATH = '/login';
 const LOGOUT_PATH = '/api/auth/logout';
+const LOGIN_API_PATH = '/api/auth/login';
 const SERVER_HEALTH_PATH = '/api/servers/health';
 
 function readCatalog(request: NextRequest): ServerCatalog | null {
@@ -54,7 +55,12 @@ function loginUrl(request: NextRequest, options?: { from?: string; servers?: boo
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith('/forbidden') || pathname === LOGOUT_PATH || pathname === SERVER_HEALTH_PATH) {
+  if (
+    pathname.startsWith('/forbidden') ||
+    pathname === LOGOUT_PATH ||
+    pathname === LOGIN_API_PATH ||
+    pathname === SERVER_HEALTH_PATH
+  ) {
     return NextResponse.next();
   }
 

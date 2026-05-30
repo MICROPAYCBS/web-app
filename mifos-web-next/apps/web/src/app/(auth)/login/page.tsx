@@ -27,6 +27,7 @@ function buildLoginQuery(params: {
   from?: string;
   signedOut?: string;
   servers?: string;
+  error?: string;
 }): string {
   const q = new URLSearchParams();
   if (params.from) {
@@ -38,6 +39,9 @@ function buildLoginQuery(params: {
   if (params.servers === '1') {
     q.set('servers', '1');
   }
+  if (params.error) {
+    q.set('error', params.error);
+  }
   const s = q.toString();
   return s ? `?${s}` : '';
 }
@@ -46,11 +50,12 @@ function buildLoginQuery(params: {
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ from?: string; signedOut?: string; servers?: string }>;
+  searchParams: Promise<{ from?: string; signedOut?: string; servers?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const redirectTo = safeRedirectPath(params.from);
   const signedOut = params.signedOut === '1';
+  const loginError = params.error?.trim() || null;
   const session = await getServerSession();
 
   if (session) {
@@ -61,10 +66,13 @@ export default async function LoginPage({
   const active = getActiveServer(catalog);
   const hasActiveServer = active !== null;
 
-  // Drop ?servers=1 when a server is already selected (refresh/bookmark hygiene).
   if (params.servers === '1' && hasActiveServer) {
     redirect(
-      `/login${buildLoginQuery({ from: params.from, signedOut: params.signedOut })}`
+      `/login${buildLoginQuery({
+        from: params.from,
+        signedOut: params.signedOut,
+        error: params.error
+      })}`
     );
   }
 
@@ -77,6 +85,7 @@ export default async function LoginPage({
           catalog={catalog}
           redirectTo={redirectTo}
           signedOut={signedOut}
+          loginError={loginError}
           demoEnabled={isDemoSessionEnabled()}
           initialServersOpen={openServers}
         />
