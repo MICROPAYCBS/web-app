@@ -9,9 +9,9 @@
  */
 
 import Image from 'next/image';
-import { useState, useTransition } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { ServerIcon } from 'lucide-react';
-import { loginAction } from '@/actions/auth';
+import { loginAction, type LoginFormState } from '@/actions/auth';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
 import { LoginActiveServer } from '@/components/auth/login-active-server';
@@ -28,6 +28,8 @@ import {
 import { Input } from '@/components/ui/input';
 import type { FineractServerProfile } from '@mifos/servers';
 import { cn } from '@/lib/utils';
+
+const initialLoginState: LoginFormState = { ok: true };
 
 export interface LoginFormProps {
   redirectTo: string;
@@ -53,29 +55,19 @@ export function LoginForm({
   serverHealth,
   className
 }: LoginFormProps) {
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [state, formAction, pending] = useActionState(loginAction, initialLoginState);
+  const navigatedRef = useRef(false);
   const signInDisabled = pending || !canSignIn;
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    const form = event.currentTarget;
-    const formData = new FormData(form);
+  useEffect(() => {
+    if (!state.ok || !state.redirectTo || navigatedRef.current) {
+      return;
+    }
+    navigatedRef.current = true;
+    window.location.assign(state.redirectTo);
+  }, [state]);
 
-    startTransition(async () => {
-      const result = await loginAction(null, formData);
-      if (result.ok && result.redirectTo) {
-        // Full navigation so the session cookie from the server action is applied
-        // before proxy / RSC run (client router.replace is unreliable here).
-        window.location.assign(result.redirectTo);
-        return;
-      }
-      if (!result.ok && result.message) {
-        setError(result.message);
-      }
-    });
-  }
+  const errorMessage = !pending && state.ok === false ? state.message : null;
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
@@ -104,7 +96,7 @@ export function LoginForm({
               ) : null}
 
               {canSignIn ? (
-                <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+                <form action={formAction} className="mt-4 space-y-4">
                   <input type="hidden" name="redirectTo" value={redirectTo} />
 
                   <Field>
@@ -143,9 +135,9 @@ export function LoginForm({
                     </FieldLabel>
                   </Field>
 
-                  {error ? (
+                  {errorMessage ? (
                     <p className="text-sm text-destructive" role="alert">
-                      {error}
+                      {errorMessage}
                     </p>
                   ) : null}
 

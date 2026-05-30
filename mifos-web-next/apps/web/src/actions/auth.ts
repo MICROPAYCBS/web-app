@@ -20,7 +20,7 @@ import { setSessionCookie } from '@/lib/session/cookie';
 export type LoginFormState = {
   ok: boolean;
   message?: string;
-  /** Set on success; client navigates (useActionState + redirect() is unreliable). */
+  /** Set on success; client performs full navigation. */
   redirectTo?: string;
 };
 
@@ -34,15 +34,39 @@ function safeRedirectPath(value: string | null | undefined): string {
   return value;
 }
 
-/** Fineract basic auth → httpOnly session cookie. */
+function resolveFormData(
+  prev: LoginFormState | FormData | null,
+  formDataMaybe?: FormData
+): FormData | null {
+  if (prev instanceof FormData) {
+    return prev;
+  }
+  if (formDataMaybe instanceof FormData) {
+    return formDataMaybe;
+  }
+  return null;
+}
+
+function readLoginFields(formData: FormData) {
+  return {
+    username: String(formData.get('username') ?? '').trim(),
+    password: String(formData.get('password') ?? ''),
+    remember: formData.get('remember') === 'on',
+    redirectTo: safeRedirectPath(String(formData.get('redirectTo') ?? '/'))
+  };
+}
+
+/** Fineract basic auth → httpOnly session cookie. Use with useActionState + form action. */
 export async function loginAction(
-  _prev: LoginFormState | null,
-  formData: FormData
+  prev: LoginFormState | FormData | null,
+  formDataMaybe?: FormData
 ): Promise<LoginFormState> {
-  const username = String(formData.get('username') ?? '').trim();
-  const password = String(formData.get('password') ?? '');
-  const remember = formData.get('remember') === 'on';
-  const redirectTo = safeRedirectPath(String(formData.get('redirectTo') ?? '/'));
+  const formData = resolveFormData(prev, formDataMaybe);
+  if (!formData) {
+    return { ok: false, message: 'Invalid form submission.' };
+  }
+
+  const { username, password, remember, redirectTo } = readLoginFields(formData);
 
   if (!username || !password) {
     return { ok: false, message: 'Username and password are required.' };
