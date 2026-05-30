@@ -8,23 +8,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ServerIcon } from 'lucide-react';
+import { ChevronRightIcon, ServerIcon } from 'lucide-react';
 
-/** Shown in place of username/password when no Fineract server is active. */
-export function LoginNoServerEmpty() {
+/** Opens server management — shown when no Fineract server is active. */
+export function LoginNoServerEmpty({ onManageServers }: { onManageServers: () => void }) {
   return (
-    <div
-      className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 px-6 py-10 text-center"
-      role="status"
+    <button
+      type="button"
+      onClick={onManageServers}
+      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-10 text-sm font-medium transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-        <ServerIcon className="size-6 text-muted-foreground" aria-hidden />
-      </div>
-      <h2 className="mt-4 text-lg font-semibold">No Fineract server selected</h2>
-      <p className="mt-2 max-w-sm text-sm text-balance text-muted-foreground">
-        Add or choose a backend below before signing in. Your credentials are sent to Fineract
-        through this app&apos;s server only.
-      </p>
-    </div>
+      <ServerIcon className="size-5 text-muted-foreground" aria-hidden />
+      Choose a Fineract server
+      <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
+    </button>
   );
 }

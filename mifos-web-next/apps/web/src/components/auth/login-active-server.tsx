@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { ChevronRightIcon } from 'lucide-react';
 import { getFineractApiHost, isDeprecatedDemoFineractHost } from '@mifos/servers';
 import type { FineractServerProfile } from '@mifos/servers';
 import type { ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
@@ -18,28 +19,40 @@ import { ServerHealthBadge } from '@/components/servers/server-health-badge';
 export function LoginActiveServer({
   server,
   health,
+  onManageServers,
   className
 }: {
   server: FineractServerProfile;
   health?: ServerHealthSnapshot;
+  onManageServers: () => void;
   className?: string;
 }) {
   return (
-    <ServerDetailsTooltip server={server} health={health} side="top" className={cn(className)}>
-      <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
-        <span className="min-w-0">
-          <span className="block truncate font-medium">{server.name}</span>
-          <span
-            className={cn(
-              'block truncate text-xs text-muted-foreground',
-              isDeprecatedDemoFineractHost(server.baseUrl) && 'text-amber-700 dark:text-amber-400'
-            )}
-          >
-            {getFineractApiHost(server.baseUrl)}
-          </span>
+    <ServerDetailsTooltip
+      server={server}
+      health={health}
+      side="top"
+      onClick={onManageServers}
+      className={cn(
+        'flex cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted/70',
+        className
+      )}
+    >
+      <span className="min-w-0">
+        <span className="block truncate font-medium">{server.name}</span>
+        <span
+          className={cn(
+            'block truncate text-xs text-muted-foreground',
+            isDeprecatedDemoFineractHost(server.baseUrl) && 'text-amber-700 dark:text-amber-400'
+          )}
+        >
+          {getFineractApiHost(server.baseUrl)}
         </span>
+      </span>
+      <span className="flex shrink-0 items-center gap-1.5">
         <ServerHealthBadge health={health} />
-      </div>
+        <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
+      </span>
     </ServerDetailsTooltip>
   );
 }

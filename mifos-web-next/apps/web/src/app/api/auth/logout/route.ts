@@ -9,7 +9,6 @@ export const dynamic = 'force-dynamic';
  */
 function logoutRedirect(request: Request) {
   const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('signedOut', '1');
   const response = NextResponse.redirect(loginUrl);
   const attrs = sessionCookieAttributes(0);
   response.cookies.set(attrs.name, '', {

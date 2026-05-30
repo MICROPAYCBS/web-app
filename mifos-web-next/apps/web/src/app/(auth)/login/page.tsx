@@ -25,16 +25,12 @@ function safeRedirectPath(value: string | undefined): string {
 
 function buildLoginQuery(params: {
   from?: string;
-  signedOut?: string;
   servers?: string;
   error?: string;
 }): string {
   const q = new URLSearchParams();
   if (params.from) {
     q.set('from', params.from);
-  }
-  if (params.signedOut === '1') {
-    q.set('signedOut', '1');
   }
   if (params.servers === '1') {
     q.set('servers', '1');
@@ -50,11 +46,10 @@ function buildLoginQuery(params: {
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ from?: string; signedOut?: string; servers?: string; error?: string }>;
+  searchParams: Promise<{ from?: string; servers?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const redirectTo = safeRedirectPath(params.from);
-  const signedOut = params.signedOut === '1';
   const loginError = params.error?.trim() || null;
   const session = await getServerSession();
 
@@ -70,7 +65,6 @@ export default async function LoginPage({
     redirect(
       `/login${buildLoginQuery({
         from: params.from,
-        signedOut: params.signedOut,
         error: params.error
       })}`
     );
@@ -84,7 +78,6 @@ export default async function LoginPage({
         <LoginShell
           catalog={catalog}
           redirectTo={redirectTo}
-          signedOut={signedOut}
           loginError={loginError}
           demoEnabled={isDemoSessionEnabled()}
           initialServersOpen={openServers}

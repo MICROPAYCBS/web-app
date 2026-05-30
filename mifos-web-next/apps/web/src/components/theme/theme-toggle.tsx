@@ -24,16 +24,31 @@ export function ThemeToggle({
   variant = 'default'
 }: {
   className?: string;
-  variant?: 'default' | 'loginRow';
+  /** `icon` — single control toggles light/dark (login and compact surfaces). */
+  variant?: 'default' | 'icon';
 }) {
-  const { theme, setTheme } = useTheme();
-  const isLoginRow = variant === 'loginRow';
+  const { theme, setTheme, resolvedTheme } = useTheme();
+
+  if (variant === 'icon') {
+    const isDark = resolvedTheme === 'dark';
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className={cn('text-muted-foreground', className)}
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      >
+        {isDark ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
+      </Button>
+    );
+  }
 
   return (
     <div
       className={cn(
         'inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5',
-        isLoginRow && 'h-10 w-full',
         className
       )}
       role="group"
@@ -46,8 +61,7 @@ export function ThemeToggle({
           variant="ghost"
           size="sm"
           className={cn(
-            'text-muted-foreground',
-            isLoginRow ? 'h-9 min-w-0 flex-1 gap-1 px-1.5' : 'h-8 gap-1.5 px-2.5',
+            'h-8 gap-1.5 px-2.5 text-muted-foreground',
             theme === value && 'bg-background text-foreground shadow-sm'
           )}
           aria-pressed={theme === value}
@@ -55,7 +69,7 @@ export function ThemeToggle({
           onClick={() => setTheme(value)}
         >
           <Icon className="size-4 shrink-0" aria-hidden />
-          <span className={cn(isLoginRow ? 'sr-only' : 'hidden sm:inline')}>{label}</span>
+          <span className="hidden sm:inline">{label}</span>
         </Button>
       ))}
     </div>

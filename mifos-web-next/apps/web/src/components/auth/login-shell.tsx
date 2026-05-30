@@ -18,14 +18,12 @@ import { useServerHealth } from '@/components/servers/use-server-health';
 export function LoginShell({
   catalog,
   redirectTo,
-  signedOut,
   demoEnabled,
   loginError = null,
   initialServersOpen = false
 }: {
   catalog: ServerCatalog;
   redirectTo: string;
-  signedOut: boolean;
   demoEnabled: boolean;
   loginError?: string | null;
   /** Only true when URL has ?servers=1 and no active server (see login page). */
@@ -60,7 +58,6 @@ export function LoginShell({
     <>
       <LoginForm
         redirectTo={redirectTo}
-        signedOut={signedOut}
         demoEnabled={demoEnabled}
         loginError={loginError}
         canSignIn={Boolean(active)}

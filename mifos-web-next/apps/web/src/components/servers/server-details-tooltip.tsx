@@ -49,6 +49,7 @@ export function ServerDetailsTooltip({
   isActive,
   side = 'left',
   className,
+  onClick,
   children
 }: {
   server: ServerDetails;
@@ -56,16 +57,18 @@ export function ServerDetailsTooltip({
   isActive?: boolean;
   side?: 'top' | 'right' | 'bottom' | 'left';
   className?: string;
+  onClick?: () => void;
   children: React.ReactNode;
 }) {
   return (
     <Tooltip>
       <TooltipTrigger
+        type="button"
+        onClick={onClick}
         className={cn(
-          'w-full cursor-default rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
           className
         )}
-        type="button"
       >
         {children}
       </TooltipTrigger>
