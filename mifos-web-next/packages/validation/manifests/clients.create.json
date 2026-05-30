@@ -1,0 +1,14 @@
+{
+  "command": "clients.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.client.command.CreateClientCommand",
+    "org.apache.fineract.portfolio.client.domain.Client"
+  ],
+  "fields": {
+    "firstname": { "required": true, "maxLength": 50 },
+    "lastname": { "required": true, "maxLength": 50 },
+    "officeId": { "required": true },
+    "active": { "required": false },
+    "activationDate": { "requiredWhen": "active=true" }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "generatedAt": "2026-05-30T04:48:08.294Z",
+  "summary": {
+    "todo": 2,
+    "in_progress": 4,
+    "done": 3,
+    "n/a": 0
+  },
+  "routes": [
+    {
+      "id": "dashboard",
+      "path": "/",
+      "domain": "platform",
+      "label": "Dashboard",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "home/dashboard"
+    },
+    {
+      "id": "connect",
+      "path": "/connect",
+      "domain": "auth",
+      "label": "Connect",
+      "kind": "page",
+      "status": "done",
+      "notes": "Greenfield server selection"
+    },
+    {
+      "id": "login",
+      "path": "/login",
+      "domain": "auth",
+      "label": "Sign in",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "login"
+    },
+    {
+      "id": "forbidden",
+      "path": "/forbidden",
+      "domain": "platform",
+      "label": "Access denied",
+      "kind": "page",
+      "status": "done"
+    },
+    {
+      "id": "callback",
+      "path": "/callback",
+      "domain": "auth",
+      "label": "OAuth callback",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "zitadel/callback"
+    },
+    {
+      "id": "clients",
+      "path": "/clients",
+      "domain": "clients",
+      "label": "Clients",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "clients",
+      "fineractApi": "GET /clients",
+      "schemaId": "clients.create"
+    },
+    {
+      "id": "clientsApi",
+      "path": "/api/clients",
+      "domain": "clients",
+      "label": "Clients API (BFF)",
+      "kind": "api",
+      "status": "in_progress",
+      "fineractApi": "GET /clients"
+    },
+    {
+      "id": "checkerInbox",
+      "path": "/checker-inbox-and-tasks",
+      "domain": "tasks",
+      "label": "Checker inbox",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "tasks/checker-inbox-and-tasks"
+    },
+    {
+      "id": "settingsServers",
+      "path": "/settings/servers",
+      "domain": "settings",
+      "label": "Server settings",
+      "kind": "page",
+      "status": "done",
+      "notes": "Greenfield multi-server"
+    }
+  ]
+}
