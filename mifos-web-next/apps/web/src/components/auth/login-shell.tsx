@@ -12,6 +12,7 @@ import { useState } from 'react';
 import type { ServerCatalog } from '@mifos/servers';
 import { LoginForm } from '@/components/auth/login-form';
 import { ServerManagerSheet } from '@/components/servers/server-manager-sheet';
+import { useServerHealth } from '@/components/servers/use-server-health';
 
 export function LoginShell({
   catalog,
@@ -28,6 +29,8 @@ export function LoginShell({
 }) {
   const [serversOpen, setServersOpen] = useState(initialServersOpen);
   const active = catalog.servers.find((s) => s.id === catalog.activeServerId);
+  const activeList = active ? [active] : [];
+  const { getHealth } = useServerHealth(activeList, Boolean(active));
 
   return (
     <>
@@ -39,6 +42,7 @@ export function LoginShell({
         serverName={active?.name ?? 'No server selected'}
         tenantId={active?.tenantId ?? '—'}
         onManageServers={() => setServersOpen(true)}
+        serverHealth={active ? getHealth(active.id) : undefined}
       />
       <ServerManagerSheet
         catalog={catalog}

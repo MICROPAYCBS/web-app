@@ -14,6 +14,7 @@ import { PlusIcon } from 'lucide-react';
 import type { FineractServerProfile, ServerCatalog } from '@mifos/servers';
 import { addServerAction, updateServerAction } from '@/actions/servers';
 import { ServerManagerRow } from '@/components/servers/server-manager-row';
+import { useServerHealth } from '@/components/servers/use-server-health';
 import { ServerForm, type ServerFormValues } from '@/components/servers/server-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,9 +43,11 @@ export function ServerManagerSheet({
   const router = useRouter();
   const [view, setView] = useState<SheetView>({ mode: 'list' });
   const isEmpty = catalog.servers.length === 0;
+  const { getHealth, refresh: refreshHealth } = useServerHealth(catalog.servers, open && view.mode === 'list');
 
   function refreshAfterMutation() {
     router.refresh();
+    void refreshHealth();
   }
 
   function showList() {
@@ -96,6 +99,7 @@ export function ServerManagerSheet({
                       server={server}
                       isActive={server.id === catalog.activeServerId}
                       onEdit={(s) => setView({ mode: 'edit', server: s })}
+                      health={getHealth(server.id)}
                       onChanged={refreshAfterMutation}
                     />
                   ))}

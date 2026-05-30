@@ -14,6 +14,7 @@ import { ServerIcon } from 'lucide-react';
 import { loginAction, type LoginFormState } from '@/actions/auth';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
+import { ServerHealthIndicator, type ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,6 +37,7 @@ export interface LoginFormProps {
   signedOut?: boolean;
   canSignIn?: boolean;
   onManageServers: () => void;
+  serverHealth?: ServerHealthSnapshot;
   className?: string;
 }
 
@@ -50,6 +52,7 @@ export function LoginForm({
   signedOut = false,
   canSignIn = true,
   onManageServers,
+  serverHealth,
   className
 }: LoginFormProps) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
@@ -83,7 +86,10 @@ export function LoginForm({
 
                   <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-sm">
                     <p className="font-medium">{serverName}</p>
-                    <p className="text-xs text-muted-foreground">Tenant: {tenantId}</p>
+                    {serverHealth && serverHealth.status !== 'idle' ? (
+                      <ServerHealthIndicator health={serverHealth} className="mt-1" />
+                    ) : null}
+                    <p className="mt-1 text-xs text-muted-foreground">Tenant: {tenantId}</p>
                   </div>
 
                   <Field>

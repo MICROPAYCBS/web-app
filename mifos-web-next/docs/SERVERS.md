@@ -50,3 +50,13 @@ Server mutations use **Server Actions** in `apps/web/src/actions/servers.ts` (no
 
 - [BFF.md](BFF.md) — server-to-server Fineract calls
 - `@mifos/servers` — catalog types and helpers
+
+
+## Health status
+
+The app probes each server via Fineract Spring Actuator (BFF-only):
+
+- `GET {provider}/actuator/health` — must return `"status":"UP"`
+- `GET {provider}/actuator/info` — `build.version` shown when healthy
+
+Status lights: **amber** (checking), **green** (healthy + version), **red** (unreachable).
