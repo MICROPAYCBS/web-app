@@ -49,13 +49,18 @@ export function mapAuthenticationToSession(data: FineractAuthenticationResponse)
   };
 }
 
+function invalidCredentialsMessage(serverName: string, tenantId: string, fineractMessage?: string): string {
+  const base = fineractMessage?.trim() || 'Invalid username or password.';
+  return `${base} (${serverName}, tenant: ${tenantId}). Confirm credentials, tenant, and server URL — host-only URLs like https://my-server are OK and match the legacy web app.`;
+}
+
 /**
  * Authenticate against the active Fineract server (BFF — never from the browser).
  */
 export async function authenticateFineract(
   params: AuthenticateParams
 ): Promise<ServerSession> {
-  const { baseUrl, tenantId } = await getFineractServerConfig();
+  const { baseUrl, tenantId, serverName } = await getFineractServerConfig();
   const url = `${baseUrl.replace(/\/$/, '')}/authentication`;
 
   let res: Response;
@@ -75,7 +80,7 @@ export async function authenticateFineract(
     });
   } catch {
     throw new AuthenticationError(
-      'Could not reach the Fineract server. Check the server URL and try again.',
+      `Could not reach ${serverName} at ${baseUrl}. Check the server URL and network.`,
       'SERVER'
     );
   }
@@ -89,18 +94,18 @@ export async function authenticateFineract(
     }
     if (res.status === 401 || res.status === 403) {
       throw new AuthenticationError(
-        body?.defaultUserMessage ?? 'Invalid username or password.',
+        invalidCredentialsMessage(serverName, tenantId, body?.defaultUserMessage),
         'INVALID_CREDENTIALS'
       );
     }
     if (res.status === 404) {
       throw new AuthenticationError(
-        'Fineract sign-in URL was not found. Use an API base URL ending in /fineract-provider/api/v1.',
+        `Fineract sign-in URL not found for ${serverName} (${baseUrl}/authentication). Check the API base URL.`,
         'SERVER'
       );
     }
     throw new AuthenticationError(
-      body?.defaultUserMessage ?? `Authentication failed (HTTP ${res.status}).`,
+      body?.defaultUserMessage ?? `Authentication failed for ${serverName} (HTTP ${res.status}).`,
       'SERVER'
     );
   }

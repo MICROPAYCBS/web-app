@@ -3,7 +3,9 @@ export {
   normalizeBaseUrl,
   normalizeServerInput,
   createServerId,
-  resolveFineractApiBaseUrl
+  resolveFineractApiBaseUrl,
+  normalizeServerProfile,
+  normalizeCatalog
 } from './normalize';
 export {
   emptyCatalog,

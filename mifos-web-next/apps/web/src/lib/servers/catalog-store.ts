@@ -9,7 +9,7 @@ import {
   setActiveServerId,
   upsertServer
 } from '@mifos/servers';
-import { createServerId, normalizeServerInput } from '@mifos/servers';
+import { createServerId, normalizeCatalog, normalizeServerInput } from '@mifos/servers';
 import type { UpsertServerInput } from '@mifos/servers';
 import { SERVER_CATALOG_COOKIE } from './constants';
 import { seedCatalog } from './defaults';
@@ -27,16 +27,17 @@ async function readRawCatalog(): Promise<ServerCatalog> {
     if (!parsed?.servers || !Array.isArray(parsed.servers)) {
       return seedCatalog(emptyCatalog());
     }
-    return {
+    return normalizeCatalog({
       servers: parsed.servers,
       activeServerId: parsed.activeServerId ?? null
-    };
+    });
   } catch {
     return seedCatalog(emptyCatalog());
   }
 }
 
 async function writeCatalog(catalog: ServerCatalog): Promise<void> {
+  catalog = normalizeCatalog(catalog);
   const cookieStore = await cookies();
   cookieStore.set(SERVER_CATALOG_COOKIE, JSON.stringify(catalog), {
     httpOnly: true,

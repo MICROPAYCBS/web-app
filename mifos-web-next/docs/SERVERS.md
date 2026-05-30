@@ -30,8 +30,10 @@ Fineract URLs are stored server-side in this cookie. The browser never calls Fin
 ## Seed servers (optional)
 
 ```bash
-FINERACT_SERVERS='[{"id":"demo","name":"Mifos Demo","baseUrl":"https://demo.mifos.community/fineract-provider/api/v1","tenantId":"default"}]'
+FINERACT_SERVERS='[{"id":"sandbox","name":"Mifos Sandbox","baseUrl":"https://sandbox.mifos.community","tenantId":"default"}]'
 ```
+
+Host-only URLs are expanded to `/fineract-provider/api/v1` automatically (legacy web-app behaviour). Use **sandbox.mifos.community** for the public demo; **demo.mifos.community** no longer accepts mifos/password.
 
 Used only when the catalog cookie is empty (first visit).
 

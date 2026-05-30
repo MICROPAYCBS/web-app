@@ -14,7 +14,7 @@ export interface ServerFormValues {
 
 const DEFAULT_VALUES: ServerFormValues = {
   name: '',
-  baseUrl: 'http://localhost:8443/fineract-provider/api/v1',
+  baseUrl: 'https://sandbox.mifos.community',
   tenantId: 'default'
 };
 
@@ -58,15 +58,16 @@ export function ServerForm({
         <Label htmlFor="server-url">API base URL</Label>
         <Input
           id="server-url"
-          placeholder="https://host/fineract-provider/api/v1"
+          placeholder="https://sandbox.mifos.community or https://host:8443"
           value={values.baseUrl}
           onChange={(e) => setValues((v) => ({ ...v, baseUrl: e.target.value }))}
           required
           autoComplete="off"
         />
         <p className="text-xs text-muted-foreground">
-          Full Fineract API path (no trailing slash). Used only by the app server, not exposed to
-          Fineract from the browser.
+          Host only (same as the legacy web app) or full path ending in
+          /fineract-provider/api/v1. Tenant must match your Fineract instance. For the public sandbox
+          use https://sandbox.mifos.community with tenant default and mifos / password.
         </p>
       </div>
       <div className="space-y-2">
