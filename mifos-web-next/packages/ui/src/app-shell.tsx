@@ -21,7 +21,7 @@ export function AppShell({ children, sidebar, header }: AppShellProps) {
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       {sidebar ? (
-        <aside className="hidden w-64 shrink-0 border-r border-border md:block">{sidebar}</aside>
+        <aside className="hidden w-72 shrink-0 border-r border-border md:block">{sidebar}</aside>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
         {header ? <header className="border-b border-border">{header}</header> : null}

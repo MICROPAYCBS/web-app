@@ -2,35 +2,63 @@ export type RouteKind = 'page' | 'api' | 'layout';
 
 export type ParityStatus = 'todo' | 'in_progress' | 'done' | 'n/a';
 
+export type NavIcon =
+  | 'layout-dashboard'
+  | 'users'
+  | 'user'
+  | 'users-round'
+  | 'building-2'
+  | 'landmark'
+  | 'piggy-bank'
+  | 'wallet'
+  | 'book-open'
+  | 'calculator'
+  | 'building'
+  | 'settings'
+  | 'inbox'
+  | 'search'
+  | 'file-bar-chart'
+  | 'package';
+
+/** Sidebar / Quick Find grouping */
+export type NavGroupId =
+  | 'overview'
+  | 'portfolio'
+  | 'products'
+  | 'accounting'
+  | 'organization'
+  | 'administration';
+
 export interface RouteParity {
   status: ParityStatus;
-  /** e.g. openMF/web-app → src/app/clients/ */
   webAppRef?: string;
-  /** Primary Fineract API for the screen */
   fineractApi?: string;
-  /** Validation manifest command id */
   schemaId?: string;
   notes?: string;
 }
 
 export interface RouteDefinition {
-  /** Stable id for code references (routePath('clients')) */
   id: string;
-  /** App path (no hash) */
   path: string;
   kind: RouteKind;
   label: string;
   domain: string;
-  /** Show in primary sidebar */
   nav?: boolean;
   navOrder?: number;
-  /** No Fineract auth session required */
+  /** Pinned shortcuts row (Clients, Loans, Savings, …) */
+  navFeatured?: boolean;
+  navFeaturedOrder?: number;
+  /** Collapsible sidebar section */
+  navGroup?: NavGroupId;
+  /** Lucide icon name */
+  navIcon?: NavIcon;
+  /** Include in Quick Find (default: page routes that are not public-only) */
+  quickFind?: boolean;
+  /** Extra search terms for Quick Find */
+  keywords?: string[];
   public?: boolean;
-  /** Active Fineract server must be selected (catalog cookie) */
   requiresServer?: boolean;
-  /** Fineract user session required */
   requiresAuth?: boolean;
-  /** Key into packages/auth/permissions.manifest.json */
   permissionKey?: string;
   parity: RouteParity;
 }

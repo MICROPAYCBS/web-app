@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-05-30T04:48:08.294Z",
+  "generatedAt": "2026-05-30T05:04:40.138Z",
   "summary": {
-    "todo": 2,
-    "in_progress": 4,
+    "todo": 7,
+    "in_progress": 7,
     "done": 3,
     "n/a": 0
   },
@@ -63,13 +63,78 @@
       "schemaId": "clients.create"
     },
     {
-      "id": "clientsApi",
-      "path": "/api/clients",
-      "domain": "clients",
-      "label": "Clients API (BFF)",
-      "kind": "api",
+      "id": "groups",
+      "path": "/groups",
+      "domain": "groups",
+      "label": "Groups",
+      "kind": "page",
       "status": "in_progress",
-      "fineractApi": "GET /clients"
+      "webAppRef": "groups"
+    },
+    {
+      "id": "centers",
+      "path": "/centers",
+      "domain": "centers",
+      "label": "Centers",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "centers"
+    },
+    {
+      "id": "loans",
+      "path": "/loans",
+      "domain": "loans",
+      "label": "Loans",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "loans",
+      "fineractApi": "GET /loans"
+    },
+    {
+      "id": "savings",
+      "path": "/savings",
+      "domain": "savings",
+      "label": "Savings accounts",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "savings",
+      "fineractApi": "GET /savingsaccounts"
+    },
+    {
+      "id": "loanProducts",
+      "path": "/products/loan-products",
+      "domain": "products",
+      "label": "Loan products",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "products/loan-products"
+    },
+    {
+      "id": "savingsProducts",
+      "path": "/products/savings-products",
+      "domain": "products",
+      "label": "Savings products",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "products/savings-products"
+    },
+    {
+      "id": "accounting",
+      "path": "/accounting",
+      "domain": "accounting",
+      "label": "Accounting",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting"
+    },
+    {
+      "id": "organization",
+      "path": "/organization",
+      "domain": "organization",
+      "label": "Organization",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization"
     },
     {
       "id": "checkerInbox",
@@ -88,6 +153,15 @@
       "kind": "page",
       "status": "done",
       "notes": "Greenfield multi-server"
+    },
+    {
+      "id": "clientsApi",
+      "path": "/api/clients",
+      "domain": "clients",
+      "label": "Clients API (BFF)",
+      "kind": "api",
+      "status": "in_progress",
+      "fineractApi": "GET /clients"
     }
   ]
 }

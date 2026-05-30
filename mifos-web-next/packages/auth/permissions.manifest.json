@@ -1,17 +1,76 @@
 {
-  "clients.list": { "any": ["READ_CLIENT"] },
-  "clients.create": { "any": ["CREATE_CLIENT"] },
-  "clients.update": { "any": ["UPDATE_CLIENT"] },
-  "navigation": { "any": ["READ_CLIENT"] },
-  "checkerInbox": {
-    "any": ["ALL_FUNCTIONS_READ", "READ_MAKERCHECKER", "APPROVE_LOAN", "APPROVE_LOAN_CHECKER"]
+  "clients.list": {
+    "any": [
+      "READ_CLIENT"
+    ]
   },
-  "collections": { "any": ["READ_COLLECTIONSHEET"] },
-  "accounting": { "any": ["READ_ACCOUNTING"] },
-  "loans.list": { "any": ["READ_LOAN"] },
-  "loans.create": { "any": ["CREATE_LOAN"] },
-  "products.loan": { "any": ["READ_LOANPRODUCT"] },
-  "products.savings": { "any": ["READ_SAVINGSPRODUCT"] },
-  "organization": { "any": ["READ_OFFICE"] },
-  "system": { "any": ["READ_ROLE", "READ_USER"] }
+  "clients.create": {
+    "any": [
+      "CREATE_CLIENT"
+    ]
+  },
+  "clients.update": {
+    "any": [
+      "UPDATE_CLIENT"
+    ]
+  },
+  "navigation": {
+    "any": [
+      "READ_CLIENT"
+    ]
+  },
+  "checkerInbox": {
+    "any": [
+      "ALL_FUNCTIONS_READ",
+      "READ_MAKERCHECKER",
+      "APPROVE_LOAN",
+      "APPROVE_LOAN_CHECKER"
+    ]
+  },
+  "collections": {
+    "any": [
+      "READ_COLLECTIONSHEET"
+    ]
+  },
+  "accounting": {
+    "any": [
+      "READ_ACCOUNTING"
+    ]
+  },
+  "loans.list": {
+    "any": [
+      "READ_LOAN"
+    ]
+  },
+  "loans.create": {
+    "any": [
+      "CREATE_LOAN"
+    ]
+  },
+  "products.loan": {
+    "any": [
+      "READ_LOANPRODUCT"
+    ]
+  },
+  "products.savings": {
+    "any": [
+      "READ_SAVINGSPRODUCT"
+    ]
+  },
+  "organization": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "system": {
+    "any": [
+      "READ_ROLE",
+      "READ_USER"
+    ]
+  },
+  "savings.list": {
+    "any": [
+      "READ_SAVINGSACCOUNT"
+    ]
+  }
 }

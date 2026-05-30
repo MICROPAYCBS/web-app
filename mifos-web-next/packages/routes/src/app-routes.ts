@@ -2,7 +2,7 @@ import type { RouteDefinition } from './types';
 
 /**
  * Canonical route registry — single source of truth.
- * Extend when adding pages; derive nav, RBAC, and parity from here.
+ * Nav: featured row + collapsible groups + Quick Find (see derive-nav.ts).
  */
 export const APP_ROUTES = {
   dashboard: {
@@ -13,6 +13,8 @@ export const APP_ROUTES = {
     domain: 'platform',
     nav: true,
     navOrder: 10,
+    navGroup: 'overview',
+    navIcon: 'layout-dashboard',
     requiresServer: true,
     requiresAuth: true,
     parity: { status: 'in_progress', webAppRef: 'home/dashboard' }
@@ -24,6 +26,7 @@ export const APP_ROUTES = {
     label: 'Connect',
     domain: 'auth',
     public: true,
+    quickFind: false,
     requiresServer: false,
     requiresAuth: false,
     parity: { status: 'done', notes: 'Greenfield server selection' }
@@ -35,6 +38,7 @@ export const APP_ROUTES = {
     label: 'Sign in',
     domain: 'auth',
     public: true,
+    quickFind: false,
     requiresServer: true,
     requiresAuth: false,
     parity: { status: 'in_progress', webAppRef: 'login' }
@@ -46,6 +50,7 @@ export const APP_ROUTES = {
     label: 'Access denied',
     domain: 'platform',
     public: true,
+    quickFind: false,
     requiresServer: true,
     requiresAuth: false,
     parity: { status: 'done' }
@@ -57,6 +62,7 @@ export const APP_ROUTES = {
     label: 'OAuth callback',
     domain: 'auth',
     public: true,
+    quickFind: false,
     requiresServer: true,
     requiresAuth: false,
     parity: { status: 'todo', webAppRef: 'zitadel/callback' }
@@ -68,7 +74,12 @@ export const APP_ROUTES = {
     label: 'Clients',
     domain: 'clients',
     nav: true,
-    navOrder: 20,
+    navOrder: 10,
+    navGroup: 'portfolio',
+    navFeatured: true,
+    navFeaturedOrder: 10,
+    navIcon: 'users',
+    keywords: ['customer', 'borrower', 'member'],
     permissionKey: 'clients.list',
     requiresServer: true,
     requiresAuth: true,
@@ -79,16 +90,136 @@ export const APP_ROUTES = {
       schemaId: 'clients.create'
     }
   },
-  clientsApi: {
-    id: 'clientsApi',
-    path: '/api/clients',
-    kind: 'api',
-    label: 'Clients API (BFF)',
-    domain: 'clients',
+  groups: {
+    id: 'groups',
+    path: '/groups',
+    kind: 'page',
+    label: 'Groups',
+    domain: 'groups',
+    nav: true,
+    navOrder: 20,
+    navGroup: 'portfolio',
+    navIcon: 'users-round',
+    keywords: ['group lending'],
     permissionKey: 'clients.list',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', fineractApi: 'GET /clients' }
+    parity: { status: 'in_progress', webAppRef: 'groups' }
+  },
+  centers: {
+    id: 'centers',
+    path: '/centers',
+    kind: 'page',
+    label: 'Centers',
+    domain: 'centers',
+    nav: true,
+    navOrder: 30,
+    navGroup: 'portfolio',
+    navIcon: 'building-2',
+    permissionKey: 'clients.list',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'todo', webAppRef: 'centers' }
+  },
+  loans: {
+    id: 'loans',
+    path: '/loans',
+    kind: 'page',
+    label: 'Loans',
+    domain: 'loans',
+    nav: true,
+    navOrder: 40,
+    navGroup: 'portfolio',
+    navFeatured: true,
+    navFeaturedOrder: 20,
+    navIcon: 'landmark',
+    keywords: ['loan account', 'credit', 'lending'],
+    permissionKey: 'loans.list',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'in_progress', webAppRef: 'loans', fineractApi: 'GET /loans' }
+  },
+  savings: {
+    id: 'savings',
+    path: '/savings',
+    kind: 'page',
+    label: 'Savings accounts',
+    domain: 'savings',
+    nav: true,
+    navOrder: 50,
+    navGroup: 'portfolio',
+    navFeatured: true,
+    navFeaturedOrder: 30,
+    navIcon: 'piggy-bank',
+    keywords: ['deposit', 'savings account', 'wallet'],
+    permissionKey: 'savings.list',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'in_progress', webAppRef: 'savings', fineractApi: 'GET /savingsaccounts' }
+  },
+  loanProducts: {
+    id: 'loanProducts',
+    path: '/products/loan-products',
+    kind: 'page',
+    label: 'Loan products',
+    domain: 'products',
+    nav: true,
+    navOrder: 10,
+    navGroup: 'products',
+    navIcon: 'book-open',
+    keywords: ['product', 'loan product'],
+    permissionKey: 'products.loan',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'todo', webAppRef: 'products/loan-products' }
+  },
+  savingsProducts: {
+    id: 'savingsProducts',
+    path: '/products/savings-products',
+    kind: 'page',
+    label: 'Savings products',
+    domain: 'products',
+    nav: true,
+    navOrder: 20,
+    navGroup: 'products',
+    navIcon: 'wallet',
+    keywords: ['product', 'savings product'],
+    permissionKey: 'products.savings',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'todo', webAppRef: 'products/savings-products' }
+  },
+  accounting: {
+    id: 'accounting',
+    path: '/accounting',
+    kind: 'page',
+    label: 'Accounting',
+    domain: 'accounting',
+    nav: true,
+    navOrder: 10,
+    navGroup: 'accounting',
+    navIcon: 'calculator',
+    keywords: ['gl', 'journal', 'ledger', 'coa'],
+    permissionKey: 'accounting',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'todo', webAppRef: 'accounting' }
+  },
+  organization: {
+    id: 'organization',
+    path: '/organization',
+    kind: 'page',
+    label: 'Organization',
+    domain: 'organization',
+    nav: true,
+    navOrder: 10,
+    navGroup: 'organization',
+    navIcon: 'building',
+    keywords: ['office', 'staff', 'hierarchy', 'branch'],
+    permissionKey: 'organization',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'todo', webAppRef: 'organization' }
   },
   checkerInbox: {
     id: 'checkerInbox',
@@ -97,7 +228,10 @@ export const APP_ROUTES = {
     label: 'Checker inbox',
     domain: 'tasks',
     nav: true,
-    navOrder: 30,
+    navOrder: 20,
+    navGroup: 'overview',
+    navIcon: 'inbox',
+    keywords: ['maker checker', 'tasks', 'approval'],
     permissionKey: 'checkerInbox',
     requiresServer: true,
     requiresAuth: true,
@@ -109,9 +243,26 @@ export const APP_ROUTES = {
     kind: 'page',
     label: 'Server settings',
     domain: 'settings',
+    nav: true,
+    navOrder: 10,
+    navGroup: 'administration',
+    navIcon: 'settings',
+    keywords: ['fineract', 'connection', 'tenant'],
     requiresServer: true,
     requiresAuth: true,
     parity: { status: 'done', notes: 'Greenfield multi-server' }
+  },
+  clientsApi: {
+    id: 'clientsApi',
+    path: '/api/clients',
+    kind: 'api',
+    label: 'Clients API (BFF)',
+    domain: 'clients',
+    quickFind: false,
+    permissionKey: 'clients.list',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'in_progress', fineractApi: 'GET /clients' }
   }
 } as const satisfies Record<string, RouteDefinition>;
 
