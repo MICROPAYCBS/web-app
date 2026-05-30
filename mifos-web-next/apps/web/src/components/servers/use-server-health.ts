@@ -24,18 +24,47 @@ type ProbePayload = {
 };
 
 function probingMap(servers: FineractServerProfile[]): Record<string, ServerHealthSnapshot> {
+  return Object.fromEntries(servers.map((s) => [s.id, { status: 'probing' as const }]));
+}
+
+function mapProbeResults(
+  servers: FineractServerProfile[],
+  data: ProbePayload
+): Record<string, ServerHealthSnapshot> {
   return Object.fromEntries(
-    servers.map((s) => [s.id, { status: 'probing' as const }])
+    servers.map((s) => {
+      const probe = data.servers[s.id];
+      if (!probe) {
+        return [s.id, { status: 'unhealthy' as const, message: 'No probe result.' }];
+      }
+      if (probe.state === 'healthy') {
+        return [
+          s.id,
+          {
+            status: 'healthy' as const,
+            version: probe.version,
+            message: probe.message
+          }
+        ];
+      }
+      return [
+        s.id,
+        { status: 'unhealthy' as const, message: probe.message ?? 'Fineract unreachable' }
+      ];
+    })
   );
 }
 
 export function useServerHealth(servers: FineractServerProfile[], enabled: boolean) {
   const [healthById, setHealthById] = useState<Record<string, ServerHealthSnapshot>>({});
   const serversKey = servers.map((s) => `${s.id}:${s.baseUrl}`).join('|');
+  const serversRef = useRef(servers);
+  serversRef.current = servers;
   const abortRef = useRef<AbortController | null>(null);
 
   const refresh = useCallback(async () => {
-    if (servers.length === 0) {
+    const list = serversRef.current;
+    if (list.length === 0) {
       setHealthById({});
       return;
     }
@@ -44,7 +73,7 @@ export function useServerHealth(servers: FineractServerProfile[], enabled: boole
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setHealthById(probingMap(servers));
+    setHealthById(probingMap(list));
 
     try {
       const res = await fetch('/api/servers/health', {
@@ -54,7 +83,7 @@ export function useServerHealth(servers: FineractServerProfile[], enabled: boole
       if (!res.ok) {
         setHealthById(
           Object.fromEntries(
-            servers.map((s) => [
+            list.map((s) => [
               s.id,
               { status: 'unhealthy' as const, message: 'Health check request failed.' }
             ])
@@ -64,37 +93,14 @@ export function useServerHealth(servers: FineractServerProfile[], enabled: boole
       }
 
       const data = (await res.json()) as ProbePayload;
-      setHealthById(
-        Object.fromEntries(
-          servers.map((s) => {
-            const probe = data.servers[s.id];
-            if (!probe) {
-              return [s.id, { status: 'unhealthy' as const, message: 'No probe result.' }];
-            }
-            if (probe.state === 'healthy') {
-              return [
-                s.id,
-                {
-                  status: 'healthy' as const,
-                  version: probe.version,
-                  message: probe.message
-                }
-              ];
-            }
-            return [
-              s.id,
-              { status: 'unhealthy' as const, message: probe.message ?? 'Fineract unreachable' }
-            ];
-          })
-        )
-      );
+      setHealthById(mapProbeResults(list, data));
     } catch (error) {
       if (controller.signal.aborted) {
         return;
       }
       setHealthById(
         Object.fromEntries(
-          servers.map((s) => [
+          list.map((s) => [
             s.id,
             {
               status: 'unhealthy' as const,
@@ -104,12 +110,12 @@ export function useServerHealth(servers: FineractServerProfile[], enabled: boole
         )
       );
     }
-  }, [servers]);
+  }, []);
 
   useEffect(() => {
     if (!enabled) {
       abortRef.current?.abort();
-      setHealthById({});
+      setHealthById((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
     }
     void refresh();
@@ -118,9 +124,10 @@ export function useServerHealth(servers: FineractServerProfile[], enabled: boole
     };
   }, [enabled, serversKey, refresh]);
 
-  function getHealth(serverId: string): ServerHealthSnapshot {
-    return healthById[serverId] ?? { status: 'idle' };
-  }
+  const getHealth = useCallback(
+    (serverId: string): ServerHealthSnapshot => healthById[serverId] ?? { status: 'idle' },
+    [healthById]
+  );
 
   return { getHealth, refresh, healthById };
 }

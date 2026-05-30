@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ServerCatalog } from '@mifos/servers';
 import { LoginForm } from '@/components/auth/login-form';
 import { ServerManagerSheet } from '@/components/servers/server-manager-sheet';
@@ -29,7 +29,7 @@ export function LoginShell({
 }) {
   const [serversOpen, setServersOpen] = useState(initialServersOpen);
   const active = catalog.servers.find((s) => s.id === catalog.activeServerId);
-  const activeList = active ? [active] : [];
+  const activeList = useMemo(() => (active ? [active] : []), [active]);
   const { getHealth } = useServerHealth(activeList, Boolean(active));
 
   return (
