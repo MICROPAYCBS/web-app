@@ -13,11 +13,9 @@ import type { FamilyMemberInput } from '@mifos/validation';
 import { useState } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
+import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Field } from '@/components/ui/field';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -90,30 +88,35 @@ export function FamilyMemberDialog({
             <p className="text-sm text-destructive sm:col-span-2">{error}</p>
           ) : null}
           <TextField
+            id="familyFirstName"
             label="First name"
             required
             value={form.firstName}
             onChange={(v) => setForm({ ...form, firstName: v })}
           />
           <TextField
+            id="familyMiddleName"
             label="Middle name"
             optional
             value={form.middleName ?? ''}
             onChange={(v) => setForm({ ...form, middleName: v })}
           />
           <TextField
+            id="familyLastName"
             label="Last name"
             required
             value={form.lastName}
             onChange={(v) => setForm({ ...form, lastName: v })}
           />
           <TextField
+            id="familyQualification"
             label="Qualification"
             optional
             value={form.qualification ?? ''}
             onChange={(v) => setForm({ ...form, qualification: v })}
           />
           <SelectField
+            id="familyRelationshipId"
             label="Relationship"
             required
             value={form.relationshipId ? String(form.relationshipId) : undefined}
@@ -121,6 +124,7 @@ export function FamilyMemberDialog({
             options={toSelectOptions(options?.relationshipIdOptions)}
           />
           <SelectField
+            id="familyGenderId"
             label="Gender"
             required
             value={form.genderId ? String(form.genderId) : undefined}
@@ -128,6 +132,7 @@ export function FamilyMemberDialog({
             options={toSelectOptions(options?.genderIdOptions)}
           />
           <SelectField
+            id="familyProfessionId"
             label="Profession"
             optional
             value={form.professionId ? String(form.professionId) : undefined}
@@ -135,6 +140,7 @@ export function FamilyMemberDialog({
             options={toSelectOptions(options?.professionIdOptions)}
           />
           <SelectField
+            id="familyMaritalStatusId"
             label="Marital status"
             optional
             value={form.maritalStatusId ? String(form.maritalStatusId) : undefined}
@@ -142,20 +148,20 @@ export function FamilyMemberDialog({
             options={toSelectOptions(options?.maritalStatusIdOptions)}
           />
           <DateField
+            id="familyDateOfBirth"
             label="Date of birth"
             optional
             value={form.dateOfBirth}
             onChange={(v) => setForm({ ...form, dateOfBirth: v })}
           />
-          <Field className="flex flex-row items-center gap-2 self-end">
-            <Checkbox
-              checked={form.isDependent ?? false}
-              onCheckedChange={(c) => setForm({ ...form, isDependent: c === true })}
-            />
-            <Label className="font-normal">
-              Dependent <span className="text-muted-foreground">(optional)</span>
-            </Label>
-          </Field>
+          <SwitchField
+            id="familyIsDependent"
+            label="Dependent"
+            optional
+            checked={form.isDependent ?? false}
+            description="Mark if this family member is financially dependent on the client."
+            onCheckedChange={(checked) => setForm({ ...form, isDependent: checked })}
+          />
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
