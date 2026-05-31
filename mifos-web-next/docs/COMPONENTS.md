@@ -106,6 +106,91 @@ app/(platform)/clients/
 First implementation: **`/clients`** list with server pagination — pairs with **Create client** (Quick Create + list action).
 
 See [ADR-011](adr/011-data-tables-list-screens.md).
+## Detail pages (read-only key / value)
+
+Client detail, loan account, savings account, and similar screens are **mostly read-only**: grouped **sections** of label/value pairs, with **tabs** for larger surfaces (documents, transactions). Edits use FormSheet or full-page forms (ADR-006) — not inline inputs on the detail view.
+
+### Layering
+
+| Composite | Use |
+|-----------|-----|
+| `DetailPage` | Page shell: header slot, optional tabs, content area |
+| `DetailHeader` | Entity name, `StatusBadge`, ids, office/product sublines, actions `DropdownMenu` |
+| `DetailSummary` | Optional 2–4 KPI cards (e.g. outstanding balance, arrears) |
+| `DetailTabs` | shadcn `Tabs`; sync `?tab=` when deep links matter |
+| `DetailSection` | Titled block (`Card`) with description + field grid |
+| `DetailField` | One label + value (or custom value slot) |
+| `DetailFieldGrid` | Responsive 1→2 column grid of fields |
+| `MoneyValue` | Currency + amount via `@mifos/domain` / `Decimal` |
+| `DateValue`, `PercentValue`, `CatalogValue` | Typed display + empty state |
+
+Primitives: `Card`, `Tabs`, `Badge`, `Separator`. Tables inside tabs use **DataTable** (see [List screens](#list-screens--data-tables)).
+
+### Hierarchy (how to group information)
+
+Think **outside-in**:
+
+```text
+DetailPage
+  DetailHeader          ← who/what + status + actions (not a "section")
+  DetailSummary?        ← headline money/KPIs only
+  DetailTabs
+    General tab
+      DetailSection     ← e.g. "Account overview"
+        DetailFieldGrid
+          DetailField
+            MoneyValue  ← value slot
+```
+
+**Section order — loan / savings account**
+
+1. Status & identifiers (account no, product, currency, office)
+2. Balances & summary figures (**money grouped here**)
+3. Terms (dates, repayment metadata, rates)
+4. Flags / settings (booleans, enums)
+5. Audit metadata (muted labels: created, submitted by)
+
+**Section order — client**
+
+1. Header (name, status, id) — `DetailHeader`
+2. Personal or entity information
+3. Optional performance / summary KPIs
+4. Tabs: accounts, charges, documents, notes, …
+
+**Within a section:** keep related fields together; hide optional API fields when absent (do not show empty labels for data Fineract never sent).
+
+### Monetary fields (special attention)
+
+| Rule | Detail |
+|------|--------|
+| Formatting | `Decimal` + `@mifos/domain` — **never** `toFixed` or raw `number` math |
+| Currency | Always show code or symbol from Fineract `currency.code` on the account/resource |
+| Alignment | `tabular-nums text-right` for money in grids |
+| Zero vs missing | `0.00` vs em dash (—) |
+| Rates | `PercentValue` with `%` — do not format as currency |
+| Emphasis | Stronger typography only in `DetailSummary`, not every field |
+
+Planned: `formatMoney(amount, currencyCode, locale)` in `@mifos/domain` alongside `formatAmount`.
+
+### Mixed tabs
+
+| Tab content | Pattern |
+|-------------|---------|
+| Overview, personal data, terms | `DetailSection` + `DetailFieldGrid` |
+| Transactions, charges, schedules | `DataTable` (ADR-011) |
+| Custom datatables | Dedicated table or single-row grid (per Fineract datatable shape) |
+
+### Legacy parity
+
+Angular uses `data-grid` / `data-item`, `formatNumber`, and `r-amount` right alignment — greenfield composites replace those with one LAF. See `clients-view/personal-data-tab`, `loans-view/account-details`.
+
+### Pilot routes
+
+- `/clients/[clientId]` — header + personal/general sections
+- `/loans/[loanId]` (or account id path) — summary strip + terms + balances
+
+See [ADR-013](adr/013-read-only-detail-pages.md).
+
 
 ## Form presentation matrix
 
@@ -195,6 +280,7 @@ Use plain shadcn `Select` only for static enums with **≤4** options (e.g. Yes/
 | [010](adr/010-vercel-style-navigation.md) | Sidebar, Find, featured links |
 | [011](adr/011-data-tables-list-screens.md) | Data tables & list screens |
 | [012](adr/012-quick-create-client.md) | Quick Create / Create client |
+| [013](adr/013-read-only-detail-pages.md) | Read-only detail pages (key/value) |
 
 ## Layout blocks (shadcn)
 

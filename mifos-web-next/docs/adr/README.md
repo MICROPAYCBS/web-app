@@ -16,3 +16,4 @@ Internal notes for the solo maintainer. Not community governance.
 | [010](010-vercel-style-navigation.md) | Vercel-style navigation (Quick Find, groups) |
 | [011](011-data-tables-list-screens.md) | Data tables and list screens (TanStack + composites) |
 | [012](012-quick-create-client.md) | Quick Create — prominent client creation in sidebar |
+| [013](013-read-only-detail-pages.md) | Read-only detail pages (key/value) |

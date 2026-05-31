@@ -63,6 +63,7 @@ Do **not** import dashboard-01 `nav-main.tsx` wholesale (Tabler icons, Inbox dem
 ## Consequences
 
 - Implement `QuickCreate` in `mifos-app-sidebar.tsx` (or adjacent module) after client create form scope is known (sheet vs page).
+- Detail pages after create: [ADR-013](013-read-only-detail-pages.md).
 - List/table work (ADR-011) should still put **New client** on the clients list for consistency with other resources.
 - ADR-010 featured row remains; Quick Create is additive, not a replacement for **Clients** shortcut.
 
