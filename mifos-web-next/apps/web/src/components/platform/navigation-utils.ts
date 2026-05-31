@@ -71,14 +71,16 @@ export function flattenMatchingNavLinks(
   if (!q) {
     return [];
   }
-  const seen = new Set<string>();
+  const seenIds = new Set<string>();
+  const seenHrefs = new Set<string>();
   const results: PlatformNavLink[] = [];
   const add = (item: PlatformNavLink) => {
-    if (seen.has(item.id)) {
+    if (seenIds.has(item.id) || seenHrefs.has(item.href)) {
       return;
     }
     if (matchesNavFindQuery(item, q)) {
-      seen.add(item.id);
+      seenIds.add(item.id);
+      seenHrefs.add(item.href);
       results.push(item);
     }
   };

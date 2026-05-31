@@ -19,8 +19,7 @@ import {
   filterNavGroups,
   filterNavLinks,
   flattenMatchingNavLinks,
-  isNavPathActive,
-  matchesNavFindQuery
+  isNavPathActive
 } from '@/components/platform/navigation-utils';
 import {
   SidebarGroup,
@@ -110,29 +109,32 @@ function SidebarNavGroupView({ group }: { group: PlatformNavGroup }) {
 function SidebarNavRootView() {
   const { nav, findQuery, enterGroup } = useNavigation();
   const query = findQuery.trim();
+  const isSearching = query.length > 0;
   const featured = filterNavLinks(nav.featured, findQuery);
   const groups = filterNavGroups(nav.groups, findQuery);
   const flatResults = flattenMatchingNavLinks(nav, findQuery);
 
+  if (isSearching) {
+    return (
+      <SidebarGroup className="px-0">
+        <SidebarGroupLabel className="px-2">Results</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {flatResults.length > 0 ? (
+              flatResults.map((item) => <NavMenuLink key={item.id} item={item} />)
+            ) : (
+              <SidebarMenuItem>
+                <p className="px-2 py-3 text-xs text-muted-foreground">No matching pages.</p>
+              </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    );
+  }
+
   return (
     <>
-      {query ? (
-        <SidebarGroup className="px-0">
-          <SidebarGroupLabel className="px-2">Results</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {flatResults.length > 0 ? (
-                flatResults.map((item) => <NavMenuLink key={item.id} item={item} />)
-              ) : (
-                <SidebarMenuItem>
-                  <p className="px-2 py-3 text-xs text-muted-foreground">No matching pages.</p>
-                </SidebarMenuItem>
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ) : null}
-
       {featured.length > 0 ? (
         <SidebarGroup className="px-0">
           <SidebarGroupLabel className="px-2">Quick access</SidebarGroupLabel>
@@ -148,42 +150,29 @@ function SidebarNavRootView() {
 
       {groups.length > 0 ? (
         <SidebarGroup className="px-0">
-          {!query ? <SidebarGroupLabel className="px-2">Sections</SidebarGroupLabel> : null}
+          <SidebarGroupLabel className="px-2">Sections</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {groups.flatMap((group) => {
-                const childMatches = group.items.filter((item) =>
-                  matchesNavFindQuery(item, findQuery)
-                );
-                const showChildrenInline = query.length > 0 && childMatches.length > 0;
-
-                if (showChildrenInline) {
-                  return childMatches.map((item) => (
-                    <NavMenuLink key={item.id} item={item} />
-                  ));
-                }
-
-                return (
-                  <SidebarMenuItem key={group.id}>
-                    <SidebarMenuButton
-                      type="button"
-                      className="w-full"
-                      onClick={() => enterGroup(group.id)}
-                      tooltip={group.label}
-                    >
-                      <NavIcon name={group.icon} className="size-4 shrink-0" />
-                      <span className="flex-1 truncate text-left">{group.label}</span>
-                      <ChevronRight className="ml-auto size-4 shrink-0 opacity-60" aria-hidden />
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {groups.map((group) => (
+                <SidebarMenuItem key={group.id}>
+                  <SidebarMenuButton
+                    type="button"
+                    className="w-full"
+                    onClick={() => enterGroup(group.id)}
+                    tooltip={group.label}
+                  >
+                    <NavIcon name={group.icon} className="size-4 shrink-0" />
+                    <span className="flex-1 truncate text-left">{group.label}</span>
+                    <ChevronRight className="ml-auto size-4 shrink-0 opacity-60" aria-hidden />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       ) : null}
 
-      {!query && nav.featured.length === 0 && nav.groups.length === 0 ? (
+      {nav.featured.length === 0 && nav.groups.length === 0 ? (
         <p className="px-4 py-3 text-xs text-muted-foreground">No navigation available.</p>
       ) : null}
     </>
