@@ -13,12 +13,10 @@ export function clientDetailNavGroups(clientId: string | number): DetailNavGroup
   return [
     {
       id: 'client',
-      label: 'Client',
       items: [{ id: 'general', label: 'General', href: `${base}/general` }]
     },
     {
       id: 'accounts',
-      label: 'Accounts & services',
       items: [
         { id: 'loans', label: 'Loans', href: `${base}/loans` },
         { id: 'savings', label: 'Savings', href: `${base}/savings` },
@@ -27,12 +25,11 @@ export function clientDetailNavGroups(clientId: string | number): DetailNavGroup
     },
     {
       id: 'relations',
-      label: 'Relations',
       items: [{ id: 'relations', label: 'Many to one', href: `${base}/relations` }]
     }
   ];
 }
 
 export function ClientDetailNav({ clientId }: { clientId: string | number }) {
-  return <DetailNavSidebar title="Client" groups={clientDetailNavGroups(clientId)} />;
+  return <DetailNavSidebar groups={clientDetailNavGroups(clientId)} />;
 }

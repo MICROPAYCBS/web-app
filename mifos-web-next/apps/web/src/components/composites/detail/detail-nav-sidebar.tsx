@@ -23,21 +23,16 @@ export interface DetailNavItem {
 
 export interface DetailNavGroup {
   id: string;
-  /** Uppercase section label, e.g. "Accounts & services" */
-  label: string;
   items: DetailNavItem[];
 }
 
 /**
- * Vertical secondary navigation (Supabase-style): grouped sections, muted labels,
- * rounded active row on a subtle muted background.
+ * Vertical secondary navigation: link list with optional groups (spacing only, no titles).
  */
 export function DetailNavSidebar({
-  title,
   groups,
   className
 }: {
-  title?: string;
   groups: DetailNavGroup[];
   className?: string;
 }) {
@@ -45,44 +40,36 @@ export function DetailNavSidebar({
 
   return (
     <nav aria-label="Sections" className={cn('flex flex-col', className)}>
-      {title ? (
-        <h2 className="mb-5 px-3 text-base font-semibold tracking-tight text-foreground">{title}</h2>
-      ) : null}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         {groups.map((group) => (
-          <div key={group.id}>
-            <p className="mb-2 px-3 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
-              {group.label}
-            </p>
-            <ul className="flex flex-col gap-0.5">
-              {group.items.map((item) => {
-                const active =
-                  pathname === item.href || pathname.startsWith(`${item.href}/`);
-                return (
-                  <li key={item.id}>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        'flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-normal transition-colors',
-                        active
-                          ? 'bg-muted text-foreground'
-                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                      )}
-                      aria-current={active ? 'page' : undefined}
-                      {...(item.external
-                        ? { target: '_blank', rel: 'noopener noreferrer' }
-                        : {})}
-                    >
-                      <span className="truncate">{item.label}</span>
-                      {item.external ? (
-                        <ExternalLink className="size-3.5 shrink-0 opacity-60" aria-hidden />
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+          <ul key={group.id} className="flex flex-col gap-0.5">
+            {group.items.map((item) => {
+              const active =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <li key={item.id}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-normal transition-colors',
+                      active
+                        ? 'bg-muted text-foreground'
+                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    )}
+                    aria-current={active ? 'page' : undefined}
+                    {...(item.external
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
+                  >
+                    <span className="truncate">{item.label}</span>
+                    {item.external ? (
+                      <ExternalLink className="size-3.5 shrink-0 opacity-60" aria-hidden />
+                    ) : null}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         ))}
       </div>
     </nav>
