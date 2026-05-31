@@ -12,5 +12,7 @@ Internal notes for the solo maintainer. Not community governance.
 | [006](006-form-sheet-pattern.md) | Simple forms use FormSheet (side panel) |
 | [007](007-rbac.md) | Fineract RBAC (defense in depth) |
 | [008](008-bff-server-only-fineract.md) | Server-to-server Fineract (BFF) |
-| [009](009-typed-route-registry.md |
-| [010](010-vercel-style-navigation.md) | Vercel-style navigation (Quick Find, groups) |) | Typed route registry (@mifos/routes) |
+| [009](009-typed-route-registry.md) | Typed route registry (@mifos/routes) |
+| [010](010-vercel-style-navigation.md) | Vercel-style navigation (Quick Find, groups) |
+| [011](011-data-tables-list-screens.md) | Data tables and list screens (TanStack + composites) |
+| [012](012-quick-create-client.md) | Quick Create — prominent client creation in sidebar |
