@@ -7,41 +7,21 @@
  */
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { notFound } from 'next/navigation';
+import { FineractHttpError } from '@mifos/api-client';
 import {
-  DateValue,
   DetailField,
   DetailFieldGrid,
   DetailHeader,
   DetailPage,
   DetailSection,
   DetailSummary,
-  MoneyValue,
-  PercentValue,
   TextValue
 } from '@/components/composites';
-import { ComingSoonPage } from '@/components/platform/coming-soon-page';
-
-/** Placeholder until BFF loads `GET /clients/:id`. */
-function demoClient(clientId: string) {
-  return {
-    id: clientId,
-    displayName: 'Jane Wanjiku',
-    status: 'Active',
-    accountNo: '000000042',
-    office: 'Head Office',
-    staff: 'Loan Officer A',
-    currencyCode: 'KES',
-    loanCycle: 2,
-    activeLoans: 1,
-    totalOutstanding: 125_000.5,
-    activeSavings: 1,
-    savingsBalance: 48_500,
-    activationDate: '2024-03-15',
-    submittedDate: '2024-03-10',
-    annualRate: 12.5
-  };
-}
+import { Button } from '@/components/ui/button';
+import { clientDisplayName } from '@/lib/fineract/clients-display';
+import { formatFineractDateArray } from '@/lib/fineract/dates';
+import { getClient } from '@/lib/fineract/clients';
 
 export default async function ClientDetailPage({
   params
@@ -49,27 +29,36 @@ export default async function ClientDetailPage({
   params: Promise<{ clientId: string }>;
 }) {
   const { clientId } = await params;
-  const client = demoClient(clientId);
-  const useDemo = process.env.NODE_ENV === 'development';
 
-  if (!useDemo) {
-    return (
-      <ComingSoonPage
-        title={`Client ${clientId}`}
-        description="Client detail will load from Fineract via the BFF. Demo layout is available in development."
-      />
-    );
+  let client;
+  try {
+    client = await getClient(clientId);
+  } catch (err) {
+    if (err instanceof FineractHttpError && err.status === 404) {
+      notFound();
+    }
+    throw err;
   }
+
+  const name = clientDisplayName(client);
+  const submittedLabel = formatFineractDateArray(client.timeline?.submittedOnDate);
+  const activatedLabel = formatFineractDateArray(client.timeline?.activatedOnDate);
+  const dobLabel = formatFineractDateArray(client.dateOfBirth);
 
   return (
     <DetailPage
       header={
         <DetailHeader
-          title={client.displayName}
-          status={{ label: client.status, variant: 'secondary' }}
+          title={name}
+          status={{
+            label: client.status?.value ?? 'Unknown',
+            variant: 'secondary'
+          }}
           meta={
             <span>
-              Client no. {client.accountNo} · {client.office} · Staff: {client.staff}
+              Account {client.accountNo}
+              {client.officeName ? ` · ${client.officeName}` : ''}
+              {client.staffName ? ` · ${client.staffName}` : ''}
             </span>
           }
           actions={
@@ -83,88 +72,57 @@ export default async function ClientDetailPage({
         <DetailSummary
           items={[
             {
-              id: 'outstanding',
-              label: 'Total loan outstanding',
-              value: (
-                <MoneyValue
-                  amount={client.totalOutstanding}
-                  currencyCode={client.currencyCode}
-                  emphasize
-                />
-              )
+              id: 'status',
+              label: 'Status',
+              value: <TextValue value={client.status?.value} />
             },
             {
-              id: 'savings',
-              label: 'Savings balance',
-              value: (
-                <MoneyValue
-                  amount={client.savingsBalance}
-                  currencyCode={client.currencyCode}
-                  emphasize
-                />
-              )
-            },
-            {
-              id: 'loans',
-              label: 'Active loans',
-              value: <TextValue value={String(client.activeLoans)} />
-            },
-            {
-              id: 'cycle',
-              label: 'Loan cycle',
-              value: <TextValue value={String(client.loanCycle)} />
+              id: 'external',
+              label: 'External ID',
+              value: <TextValue value={client.externalId} />
             }
           ]}
         />
       }
     >
-      <DetailSection title="Identifiers" description="Office and account references.">
+      <DetailSection title="Identifiers">
         <DetailFieldGrid>
           <DetailField label="Client ID">
-            <TextValue value={client.id} />
+            <TextValue value={String(client.id)} />
           </DetailField>
           <DetailField label="Account no.">
             <TextValue value={client.accountNo} />
           </DetailField>
           <DetailField label="Office">
-            <TextValue value={client.office} />
+            <TextValue value={client.officeName} />
           </DetailField>
           <DetailField label="Staff">
-            <TextValue value={client.staff} />
+            <TextValue value={client.staffName} />
           </DetailField>
         </DetailFieldGrid>
       </DetailSection>
 
-      <DetailSection title="Performance" description="Summary figures for lending and savings.">
+      <DetailSection title="Contact">
         <DetailFieldGrid>
-          <DetailField label="Loan cycle">
-            <TextValue value={String(client.loanCycle)} />
+          <DetailField label="Mobile">
+            <TextValue value={client.mobileNo} />
           </DetailField>
-          <DetailField label="Active loans">
-            <TextValue value={String(client.activeLoans)} />
-          </DetailField>
-          <DetailField label="Total outstanding" valueClassName="text-right">
-            <MoneyValue amount={client.totalOutstanding} currencyCode={client.currencyCode} />
-          </DetailField>
-          <DetailField label="Active savings">
-            <TextValue value={String(client.activeSavings)} />
-          </DetailField>
-          <DetailField label="Savings balance" valueClassName="text-right">
-            <MoneyValue amount={client.savingsBalance} currencyCode={client.currencyCode} />
-          </DetailField>
-          <DetailField label="Illustrative rate" valueClassName="text-right">
-            <PercentValue value={client.annualRate} />
+          <DetailField label="Email">
+            <TextValue value={client.emailAddress} />
           </DetailField>
         </DetailFieldGrid>
       </DetailSection>
 
       <DetailSection title="Dates">
-        <DetailFieldGrid columns={2}>
+        <DetailFieldGrid>
           <DetailField label="Submitted on">
-            <DateValue value={client.submittedDate} />
+            <TextValue value={submittedLabel} />
           </DetailField>
-          <DetailField label="Activation date">
-            <DateValue value={client.activationDate} />
+          <DetailField label="Activated on">
+            <TextValue value={activatedLabel} />
+          </DetailField>
+          <DetailField label="Date of birth">
+            <TextValue value={dobLabel} />
           </DetailField>
         </DetailFieldGrid>
       </DetailSection>
@@ -173,8 +131,6 @@ export default async function ClientDetailPage({
         <Link href="/clients" className="underline underline-offset-4">
           Back to clients
         </Link>
-        {' · '}
-        Development preview using ADR-013 detail composites.
       </p>
     </DetailPage>
   );

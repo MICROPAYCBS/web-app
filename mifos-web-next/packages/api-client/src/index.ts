@@ -8,3 +8,12 @@
 
 export { FineractClient, FineractHttpError } from './fineract-client';
 export type { FineractApiError, FineractClientConfig } from './types';
+
+export type {
+  FineractClientDetail,
+  FineractClientSummary,
+  FineractClientsPage,
+  FineractClientTemplate,
+  FineractCreateClientResponse,
+  FineractOfficeOption
+} from './clients/types';

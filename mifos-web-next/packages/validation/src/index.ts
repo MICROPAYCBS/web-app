@@ -6,5 +6,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export { createClientSchema, type CreateClientInput } from './clients/create-client.schema';
+export {
+  createClientSchema,
+  type CreateClientInput,
+  type CreateClientPayload
+} from './clients/create-client.schema';
 export { mapFineractErrors, type FieldError, type MappedFineractErrors } from './map-fineract-errors';

@@ -6,34 +6,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import Link from 'next/link';
-import { Can, resolvePermission } from '@mifos/auth';
-import { Button } from '@/components/ui/button';
+import { Suspense } from 'react';
+import { ClientsPageContent } from '@/components/clients/clients-page-content';
+import { getClientTemplate, listClients } from '@/lib/fineract/clients';
 
-export default function ClientsPage() {
+export default async function ClientsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  const { create } = await searchParams;
+  const [initialPage, template] = await Promise.all([
+    listClients({ limit: 25, offset: 0, orderBy: 'id', sortOrder: 'DESC' }),
+    getClientTemplate().catch(() => null)
+  ]);
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold tracking-tight">Clients</h2>
-        <Can permission={resolvePermission('clients.create')}>
-          <Button type="button" disabled>
-            New client (coming soon)
-          </Button>
-        </Can>
-      </div>
-      <p className="text-muted-foreground">
-        Client list will be implemented here. The &quot;New client&quot; button is visible only with{' '}
-        <code className="text-sm">CREATE_CLIENT</code> (or superuser permissions).
-      </p>
-      {process.env.NODE_ENV === 'development' ? (
-        <p className="text-sm text-muted-foreground">
-          Preview{' '}
-          <Link href="/clients/1" className="underline underline-offset-4">
-            client detail layout
-          </Link>{' '}
-          (ADR-013 composites, demo data).
-        </p>
-      ) : null}
-    </div>
+    <Suspense fallback={<p className="text-muted-foreground">Loading clients…</p>}>
+      <ClientsPageContent
+        initialPage={initialPage}
+        template={template}
+        openCreate={create === '1'}
+      />
+    </Suspense>
   );
 }

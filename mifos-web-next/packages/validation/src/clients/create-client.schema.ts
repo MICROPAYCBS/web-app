@@ -14,7 +14,7 @@ import { z } from 'zod';
  */
 export const createClientSchema = z
   .object({
-    officeId: z.number().int().positive(),
+    officeId: z.coerce.number().int().positive(),
     firstname: z.string().trim().min(1).max(50),
     lastname: z.string().trim().min(1).max(50),
     middlename: z.string().trim().max(50).optional(),
@@ -35,4 +35,6 @@ export const createClientSchema = z
     }
   });
 
-export type CreateClientInput = z.infer<typeof createClientSchema>;
+export type CreateClientInput = z.input<typeof createClientSchema>;
+
+export type CreateClientPayload = z.output<typeof createClientSchema>;
