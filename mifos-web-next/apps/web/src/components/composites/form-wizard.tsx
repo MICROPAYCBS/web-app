@@ -84,7 +84,7 @@ export function FormWizard({
   const currentIndex = steps.findIndex((s) => s.id === currentStepId);
 
   return (
-    <div className={cn('mx-auto flex w-full max-w-6xl flex-col gap-6', className)}>
+    <div className={cn('mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-6', className)}>
       <PageHeader>
         <div className="space-y-1 pt-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -94,7 +94,7 @@ export function FormWizard({
         </div>
       </PageHeader>
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-stretch lg:gap-8">
         <nav
           aria-label="Progress"
           className="w-full shrink-0 lg:sticky lg:top-24 lg:w-56 lg:self-start xl:w-60"
@@ -162,9 +162,9 @@ export function FormWizard({
           </ol>
         </nav>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-col overflow-hidden rounded-lg border bg-card shadow-sm">
-            <div className="p-4 md:p-6">{children}</div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card shadow-sm">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
             {footer}
           </div>
         </div>

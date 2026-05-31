@@ -40,7 +40,7 @@ export function PlatformShell({
         <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
           <MifosSiteHeader />
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
-            <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-6">
+            <div className="@container/main flex min-h-0 flex-1 flex-col gap-2 p-4 md:p-6">
               {children}
             </div>
           </div>

@@ -29,7 +29,7 @@ export interface FormWizardFooterProps {
 
 /**
  * Sticky navigation footer for full-page wizards (Cancel, Back, Next/Submit).
- * Mirrors FormSheet footer actions; sticks to the bottom while step content scrolls.
+ * Mirrors FormSheet footer actions; pinned below scrollable step content in the wizard card.
  */
 export function FormWizardFooter({
   cancelHref,
@@ -48,8 +48,7 @@ export function FormWizardFooter({
   return (
     <div
       className={cn(
-        'sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-background/95 px-4 py-4 backdrop-blur md:-mx-6 md:px-6',
-        'supports-[backdrop-filter]:bg-background/80',
+        'flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-card px-4 py-4 md:px-6',
         className
       )}
     >

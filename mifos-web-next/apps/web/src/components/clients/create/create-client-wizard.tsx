@@ -232,7 +232,8 @@ export function CreateClientWizard({
   const isPreview = resolvedStepId === 'preview';
 
   return (
-    <FormWizard
+    <div className="flex min-h-0 flex-1 flex-col">
+      <FormWizard
       steps={steps}
       currentStepId={resolvedStepId}
       title="Create client"
@@ -301,5 +302,6 @@ export function CreateClientWizard({
         <PreviewStep template={template} draft={draft} submitError={submitError} />
       ) : null}
     </FormWizard>
+    </div>
   );
 }
