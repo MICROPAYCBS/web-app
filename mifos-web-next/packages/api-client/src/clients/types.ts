@@ -123,3 +123,12 @@ export interface FineractCreateClientResponse {
   resourceId: number;
   resourceExternalId?: string;
 }
+
+export type {
+  FineractClientAccountStatus,
+  FineractClientAccounts,
+  FineractClientLoanAccount,
+  FineractClientSavingsAccount,
+  FineractCurrencyOption,
+  FineractDatatableRegistration
+} from './accounts-types';

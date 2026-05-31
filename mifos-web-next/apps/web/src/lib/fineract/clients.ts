@@ -8,6 +8,8 @@
 
 import 'server-only';
 
+import { cache } from 'react';
+
 import type {
   FineractAddressFieldConfig,
   FineractClientDetail,
@@ -39,10 +41,10 @@ export async function listClients(params: ListClientsParams = {}): Promise<Finer
   return fineract.get<FineractClientsPage>('/clients', searchParams);
 }
 
-export async function getClient(clientId: string | number): Promise<FineractClientDetail> {
+export const getClient = cache(async (clientId: string | number): Promise<FineractClientDetail> => {
   const fineract = await createFineractClient();
   return fineract.get<FineractClientDetail>(`/clients/${clientId}`);
-}
+});
 
 export async function getClientTemplate(officeId?: number): Promise<FineractClientTemplate> {
   const fineract = await createFineractClient();

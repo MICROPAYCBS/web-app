@@ -19,7 +19,7 @@
 | Area               | Status                                |
 | ------------------ | ------------------------------------- |
 | List (paginated)   | Done — `ClientsTable` + `listClients` |
-| Detail (read-only) | Done — `/clients/[clientId]`          |
+| Detail (read-only) | Done — `/clients/[clientId]` with section tabs |
 | Update             | Not started                           |
 | Delete / close     | Not started                           |
 
@@ -29,3 +29,13 @@
 2. Sidebar **Create client** → `/clients/create`.
 3. Complete General (person and entity), optional Family, Address (if enabled), datatables, Preview.
 4. Confirm redirect to `/clients/{id}`.
+
+## Client detail tabs
+
+| Tab | Route | Content |
+|-----|-------|--------|
+| General | `/clients/[id]/general` | Identifiers, personal, contact, dates |
+| Loans | `/clients/[id]/loans` | Open loan accounts (`GET /clients/{id}/accounts`) |
+| Savings | `/clients/[id]/savings` | Savings deposit type |
+| Fixed deposits | `/clients/[id]/fixed-deposits` | Fixed deposit type |
+| Many to one | `/clients/[id]/relations` | Multi-row client datatables |

@@ -20,6 +20,8 @@ export {
   DateValue,
   TextValue,
   EmptyValue,
+  DetailNavTabs,
+  type DetailNavTab,
   type DetailSummaryItem
 } from './detail';
 

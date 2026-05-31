@@ -13,11 +13,14 @@ import { cn } from '@/lib/utils';
 export function DetailPage({
   header,
   summary,
+  tabs,
   children,
   className
 }: {
   header: ReactNode;
   summary?: ReactNode;
+  /** Route-linked section tabs below the header */
+  tabs?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
@@ -27,6 +30,7 @@ export function DetailPage({
         <div className="space-y-4 pt-1">
           {header}
           {summary}
+          {tabs}
         </div>
       </PageHeader>
       <div className="space-y-6">{children}</div>

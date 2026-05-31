@@ -23,3 +23,12 @@ export type {
   FineractOfficeOption,
   FineractStaffOption
 } from './clients/types';
+
+export type {
+  FineractClientAccountStatus,
+  FineractClientAccounts,
+  FineractClientLoanAccount,
+  FineractClientSavingsAccount,
+  FineractCurrencyOption,
+  FineractDatatableRegistration
+} from './clients/accounts-types';
