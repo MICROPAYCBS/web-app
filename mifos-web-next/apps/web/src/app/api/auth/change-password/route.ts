@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { jsonError, jsonOk } from '@/lib/bff/json-response';
 import { requireServerSession } from '@/lib/bff/require-session';
 import { createFineractClient } from '@/lib/fineract/create-client';
-
-const MIN_PASSWORD_LENGTH = 12;
+import {
+  fetchActivePasswordPolicyRules,
+  validatePasswordAgainstPolicy
+} from '@/lib/fineract/password-policy';
 
 /**
  * BFF: change the signed-in user's Fineract password (PUT /users/{id}).
@@ -32,18 +34,17 @@ export async function POST(request: Request) {
     );
   }
 
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return NextResponse.json(
-      { message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` },
-      { status: 400 }
-    );
-  }
-
   if (password !== repeatPassword) {
     return NextResponse.json({ message: 'Passwords do not match.' }, { status: 400 });
   }
 
   try {
+    const policy = await fetchActivePasswordPolicyRules();
+    const policyError = validatePasswordAgainstPolicy(password, policy);
+    if (policyError) {
+      return NextResponse.json({ message: policyError }, { status: 400 });
+    }
+
     const fineract = await createFineractClient();
     await fineract.put(`/users/${session!.userId}`, { password, repeatPassword });
     return jsonOk({ ok: true });

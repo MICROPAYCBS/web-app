@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,8 +25,11 @@ import {
   FieldLabel
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-
-const MIN_PASSWORD_LENGTH = 12;
+import {
+  DEFAULT_PASSWORD_POLICY,
+  validatePasswordAgainstPolicy,
+  type PasswordPolicyRules
+} from '@/lib/password-policy-validate';
 
 type PasswordField = 'password' | 'repeatPassword';
 
@@ -34,13 +37,13 @@ type PasswordFieldErrors = Partial<Record<PasswordField, string>>;
 
 function validatePasswordFields(
   password: string,
-  repeatPassword: string
+  repeatPassword: string,
+  policy: PasswordPolicyRules
 ): PasswordFieldErrors {
   const errors: PasswordFieldErrors = {};
-  if (!password) {
-    errors.password = 'Password is required';
-  } else if (password.length < MIN_PASSWORD_LENGTH) {
-    errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+  const passwordError = validatePasswordAgainstPolicy(password, policy);
+  if (passwordError) {
+    errors.password = passwordError;
   }
   if (!repeatPassword) {
     errors.repeatPassword = 'Please confirm your password';
@@ -61,7 +64,32 @@ export function ChangePasswordDialog({
   const [repeatPassword, setRepeatPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<PasswordFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [policy, setPolicy] = useState<PasswordPolicyRules>(DEFAULT_PASSWORD_POLICY);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/auth/password-policy');
+        if (!res.ok) {
+          return;
+        }
+        const data = (await res.json()) as PasswordPolicyRules;
+        if (!cancelled && data?.minLength) {
+          setPolicy(data);
+        }
+      } catch {
+        /* keep default policy */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   function resetForm() {
     setPassword('');
@@ -92,7 +120,7 @@ export function ChangePasswordDialog({
     e.preventDefault();
     setFormError(null);
 
-    const nextFieldErrors = validatePasswordFields(password, repeatPassword);
+    const nextFieldErrors = validatePasswordFields(password, repeatPassword, policy);
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors);
       return;
@@ -123,10 +151,7 @@ export function ChangePasswordDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Change password</DialogTitle>
-          <DialogDescription>
-            Enter a new password and confirm it. Password must be at least{' '}
-            {MIN_PASSWORD_LENGTH} characters.
-          </DialogDescription>
+          <DialogDescription>{policy.hint}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} noValidate>
           <FieldGroup className="gap-4">
@@ -170,7 +195,7 @@ export function ChangePasswordDialog({
             </p>
           ) : null}
 
-          <DialogFooter className="mt-6 gap-2 sm:gap-0">
+          <DialogFooter className="mt-6 flex flex-row justify-end gap-3">
             <Button
               type="button"
               variant="outline"

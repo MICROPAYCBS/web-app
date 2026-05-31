@@ -10,6 +10,7 @@ import { filterNavStructure } from '@mifos/auth';
 import { buildNavStructure } from '@mifos/routes/server';
 import { PlatformShell } from '@/components/platform/platform-shell';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
+import { enrichSessionUser } from '@/lib/fineract/fetch-user-profile';
 import { getPublicSession } from '@/lib/session/server';
 import { getActiveFineractServer } from '@/lib/servers/catalog-store';
 import { isRbacEnabled } from '@/lib/session/dev-user';
@@ -37,7 +38,8 @@ function toPlatformNav(structure: ReturnType<typeof buildNavStructure>): Platfor
 }
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
-  const user = await getPublicSession();
+  const sessionUser = await getPublicSession();
+  const user = sessionUser ? await enrichSessionUser(sessionUser) : null;
   const activeServer = await getActiveFineractServer();
   const nav = toPlatformNav(filterNavStructure(user, buildNavStructure()));
 

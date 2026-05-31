@@ -31,6 +31,14 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 
+function userInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();
+  }
+  return displayName.slice(0, 2).toUpperCase();
+}
+
 export function MifosNavUser() {
   const { user } = useSession();
   const { isMobile } = useSidebar();
@@ -40,7 +48,9 @@ export function MifosNavUser() {
     return null;
   }
 
-  const initials = user.username.slice(0, 2).toUpperCase();
+  const displayName = user.displayName?.trim() || user.username;
+  const branchLabel = user.officeName?.trim();
+  const initials = userInitials(displayName);
 
   return (
     <>
@@ -54,9 +64,9 @@ export function MifosNavUser() {
                 <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.username}</span>
-                {user.officeName ? (
-                  <span className="truncate text-xs text-muted-foreground">{user.officeName}</span>
+                <span className="truncate font-medium">{displayName}</span>
+                {branchLabel ? (
+                  <span className="truncate text-xs text-muted-foreground">{branchLabel}</span>
                 ) : null}
               </div>
               <MoreVerticalIcon className="ml-auto size-4" />
@@ -70,8 +80,10 @@ export function MifosNavUser() {
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="px-2 py-1.5 text-sm">
-                    <p className="font-medium">{user.username}</p>
-                    <p className="text-xs text-muted-foreground">User ID {user.userId}</p>
+                    <p className="font-medium">{displayName}</p>
+                    {branchLabel ? (
+                      <p className="text-xs text-muted-foreground">Branch: {branchLabel}</p>
+                    ) : null}
                   </div>
                 </DropdownMenuLabel>
               </DropdownMenuGroup>
