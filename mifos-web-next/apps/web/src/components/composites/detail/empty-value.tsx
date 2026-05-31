@@ -6,11 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export {
-  AMOUNT_MAX_DECIMAL_PLACES,
-  AMOUNT_MAX_INTEGER_DIGITS,
-  formatAmount,
-  formatMoney,
-  parseAmount,
-  toDecimal
-} from './money';
+export const EMPTY_DETAIL_VALUE = '—';
+
+export function EmptyValue() {
+  return <span className="text-muted-foreground">{EMPTY_DETAIL_VALUE}</span>;
+}

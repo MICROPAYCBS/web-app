@@ -9,6 +9,7 @@
  */
 
 import { MifosNavUser } from '@/components/platform/mifos-nav-user';
+import { QuickCreate } from '@/components/platform/quick-create';
 import { SidebarNavFind } from '@/components/platform/sidebar-nav-find';
 import { SidebarNavPanel } from '@/components/platform/sidebar-nav-panel';
 import {
@@ -44,6 +45,7 @@ export function MifosAppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <QuickCreate />
         <SidebarNavFind />
       </SidebarHeader>
 

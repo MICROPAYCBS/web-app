@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (documentation); composites **not yet implemented**.
+Accepted; core detail composites implemented (see `components/composites/detail/`). BFF-backed pages pending.
 
 ## Context
 

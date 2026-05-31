@@ -32,3 +32,49 @@ export function formatAmount(amount: Decimal, locale = 'en'): string {
     maximumFractionDigits: AMOUNT_MAX_DECIMAL_PLACES
   }).format(amount.toNumber());
 }
+
+/** Coerce Fineract API numeric values for display formatting. */
+export function toDecimal(
+  value: Decimal | string | number | null | undefined
+): Decimal | null {
+  if (value == null || value === '') {
+    return null;
+  }
+  if (value instanceof Decimal) {
+    return value;
+  }
+  try {
+    return new Decimal(value);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Display money with ISO currency code context (e.g. `KES 1,234.00`).
+ * Uses `Intl` currency style when the code is supported; falls back to code + amount.
+ */
+export function formatMoney(
+  amount: Decimal | string | number | null | undefined,
+  currencyCode: string,
+  locale = 'en'
+): string | null {
+  const decimal = toDecimal(amount);
+  if (!decimal) {
+    return null;
+  }
+  const code = currencyCode.trim().toUpperCase();
+  if (!code) {
+    return formatAmount(decimal, locale);
+  }
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: AMOUNT_MAX_DECIMAL_PLACES
+    }).format(decimal.toNumber());
+  } catch {
+    return `${code} ${formatAmount(decimal, locale)}`;
+  }
+}
