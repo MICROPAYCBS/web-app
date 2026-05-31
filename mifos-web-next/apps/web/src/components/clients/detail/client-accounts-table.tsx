@@ -79,10 +79,12 @@ function buildColumns(includeExtra: boolean): ColumnDef<ClientAccountRow>[] {
 
 export function ClientAccountsTable({
   rows,
-  emptyMessage
+  emptyMessage,
+  emptyDescription
 }: {
   rows: ClientAccountRow[];
   emptyMessage: string;
+  emptyDescription?: string;
 }) {
   const includeExtra = rows.some((r) => r.extraLabel);
   const columns = useMemo(() => buildColumns(includeExtra), [includeExtra]);
@@ -93,5 +95,7 @@ export function ClientAccountsTable({
     getCoreRowModel: getCoreRowModel()
   });
 
-  return <DataTable table={table} emptyMessage={emptyMessage} />;
+  return (
+    <DataTable table={table} emptyMessage={emptyMessage} emptyDescription={emptyDescription} />
+  );
 }

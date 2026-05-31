@@ -10,7 +10,7 @@
 
 import type { FineractClientFamilyMember, FineractFamilyMemberOptions } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { FamilyMemberDialog } from '@/components/clients/create/family-member-dialog';
@@ -23,6 +23,7 @@ import {
   deleteClientFamilyMemberAction,
   updateClientFamilyMemberAction
 } from '@/actions/client-family';
+import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -149,7 +150,27 @@ export function ClientFamilyView({
       ) : null}
 
       {initialMembers.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No family members on file for this client.</p>
+        <EmptyState
+          icon={Users}
+          title="No family members on file"
+          description="Add family members linked to this client for household or next-of-kin records."
+          action={
+            canUpdate ? (
+              <Button
+                type="button"
+                size="sm"
+                disabled={pending}
+                onClick={() => {
+                  setEditMember(null);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus className="mr-2 size-4" />
+                Add family member
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-4">
           {initialMembers.map((member) => (

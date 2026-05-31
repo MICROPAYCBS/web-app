@@ -29,7 +29,8 @@ export default async function ClientSavingsPage({
 
   return (
     <DetailSection title="Savings accounts" description="Standard savings accounts for this client.">
-      <ClientAccountsTable rows={rows} emptyMessage="No active savings accounts for this client." />
+      <ClientAccountsTable rows={rows} emptyMessage="No active savings accounts"
+        emptyDescription="This client has no open savings accounts." />
     </DetailSection>
   );
 }

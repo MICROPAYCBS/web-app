@@ -6,7 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { DetailSection } from '@/components/composites';
+import { DetailSection, EmptyState } from '@/components/composites';
+import { Table2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -24,24 +25,23 @@ export interface ClientDatatableSection {
 
 const HIDDEN_COLUMNS = new Set(['id', 'client_id', 'created_at', 'updated_at']);
 
-export function ClientRelationsSections({
-  sections
-}: {
-  sections: ClientDatatableSection[];
-}) {
+export function ClientRelationsSections({ sections }: { sections: ClientDatatableSection[] }) {
   if (sections.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No many-to-one custom data tables are registered for clients, or this client has no related
-        rows yet.
-      </p>
+      <EmptyState
+        icon={Table2}
+        title="No related records"
+        description="No many-to-one custom data tables are registered for clients, or this client has no related rows yet."
+      />
     );
   }
 
   return (
     <>
       {sections.map((section) => {
-        const columns = Object.keys(section.rows[0] ?? {}).filter((key) => !HIDDEN_COLUMNS.has(key));
+        const columns = Object.keys(section.rows[0] ?? {}).filter(
+          (key) => !HIDDEN_COLUMNS.has(key)
+        );
         const title = formatDatatableColumnLabel(section.registeredTableName.replace(/_/g, ' '));
 
         return (

@@ -31,7 +31,8 @@ export default async function ClientFixedDepositsPage({
     <DetailSection title="Fixed deposit accounts" description="Fixed deposit accounts for this client.">
       <ClientAccountsTable
         rows={rows}
-        emptyMessage="No active fixed deposit accounts for this client."
+        emptyMessage="No active fixed deposit accounts"
+        emptyDescription="This client has no open fixed deposit accounts."
       />
     </DetailSection>
   );

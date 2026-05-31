@@ -160,7 +160,8 @@ export function ClientsTable({
         className="max-w-sm"
         aria-label="Filter clients on this page"
       />
-      <DataTable table={table} isLoading={pending} emptyMessage="No clients found." />
+      <DataTable table={table} isLoading={pending} emptyMessage="No clients found"
+        emptyDescription="Try adjusting search or filters, or create a new client." />
       <DataTablePagination table={table} totalRecords={data.totalFilteredRecords} />
     </div>
   );

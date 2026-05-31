@@ -10,11 +10,12 @@
 
 import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { AddressDialog } from '../address-dialog';
 import type { CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
+import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 
 export function AddressStep({
@@ -60,7 +61,25 @@ export function AddressStep({
       </Button>
 
       {addresses.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No addresses added yet.</p>
+        <EmptyState
+          icon={MapPin}
+          title="No addresses added yet"
+          description="Add at least one address to continue. Required fields depend on your institution configuration."
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditIndex(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 size-4" />
+              Add address
+            </Button>
+          }
+        />
       ) : (
         <ul className="divide-y rounded-md border">
           {addresses.map((addr, index) => (
@@ -111,7 +130,6 @@ export function AddressStep({
           }
         }}
       />
-
     </div>
   );
 }

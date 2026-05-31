@@ -9,6 +9,8 @@
  */
 
 import { flexRender, type Table as ReactTable } from '@tanstack/react-table';
+import type { ReactNode } from 'react';
+import { EmptyState } from '@/components/composites/empty-state';
 import {
   Table,
   TableBody,
@@ -21,11 +23,15 @@ import {
 export function DataTable<TData>({
   table,
   isLoading = false,
-  emptyMessage = 'No results.'
+  emptyMessage = 'No results.',
+  emptyDescription,
+  emptyAction
 }: {
   table: ReactTable<TData>;
   isLoading?: boolean;
   emptyMessage?: string;
+  emptyDescription?: string;
+  emptyAction?: ReactNode;
 }) {
   const columnCount = table.getAllColumns().length;
 
@@ -64,8 +70,13 @@ export function DataTable<TData>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columnCount} className="h-24 text-center text-muted-foreground">
-                {emptyMessage}
+              <TableCell colSpan={columnCount} className="p-0">
+                <EmptyState
+                  variant="compact"
+                  title={emptyMessage}
+                  description={emptyDescription}
+                  action={emptyAction}
+                />
               </TableCell>
             </TableRow>
           )}

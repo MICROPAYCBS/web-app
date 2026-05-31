@@ -7,12 +7,7 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
-import {
-  DetailField,
-  DetailFieldGrid,
-  DetailSection,
-  TextValue
-} from '@/components/composites';
+import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
 export function ClientGeneralSections({ client }: { client: FineractClientDetail }) {
@@ -99,7 +94,6 @@ export function ClientGeneralSections({ client }: { client: FineractClientDetail
           </DetailField>
         </DetailFieldGrid>
       </DetailSection>
-
     </>
   );
 }

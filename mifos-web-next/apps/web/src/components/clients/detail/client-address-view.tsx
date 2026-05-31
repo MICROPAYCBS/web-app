@@ -15,7 +15,7 @@ import type {
   FineractClientTemplate
 } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
-import { Plus } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { AddressDialog } from '@/components/clients/create/address-dialog';
@@ -25,6 +25,7 @@ import {
   toggleClientAddressActiveAction,
   updateClientAddressAction
 } from '@/actions/client-address';
+import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 
 function toWizardTemplate(template: FineractClientAddressTemplate): FineractClientTemplate {
@@ -144,7 +145,27 @@ export function ClientAddressView({
       ) : null}
 
       {initialAddresses.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No addresses on file for this client.</p>
+        <EmptyState
+          icon={MapPin}
+          title="No addresses on file"
+          description="Add a client address to store mailing or location details in Fineract."
+          action={
+            canUpdate ? (
+              <Button
+                type="button"
+                size="sm"
+                disabled={pending}
+                onClick={() => {
+                  setEditAddress(null);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus className="mr-2 size-4" />
+                Add address
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-4">
           {initialAddresses.map((address) => (

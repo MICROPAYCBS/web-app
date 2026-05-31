@@ -28,6 +28,7 @@ export {
   type DetailSummaryItem
 } from './detail';
 
+export { EmptyState, type EmptyStateProps } from './empty-state';
 export { DataTable } from './data-table/data-table';
 export { DataTablePagination } from './data-table/data-table-pagination';
 export { PageHeader } from './page-header';

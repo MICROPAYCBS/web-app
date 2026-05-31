@@ -91,9 +91,7 @@ export function ClientProfileAvatar({
   return (
     <div className="flex flex-col items-center gap-3 sm:items-start">
       <Avatar className="size-24 text-lg">
-        {showImage ? (
-          <AvatarImage key={imageVersion} src={imageSrc ?? undefined} alt="" />
-        ) : null}
+        {showImage ? <AvatarImage key={imageVersion} src={imageSrc ?? undefined} alt="" /> : null}
         <AvatarFallback className="text-lg font-medium">{initials}</AvatarFallback>
       </Avatar>
 

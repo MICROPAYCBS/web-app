@@ -10,10 +10,11 @@
 
 import type { FineractClientTemplate } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { FamilyMemberDialog } from '../family-member-dialog';
 import type { CreateClientDraft } from '../types';
+import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 
 export function FamilyStep({
@@ -56,7 +57,25 @@ export function FamilyStep({
       </Button>
 
       {members.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No family members added yet.</p>
+        <EmptyState
+          icon={Users}
+          title="No family members added yet"
+          description="This step is optional. Add household or next-of-kin contacts if needed."
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditIndex(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 size-4" />
+              Add family member
+            </Button>
+          }
+        />
       ) : (
         <ul className="divide-y rounded-md border">
           {members.map((member, index) => (
@@ -93,7 +112,6 @@ export function FamilyStep({
           }
         }}
       />
-
     </div>
   );
 }

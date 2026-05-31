@@ -1,9 +1,11 @@
 'use client';
 
+import { Server } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
 import { selectServerAction } from '@/actions/servers';
+import { EmptyState } from '@/components/composites';
 import { cn } from '@/lib/utils';
 
 export function ServerList({
@@ -21,9 +23,11 @@ export function ServerList({
 
   if (servers.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
-        No servers yet. Add a Fineract instance below.
-      </p>
+      <EmptyState
+        icon={Server}
+        title="No servers yet"
+        description="Add a Fineract instance below to sign in and use the app."
+      />
     );
   }
 
@@ -51,10 +55,10 @@ export function ServerList({
               }
             >
               <span className="font-medium">{server.name}</span>
-              <span className="mt-1 text-xs text-muted-foreground">
-                Tenant: {server.tenantId}
+              <span className="mt-1 text-xs text-muted-foreground">Tenant: {server.tenantId}</span>
+              <span className="mt-0.5 truncate text-xs text-muted-foreground">
+                {server.baseUrl}
               </span>
-              <span className="mt-0.5 truncate text-xs text-muted-foreground">{server.baseUrl}</span>
               {isActive ? (
                 <span className="mt-2 text-xs font-medium text-primary">Active for sign-in</span>
               ) : (

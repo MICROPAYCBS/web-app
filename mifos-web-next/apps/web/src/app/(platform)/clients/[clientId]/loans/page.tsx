@@ -30,7 +30,8 @@ export default async function ClientLoansPage({
       title="Loan accounts"
       description="Open and active loan accounts for this client. Account detail screens will link here in a later iteration."
     >
-      <ClientAccountsTable rows={rows} emptyMessage="No active loan accounts for this client." />
+      <ClientAccountsTable rows={rows} emptyMessage="No active loan accounts"
+        emptyDescription="This client has no open loan or working-capital accounts." />
     </DetailSection>
   );
 }
