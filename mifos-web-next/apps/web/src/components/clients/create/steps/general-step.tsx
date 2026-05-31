@@ -12,12 +12,9 @@ import type { FineractClientTemplate } from '@mifos/api-client';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
+import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Field } from '@/components/ui/field';
-import { FormLabel } from '@/components/composites/form-label';
-import { Label } from '@/components/ui/label';
 import { toFineractDate } from '@/lib/fineract/dates';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
@@ -45,7 +42,6 @@ export function GeneralStep({
   const active = g.active ?? false;
   const addSavings = g.addSavings ?? false;
   const nonPerson = g.clientNonPersonDetails ?? {};
-
 
   async function reloadTemplateForOffice(officeId: number) {
     const res = await fetch(`/api/clients/template?officeId=${officeId}`);
@@ -211,7 +207,9 @@ export function GeneralStep({
               id="mainBusinessLineId"
               label="Main business line"
               optional
-              value={nonPerson.mainBusinessLineId ? String(nonPerson.mainBusinessLineId) : undefined}
+              value={
+                nonPerson.mainBusinessLineId ? String(nonPerson.mainBusinessLineId) : undefined
+              }
               onValueChange={(v) =>
                 onDraftChange({
                   clientNonPersonDetails: {
@@ -271,26 +269,23 @@ export function GeneralStep({
             template.staffOptions?.map((s) => ({
               id: s.id,
               displayName:
-                s.displayName ?? (`${s.firstname ?? ''} ${s.lastname ?? ''}`.trim() || `Staff ${s.id}`)
+                s.displayName ??
+                (`${s.firstname ?? ''} ${s.lastname ?? ''}`.trim() || `Staff ${s.id}`)
             }))
           )}
           placeholder="Assign staff"
         />
 
         {legalFormId === LEGAL_FORM_PERSON ? (
-          <Field className="flex flex-row items-center gap-2 self-end">
-            <Checkbox
-              id="isStaff"
-              checked={g.isStaff ?? false}
-              onCheckedChange={(checked) => onDraftChange({ isStaff: checked === true })}
-            />
-            <Label htmlFor="isStaff" className="font-normal">
-              Is staff <span className="text-muted-foreground">(optional)</span>
-            </Label>
-          </Field>
-        ) : (
-          <div className="hidden sm:block" />
-        )}
+          <SwitchField
+            id="isStaff"
+            label="Is staff"
+            optional
+            checked={g.isStaff ?? false}
+            description="Mark if this client is also an employee of the institution."
+            onCheckedChange={(checked) => onDraftChange({ isStaff: checked })}
+          />
+        ) : null}
 
         <TextField
           id="mobileNo"
@@ -341,22 +336,20 @@ export function GeneralStep({
           error={errors.submittedOnDate}
         />
 
-        <Field className="flex flex-row items-center gap-2 self-end">
-          <Checkbox
-            id="active"
-            checked={active}
-            onCheckedChange={(checked) => {
-              const isActive = checked === true;
-              onDraftChange({
-                active: isActive,
-                activationDate: isActive && !g.activationDate ? toFineractDate() : g.activationDate
-              });
-            }}
-          />
-          <FormLabel htmlFor="active" optional className="font-normal">
-            Active
-          </FormLabel>
-        </Field>
+        <SwitchField
+          id="active"
+          label="Active"
+          optional
+          checked={active}
+          description="Activate the client immediately. Requires an activation date."
+          onCheckedChange={(isActive) => {
+            onDraftChange({
+              active: isActive,
+              activationDate: isActive && !g.activationDate ? toFineractDate() : g.activationDate,
+              ...(isActive ? {} : { addSavings: false, savingsProductId: undefined })
+            });
+          }}
+        />
 
         {active ? (
           <DateField
@@ -367,26 +360,27 @@ export function GeneralStep({
             onChange={(v) => onDraftChange({ activationDate: v })}
             error={errors.activationDate}
           />
-        ) : (
-          <div className="hidden sm:block" />
-        )}
+        ) : null}
 
-        <Field className="flex flex-row items-center gap-2 self-end">
-          <Checkbox
-            id="addSavings"
-            checked={addSavings}
-            onCheckedChange={(checked) => {
-              const open = checked === true;
-              onDraftChange({
-                addSavings: open,
-                savingsProductId: open ? g.savingsProductId : undefined
-              });
-            }}
-          />
-          <FormLabel htmlFor="addSavings" optional className="font-normal">
-            Open savings account
-          </FormLabel>
-        </Field>
+        <SwitchField
+          id="addSavings"
+          label="Open savings account"
+          optional
+          checked={addSavings}
+          disabled={!active}
+          description={
+            active
+              ? 'Create a savings account when this client is submitted.'
+              : 'Turn on Active first to open a savings account on creation.'
+          }
+          error={errors.addSavings}
+          onCheckedChange={(open) => {
+            onDraftChange({
+              addSavings: open,
+              savingsProductId: open ? g.savingsProductId : undefined
+            });
+          }}
+        />
 
         {addSavings ? (
           <SelectField
@@ -401,9 +395,7 @@ export function GeneralStep({
             placeholder="Select savings product"
             error={errors.savingsProductId}
           />
-        ) : (
-          <div className="hidden sm:block" />
-        )}
+        ) : null}
       </div>
 
       <div className="flex justify-end">
