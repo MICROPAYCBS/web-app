@@ -19,7 +19,7 @@ export interface DetailNavTab {
 }
 
 /**
- * Route-linked secondary navigation for detail pages (client, loan, etc.).
+ * Horizontal tabs (legacy). Prefer DetailNavSidebar for Supabase-style vertical nav.
  */
 export function DetailNavTabs({ tabs }: { tabs: DetailNavTab[] }) {
   const pathname = usePathname();

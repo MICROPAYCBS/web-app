@@ -21,7 +21,10 @@ export {
   TextValue,
   EmptyValue,
   DetailNavTabs,
+  DetailNavSidebar,
   type DetailNavTab,
+  type DetailNavGroup,
+  type DetailNavItem,
   type DetailSummaryItem
 } from './detail';
 

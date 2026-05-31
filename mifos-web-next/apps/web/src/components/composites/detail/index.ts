@@ -18,3 +18,9 @@ export { DetailSummary, type DetailSummaryItem } from './detail-summary';
 export { DetailHeader } from './detail-header';
 export { DetailPage } from './detail-page';
 export { DetailNavTabs, type DetailNavTab } from './detail-nav-tabs';
+
+export {
+  DetailNavSidebar,
+  type DetailNavGroup,
+  type DetailNavItem
+} from './detail-nav-sidebar';

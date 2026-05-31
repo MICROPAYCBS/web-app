@@ -8,27 +8,10 @@
 
 import type { FineractClientDetail } from '@mifos/api-client';
 import type { ReactNode } from 'react';
-import {
-  DetailHeader,
-  DetailNavTabs,
-  DetailPage,
-  DetailSummary,
-  TextValue,
-  type DetailNavTab
-} from '@/components/composites';
+import { ClientDetailNav } from '@/components/clients/detail/client-detail-nav';
+import { DetailHeader, DetailPage, DetailSummary, TextValue } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
-
-export function clientDetailTabs(clientId: string | number): DetailNavTab[] {
-  const base = `/clients/${clientId}`;
-  return [
-    { id: 'general', label: 'General', href: `${base}/general` },
-    { id: 'loans', label: 'Loans', href: `${base}/loans` },
-    { id: 'savings', label: 'Savings', href: `${base}/savings` },
-    { id: 'fixed-deposits', label: 'Fixed deposits', href: `${base}/fixed-deposits` },
-    { id: 'relations', label: 'Many to one', href: `${base}/relations` }
-  ];
-}
 
 export function ClientDetailShell({
   client,
@@ -78,9 +61,12 @@ export function ClientDetailShell({
           ]}
         />
       }
-      tabs={<DetailNavTabs tabs={clientDetailTabs(client.id)} />}
+      sidebar={<ClientDetailNav clientId={client.id} />}
     >
       {children}
     </DetailPage>
   );
 }
+
+// Re-export for tests or config
+export { clientDetailNavGroups } from '@/components/clients/detail/client-detail-nav';
