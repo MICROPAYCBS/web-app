@@ -70,7 +70,9 @@ export function CreateClientWizard({
   const [template, setTemplate] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(emptyDraft);
   const [stepId, setStepId] = useState('general');
-  const [stepErrors, setStepErrors] = useState<StepErrors>({});
+  const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
+    () => new Set()
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -79,6 +81,33 @@ export function CreateClientWizard({
   const resolvedStepId = steps.some((s) => s.id === stepId) ? stepId : 'general';
   const currentIndex = steps.findIndex((s) => s.id === resolvedStepId);
 
+  const markValidationAttempted = useCallback((id: string) => {
+    setValidationAttemptedStepIds((prev) => {
+      if (prev.has(id)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const invalidStepIdsForRail = useMemo(() => {
+    const stepIdSet = new Set(steps.map((s) => s.id));
+    return [...validationAttemptedStepIds].filter((id) => {
+      if (!stepIdSet.has(id) || id === 'preview') {
+        return false;
+      }
+      return Object.keys(validateStep(id, draft, template)).length > 0;
+    });
+  }, [validationAttemptedStepIds, steps, draft, template]);
+
+  const stepErrors = useMemo((): StepErrors => {
+    if (resolvedStepId === 'preview' || !validationAttemptedStepIds.has(resolvedStepId)) {
+      return {};
+    }
+    return validateStep(resolvedStepId, draft, template);
+  }, [validationAttemptedStepIds, resolvedStepId, draft, template]);
 
   const goNext = useCallback(() => {
     const next = steps[currentIndex + 1];
@@ -88,7 +117,6 @@ export function CreateClientWizard({
   }, [currentIndex, steps]);
 
   const goBack = useCallback(() => {
-    setStepErrors({});
     const prev = steps[currentIndex - 1];
     if (prev) {
       setStepId(prev.id);
@@ -101,12 +129,11 @@ export function CreateClientWizard({
     }
     const errors = validateStep(resolvedStepId, draft, template);
     if (Object.keys(errors).length > 0) {
-      setStepErrors(errors);
+      markValidationAttempted(resolvedStepId);
       return;
     }
-    setStepErrors({});
     goNext();
-  }, [resolvedStepId, draft, template, goNext]);
+  }, [resolvedStepId, draft, template, goNext, markValidationAttempted]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -116,7 +143,6 @@ export function CreateClientWizard({
       }
 
       if (targetIndex < currentIndex) {
-        setStepErrors({});
         setStepId(targetStepId);
         return;
       }
@@ -125,16 +151,15 @@ export function CreateClientWizard({
         const stepToValidate = steps[i].id;
         const errors = validateStep(stepToValidate, draft, template);
         if (Object.keys(errors).length > 0) {
-          setStepErrors(errors);
+          markValidationAttempted(stepToValidate);
           setStepId(stepToValidate);
           return;
         }
       }
 
-      setStepErrors({});
       setStepId(targetStepId);
     },
-    [currentIndex, draft, steps, template]
+    [currentIndex, draft, steps, template, markValidationAttempted]
   );
 
   function patchGeneral(patch: Partial<import('./types').ClientGeneralFormState>) {
@@ -213,6 +238,7 @@ export function CreateClientWizard({
       title="Create client"
       description="Complete each step to register a new client in Fineract."
       onStepClick={goToStep}
+      invalidStepIds={invalidStepIdsForRail}
       footer={
         <FormWizardFooter
           cancelHref="/clients"

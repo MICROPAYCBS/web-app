@@ -27,7 +27,43 @@ export interface FormWizardProps {
   footer?: ReactNode;
   /** When set, step labels in the rail are buttons and invoke this handler */
   onStepClick?: (stepId: string) => void;
+  /** Step IDs that failed validation and still need attention */
+  invalidStepIds?: readonly string[];
   className?: string;
+}
+
+
+function WizardStepIndicator({
+  index,
+  isActive,
+  isPast,
+  isInvalid
+}: {
+  index: number;
+  isActive: boolean;
+  isPast: boolean;
+  isInvalid: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        'relative flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+        isActive && 'border-primary-foreground/30 bg-primary-foreground/15',
+        !isActive && isPast && 'border-border bg-background',
+        !isActive && !isPast && 'border-border bg-muted/40',
+        isInvalid && !isActive && 'ring-1 ring-destructive/60',
+        isInvalid && isActive && 'ring-2 ring-destructive/50 ring-offset-1 ring-offset-primary'
+      )}
+    >
+      {index + 1}
+      {isInvalid ? (
+        <span
+          className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-destructive ring-2 ring-background"
+          aria-hidden
+        />
+      ) : null}
+    </span>
+  );
 }
 
 /**
@@ -42,6 +78,7 @@ export function FormWizard({
   children,
   footer,
   onStepClick,
+  invalidStepIds,
   className
 }: FormWizardProps) {
   const currentIndex = steps.findIndex((s) => s.id === currentStepId);
@@ -66,6 +103,7 @@ export function FormWizard({
             {steps.map((step, index) => {
               const isActive = step.id === currentStepId;
               const isPast = index < currentIndex;
+              const isInvalid = invalidStepIds?.includes(step.id) ?? false;
               const isClickable = Boolean(onStepClick);
               const stepClassName = cn(
                 'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -86,32 +124,36 @@ export function FormWizard({
                       className={cn(stepClassName, 'text-left')}
                       onClick={() => onStepClick?.(step.id)}
                       aria-current={isActive ? 'step' : undefined}
+                      title={isInvalid ? 'Complete required fields on this step' : undefined}
                     >
-                      <span
-                        className={cn(
-                          'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
-                          isActive && 'border-primary-foreground/30 bg-primary-foreground/15',
-                          !isActive && isPast && 'border-border bg-background',
-                          !isActive && !isPast && 'border-border bg-muted/40'
-                        )}
-                      >
-                        {index + 1}
+                      <WizardStepIndicator
+                        index={index}
+                        isActive={isActive}
+                        isPast={isPast}
+                        isInvalid={isInvalid}
+                      />
+                      <span className="flex min-w-0 flex-col truncate">
+                        <span className="truncate">{step.label}</span>
+                        {isInvalid ? (
+                          <span className="sr-only">Has required fields to fix</span>
+                        ) : null}
                       </span>
-                      <span className="min-w-0 truncate">{step.label}</span>
                     </button>
                   ) : (
-                    <span className={stepClassName} aria-current={isActive ? 'step' : undefined}>
-                      <span
-                        className={cn(
-                          'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
-                          isActive && 'border-primary-foreground/30 bg-primary-foreground/15',
-                          !isActive && isPast && 'border-border bg-background',
-                          !isActive && !isPast && 'border-border bg-muted/40'
-                        )}
-                      >
-                        {index + 1}
-                      </span>
+                    <span
+                      className={stepClassName}
+                      aria-current={isActive ? 'step' : undefined}
+                    >
+                      <WizardStepIndicator
+                        index={index}
+                        isActive={isActive}
+                        isPast={isPast}
+                        isInvalid={isInvalid}
+                      />
                       <span className="min-w-0 truncate">{step.label}</span>
+                      {isInvalid ? (
+                        <span className="sr-only">Has required fields to fix</span>
+                      ) : null}
                     </span>
                   )}
                 </li>
