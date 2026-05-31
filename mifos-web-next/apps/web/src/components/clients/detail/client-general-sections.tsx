@@ -7,7 +7,6 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
-import Link from 'next/link';
 import {
   DetailField,
   DetailFieldGrid,
@@ -101,11 +100,6 @@ export function ClientGeneralSections({ client }: { client: FineractClientDetail
         </DetailFieldGrid>
       </DetailSection>
 
-      <p className="text-sm text-muted-foreground">
-        <Link href="/clients" className="underline underline-offset-4">
-          Back to clients
-        </Link>
-      </p>
     </>
   );
 }

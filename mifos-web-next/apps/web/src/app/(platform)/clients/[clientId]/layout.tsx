@@ -6,11 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { can } from '@mifos/auth';
 import { FineractHttpError } from '@mifos/api-client';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ClientDetailShell } from '@/components/clients/detail/client-detail-shell';
+import { getClientProfileImage } from '@/lib/fineract/client-image';
 import { getClient } from '@/lib/fineract/clients';
+import { getServerSession } from '@/lib/session/server';
 
 export default async function ClientDetailLayout({
   children,
@@ -20,6 +23,7 @@ export default async function ClientDetailLayout({
   params: Promise<{ clientId: string }>;
 }) {
   const { clientId } = await params;
+  const session = await getServerSession();
 
   let client;
   try {
@@ -31,5 +35,19 @@ export default async function ClientDetailLayout({
     throw err;
   }
 
-  return <ClientDetailShell client={client}>{children}</ClientDetailShell>;
+  const profileImageSrc = await getClientProfileImage(clientId).catch(() => null);
+
+  const canCreateImage = can(session, 'CREATE_CLIENTIMAGE');
+  const canDeleteImage = can(session, 'DELETE_CLIENTIMAGE');
+
+  return (
+    <ClientDetailShell
+      client={client}
+      initialImageSrc={profileImageSrc}
+      canCreateImage={canCreateImage}
+      canDeleteImage={canDeleteImage}
+    >
+      {children}
+    </ClientDetailShell>
+  );
 }

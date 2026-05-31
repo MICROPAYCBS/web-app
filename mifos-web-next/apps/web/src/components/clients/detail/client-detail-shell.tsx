@@ -9,56 +9,30 @@
 import type { FineractClientDetail } from '@mifos/api-client';
 import type { ReactNode } from 'react';
 import { ClientDetailNav } from '@/components/clients/detail/client-detail-nav';
-import { DetailHeader, DetailPage, DetailSummary, TextValue } from '@/components/composites';
-import { Button } from '@/components/ui/button';
-import { clientDisplayName } from '@/lib/fineract/clients-display';
+import { ClientDetailTop } from '@/components/clients/detail/client-detail-top';
+import { DetailPage } from '@/components/composites';
 
 export function ClientDetailShell({
   client,
+  initialImageSrc,
+  canCreateImage,
+  canDeleteImage,
   children
 }: {
   client: FineractClientDetail;
+  initialImageSrc: string | null;
+  canCreateImage: boolean;
+  canDeleteImage: boolean;
   children: ReactNode;
 }) {
-  const name = clientDisplayName(client);
-
   return (
     <DetailPage
       header={
-        <DetailHeader
-          title={name}
-          status={{
-            label: client.status?.value ?? 'Unknown',
-            variant: 'secondary'
-          }}
-          meta={
-            <span>
-              Account {client.accountNo}
-              {client.officeName ? ` · ${client.officeName}` : ''}
-              {client.staffName ? ` · ${client.staffName}` : ''}
-            </span>
-          }
-          actions={
-            <Button type="button" variant="outline" disabled>
-              Actions
-            </Button>
-          }
-        />
-      }
-      summary={
-        <DetailSummary
-          items={[
-            {
-              id: 'status',
-              label: 'Status',
-              value: <TextValue value={client.status?.value} />
-            },
-            {
-              id: 'external',
-              label: 'External ID',
-              value: <TextValue value={client.externalId} />
-            }
-          ]}
+        <ClientDetailTop
+          client={client}
+          initialImageSrc={initialImageSrc}
+          canCreateImage={canCreateImage}
+          canDeleteImage={canDeleteImage}
         />
       }
       sidebar={<ClientDetailNav clientId={client.id} />}
@@ -68,5 +42,4 @@ export function ClientDetailShell({
   );
 }
 
-// Re-export for tests or config
 export { clientDetailNavGroups } from '@/components/clients/detail/client-detail-nav';

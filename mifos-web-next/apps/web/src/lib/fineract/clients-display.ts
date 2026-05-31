@@ -21,3 +21,17 @@ export function clientDisplayName(client: {
   }
   return [client.firstname, client.lastname].filter(Boolean).join(' ').trim() || 'Client';
 }
+
+export function clientInitials(client: {
+  displayName?: string;
+  firstname?: string;
+  lastname?: string;
+  fullname?: string;
+}): string {
+  const name = clientDisplayName(client);
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
