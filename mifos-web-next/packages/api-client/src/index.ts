@@ -11,6 +11,8 @@ export type { FineractApiError, FineractClientConfig } from './types';
 
 export type {
   FineractAddressFieldConfig,
+  FineractClientAddress,
+  FineractClientAddressTemplate,
   FineractClientDatatableTemplate,
   FineractClientDetail,
   FineractClientSummary,

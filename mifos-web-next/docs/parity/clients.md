@@ -71,7 +71,7 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | -- | ----- | ----- | ------------------- | ------ |
 | CL-030 | General | `/general` | General (subset) | Partial |
 | CL-031 | Personal data | `/personal-data` | Personal Data | Planned |
-| CL-032 | Address | `/address` | Address | Planned |
+| CL-032 | Address | `/address` | Address | **Done** |
 | CL-033 | Family members | `/family-members` (+ add, `:id/edit`) | Family Members | Planned |
 | CL-034 | Identities | `/identities` | Identities | Planned |
 | CL-035 | Documents | `/documents` | Documents | Planned |
@@ -161,10 +161,10 @@ Above + Closed Date.
 
 | ID | Feature | API | Status |
 | -- | ------- | --- | ------ |
-| CL-080 | List addresses | `GET` client addresses | Planned |
-| CL-081 | Field configuration | address field config resolver | Planned |
-| CL-082 | Add / edit / delete | template + commands | Planned |
-| CL-083 | Reuse `AddressDialog` from create | — | Planned |
+| CL-080 | List addresses | `GET` client addresses | Done |
+| CL-081 | Field configuration | address field config resolver | Done |
+| CL-082 | Add / edit / toggle active | template + POST/PUT | Done |
+| CL-083 | Reuse `AddressDialog` from create | — | Done |
 
 ### Family (`CL-033`)
 

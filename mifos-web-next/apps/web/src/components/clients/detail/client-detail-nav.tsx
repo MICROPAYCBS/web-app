@@ -6,14 +6,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { DetailNavSidebar, type DetailNavGroup } from '@/components/composites/detail/detail-nav-sidebar';
+import {
+  DetailNavSidebar,
+  type DetailNavGroup
+} from '@/components/composites/detail/detail-nav-sidebar';
 
 export function clientDetailNavGroups(clientId: string | number): DetailNavGroup[] {
   const base = `/clients/${clientId}`;
   return [
     {
       id: 'client',
-      items: [{ id: 'general', label: 'General', href: `${base}/general` }]
+      items: [
+        { id: 'general', label: 'General', href: `${base}/general` },
+        { id: 'address', label: 'Address', href: `${base}/address` }
+      ]
     },
     {
       id: 'accounts',

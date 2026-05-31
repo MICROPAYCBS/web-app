@@ -82,6 +82,26 @@ export interface FineractAddressFieldConfig {
   isEnabled: boolean;
 }
 
+export interface FineractClientAddress {
+  addressId: number;
+  addressType: string;
+  addressTypeId: number;
+  street?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  addressLine3?: string;
+  townVillage?: string;
+  city?: string;
+  stateProvinceId?: number;
+  countryId?: number;
+  countyDistrict?: string;
+  postalCode?: string;
+  isActive?: boolean;
+  relationship?: string;
+}
+
+export interface FineractClientAddressTemplate extends FineractAddressTemplateOptions {}
+
 export interface FineractClientSummary {
   id: number;
   accountNo: string;
