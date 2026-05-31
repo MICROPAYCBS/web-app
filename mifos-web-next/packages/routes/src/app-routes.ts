@@ -1,10 +1,11 @@
+import { ADMIN_NAV_ROUTES } from './admin-nav-routes';
 import type { RouteDefinition } from './types';
 
 /**
  * Canonical route registry — single source of truth.
  * Nav: featured row + collapsible groups + Quick Find (see derive-nav.ts).
  */
-export const APP_ROUTES = {
+const CORE_APP_ROUTES = {
   dashboard: {
     id: 'dashboard',
     path: '/',
@@ -195,7 +196,7 @@ export const APP_ROUTES = {
     kind: 'page',
     label: 'Accounting',
     domain: 'accounting',
-    nav: true,
+    nav: false,
     navOrder: 10,
     navGroup: 'accounting',
     navIcon: 'calculator',
@@ -211,7 +212,7 @@ export const APP_ROUTES = {
     kind: 'page',
     label: 'Organization',
     domain: 'organization',
-    nav: true,
+    nav: false,
     navOrder: 10,
     navGroup: 'organization',
     navIcon: 'building',
@@ -264,6 +265,12 @@ export const APP_ROUTES = {
     requiresAuth: true,
     parity: { status: 'in_progress', fineractApi: 'GET /clients' }
   }
+} as const satisfies Record<string, RouteDefinition>;
+
+/** Canonical route registry (core + admin/config list screens). */
+export const APP_ROUTES = {
+  ...CORE_APP_ROUTES,
+  ...ADMIN_NAV_ROUTES
 } as const satisfies Record<string, RouteDefinition>;
 
 export type AppRouteId = keyof typeof APP_ROUTES;

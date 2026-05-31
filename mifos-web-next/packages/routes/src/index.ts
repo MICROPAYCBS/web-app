@@ -11,3 +11,4 @@ export {
   routePath,
   isAppRoutePath
 } from './registry';
+export { findRouteByPath } from './resolve-route';

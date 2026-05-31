@@ -15,6 +15,7 @@ export const NAV_GROUPS: NavGroupDefinition[] = [
   { id: 'products', label: 'Products', defaultOpen: false, order: 30 },
   { id: 'accounting', label: 'Accounting', defaultOpen: false, order: 40 },
   { id: 'organization', label: 'Organization', defaultOpen: false, order: 50 },
+  { id: 'system', label: 'System', defaultOpen: false, order: 55 },
   { id: 'administration', label: 'Administration', defaultOpen: false, order: 60 }
 ];
 

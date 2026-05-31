@@ -1,0 +1,576 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { adminRoutesToRecord } from './admin-route-factory';
+import type { AdminRouteInput } from './admin-route-factory';
+
+/** Admin/config list screens from legacy web-app routing (parity audit). */
+export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
+  {
+    id: 'orgOffices',
+    path: '/organization/offices',
+    label: 'Offices',
+    navGroup: 'organization',
+    webAppRef: 'organization/offices',
+    permissionKey: 'organization.offices',
+    navOrder: 10,
+    keywords: ['branch', 'office']
+  },
+  {
+    id: 'orgEmployees',
+    path: '/organization/employees',
+    label: 'Employees',
+    navGroup: 'organization',
+    webAppRef: 'organization/employees',
+    permissionKey: 'organization.employees',
+    navOrder: 20,
+    keywords: ['staff']
+  },
+  {
+    id: 'orgProvisioningCriteria',
+    path: '/organization/provisioning-criteria',
+    label: 'Provisioning criteria',
+    navGroup: 'organization',
+    webAppRef: 'organization/provisioning-criteria',
+    permissionKey: 'organization.provisioning',
+    navOrder: 30,
+    keywords: []
+  },
+  {
+    id: 'orgCurrencies',
+    path: '/organization/currencies',
+    label: 'Currencies',
+    navGroup: 'organization',
+    webAppRef: 'organization/currencies',
+    permissionKey: 'organization.currencies',
+    navOrder: 40,
+    keywords: []
+  },
+  {
+    id: 'orgSmsCampaigns',
+    path: '/organization/sms-campaigns',
+    label: 'SMS campaigns',
+    navGroup: 'organization',
+    webAppRef: 'organization/sms-campaigns',
+    permissionKey: 'organization.smsCampaigns',
+    navOrder: 50,
+    keywords: []
+  },
+  {
+    id: 'orgStandingInstructions',
+    path: '/organization/standing-instructions-history',
+    label: 'Standing instructions history',
+    navGroup: 'organization',
+    webAppRef: 'organization/standing-instructions-history',
+    permissionKey: 'organization.standingInstructions',
+    navOrder: 60,
+    keywords: []
+  },
+  {
+    id: 'orgFundMapping',
+    path: '/organization/fund-mapping',
+    label: 'Fund mapping',
+    navGroup: 'organization',
+    webAppRef: 'organization/fund-mapping',
+    permissionKey: 'organization.fundMapping',
+    navOrder: 70,
+    keywords: []
+  },
+  {
+    id: 'orgInvestors',
+    path: '/organization/investors',
+    label: 'Investors',
+    navGroup: 'organization',
+    webAppRef: 'organization/investors',
+    permissionKey: 'organization.investors',
+    navOrder: 80,
+    keywords: []
+  },
+  {
+    id: 'orgAdhocQuery',
+    path: '/organization/adhoc-query',
+    label: 'Ad hoc query',
+    navGroup: 'organization',
+    webAppRef: 'organization/adhoc-query',
+    permissionKey: 'organization.adhocQuery',
+    navOrder: 90,
+    keywords: []
+  },
+  {
+    id: 'orgTellers',
+    path: '/organization/tellers',
+    label: 'Tellers',
+    navGroup: 'organization',
+    webAppRef: 'organization/tellers',
+    permissionKey: 'organization.tellers',
+    navOrder: 100,
+    keywords: []
+  },
+  {
+    id: 'orgPaymentTypes',
+    path: '/organization/payment-types',
+    label: 'Payment types',
+    navGroup: 'organization',
+    webAppRef: 'organization/payment-types',
+    permissionKey: 'organization.paymentTypes',
+    navOrder: 110,
+    keywords: []
+  },
+  {
+    id: 'orgPasswordPreferences',
+    path: '/organization/password-preferences',
+    label: 'Password preferences',
+    navGroup: 'organization',
+    webAppRef: 'organization/password-preferences',
+    permissionKey: 'organization.passwordPreferences',
+    navOrder: 120,
+    keywords: []
+  },
+  {
+    id: 'orgBulkLoanReassignment',
+    path: '/organization/bulkloan',
+    label: 'Bulk loan reassignment',
+    navGroup: 'organization',
+    webAppRef: 'organization/bulkloan',
+    permissionKey: 'organization.bulkLoan',
+    navOrder: 130,
+    keywords: []
+  },
+  {
+    id: 'orgEntityDatatableChecks',
+    path: '/organization/entity-data-table-checks',
+    label: 'Entity data table checks',
+    navGroup: 'organization',
+    webAppRef: 'organization/entity-data-table-checks',
+    permissionKey: 'organization.entityChecks',
+    navOrder: 140,
+    keywords: []
+  },
+  {
+    id: 'orgWorkingDays',
+    path: '/organization/working-days',
+    label: 'Working days',
+    navGroup: 'organization',
+    webAppRef: 'organization/working-days',
+    permissionKey: 'organization.workingDays',
+    navOrder: 150,
+    keywords: []
+  },
+  {
+    id: 'orgLoanOriginators',
+    path: '/organization/manage-loan-originators',
+    label: 'Loan originators',
+    navGroup: 'organization',
+    webAppRef: 'organization/manage-loan-originators',
+    permissionKey: 'organization.loanOriginators',
+    navOrder: 160,
+    keywords: []
+  },
+  {
+    id: 'orgFunds',
+    path: '/organization/manage-funds',
+    label: 'Manage funds',
+    navGroup: 'organization',
+    webAppRef: 'organization/manage-funds',
+    permissionKey: 'organization.funds',
+    navOrder: 170,
+    keywords: []
+  },
+  {
+    id: 'orgBulkImport',
+    path: '/organization/bulk-import',
+    label: 'Bulk import',
+    navGroup: 'organization',
+    webAppRef: 'organization/bulk-import',
+    permissionKey: 'organization.bulkImport',
+    navOrder: 180,
+    keywords: []
+  },
+  {
+    id: 'orgHolidays',
+    path: '/organization/holidays',
+    label: 'Holidays',
+    navGroup: 'organization',
+    webAppRef: 'organization/holidays',
+    permissionKey: 'organization.holidays',
+    navOrder: 190,
+    keywords: []
+  },
+  {
+    id: 'sysCodes',
+    path: '/system/codes',
+    label: 'Codes',
+    navGroup: 'system',
+    webAppRef: 'system/codes',
+    permissionKey: 'system.codes',
+    navOrder: 10,
+    keywords: []
+  },
+  {
+    id: 'sysExternalEvents',
+    path: '/system/external-events',
+    label: 'External events',
+    navGroup: 'system',
+    webAppRef: 'system/external-events',
+    permissionKey: 'system.externalEvents',
+    navOrder: 20,
+    keywords: []
+  },
+  {
+    id: 'sysEntityMapping',
+    path: '/system/entity-to-entity-mapping',
+    label: 'Entity to entity mapping',
+    navGroup: 'system',
+    webAppRef: 'system/entity-to-entity-mapping',
+    permissionKey: 'system.entityMapping',
+    navOrder: 30,
+    keywords: []
+  },
+  {
+    id: 'sysExternalServices',
+    path: '/system/external-services',
+    label: 'External services',
+    navGroup: 'system',
+    webAppRef: 'system/external-services',
+    permissionKey: 'system.externalServices',
+    navOrder: 40,
+    keywords: []
+  },
+  {
+    id: 'sysDataTables',
+    path: '/system/data-tables',
+    label: 'Data tables',
+    navGroup: 'system',
+    webAppRef: 'system/data-tables',
+    permissionKey: 'system.dataTables',
+    navOrder: 50,
+    keywords: ['datatable']
+  },
+  {
+    id: 'sysHooks',
+    path: '/system/hooks',
+    label: 'Hooks',
+    navGroup: 'system',
+    webAppRef: 'system/hooks',
+    permissionKey: 'system.hooks',
+    navOrder: 60,
+    keywords: []
+  },
+  {
+    id: 'sysRoles',
+    path: '/system/roles-and-permissions',
+    label: 'Roles and permissions',
+    navGroup: 'system',
+    webAppRef: 'system/roles-and-permissions',
+    permissionKey: 'system.roles',
+    navOrder: 70,
+    keywords: ['role', 'permission']
+  },
+  {
+    id: 'sysMakerCheckerTasks',
+    path: '/system/configure-mc-tasks',
+    label: 'Configure maker checker tasks',
+    navGroup: 'system',
+    webAppRef: 'system/configure-mc-tasks',
+    permissionKey: 'system.makerChecker',
+    navOrder: 80,
+    keywords: []
+  },
+  {
+    id: 'sysSurveys',
+    path: '/system/surveys',
+    label: 'Surveys',
+    navGroup: 'system',
+    webAppRef: 'system/surveys',
+    permissionKey: 'system.surveys',
+    navOrder: 90,
+    keywords: []
+  },
+  {
+    id: 'sysJobs',
+    path: '/system/manage-jobs',
+    label: 'Manage jobs',
+    navGroup: 'system',
+    webAppRef: 'system/manage-jobs',
+    permissionKey: 'system.jobs',
+    navOrder: 100,
+    keywords: ['scheduler']
+  },
+  {
+    id: 'sysConfigurations',
+    path: '/system/configurations',
+    label: 'Global configurations',
+    navGroup: 'system',
+    webAppRef: 'system/configurations',
+    permissionKey: 'system.configurations',
+    navOrder: 110,
+    keywords: ['configuration']
+  },
+  {
+    id: 'sysAccountNumberPrefs',
+    path: '/system/account-number-preferences',
+    label: 'Account number preferences',
+    navGroup: 'system',
+    webAppRef: 'system/account-number-preferences',
+    permissionKey: 'system.accountNumberPrefs',
+    navOrder: 120,
+    keywords: []
+  },
+  {
+    id: 'sysReports',
+    path: '/system/reports',
+    label: 'Report configuration',
+    navGroup: 'system',
+    webAppRef: 'system/reports',
+    permissionKey: 'system.reports',
+    navOrder: 130,
+    keywords: []
+  },
+  {
+    id: 'sysSystemInformation',
+    path: '/system/system-information',
+    label: 'System information',
+    navGroup: 'system',
+    webAppRef: 'system/system-information',
+    permissionKey: 'system.information',
+    navOrder: 140,
+    keywords: []
+  },
+  {
+    id: 'sysAboutUs',
+    path: '/system/about-us',
+    label: 'About us',
+    navGroup: 'system',
+    webAppRef: 'system/about-us',
+    permissionKey: 'system.aboutUs',
+    navOrder: 150,
+    keywords: []
+  },
+  {
+    id: 'sysAuditTrails',
+    path: '/system/audit-trails',
+    label: 'Audit trails',
+    navGroup: 'system',
+    webAppRef: 'system/audit-trails',
+    permissionKey: 'system.audit',
+    navOrder: 160,
+    keywords: []
+  },
+  {
+    id: 'prodShare',
+    path: '/products/share-products',
+    label: 'Share products',
+    navGroup: 'products',
+    webAppRef: 'products/share-products',
+    permissionKey: 'products.share',
+    navOrder: 30,
+    keywords: []
+  },
+  {
+    id: 'prodCharges',
+    path: '/products/charges',
+    label: 'Charges',
+    navGroup: 'products',
+    webAppRef: 'products/charges',
+    permissionKey: 'products.charges',
+    navOrder: 40,
+    keywords: ['fee']
+  },
+  {
+    id: 'prodMix',
+    path: '/products/products-mix',
+    label: 'Product mix',
+    navGroup: 'products',
+    webAppRef: 'products/products-mix',
+    permissionKey: 'products.mix',
+    navOrder: 50,
+    keywords: []
+  },
+  {
+    id: 'prodTax',
+    path: '/products/tax-configurations',
+    label: 'Tax configurations',
+    navGroup: 'products',
+    webAppRef: 'products/tax-configurations',
+    permissionKey: 'products.tax',
+    navOrder: 60,
+    keywords: []
+  },
+  {
+    id: 'prodDelinquency',
+    path: '/products/delinquency-bucket-configurations',
+    label: 'Delinquency buckets',
+    navGroup: 'products',
+    webAppRef: 'products/delinquency-bucket-configurations',
+    permissionKey: 'products.delinquency',
+    navOrder: 70,
+    keywords: []
+  },
+  {
+    id: 'prodRecurringDeposit',
+    path: '/products/recurring-deposit-products',
+    label: 'Recurring deposit products',
+    navGroup: 'products',
+    webAppRef: 'products/recurring-deposit-products',
+    permissionKey: 'products.recurringDeposit',
+    navOrder: 80,
+    keywords: []
+  },
+  {
+    id: 'prodFixedDeposit',
+    path: '/products/fixed-deposit-products',
+    label: 'Fixed deposit products',
+    navGroup: 'products',
+    webAppRef: 'products/fixed-deposit-products',
+    permissionKey: 'products.fixedDeposit',
+    navOrder: 90,
+    keywords: []
+  },
+  {
+    id: 'prodFloatingRates',
+    path: '/products/floating-rates',
+    label: 'Floating rates',
+    navGroup: 'products',
+    webAppRef: 'products/floating-rates',
+    permissionKey: 'products.floatingRates',
+    navOrder: 100,
+    keywords: []
+  },
+  {
+    id: 'prodCollaterals',
+    path: '/products/collaterals',
+    label: 'Collaterals',
+    navGroup: 'products',
+    webAppRef: 'products/collaterals',
+    permissionKey: 'products.collaterals',
+    navOrder: 110,
+    keywords: []
+  },
+  {
+    id: 'acctCoa',
+    path: '/accounting/chart-of-accounts',
+    label: 'Chart of accounts',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/chart-of-accounts',
+    permissionKey: 'accounting.coa',
+    navOrder: 10,
+    keywords: ['gl', 'coa']
+  },
+  {
+    id: 'acctJournal',
+    path: '/accounting/journal-entries',
+    label: 'Journal entries',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/journal-entries',
+    permissionKey: 'accounting.journal',
+    navOrder: 20,
+    keywords: []
+  },
+  {
+    id: 'acctFrequentPostings',
+    path: '/accounting/journal-entries/frequent-postings',
+    label: 'Frequent postings',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/journal-entries/frequent-postings',
+    permissionKey: 'accounting.frequentPostings',
+    navOrder: 25,
+    keywords: []
+  },
+  {
+    id: 'acctFinancialActivity',
+    path: '/accounting/financial-activity-mappings',
+    label: 'Financial activity mappings',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/financial-activity-mappings',
+    permissionKey: 'accounting.financialActivity',
+    navOrder: 30,
+    keywords: []
+  },
+  {
+    id: 'acctMigrateBalances',
+    path: '/accounting/migrate-opening-balances',
+    label: 'Migrate opening balances',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/migrate-opening-balances',
+    permissionKey: 'accounting.migrateBalances',
+    navOrder: 40,
+    keywords: []
+  },
+  {
+    id: 'acctClosing',
+    path: '/accounting/closing-entries',
+    label: 'Closing entries',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/closing-entries',
+    permissionKey: 'accounting.closing',
+    navOrder: 50,
+    keywords: []
+  },
+  {
+    id: 'acctRules',
+    path: '/accounting/accounting-rules',
+    label: 'Accounting rules',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/accounting-rules',
+    permissionKey: 'accounting.rules',
+    navOrder: 60,
+    keywords: []
+  },
+  {
+    id: 'acctAccruals',
+    path: '/accounting/periodic-accruals',
+    label: 'Periodic accruals',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/periodic-accruals',
+    permissionKey: 'accounting.accruals',
+    navOrder: 70,
+    keywords: []
+  },
+  {
+    id: 'acctProvisioning',
+    path: '/accounting/provisioning-entries',
+    label: 'Provisioning entries',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/provisioning-entries',
+    permissionKey: 'accounting.provisioning',
+    navOrder: 80,
+    keywords: []
+  },
+  {
+    id: 'adminUsers',
+    path: '/appusers',
+    label: 'Users',
+    navGroup: 'administration',
+    webAppRef: 'appusers',
+    permissionKey: 'administration.users',
+    navOrder: 20,
+    keywords: ['app user']
+  },
+  {
+    id: 'adminTemplates',
+    path: '/templates',
+    label: 'Templates',
+    navGroup: 'administration',
+    webAppRef: 'templates',
+    permissionKey: 'administration.templates',
+    navOrder: 30,
+    keywords: []
+  },
+  {
+    id: 'adminReports',
+    path: '/reports',
+    label: 'Reports',
+    navGroup: 'administration',
+    webAppRef: 'reports',
+    permissionKey: 'administration.reports',
+    navOrder: 40,
+    keywords: ['report']
+  },
+];
+
+export const ADMIN_NAV_ROUTES = adminRoutesToRecord([...ADMIN_NAV_ROUTE_ENTRIES]);

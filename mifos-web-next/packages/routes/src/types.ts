@@ -18,7 +18,11 @@ export type NavIcon =
   | 'inbox'
   | 'search'
   | 'file-bar-chart'
-  | 'package';
+  | 'package'
+  | 'shield'
+  | 'database'
+  | 'cog'
+  | 'list';
 
 /** Sidebar / Quick Find grouping */
 export type NavGroupId =
@@ -27,6 +31,7 @@ export type NavGroupId =
   | 'products'
   | 'accounting'
   | 'organization'
+  | 'system'
   | 'administration';
 
 export interface RouteParity {

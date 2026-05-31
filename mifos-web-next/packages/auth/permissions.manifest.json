@@ -34,6 +34,8 @@
   },
   "accounting": {
     "any": [
+      "READ_GLACCOUNT",
+      "READ_JOURNALENTRY",
       "READ_ACCOUNTING"
     ]
   },
@@ -71,6 +73,291 @@
   "savings.list": {
     "any": [
       "READ_SAVINGSACCOUNT"
+    ]
+  },
+  "organization.offices": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "organization.employees": {
+    "any": [
+      "READ_STAFF"
+    ]
+  },
+  "organization.provisioning": {
+    "any": [
+      "READ_PROVISIONINGCRITERIA",
+      "READ_PROVISIONINGENTRY"
+    ]
+  },
+  "organization.currencies": {
+    "any": [
+      "READ_CURRENCY"
+    ]
+  },
+  "organization.smsCampaigns": {
+    "any": [
+      "READ_SMSCAMPAIGN"
+    ]
+  },
+  "organization.standingInstructions": {
+    "any": [
+      "READ_STANDINGINSTRUCTION"
+    ]
+  },
+  "organization.fundMapping": {
+    "any": [
+      "READ_OFFICE",
+      "READ_FUND"
+    ]
+  },
+  "organization.investors": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "organization.adhocQuery": {
+    "any": [
+      "READ_ADHOC"
+    ]
+  },
+  "organization.tellers": {
+    "any": [
+      "READ_TELLER"
+    ]
+  },
+  "organization.paymentTypes": {
+    "any": [
+      "READ_PAYMENTTYPE"
+    ]
+  },
+  "organization.passwordPreferences": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "organization.bulkLoan": {
+    "any": [
+      "BULKREASSIGN_LOAN"
+    ]
+  },
+  "organization.entityChecks": {
+    "any": [
+      "READ_ENTITY_DATATABLE_CHECK"
+    ]
+  },
+  "organization.workingDays": {
+    "any": [
+      "READ_WORKINGDAYS"
+    ]
+  },
+  "organization.loanOriginators": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "organization.funds": {
+    "any": [
+      "READ_FUND"
+    ]
+  },
+  "organization.bulkImport": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "organization.holidays": {
+    "any": [
+      "READ_HOLIDAY"
+    ]
+  },
+  "system.codes": {
+    "any": [
+      "READ_CODE"
+    ]
+  },
+  "system.externalEvents": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.entityMapping": {
+    "any": [
+      "READ_ENTITYMAPPING"
+    ]
+  },
+  "system.externalServices": {
+    "any": [
+      "READ_EXTERNALSERVICES"
+    ]
+  },
+  "system.dataTables": {
+    "any": [
+      "READ_DATATABLE"
+    ]
+  },
+  "system.hooks": {
+    "any": [
+      "READ_HOOK"
+    ]
+  },
+  "system.roles": {
+    "any": [
+      "READ_ROLE",
+      "READ_PERMISSION"
+    ]
+  },
+  "system.makerChecker": {
+    "any": [
+      "READ_MAKERCHECKER",
+      "READ_PERMISSION"
+    ]
+  },
+  "system.surveys": {
+    "any": [
+      "READ_SURVEY"
+    ]
+  },
+  "system.jobs": {
+    "any": [
+      "READ_SCHEDULER"
+    ]
+  },
+  "system.configurations": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.accountNumberPrefs": {
+    "any": [
+      "READ_ACCOUNTNUMBERFORMAT"
+    ]
+  },
+  "system.reports": {
+    "any": [
+      "READ_REPORT"
+    ]
+  },
+  "system.information": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.aboutUs": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.audit": {
+    "any": [
+      "READ_AUDIT"
+    ]
+  },
+  "products.share": {
+    "any": [
+      "READ_SHAREPRODUCT"
+    ]
+  },
+  "products.charges": {
+    "any": [
+      "READ_CHARGE"
+    ]
+  },
+  "products.mix": {
+    "any": [
+      "READ_PRODUCTMIX"
+    ]
+  },
+  "products.tax": {
+    "any": [
+      "READ_TAXCOMPONENT",
+      "READ_TAXGROUP"
+    ]
+  },
+  "products.delinquency": {
+    "any": [
+      "READ_DELINQUENCY"
+    ]
+  },
+  "products.recurringDeposit": {
+    "any": [
+      "READ_RECURRINGDEPOSITPRODUCT"
+    ]
+  },
+  "products.fixedDeposit": {
+    "any": [
+      "READ_FIXEDDEPOSITPRODUCT"
+    ]
+  },
+  "products.floatingRates": {
+    "any": [
+      "READ_FLOATINGRATE"
+    ]
+  },
+  "products.collaterals": {
+    "any": [
+      "READ_COLLATERAL"
+    ]
+  },
+  "accounting.coa": {
+    "any": [
+      "READ_GLACCOUNT"
+    ]
+  },
+  "accounting.journal": {
+    "any": [
+      "READ_JOURNALENTRY"
+    ]
+  },
+  "accounting.frequentPostings": {
+    "any": [
+      "READ_JOURNALENTRY"
+    ]
+  },
+  "accounting.financialActivity": {
+    "any": [
+      "READ_FINANCIALACTIVITYACCOUNT"
+    ]
+  },
+  "accounting.migrateBalances": {
+    "any": [
+      "READ_JOURNALENTRY"
+    ]
+  },
+  "accounting.closing": {
+    "any": [
+      "READ_GLCLOSURE"
+    ]
+  },
+  "accounting.rules": {
+    "any": [
+      "READ_ACCOUNTINGRULE"
+    ]
+  },
+  "accounting.accruals": {
+    "any": [
+      "READ_JOURNALENTRY"
+    ]
+  },
+  "accounting.provisioning": {
+    "any": [
+      "READ_PROVISIONINGENTRY"
+    ]
+  },
+  "administration.users": {
+    "any": [
+      "READ_USER"
+    ]
+  },
+  "administration.templates": {
+    "any": [
+      "READ_TEMPLATE"
+    ]
+  },
+  "administration.reports": {
+    "any": [
+      "READ_REPORT"
     ]
   }
 }
