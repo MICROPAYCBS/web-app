@@ -6,10 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {
-  DEFAULT_PASSWORD_POLICY,
-  type PasswordPolicyRules
-} from '@/lib/password-policy-validate';
+import { DEFAULT_PASSWORD_POLICY, type PasswordPolicyRules } from '@/lib/password-policy-validate';
 
 /**
  * Fineract GET /passwordpreferences/template item.
@@ -34,15 +31,13 @@ const SECURE_POLICY_RULES: PasswordPolicyRules = {
   requireSpecialChar: false,
   disallowSpaces: true,
   disallowConsecutiveRepeats: false,
-  hint:
-    'Password must be 6–50 characters with uppercase, lowercase, a number, and no spaces.'
+  hint: 'Password must be 6–50 characters with uppercase, lowercase, a number, and no spaces.'
 };
 
 /** Fineract "strong" tier (12+ chars, full complexity) — matches template description. */
 const STRONG_POLICY_RULES: PasswordPolicyRules = {
   ...DEFAULT_PASSWORD_POLICY,
-  hint:
-    'Password must be 12–50 characters with uppercase, lowercase, a number, and a special character. No spaces or consecutive repeating characters.'
+  hint: 'Password must be 12–50 characters with uppercase, lowercase, a number, and a special character. No spaces or consecutive repeating characters.'
 };
 
 /** When Fineract "simple" is active but the app enforces stronger passwords. */
@@ -96,9 +91,7 @@ export function isStrongPasswordPolicy(preference: FineractPasswordPreference): 
   }
   const desc = descriptionLower(preference);
   return (
-    desc.includes('12 to 50') ||
-    desc.includes('12 characters') ||
-    desc.includes('12 character')
+    desc.includes('12 to 50') || desc.includes('12 characters') || desc.includes('12 character')
   );
 }
 

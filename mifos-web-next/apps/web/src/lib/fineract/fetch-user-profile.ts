@@ -11,7 +11,10 @@ interface FineractAppUser {
 }
 
 function buildDisplayName(firstname?: string, lastname?: string, username?: string): string {
-  const full = [firstname, lastname].filter((part) => part?.trim()).join(' ').trim();
+  const full = [firstname, lastname]
+    .filter((part) => part?.trim())
+    .join(' ')
+    .trim();
   if (full) {
     return full;
   }

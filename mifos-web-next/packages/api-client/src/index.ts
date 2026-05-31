@@ -10,10 +10,16 @@ export { FineractClient, FineractHttpError } from './fineract-client';
 export type { FineractApiError, FineractClientConfig } from './types';
 
 export type {
+  FineractAddressFieldConfig,
+  FineractClientDatatableTemplate,
   FineractClientDetail,
   FineractClientSummary,
   FineractClientsPage,
   FineractClientTemplate,
   FineractCreateClientResponse,
-  FineractOfficeOption
+  FineractDatatableColumnHeader,
+  FineractEnumOption,
+  FineractFamilyMemberOptions,
+  FineractOfficeOption,
+  FineractStaffOption
 } from './clients/types';

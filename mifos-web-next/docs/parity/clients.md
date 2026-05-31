@@ -1,24 +1,31 @@
-# Parity: Clients
+# Clients — parity (mifos-web-next)
 
-Reference: `openMF/web-app` → `src/app/clients/`
+## Create client
 
-## Routes
+| Area         | Legacy Angular                                       | mifos-web-next                                         |
+| ------------ | ---------------------------------------------------- | ------------------------------------------------------ |
+| Entry        | `/clients/create` stepper                            | `/clients/create` full-page wizard (ADR-006 exception) |
+| Quick Create | Sidebar                                              | `/clients/create`                                      |
+| General      | Person + entity, office, staff, savings on create, … | `GeneralStep` — parity fields                          |
+| Family       | Optional list + dialog                               | `FamilyStep` + `FamilyMemberDialog`                    |
+| Address      | When `isAddressEnabled`                              | `AddressStep` + `AddressDialog` + field config API     |
+| Datatables   | Per-table steps by legal form                        | `DatatableStep` per registered table                   |
+| Preview      | Summary + submit                                     | `PreviewStep`                                          |
+| Validation   | Reactive forms                                       | `@mifos/validation` `createClientSchema`               |
+| API          | `POST /clients`                                      | BFF → `createClientAction`                             |
 
-| Route | Method | web-app screen | Fineract API | Schema ID | Status |
-|-------|--------|----------------|--------------|-----------|--------|
-| `/clients` | GET | clients list | `GET /clients` | — | in_progress |
-| `/clients?create=1` | — | create (sheet) | `POST /clients` | `clients.create` | in_progress |
-| `/clients/[id]` | GET | clients-view | `GET /clients/{id}` | — | in_progress |
-| `/clients/[id]` | PUT | edit-client | `PUT /clients/{id}` | — | todo |
+## List / detail
 
-## Validation
+| Area               | Status                                |
+| ------------------ | ------------------------------------- |
+| List (paginated)   | Done — `ClientsTable` + `listClients` |
+| Detail (read-only) | Done — `/clients/[clientId]`          |
+| Update             | Not started                           |
+| Delete / close     | Not started                           |
 
-- Manifest: `packages/validation/manifests/clients.create.json`
-- Schema: `packages/validation/src/clients/create-client.schema.ts`
+## Verification
 
-## Greenfield notes
-
-- **Create:** FormSheet (person MVP): office, first/last name, submitted date, active + activation date.
-- **List:** TanStack table, server-side pagination via `/api/clients`.
-- **Detail:** ADR-013 composites with live Fineract data.
-- **Next:** Update client, entity legal form, addresses, family members, delete.
+1. Sign in with `clients.create` permission.
+2. Sidebar **Create client** → `/clients/create`.
+3. Complete General (person and entity), optional Family, Address (if enabled), datatables, Preview.
+4. Confirm redirect to `/clients/{id}`.

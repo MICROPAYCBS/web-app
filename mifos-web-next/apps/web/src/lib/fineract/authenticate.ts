@@ -74,9 +74,7 @@ function invalidCredentialsMessage(
 /**
  * Authenticate against the active Fineract server (BFF — never from the browser).
  */
-export async function authenticateFineract(
-  params: AuthenticateParams
-): Promise<ServerSession> {
+export async function authenticateFineract(params: AuthenticateParams): Promise<ServerSession> {
   const { baseUrl, tenantId, serverName } = await getFineractServerConfig();
   const url = `${baseUrl.replace(/\/$/, '')}/authentication`;
 

@@ -15,18 +15,71 @@ export interface FineractEnumOption {
   mandatory?: boolean;
 }
 
+export interface FineractStaffOption {
+  id: number;
+  displayName?: string;
+  firstname?: string;
+  lastname?: string;
+}
+
 export interface FineractOfficeOption {
   id: number;
   name: string;
   nameDecorated?: string;
 }
 
+export interface FineractSavingProductOption {
+  id: number;
+  name: string;
+}
+
+export interface FineractDatatableColumnHeader {
+  columnName: string;
+  columnDisplayType: string;
+  isColumnNullable?: boolean;
+  columnValues?: { id: number; value: string }[];
+}
+
+export interface FineractClientDatatableTemplate {
+  registeredTableName: string;
+  entitySubType?: string;
+  columnHeaderData: FineractDatatableColumnHeader[];
+}
+
+export interface FineractAddressTemplateOptions {
+  addressTypeIdOptions?: FineractEnumOption[];
+  stateProvinceIdOptions?: FineractEnumOption[];
+  countryIdOptions?: FineractEnumOption[];
+}
+
+export interface FineractFamilyMemberOptions {
+  relationshipIdOptions?: FineractEnumOption[];
+  genderIdOptions?: FineractEnumOption[];
+  maritalStatusIdOptions?: FineractEnumOption[];
+  professionIdOptions?: FineractEnumOption[];
+}
+
 export interface FineractClientTemplate {
   officeOptions: FineractOfficeOption[];
-  staffOptions?: FineractEnumOption[];
+  staffOptions?: FineractStaffOption[];
   clientLegalFormOptions?: FineractEnumOption[];
+  clientTypeOptions?: FineractEnumOption[];
+  clientClassificationOptions?: FineractEnumOption[];
+  genderOptions?: FineractEnumOption[];
+  savingProductOptions?: FineractSavingProductOption[];
+  clientNonPersonConstitutionOptions?: FineractEnumOption[];
+  clientNonPersonMainBusinessLineOptions?: FineractEnumOption[];
+  familyMemberOptions?: FineractFamilyMemberOptions;
+  address?: FineractAddressTemplateOptions[];
+  datatables?: FineractClientDatatableTemplate[];
+  isAddressEnabled?: boolean;
   dateFormat?: string;
   locale?: string;
+}
+
+export interface FineractAddressFieldConfig {
+  field: string;
+  isEnabled: boolean;
 }
 
 export interface FineractClientSummary {

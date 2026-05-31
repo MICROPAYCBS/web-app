@@ -23,9 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
 
-function statusVariant(
-  code?: string
-): 'default' | 'secondary' | 'outline' | 'destructive' {
+function statusVariant(code?: string): 'default' | 'secondary' | 'outline' | 'destructive' {
   if (!code) {
     return 'secondary';
   }
@@ -95,23 +93,20 @@ export function ClientsTable({
 
   const pageCount = Math.max(1, Math.ceil(data.totalFilteredRecords / pagination.pageSize));
 
-  const fetchPage = useCallback(
-    (next: PaginationState) => {
-      startTransition(async () => {
-        const offset = next.pageIndex * next.pageSize;
-        const res = await fetch(
-          `/api/clients?offset=${offset}&limit=${next.pageSize}&orderBy=id&sortOrder=DESC`,
-          { credentials: 'include' }
-        );
-        if (!res.ok) {
-          return;
-        }
-        const json = (await res.json()) as FineractClientsPage;
-        setData(json);
-      });
-    },
-    []
-  );
+  const fetchPage = useCallback((next: PaginationState) => {
+    startTransition(async () => {
+      const offset = next.pageIndex * next.pageSize;
+      const res = await fetch(
+        `/api/clients?offset=${offset}&limit=${next.pageSize}&orderBy=id&sortOrder=DESC`,
+        { credentials: 'include' }
+      );
+      if (!res.ok) {
+        return;
+      }
+      const json = (await res.json()) as FineractClientsPage;
+      setData(json);
+    });
+  }, []);
 
   useEffect(() => {
     if (skipInitialFetch.current) {

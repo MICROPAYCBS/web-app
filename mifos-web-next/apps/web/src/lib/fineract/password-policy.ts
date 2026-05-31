@@ -1,7 +1,10 @@
 import 'server-only';
 
 import { createFineractClient } from '@/lib/fineract/create-client';
-import { validatePasswordAgainstPolicy, type PasswordPolicyRules } from '@/lib/password-policy-validate';
+import {
+  validatePasswordAgainstPolicy,
+  type PasswordPolicyRules
+} from '@/lib/password-policy-validate';
 import {
   rulesForActivePasswordPreference,
   type FineractPasswordPreference

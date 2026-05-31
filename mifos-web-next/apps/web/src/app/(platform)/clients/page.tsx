@@ -6,9 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { ClientsPageContent } from '@/components/clients/clients-page-content';
-import { getClientTemplate, listClients } from '@/lib/fineract/clients';
+import { listClients } from '@/lib/fineract/clients';
 
 export default async function ClientsPage({
   searchParams
@@ -16,18 +17,20 @@ export default async function ClientsPage({
   searchParams: Promise<{ create?: string }>;
 }) {
   const { create } = await searchParams;
-  const [initialPage, template] = await Promise.all([
-    listClients({ limit: 25, offset: 0, orderBy: 'id', sortOrder: 'DESC' }),
-    getClientTemplate().catch(() => null)
-  ]);
+  if (create === '1') {
+    redirect('/clients/create');
+  }
+
+  const initialPage = await listClients({
+    limit: 25,
+    offset: 0,
+    orderBy: 'id',
+    sortOrder: 'DESC'
+  });
 
   return (
     <Suspense fallback={<p className="text-muted-foreground">Loading clients…</p>}>
-      <ClientsPageContent
-        initialPage={initialPage}
-        template={template}
-        openCreate={create === '1'}
-      />
+      <ClientsPageContent initialPage={initialPage} />
     </Suspense>
   );
 }

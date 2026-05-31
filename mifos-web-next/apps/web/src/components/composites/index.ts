@@ -7,6 +7,7 @@
  */
 
 export { FormSheet, FORM_SHEET_MAX_FIELDS, type FormSheetProps } from './form-sheet';
+export { FormWizard, type FormWizardProps, type FormWizardStep } from './form-wizard';
 export {
   DetailPage,
   DetailHeader,

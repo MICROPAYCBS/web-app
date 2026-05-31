@@ -22,8 +22,7 @@ const SANDBOX_TEMPLATE: FineractPasswordPreference[] = [
     id: 1,
     key: 'simple',
     active: false,
-    description:
-      'Password most be at least 1 character and not more that 50 characters long'
+    description: 'Password most be at least 1 character and not more that 50 characters long'
   },
   {
     id: 2,

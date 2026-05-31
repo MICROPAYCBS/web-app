@@ -5,10 +5,18 @@
     "org.apache.fineract.portfolio.client.domain.Client"
   ],
   "fields": {
-    "firstname": { "required": true, "maxLength": 50 },
-    "lastname": { "required": true, "maxLength": 50 },
     "officeId": { "required": true },
+    "legalFormId": { "required": true, "values": [1, 2] },
+    "firstname": { "requiredWhen": "legalFormId=1" },
+    "lastname": { "requiredWhen": "legalFormId=1" },
+    "fullname": { "requiredWhen": "legalFormId=2" },
+    "clientNonPersonDetails.constitutionId": { "requiredWhen": "legalFormId=2" },
+    "submittedOnDate": { "required": true },
     "active": { "required": false },
-    "activationDate": { "requiredWhen": "active=true" }
+    "activationDate": { "requiredWhen": "active=true" },
+    "savingsProductId": { "requiredWhen": "openSavingsOnCreate=true" },
+    "familyMembers": { "required": false },
+    "address": { "requiredWhen": "isAddressEnabled=true" },
+    "datatables": { "required": false }
   }
 }

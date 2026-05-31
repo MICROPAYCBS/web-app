@@ -9,13 +9,14 @@
 import 'server-only';
 
 import type {
+  FineractAddressFieldConfig,
   FineractClientDetail,
   FineractClientsPage,
   FineractClientTemplate,
   FineractCreateClientResponse
 } from '@mifos/api-client';
 import type { CreateClientPayload } from '@mifos/validation';
-import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { buildCreateClientPayload } from '@/lib/fineract/build-create-client-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 export interface ListClientsParams {
@@ -52,18 +53,15 @@ export async function getClientTemplate(officeId?: number): Promise<FineractClie
   return fineract.get<FineractClientTemplate>('/clients/template', searchParams);
 }
 
-export function buildCreateClientPayload(input: CreateClientPayload) {
-  return {
-    ...input,
-    legalFormId: 1,
-    dateFormat: input.dateFormat ?? FINERACT_DATE_FORMAT,
-    locale: input.locale ?? FINERACT_LOCALE
-  };
+export async function getAddressFieldConfiguration(): Promise<FineractAddressFieldConfig[]> {
+  const fineract = await createFineractClient();
+  return fineract.get<FineractAddressFieldConfig[]>('/fieldconfiguration/ADDRESS');
 }
 
 export async function createClient(
   input: CreateClientPayload
 ): Promise<FineractCreateClientResponse> {
   const fineract = await createFineractClient();
-  return fineract.post<FineractCreateClientResponse>('/clients', buildCreateClientPayload(input));
+  const body = buildCreateClientPayload(input);
+  return fineract.post<FineractCreateClientResponse>('/clients', body);
 }

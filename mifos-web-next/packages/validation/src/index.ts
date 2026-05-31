@@ -6,9 +6,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+export { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './clients/legal-form';
 export {
+  clientAddressEntrySchema,
+  clientNonPersonDetailsSchema,
   createClientSchema,
+  createClientSheetSchema,
+  datatablePayloadSchema,
+  familyMemberSchema,
+  type ClientAddressEntry,
   type CreateClientInput,
-  type CreateClientPayload
+  type CreateClientPayload,
+  type FamilyMemberInput
 } from './clients/create-client.schema';
 export { mapFineractErrors, type FieldError, type MappedFineractErrors } from './map-fineract-errors';

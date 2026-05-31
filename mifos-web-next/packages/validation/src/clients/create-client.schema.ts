@@ -7,12 +7,126 @@
  */
 
 import { z } from 'zod';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 
-/**
- * Client creation — Zod schema aligned with Fineract (not web-app-only rules).
- * @fineract CreateClientCommand, Client
- */
+const namePattern = /^[A-Za-z].*/;
+const fineractDate = z.string().trim().min(1);
+const optionalFineractDate = z.string().trim().optional();
+
+export const clientNonPersonDetailsSchema = z.object({
+  constitutionId: z.coerce.number().int().positive(),
+  incorpValidityTillDate: optionalFineractDate,
+  incorpNumber: z.string().trim().max(50).optional(),
+  mainBusinessLineId: z.coerce.number().int().positive().optional(),
+  remarks: z.string().trim().max(300).optional(),
+  dateFormat: z.string().optional(),
+  locale: z.string().optional()
+});
+
+export const familyMemberSchema = z.object({
+  firstName: z.string().trim().min(1).max(50),
+  middleName: z.string().trim().max(50).optional(),
+  lastName: z.string().trim().min(1).max(50),
+  qualification: z.string().trim().max(100).optional(),
+  age: z.coerce.number().int().nonnegative().optional(),
+  isDependent: z.boolean().optional(),
+  relationshipId: z.coerce.number().int().positive(),
+  genderId: z.coerce.number().int().positive(),
+  professionId: z.coerce.number().int().positive().optional(),
+  maritalStatusId: z.coerce.number().int().positive().optional(),
+  dateOfBirth: optionalFineractDate,
+  dateFormat: z.string().optional(),
+  locale: z.string().optional()
+});
+
+export const clientAddressEntrySchema = z.object({
+  addressTypeId: z.coerce.number().int().positive().optional(),
+  postalCode: z.string().trim().max(20).optional(),
+  street: z.string().trim().max(200).optional(),
+  addressLine1: z.string().trim().max(200).optional(),
+  addressLine2: z.string().trim().max(200).optional(),
+  addressLine3: z.string().trim().max(200).optional(),
+  townVillage: z.string().trim().max(100).optional(),
+  city: z.string().trim().max(100).optional(),
+  stateProvinceId: z.coerce.number().int().positive().optional(),
+  countryId: z.coerce.number().int().positive().optional(),
+  countyDistrict: z.string().trim().max(100).optional(),
+  isActive: z.boolean().optional()
+});
+
+export const datatablePayloadSchema = z.object({
+  registeredTableName: z.string().min(1),
+  data: z.record(z.unknown())
+});
+
+const clientBaseSchema = z.object({
+  officeId: z.coerce.number().int().positive(),
+  staffId: z.coerce.number().int().positive().optional(),
+  legalFormId: z.coerce.number().int(),
+  externalId: z.string().trim().max(100).optional(),
+  mobileNo: z.string().trim().max(50).optional(),
+  emailAddress: z.string().trim().email().optional().or(z.literal('')),
+  dateOfBirth: optionalFineractDate,
+  genderId: z.coerce.number().int().positive().optional(),
+  isStaff: z.boolean().optional(),
+  clientTypeId: z.coerce.number().int().positive().optional(),
+  clientClassificationId: z.coerce.number().int().positive().optional(),
+  submittedOnDate: fineractDate,
+  active: z.boolean().default(false),
+  activationDate: optionalFineractDate,
+  savingsProductId: z.coerce.number().int().positive().optional(),
+  dateFormat: z.string().optional(),
+  locale: z.string().optional(),
+  familyMembers: z.array(familyMemberSchema).optional(),
+  address: z.array(clientAddressEntrySchema).optional(),
+  datatables: z.array(datatablePayloadSchema).optional()
+});
+
+const personClientSchema = clientBaseSchema.extend({
+  legalFormId: z.literal(LEGAL_FORM_PERSON),
+  firstname: z.string().trim().min(1).max(50).regex(namePattern, {
+    message: 'Name cannot begin with a number or special character'
+  }),
+  middlename: z.string().trim().max(50).regex(namePattern).optional().or(z.literal('')),
+  lastname: z.string().trim().min(1).max(50).regex(namePattern, {
+    message: 'Name cannot begin with a number or special character'
+  })
+});
+
+const entityClientSchema = clientBaseSchema.extend({
+  legalFormId: z.literal(LEGAL_FORM_ENTITY),
+  fullname: z.string().trim().min(1).max(100).regex(namePattern, {
+    message: 'Name cannot begin with a number or special character'
+  }),
+  clientNonPersonDetails: clientNonPersonDetailsSchema
+});
+
 export const createClientSchema = z
+  .discriminatedUnion('legalFormId', [personClientSchema, entityClientSchema])
+  .superRefine((data, ctx) => {
+    if (data.active && !data.activationDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Activation date is required when client is active',
+        path: ['activationDate']
+      });
+    }
+    if (data.savingsProductId && !data.active) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Client must be active to open a savings account on creation',
+        path: ['savingsProductId']
+      });
+    }
+  });
+
+export type CreateClientInput = z.input<typeof createClientSchema>;
+export type CreateClientPayload = z.output<typeof createClientSchema>;
+export type FamilyMemberInput = z.input<typeof familyMemberSchema>;
+export type ClientAddressEntry = z.infer<typeof clientAddressEntrySchema>;
+
+/** Legacy sheet schema — person-only quick path (deprecated). */
+export const createClientSheetSchema = z
   .object({
     officeId: z.coerce.number().int().positive(),
     firstname: z.string().trim().min(1).max(50),
@@ -34,7 +148,3 @@ export const createClientSchema = z
       });
     }
   });
-
-export type CreateClientInput = z.input<typeof createClientSchema>;
-
-export type CreateClientPayload = z.output<typeof createClientSchema>;
