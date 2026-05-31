@@ -164,7 +164,7 @@ Above + Closed Date.
 | CL-080 | List addresses | `GET` client addresses | Done |
 | CL-081 | Field configuration | address field config resolver | Done |
 | CL-082 | Add / edit / toggle active | template + POST/PUT | Done |
-| CL-083 | Reuse `AddressDialog` from create | — | Done |
+| CL-083 | Reuse `AddressFormSheet` (ADR-006) from create | — | Done |
 
 ### Family (`CL-033`)
 

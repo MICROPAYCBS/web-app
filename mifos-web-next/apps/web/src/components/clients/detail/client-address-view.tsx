@@ -18,7 +18,7 @@ import type { ClientAddressEntry } from '@mifos/validation';
 import { MapPin, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { AddressDialog } from '@/components/clients/create/address-dialog';
+import { AddressFormSheet } from '@/components/clients/shared/address-form-sheet';
 import { ClientAddressPanel } from '@/components/clients/detail/client-address-sections';
 import {
   createClientAddressAction,
@@ -185,7 +185,7 @@ export function ClientAddressView({
         </div>
       )}
 
-      <AddressDialog
+      <AddressFormSheet
         open={dialogOpen}
         onOpenChange={(open) => {
           setDialogOpen(open);
@@ -197,6 +197,7 @@ export function ClientAddressView({
         fieldConfig={fieldConfig}
         address={editAddress ? toAddressEntry(editAddress) : undefined}
         onSave={handleSave}
+        submitLoading={pending}
       />
     </div>
   );

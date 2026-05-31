@@ -12,7 +12,7 @@ import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/
 import type { ClientAddressEntry } from '@mifos/validation';
 import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { AddressDialog } from '../address-dialog';
+import { AddressFormSheet } from '@/components/clients/shared/address-form-sheet';
 import type { CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
 import { EmptyState } from '@/components/composites';
@@ -114,7 +114,7 @@ export function AddressStep({
         </ul>
       )}
 
-      <AddressDialog
+      <AddressFormSheet
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         template={template}

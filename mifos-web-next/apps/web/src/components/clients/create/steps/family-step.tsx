@@ -12,7 +12,7 @@ import type { FineractClientTemplate } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
 import { Pencil, Plus, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
-import { FamilyMemberDialog } from '../family-member-dialog';
+import { FamilyMemberFormSheet } from '@/components/clients/shared/family-member-form-sheet';
 import type { CreateClientDraft } from '../types';
 import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
@@ -97,7 +97,7 @@ export function FamilyStep({
         </ul>
       )}
 
-      <FamilyMemberDialog
+      <FamilyMemberFormSheet
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         options={template.familyMemberOptions}

@@ -13,7 +13,7 @@ import type { FamilyMemberInput } from '@mifos/validation';
 import { Plus, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { FamilyMemberDialog } from '@/components/clients/create/family-member-dialog';
+import { FamilyMemberFormSheet } from '@/components/clients/shared/family-member-form-sheet';
 import {
   ClientFamilyPanel,
   familyMemberDisplayName
@@ -188,7 +188,7 @@ export function ClientFamilyView({
         </div>
       )}
 
-      <FamilyMemberDialog
+      <FamilyMemberFormSheet
         open={dialogOpen}
         onOpenChange={(open) => {
           setDialogOpen(open);
@@ -199,6 +199,7 @@ export function ClientFamilyView({
         options={familyOptions}
         member={editMember ? toFamilyMemberInput(editMember) : undefined}
         onSave={handleSave}
+        submitLoading={pending}
       />
 
       <Dialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
