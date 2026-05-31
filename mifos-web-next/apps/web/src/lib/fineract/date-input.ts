@@ -34,3 +34,26 @@ export function fineractDateToIso(value: string | undefined): string {
   const d = String(parsed.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+/** Parse Fineract or ISO date string to local `Date` (calendar). */
+export function fineractDateToDate(value: string | undefined): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+  return parsed;
+}
+
+export function dateToFineract(date: Date | undefined): string | undefined {
+  if (!date) {
+    return undefined;
+  }
+  return toFineractDate(date);
+}

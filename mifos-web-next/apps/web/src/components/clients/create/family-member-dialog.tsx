@@ -11,7 +11,13 @@
 import type { FineractFamilyMemberOptions } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
 import { useState } from 'react';
+import { DateField } from '@/components/composites/date-field';
+import { SelectField } from '@/components/composites/select-field';
+import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field } from '@/components/ui/field';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -19,18 +25,25 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
-import { fineractDateToIso, isoDateToFineract } from '@/lib/fineract/date-input';
+import { toSelectOptions } from '@/lib/form/select-options';
+
+function defaultFamilyMemberForm(m?: FamilyMemberInput): FamilyMemberInput {
+  return {
+    firstName: m?.firstName ?? '',
+    middleName: m?.middleName ?? '',
+    lastName: m?.lastName ?? '',
+    qualification: m?.qualification ?? '',
+    relationshipId: m?.relationshipId ?? 0,
+    genderId: m?.genderId ?? 0,
+    professionId: m?.professionId,
+    maritalStatusId: m?.maritalStatusId,
+    isDependent: m?.isDependent ?? false,
+    dateOfBirth: m?.dateOfBirth,
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  };
+}
 
 export function FamilyMemberDialog({
   open,
@@ -45,22 +58,16 @@ export function FamilyMemberDialog({
   member?: FamilyMemberInput;
   onSave: (member: FamilyMemberInput) => void;
 }) {
-  const [form, setForm] = useState<FamilyMemberInput>(() => ({
-    firstName: member?.firstName ?? '',
-    middleName: member?.middleName ?? '',
-    lastName: member?.lastName ?? '',
-    qualification: member?.qualification ?? '',
-    relationshipId: member?.relationshipId ?? 0,
-    genderId: member?.genderId ?? 0,
-    professionId: member?.professionId,
-    maritalStatusId: member?.maritalStatusId,
-    isDependent: member?.isDependent ?? false,
-    dateOfBirth: member?.dateOfBirth,
-    age: member?.age,
-    dateFormat: FINERACT_DATE_FORMAT,
-    locale: FINERACT_LOCALE
-  }));
+  const [form, setForm] = useState<FamilyMemberInput>(() => defaultFamilyMemberForm(member));
   const [error, setError] = useState<string | null>(null);
+
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      setForm(defaultFamilyMemberForm(member));
+      setError(null);
+    }
+    onOpenChange(next);
+  }
 
   function handleSave() {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.relationshipId || !form.genderId) {
@@ -69,144 +76,89 @@ export function FamilyMemberDialog({
     }
     setError(null);
     onSave(form);
-    onOpenChange(false);
+    handleOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{member ? 'Edit family member' : 'Add family member'}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-2">
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>First name</Label>
-              <Input
-                value={form.firstName}
-                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Middle name</Label>
-              <Input
-                value={form.middleName ?? ''}
-                onChange={(e) => setForm({ ...form, middleName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Last name</Label>
-              <Input
-                value={form.lastName}
-                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Qualification</Label>
-              <Input
-                value={form.qualification ?? ''}
-                onChange={(e) => setForm({ ...form, qualification: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Relationship</Label>
-              <Select
-                value={form.relationshipId ? String(form.relationshipId) : ''}
-                onValueChange={(v) => setForm({ ...form, relationshipId: Number(v) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {options?.relationshipIdOptions?.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.name ?? opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Gender</Label>
-              <Select
-                value={form.genderId ? String(form.genderId) : ''}
-                onValueChange={(v) => setForm({ ...form, genderId: Number(v) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {options?.genderIdOptions?.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.name ?? opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Profession</Label>
-              <Select
-                value={form.professionId ? String(form.professionId) : ''}
-                onValueChange={(v) => setForm({ ...form, professionId: v ? Number(v) : undefined })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Optional" />
-                </SelectTrigger>
-                <SelectContent>
-                  {options?.professionIdOptions?.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.name ?? opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Marital status</Label>
-              <Select
-                value={form.maritalStatusId ? String(form.maritalStatusId) : ''}
-                onValueChange={(v) =>
-                  setForm({ ...form, maritalStatusId: v ? Number(v) : undefined })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Optional" />
-                </SelectTrigger>
-                <SelectContent>
-                  {options?.maritalStatusIdOptions?.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.name ?? opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Date of birth</Label>
-              <Input
-                type="date"
-                value={fineractDateToIso(form.dateOfBirth)}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    dateOfBirth: e.target.value ? isoDateToFineract(e.target.value) : undefined
-                  })
-                }
-              />
-            </div>
-            <div className="flex items-center gap-2 self-end">
-              <Checkbox
-                checked={form.isDependent ?? false}
-                onCheckedChange={(c) => setForm({ ...form, isDependent: c === true })}
-              />
-              <Label>Dependent</Label>
-            </div>
-          </div>
+        <div className="grid gap-4 py-2 sm:grid-cols-2">
+          {error ? (
+            <p className="text-sm text-destructive sm:col-span-2">{error}</p>
+          ) : null}
+          <TextField
+            label="First name"
+            required
+            value={form.firstName}
+            onChange={(v) => setForm({ ...form, firstName: v })}
+          />
+          <TextField
+            label="Middle name"
+            optional
+            value={form.middleName ?? ''}
+            onChange={(v) => setForm({ ...form, middleName: v })}
+          />
+          <TextField
+            label="Last name"
+            required
+            value={form.lastName}
+            onChange={(v) => setForm({ ...form, lastName: v })}
+          />
+          <TextField
+            label="Qualification"
+            optional
+            value={form.qualification ?? ''}
+            onChange={(v) => setForm({ ...form, qualification: v })}
+          />
+          <SelectField
+            label="Relationship"
+            required
+            value={form.relationshipId ? String(form.relationshipId) : undefined}
+            onValueChange={(v) => setForm({ ...form, relationshipId: Number(v) })}
+            options={toSelectOptions(options?.relationshipIdOptions)}
+          />
+          <SelectField
+            label="Gender"
+            required
+            value={form.genderId ? String(form.genderId) : undefined}
+            onValueChange={(v) => setForm({ ...form, genderId: Number(v) })}
+            options={toSelectOptions(options?.genderIdOptions)}
+          />
+          <SelectField
+            label="Profession"
+            optional
+            value={form.professionId ? String(form.professionId) : undefined}
+            onValueChange={(v) => setForm({ ...form, professionId: v ? Number(v) : undefined })}
+            options={toSelectOptions(options?.professionIdOptions)}
+          />
+          <SelectField
+            label="Marital status"
+            optional
+            value={form.maritalStatusId ? String(form.maritalStatusId) : undefined}
+            onValueChange={(v) => setForm({ ...form, maritalStatusId: v ? Number(v) : undefined })}
+            options={toSelectOptions(options?.maritalStatusIdOptions)}
+          />
+          <DateField
+            label="Date of birth"
+            optional
+            value={form.dateOfBirth}
+            onChange={(v) => setForm({ ...form, dateOfBirth: v })}
+          />
+          <Field className="flex flex-row items-center gap-2 self-end">
+            <Checkbox
+              checked={form.isDependent ?? false}
+              onCheckedChange={(c) => setForm({ ...form, isDependent: c === true })}
+            />
+            <Label className="font-normal">
+              Dependent <span className="text-muted-foreground">(optional)</span>
+            </Label>
+          </Field>
         </div>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
           <Button type="button" onClick={handleSave}>

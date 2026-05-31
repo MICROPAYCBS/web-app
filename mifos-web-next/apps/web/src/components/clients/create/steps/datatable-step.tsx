@@ -9,7 +9,14 @@
  */
 
 import type { FineractClientDatatableTemplate } from '@mifos/api-client';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { DateField } from '@/components/composites/date-field';
+import { SelectField } from '@/components/composites/select-field';
+import { TextField } from '@/components/composites/text-field';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field } from '@/components/ui/field';
+import { Label } from '@/components/ui/label';
 import {
   filterSystemColumns,
   getDatatableControlName,
@@ -17,29 +24,19 @@ import {
   isNumericColumn,
   toDatatableDisplayLabel
 } from '@/lib/fineract/datatables';
-import { fineractDateToIso, isoDateToFineract } from '@/lib/fineract/date-input';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import type { StepErrors } from '../validation';
 
 export function DatatableStep({
   datatable,
   values,
+  errors,
   onChange,
   onBack,
   onNext
 }: {
   datatable: FineractClientDatatableTemplate;
   values: Record<string, unknown>;
+  errors: StepErrors;
   onChange: (values: Record<string, unknown>) => void;
   onBack: () => void;
   onNext: () => void;
@@ -48,145 +45,116 @@ export function DatatableStep({
     () => filterSystemColumns(datatable.columnHeaderData ?? []),
     [datatable.columnHeaderData]
   );
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   function setValue(controlName: string, value: unknown) {
     onChange({ ...values, [controlName]: value });
   }
 
-  function validate(): boolean {
-    const next: Record<string, string> = {};
-    for (const column of columns) {
-      if (column.isColumnNullable) {
-        continue;
-      }
-      const controlName = getDatatableControlName(column);
-      const raw = values[controlName];
-      if (raw === '' || raw === undefined || raw === null) {
-        next[controlName] = `${toDatatableDisplayLabel(column.columnName)} is required`;
-      }
-    }
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  }
-
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Custom fields for table <strong>{datatable.registeredTableName}</strong>.
+        Custom fields for table <strong>{datatable.registeredTableName}</strong>. Required fields
+        are marked with an asterisk.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         {columns.map((column) => {
           const controlName = getDatatableControlName(column);
           const label = toDatatableDisplayLabel(column.columnName);
           const required = !column.isColumnNullable;
+          const error = errors[controlName];
 
           if (column.columnDisplayType === 'BOOLEAN') {
             return (
-              <div key={column.columnName} className="flex items-center gap-2">
+              <Field key={column.columnName} className="flex flex-row items-center gap-2">
                 <Checkbox
                   id={controlName}
                   checked={values[controlName] === true}
                   onCheckedChange={(c) => setValue(controlName, c === true)}
                 />
-                <Label htmlFor={controlName}>{label}</Label>
-              </div>
+                <Label htmlFor={controlName} className="font-normal">
+                  {label}
+                  {required ? <span className="text-destructive"> *</span> : null}
+                  {!required ? <span className="text-muted-foreground"> (optional)</span> : null}
+                </Label>
+                {error ? <p className="text-xs text-destructive sm:col-span-2">{error}</p> : null}
+              </Field>
             );
           }
 
           if (column.columnDisplayType === 'CODELOOKUP') {
             return (
-              <div key={column.columnName} className="space-y-2">
-                <Label>
-                  {label}
-                  {required ? ' *' : ''}
-                </Label>
-                <Select
-                  value={values[controlName] != null ? String(values[controlName]) : ''}
-                  onValueChange={(v) => setValue(controlName, Number(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {column.columnValues?.map((opt) => (
-                      <SelectItem key={opt.id} value={String(opt.id)}>
-                        {opt.value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors[controlName] ? (
-                  <p className="text-xs text-destructive">{errors[controlName]}</p>
-                ) : null}
-              </div>
+              <SelectField
+                key={column.columnName}
+                id={controlName}
+                label={label}
+                required={required}
+                optional={!required}
+                value={values[controlName] != null ? String(values[controlName]) : undefined}
+                onValueChange={(v) => setValue(controlName, v ? Number(v) : undefined)}
+                options={
+                  column.columnValues?.map((opt) => ({
+                    value: String(opt.id),
+                    label: opt.value
+                  })) ?? []
+                }
+                error={error}
+              />
             );
           }
 
           if (isDateColumn(column.columnDisplayType)) {
             return (
-              <div key={column.columnName} className="space-y-2">
-                <Label>
-                  {label}
-                  {required ? ' *' : ''}
-                </Label>
-                <Input
-                  type="date"
-                  value={fineractDateToIso(String(values[controlName] ?? ''))}
-                  onChange={(e) =>
-                    setValue(controlName, e.target.value ? isoDateToFineract(e.target.value) : '')
-                  }
-                />
-                {errors[controlName] ? (
-                  <p className="text-xs text-destructive">{errors[controlName]}</p>
-                ) : null}
-              </div>
+              <DateField
+                key={column.columnName}
+                id={controlName}
+                label={label}
+                required={required}
+                optional={!required}
+                value={values[controlName] != null ? String(values[controlName]) : undefined}
+                onChange={(v) => setValue(controlName, v ?? '')}
+                error={error}
+              />
             );
           }
 
           if (column.columnDisplayType === 'TEXT') {
             return (
-              <div key={column.columnName} className="space-y-2 sm:col-span-2">
-                <Label>
-                  {label}
-                  {required ? ' *' : ''}
-                </Label>
-                <Textarea
-                  rows={2}
-                  value={String(values[controlName] ?? '')}
-                  onChange={(e) => setValue(controlName, e.target.value)}
-                />
-                {errors[controlName] ? (
-                  <p className="text-xs text-destructive">{errors[controlName]}</p>
-                ) : null}
-              </div>
+              <TextField
+                key={column.columnName}
+                id={controlName}
+                className="sm:col-span-2"
+                label={label}
+                required={required}
+                optional={!required}
+                multiline
+                value={String(values[controlName] ?? '')}
+                onChange={(v) => setValue(controlName, v)}
+                error={error}
+              />
             );
           }
 
           return (
-            <div key={column.columnName} className="space-y-2">
-              <Label>
-                {label}
-                {required ? ' *' : ''}
-              </Label>
-              <Input
-                type={isNumericColumn(column.columnDisplayType) ? 'number' : 'text'}
-                value={String(values[controlName] ?? '')}
-                onChange={(e) =>
-                  setValue(
-                    controlName,
-                    isNumericColumn(column.columnDisplayType)
-                      ? e.target.value === ''
-                        ? ''
-                        : Number(e.target.value)
-                      : e.target.value
-                  )
-                }
-              />
-              {errors[controlName] ? (
-                <p className="text-xs text-destructive">{errors[controlName]}</p>
-              ) : null}
-            </div>
+            <TextField
+              key={column.columnName}
+              id={controlName}
+              label={label}
+              required={required}
+              optional={!required}
+              type={isNumericColumn(column.columnDisplayType) ? 'number' : 'text'}
+              value={String(values[controlName] ?? '')}
+              onChange={(v) =>
+                setValue(
+                  controlName,
+                  isNumericColumn(column.columnDisplayType)
+                    ? v === ''
+                      ? ''
+                      : Number(v)
+                    : v
+                )
+              }
+              error={error}
+            />
           );
         })}
       </div>
@@ -195,14 +163,7 @@ export function DatatableStep({
         <Button type="button" variant="outline" onClick={onBack}>
           Back
         </Button>
-        <Button
-          type="button"
-          onClick={() => {
-            if (validate()) {
-              onNext();
-            }
-          }}
-        >
+        <Button type="button" onClick={onNext}>
           Next
         </Button>
       </div>

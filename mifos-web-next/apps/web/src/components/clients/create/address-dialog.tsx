@@ -11,6 +11,8 @@
 import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
 import { useState } from 'react';
+import { SelectField } from '@/components/composites/select-field';
+import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,15 +21,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import { toSelectOptions } from '@/lib/form/select-options';
 
 function isFieldEnabled(config: FineractAddressFieldConfig[], field: string): boolean {
   return config.find((f) => f.field === field)?.isEnabled ?? false;
@@ -52,6 +46,14 @@ export function AddressDialog({
   const [form, setForm] = useState<ClientAddressEntry>(() => address ?? { isActive: false });
   const [error, setError] = useState<string | null>(null);
 
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      setForm(address ?? { isActive: false });
+      setError(null);
+    }
+    onOpenChange(next);
+  }
+
   function handleSave() {
     if (isFieldEnabled(fieldConfig, 'addressType') && !form.addressTypeId) {
       setError('Address type is required.');
@@ -63,11 +65,11 @@ export function AddressDialog({
     }
     setError(null);
     onSave({ ...form, isActive: form.isActive ?? false });
-    onOpenChange(false);
+    handleOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{address ? 'Edit address' : 'Add address'}</DialogTitle>
@@ -75,142 +77,103 @@ export function AddressDialog({
         <div className="grid gap-4 py-2 sm:grid-cols-2">
           {error ? <p className="text-sm text-destructive sm:col-span-2">{error}</p> : null}
           {isFieldEnabled(fieldConfig, 'addressType') ? (
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Address type</Label>
-              <Select
-                value={form.addressTypeId ? String(form.addressTypeId) : ''}
-                onValueChange={(v) => setForm({ ...form, addressTypeId: Number(v) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {addressTemplate?.addressTypeIdOptions?.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.name ?? opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectField
+              className="sm:col-span-2"
+              label="Address type"
+              required
+              value={form.addressTypeId ? String(form.addressTypeId) : undefined}
+              onValueChange={(v) => setForm({ ...form, addressTypeId: Number(v) })}
+              options={toSelectOptions(addressTemplate?.addressTypeIdOptions)}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'street') ? (
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Street</Label>
-              <Input
-                value={form.street ?? ''}
-                onChange={(e) => setForm({ ...form, street: e.target.value })}
-              />
-            </div>
+            <TextField
+              className="sm:col-span-2"
+              label="Street"
+              required
+              value={form.street ?? ''}
+              onChange={(v) => setForm({ ...form, street: v })}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'addressLine1') ? (
-            <div className="space-y-2">
-              <Label>Address line 1</Label>
-              <Input
-                value={form.addressLine1 ?? ''}
-                onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
-              />
-            </div>
+            <TextField
+              label="Address line 1"
+              optional
+              value={form.addressLine1 ?? ''}
+              onChange={(v) => setForm({ ...form, addressLine1: v })}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'addressLine2') ? (
-            <div className="space-y-2">
-              <Label>Address line 2</Label>
-              <Input
-                value={form.addressLine2 ?? ''}
-                onChange={(e) => setForm({ ...form, addressLine2: e.target.value })}
-              />
-            </div>
+            <TextField
+              label="Address line 2"
+              optional
+              value={form.addressLine2 ?? ''}
+              onChange={(v) => setForm({ ...form, addressLine2: v })}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'addressLine3') ? (
-            <div className="space-y-2">
-              <Label>Address line 3</Label>
-              <Input
-                value={form.addressLine3 ?? ''}
-                onChange={(e) => setForm({ ...form, addressLine3: e.target.value })}
-              />
-            </div>
+            <TextField
+              label="Address line 3"
+              optional
+              value={form.addressLine3 ?? ''}
+              onChange={(v) => setForm({ ...form, addressLine3: v })}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'townVillage') ? (
-            <div className="space-y-2">
-              <Label>Town / village</Label>
-              <Input
-                value={form.townVillage ?? ''}
-                onChange={(e) => setForm({ ...form, townVillage: e.target.value })}
-              />
-            </div>
+            <TextField
+              label="Town / village"
+              optional
+              value={form.townVillage ?? ''}
+              onChange={(v) => setForm({ ...form, townVillage: v })}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'city') ? (
-            <div className="space-y-2">
-              <Label>City</Label>
-              <Input
-                value={form.city ?? ''}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-              />
-            </div>
+            <TextField
+              label="City"
+              optional
+              value={form.city ?? ''}
+              onChange={(v) => setForm({ ...form, city: v })}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'stateProvinceId') ? (
-            <div className="space-y-2">
-              <Label>State / province</Label>
-              <Select
-                value={form.stateProvinceId ? String(form.stateProvinceId) : ''}
-                onValueChange={(v) =>
-                  setForm({ ...form, stateProvinceId: v ? Number(v) : undefined })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Optional" />
-                </SelectTrigger>
-                <SelectContent>
-                  {addressTemplate?.stateProvinceIdOptions?.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.name ?? opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectField
+              label="State / province"
+              optional
+              value={form.stateProvinceId ? String(form.stateProvinceId) : undefined}
+              onValueChange={(v) =>
+                setForm({ ...form, stateProvinceId: v ? Number(v) : undefined })
+              }
+              options={toSelectOptions(addressTemplate?.stateProvinceIdOptions)}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'countryId') ? (
-            <div className="space-y-2">
-              <Label>Country</Label>
-              <Select
-                value={form.countryId ? String(form.countryId) : ''}
-                onValueChange={(v) => setForm({ ...form, countryId: v ? Number(v) : undefined })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Optional" />
-                </SelectTrigger>
-                <SelectContent>
-                  {addressTemplate?.countryIdOptions?.map((opt) => (
-                    <SelectItem key={opt.id} value={String(opt.id)}>
-                      {opt.name ?? opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectField
+              label="Country"
+              optional
+              value={form.countryId ? String(form.countryId) : undefined}
+              onValueChange={(v) => setForm({ ...form, countryId: v ? Number(v) : undefined })}
+              options={toSelectOptions(addressTemplate?.countryIdOptions)}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'postalCode') ? (
-            <div className="space-y-2">
-              <Label>Postal code</Label>
-              <Input
-                value={form.postalCode ?? ''}
-                onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-              />
-            </div>
+            <TextField
+              label="Postal code"
+              optional
+              value={form.postalCode ?? ''}
+              onChange={(v) => setForm({ ...form, postalCode: v })}
+            />
           ) : null}
           {isFieldEnabled(fieldConfig, 'countyDistrict') ? (
-            <div className="space-y-2">
-              <Label>County district</Label>
-              <Input
-                value={form.countyDistrict ?? ''}
-                onChange={(e) => setForm({ ...form, countyDistrict: e.target.value })}
-              />
-            </div>
+            <TextField
+              label="County district"
+              optional
+              value={form.countyDistrict ?? ''}
+              onChange={(v) => setForm({ ...form, countyDistrict: v })}
+            />
           ) : null}
         </div>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
           <Button type="button" onClick={handleSave}>

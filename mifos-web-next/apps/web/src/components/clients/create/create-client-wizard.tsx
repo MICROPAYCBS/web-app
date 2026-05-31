@@ -8,7 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
 import { createClientSchema, LEGAL_FORM_PERSON, type CreateClientPayload } from '@mifos/validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,26 +17,23 @@ import { FormWizard, type FormWizardStep } from '@/components/composites/form-wi
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { buildDatatableDataPayload, filterSystemColumns } from '@/lib/fineract/datatables';
-import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fineract/dates';
 import { AddressStep } from './steps/address-step';
 import { DatatableStep } from './steps/datatable-step';
 import { FamilyStep } from './steps/family-step';
 import { GeneralStep } from './steps/general-step';
 import { PreviewStep } from './steps/preview-step';
 import type { CreateClientDraft, CreateClientWizardProps } from './types';
+import {
+  datatablesForLegalForm,
+  validateStep,
+  type StepErrors
+} from './validation';
 
-function datatablesForLegalForm(
-  template: FineractClientTemplate,
+function buildSteps(
+  template: CreateClientWizardProps['initialTemplate'],
   legalFormId: number
-): FineractClientDatatableTemplate[] {
-  const subtype = legalFormId === 2 ? 'entity' : 'person';
-  return (
-    template.datatables?.filter((dt) => (dt.entitySubType ?? 'person').toLowerCase() === subtype) ??
-    []
-  );
-}
-
-function buildSteps(template: FineractClientTemplate, legalFormId: number): FormWizardStep[] {
+): FormWizardStep[] {
   const steps: FormWizardStep[] = [
     { id: 'general', label: 'General' },
     { id: 'family', label: 'Family' }
@@ -56,6 +52,7 @@ function emptyDraft(): CreateClientDraft {
   return {
     general: {
       legalFormId: LEGAL_FORM_PERSON,
+      submittedOnDate: toFineractDate(),
       active: false,
       addSavings: false,
       dateFormat: FINERACT_DATE_FORMAT,
@@ -75,12 +72,15 @@ export function CreateClientWizard({
   const [template, setTemplate] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(emptyDraft);
   const [stepId, setStepId] = useState('general');
+  const [stepErrors, setStepErrors] = useState<StepErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
   const steps = useMemo(() => buildSteps(template, legalFormId), [template, legalFormId]);
-  const currentIndex = steps.findIndex((s) => s.id === stepId);
+  const resolvedStepId = steps.some((s) => s.id === stepId) ? stepId : 'general';
+  const currentIndex = steps.findIndex((s) => s.id === resolvedStepId);
+
 
   const goNext = useCallback(() => {
     const next = steps[currentIndex + 1];
@@ -90,11 +90,25 @@ export function CreateClientWizard({
   }, [currentIndex, steps]);
 
   const goBack = useCallback(() => {
+    setStepErrors({});
     const prev = steps[currentIndex - 1];
     if (prev) {
       setStepId(prev.id);
     }
   }, [currentIndex, steps]);
+
+  const tryNext = useCallback(() => {
+    if (resolvedStepId === 'preview') {
+      return;
+    }
+    const errors = validateStep(resolvedStepId, draft, template);
+    if (Object.keys(errors).length > 0) {
+      setStepErrors(errors);
+      return;
+    }
+    setStepErrors({});
+    goNext();
+  }, [resolvedStepId, draft, template, goNext]);
 
   function patchGeneral(patch: Partial<import('./types').ClientGeneralFormState>) {
     setDraft((d) => ({
@@ -157,16 +171,16 @@ export function CreateClientWizard({
     });
   }
 
-  const activeDatatable = stepId.startsWith('datatable:')
+  const activeDatatable = resolvedStepId.startsWith('datatable:')
     ? datatablesForLegalForm(template, legalFormId).find(
-        (dt) => `datatable:${dt.registeredTableName}` === stepId
+        (dt) => `datatable:${dt.registeredTableName}` === resolvedStepId
       )
     : undefined;
 
   return (
     <FormWizard
       steps={steps}
-      currentStepId={stepId}
+      currentStepId={resolvedStepId}
       title="Create client"
       description="Complete each step to register a new client in Fineract."
     >
@@ -176,34 +190,36 @@ export function CreateClientWizard({
         </Link>
       </div>
 
-      {stepId === 'general' ? (
+      {resolvedStepId === 'general' ? (
         <GeneralStep
           template={template}
           draft={draft}
+          errors={stepErrors}
           onDraftChange={patchGeneral}
           onTemplateChange={setTemplate}
-          onNext={goNext}
+          onNext={tryNext}
         />
       ) : null}
 
-      {stepId === 'family' ? (
+      {resolvedStepId === 'family' ? (
         <FamilyStep
           template={template}
           draft={draft}
           onFamilyChange={(familyMembers) => setDraft((d) => ({ ...d, familyMembers }))}
           onBack={goBack}
-          onNext={goNext}
+          onNext={tryNext}
         />
       ) : null}
 
-      {stepId === 'address' && template.isAddressEnabled ? (
+      {resolvedStepId === 'address' && template.isAddressEnabled ? (
         <AddressStep
           template={template}
           fieldConfig={addressFieldConfig}
           draft={draft}
+          errors={stepErrors}
           onAddressesChange={(addresses) => setDraft((d) => ({ ...d, addresses }))}
           onBack={goBack}
-          onNext={goNext}
+          onNext={tryNext}
         />
       ) : null}
 
@@ -211,6 +227,7 @@ export function CreateClientWizard({
         <DatatableStep
           datatable={activeDatatable}
           values={draft.datatables[activeDatatable.registeredTableName] ?? {}}
+          errors={stepErrors}
           onChange={(values) =>
             setDraft((d) => ({
               ...d,
@@ -221,11 +238,11 @@ export function CreateClientWizard({
             }))
           }
           onBack={goBack}
-          onNext={goNext}
+          onNext={tryNext}
         />
       ) : null}
 
-      {stepId === 'preview' ? (
+      {resolvedStepId === 'preview' ? (
         <PreviewStep
           template={template}
           draft={draft}

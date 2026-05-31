@@ -14,12 +14,14 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { AddressDialog } from '../address-dialog';
 import type { CreateClientDraft } from '../types';
+import type { StepErrors } from '../validation';
 import { Button } from '@/components/ui/button';
 
 export function AddressStep({
   template,
   fieldConfig,
   draft,
+  errors,
   onAddressesChange,
   onBack,
   onNext
@@ -27,33 +29,26 @@ export function AddressStep({
   template: FineractClientTemplate;
   fieldConfig: FineractAddressFieldConfig[];
   draft: CreateClientDraft;
+  errors: StepErrors;
   onAddressesChange: (addresses: ClientAddressEntry[]) => void;
   onBack: () => void;
   onNext: () => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [stepError, setStepError] = useState<string | null>(null);
 
   const addresses = draft.addresses;
-
-  function handleNext() {
-    if (addresses.length === 0) {
-      setStepError(
-        'Add at least one address, or contact your administrator if addresses are optional.'
-      );
-      return;
-    }
-    setStepError(null);
-    onNext();
-  }
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Add one or more addresses for this client as required by your organization.
+        Add one or more addresses for this client. At least one address is required on this step.
       </p>
-      {stepError ? <p className="text-sm text-destructive">{stepError}</p> : null}
+      {errors.address ? (
+        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {errors.address}
+        </p>
+      ) : null}
 
       <Button
         type="button"
@@ -125,7 +120,7 @@ export function AddressStep({
         <Button type="button" variant="outline" onClick={onBack}>
           Back
         </Button>
-        <Button type="button" onClick={handleNext}>
+        <Button type="button" onClick={onNext}>
           Next
         </Button>
       </div>
