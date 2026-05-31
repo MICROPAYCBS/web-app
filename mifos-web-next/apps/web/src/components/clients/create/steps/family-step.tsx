@@ -19,15 +19,11 @@ import { Button } from '@/components/ui/button';
 export function FamilyStep({
   template,
   draft,
-  onFamilyChange,
-  onBack,
-  onNext
+  onFamilyChange
 }: {
   template: FineractClientTemplate;
   draft: CreateClientDraft;
   onFamilyChange: (members: FamilyMemberInput[]) => void;
-  onBack: () => void;
-  onNext: () => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -98,14 +94,6 @@ export function FamilyStep({
         }}
       />
 
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onBack}>
-          Back
-        </Button>
-        <Button type="button" onClick={onNext}>
-          Next
-        </Button>
-      </div>
     </div>
   );
 }

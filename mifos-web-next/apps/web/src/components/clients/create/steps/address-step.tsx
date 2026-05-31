@@ -22,17 +22,13 @@ export function AddressStep({
   fieldConfig,
   draft,
   errors,
-  onAddressesChange,
-  onBack,
-  onNext
+  onAddressesChange
 }: {
   template: FineractClientTemplate;
   fieldConfig: FineractAddressFieldConfig[];
   draft: CreateClientDraft;
   errors: StepErrors;
   onAddressesChange: (addresses: ClientAddressEntry[]) => void;
-  onBack: () => void;
-  onNext: () => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -116,14 +112,6 @@ export function AddressStep({
         }}
       />
 
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onBack}>
-          Back
-        </Button>
-        <Button type="button" onClick={onNext}>
-          Next
-        </Button>
-      </div>
     </div>
   );
 }

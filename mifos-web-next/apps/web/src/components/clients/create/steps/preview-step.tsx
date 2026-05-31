@@ -11,7 +11,6 @@
 import type { FineractClientTemplate } from '@mifos/api-client';
 import { LEGAL_FORM_PERSON } from '@mifos/validation';
 import type { CreateClientDraft } from '../types';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -29,17 +28,11 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 export function PreviewStep({
   template,
   draft,
-  submitError,
-  submitting,
-  onBack,
-  onSubmit
+  submitError
 }: {
   template: FineractClientTemplate;
   draft: CreateClientDraft;
   submitError: string | null;
-  submitting: boolean;
-  onBack: () => void;
-  onSubmit: () => void;
 }) {
   const g = draft.general;
   const office = template.officeOptions.find((o) => o.id === g.officeId);
@@ -126,14 +119,6 @@ export function PreviewStep({
         </>
       ) : null}
 
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onBack} disabled={submitting}>
-          Back
-        </Button>
-        <Button type="button" onClick={onSubmit} disabled={submitting}>
-          {submitting ? 'Creating…' : 'Create client'}
-        </Button>
-      </div>
     </div>
   );
 }

@@ -14,7 +14,6 @@ import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
-import { Button } from '@/components/ui/button';
 import { toFineractDate } from '@/lib/fineract/dates';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
@@ -26,7 +25,6 @@ export interface GeneralStepProps {
   errors: StepErrors;
   onDraftChange: (patch: Partial<ClientGeneralFormState>) => void;
   onTemplateChange: (template: FineractClientTemplate) => void;
-  onNext: () => void;
 }
 
 export function GeneralStep({
@@ -35,7 +33,6 @@ export function GeneralStep({
   errors,
   onDraftChange,
   onTemplateChange,
-  onNext
 }: GeneralStepProps) {
   const g = draft.general;
   const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
@@ -398,11 +395,6 @@ export function GeneralStep({
         ) : null}
       </div>
 
-      <div className="flex justify-end">
-        <Button type="button" onClick={onNext}>
-          Next
-        </Button>
-      </div>
     </div>
   );
 }

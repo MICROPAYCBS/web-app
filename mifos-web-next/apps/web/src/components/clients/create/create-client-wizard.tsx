@@ -9,13 +9,11 @@
  */
 
 import { createClientSchema, LEGAL_FORM_PERSON, type CreateClientPayload } from '@mifos/validation';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import { createClientAction } from '@/actions/clients';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { buildDatatableDataPayload, filterSystemColumns } from '@/lib/fineract/datatables';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fineract/dates';
 import { AddressStep } from './steps/address-step';
@@ -177,19 +175,27 @@ export function CreateClientWizard({
       )
     : undefined;
 
+  const isPreview = resolvedStepId === 'preview';
+
   return (
     <FormWizard
       steps={steps}
       currentStepId={resolvedStepId}
       title="Create client"
       description="Complete each step to register a new client in Fineract."
+      footer={
+        <FormWizardFooter
+          cancelHref="/clients"
+          showBack={currentIndex > 0}
+          onBack={goBack}
+          backDisabled={pending}
+          primaryLabel={isPreview ? 'Create client' : 'Next'}
+          onPrimary={isPreview ? handleSubmit : tryNext}
+          primaryLoading={isPreview && pending}
+          primaryLoadingLabel="Creating…"
+        />
+      }
     >
-      <div className="mb-4 flex justify-end">
-        <Link href="/clients" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
-          Cancel
-        </Link>
-      </div>
-
       {resolvedStepId === 'general' ? (
         <GeneralStep
           template={template}
@@ -197,7 +203,6 @@ export function CreateClientWizard({
           errors={stepErrors}
           onDraftChange={patchGeneral}
           onTemplateChange={setTemplate}
-          onNext={tryNext}
         />
       ) : null}
 
@@ -206,8 +211,6 @@ export function CreateClientWizard({
           template={template}
           draft={draft}
           onFamilyChange={(familyMembers) => setDraft((d) => ({ ...d, familyMembers }))}
-          onBack={goBack}
-          onNext={tryNext}
         />
       ) : null}
 
@@ -218,8 +221,6 @@ export function CreateClientWizard({
           draft={draft}
           errors={stepErrors}
           onAddressesChange={(addresses) => setDraft((d) => ({ ...d, addresses }))}
-          onBack={goBack}
-          onNext={tryNext}
         />
       ) : null}
 
@@ -237,20 +238,11 @@ export function CreateClientWizard({
               }
             }))
           }
-          onBack={goBack}
-          onNext={tryNext}
         />
       ) : null}
 
-      {resolvedStepId === 'preview' ? (
-        <PreviewStep
-          template={template}
-          draft={draft}
-          submitError={submitError}
-          submitting={pending}
-          onBack={goBack}
-          onSubmit={handleSubmit}
-        />
+      {isPreview ? (
+        <PreviewStep template={template} draft={draft} submitError={submitError} />
       ) : null}
     </FormWizard>
   );

@@ -23,6 +23,8 @@ export interface FormWizardProps {
   title: string;
   description?: string;
   children: ReactNode;
+  /** Sticky Cancel / Previous / Next (or submit) actions below step content */
+  footer?: ReactNode;
   className?: string;
 }
 
@@ -36,6 +38,7 @@ export function FormWizard({
   title,
   description,
   children,
+  footer,
   className
 }: FormWizardProps) {
   const currentIndex = steps.findIndex((s) => s.id === currentStepId);
@@ -90,7 +93,10 @@ export function FormWizard({
         </nav>
 
         <div className="min-w-0 flex-1">
-          <div className="rounded-lg border bg-card p-4 shadow-sm md:p-6">{children}</div>
+          <div className="flex flex-col overflow-hidden rounded-lg border bg-card shadow-sm">
+            <div className="p-4 md:p-6">{children}</div>
+            {footer}
+          </div>
         </div>
       </div>
     </div>

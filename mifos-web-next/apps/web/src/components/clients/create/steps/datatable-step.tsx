@@ -13,7 +13,6 @@ import { useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/field';
 import { Label } from '@/components/ui/label';
@@ -30,16 +29,12 @@ export function DatatableStep({
   datatable,
   values,
   errors,
-  onChange,
-  onBack,
-  onNext
+  onChange
 }: {
   datatable: FineractClientDatatableTemplate;
   values: Record<string, unknown>;
   errors: StepErrors;
   onChange: (values: Record<string, unknown>) => void;
-  onBack: () => void;
-  onNext: () => void;
 }) {
   const columns = useMemo(
     () => filterSystemColumns(datatable.columnHeaderData ?? []),
@@ -159,14 +154,6 @@ export function DatatableStep({
         })}
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onBack}>
-          Back
-        </Button>
-        <Button type="button" onClick={onNext}>
-          Next
-        </Button>
-      </div>
     </div>
   );
 }
