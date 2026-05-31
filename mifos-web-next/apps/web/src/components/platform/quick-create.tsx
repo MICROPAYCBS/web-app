@@ -10,25 +10,26 @@
 
 import { CirclePlus } from 'lucide-react';
 import { Can, resolvePermission } from '@mifos/auth';
+import { cn } from '@/lib/utils';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
 /**
- * Primary platform action — Create client (dashboard-01 Quick Create placement).
+ * Primary platform action — Create client (below sidebar Find).
  * Opens create flow when wired; disabled until FormSheet / create page ships.
  */
-export function QuickCreate() {
+export function QuickCreate({ className }: { className?: string }) {
   return (
     <Can permission={resolvePermission('clients.create')}>
-      <SidebarMenu>
-        <SidebarMenuItem>
+      <SidebarMenu className={cn('w-full', className)}>
+        <SidebarMenuItem className="w-full">
           <SidebarMenuButton
             type="button"
             tooltip="Create client"
             disabled
-            className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground disabled:opacity-80"
+            className="h-8 w-full min-w-0 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground disabled:opacity-80"
           >
             <CirclePlus className="size-4 shrink-0" />
-            <span>Create client</span>
+            <span className="truncate">Create client</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

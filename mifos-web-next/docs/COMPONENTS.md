@@ -19,7 +19,7 @@ Fineract revolves around **clients**. **Create client** must be obvious from eve
 
 | Rule | Detail |
 |------|--------|
-| **Placement** | Sidebar: under branding, **above** navigation Find — not in the header (v1). |
+| **Placement** | Sidebar: under branding, **below** navigation Find — not in the header (v1). |
 | **Visual** | Primary button: `bg-primary text-primary-foreground`, plus icon, full width in sidebar menu. Reference: dashboard-01 `nav-main.tsx`. |
 | **Phase 1 label** | **Create client** (not generic “Quick Create” until a multi-entity menu exists). |
 | **Phase 1 action** | Open create-client flow: `FormSheet` if ≤7 logical fields (ADR-006), else full page `/clients/create`. |

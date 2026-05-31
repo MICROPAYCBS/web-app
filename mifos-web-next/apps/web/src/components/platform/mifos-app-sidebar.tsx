@@ -45,8 +45,11 @@ export function MifosAppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <QuickCreate />
-        <SidebarNavFind />
+
+        <div className="flex w-full min-w-0 flex-col items-stretch gap-2">
+          <SidebarNavFind />
+          <QuickCreate />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="gap-0">

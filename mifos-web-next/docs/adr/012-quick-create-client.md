@@ -30,7 +30,7 @@ Secondary creates (group, center, loan account, savings account) may appear late
 
 | Location | Role |
 |----------|------|
-| **Sidebar** — directly under branding, **above** navigation Find | **Quick Create** (primary). Same visual weight as dashboard-01: full-width primary `SidebarMenuButton`, Lucide `circle-plus` (or `user-plus` for client-only phase). |
+| **Sidebar** — directly under branding, **below** navigation Find | **Quick Create** (primary). Same visual weight as dashboard-01: full-width primary `SidebarMenuButton`, Lucide `circle-plus` (or `user-plus` for client-only phase). |
 | **Clients list** (`ListPage` actions) | Secondary **New client** — same permission, same handler; users who navigated via featured link still see create on the page. |
 | **Header** | **No** Quick Create in v1 — keep header for sidebar trigger + Find only (ADR-010). Avoid competing primary buttons. |
 

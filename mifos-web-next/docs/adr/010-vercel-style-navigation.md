@@ -19,5 +19,5 @@ The legacy Mifos X Web App exposes dozens of sidenav links. A flat list in the g
 
 - Many routes can exist in the registry before pages ship (`parity: todo` → "Soon" in UI).
 - Auth continues to filter nav server-side.
-- **Quick Create** (prominent **Create client**) is specified in [ADR-012](012-quick-create-client.md) — sidebar placement above Find, dashboard-01 primary button styling.
+- **Quick Create** (prominent **Create client**) is specified in [ADR-012](012-quick-create-client.md) — sidebar placement below Find, dashboard-01 primary button styling.
 - Future: recent items in Quick Find, mobile bottom bar (Vercel mobile pattern).

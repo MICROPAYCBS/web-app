@@ -12,15 +12,16 @@ import { Search } from 'lucide-react';
 import { useNavigation } from '@/components/platform/navigation-provider';
 import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
+import { cn } from '@/lib/utils';
 
-/** Vercel-style find field at the top of the sidebar nav stack. */
-export function SidebarNavFind() {
+/** Vercel-style find field — full width of sidebar header action stack (matches Quick Create). */
+export function SidebarNavFind({ className }: { className?: string }) {
   const { findQuery, setFindQuery, findInputRef } = useNavigation();
 
   return (
-    <div className="relative px-2 pb-2">
+    <div className={cn('relative flex w-full items-center', className)}>
       <Search
-        className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground"
         aria-hidden
       />
       <Input
@@ -31,12 +32,12 @@ export function SidebarNavFind() {
         placeholder="Find…"
         data-slot="sidebar-input"
         data-sidebar="input"
-        className="h-8 w-full bg-background pl-8 pr-10 shadow-none"
+        className="h-8 w-full bg-background pl-8 pr-9 shadow-none"
         aria-label="Find navigation"
         autoComplete="off"
         spellCheck={false}
       />
-      <div className="pointer-events-none absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
+      <div className="pointer-events-none absolute top-1/2 right-2.5 flex -translate-y-1/2 items-center justify-center">
         <Kbd className="text-[10px]">F</Kbd>
       </div>
     </div>
