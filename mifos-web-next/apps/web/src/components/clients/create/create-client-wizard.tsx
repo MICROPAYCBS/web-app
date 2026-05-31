@@ -108,6 +108,35 @@ export function CreateClientWizard({
     goNext();
   }, [resolvedStepId, draft, template, goNext]);
 
+  const goToStep = useCallback(
+    (targetStepId: string) => {
+      const targetIndex = steps.findIndex((s) => s.id === targetStepId);
+      if (targetIndex < 0 || targetIndex === currentIndex) {
+        return;
+      }
+
+      if (targetIndex < currentIndex) {
+        setStepErrors({});
+        setStepId(targetStepId);
+        return;
+      }
+
+      for (let i = currentIndex; i < targetIndex; i++) {
+        const stepToValidate = steps[i].id;
+        const errors = validateStep(stepToValidate, draft, template);
+        if (Object.keys(errors).length > 0) {
+          setStepErrors(errors);
+          setStepId(stepToValidate);
+          return;
+        }
+      }
+
+      setStepErrors({});
+      setStepId(targetStepId);
+    },
+    [currentIndex, draft, steps, template]
+  );
+
   function patchGeneral(patch: Partial<import('./types').ClientGeneralFormState>) {
     setDraft((d) => ({
       ...d,
@@ -183,6 +212,7 @@ export function CreateClientWizard({
       currentStepId={resolvedStepId}
       title="Create client"
       description="Complete each step to register a new client in Fineract."
+      onStepClick={goToStep}
       footer={
         <FormWizardFooter
           cancelHref="/clients"

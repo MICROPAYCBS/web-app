@@ -25,6 +25,8 @@ export interface FormWizardProps {
   children: ReactNode;
   /** Sticky Cancel / Previous / Next (or submit) actions below step content */
   footer?: ReactNode;
+  /** When set, step labels in the rail are buttons and invoke this handler */
+  onStepClick?: (stepId: string) => void;
   className?: string;
 }
 
@@ -39,6 +41,7 @@ export function FormWizard({
   description,
   children,
   footer,
+  onStepClick,
   className
 }: FormWizardProps) {
   const currentIndex = steps.findIndex((s) => s.id === currentStepId);
@@ -63,29 +66,54 @@ export function FormWizard({
             {steps.map((step, index) => {
               const isActive = step.id === currentStepId;
               const isPast = index < currentIndex;
+              const isClickable = Boolean(onStepClick);
+              const stepClassName = cn(
+                'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive && 'bg-primary text-primary-foreground',
+                !isActive && isPast && 'bg-muted/60 text-foreground',
+                !isActive && !isPast && 'text-muted-foreground',
+                isClickable &&
+                  !isActive &&
+                  'cursor-pointer hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                isClickable && isActive && 'cursor-default'
+              );
+
               return (
                 <li key={step.id}>
-                  <span
-                    className={cn(
-                      'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      isActive && 'bg-primary text-primary-foreground',
-                      !isActive && isPast && 'bg-muted/60 text-foreground',
-                      !isActive && !isPast && 'text-muted-foreground'
-                    )}
-                    aria-current={isActive ? 'step' : undefined}
-                  >
-                    <span
-                      className={cn(
-                        'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
-                        isActive && 'border-primary-foreground/30 bg-primary-foreground/15',
-                        !isActive && isPast && 'border-border bg-background',
-                        !isActive && !isPast && 'border-border bg-muted/40'
-                      )}
+                  {isClickable ? (
+                    <button
+                      type="button"
+                      className={cn(stepClassName, 'text-left')}
+                      onClick={() => onStepClick?.(step.id)}
+                      aria-current={isActive ? 'step' : undefined}
                     >
-                      {index + 1}
+                      <span
+                        className={cn(
+                          'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+                          isActive && 'border-primary-foreground/30 bg-primary-foreground/15',
+                          !isActive && isPast && 'border-border bg-background',
+                          !isActive && !isPast && 'border-border bg-muted/40'
+                        )}
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0 truncate">{step.label}</span>
+                    </button>
+                  ) : (
+                    <span className={stepClassName} aria-current={isActive ? 'step' : undefined}>
+                      <span
+                        className={cn(
+                          'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+                          isActive && 'border-primary-foreground/30 bg-primary-foreground/15',
+                          !isActive && isPast && 'border-border bg-background',
+                          !isActive && !isPast && 'border-border bg-muted/40'
+                        )}
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0 truncate">{step.label}</span>
                     </span>
-                    <span className="min-w-0 truncate">{step.label}</span>
-                  </span>
+                  )}
                 </li>
               );
             })}
