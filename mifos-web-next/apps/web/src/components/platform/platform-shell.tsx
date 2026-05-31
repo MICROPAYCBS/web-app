@@ -12,7 +12,6 @@ import type { CSSProperties, ReactNode } from 'react';
 import { MifosAppSidebar } from '@/components/platform/mifos-app-sidebar';
 import { MifosSiteHeader } from '@/components/platform/mifos-site-header';
 import { NavigationProvider } from '@/components/platform/navigation-provider';
-import { QuickFind } from '@/components/platform/quick-find';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
@@ -22,7 +21,7 @@ const shellStyle = {
 } as CSSProperties;
 
 /**
- * Authenticated shell — shadcn dashboard-01 layout + Mifos nav / Quick Find.
+ * Authenticated shell — shadcn dashboard-01 layout + Vercel-style sidebar nav Find.
  */
 export function PlatformShell({
   nav,
@@ -46,7 +45,6 @@ export function PlatformShell({
           </div>
         </SidebarInset>
       </SidebarProvider>
-      <QuickFind />
     </NavigationProvider>
   );
 }
