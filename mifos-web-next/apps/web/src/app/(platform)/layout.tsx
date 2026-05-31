@@ -30,6 +30,7 @@ function toPlatformNav(structure: ReturnType<typeof buildNavStructure>): Platfor
     groups: structure.groups.map((g) => ({
       id: g.id,
       label: g.label,
+      icon: g.icon,
       defaultOpen: g.defaultOpen,
       items: g.items.map(mapLink)
     })),

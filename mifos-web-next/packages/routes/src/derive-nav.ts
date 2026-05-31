@@ -20,6 +20,7 @@ export interface NavLinkItem {
 export interface NavGroupSection {
   id: NavGroupId;
   label: string;
+  icon: string;
   defaultOpen: boolean;
   items: NavLinkItem[];
 }
@@ -89,6 +90,7 @@ export function buildNavStructure(): NavStructure {
     return {
       id: group.id,
       label: group.label,
+      icon: group.icon,
       defaultOpen: group.defaultOpen ?? false,
       items
     };

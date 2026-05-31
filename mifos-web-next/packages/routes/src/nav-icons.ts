@@ -72,7 +72,8 @@ export const NAV_ICON_NAMES = [
   'timer',
   'file-stack',
   'file-text',
-  'scale'
+  'scale',
+  'briefcase'
 ] as const;
 
 export type NavIcon = (typeof NAV_ICON_NAMES)[number];

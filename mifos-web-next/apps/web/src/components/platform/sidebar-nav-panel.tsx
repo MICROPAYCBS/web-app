@@ -84,6 +84,7 @@ function SidebarNavGroupView({ group }: { group: PlatformNavGroup }) {
               tooltip="Back"
             >
               <ChevronLeft className="size-4 shrink-0" aria-hidden />
+              <NavIcon name={group.icon} className="size-4 shrink-0" />
               <span className="truncate">{group.label}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -170,6 +171,7 @@ function SidebarNavRootView() {
                       onClick={() => enterGroup(group.id)}
                       tooltip={group.label}
                     >
+                      <NavIcon name={group.icon} className="size-4 shrink-0" />
                       <span className="flex-1 truncate text-left">{group.label}</span>
                       <ChevronRight className="ml-auto size-4 shrink-0 opacity-60" aria-hidden />
                     </SidebarMenuButton>

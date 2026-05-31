@@ -19,6 +19,7 @@ export interface PlatformNavLink {
 export interface PlatformNavGroup {
   id: string;
   label: string;
+  icon?: string;
   defaultOpen: boolean;
   items: PlatformNavLink[];
 }

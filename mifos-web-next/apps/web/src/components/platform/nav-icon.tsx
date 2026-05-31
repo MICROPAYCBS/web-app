@@ -14,6 +14,7 @@ import {
   ArrowLeftRight,
   ArrowRightLeft,
   BookOpen,
+  Briefcase,
   Building,
   Building2,
   Calculator,
@@ -142,7 +143,8 @@ const ICONS: Record<string, LucideIcon> = {
   timer: Timer,
   'file-stack': FileStack,
   'file-text': FileText,
-  scale: Scale
+  scale: Scale,
+  briefcase: Briefcase
 };
 
 export function NavIcon({ name, className }: { name?: string; className?: string }) {
