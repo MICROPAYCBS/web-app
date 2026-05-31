@@ -102,6 +102,28 @@ export interface FineractClientAddress {
 
 export interface FineractClientAddressTemplate extends FineractAddressTemplateOptions {}
 
+/** Family member returned by GET /clients/{id}/familymembers */
+export interface FineractClientFamilyMember {
+  id: number;
+  clientId?: number;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  qualification?: string;
+  mobileNumber?: string;
+  age?: number;
+  isDependent?: boolean;
+  relationshipId?: number;
+  relationship?: string;
+  genderId?: number;
+  gender?: string;
+  professionId?: number;
+  profession?: string;
+  maritalStatusId?: number;
+  maritalStatus?: string;
+  dateOfBirth?: number[] | string;
+}
+
 export interface FineractClientSummary {
   id: number;
   accountNo: string;

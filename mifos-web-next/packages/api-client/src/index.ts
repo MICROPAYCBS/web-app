@@ -13,6 +13,7 @@ export type {
   FineractAddressFieldConfig,
   FineractClientAddress,
   FineractClientAddressTemplate,
+  FineractClientFamilyMember,
   FineractClientDatatableTemplate,
   FineractClientDetail,
   FineractClientSummary,

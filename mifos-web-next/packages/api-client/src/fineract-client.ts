@@ -77,4 +77,8 @@ export class FineractClient {
   put<T>(path: string, body: unknown): Promise<T> {
     return this.request<T>('PUT', path, { body });
   }
+
+  delete<T = void>(path: string): Promise<T> {
+    return this.request<T>('DELETE', path);
+  }
 }

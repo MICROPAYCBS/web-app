@@ -170,10 +170,10 @@ Above + Closed Date.
 
 | ID | Feature | API | Status |
 | -- | ------- | --- | ------ |
-| CL-090 | List members | `GET …/familymembers` | Planned |
-| CL-091 | Add member | `POST` + template | Planned |
-| CL-092 | Edit member | `PUT …/{memberId}` | Planned |
-| CL-093 | Delete member | `DELETE` | Planned |
+| CL-090 | List members | `GET …/familymembers` | Done |
+| CL-091 | Add member | `POST` + template | Done |
+| CL-092 | Edit member | `PUT …/{memberId}` | Done |
+| CL-093 | Delete member | `DELETE` | Done |
 
 ### Identities (`CL-034`)
 

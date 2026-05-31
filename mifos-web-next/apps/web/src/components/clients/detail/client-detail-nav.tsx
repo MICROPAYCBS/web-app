@@ -18,7 +18,8 @@ export function clientDetailNavGroups(clientId: string | number): DetailNavGroup
       id: 'client',
       items: [
         { id: 'general', label: 'General', href: `${base}/general` },
-        { id: 'address', label: 'Address', href: `${base}/address` }
+        { id: 'address', label: 'Address', href: `${base}/address` },
+        { id: 'family-members', label: 'Family members', href: `${base}/family-members` }
       ]
     },
     {
