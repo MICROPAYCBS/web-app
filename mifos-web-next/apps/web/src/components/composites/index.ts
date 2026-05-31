@@ -25,6 +25,7 @@ export {
 
 export { DataTable } from './data-table/data-table';
 export { DataTablePagination } from './data-table/data-table-pagination';
+export { PageHeader } from './page-header';
 export { ListPage } from './list-page';
 export { DateField, type DateFieldProps } from './date-field';
 export { FormLabel, type FormLabelProps } from './form-label';

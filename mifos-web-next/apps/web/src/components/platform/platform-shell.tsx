@@ -22,6 +22,7 @@ const shellStyle = {
 
 /**
  * Authenticated shell — shadcn dashboard-01 layout + Vercel-style sidebar nav Find.
+ * Site header stays fixed; main content scrolls beneath it.
  */
 export function PlatformShell({
   nav,
@@ -36,9 +37,9 @@ export function PlatformShell({
     <NavigationProvider nav={nav}>
       <SidebarProvider style={shellStyle}>
         <MifosAppSidebar serverName={serverName} />
-        <SidebarInset>
+        <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
           <MifosSiteHeader />
-          <div className="flex flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
             <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-6">
               {children}
             </div>
