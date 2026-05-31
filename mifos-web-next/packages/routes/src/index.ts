@@ -3,7 +3,8 @@
  * Server/middleware code should import from `@mifos/routes/server`.
  */
 export { APP_ROUTES, type AppRouteId, type AppRoutePath } from './app-routes';
-export type { RouteDefinition, RouteKind, RouteParity, ParityStatus } from './types';
+export type { RouteDefinition, RouteKind, RouteParity, ParityStatus, NavIcon } from './types';
+export { NAV_ICON_NAMES } from './nav-icons';
 export {
   getAllRoutes,
   getRouteById,

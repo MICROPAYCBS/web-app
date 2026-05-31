@@ -1,28 +1,10 @@
+import type { NavIcon } from './nav-icons';
+
+export type { NavIcon } from './nav-icons';
+
 export type RouteKind = 'page' | 'api' | 'layout';
 
 export type ParityStatus = 'todo' | 'in_progress' | 'done' | 'n/a';
-
-export type NavIcon =
-  | 'layout-dashboard'
-  | 'users'
-  | 'user'
-  | 'users-round'
-  | 'building-2'
-  | 'landmark'
-  | 'piggy-bank'
-  | 'wallet'
-  | 'book-open'
-  | 'calculator'
-  | 'building'
-  | 'settings'
-  | 'inbox'
-  | 'search'
-  | 'file-bar-chart'
-  | 'package'
-  | 'shield'
-  | 'database'
-  | 'cog'
-  | 'list';
 
 /** Sidebar / Quick Find grouping */
 export type NavGroupId =

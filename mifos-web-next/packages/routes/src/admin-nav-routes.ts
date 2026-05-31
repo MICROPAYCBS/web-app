@@ -19,6 +19,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/offices',
     permissionKey: 'organization.offices',
     navOrder: 10,
+    navIcon: 'building',
     keywords: ['branch', 'office']
   },
   {
@@ -29,6 +30,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/employees',
     permissionKey: 'organization.employees',
     navOrder: 20,
+    navIcon: 'users',
     keywords: ['staff']
   },
   {
@@ -39,6 +41,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/provisioning-criteria',
     permissionKey: 'organization.provisioning',
     navOrder: 30,
+    navIcon: 'scale',
     keywords: []
   },
   {
@@ -49,6 +52,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/currencies',
     permissionKey: 'organization.currencies',
     navOrder: 40,
+    navIcon: 'coins',
     keywords: []
   },
   {
@@ -59,6 +63,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/sms-campaigns',
     permissionKey: 'organization.smsCampaigns',
     navOrder: 50,
+    navIcon: 'message-square',
     keywords: []
   },
   {
@@ -69,6 +74,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/standing-instructions-history',
     permissionKey: 'organization.standingInstructions',
     navOrder: 60,
+    navIcon: 'arrow-left-right',
     keywords: []
   },
   {
@@ -79,6 +85,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/fund-mapping',
     permissionKey: 'organization.fundMapping',
     navOrder: 70,
+    navIcon: 'map',
     keywords: []
   },
   {
@@ -89,6 +96,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/investors',
     permissionKey: 'organization.investors',
     navOrder: 80,
+    navIcon: 'trending-up',
     keywords: []
   },
   {
@@ -99,6 +107,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/adhoc-query',
     permissionKey: 'organization.adhocQuery',
     navOrder: 90,
+    navIcon: 'terminal',
     keywords: []
   },
   {
@@ -109,6 +118,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/tellers',
     permissionKey: 'organization.tellers',
     navOrder: 100,
+    navIcon: 'store',
     keywords: []
   },
   {
@@ -119,6 +129,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/payment-types',
     permissionKey: 'organization.paymentTypes',
     navOrder: 110,
+    navIcon: 'credit-card',
     keywords: []
   },
   {
@@ -129,6 +140,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/password-preferences',
     permissionKey: 'organization.passwordPreferences',
     navOrder: 120,
+    navIcon: 'key-round',
     keywords: []
   },
   {
@@ -139,6 +151,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/bulkloan',
     permissionKey: 'organization.bulkLoan',
     navOrder: 130,
+    navIcon: 'shuffle',
     keywords: []
   },
   {
@@ -149,6 +162,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/entity-data-table-checks',
     permissionKey: 'organization.entityChecks',
     navOrder: 140,
+    navIcon: 'table-2',
     keywords: []
   },
   {
@@ -159,6 +173,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/working-days',
     permissionKey: 'organization.workingDays',
     navOrder: 150,
+    navIcon: 'calendar-days',
     keywords: []
   },
   {
@@ -169,6 +184,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/manage-loan-originators',
     permissionKey: 'organization.loanOriginators',
     navOrder: 160,
+    navIcon: 'handshake',
     keywords: []
   },
   {
@@ -179,6 +195,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/manage-funds',
     permissionKey: 'organization.funds',
     navOrder: 170,
+    navIcon: 'landmark',
     keywords: []
   },
   {
@@ -189,6 +206,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/bulk-import',
     permissionKey: 'organization.bulkImport',
     navOrder: 180,
+    navIcon: 'upload',
     keywords: []
   },
   {
@@ -199,6 +217,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/holidays',
     permissionKey: 'organization.holidays',
     navOrder: 190,
+    navIcon: 'calendar',
     keywords: []
   },
   {
@@ -209,6 +228,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/codes',
     permissionKey: 'system.codes',
     navOrder: 10,
+    navIcon: 'code-2',
     keywords: []
   },
   {
@@ -219,6 +239,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/external-events',
     permissionKey: 'system.externalEvents',
     navOrder: 20,
+    navIcon: 'zap',
     keywords: []
   },
   {
@@ -229,6 +250,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/entity-to-entity-mapping',
     permissionKey: 'system.entityMapping',
     navOrder: 30,
+    navIcon: 'link-2',
     keywords: []
   },
   {
@@ -239,6 +261,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/external-services',
     permissionKey: 'system.externalServices',
     navOrder: 40,
+    navIcon: 'cloud',
     keywords: []
   },
   {
@@ -249,6 +272,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/data-tables',
     permissionKey: 'system.dataTables',
     navOrder: 50,
+    navIcon: 'database',
     keywords: ['datatable']
   },
   {
@@ -259,6 +283,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/hooks',
     permissionKey: 'system.hooks',
     navOrder: 60,
+    navIcon: 'webhook',
     keywords: []
   },
   {
@@ -269,6 +294,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/roles-and-permissions',
     permissionKey: 'system.roles',
     navOrder: 70,
+    navIcon: 'shield',
     keywords: ['role', 'permission']
   },
   {
@@ -279,6 +305,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/configure-mc-tasks',
     permissionKey: 'system.makerChecker',
     navOrder: 80,
+    navIcon: 'check-square',
     keywords: []
   },
   {
@@ -289,6 +316,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/surveys',
     permissionKey: 'system.surveys',
     navOrder: 90,
+    navIcon: 'clipboard-list',
     keywords: []
   },
   {
@@ -299,6 +327,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/manage-jobs',
     permissionKey: 'system.jobs',
     navOrder: 100,
+    navIcon: 'clock',
     keywords: ['scheduler']
   },
   {
@@ -309,6 +338,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/configurations',
     permissionKey: 'system.configurations',
     navOrder: 110,
+    navIcon: 'sliders-horizontal',
     keywords: ['configuration']
   },
   {
@@ -319,6 +349,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/account-number-preferences',
     permissionKey: 'system.accountNumberPrefs',
     navOrder: 120,
+    navIcon: 'hash',
     keywords: []
   },
   {
@@ -329,6 +360,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/reports',
     permissionKey: 'system.reports',
     navOrder: 130,
+    navIcon: 'file-bar-chart',
     keywords: []
   },
   {
@@ -339,6 +371,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/system-information',
     permissionKey: 'system.information',
     navOrder: 140,
+    navIcon: 'info',
     keywords: []
   },
   {
@@ -349,6 +382,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/about-us',
     permissionKey: 'system.aboutUs',
     navOrder: 150,
+    navIcon: 'info',
     keywords: []
   },
   {
@@ -359,6 +393,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'system/audit-trails',
     permissionKey: 'system.audit',
     navOrder: 160,
+    navIcon: 'scroll-text',
     keywords: []
   },
   {
@@ -369,6 +404,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/share-products',
     permissionKey: 'products.share',
     navOrder: 30,
+    navIcon: 'pie-chart',
     keywords: []
   },
   {
@@ -379,6 +415,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/charges',
     permissionKey: 'products.charges',
     navOrder: 40,
+    navIcon: 'percent',
     keywords: ['fee']
   },
   {
@@ -389,6 +426,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/products-mix',
     permissionKey: 'products.mix',
     navOrder: 50,
+    navIcon: 'layers',
     keywords: []
   },
   {
@@ -399,6 +437,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/tax-configurations',
     permissionKey: 'products.tax',
     navOrder: 60,
+    navIcon: 'receipt',
     keywords: []
   },
   {
@@ -409,6 +448,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/delinquency-bucket-configurations',
     permissionKey: 'products.delinquency',
     navOrder: 70,
+    navIcon: 'alert-triangle',
     keywords: []
   },
   {
@@ -419,6 +459,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/recurring-deposit-products',
     permissionKey: 'products.recurringDeposit',
     navOrder: 80,
+    navIcon: 'refresh-cw',
     keywords: []
   },
   {
@@ -429,6 +470,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/fixed-deposit-products',
     permissionKey: 'products.fixedDeposit',
     navOrder: 90,
+    navIcon: 'lock',
     keywords: []
   },
   {
@@ -439,6 +481,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/floating-rates',
     permissionKey: 'products.floatingRates',
     navOrder: 100,
+    navIcon: 'trending-up',
     keywords: []
   },
   {
@@ -449,6 +492,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'products/collaterals',
     permissionKey: 'products.collaterals',
     navOrder: 110,
+    navIcon: 'shield-check',
     keywords: []
   },
   {
@@ -459,6 +503,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/chart-of-accounts',
     permissionKey: 'accounting.coa',
     navOrder: 10,
+    navIcon: 'book-open',
     keywords: ['gl', 'coa']
   },
   {
@@ -469,6 +514,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/journal-entries',
     permissionKey: 'accounting.journal',
     navOrder: 20,
+    navIcon: 'notebook-pen',
     keywords: []
   },
   {
@@ -479,6 +525,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/journal-entries/frequent-postings',
     permissionKey: 'accounting.frequentPostings',
     navOrder: 25,
+    navIcon: 'repeat-2',
     keywords: []
   },
   {
@@ -489,6 +536,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/financial-activity-mappings',
     permissionKey: 'accounting.financialActivity',
     navOrder: 30,
+    navIcon: 'activity',
     keywords: []
   },
   {
@@ -499,6 +547,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/migrate-opening-balances',
     permissionKey: 'accounting.migrateBalances',
     navOrder: 40,
+    navIcon: 'arrow-right-left',
     keywords: []
   },
   {
@@ -509,6 +558,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/closing-entries',
     permissionKey: 'accounting.closing',
     navOrder: 50,
+    navIcon: 'door-closed',
     keywords: []
   },
   {
@@ -519,6 +569,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/accounting-rules',
     permissionKey: 'accounting.rules',
     navOrder: 60,
+    navIcon: 'gavel',
     keywords: []
   },
   {
@@ -529,6 +580,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/periodic-accruals',
     permissionKey: 'accounting.accruals',
     navOrder: 70,
+    navIcon: 'timer',
     keywords: []
   },
   {
@@ -539,6 +591,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'accounting/provisioning-entries',
     permissionKey: 'accounting.provisioning',
     navOrder: 80,
+    navIcon: 'file-stack',
     keywords: []
   },
   {
@@ -549,6 +602,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'appusers',
     permissionKey: 'administration.users',
     navOrder: 20,
+    navIcon: 'user',
     keywords: ['app user']
   },
   {
@@ -559,6 +613,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'templates',
     permissionKey: 'administration.templates',
     navOrder: 30,
+    navIcon: 'file-text',
     keywords: []
   },
   {
@@ -569,6 +624,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'reports',
     permissionKey: 'administration.reports',
     navOrder: 40,
+    navIcon: 'file-bar-chart',
     keywords: ['report']
   },
 ];

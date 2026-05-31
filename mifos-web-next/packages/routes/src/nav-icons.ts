@@ -1,0 +1,78 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+/** Lucide icon names used in sidebar / Quick Find (kebab-case). */
+export const NAV_ICON_NAMES = [
+  'layout-dashboard',
+  'users',
+  'user',
+  'users-round',
+  'building-2',
+  'landmark',
+  'piggy-bank',
+  'wallet',
+  'book-open',
+  'calculator',
+  'building',
+  'settings',
+  'inbox',
+  'search',
+  'file-bar-chart',
+  'package',
+  'shield',
+  'database',
+  'cog',
+  'list',
+  'coins',
+  'message-square',
+  'arrow-left-right',
+  'map',
+  'trending-up',
+  'terminal',
+  'store',
+  'credit-card',
+  'key-round',
+  'shuffle',
+  'table-2',
+  'calendar-days',
+  'handshake',
+  'upload',
+  'calendar',
+  'code-2',
+  'zap',
+  'link-2',
+  'cloud',
+  'webhook',
+  'check-square',
+  'clipboard-list',
+  'clock',
+  'sliders-horizontal',
+  'hash',
+  'info',
+  'scroll-text',
+  'pie-chart',
+  'percent',
+  'layers',
+  'receipt',
+  'alert-triangle',
+  'refresh-cw',
+  'lock',
+  'shield-check',
+  'notebook-pen',
+  'repeat-2',
+  'activity',
+  'arrow-right-left',
+  'door-closed',
+  'gavel',
+  'timer',
+  'file-stack',
+  'file-text',
+  'scale'
+] as const;
+
+export type NavIcon = (typeof NAV_ICON_NAMES)[number];

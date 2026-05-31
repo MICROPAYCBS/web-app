@@ -6,7 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { NavGroupId, NavIcon, RouteDefinition } from './types';
+import type { NavIcon } from './nav-icons';
+import type { NavGroupId, RouteDefinition } from './types';
 
 export interface AdminRouteInput {
   id: string;
@@ -16,7 +17,7 @@ export interface AdminRouteInput {
   webAppRef: string;
   permissionKey: string;
   navOrder: number;
-  navIcon?: NavIcon;
+  navIcon: NavIcon;
   keywords?: string[];
   domain?: string;
 }
