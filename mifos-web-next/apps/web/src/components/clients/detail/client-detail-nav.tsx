@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Copyright since 2026 Mifos Initiative
  *

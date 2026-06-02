@@ -41,5 +41,3 @@ export function ClientDetailShell({
     </DetailPage>
   );
 }
-
-export { clientDetailNavGroups } from '@/components/clients/detail/client-detail-nav';
