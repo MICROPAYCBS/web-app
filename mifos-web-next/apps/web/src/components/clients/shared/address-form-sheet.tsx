@@ -74,7 +74,7 @@ export function AddressFormSheet({
       submitLabel="Save"
       onSubmit={handleSave}
       submitLoading={submitLoading}
-      className="sm:max-w-lg"
+      className="sm:max-w-xl"
     >
       <form
         id={formId}
