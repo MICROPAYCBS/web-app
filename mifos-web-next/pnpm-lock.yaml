@@ -158,6 +158,10 @@ importers:
         version: 5.9.3
 
   packages/api-client:
+    dependencies:
+      '@mifos/i18n':
+        specifier: workspace:*
+        version: link:../i18n
     devDependencies:
       typescript:
         specifier: ^5.8.3
@@ -200,6 +204,9 @@ importers:
 
   packages/i18n:
     devDependencies:
+      tsx:
+        specifier: ^4.19.3
+        version: 4.22.4
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -239,6 +246,9 @@ importers:
       '@mifos/api-client':
         specifier: workspace:*
         version: link:../api-client
+      '@mifos/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       zod:
         specifier: ^3.24.2
         version: 3.25.76

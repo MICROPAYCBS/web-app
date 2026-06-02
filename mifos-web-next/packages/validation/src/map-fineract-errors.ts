@@ -7,6 +7,7 @@
  */
 
 import type { FineractApiError } from '@mifos/api-client';
+import { getFineractErrorMessage, resolveFineractErrorItemMessage } from '@mifos/i18n';
 
 export interface FieldError {
   field: string;
@@ -23,12 +24,14 @@ export interface MappedFineractErrors {
 /** Map Fineract error payload to form field errors. */
 export function mapFineractErrors(body: FineractApiError | null): MappedFineractErrors {
   const fieldErrors: FieldError[] = [];
+
   if (body?.errors?.length) {
     for (const err of body.errors) {
-      if (err.parameterName) {
+      const message = resolveFineractErrorItemMessage(err);
+      if (err.parameterName && message) {
         fieldErrors.push({
           field: err.parameterName,
-          message: err.defaultUserMessage ?? err.userMessageGlobalisationCode ?? 'Invalid value',
+          message,
           code: err.userMessageGlobalisationCode
         });
       }
@@ -36,7 +39,7 @@ export function mapFineractErrors(body: FineractApiError | null): MappedFineract
   }
 
   return {
-    globalMessage: body?.defaultUserMessage ?? body?.developerMessage ?? null,
+    globalMessage: body ? getFineractErrorMessage(body) : null,
     globalCode: body?.userMessageGlobalisationCode ?? null,
     fieldErrors
   };

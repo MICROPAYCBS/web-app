@@ -20,3 +20,8 @@ export {
   type FamilyMemberInput
 } from './clients/create-client.schema';
 export { mapFineractErrors, type FieldError, type MappedFineractErrors } from './map-fineract-errors';
+export {
+  formatActionErrorMessage,
+  toFineractActionError,
+  type FineractActionError
+} from './to-fineract-action-error';

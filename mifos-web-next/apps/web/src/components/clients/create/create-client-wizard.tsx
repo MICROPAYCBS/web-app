@@ -8,7 +8,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { createClientSchema, LEGAL_FORM_PERSON, type CreateClientPayload } from '@mifos/validation';
+import {
+  createClientSchema,
+  formatActionErrorMessage,
+  LEGAL_FORM_PERSON,
+  type CreateClientPayload
+} from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import { createClientAction } from '@/actions/clients';
@@ -215,7 +220,7 @@ export function CreateClientWizard({
     startTransition(async () => {
       const result = await createClientAction(payload);
       if (!result.ok) {
-        setSubmitError(result.message);
+        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
       router.push(`/clients/${result.clientId}`);

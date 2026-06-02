@@ -14,7 +14,7 @@ import type {
   FineractClientAddressTemplate,
   FineractClientTemplate
 } from '@mifos/api-client';
-import type { ClientAddressEntry } from '@mifos/validation';
+import { formatActionErrorMessage, type ClientAddressEntry } from '@mifos/validation';
 import { MapPin, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -90,7 +90,7 @@ export function ClientAddressView({
         : await createClientAddressAction(clientId, entry);
 
       if (!result.ok) {
-        setActionError(result.message);
+        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
       setDialogOpen(false);
@@ -109,7 +109,7 @@ export function ClientAddressView({
         isActive
       );
       if (!result.ok) {
-        setActionError(result.message);
+        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
       refresh();

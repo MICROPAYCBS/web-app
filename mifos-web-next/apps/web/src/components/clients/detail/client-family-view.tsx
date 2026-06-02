@@ -9,7 +9,7 @@
  */
 
 import type { FineractClientFamilyMember, FineractFamilyMemberOptions } from '@mifos/api-client';
-import type { FamilyMemberInput } from '@mifos/validation';
+import { formatActionErrorMessage, type FamilyMemberInput } from '@mifos/validation';
 import { Plus, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -96,7 +96,7 @@ export function ClientFamilyView({
         : await createClientFamilyMemberAction(clientId, entry);
 
       if (!result.ok) {
-        setActionError(result.message);
+        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
       setDialogOpen(false);
@@ -113,7 +113,7 @@ export function ClientFamilyView({
     startTransition(async () => {
       const result = await deleteClientFamilyMemberAction(clientId, deleteTarget.id);
       if (!result.ok) {
-        setActionError(result.message);
+        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
       setDeleteTarget(null);

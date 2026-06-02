@@ -15,6 +15,7 @@ export interface FineractApiError {
   errors?: Array<{
     parameterName?: string;
     defaultUserMessage?: string;
+    developerMessage?: string;
     userMessageGlobalisationCode?: string;
   }>;
 }

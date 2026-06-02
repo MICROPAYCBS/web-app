@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { getFineractErrorMessage } from '@mifos/i18n';
 import type { FineractApiError, FineractClientConfig } from './types';
 
 export class FineractHttpError extends Error {
@@ -13,7 +14,7 @@ export class FineractHttpError extends Error {
     public readonly status: number,
     public readonly body: FineractApiError | null
   ) {
-    super(body?.defaultUserMessage ?? body?.developerMessage ?? `HTTP ${status}`);
+    super(getFineractErrorMessage(body, status));
     this.name = 'FineractHttpError';
   }
 }
@@ -52,10 +53,13 @@ export class FineractClient {
 
     if (!res.ok) {
       let body: FineractApiError | null = null;
-      try {
-        body = (await res.json()) as FineractApiError;
-      } catch {
-        body = null;
+      const raw = await res.text();
+      if (raw) {
+        try {
+          body = JSON.parse(raw) as FineractApiError;
+        } catch {
+          body = { defaultUserMessage: raw };
+        }
       }
       throw new FineractHttpError(res.status, body);
     }

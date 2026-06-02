@@ -9,8 +9,7 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { FineractHttpError } from '@mifos/api-client';
-import { createClientSchema, mapFineractErrors, type CreateClientPayload } from '@mifos/validation';
+import { createClientSchema, toFineractActionError, type CreateClientPayload } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
@@ -52,20 +51,6 @@ export async function createClientAction(
     revalidatePath(`/clients/${clientId}`);
     return { ok: true, clientId };
   } catch (err) {
-    if (err instanceof FineractHttpError) {
-      const mapped = mapFineractErrors(err.body);
-      const fieldErrors = Object.fromEntries(
-        mapped.fieldErrors.map((e) => [e.field, e.message])
-      );
-      return {
-        ok: false,
-        message: mapped.globalMessage ?? err.message,
-        fieldErrors: Object.keys(fieldErrors).length ? fieldErrors : undefined
-      };
-    }
-    return {
-      ok: false,
-      message: err instanceof Error ? err.message : 'Failed to create client.'
-    };
+    return toFineractActionError(err, 'Failed to create client.');
   }
 }

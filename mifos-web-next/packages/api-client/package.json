@@ -11,6 +11,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@mifos/i18n": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.8.3"
   }

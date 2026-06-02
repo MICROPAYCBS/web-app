@@ -9,8 +9,7 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { FineractHttpError } from '@mifos/api-client';
-import { familyMemberSchema, mapFineractErrors, type FamilyMemberInput } from '@mifos/validation';
+import { familyMemberSchema, toFineractActionError, type FamilyMemberInput } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
   createClientFamilyMember,
@@ -56,19 +55,7 @@ function parseMember(raw: unknown): ClientFamilyActionResult | FamilyMemberInput
 }
 
 function mapError(err: unknown): ClientFamilyActionResult {
-  if (err instanceof FineractHttpError) {
-    const mapped = mapFineractErrors(err.body);
-    const fieldErrors = Object.fromEntries(mapped.fieldErrors.map((e) => [e.field, e.message]));
-    return {
-      ok: false,
-      message: mapped.globalMessage ?? err.message,
-      fieldErrors: Object.keys(fieldErrors).length ? fieldErrors : undefined
-    };
-  }
-  return {
-    ok: false,
-    message: err instanceof Error ? err.message : 'Request failed.'
-  };
+  return toFineractActionError(err, 'Request failed.');
 }
 
 export async function createClientFamilyMemberAction(
