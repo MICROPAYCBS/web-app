@@ -5,7 +5,7 @@ Track implementation status against [openMF/web-app](https://github.com/openMF/w
 ## Generated matrix
 
 ```bash
-npm run routes:parity
+pnpm run routes:parity
 ```
 
 Produces **[generated.json](generated.json)** from `@mifos/routes` (`APP_ROUTES.parity`).

@@ -25,9 +25,9 @@ If you see **“Mifos® X WebApp”** with **Username / Password** fields and UR
 
 | Your repo layout | Vercel **Root Directory** | Build runs |
 |------------------|---------------------------|------------|
-| `web-app` repo with `mifos-web-next/` folder (this repo) | **`mifos-web-next`** | `npm run build` at monorepo root |
+| `web-app` repo with `mifos-web-next/` folder (this repo) | **`mifos-web-next`** | `pnpm run build` at monorepo root |
 | Standalone clone of only `mifos-web-next` | **`.`** (leave empty) | same |
-| Only if the above fails | `apps/web` | `npm run build` in `apps/web` (install still runs from monorepo root via `vercel.json`) |
+| Only if the above fails | `apps/web` | `pnpm run build` in `apps/web` (install still runs from monorepo root via `vercel.json`) |
 
 Do **not** use `mifos-web-next/apps/web` when the project is the full `web-app` repository — Vercel often cannot see workspace `build` scripts there. Use **`mifos-web-next`** instead.
 
@@ -83,9 +83,9 @@ Point production at `cursor/mifos-web-next-architecture-55aa` or `dev` until you
 
 ```bash
 cd mifos-web-next/apps/web
-npx vercel link          # once per machine
-npx vercel env pull      # download env to .env.local
-npx vercel --prod        # production deploy
+pnpm exec vercel link          # once per machine
+pnpm exec vercel env pull      # download env to .env.local
+pnpm exec vercel --prod        # production deploy
 ```
 
 ## 6. Troubleshooting

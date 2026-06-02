@@ -33,7 +33,7 @@ Groups are defined in `packages/routes/src/nav-groups.ts`.
 1. Add `APP_ROUTES` entry with `navGroup` / `navFeatured` as appropriate.
 2. Create the Next.js page.
 3. Set `parity.status` to `in_progress` or `done` when the page is navigable (`soon` disables links).
-4. Run `npm run routes:parity`.
+4. Run `pnpm run routes:parity`.
 
 ## Client vs server
 

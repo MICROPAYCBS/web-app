@@ -1,6 +1,6 @@
 # Roadmap
 
-Living backlog for **mifos-web-next**. Parity counts come from `npm run routes:parity` → `docs/parity/generated.json`.
+Living backlog for **mifos-web-next**. Parity counts come from `pnpm run routes:parity` → `docs/parity/generated.json`.
 
 ## Phase 0 — Platform (current)
 

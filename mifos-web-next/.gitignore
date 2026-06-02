@@ -13,3 +13,4 @@ test-results
 .DS_Store
 reference/web-app
 reference/fineract
+pnpm-debug.log*

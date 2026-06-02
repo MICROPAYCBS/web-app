@@ -44,10 +44,10 @@ Pin in `reference/` (not committed):
 ## Commands
 
 ```bash
-npm run dev
-npm run build
-npm run lint
-npm run typecheck
+pnpm run dev
+pnpm run build
+pnpm run lint
+pnpm run typecheck
 ```
 
 ## UI
@@ -55,7 +55,7 @@ npm run typecheck
 Add shadcn components from `apps/web`:
 
 ```bash
-cd apps/web && npx shadcn@latest add <component>
+cd apps/web && pnpm exec shadcn@latest add <component>
 ```
 
 Prefer composites in `@mifos/ui` for patterns used across domains.

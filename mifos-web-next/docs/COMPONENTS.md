@@ -284,7 +284,7 @@ Use plain shadcn `Select` only for static enums with **≤4** options (e.g. Yes/
 
 ## Layout blocks (shadcn)
 
-Installed via `npx shadcn add dashboard-01 login-04` and adapted to Mifos rules (no OAuth, BFF-only auth, nav from `@mifos/routes`).
+Installed via `pnpm exec shadcn add dashboard-01 login-04` and adapted to Mifos rules (no OAuth, BFF-only auth, nav from `@mifos/routes`).
 
 | Block | Mifos implementation | Notes |
 |-------|----------------------|-------|

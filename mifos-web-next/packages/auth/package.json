@@ -14,8 +14,8 @@
     "test": "node --import tsx --test src/can.test.ts"
   },
   "dependencies": {
-    "@mifos/api-client": "0.1.0",
-    "@mifos/routes": "0.1.0",
+    "@mifos/api-client": "workspace:*",
+    "@mifos/routes": "workspace:*",
     "zod": "^3.24.2"
   },
   "peerDependencies": {

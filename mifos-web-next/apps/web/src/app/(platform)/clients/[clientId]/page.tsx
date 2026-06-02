@@ -14,5 +14,5 @@ export default async function ClientDetailIndexPage({
   params: Promise<{ clientId: string }>;
 }) {
   const { clientId } = await params;
-  redirect(`/clients/${clientId}/general`);
+  return redirect(`/clients/${clientId}/general`);
 }

@@ -15,10 +15,10 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the full flow (Connect â†’ demo session â
 
 ```bash
 cd mifos-web-next
-npm install
+pnpm install
 cp apps/web/.env.example apps/web/.env.local
 # Optional: copy demo vars from apps/web/.env.vercel.example
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -27,7 +27,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Capability | Yes / No |
 |------------|----------|
-| Run `npm run build` / `npm run dev` in the workspace | Yes |
+| Run `pnpm run build` / `pnpm run dev` in the workspace | Yes |
 | Fix UI bugs and push so **your** Vercel preview updates | Yes |
 | Show a live browser inside this chat | No |
 | Attach screenshots automatically each turn | Only if we add Playwright artifacts (optional) |

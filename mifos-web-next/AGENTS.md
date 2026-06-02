@@ -30,7 +30,7 @@ Instructions for AI agents working in this repository.
 4. **Map Fineract API errors** via `mapFineractErrors` + `translateFineractCode`.
 5. Use **decimal.js** (via `@mifos/domain`) for money — never JavaScript `number` for amounts.
 6. **Simple forms (1–7 fields)** use `FormSheet` (shadcn Sheet) with Cancel/Submit in the footer — see `docs/COMPONENTS.md` and ADR-006.
-7. Add new pages to `packages/routes/src/app-routes.ts` and run `npm run routes:parity`.
+7. Add new pages to `packages/routes/src/app-routes.ts` and run `pnpm run routes:parity`.
 8. **RBAC:** register permissions in `@mifos/auth`; use `<Can>` + `assertCan()` — see `docs/RBAC.md`.
 9. Update **parity matrix** (`docs/parity/`) when shipping a route.
 10. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md and `docs/SERVERS.md``).
@@ -46,10 +46,10 @@ Pin in `reference/` (not committed):
 ## Commands
 
 ```bash
-npm run dev
-npm run build
-npm run lint
-npm run typecheck
+pnpm run dev
+pnpm run build
+pnpm run lint
+pnpm run typecheck
 ```
 
 ## UI
@@ -57,7 +57,7 @@ npm run typecheck
 Add shadcn components from `apps/web`:
 
 ```bash
-cd apps/web && npx shadcn@latest add <component>
+cd apps/web && pnpm dlx shadcn@latest add <component>
 ```
 
 Prefer composites in `@mifos/ui` for patterns used across domains.

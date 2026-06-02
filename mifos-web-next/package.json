@@ -2,27 +2,26 @@
   "name": "mifos-web-next",
   "version": "0.1.0",
   "private": true,
-  "description": "Next.js Fineract web client \u2014 greenfield replacement for Mifos X Web App",
+  "description": "Next.js Fineract web client — greenfield replacement for Mifos X Web App",
   "license": "MPL-2.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "dev": "npm run dev -w web",
-    "build": "npm run build -w web",
-    "start": "npm run start -w web",
-    "lint": "npm run lint -w web",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "lint": "pnpm --filter web lint",
+    "typecheck": "pnpm -r typecheck",
     "format": "prettier --write .",
-    "routes:parity": "npx tsx tooling/routes-inventory/generate-parity.ts",
-    "vercel-build": "npm run build -w web"
+    "routes:parity": "pnpm exec tsx tooling/routes-inventory/generate-parity.ts",
+    "vercel-build": "pnpm --filter web build"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20",
+    "pnpm": ">=9"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }
