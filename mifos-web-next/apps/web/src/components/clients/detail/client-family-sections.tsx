@@ -7,11 +7,138 @@
  */
 
 import type { FineractClientFamilyMember } from '@mifos/api-client';
+import type { FamilyMemberInput } from '@mifos/validation';
 import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
 export function familyMemberDisplayName(member: FineractClientFamilyMember): string {
   return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(' ');
+}
+
+export function familyMemberInputDisplayName(member: FamilyMemberInput): string {
+  return [member.firstName, member.middleName, member.lastName].filter(Boolean).join(' ');
+}
+
+export function formatFamilyMemberSummary(member: {
+  relationship?: string;
+  gender?: string;
+  mobileNumber?: string;
+  isDependent?: boolean;
+}): string {
+  const parts = [member.relationship, member.gender, member.mobileNumber].filter(Boolean);
+  if (member.isDependent) {
+    parts.push('Dependent');
+  }
+  return parts.join(' · ') || 'Family member';
+}
+
+export function formatFamilyMemberInputSummary(
+  member: FamilyMemberInput,
+  relationshipLabel?: string
+): string {
+  return formatFamilyMemberSummary({
+    relationship: relationshipLabel,
+    isDependent: member.isDependent
+  });
+}
+
+function FamilyCollectionActions({
+  canUpdate,
+  onEdit,
+  onDelete,
+  className
+}: {
+  canUpdate: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  className?: string;
+}) {
+  if (!canUpdate) {
+    return null;
+  }
+  return (
+    <div className={cn('flex shrink-0 items-center gap-2', className)}>
+      <button
+        type="button"
+        className="text-sm font-medium text-primary hover:underline"
+        onClick={onEdit}
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        className="text-sm font-medium text-destructive hover:underline"
+        onClick={onDelete}
+      >
+        Delete
+      </button>
+    </div>
+  );
+}
+
+export function ClientFamilyListItem({
+  title,
+  summary,
+  isDependent,
+  canUpdate,
+  onEdit,
+  onDelete,
+  className
+}: {
+  title: string;
+  summary: string;
+  isDependent?: boolean;
+  canUpdate: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn('flex items-start justify-between gap-3 bg-card px-4 py-3', className)}>
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium">{title}</p>
+          {isDependent ? <Badge variant="secondary">Dependent</Badge> : null}
+        </div>
+        <p className="text-sm text-muted-foreground">{summary}</p>
+      </div>
+      <FamilyCollectionActions canUpdate={canUpdate} onEdit={onEdit} onDelete={onDelete} />
+    </div>
+  );
+}
+
+export function ClientFamilyGridCard({
+  title,
+  summary,
+  isDependent,
+  canUpdate,
+  onEdit,
+  onDelete
+}: {
+  title: string;
+  summary: string;
+  isDependent?: boolean;
+  canUpdate: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <Card size="sm" className="h-full">
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          <span>{title}</span>
+          {isDependent ? <Badge variant="secondary">Dependent</Badge> : null}
+        </CardTitle>
+        <CardDescription>{summary}</CardDescription>
+        <CardAction>
+          <FamilyCollectionActions canUpdate={canUpdate} onEdit={onEdit} onDelete={onDelete} />
+        </CardAction>
+      </CardHeader>
+    </Card>
+  );
 }
 
 function formatDateOfBirth(value: FineractClientFamilyMember['dateOfBirth']): string | null {

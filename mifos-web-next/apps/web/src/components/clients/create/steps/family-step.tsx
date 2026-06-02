@@ -10,12 +10,29 @@
 
 import type { FineractClientTemplate } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
-import { Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { FamilyMemberFormSheet } from '@/components/clients/shared/family-member-form-sheet';
+import {
+  ClientFamilyGridCard,
+  ClientFamilyListItem,
+  familyMemberInputDisplayName,
+  formatFamilyMemberInputSummary
+} from '@/components/clients/detail/client-family-sections';
+import { DraftCollectionView } from '@/components/clients/shared/draft-collection-view';
 import type { CreateClientDraft } from '../types';
 import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
+
+const VIEW_MODE_STORAGE_KEY = 'mifos.create-client.family.view-mode';
+
+function relationshipLabel(
+  template: FineractClientTemplate,
+  relationshipId: number
+): string | undefined {
+  return template.familyMemberOptions?.relationshipIdOptions?.find((o) => o.id === relationshipId)
+    ?.name;
+}
 
 export function FamilyStep({
   template,
@@ -62,39 +79,54 @@ export function FamilyStep({
           title="No family members added yet"
           description="This step is optional. Add household or next-of-kin contacts if needed."
           action={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setEditIndex(null);
-                setDialogOpen(true);
-              }}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={openAdd}>
               <Plus className="mr-2 size-4" />
               Add family member
             </Button>
           }
         />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {members.map((member, index) => (
-            <li key={index} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-              <span>
-                {member.firstName} {member.middleName ? `${member.middleName} ` : ''}
-                {member.lastName}
-              </span>
-              <div className="flex gap-1">
-                <Button type="button" variant="ghost" size="icon" onClick={() => openEdit(index)}>
-                  <Pencil className="size-4" />
-                </Button>
-                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <DraftCollectionView
+          storageKey={VIEW_MODE_STORAGE_KEY}
+          itemCount={members.length}
+          renderItems={(mode) =>
+            members.map((member, index) => {
+              const title = familyMemberInputDisplayName(member);
+              const summary = formatFamilyMemberInputSummary(
+                member,
+                relationshipLabel(template, member.relationshipId)
+              );
+              const onEdit = () => openEdit(index);
+              const onDelete = () => remove(index);
+
+              if (mode === 'grid') {
+                return (
+                  <ClientFamilyGridCard
+                    key={index}
+                    title={title}
+                    summary={summary}
+                    isDependent={member.isDependent}
+                    canUpdate
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                );
+              }
+
+              return (
+                <ClientFamilyListItem
+                  key={index}
+                  title={title}
+                  summary={summary}
+                  isDependent={member.isDependent}
+                  canUpdate
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              );
+            })
+          }
+        />
       )}
 
       <FamilyMemberFormSheet

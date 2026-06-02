@@ -19,14 +19,25 @@ import { MapPin, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { AddressFormSheet } from '@/components/clients/shared/address-form-sheet';
-import { ClientAddressPanel } from '@/components/clients/detail/client-address-sections';
+import {
+  ClientAddressGridCard,
+  ClientAddressListItem,
+  formatClientAddressSummary
+} from '@/components/clients/detail/client-address-sections';
 import {
   createClientAddressAction,
   toggleClientAddressActiveAction,
   updateClientAddressAction
 } from '@/actions/client-address';
-import { EmptyState } from '@/components/composites';
+import {
+  CollectionViewLayout,
+  CollectionViewToggle,
+  EmptyState,
+  useCollectionViewMode
+} from '@/components/composites';
 import { Button } from '@/components/ui/button';
+
+const VIEW_MODE_STORAGE_KEY = 'mifos.client-addresses.view-mode';
 
 function toWizardTemplate(template: FineractClientAddressTemplate): FineractClientTemplate {
   return {
@@ -52,6 +63,10 @@ function toAddressEntry(address: FineractClientAddress): ClientAddressEntry {
   };
 }
 
+function isFieldEnabled(config: FineractAddressFieldConfig[], field: string): boolean {
+  return config.find((f) => f.field === field)?.isEnabled ?? false;
+}
+
 export function ClientAddressView({
   clientId,
   addresses: initialAddresses,
@@ -70,8 +85,11 @@ export function ClientAddressView({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editAddress, setEditAddress] = useState<FineractClientAddress | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const { mode, setMode } = useCollectionViewMode(VIEW_MODE_STORAGE_KEY, 'list');
 
   const wizardTemplate = toWizardTemplate(addressTemplate);
+  const showActiveBadge = isFieldEnabled(fieldConfig, 'isActive');
+  const showActiveToggle = canUpdate && showActiveBadge;
 
   function refresh() {
     router.refresh();
@@ -116,26 +134,55 @@ export function ClientAddressView({
     });
   }
 
+  function renderAddress(address: FineractClientAddress) {
+    const title = address.addressType ?? 'Address';
+    const summary = formatClientAddressSummary(address);
+    const common = {
+      title,
+      subtitle: address.relationship,
+      summary,
+      isActive: address.isActive,
+      showActiveBadge,
+      canUpdate,
+      onEdit: () => {
+        setEditAddress(address);
+        setDialogOpen(true);
+      },
+      onToggleActive: showActiveToggle ? (next: boolean) => handleToggle(address, next) : undefined
+    };
+
+    if (mode === 'grid') {
+      return <ClientAddressGridCard key={address.addressId} {...common} />;
+    }
+
+    return <ClientAddressListItem key={address.addressId} {...common} />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Client addresses. Fields shown depend on your institution&apos;s address configuration.
         </p>
-        {canUpdate ? (
-          <Button
-            type="button"
-            size="sm"
-            disabled={pending}
-            onClick={() => {
-              setEditAddress(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 size-4" />
-            Add address
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {initialAddresses.length > 0 ? (
+            <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
+          ) : null}
+          {canUpdate ? (
+            <Button
+              type="button"
+              size="sm"
+              disabled={pending}
+              onClick={() => {
+                setEditAddress(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 size-4" />
+              Add address
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {actionError ? (
@@ -167,22 +214,9 @@ export function ClientAddressView({
           }
         />
       ) : (
-        <div className="space-y-4">
-          {initialAddresses.map((address) => (
-            <ClientAddressPanel
-              key={address.addressId}
-              address={address}
-              fieldConfig={fieldConfig}
-              template={addressTemplate}
-              canUpdate={canUpdate}
-              onEdit={() => {
-                setEditAddress(address);
-                setDialogOpen(true);
-              }}
-              onToggleActive={(next) => handleToggle(address, next)}
-            />
-          ))}
-        </div>
+        <CollectionViewLayout mode={mode}>
+          {initialAddresses.map((address) => renderAddress(address))}
+        </CollectionViewLayout>
       )}
 
       <AddressFormSheet

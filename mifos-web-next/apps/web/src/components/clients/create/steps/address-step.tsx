@@ -10,13 +10,28 @@
 
 import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
-import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AddressFormSheet } from '@/components/clients/shared/address-form-sheet';
+import {
+  ClientAddressGridCard,
+  ClientAddressListItem,
+  formatClientAddressEntrySummary
+} from '@/components/clients/detail/client-address-sections';
+import { DraftCollectionView } from '@/components/clients/shared/draft-collection-view';
 import type { CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
 import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
+
+const VIEW_MODE_STORAGE_KEY = 'mifos.create-client.addresses.view-mode';
+
+function addressTypeLabel(template: FineractClientTemplate, addressTypeId: number): string {
+  const option = template.address
+    ?.flatMap((block) => block.addressTypeIdOptions ?? [])
+    .find((o) => o.id === addressTypeId);
+  return option?.name ?? option?.value ?? `Address type ${addressTypeId}`;
+}
 
 export function AddressStep({
   template,
@@ -35,6 +50,15 @@ export function AddressStep({
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const addresses = draft.addresses;
+
+  function openEdit(index: number) {
+    setEditIndex(index);
+    setDialogOpen(true);
+  }
+
+  function remove(index: number) {
+    onAddressesChange(addresses.filter((_, i) => i !== index));
+  }
 
   return (
     <div className="space-y-4">
@@ -81,37 +105,46 @@ export function AddressStep({
           }
         />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {addresses.map((addr, index) => (
-            <li key={index} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-              <span>
-                {[addr.street, addr.city, addr.postalCode].filter(Boolean).join(', ') ||
-                  `Address ${index + 1}`}
-              </span>
-              <div className="flex gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setEditIndex(index);
-                    setDialogOpen(true);
-                  }}
-                >
-                  <Pencil className="size-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onAddressesChange(addresses.filter((_, i) => i !== index))}
-                >
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <DraftCollectionView
+          storageKey={VIEW_MODE_STORAGE_KEY}
+          itemCount={addresses.length}
+          renderItems={(mode) =>
+            addresses.map((addr, index) => {
+              const title = addressTypeLabel(template, addr.addressTypeId ?? 0);
+              const summary = formatClientAddressEntrySummary(addr);
+              const onEdit = () => openEdit(index);
+              const onDelete = () => remove(index);
+
+              if (mode === 'grid') {
+                return (
+                  <ClientAddressGridCard
+                    key={index}
+                    title={title}
+                    summary={summary}
+                    isActive={addr.isActive}
+                    showActiveBadge={fieldConfig.some((f) => f.field === 'isActive' && f.isEnabled)}
+                    canUpdate
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                );
+              }
+
+              return (
+                <ClientAddressListItem
+                  key={index}
+                  title={title}
+                  summary={summary}
+                  isActive={addr.isActive}
+                  showActiveBadge={fieldConfig.some((f) => f.field === 'isActive' && f.isEnabled)}
+                  canUpdate
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              );
+            })
+          }
+        />
       )}
 
       <AddressFormSheet

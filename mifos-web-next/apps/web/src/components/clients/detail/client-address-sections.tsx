@@ -12,8 +12,19 @@ import type {
   FineractClientAddressTemplate,
   FineractEnumOption
 } from '@mifos/api-client';
+import type { ClientAddressEntry } from '@mifos/validation';
 import { SwitchField } from '@/components/composites/switch-field';
 import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 function isFieldEnabled(config: FineractAddressFieldConfig[], field: string): boolean {
   return config.find((f) => f.field === field)?.isEnabled ?? false;
@@ -24,6 +35,192 @@ function optionLabel(options: FineractEnumOption[] | undefined, id?: number): st
     return undefined;
   }
   return options.find((o) => o.id === id)?.name ?? options.find((o) => o.id === id)?.value;
+}
+
+type AddressSummaryParts = {
+  street?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  addressLine3?: string;
+  townVillage?: string;
+  city?: string;
+  postalCode?: string;
+  countyDistrict?: string;
+};
+
+export function formatAddressSummary(parts: AddressSummaryParts): string {
+  const line = [
+    parts.street,
+    parts.addressLine1,
+    parts.addressLine2,
+    parts.addressLine3,
+    parts.townVillage,
+    parts.city,
+    parts.countyDistrict,
+    parts.postalCode
+  ]
+    .filter(Boolean)
+    .join(', ');
+  return line || 'No address details on file';
+}
+
+export function formatClientAddressSummary(address: FineractClientAddress): string {
+  return formatAddressSummary(address);
+}
+
+export function formatClientAddressEntrySummary(entry: ClientAddressEntry): string {
+  return formatAddressSummary(entry);
+}
+
+function AddressCollectionActions({
+  canUpdate,
+  onEdit,
+  onDelete,
+  className
+}: {
+  canUpdate: boolean;
+  onEdit: () => void;
+  onDelete?: () => void;
+  className?: string;
+}) {
+  if (!canUpdate) {
+    return null;
+  }
+  return (
+    <div className={cn('flex shrink-0 items-center gap-2', className)}>
+      <button
+        type="button"
+        className="text-sm font-medium text-primary hover:underline"
+        onClick={onEdit}
+      >
+        Edit
+      </button>
+      {onDelete ? (
+        <button
+          type="button"
+          className="text-sm font-medium text-destructive hover:underline"
+          onClick={onDelete}
+        >
+          Delete
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+export function ClientAddressListItem({
+  title,
+  subtitle,
+  summary,
+  isActive,
+  showActiveBadge,
+  canUpdate,
+  onEdit,
+  onDelete,
+  onToggleActive,
+  className
+}: {
+  title: string;
+  subtitle?: string;
+  summary: string;
+  isActive?: boolean;
+  showActiveBadge?: boolean;
+  canUpdate: boolean;
+  onEdit: () => void;
+  onDelete?: () => void;
+  onToggleActive?: (next: boolean) => void;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn('flex flex-col gap-3 bg-card px-4 py-3 sm:flex-row sm:items-start', className)}
+    >
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium">{title}</p>
+          {showActiveBadge ? (
+            <Badge variant={isActive ? 'default' : 'secondary'}>
+              {isActive ? 'Active' : 'Inactive'}
+            </Badge>
+          ) : null}
+        </div>
+        {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+        <p className="text-sm text-muted-foreground">{summary}</p>
+        {canUpdate && onToggleActive ? (
+          <div className="pt-1 sm:hidden">
+            <SwitchField
+              label="Active address"
+              checked={Boolean(isActive)}
+              onCheckedChange={onToggleActive}
+            />
+          </div>
+        ) : null}
+      </div>
+      <div className="flex flex-col items-stretch gap-3 sm:items-end">
+        <AddressCollectionActions canUpdate={canUpdate} onEdit={onEdit} onDelete={onDelete} />
+        {canUpdate && onToggleActive ? (
+          <div className="hidden sm:block">
+            <SwitchField
+              label="Active address"
+              checked={Boolean(isActive)}
+              onCheckedChange={onToggleActive}
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export function ClientAddressGridCard({
+  title,
+  subtitle,
+  summary,
+  isActive,
+  showActiveBadge,
+  canUpdate,
+  onEdit,
+  onDelete,
+  onToggleActive
+}: {
+  title: string;
+  subtitle?: string;
+  summary: string;
+  isActive?: boolean;
+  showActiveBadge?: boolean;
+  canUpdate: boolean;
+  onEdit: () => void;
+  onDelete?: () => void;
+  onToggleActive?: (next: boolean) => void;
+}) {
+  return (
+    <Card size="sm" className="h-full">
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          <span>{title}</span>
+          {showActiveBadge ? (
+            <Badge variant={isActive ? 'default' : 'secondary'}>
+              {isActive ? 'Active' : 'Inactive'}
+            </Badge>
+          ) : null}
+        </CardTitle>
+        {subtitle ? <CardDescription>{subtitle}</CardDescription> : null}
+        <CardAction>
+          <AddressCollectionActions canUpdate={canUpdate} onEdit={onEdit} onDelete={onDelete} />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">{summary}</p>
+        {canUpdate && onToggleActive ? (
+          <SwitchField
+            label="Active address"
+            checked={Boolean(isActive)}
+            onCheckedChange={onToggleActive}
+          />
+        ) : null}
+      </CardContent>
+    </Card>
+  );
 }
 
 export function ClientAddressSections({

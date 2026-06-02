@@ -38,3 +38,9 @@ export { FormLabel, type FormLabelProps } from './form-label';
 export { SelectField, type SelectFieldProps, type SelectOption } from './select-field';
 export { TextField, type TextFieldProps } from './text-field';
 export { SwitchField, type SwitchFieldProps } from './switch-field';
+export {
+  type CollectionViewMode,
+  CollectionViewToggle,
+  CollectionViewLayout,
+  useCollectionViewMode
+} from './collection-view';

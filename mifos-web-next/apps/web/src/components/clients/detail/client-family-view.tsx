@@ -15,15 +15,22 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { FamilyMemberFormSheet } from '@/components/clients/shared/family-member-form-sheet';
 import {
-  ClientFamilyPanel,
-  familyMemberDisplayName
+  ClientFamilyGridCard,
+  ClientFamilyListItem,
+  familyMemberDisplayName,
+  formatFamilyMemberSummary
 } from '@/components/clients/detail/client-family-sections';
 import {
   createClientFamilyMemberAction,
   deleteClientFamilyMemberAction,
   updateClientFamilyMemberAction
 } from '@/actions/client-family';
-import { EmptyState } from '@/components/composites';
+import {
+  CollectionViewLayout,
+  CollectionViewToggle,
+  EmptyState,
+  useCollectionViewMode
+} from '@/components/composites';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -39,6 +46,8 @@ import {
   fromFineractDateArray,
   toFineractDate
 } from '@/lib/fineract/dates';
+
+const VIEW_MODE_STORAGE_KEY = 'mifos.client-family.view-mode';
 
 function toFamilyMemberInput(member: FineractClientFamilyMember): FamilyMemberInput {
   let dateOfBirth: string | undefined;
@@ -83,6 +92,7 @@ export function ClientFamilyView({
   const [editMember, setEditMember] = useState<FineractClientFamilyMember | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FineractClientFamilyMember | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const { mode, setMode } = useCollectionViewMode(VIEW_MODE_STORAGE_KEY, 'list');
 
   function refresh() {
     router.refresh();
@@ -121,26 +131,51 @@ export function ClientFamilyView({
     });
   }
 
+  function renderMember(member: FineractClientFamilyMember) {
+    const title = familyMemberDisplayName(member);
+    const summary = formatFamilyMemberSummary(member);
+    const common = {
+      title,
+      summary,
+      isDependent: member.isDependent,
+      canUpdate,
+      onEdit: () => {
+        setEditMember(member);
+        setDialogOpen(true);
+      },
+      onDelete: () => setDeleteTarget(member)
+    };
+
+    if (mode === 'grid') {
+      return <ClientFamilyGridCard key={member.id} {...common} />;
+    }
+
+    return <ClientFamilyListItem key={member.id} {...common} />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          Family members linked to this client.
-        </p>
-        {canUpdate ? (
-          <Button
-            type="button"
-            size="sm"
-            disabled={pending}
-            onClick={() => {
-              setEditMember(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 size-4" />
-            Add family member
-          </Button>
-        ) : null}
+        <p className="text-sm text-muted-foreground">Family members linked to this client.</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {initialMembers.length > 0 ? (
+            <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
+          ) : null}
+          {canUpdate ? (
+            <Button
+              type="button"
+              size="sm"
+              disabled={pending}
+              onClick={() => {
+                setEditMember(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 size-4" />
+              Add family member
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {actionError ? (
@@ -172,20 +207,9 @@ export function ClientFamilyView({
           }
         />
       ) : (
-        <div className="space-y-4">
-          {initialMembers.map((member) => (
-            <ClientFamilyPanel
-              key={member.id}
-              member={member}
-              canUpdate={canUpdate}
-              onEdit={() => {
-                setEditMember(member);
-                setDialogOpen(true);
-              }}
-              onDelete={() => setDeleteTarget(member)}
-            />
-          ))}
-        </div>
+        <CollectionViewLayout mode={mode}>
+          {initialMembers.map((member) => renderMember(member))}
+        </CollectionViewLayout>
       )}
 
       <FamilyMemberFormSheet
