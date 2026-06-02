@@ -10,24 +10,8 @@ import 'server-only';
 
 import type { FineractClientAddress, FineractClientAddressTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
+import { toClientAddressRequestBody } from '@/lib/fineract/client-address-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
-
-function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
-  const next = { ...obj };
-  for (const key of Object.keys(next)) {
-    const value = next[key];
-    if (value === '' || value === undefined) {
-      delete next[key];
-    }
-  }
-  return next;
-}
-
-function toAddressBody(
-  entry: ClientAddressEntry & { addressId?: number }
-): Record<string, unknown> {
-  return stripEmpty({ ...entry });
-}
 
 /** Fineract uses singular `/client/` for address APIs (legacy parity). */
 export async function getClientAddresses(
@@ -51,7 +35,7 @@ export async function createClientAddress(
   const fineract = await createFineractClient();
   return fineract.post<{ resourceId: number }>(
     `/client/${clientId}/addresses?type=${addressTypeId}`,
-    toAddressBody(entry)
+    toClientAddressRequestBody(entry, { includeAddressId: false })
   );
 }
 
@@ -61,5 +45,8 @@ export async function updateClientAddress(
   entry: ClientAddressEntry & { addressId: number }
 ): Promise<void> {
   const fineract = await createFineractClient();
-  await fineract.put(`/client/${clientId}/addresses?type=${addressTypeId}`, toAddressBody(entry));
+  await fineract.put(
+    `/client/${clientId}/addresses?type=${addressTypeId}`,
+    toClientAddressRequestBody(entry, { includeAddressId: true })
+  );
 }
