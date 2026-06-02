@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,8 @@ export interface DetailNavItem {
   id: string;
   label: string;
   href: string;
+  /** Optional leading icon (lucide-react). */
+  icon?: LucideIcon;
   /** Show external-link affordance (opens in new context / external route) */
   external?: boolean;
 }
@@ -46,6 +48,7 @@ export function DetailNavSidebar({
             {group.items.map((item) => {
               const active =
                 pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
               return (
                 <li key={item.id}>
                   <Link
@@ -61,7 +64,18 @@ export function DetailNavSidebar({
                       ? { target: '_blank', rel: 'noopener noreferrer' }
                       : {})}
                   >
-                    <span className="truncate">{item.label}</span>
+                    <span className="flex min-w-0 flex-1 items-center gap-2">
+                      {Icon ? (
+                        <Icon
+                          className={cn(
+                            'size-4 shrink-0',
+                            active ? 'text-foreground' : 'text-muted-foreground'
+                          )}
+                          aria-hidden
+                        />
+                      ) : null}
+                      <span className="truncate">{item.label}</span>
+                    </span>
                     {item.external ? (
                       <ExternalLink className="size-3.5 shrink-0 opacity-60" aria-hidden />
                     ) : null}

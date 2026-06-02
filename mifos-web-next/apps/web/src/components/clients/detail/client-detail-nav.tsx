@@ -7,6 +7,15 @@
  */
 
 import {
+  Banknote,
+  Link2,
+  MapPin,
+  PiggyBank,
+  UserRound,
+  Users,
+  Vault
+} from 'lucide-react';
+import {
   DetailNavSidebar,
   type DetailNavGroup
 } from '@/components/composites/detail/detail-nav-sidebar';
@@ -17,22 +26,37 @@ export function clientDetailNavGroups(clientId: string | number): DetailNavGroup
     {
       id: 'client',
       items: [
-        { id: 'general', label: 'General', href: `${base}/general` },
-        { id: 'address', label: 'Address', href: `${base}/address` },
-        { id: 'family-members', label: 'Family members', href: `${base}/family-members` }
+        { id: 'general', label: 'General', href: `${base}/general`, icon: UserRound },
+        {
+          id: 'address',
+          label: 'Client addresses',
+          href: `${base}/address`,
+          icon: MapPin
+        },
+        {
+          id: 'family-members',
+          label: 'Next of kin',
+          href: `${base}/family-members`,
+          icon: Users
+        }
       ]
     },
     {
       id: 'accounts',
       items: [
-        { id: 'loans', label: 'Loans', href: `${base}/loans` },
-        { id: 'savings', label: 'Savings', href: `${base}/savings` },
-        { id: 'fixed-deposits', label: 'Fixed deposits', href: `${base}/fixed-deposits` }
+        { id: 'loans', label: 'Loans', href: `${base}/loans`, icon: Banknote },
+        { id: 'savings', label: 'Savings', href: `${base}/savings`, icon: PiggyBank },
+        {
+          id: 'fixed-deposits',
+          label: 'Fixed deposits',
+          href: `${base}/fixed-deposits`,
+          icon: Vault
+        }
       ]
     },
     {
       id: 'relations',
-      items: [{ id: 'relations', label: 'Many to one', href: `${base}/relations` }]
+      items: [{ id: 'relations', label: 'Many to one', href: `${base}/relations`, icon: Link2 }]
     }
   ];
 }
