@@ -39,8 +39,7 @@ export default async function ClientRelationsPage({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Custom data tables with multiple rows linked to this client (Fineract many-to-one entity
-        datatables).
+        Custom data tables with multiple rows linked to this client.
       </p>
       <ClientRelationsSections sections={sections} />
     </div>

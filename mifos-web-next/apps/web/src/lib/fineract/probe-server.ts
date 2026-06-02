@@ -85,10 +85,10 @@ export async function probeFineractServer(apiBaseUrl: string): Promise<FineractP
   } catch (error) {
     const message =
       error instanceof Error && error.name === 'TimeoutError'
-        ? 'Fineract did not respond in time.'
+        ? 'The server did not respond in time.'
         : error instanceof Error
           ? error.message
-          : 'Could not reach Fineract.';
+          : 'Could not reach the server.';
     return { state: 'unhealthy', message };
   }
 }

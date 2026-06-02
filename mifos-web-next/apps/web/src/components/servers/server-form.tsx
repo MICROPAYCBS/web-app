@@ -154,7 +154,7 @@ export function ServerForm({
             }
           />
           <FieldDescription id="server-url-hint">
-            Hostname only, or include the path (e.g. …/fineract-provider/api/v1).
+            Hostname only, or include the full API path (e.g. …/api/v1).
           </FieldDescription>
           <FieldError id="server-url-error">{fieldErrors.baseUrl}</FieldError>
         </Field>

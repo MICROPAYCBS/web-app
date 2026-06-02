@@ -26,7 +26,7 @@ export function ServerList({
       <EmptyState
         icon={Server}
         title="No servers yet"
-        description="Add a Fineract instance below to sign in and use the app."
+        description="Add a server below to sign in and use the app."
       />
     );
   }

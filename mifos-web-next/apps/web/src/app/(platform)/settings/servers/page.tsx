@@ -14,7 +14,7 @@ export default async function ServerSettingsPage() {
         <AppLink route="dashboard" className="text-sm text-muted-foreground hover:text-foreground">
           ← Back
         </AppLink>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight">Fineract servers</h2>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight">Servers</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Manage named backends and tenants. Sign out to switch servers before logging in again.
         </p>

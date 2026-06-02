@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Mifos Web',
-  description: 'Apache Fineract web client built with Next.js and shadcn/ui'
+  description: 'Mifos web client built with Next.js and shadcn/ui'
 };
 
 export default function RootLayout({

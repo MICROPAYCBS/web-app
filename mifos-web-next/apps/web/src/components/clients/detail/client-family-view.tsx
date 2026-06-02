@@ -125,7 +125,7 @@ export function ClientFamilyView({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Family members linked to this client in Fineract.
+          Family members linked to this client.
         </p>
         {canUpdate ? (
           <Button

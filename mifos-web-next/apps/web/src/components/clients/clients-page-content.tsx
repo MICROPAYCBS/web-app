@@ -20,7 +20,7 @@ export function ClientsPageContent({ initialPage }: { initialPage: FineractClien
   return (
     <ListPage
       title="Clients"
-      description="Browse and manage clients from your Fineract instance."
+      description="Browse and manage clients."
       actions={
         <Can permission={resolvePermission('clients.create')}>
           <Link href="/clients/create" className={cn(buttonVariants())}>

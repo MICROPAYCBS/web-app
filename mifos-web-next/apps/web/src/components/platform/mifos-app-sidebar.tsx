@@ -39,7 +39,7 @@ export function MifosAppSidebar({
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Mifos Web</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {serverName ?? 'Fineract'}
+                  {serverName ?? 'Server'}
                 </span>
               </div>
             </SidebarMenuButton>

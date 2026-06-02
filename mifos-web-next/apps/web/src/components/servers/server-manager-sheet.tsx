@@ -73,7 +73,7 @@ export function ServerManagerSheet({
               ? 'Add server'
               : view.mode === 'edit'
                 ? 'Edit server'
-                : 'Fineract servers'}
+                : 'Servers'}
           </SheetTitle>
           {view.mode === 'list' ? (
             <SheetDescription>Tap a server to use it for sign-in.</SheetDescription>

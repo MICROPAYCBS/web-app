@@ -35,6 +35,7 @@ Instructions for AI agents working in this repository.
 9. Update **parity matrix** (`docs/parity/`) when shipping a route.
 10. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md and `docs/SERVERS.md``).
 11. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
+12. **User-facing copy** must not mention Fineract, APIs, or backend product names unless unavoidable (e.g. a technical settings field). Prefer domain language users know: “Client addresses”, “Family members”, “Servers”, “Sign in”. Code, comments, and docs for developers may still reference Fineract.
 
 ## Reference repos
 

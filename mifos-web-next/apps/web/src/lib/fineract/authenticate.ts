@@ -115,7 +115,7 @@ export async function authenticateFineract(params: AuthenticateParams): Promise<
     }
     if (res.status === 404) {
       throw new AuthenticationError(
-        `Fineract sign-in URL not found for ${serverName} (${baseUrl}/authentication). Check the API base URL.`,
+        `Sign-in URL not found for ${serverName} (${baseUrl}/authentication). Check the server API URL.`,
         'SERVER'
       );
     }
@@ -136,7 +136,7 @@ export async function authenticateFineract(params: AuthenticateParams): Promise<
 
   if (data.shouldRenewPassword) {
     throw new AuthenticationError(
-      'Your password has expired. Reset it in Fineract before signing in here.',
+      'Your password has expired. Reset it with your administrator before signing in here.',
       'PASSWORD_EXPIRED'
     );
   }

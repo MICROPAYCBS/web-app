@@ -27,11 +27,11 @@ const LIGHT_CLASS: Record<Exclude<ServerHealthUiStatus, 'idle'>, string> = {
 export function getServerHealthLabel(health: ServerHealthSnapshot): string | null {
   switch (health.status) {
     case 'probing':
-      return 'Checking Fineract…';
+      return 'Checking server…';
     case 'healthy':
-      return health.version ? `Fineract ${health.version}` : 'Fineract is healthy';
+      return health.version ? `Connected · v${health.version}` : 'Server is healthy';
     case 'unhealthy':
-      return health.message ?? 'Fineract unreachable';
+      return health.message ?? 'Server unreachable';
     default:
       return null;
   }

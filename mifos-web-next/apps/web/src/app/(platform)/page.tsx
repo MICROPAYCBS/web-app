@@ -45,7 +45,7 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
         <p className="mt-2 text-muted-foreground">
-          Greenfield Fineract client on Next.js 16.2.6. Routes are typed via{' '}
+          Mifos web client on Next.js 16.2.6. Routes are typed via{' '}
           <code className="text-sm">@mifos/routes</code> and Next{' '}
           <code className="text-sm">strictRouteTypes</code>.
         </p>

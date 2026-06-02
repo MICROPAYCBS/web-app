@@ -242,7 +242,7 @@ export function CreateClientWizard({
       steps={steps}
       currentStepId={resolvedStepId}
       title="Create client"
-      description="Complete each step to register a new client in Fineract."
+      description="Complete each step to register a new client."
       onStepClick={goToStep}
       invalidStepIds={invalidStepIdsForRail}
       footer={

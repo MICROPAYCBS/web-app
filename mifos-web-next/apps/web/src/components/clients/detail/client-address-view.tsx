@@ -120,7 +120,7 @@ export function ClientAddressView({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Client addresses from Fineract. Fields shown depend on institution address configuration.
+          Client addresses. Fields shown depend on your institution&apos;s address configuration.
         </p>
         {canUpdate ? (
           <Button
@@ -148,7 +148,7 @@ export function ClientAddressView({
         <EmptyState
           icon={MapPin}
           title="No addresses on file"
-          description="Add a client address to store mailing or location details in Fineract."
+          description="Add a mailing or location address for this client."
           action={
             canUpdate ? (
               <Button

@@ -69,7 +69,7 @@ export function AddressFormSheet({
       open={open}
       onOpenChange={handleOpenChange}
       title={address ? 'Edit address' : 'Add address'}
-      description="Fields shown depend on your institution address configuration."
+      description="Fields shown depend on your institution's address configuration."
       formId={formId}
       submitLabel="Save"
       onSubmit={handleSave}

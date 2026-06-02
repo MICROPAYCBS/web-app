@@ -49,7 +49,7 @@ function mapProbeResults(
       }
       return [
         s.id,
-        { status: 'unhealthy' as const, message: probe.message ?? 'Fineract unreachable' }
+        { status: 'unhealthy' as const, message: probe.message ?? 'Server unreachable' }
       ];
     })
   );
