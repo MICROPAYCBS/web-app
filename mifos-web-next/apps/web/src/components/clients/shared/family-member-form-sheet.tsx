@@ -83,7 +83,7 @@ export function FamilyMemberFormSheet({
       submitLabel="Save"
       onSubmit={handleSave}
       submitLoading={submitLoading}
-      className="sm:max-w-lg"
+      className="data-[side=right]:sm:max-w-lg"
     >
       <form
         id={formId}

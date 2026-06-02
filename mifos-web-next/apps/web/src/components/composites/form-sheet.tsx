@@ -40,8 +40,14 @@ export interface FormSheetProps {
   /** Optional form id — wires footer Submit to <form id={formId}> */
   formId?: string;
   side?: 'left' | 'right';
+  /** Panel width at `sm+`. Must use `data-[side=*]:` variants to override Sheet defaults. */
   className?: string;
 }
+
+const formSheetSideMaxWidth: Record<NonNullable<FormSheetProps['side']>, string> = {
+  right: 'data-[side=right]:w-full data-[side=right]:sm:max-w-md',
+  left: 'data-[side=left]:w-full data-[side=left]:sm:max-w-md'
+};
 
 /**
  * Standard side panel for simple forms (1–7 logical fields).
@@ -73,7 +79,11 @@ export function FormSheet({
       <SheetContent
         side={side}
         showCloseButton
-        className={cn('flex w-full flex-col gap-0 p-0 sm:max-w-md', className)}
+        className={cn(
+          'flex flex-col gap-0 p-0',
+          formSheetSideMaxWidth[side],
+          className
+        )}
       >
         <SheetHeader className="shrink-0 border-b border-border">
           <SheetTitle>{title}</SheetTitle>
