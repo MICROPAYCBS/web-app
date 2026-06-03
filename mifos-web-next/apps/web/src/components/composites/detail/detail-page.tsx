@@ -43,7 +43,7 @@ export function DetailPage({
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-0">
           <aside
             className={cn(
-              'w-full shrink-0 border-b border-border pb-6 lg:sticky lg:top-24 lg:w-56 lg:self-start lg:border-r lg:border-b-0 lg:pb-0 lg:pr-6 xl:w-60'
+              'w-full shrink-0 border-b border-border pb-6 lg:sticky lg:top-24 lg:z-10 lg:bg-background lg:w-56 lg:self-start lg:border-r lg:border-b-0 lg:pb-0 lg:pr-6 xl:w-60'
             )}
           >
             {sidebar}

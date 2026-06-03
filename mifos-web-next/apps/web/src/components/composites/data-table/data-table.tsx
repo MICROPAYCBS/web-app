@@ -11,6 +11,7 @@
 import { flexRender, type Table as ReactTable } from '@tanstack/react-table';
 import type { ReactNode } from 'react';
 import { EmptyState } from '@/components/composites/empty-state';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -25,20 +26,28 @@ export function DataTable<TData>({
   isLoading = false,
   emptyMessage = 'No results.',
   emptyDescription,
-  emptyAction
+  emptyAction,
+  /** Sticky column header for long list pages. Off inside detail cards so the table scrolls with its container. */
+  stickyHeader = true
 }: {
   table: ReactTable<TData>;
   isLoading?: boolean;
   emptyMessage?: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
+  stickyHeader?: boolean;
 }) {
   const columnCount = table.getAllColumns().length;
 
   return (
     <div className="overflow-hidden rounded-md border">
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-muted">
+        <TableHeader
+          className={cn(
+            'bg-muted',
+            stickyHeader && 'sticky top-0 z-[1] bg-muted'
+          )}
+        >
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (

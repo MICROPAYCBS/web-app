@@ -96,8 +96,7 @@ export function ClientAddressView({
   }
 
   function handleSave(entry: ClientAddressEntry) {
-    setActionError(null);
-    startTransition(async () => {
+    return (async () => {
       const result = editAddress
         ? await updateClientAddressAction(
             clientId,
@@ -108,13 +107,15 @@ export function ClientAddressView({
         : await createClientAddressAction(clientId, entry);
 
       if (!result.ok) {
-        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
-        return;
+        return {
+          ok: false as const,
+          message: formatActionErrorMessage(result.message, result.fieldErrors)
+        };
       }
-      setDialogOpen(false);
       setEditAddress(null);
       refresh();
-    });
+      return { ok: true as const };
+    })();
   }
 
   function handleToggle(address: FineractClientAddress, isActive: boolean) {
@@ -231,7 +232,7 @@ export function ClientAddressView({
         fieldConfig={fieldConfig}
         address={editAddress ? toAddressEntry(editAddress) : undefined}
         onSave={handleSave}
-        submitLoading={pending}
+        submitLoading={false}
       />
     </div>
   );

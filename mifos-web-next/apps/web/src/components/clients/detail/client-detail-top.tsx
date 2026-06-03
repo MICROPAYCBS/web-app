@@ -7,14 +7,68 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Hash, Mail, Phone } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ClientProfileAvatar } from '@/components/clients/detail/client-profile-avatar';
-import { DetailHeader, DetailSummary } from '@/components/composites';
+import { DetailHeader, EmptyValue } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
-import { TextValue } from '@/components/composites';
+
+function ClientHeaderKeyInfo({
+  mobileNo,
+  emailAddress,
+  externalId
+}: {
+  mobileNo?: string;
+  emailAddress?: string;
+  externalId?: string;
+}) {
+  const mobile = mobileNo?.trim();
+  const email = emailAddress?.trim();
+  const external = externalId?.trim();
+  const linkClassName =
+    'inline-flex min-w-0 items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground';
+  const missingClassName = 'inline-flex min-w-0 items-center gap-1.5 text-muted-foreground';
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+      {mobile ? (
+        <a href={`tel:${mobile}`} className={linkClassName} aria-label={`Mobile ${mobile}`}>
+          <Phone className="size-4 shrink-0" aria-hidden />
+          <span>{mobile}</span>
+        </a>
+      ) : (
+        <span className={missingClassName} aria-label="Mobile not provided">
+          <Phone className="size-4 shrink-0" aria-hidden />
+          <EmptyValue />
+        </span>
+      )}
+      {email ? (
+        <a href={`mailto:${email}`} className={linkClassName} aria-label={`Email ${email}`}>
+          <Mail className="size-4 shrink-0" aria-hidden />
+          <span className="truncate">{email}</span>
+        </a>
+      ) : (
+        <span className={missingClassName} aria-label="Email not provided">
+          <Mail className="size-4 shrink-0" aria-hidden />
+          <EmptyValue />
+        </span>
+      )}
+      {external ? (
+        <span className={missingClassName} aria-label={`External ID ${external}`}>
+          <Hash className="size-4 shrink-0" aria-hidden />
+          <span className="truncate">{external}</span>
+        </span>
+      ) : (
+        <span className={missingClassName} aria-label="External ID not provided">
+          <Hash className="size-4 shrink-0" aria-hidden />
+          <EmptyValue />
+        </span>
+      )}
+    </div>
+  );
+}
 
 export function ClientDetailTop({
   client,
@@ -57,11 +111,18 @@ export function ClientDetailTop({
               variant: 'secondary'
             }}
             meta={
-              <span>
-                Account {client.accountNo}
-                {client.officeName ? ` · ${client.officeName}` : ''}
-                {client.staffName ? ` · ${client.staffName}` : ''}
-              </span>
+              <div className="space-y-2">
+                <span>
+                  Account {client.accountNo}
+                  {client.officeName ? ` · ${client.officeName}` : ''}
+                  {client.staffName ? ` · ${client.staffName}` : ''}
+                </span>
+                <ClientHeaderKeyInfo
+                  mobileNo={client.mobileNo}
+                  emailAddress={client.emailAddress}
+                  externalId={client.externalId}
+                />
+              </div>
             }
             actions={
               <Button type="button" variant="outline" disabled>
@@ -70,22 +131,7 @@ export function ClientDetailTop({
             }
           />
 
-          {summary ?? (
-            <DetailSummary
-              items={[
-                {
-                  id: 'status',
-                  label: 'Status',
-                  value: <TextValue value={client.status?.value} />
-                },
-                {
-                  id: 'external',
-                  label: 'External ID',
-                  value: <TextValue value={client.externalId} />
-                }
-              ]}
-            />
-          )}
+          {summary ?? null}
         </div>
       </div>
     </div>

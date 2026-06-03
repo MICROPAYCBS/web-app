@@ -23,7 +23,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'sticky top-0 z-10 -mx-4 border-b bg-background/95 px-4 pb-4 backdrop-blur md:-mx-6 md:px-6',
+        'sticky top-0 z-20 -mx-4 border-b bg-background/95 px-4 pb-4 backdrop-blur md:-mx-6 md:px-6',
         'supports-[backdrop-filter]:bg-background/80',
         className
       )}

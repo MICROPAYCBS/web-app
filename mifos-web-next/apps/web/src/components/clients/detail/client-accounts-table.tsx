@@ -36,7 +36,11 @@ function statusVariant(code?: string): 'default' | 'secondary' | 'outline' | 'de
   return 'outline';
 }
 
-function buildColumns(includeExtra: boolean): ColumnDef<ClientAccountRow>[] {
+function buildColumns(
+  includeExtra: boolean,
+  balanceHeader = 'Balance',
+  extraHeader = 'Details'
+): ColumnDef<ClientAccountRow>[] {
   const cols: ColumnDef<ClientAccountRow>[] = [
     {
       accessorKey: 'accountNo',
@@ -59,7 +63,7 @@ function buildColumns(includeExtra: boolean): ColumnDef<ClientAccountRow>[] {
     },
     {
       accessorKey: 'balanceLabel',
-      header: () => <span className="block w-full text-right">Balance</span>,
+      header: () => <span className="block w-full text-right">{balanceHeader}</span>,
       cell: ({ row }) => (
         <span className="block w-full text-right tabular-nums">
           {row.original.balanceLabel ?? '—'}
@@ -70,7 +74,7 @@ function buildColumns(includeExtra: boolean): ColumnDef<ClientAccountRow>[] {
   if (includeExtra) {
     cols.push({
       accessorKey: 'extraLabel',
-      header: 'Details',
+      header: extraHeader,
       cell: ({ row }) => row.original.extraLabel ?? '—'
     });
   }
@@ -80,14 +84,21 @@ function buildColumns(includeExtra: boolean): ColumnDef<ClientAccountRow>[] {
 export function ClientAccountsTable({
   rows,
   emptyMessage,
-  emptyDescription
+  emptyDescription,
+  balanceHeader,
+  extraHeader
 }: {
   rows: ClientAccountRow[];
   emptyMessage: string;
   emptyDescription?: string;
+  balanceHeader?: string;
+  extraHeader?: string;
 }) {
-  const includeExtra = rows.some((r) => r.extraLabel);
-  const columns = useMemo(() => buildColumns(includeExtra), [includeExtra]);
+  const includeExtra = rows.some((r) => r.extraLabel) || extraHeader != null;
+  const columns = useMemo(
+    () => buildColumns(includeExtra, balanceHeader, extraHeader),
+    [includeExtra, balanceHeader, extraHeader]
+  );
 
   const table = useReactTable({
     data: rows,
@@ -96,6 +107,11 @@ export function ClientAccountsTable({
   });
 
   return (
-    <DataTable table={table} emptyMessage={emptyMessage} emptyDescription={emptyDescription} />
+    <DataTable
+      table={table}
+      stickyHeader={false}
+      emptyMessage={emptyMessage}
+      emptyDescription={emptyDescription}
+    />
   );
 }

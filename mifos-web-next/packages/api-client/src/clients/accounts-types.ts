@@ -53,10 +53,19 @@ export interface FineractClientSavingsAccount {
   };
 }
 
+export interface FineractClientShareAccount {
+  id: number;
+  accountNo: string;
+  productName?: string;
+  status: FineractClientAccountStatus;
+  totalApprovedShares?: number;
+  totalPendingForApprovalShares?: number;
+}
+
 export interface FineractClientAccounts {
   loanAccounts?: FineractClientLoanAccount[];
   savingsAccounts?: FineractClientSavingsAccount[];
-  shareAccounts?: unknown[];
+  shareAccounts?: FineractClientShareAccount[];
   workingCapitalLoanAccounts?: FineractClientLoanAccount[];
   guarantorAccounts?: unknown[];
 }

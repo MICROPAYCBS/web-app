@@ -10,9 +10,14 @@
 
 import {
   Banknote,
+  ChartPie,
+  FileText,
+  Fingerprint,
   Link2,
   MapPin,
+  NotebookPen,
   PiggyBank,
+  Repeat,
   UserRound,
   Users,
   Vault
@@ -26,22 +31,8 @@ export function clientDetailNavGroups(clientId: string | number): DetailNavGroup
   const base = `/clients/${clientId}`;
   return [
     {
-      id: 'client',
-      items: [
-        { id: 'general', label: 'General', href: `${base}/general`, icon: UserRound },
-        {
-          id: 'address',
-          label: 'Client addresses',
-          href: `${base}/address`,
-          icon: MapPin
-        },
-        {
-          id: 'family-members',
-          label: 'Next of kin',
-          href: `${base}/family-members`,
-          icon: Users
-        }
-      ]
+      id: 'general',
+      items: [{ id: 'general', label: 'General', href: `${base}/general`, icon: UserRound }]
     },
     {
       id: 'accounts',
@@ -53,11 +44,53 @@ export function clientDetailNavGroups(clientId: string | number): DetailNavGroup
           label: 'Fixed deposits',
           href: `${base}/fixed-deposits`,
           icon: Vault
+        },
+        {
+          id: 'recurring-deposits',
+          label: 'Recurring deposits',
+          href: `${base}/recurring-deposits`,
+          icon: Repeat
+        },
+        { id: 'shares', label: 'Shares', href: `${base}/shares`, icon: ChartPie }
+      ]
+    },
+    {
+      id: 'lists',
+      items: [
+        {
+          id: 'address',
+          label: 'Client addresses',
+          href: `${base}/address`,
+          icon: MapPin
+        },
+        {
+          id: 'family-members',
+          label: 'Next of kin',
+          href: `${base}/family-members`,
+          icon: Users
+        },
+        {
+          id: 'identities',
+          label: 'Identities',
+          href: `${base}/identities`,
+          icon: Fingerprint
+        },
+        {
+          id: 'documents',
+          label: 'Documents',
+          href: `${base}/documents`,
+          icon: FileText
+        },
+        {
+          id: 'notes',
+          label: 'Notes',
+          href: `${base}/notes`,
+          icon: NotebookPen
         }
       ]
     },
     {
-      id: 'relations',
+      id: 'datatables',
       items: [{ id: 'relations', label: 'Many to one', href: `${base}/relations`, icon: Link2 }]
     }
   ];

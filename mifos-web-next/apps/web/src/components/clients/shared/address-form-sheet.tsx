@@ -14,6 +14,7 @@ import { useId, useState } from 'react';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import type { FormSubmitResult } from '@/lib/form/submit-result';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 function isFieldEnabled(config: FineractAddressFieldConfig[], field: string): boolean {
@@ -34,15 +35,19 @@ export function AddressFormSheet({
   template: FineractClientTemplate;
   fieldConfig: FineractAddressFieldConfig[];
   address?: ClientAddressEntry;
-  onSave: (entry: ClientAddressEntry) => void;
+  onSave: (entry: ClientAddressEntry) => Promise<FormSubmitResult>;
   submitLoading?: boolean;
 }) {
   const formId = useId();
   const addressTemplate = template.address?.[0];
   const [form, setForm] = useState<ClientAddressEntry>(() => address ?? { isActive: false });
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleOpenChange(next: boolean) {
+    if (isSubmitting) {
+      return;
+    }
     if (next) {
       setForm(address ?? { isActive: false });
       setError(null);
@@ -50,7 +55,10 @@ export function AddressFormSheet({
     onOpenChange(next);
   }
 
-  function handleSave() {
+  async function handleSave() {
+    if (isSubmitting) {
+      return;
+    }
     if (isFieldEnabled(fieldConfig, 'addressType') && !form.addressTypeId) {
       setError('Address type is required.');
       return;
@@ -60,8 +68,17 @@ export function AddressFormSheet({
       return;
     }
     setError(null);
-    onSave({ ...form, isActive: form.isActive ?? false });
-    handleOpenChange(false);
+    setIsSubmitting(true);
+    try {
+      const result = await onSave({ ...form, isActive: form.isActive ?? false });
+      if (result.ok) {
+        handleOpenChange(false);
+        return;
+      }
+      setError(result.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -73,7 +90,7 @@ export function AddressFormSheet({
       formId={formId}
       submitLabel="Save"
       onSubmit={handleSave}
-      submitLoading={submitLoading}
+      submitLoading={isSubmitting || submitLoading}
       className="data-[side=right]:sm:max-w-2xl"
     >
       <form

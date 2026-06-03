@@ -1,0 +1,9 @@
+{
+  "command": "clients.note.write",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.documentmanagement.api.NotesApiResource"
+  ],
+  "fields": {
+    "note": { "required": true }
+  }
+}

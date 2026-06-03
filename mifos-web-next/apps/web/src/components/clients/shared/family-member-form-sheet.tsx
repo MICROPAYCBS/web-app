@@ -17,6 +17,7 @@ import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
+import type { FormSubmitResult } from '@/lib/form/submit-result';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 function defaultFamilyMemberForm(m?: FamilyMemberInput): FamilyMemberInput {
@@ -48,14 +49,18 @@ export function FamilyMemberFormSheet({
   onOpenChange: (open: boolean) => void;
   options: FineractFamilyMemberOptions | undefined;
   member?: FamilyMemberInput;
-  onSave: (member: FamilyMemberInput) => void;
+  onSave: (member: FamilyMemberInput) => Promise<FormSubmitResult>;
   submitLoading?: boolean;
 }) {
   const formId = useId();
   const [form, setForm] = useState<FamilyMemberInput>(() => defaultFamilyMemberForm(member));
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleOpenChange(next: boolean) {
+    if (isSubmitting) {
+      return;
+    }
     if (next) {
       setForm(defaultFamilyMemberForm(member));
       setError(null);
@@ -63,14 +68,26 @@ export function FamilyMemberFormSheet({
     onOpenChange(next);
   }
 
-  function handleSave() {
+  async function handleSave() {
+    if (isSubmitting) {
+      return;
+    }
     if (!form.firstName.trim() || !form.lastName.trim() || !form.relationshipId || !form.genderId) {
       setError('First name, last name, relationship, and gender are required.');
       return;
     }
     setError(null);
-    onSave(form);
-    handleOpenChange(false);
+    setIsSubmitting(true);
+    try {
+      const result = await onSave(form);
+      if (result.ok) {
+        handleOpenChange(false);
+        return;
+      }
+      setError(result.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -82,7 +99,7 @@ export function FamilyMemberFormSheet({
       formId={formId}
       submitLabel="Save"
       onSubmit={handleSave}
-      submitLoading={submitLoading}
+      submitLoading={isSubmitting || submitLoading}
       className="data-[side=right]:sm:max-w-lg"
     >
       <form

@@ -89,14 +89,14 @@ export function ClientProfileAvatar({
   const showImage = Boolean(imageSrc);
 
   return (
-    <div className="flex flex-col items-center gap-3 sm:items-start">
+    <div className="flex flex-col items-center gap-3">
       <Avatar className="size-24 text-lg">
         {showImage ? <AvatarImage key={imageVersion} src={imageSrc ?? undefined} alt="" /> : null}
         <AvatarFallback className="text-lg font-medium">{initials}</AvatarFallback>
       </Avatar>
 
       {canCreateImage || (canDeleteImage && showImage) ? (
-        <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-start">
+        <div className="flex items-center justify-center gap-1">
           {canCreateImage ? (
             <>
               <Button

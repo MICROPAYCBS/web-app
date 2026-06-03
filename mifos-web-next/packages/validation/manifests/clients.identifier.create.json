@@ -1,0 +1,13 @@
+{
+  "command": "clients.identifier.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.client.api.ClientIdentifiersApiResource",
+    "org.apache.fineract.portfolio.client.domain.ClientIdentifier"
+  ],
+  "fields": {
+    "documentTypeId": { "required": true },
+    "documentKey": { "required": true },
+    "status": { "required": true, "values": ["Active", "Inactive"] },
+    "description": { "required": false }
+  }
+}

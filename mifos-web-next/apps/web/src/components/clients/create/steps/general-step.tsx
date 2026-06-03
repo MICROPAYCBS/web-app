@@ -222,6 +222,7 @@ export function GeneralStep({
               id="incorpValidityTillDate"
               label="Incorporation validity till"
               optional
+              allowFuture
               value={nonPerson.incorpValidityTillDate}
               onChange={(v) =>
                 onDraftChange({

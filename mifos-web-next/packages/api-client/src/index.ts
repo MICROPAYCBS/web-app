@@ -16,10 +16,14 @@ export type {
   FineractClientFamilyMember,
   FineractClientDatatableTemplate,
   FineractClientDetail,
+  FineractClientIdentifier,
+  FineractClientIdentifierTemplate,
+  FineractClientNote,
   FineractClientSummary,
   FineractClientsPage,
   FineractClientTemplate,
   FineractCreateClientResponse,
+  FineractEntityDocument,
   FineractDatatableColumnHeader,
   FineractEnumOption,
   FineractFamilyMemberOptions,
@@ -32,6 +36,7 @@ export type {
   FineractClientAccounts,
   FineractClientLoanAccount,
   FineractClientSavingsAccount,
+  FineractClientShareAccount,
   FineractCurrencyOption,
   FineractDatatableRegistration
 } from './clients/accounts-types';

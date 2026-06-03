@@ -99,20 +99,21 @@ export function ClientFamilyView({
   }
 
   function handleSave(entry: FamilyMemberInput) {
-    setActionError(null);
-    startTransition(async () => {
+    return (async () => {
       const result = editMember
         ? await updateClientFamilyMemberAction(clientId, editMember.id, entry)
         : await createClientFamilyMemberAction(clientId, entry);
 
       if (!result.ok) {
-        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
-        return;
+        return {
+          ok: false as const,
+          message: formatActionErrorMessage(result.message, result.fieldErrors)
+        };
       }
-      setDialogOpen(false);
       setEditMember(null);
       refresh();
-    });
+      return { ok: true as const };
+    })();
   }
 
   function handleDeleteConfirm() {
@@ -223,7 +224,7 @@ export function ClientFamilyView({
         options={familyOptions}
         member={editMember ? toFamilyMemberInput(editMember) : undefined}
         onSave={handleSave}
-        submitLoading={pending}
+        submitLoading={false}
       />
 
       <Dialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>

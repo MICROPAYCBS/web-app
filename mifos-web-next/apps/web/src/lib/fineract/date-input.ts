@@ -57,3 +57,20 @@ export function dateToFineract(date: Date | undefined): string | undefined {
   }
   return toFineractDate(date);
 }
+
+/** Local calendar day at 00:00:00.000. */
+export function startOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+/** Start of today in local time. */
+export function todayStart(): Date {
+  return startOfDay(new Date());
+}
+
+/** True when `date` is after today (local calendar day). */
+export function isAfterToday(date: Date): boolean {
+  return startOfDay(date).getTime() > todayStart().getTime();
+}

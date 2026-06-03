@@ -11,7 +11,8 @@ import 'server-only';
 import type {
   FineractClientAccounts,
   FineractClientLoanAccount,
-  FineractClientSavingsAccount
+  FineractClientSavingsAccount,
+  FineractClientShareAccount
 } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -58,4 +59,15 @@ export function filterOpenSavingsAccounts(
   accounts: FineractClientSavingsAccount[]
 ): FineractClientSavingsAccount[] {
   return accounts.filter((account) => !CLOSED_SAVINGS_CODES.has(account.status?.code ?? ''));
+}
+
+const CLOSED_SHARE_CODES = new Set([
+  'shareAccountStatusType.closed',
+  'shareAccountStatusType.rejected'
+]);
+
+export function filterOpenShareAccounts(
+  accounts: FineractClientShareAccount[]
+): FineractClientShareAccount[] {
+  return accounts.filter((account) => !CLOSED_SHARE_CODES.has(account.status?.code ?? ''));
 }

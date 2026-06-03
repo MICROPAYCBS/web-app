@@ -166,6 +166,36 @@ export interface FineractCreateClientResponse {
   resourceExternalId?: string;
 }
 
+export interface FineractEntityDocument {
+  id: number;
+  name: string;
+  fileName?: string;
+  description?: string;
+  parentEntityType?: string;
+  parentEntityId?: number;
+}
+
+export interface FineractClientIdentifier {
+  id: number;
+  clientId: number;
+  documentType: { id: number; name: string };
+  documentKey: string;
+  description?: string;
+  status: string;
+  documents?: FineractEntityDocument[];
+}
+
+export interface FineractClientIdentifierTemplate {
+  allowedDocumentTypes: { id: number; name: string }[];
+}
+
+export interface FineractClientNote {
+  id: number;
+  note: string;
+  createdByUsername?: string;
+  createdOn?: number[] | string;
+}
+
 export type {
   FineractClientAccountStatus,
   FineractClientAccounts,

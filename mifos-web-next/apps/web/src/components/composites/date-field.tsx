@@ -16,7 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Field, FieldContent, FieldError } from '@/components/ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { dateToFineract, fineractDateToDate } from '@/lib/fineract/date-input';
+import {
+  dateToFineract,
+  fineractDateToDate,
+  startOfDay,
+  todayStart
+} from '@/lib/fineract/date-input';
 import { cn } from '@/lib/utils';
 
 export interface DateFieldProps {
@@ -31,8 +36,39 @@ export interface DateFieldProps {
   disabled?: boolean;
   className?: string;
   placeholder?: string;
+  /** Earliest selectable day (inclusive). */
   fromDate?: Date;
+  /** Latest selectable day (inclusive). */
   toDate?: Date;
+  /**
+   * When false (default), dates after today are disabled — typical for
+   * transactions and backdated entries. Set true for expiry dates and similar.
+   */
+  allowFuture?: boolean;
+}
+
+function addYears(date: Date, years: number): Date {
+  const next = new Date(date);
+  next.setFullYear(next.getFullYear() + years);
+  return next;
+}
+
+function subtractYears(date: Date, years: number): Date {
+  return addYears(date, -years);
+}
+
+function resolveEffectiveToDate(
+  allowFuture: boolean,
+  toDate: Date | undefined,
+  today: Date
+): Date | undefined {
+  if (allowFuture) {
+    return toDate;
+  }
+  if (toDate && startOfDay(toDate).getTime() < today.getTime()) {
+    return toDate;
+  }
+  return today;
 }
 
 export function DateField({
@@ -47,10 +83,29 @@ export function DateField({
   className,
   placeholder = 'Pick a date',
   fromDate,
-  toDate
+  toDate,
+  allowFuture = false
 }: DateFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = useMemo(() => fineractDateToDate(value), [value]);
+  const today = useMemo(() => todayStart(), []);
+
+  const effectiveToDate = useMemo(
+    () => resolveEffectiveToDate(allowFuture, toDate, today),
+    [allowFuture, toDate, today]
+  );
+
+  const calendarStartMonth = useMemo(
+    () => startOfDay(fromDate ?? subtractYears(today, 100)),
+    [fromDate, today]
+  );
+
+  const calendarEndMonth = useMemo(() => {
+    if (allowFuture) {
+      return startOfDay(toDate ?? addYears(today, 50));
+    }
+    return today;
+  }, [allowFuture, toDate, today]);
 
   const display = selected ? format(selected, 'PPP') : null;
 
@@ -88,15 +143,18 @@ export function DateField({
                 setOpen(false);
               }}
               disabled={(date) => {
-                if (fromDate && date < fromDate) {
+                const day = startOfDay(date);
+                if (fromDate && day.getTime() < startOfDay(fromDate).getTime()) {
                   return true;
                 }
-                if (toDate && date > toDate) {
+                if (effectiveToDate && day.getTime() > startOfDay(effectiveToDate).getTime()) {
                   return true;
                 }
                 return false;
               }}
-              defaultMonth={selected}
+              defaultMonth={selected ?? today}
+              startMonth={calendarStartMonth}
+              endMonth={calendarEndMonth}
             />
           </PopoverContent>
         </Popover>

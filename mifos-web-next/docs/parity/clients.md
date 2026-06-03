@@ -72,15 +72,15 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-030 | General               | `/general`                            | General (subset)              | Partial  |
 | CL-031 | Personal data         | `/personal-data`                      | Personal Data                 | Planned  |
 | CL-032 | Address               | `/address`                            | Address                       | **Done** |
-| CL-033 | Family members        | `/family-members` (+ add, `:id/edit`) | Family Members                | Planned  |
-| CL-034 | Identities            | `/identities`                         | Identities                    | Planned  |
-| CL-035 | Documents             | `/documents`                          | Documents                     | Planned  |
-| CL-036 | Notes                 | `/notes`                              | Notes                         | Planned  |
+| CL-033 | Family members        | `/family-members` (+ add, `:id/edit`) | Family Members                | Done   |
+| CL-034 | Identities            | `/identities`                         | Identities                    | Done   |
+| CL-035 | Documents             | `/documents`                          | Documents                     | Done   |
+| CL-036 | Notes                 | `/notes`                              | Notes                         | Done   |
 | CL-037 | Loans                 | `/loans`                              | General → loans + WC loans    | Partial  |
 | CL-038 | Savings               | `/savings`                            | General → savings             | Partial  |
 | CL-039 | Fixed deposits        | `/fixed-deposits`                     | General → FD                  | Partial  |
-| CL-040 | Recurring deposits    | `/recurring-deposits`                 | General → RD                  | Planned  |
-| CL-041 | Shares                | `/shares`                             | General → shares              | Planned  |
+| CL-040 | Recurring deposits    | `/recurring-deposits`                 | General → RD                  | Partial  |
+| CL-041 | Shares                | `/shares`                             | General → shares              | Partial  |
 | CL-042 | Charges               | `/charges` (+ nested)                 | General → upcoming + overview | Planned  |
 | CL-043 | Collateral            | `/collateral`                         | General → collateral table    | Planned  |
 | CL-044 | Standing instructions | `/standing-instructions`              | Nested module                 | Planned  |
@@ -179,36 +179,36 @@ Above + Closed Date.
 
 ### Identities (`CL-034`)
 
-| ID     | Feature                    | Permission                       | Status  |
-| ------ | -------------------------- | -------------------------------- | ------- |
-| CL-100 | List identifiers           | `READ_CLIENTIDENTIFIER`          | Planned |
-| CL-101 | Add / edit / delete        | template + documents             | Planned |
-| CL-102 | Identifier document upload | `upload-document-dialog` pattern | Planned |
+| ID     | Feature                    | Permission                       | Status |
+| ------ | -------------------------- | -------------------------------- | ------ |
+| CL-100 | List identifiers           | `READ_CLIENTIDENTIFIER`          | Done   |
+| CL-101 | Add / edit / delete        | template + documents             | Done   |
+| CL-102 | Identifier document upload | `upload-document-dialog` pattern | Done   |
 
 ### Documents (`CL-035`)
 
-| ID     | Feature                    | Permission      | Status  |
-| ------ | -------------------------- | --------------- | ------- |
-| CL-110 | List documents             | `READ_DOCUMENT` | Planned |
-| CL-111 | Upload / download / delete | —               | Planned |
+| ID     | Feature                    | Permission      | Status |
+| ------ | -------------------------- | --------------- | ------ |
+| CL-110 | List documents             | `READ_DOCUMENT` | Done   |
+| CL-111 | Upload / download / delete | —               | Done   |
 
 ### Notes (`CL-036`)
 
-| ID     | Feature             | Permission          | Status  |
-| ------ | ------------------- | ------------------- | ------- |
-| CL-120 | List notes          | `READ_CLIENTNOTE`   | Planned |
-| CL-121 | Add / edit / delete | `edit-notes-dialog` | Planned |
+| ID     | Feature             | Permission          | Status |
+| ------ | ------------------- | ------------------- | ------ |
+| CL-120 | List notes          | `READ_CLIENTNOTE`   | Done   |
+| CL-121 | Add / edit / delete | `edit-notes-dialog` | Done   |
 
-### Charges (`CL-042`)
+### Charges (`CL-042`) — deferred
 
-| ID     | Route                           | Purpose                        | Status  |
-| ------ | ------------------------------- | ------------------------------ | ------- |
-| CL-130 | `/charges`                      | All / overview table           | Planned |
-| CL-131 | `/charges/overview`             | Legacy charges overview        | Planned |
-| CL-132 | `/charges/[chargeId]`           | View charge + transactions     | Planned |
-| CL-133 | `/charges/[chargeId]/pay`       | Pay charge                     | Planned |
-| CL-134 | Pay / waive from General teaser | Row actions                    | Planned |
-| CL-135 | Add charge                      | Actions → `actions/Add Charge` | Planned |
+| ID     | Route                           | Purpose                        | Status   |
+| ------ | ------------------------------- | ------------------------------ | -------- |
+| CL-130 | `/charges`                      | All / overview table           | Deferred |
+| CL-131 | `/charges/overview`             | Legacy charges overview        | Deferred |
+| CL-132 | `/charges/[chargeId]`           | View charge + transactions     | Deferred |
+| CL-133 | `/charges/[chargeId]/pay`       | Pay charge                     | Deferred |
+| CL-134 | Pay / waive from General teaser | Row actions                    | Deferred |
+| CL-135 | Add charge                      | Actions → `actions/Add Charge` | Deferred |
 
 ### Collateral (`CL-043`)
 
@@ -394,7 +394,11 @@ Resolver prefetch: `ClientActionsResolver` (template, offices, charges, collater
 | General       | `general/page.tsx`, `client-general-sections.tsx`                                          |
 | Accounts      | `loans                                                                                     | savings | fixed-deposits/page.tsx`, `client-accounts-table.tsx` |
 | Relations     | `relations/page.tsx`, `client-relations-sections.tsx`                                      |
-| Lib           | `lib/fineract/client-accounts.ts`, `client-datatables.ts`, `client-image.ts`               |
+| Family        | `family-members/page.tsx`, `client-family-view.tsx`, `family-member-form-sheet.tsx`        |
+| Identities    | `identities/page.tsx`, `client-identities-view.tsx`, `client-identifier-form-sheet.tsx`    |
+| Documents     | `documents/page.tsx`, `client-documents-view.tsx`, `client-document-form-sheet.tsx`        |
+| Notes         | `notes/page.tsx`, `client-notes-view.tsx`                                                  |
+| Lib           | `lib/fineract/client-accounts.ts`, `client-datatables.ts`, `client-image.ts`, `client-identifiers.ts`, `client-documents.ts`, `client-notes.ts` |
 
 ---
 
@@ -403,8 +407,8 @@ Resolver prefetch: `ClientActionsResolver` (template, offices, charges, collater
 | Wave            | Scope                                                                            | Checklist IDs (primary)                                |
 | --------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | **A** (current) | Shell, avatar, sidebar scaffold, General fields, open account lists, many-to-one | CL-020–022, CL-030, CL-037–039, CL-045, CL-060         |
-| **B**           | Personal data, Address, Family, closed toggles, MoneyValue, WC loans             | CL-031–033, CL-061–062, CL-066, CL-070–083, CL-090–093 |
-| **C**           | Identities, Documents, Notes, Charges                                            | CL-034–036, CL-100–121, CL-130–135                     |
+| **B**           | Personal data, Address, Family, closed toggles, MoneyValue, WC loans             | CL-031–033, CL-061–062, CL-066, CL-070–083, CL-090–094 |
+| **C**           | Identities, Documents, Notes                                                     | CL-034–036, CL-100–121                                 |
 | **D**           | RD, Shares, SI, per-datatable routes                                             | CL-040–041, CL-044, CL-150–152, CL-046, CL-162–165     |
 | **E**           | Actions menu + `/edit` + `/actions/*`                                            | CL-026–027, CL-170–171, all action rows                |
 | **F**           | Product account deep-links + row actions                                         | CL-063–064, CL-141, loan/savings/FD/share modules      |

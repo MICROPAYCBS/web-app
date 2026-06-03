@@ -19,6 +19,14 @@ export {
   type CreateClientPayload,
   type FamilyMemberInput
 } from './clients/create-client.schema';
+export {
+  clientDocumentMetadataSchema,
+  clientIdentifierSchema,
+  clientNoteSchema,
+  type ClientDocumentMetadataInput,
+  type ClientIdentifierInput,
+  type ClientNoteInput
+} from './clients/client-details.schema';
 export { mapFineractErrors, type FieldError, type MappedFineractErrors } from './map-fineract-errors';
 export {
   formatActionErrorMessage,

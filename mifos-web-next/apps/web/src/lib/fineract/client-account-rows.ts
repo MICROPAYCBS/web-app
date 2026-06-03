@@ -6,7 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientLoanAccount, FineractClientSavingsAccount } from '@mifos/api-client';
+import type {
+  FineractClientLoanAccount,
+  FineractClientSavingsAccount,
+  FineractClientShareAccount
+} from '@mifos/api-client';
 import type { ClientAccountRow } from '@/components/clients/detail/client-accounts-table';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 
@@ -30,5 +34,22 @@ export function toSavingsAccountRows(accounts: FineractClientSavingsAccount[]): 
     statusLabel: account.status?.value,
     statusCode: account.status?.code,
     balanceLabel: formatAccountMoney(account.accountBalance, account.currency?.code)
+  }));
+}
+
+export function toShareAccountRows(accounts: FineractClientShareAccount[]): ClientAccountRow[] {
+  return accounts.map((account) => ({
+    id: account.id,
+    accountNo: account.accountNo,
+    productName: account.productName,
+    statusLabel: account.status?.value,
+    statusCode: account.status?.code,
+    balanceLabel:
+      account.totalApprovedShares != null ? String(account.totalApprovedShares) : undefined,
+    extraLabel:
+      account.totalPendingForApprovalShares != null &&
+      account.totalPendingForApprovalShares > 0
+        ? `${account.totalPendingForApprovalShares} pending approval`
+        : undefined
   }));
 }

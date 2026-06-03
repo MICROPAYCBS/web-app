@@ -70,17 +70,6 @@ export function ClientGeneralSections({ client }: { client: FineractClientDetail
         </DetailFieldGrid>
       </DetailSection>
 
-      <DetailSection title="Contact">
-        <DetailFieldGrid>
-          <DetailField label="Mobile">
-            <TextValue value={client.mobileNo} />
-          </DetailField>
-          <DetailField label="Email">
-            <TextValue value={client.emailAddress} />
-          </DetailField>
-        </DetailFieldGrid>
-      </DetailSection>
-
       <DetailSection title="Dates">
         <DetailFieldGrid>
           <DetailField label="Submitted on">
