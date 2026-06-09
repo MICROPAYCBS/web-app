@@ -104,6 +104,44 @@ const entityClientSchema = clientBaseSchema.extend({
 export const createClientSchema = z
   .discriminatedUnion('legalFormId', [personClientSchema, entityClientSchema])
   .superRefine((data, ctx) => {
+    if (!data.dateOfBirth?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          data.legalFormId === LEGAL_FORM_PERSON
+            ? 'Date of birth is required'
+            : 'Incorporation date is required',
+        path: ['dateOfBirth']
+      });
+    }
+    if (!data.staffId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Relationship officer is required',
+        path: ['staffId']
+      });
+    }
+    if (!data.mobileNo?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Phone number is required',
+        path: ['mobileNo']
+      });
+    }
+    if (!data.clientTypeId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Client type is required',
+        path: ['clientTypeId']
+      });
+    }
+    if (data.legalFormId === LEGAL_FORM_PERSON && !data.genderId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Gender is required',
+        path: ['genderId']
+      });
+    }
     if (data.active && !data.activationDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

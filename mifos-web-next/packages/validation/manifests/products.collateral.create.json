@@ -1,0 +1,14 @@
+{
+  "command": "products.collateral.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.collateral.api.CollateralApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "quality": { "required": true },
+    "unitType": { "required": true },
+    "basePrice": { "required": true },
+    "pctToBase": { "required": true },
+    "currency": { "required": true }
+  }
+}

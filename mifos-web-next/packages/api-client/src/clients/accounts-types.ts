@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractEnumOption } from './types';
+import type { FineractDatatableColumnHeader, FineractEnumOption } from './types';
 
 /** Status object on loan/savings accounts from GET /clients/{id}/accounts */
 export interface FineractClientAccountStatus {
@@ -17,6 +17,8 @@ export interface FineractClientAccountStatus {
   submittedAndPendingApproval?: boolean;
   pendingApproval?: boolean;
   overpaid?: boolean;
+  transferInProgress?: boolean;
+  transferOnHold?: boolean;
 }
 
 export interface FineractCurrencyOption {
@@ -75,4 +77,11 @@ export interface FineractDatatableRegistration {
   registeredTableName: string;
   entitySubType?: string;
   subentityType?: string;
+}
+
+export interface FineractDatatableDefinition {
+  registeredTableName?: string;
+  applicationTableName?: string;
+  entitySubType?: string;
+  columnHeaderData: FineractDatatableColumnHeader[];
 }

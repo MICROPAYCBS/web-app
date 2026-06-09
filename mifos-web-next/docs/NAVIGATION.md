@@ -1,6 +1,6 @@
 # Navigation (Vercel-inspired)
 
-Mifos Web avoids overwhelming users with a flat list of every Fineract screen. Navigation is derived from `@mifos/routes` and rendered in three layers—similar to the [Vercel dashboard](https://vercel.com/changelog/dashboard-navigation-redesign-rollout) (sidebar groups, universal search, keyboard shortcuts).
+MicroPay Banking avoids overwhelming users with a flat list of every backend screen. Navigation is derived from `@mifos/routes` and rendered in three layers—similar to the [Vercel dashboard](https://vercel.com/changelog/dashboard-navigation-redesign-rollout) (sidebar groups, universal search, keyboard shortcuts).
 
 ## Layers
 

@@ -8,12 +8,10 @@
 
 import { z } from 'zod';
 
-export const clientIdentifierSchema = z.object({
-  documentTypeId: z.number().int().positive(),
-  status: z.enum(['Active', 'Inactive']),
-  documentKey: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(500).optional()
-});
+export {
+  clientIdentifierSchema,
+  type ClientIdentifierInput
+} from './client-identifier.schema';
 
 export const clientDocumentMetadataSchema = z.object({
   name: z.string().trim().min(1).max(250),
@@ -24,6 +22,5 @@ export const clientNoteSchema = z.object({
   note: z.string().trim().min(1).max(65535)
 });
 
-export type ClientIdentifierInput = z.infer<typeof clientIdentifierSchema>;
 export type ClientDocumentMetadataInput = z.infer<typeof clientDocumentMetadataSchema>;
 export type ClientNoteInput = z.infer<typeof clientNoteSchema>;

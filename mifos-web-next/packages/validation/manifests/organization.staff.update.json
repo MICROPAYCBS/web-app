@@ -1,0 +1,16 @@
+{
+  "schemaId": "organization.staff.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.staff.api.StaffApiResource",
+    "org.apache.fineract.organisation.staff.domain.Staff"
+  ],
+  "fields": {
+    "officeId": { "required": true, "type": "integer" },
+    "firstname": { "required": true, "maxLength": 50 },
+    "lastname": { "required": true, "maxLength": 50 },
+    "isLoanOfficer": { "required": false, "type": "boolean" },
+    "mobileNo": { "required": false, "maxLength": 25 },
+    "joiningDate": { "required": true, "type": "date" },
+    "isActive": { "required": true, "type": "boolean" }
+  }
+}

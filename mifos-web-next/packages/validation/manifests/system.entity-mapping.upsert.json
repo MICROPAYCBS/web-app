@@ -1,0 +1,12 @@
+{
+  "command": "system.entity-mapping.upsert",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.entityaccess.api.EntityToEntityMappingApiResource"
+  ],
+  "fields": {
+    "fromId": { "required": true },
+    "toId": { "required": true },
+    "startDate": { "required": false },
+    "endDate": { "required": false }
+  }
+}

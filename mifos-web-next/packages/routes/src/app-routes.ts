@@ -20,6 +20,28 @@ const CORE_APP_ROUTES = {
     requiresAuth: true,
     parity: { status: 'in_progress', webAppRef: 'home/dashboard' }
   },
+  search: {
+    id: 'search',
+    path: '/search',
+    kind: 'page',
+    label: 'Search',
+    domain: 'platform',
+    quickFind: false,
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'in_progress', webAppRef: 'search', fineractApi: 'GET /search' }
+  },
+  searchApi: {
+    id: 'searchApi',
+    path: '/api/search',
+    kind: 'api',
+    label: 'Search API (BFF)',
+    domain: 'platform',
+    quickFind: false,
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'in_progress', fineractApi: 'GET /search' }
+  },
   connect: {
     id: 'connect',
     path: '/connect',
@@ -172,7 +194,11 @@ const CORE_APP_ROUTES = {
     permissionKey: 'products.loan',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'todo', webAppRef: 'products/loan-products' }
+    parity: {
+      status: 'in_progress',
+      webAppRef: 'products/loan-products',
+      fineractApi: 'GET /loanproducts'
+    }
   },
   savingsProducts: {
     id: 'savingsProducts',
@@ -188,7 +214,111 @@ const CORE_APP_ROUTES = {
     permissionKey: 'products.savings',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'todo', webAppRef: 'products/savings-products' }
+    parity: {
+      status: 'in_progress',
+      webAppRef: 'products/saving-products',
+      fineractApi: 'GET /savingsproducts'
+    }
+  },
+  shareProducts: {
+    id: 'shareProducts',
+    path: '/products/share-products',
+    kind: 'page',
+    label: 'Share products',
+    domain: 'products',
+    nav: true,
+    navOrder: 30,
+    navGroup: 'products',
+    navIcon: 'pie-chart',
+    keywords: ['product', 'share product'],
+    permissionKey: 'products.share',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'in_progress',
+      webAppRef: 'products/share-products',
+      fineractApi: 'GET /products/share'
+    }
+  },
+  recurringDepositProducts: {
+    id: 'recurringDepositProducts',
+    path: '/products/recurring-deposit-products',
+    kind: 'page',
+    label: 'Recurring deposit products',
+    domain: 'products',
+    nav: true,
+    navOrder: 80,
+    navGroup: 'products',
+    navIcon: 'refresh-cw',
+    keywords: ['product', 'recurring deposit', 'rd'],
+    permissionKey: 'products.recurringDeposit',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      webAppRef: 'products/recurring-deposit-products',
+      fineractApi: 'GET /recurringdepositproducts'
+    }
+  },
+  fixedDepositProducts: {
+    id: 'fixedDepositProducts',
+    path: '/products/fixed-deposit-products',
+    kind: 'page',
+    label: 'Fixed deposit products',
+    domain: 'products',
+    nav: true,
+    navOrder: 90,
+    navGroup: 'products',
+    navIcon: 'lock',
+    keywords: ['product', 'fixed deposit', 'fd'],
+    permissionKey: 'products.fixedDeposit',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      webAppRef: 'products/fixed-deposit-products',
+      fineractApi: 'GET /fixeddepositproducts'
+    }
+  },
+  chargeProducts: {
+    id: 'chargeProducts',
+    path: '/products/charges',
+    kind: 'page',
+    label: 'Charges',
+    domain: 'products',
+    nav: true,
+    navOrder: 40,
+    navGroup: 'products',
+    navIcon: 'percent',
+    keywords: ['fee', 'charge', 'penalty'],
+    permissionKey: 'products.charges',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      webAppRef: 'products/charges',
+      fineractApi: 'GET /charges'
+    }
+  },
+  collateralProducts: {
+    id: 'collateralProducts',
+    path: '/products/collaterals',
+    kind: 'page',
+    label: 'Collateral products',
+    domain: 'products',
+    nav: true,
+    navOrder: 110,
+    navGroup: 'products',
+    navIcon: 'shield-check',
+    keywords: ['collateral', 'collateral product'],
+    permissionKey: 'products.collaterals',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      webAppRef: 'products/collaterals',
+      fineractApi: 'GET /collateral-management'
+    }
   },
   accounting: {
     id: 'accounting',

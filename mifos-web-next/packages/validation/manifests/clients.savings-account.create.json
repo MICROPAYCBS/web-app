@@ -1,0 +1,11 @@
+{
+  "command": "clients.savings-account.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.SavingsAccountsApiResource",
+    "org.apache.fineract.portfolio.savings.data.SavingsAccountDataValidator"
+  ],
+  "fields": {
+    "productId": { "required": true },
+    "submittedOnDate": { "required": true }
+  }
+}

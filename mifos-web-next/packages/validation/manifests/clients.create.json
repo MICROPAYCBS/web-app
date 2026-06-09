@@ -6,6 +6,11 @@
   ],
   "fields": {
     "officeId": { "required": true },
+    "staffId": { "required": true },
+    "mobileNo": { "required": true, "maxLength": 50 },
+    "dateOfBirth": { "required": true },
+    "genderId": { "requiredWhen": "legalFormId=1" },
+    "clientTypeId": { "required": true },
     "legalFormId": { "required": true, "values": [1, 2] },
     "firstname": { "requiredWhen": "legalFormId=1" },
     "lastname": { "requiredWhen": "legalFormId=1" },

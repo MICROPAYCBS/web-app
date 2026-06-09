@@ -92,7 +92,7 @@ Optional later: **`DetailSidebar`** (client photo, quick links), compliance **`M
 | Rule | Implementation |
 |------|----------------|
 | Never use JS `number` arithmetic for display | Parse with `Decimal`; format via `@mifos/domain` |
-| Always show **currency context** | `MoneyValue`: `{ amount, currencyCode }` → e.g. `KES 1,234,567.00` or locale-aware symbol |
+| Always show **currency context** | `MoneyValue`: `{ amount, currencyCode }` → e.g. `UGX 1,234,567.00` (ISO code, not symbol) |
 | Right-align money in grids | `tabular-nums text-right` on value |
 | Distinguish **zero** vs **missing** | Zero displays `0.00`; missing displays em dash |
 | Tenant vs account currency | Use account/loan `currency.code` from Fineract payload, not guessed |

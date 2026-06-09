@@ -1,0 +1,11 @@
+{
+  "command": "system.external-service.notification.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.configuration.api.ExternalServicesApiResource"
+  ],
+  "fields": {
+    "server_key": { "required": true },
+    "gcm_end_point": { "required": true },
+    "fcm_end_point": { "required": true }
+  }
+}

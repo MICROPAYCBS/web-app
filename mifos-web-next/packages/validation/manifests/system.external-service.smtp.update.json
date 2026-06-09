@@ -1,0 +1,15 @@
+{
+  "command": "system.external-service.smtp.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.configuration.api.ExternalServicesApiResource"
+  ],
+  "fields": {
+    "username": { "required": true },
+    "password": { "required": true },
+    "host": { "required": true },
+    "port": { "required": true },
+    "useTLS": { "required": true },
+    "fromEmail": { "required": true },
+    "fromName": { "required": true }
+  }
+}

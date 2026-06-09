@@ -20,16 +20,281 @@ export {
   type FamilyMemberInput
 } from './clients/create-client.schema';
 export {
+  updateClientSchema,
+  type UpdateClientInput,
+  type UpdateClientPayload
+} from './clients/update-client.schema';
+export {
+  clientDatatableValuesSchema,
+  validateClientDatatableValues,
+  type ClientDatatableValuesInput,
+  type DatatableColumnRule
+} from './clients/datatable.schema';
+export {
   clientDocumentMetadataSchema,
-  clientIdentifierSchema,
   clientNoteSchema,
   type ClientDocumentMetadataInput,
-  type ClientIdentifierInput,
   type ClientNoteInput
 } from './clients/client-details.schema';
-export { mapFineractErrors, type FieldError, type MappedFineractErrors } from './map-fineract-errors';
+export {
+  clientIdentifierSchema,
+  FIRST_IDENTIFIER_DOCUMENT_KEY_MESSAGE,
+  FIRST_IDENTIFIER_DOCUMENT_KEY_PATTERN,
+  FIRST_IDENTIFIER_DOCUMENT_KEY_PLACEHOLDER,
+  isFirstIdentifierDocumentType,
+  validateClientIdentifier,
+  validateFirstIdentifierDocumentKey,
+  type ClientIdentifierInput,
+  type ClientIdentifierValidationContext
+} from './clients/client-identifier.schema';
+export {
+  clientActivateCommandSchema,
+  clientAssignStaffCommandSchema,
+  clientCloseCommandSchema,
+  clientReactivateCommandSchema,
+  clientRejectCommandSchema,
+  clientTransferCommandSchema,
+  clientTransferNoteCommandSchema,
+  clientUndoRejectionCommandSchema,
+  clientUpdateSavingsCommandSchema,
+  clientWithdrawCommandSchema,
+  type ClientActivateCommandInput,
+  type ClientAssignStaffCommandInput,
+  type ClientCloseCommandInput,
+  type ClientReactivateCommandInput,
+  type ClientRejectCommandInput,
+  type ClientTransferCommandInput,
+  type ClientTransferNoteCommandInput,
+  type ClientUndoRejectionCommandInput,
+  type ClientUpdateSavingsCommandInput,
+  type ClientWithdrawCommandInput
+} from './clients/client-command.schema';
+export {
+  createSystemDatatableSchema,
+  updateSystemDatatableSchema,
+  validateCreateSystemDatatable,
+  validateUpdateSystemDatatable,
+  SYSTEM_DATATABLE_COLUMN_TYPES,
+  type CreateSystemDatatableInput,
+  type UpdateSystemDatatableInput,
+  type SystemDatatableColumnInput,
+  type SystemDatatableColumnType
+} from './system/system-datatable.schema';
+export {
+  createStandingInstructionSchema,
+  type CreateStandingInstructionInput
+} from './clients/create-standing-instruction.schema';
+export {
+  createClientCollateralSchema,
+  type CreateClientCollateralInput
+} from './clients/create-client-collateral.schema';
+export {
+  createClientFixedDepositAccountSchema,
+  createClientRecurringDepositAccountSchema,
+  createClientSavingsAccountSchema,
+  type CreateClientFixedDepositAccountInput,
+  type CreateClientRecurringDepositAccountInput,
+  type CreateClientSavingsAccountInput
+} from './clients/create-client-deposit-account.schema';
+export {
+  createLoanAccountSchema,
+  loanAccountCoreStepSchema,
+  loanAccountFinancialStepSchema,
+  loanAccountTimelineStepSchema,
+  loanAccountSecurityStepSchema,
+  loanAccountPayoutStepSchema,
+  loanAccountProductStepSchema,
+  loanAccountTermsStepSchema,
+  loanCollateralItemSchema,
+  loanGuarantorItemSchema,
+  type CreateLoanAccountInput,
+  type LoanAccountCoreStepInput,
+  type LoanAccountFinancialStepInput,
+  type LoanAccountTimelineStepInput,
+  type LoanAccountSecurityStepInput,
+  type LoanAccountPayoutStepInput,
+  type LoanCollateralItemInput,
+  type LoanGuarantorItemInput,
+  type LoanAccountProductStepInput,
+  type LoanAccountTermsStepInput
+} from './clients/create-loan-account.schema';
+export {
+  upsertCollateralProductSchema,
+  type UpsertCollateralProductInput
+} from './products/upsert-collateral-product.schema';
+export {
+  upsertChargeSchema,
+  type UpsertChargeInput
+} from './products/upsert-charge.schema';
+export {
+  upsertSavingsProductSchema,
+  savingsProductDetailsStepSchema,
+  savingsProductCurrencyStepSchema,
+  savingsProductTermsStepSchema,
+  savingsProductSettingsStepSchema,
+  savingsProductChargesStepSchema,
+  savingsProductAccountingStepSchema,
+  savingsProductAccountingCoreStepSchema,
+  savingsProductMappingsStepSchema,
+  validateSavingsProductAccounting,
+  type UpsertSavingsProductInput,
+  type SavingsProductDetailsInput,
+  type SavingsProductCurrencyInput,
+  type SavingsProductTermsInput,
+  type SavingsProductSettingsInput,
+  type SavingsProductChargesInput,
+  type SavingsProductMappingsInput,
+  type SavingsProductAccountingInput
+} from './products/savings-product.schema';
+export {
+  upsertShareProductSchema,
+  shareProductDetailsStepSchema,
+  shareProductCurrencyStepSchema,
+  shareProductTermsStepSchema,
+  shareProductSettingsStepSchema,
+  shareProductMarketPriceStepSchema,
+  shareProductChargesStepSchema,
+  shareProductAccountingStepSchema,
+  type UpsertShareProductInput,
+  type ShareProductDetailsInput,
+  type ShareProductCurrencyInput,
+  type ShareProductTermsInput,
+  type ShareProductSettingsInput,
+  type ShareProductMarketPriceInput,
+  type ShareProductChargesInput,
+  type ShareProductAccountingInput
+} from './products/share-product.schema';
+export {
+  upsertDepositProductSchema,
+  depositProductDetailsStepSchema,
+  depositProductCurrencyStepSchema,
+  depositProductTermsStepSchema,
+  depositProductSettingsStepSchema,
+  depositProductInterestRateChartStepSchema,
+  depositProductChargesStepSchema,
+  depositProductAccountingStepSchema,
+  depositProductAccountingCoreStepSchema,
+  validateDepositProductAccounting,
+  type UpsertDepositProductInput,
+  type DepositProductDetailsInput,
+  type DepositProductCurrencyInput,
+  type DepositProductTermsInput,
+  type DepositProductSettingsInput,
+  type DepositProductInterestRateChartInput,
+  type DepositProductChargesInput,
+  type DepositProductAccountingInput
+} from './products/deposit-product.schema';
+export {
+  upsertLoanProductSchema,
+  loanProductDetailsStepSchema,
+  loanProductCurrencyStepSchema,
+  loanProductTermsStepSchema,
+  loanProductSettingsStepSchema,
+  loanProductChargesStepSchema,
+  loanProductAccountingStepSchema,
+  loanProductAccountingCoreStepSchema,
+  loanProductMappingsStepSchema,
+  type UpsertLoanProductInput,
+  type LoanProductDetailsInput,
+  type LoanProductCurrencyInput,
+  type LoanProductTermsInput,
+  type LoanProductSettingsInput,
+  type LoanProductChargesInput,
+  type LoanProductMappingsInput,
+  type LoanProductAccountingInput
+} from './products/loan-product.schema';
 export {
   formatActionErrorMessage,
   toFineractActionError,
   type FineractActionError
 } from './to-fineract-action-error';
+export {
+  createEntityDatatableCheckSchema,
+  validateCreateEntityDatatableCheck,
+  ENTITY_DATATABLE_CHECK_ENTITIES,
+  type CreateEntityDatatableCheckInput,
+  type EntityDatatableCheckEntity
+} from './organization/entity-datatable-check.schema';
+export {
+  createCodeSchema,
+  updateCodeSchema,
+  upsertCodeValueSchema,
+  validateCreateCode,
+  validateUpdateCode,
+  validateUpsertCodeValue,
+  type CreateCodeInput,
+  type UpdateCodeInput,
+  type UpsertCodeValueInput,
+  type UpsertCodeValuePayload
+} from './system/code.schema';
+export {
+  updateExternalEventConfigurationSchema,
+  validateUpdateExternalEventConfiguration,
+  type UpdateExternalEventConfigurationInput
+} from './system/external-events.schema';
+export {
+  updateNotificationExternalServiceSchema,
+  updateS3ExternalServiceSchema,
+  updateSmsExternalServiceSchema,
+  updateSmtpExternalServiceSchema,
+  validateUpdateNotificationExternalService,
+  validateUpdateS3ExternalService,
+  validateUpdateSmsExternalService,
+  validateUpdateSmtpExternalService,
+  type UpdateNotificationExternalServiceInput,
+  type UpdateS3ExternalServiceInput,
+  type UpdateSmsExternalServiceInput,
+  type UpdateSmtpExternalServiceInput
+} from './system/external-service.schema';
+export {
+  createRoleSchema,
+  updateRolePermissionsSchema,
+  updateRoleSchema,
+  validateCreateRole,
+  validateUpdateRole,
+  validateUpdateRolePermissions,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+  type UpdateRolePermissionsInput
+} from './system/role.schema';
+export {
+  updateMakerCheckerPermissionsSchema,
+  validateUpdateMakerCheckerPermissions,
+  type UpdateMakerCheckerPermissionsInput
+} from './system/maker-checker.schema';
+export {
+  buildHookApiPayload,
+  buildHookConfigPayload,
+  hookEventSchema,
+  smsHookFormSchema,
+  upsertHookFormSchema,
+  validateUpsertHookForm,
+  webHookFormSchema,
+  type HookEventInput,
+  type SmsHookFormInput,
+  type UpsertHookFormInput,
+  type WebHookFormInput
+} from './system/hook.schema';
+export {
+  updateGlobalConfigurationEnabledSchema,
+  updateGlobalConfigurationValuesSchema,
+  validateUpdateGlobalConfigurationEnabled,
+  validateUpdateGlobalConfigurationValues,
+  type UpdateGlobalConfigurationEnabledInput,
+  type UpdateGlobalConfigurationValuesInput
+} from './system/global-configuration.schema';
+export {
+  upsertEntityMappingSchema,
+  validateUpsertEntityMapping,
+  type UpsertEntityMappingInput
+} from './system/entity-mapping.schema';
+export {
+  createStaffSchema,
+  updateStaffSchema,
+  validateCreateStaff,
+  validateUpdateStaff,
+  type CreateStaffInput,
+  type CreateStaffPayload,
+  type UpdateStaffInput,
+  type UpdateStaffPayload
+} from './organization/staff.schema';

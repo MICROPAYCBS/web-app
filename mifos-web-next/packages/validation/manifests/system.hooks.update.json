@@ -1,0 +1,13 @@
+{
+  "command": "system.hooks.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.hooks.api.HookApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "displayName": { "required": true },
+    "isActive": { "required": false },
+    "events": { "required": true },
+    "config": { "required": true }
+  }
+}

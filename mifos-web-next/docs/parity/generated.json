@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-05-30T05:04:40.138Z",
+  "generatedAt": "2026-06-09T11:53:18.121Z",
   "summary": {
-    "todo": 7,
-    "in_progress": 7,
-    "done": 3,
+    "todo": 45,
+    "in_progress": 16,
+    "done": 14,
     "n/a": 0
   },
   "routes": [
@@ -17,13 +17,32 @@
       "webAppRef": "home/dashboard"
     },
     {
+      "id": "search",
+      "path": "/search",
+      "domain": "platform",
+      "label": "Search",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "search",
+      "fineractApi": "GET /search"
+    },
+    {
+      "id": "searchApi",
+      "path": "/api/search",
+      "domain": "platform",
+      "label": "Search API (BFF)",
+      "kind": "api",
+      "status": "in_progress",
+      "fineractApi": "GET /search"
+    },
+    {
       "id": "connect",
       "path": "/connect",
       "domain": "auth",
       "label": "Connect",
       "kind": "page",
       "status": "done",
-      "notes": "Greenfield server selection"
+      "notes": "Redirects to /login?servers=1"
     },
     {
       "id": "login",
@@ -106,8 +125,9 @@
       "domain": "products",
       "label": "Loan products",
       "kind": "page",
-      "status": "todo",
-      "webAppRef": "products/loan-products"
+      "status": "in_progress",
+      "webAppRef": "products/loan-products",
+      "fineractApi": "GET /loanproducts"
     },
     {
       "id": "savingsProducts",
@@ -115,8 +135,59 @@
       "domain": "products",
       "label": "Savings products",
       "kind": "page",
-      "status": "todo",
-      "webAppRef": "products/savings-products"
+      "status": "in_progress",
+      "webAppRef": "products/saving-products",
+      "fineractApi": "GET /savingsproducts"
+    },
+    {
+      "id": "shareProducts",
+      "path": "/products/share-products",
+      "domain": "products",
+      "label": "Share products",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "products/share-products",
+      "fineractApi": "GET /products/share"
+    },
+    {
+      "id": "recurringDepositProducts",
+      "path": "/products/recurring-deposit-products",
+      "domain": "products",
+      "label": "Recurring deposit products",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "products/recurring-deposit-products",
+      "fineractApi": "GET /recurringdepositproducts"
+    },
+    {
+      "id": "fixedDepositProducts",
+      "path": "/products/fixed-deposit-products",
+      "domain": "products",
+      "label": "Fixed deposit products",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "products/fixed-deposit-products",
+      "fineractApi": "GET /fixeddepositproducts"
+    },
+    {
+      "id": "chargeProducts",
+      "path": "/products/charges",
+      "domain": "products",
+      "label": "Charges",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "products/charges",
+      "fineractApi": "GET /charges"
+    },
+    {
+      "id": "collateralProducts",
+      "path": "/products/collaterals",
+      "domain": "products",
+      "label": "Collateral products",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "products/collaterals",
+      "fineractApi": "GET /collateral-management"
     },
     {
       "id": "accounting",
@@ -162,6 +233,465 @@
       "kind": "api",
       "status": "in_progress",
       "fineractApi": "GET /clients"
+    },
+    {
+      "id": "orgOffices",
+      "path": "/organization/offices",
+      "domain": "organization",
+      "label": "Offices",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/offices"
+    },
+    {
+      "id": "orgEmployees",
+      "path": "/organization/employees",
+      "domain": "organization",
+      "label": "Employees",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "organization/employees"
+    },
+    {
+      "id": "orgProvisioningCriteria",
+      "path": "/organization/provisioning-criteria",
+      "domain": "organization",
+      "label": "Provisioning criteria",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/provisioning-criteria"
+    },
+    {
+      "id": "orgCurrencies",
+      "path": "/organization/currencies",
+      "domain": "organization",
+      "label": "Currencies",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/currencies"
+    },
+    {
+      "id": "orgSmsCampaigns",
+      "path": "/organization/sms-campaigns",
+      "domain": "organization",
+      "label": "SMS campaigns",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/sms-campaigns"
+    },
+    {
+      "id": "orgStandingInstructions",
+      "path": "/organization/standing-instructions-history",
+      "domain": "organization",
+      "label": "Standing instructions history",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/standing-instructions-history"
+    },
+    {
+      "id": "orgFundMapping",
+      "path": "/organization/fund-mapping",
+      "domain": "organization",
+      "label": "Fund mapping",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/fund-mapping"
+    },
+    {
+      "id": "orgInvestors",
+      "path": "/organization/investors",
+      "domain": "organization",
+      "label": "Investors",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/investors"
+    },
+    {
+      "id": "orgAdhocQuery",
+      "path": "/organization/adhoc-query",
+      "domain": "organization",
+      "label": "Ad hoc query",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/adhoc-query"
+    },
+    {
+      "id": "orgTellers",
+      "path": "/organization/tellers",
+      "domain": "organization",
+      "label": "Tellers",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/tellers"
+    },
+    {
+      "id": "orgPaymentTypes",
+      "path": "/organization/payment-types",
+      "domain": "organization",
+      "label": "Payment types",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/payment-types"
+    },
+    {
+      "id": "orgPasswordPreferences",
+      "path": "/organization/password-preferences",
+      "domain": "organization",
+      "label": "Password preferences",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/password-preferences"
+    },
+    {
+      "id": "orgBulkLoanReassignment",
+      "path": "/organization/bulkloan",
+      "domain": "organization",
+      "label": "Bulk loan reassignment",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/bulkloan"
+    },
+    {
+      "id": "orgEntityDatatableChecks",
+      "path": "/organization/entity-data-table-checks",
+      "domain": "organization",
+      "label": "Entity data table checks",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "organization/entity-data-table-checks"
+    },
+    {
+      "id": "orgWorkingDays",
+      "path": "/organization/working-days",
+      "domain": "organization",
+      "label": "Working days",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/working-days"
+    },
+    {
+      "id": "orgLoanOriginators",
+      "path": "/organization/manage-loan-originators",
+      "domain": "organization",
+      "label": "Loan originators",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/manage-loan-originators"
+    },
+    {
+      "id": "orgFunds",
+      "path": "/organization/manage-funds",
+      "domain": "organization",
+      "label": "Manage funds",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/manage-funds"
+    },
+    {
+      "id": "orgBulkImport",
+      "path": "/organization/bulk-import",
+      "domain": "organization",
+      "label": "Bulk import",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/bulk-import"
+    },
+    {
+      "id": "orgHolidays",
+      "path": "/organization/holidays",
+      "domain": "organization",
+      "label": "Holidays",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "organization/holidays"
+    },
+    {
+      "id": "sysCodes",
+      "path": "/system/codes",
+      "domain": "system",
+      "label": "Codes",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "system/codes"
+    },
+    {
+      "id": "sysExternalEvents",
+      "path": "/system/external-events",
+      "domain": "system",
+      "label": "External events",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/external-events"
+    },
+    {
+      "id": "sysEntityMapping",
+      "path": "/system/entity-to-entity-mapping",
+      "domain": "system",
+      "label": "Entity to entity mapping",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/entity-to-entity-mapping"
+    },
+    {
+      "id": "sysExternalServices",
+      "path": "/system/external-services",
+      "domain": "system",
+      "label": "External services",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/external-services"
+    },
+    {
+      "id": "sysDataTables",
+      "path": "/system/data-tables",
+      "domain": "system",
+      "label": "Data tables",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "system/data-tables"
+    },
+    {
+      "id": "sysHooks",
+      "path": "/system/hooks",
+      "domain": "system",
+      "label": "Hooks",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/hooks"
+    },
+    {
+      "id": "sysRoles",
+      "path": "/system/roles-and-permissions",
+      "domain": "system",
+      "label": "Roles and permissions",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/roles-and-permissions"
+    },
+    {
+      "id": "sysMakerCheckerTasks",
+      "path": "/system/configure-mc-tasks",
+      "domain": "system",
+      "label": "Configure maker checker tasks",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/configure-mc-tasks"
+    },
+    {
+      "id": "sysSurveys",
+      "path": "/system/surveys",
+      "domain": "system",
+      "label": "Surveys",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "system/surveys"
+    },
+    {
+      "id": "sysJobs",
+      "path": "/system/manage-jobs",
+      "domain": "system",
+      "label": "Manage jobs",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "system/manage-jobs"
+    },
+    {
+      "id": "sysConfigurations",
+      "path": "/system/configurations",
+      "domain": "system",
+      "label": "Global configurations",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/configurations"
+    },
+    {
+      "id": "sysAccountNumberPrefs",
+      "path": "/system/account-number-preferences",
+      "domain": "system",
+      "label": "Account number preferences",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "system/account-number-preferences"
+    },
+    {
+      "id": "sysReports",
+      "path": "/system/reports",
+      "domain": "system",
+      "label": "Report configuration",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "system/reports"
+    },
+    {
+      "id": "sysSystemInformation",
+      "path": "/system/system-information",
+      "domain": "system",
+      "label": "System information",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "system/system-information"
+    },
+    {
+      "id": "sysAboutUs",
+      "path": "/system/about-us",
+      "domain": "system",
+      "label": "About us",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "system/about-us"
+    },
+    {
+      "id": "sysAuditTrails",
+      "path": "/system/audit-trails",
+      "domain": "system",
+      "label": "Audit trails",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "system/audit-trails"
+    },
+    {
+      "id": "prodMix",
+      "path": "/products/products-mix",
+      "domain": "products",
+      "label": "Product mix",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "products/products-mix"
+    },
+    {
+      "id": "prodTax",
+      "path": "/products/tax-configurations",
+      "domain": "products",
+      "label": "Tax configurations",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "products/tax-configurations"
+    },
+    {
+      "id": "prodDelinquency",
+      "path": "/products/delinquency-bucket-configurations",
+      "domain": "products",
+      "label": "Delinquency buckets",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "products/delinquency-bucket-configurations"
+    },
+    {
+      "id": "prodFloatingRates",
+      "path": "/products/floating-rates",
+      "domain": "products",
+      "label": "Floating rates",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "products/floating-rates"
+    },
+    {
+      "id": "acctCoa",
+      "path": "/accounting/chart-of-accounts",
+      "domain": "accounting",
+      "label": "Chart of accounts",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/chart-of-accounts"
+    },
+    {
+      "id": "acctJournal",
+      "path": "/accounting/journal-entries",
+      "domain": "accounting",
+      "label": "Journal entries",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/journal-entries"
+    },
+    {
+      "id": "acctFrequentPostings",
+      "path": "/accounting/journal-entries/frequent-postings",
+      "domain": "accounting",
+      "label": "Frequent postings",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/journal-entries/frequent-postings"
+    },
+    {
+      "id": "acctFinancialActivity",
+      "path": "/accounting/financial-activity-mappings",
+      "domain": "accounting",
+      "label": "Financial activity mappings",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/financial-activity-mappings"
+    },
+    {
+      "id": "acctMigrateBalances",
+      "path": "/accounting/migrate-opening-balances",
+      "domain": "accounting",
+      "label": "Migrate opening balances",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/migrate-opening-balances"
+    },
+    {
+      "id": "acctClosing",
+      "path": "/accounting/closing-entries",
+      "domain": "accounting",
+      "label": "Closing entries",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/closing-entries"
+    },
+    {
+      "id": "acctRules",
+      "path": "/accounting/accounting-rules",
+      "domain": "accounting",
+      "label": "Accounting rules",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/accounting-rules"
+    },
+    {
+      "id": "acctAccruals",
+      "path": "/accounting/periodic-accruals",
+      "domain": "accounting",
+      "label": "Periodic accruals",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/periodic-accruals"
+    },
+    {
+      "id": "acctProvisioning",
+      "path": "/accounting/provisioning-entries",
+      "domain": "accounting",
+      "label": "Provisioning entries",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "accounting/provisioning-entries"
+    },
+    {
+      "id": "adminUsers",
+      "path": "/appusers",
+      "domain": "appusers",
+      "label": "Users",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "appusers"
+    },
+    {
+      "id": "adminTemplates",
+      "path": "/templates",
+      "domain": "templates",
+      "label": "Templates",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "templates"
+    },
+    {
+      "id": "adminReports",
+      "path": "/reports",
+      "domain": "reports",
+      "label": "Reports",
+      "kind": "page",
+      "status": "todo",
+      "webAppRef": "reports"
     }
   ]
 }

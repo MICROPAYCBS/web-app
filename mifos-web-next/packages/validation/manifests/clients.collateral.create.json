@@ -1,0 +1,10 @@
+{
+  "command": "clients.collateral.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.collateral.api.ClientCollateralApiResource"
+  ],
+  "fields": {
+    "collateralId": { "required": true },
+    "quantity": { "required": true }
+  }
+}

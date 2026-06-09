@@ -31,6 +31,8 @@ export interface ExternalServiceDefinition {
   fields: ExternalServiceFieldDefinition[];
 }
 
+export const DEFAULT_EXTERNAL_SERVICE_SLUG: ExternalServiceSlug = 'amazon-s3';
+
 export const EXTERNAL_SERVICE_DEFINITIONS: ExternalServiceDefinition[] = [
   {
     slug: 'amazon-s3',
@@ -105,12 +107,31 @@ export function getExternalServiceDefinition(
   return definition;
 }
 
-export function externalServicePath(slug: ExternalServiceSlug): string {
-  return `/system/external-services/${slug}`;
-}
-
 export function externalServiceListPath(): string {
   return '/system/external-services';
+}
+
+export function externalServiceSectionHref(slug: ExternalServiceSlug): string {
+  const base = externalServiceListPath();
+  if (slug === DEFAULT_EXTERNAL_SERVICE_SLUG) {
+    return base;
+  }
+  return `${base}?section=${slug}`;
+}
+
+/** @deprecated Use {@link externalServiceSectionHref} — nested routes redirect to section query. */
+export function externalServicePath(slug: ExternalServiceSlug): string {
+  return externalServiceSectionHref(slug);
+}
+
+export function configurationsBySlug(
+  configurations: Record<FineractExternalServiceName, FineractExternalServiceProperty[]>
+): Record<ExternalServiceSlug, FineractExternalServiceProperty[]> {
+  const bySlug = {} as Record<ExternalServiceSlug, FineractExternalServiceProperty[]>;
+  for (const definition of EXTERNAL_SERVICE_DEFINITIONS) {
+    bySlug[definition.slug] = configurations[definition.apiName] ?? [];
+  }
+  return bySlug;
 }
 
 export function externalServicePropertyLabel(

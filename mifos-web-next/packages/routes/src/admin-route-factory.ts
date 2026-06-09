@@ -20,6 +20,7 @@ export interface AdminRouteInput {
   navIcon: NavIcon;
   keywords?: string[];
   domain?: string;
+  parityStatus?: 'todo' | 'in_progress' | 'done';
 }
 
 /** Admin/config list screen — nav + Quick Find, page implementation deferred. */
@@ -40,7 +41,7 @@ export function defineAdminRoute(input: AdminRouteInput): RouteDefinition {
     requiresServer: true,
     requiresAuth: true,
     parity: {
-      status: 'todo',
+      status: input.parityStatus ?? 'todo',
       webAppRef: input.webAppRef
     }
   };

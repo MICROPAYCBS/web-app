@@ -1,0 +1,9 @@
+{
+  "schemaId": "clients.datatable",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.dataqueries.api.DatatablesApiResource"
+  ],
+  "fields": {
+    "values": { "required": true, "type": "record" }
+  }
+}

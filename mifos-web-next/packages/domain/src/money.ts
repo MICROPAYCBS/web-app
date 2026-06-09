@@ -51,8 +51,8 @@ export function toDecimal(
 }
 
 /**
- * Display money with ISO currency code context (e.g. `KES 1,234.00`).
- * Uses `Intl` currency style when the code is supported; falls back to code + amount.
+ * Display money with ISO 4217 currency code (e.g. `UGX 1,234.00`, `USD 1,234.00`).
+ * Always uses the 3-letter code — never the locale currency symbol.
  */
 export function formatMoney(
   amount: Decimal | string | number | null | undefined,
@@ -71,6 +71,7 @@ export function formatMoney(
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: code,
+      currencyDisplay: 'code',
       minimumFractionDigits: 2,
       maximumFractionDigits: AMOUNT_MAX_DECIMAL_PLACES
     }).format(decimal.toNumber());

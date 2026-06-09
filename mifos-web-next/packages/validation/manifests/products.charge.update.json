@@ -1,0 +1,15 @@
+{
+  "command": "products.charge.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.charge.api.ChargesApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "currencyCode": { "required": true },
+    "chargeTimeType": { "required": true },
+    "chargeCalculationType": { "required": true },
+    "amount": { "required": true },
+    "active": { "required": false },
+    "penalty": { "required": false }
+  }
+}

@@ -37,10 +37,13 @@ export class FineractClient {
     }
 
     const auth = await this.config.getAuthHeader();
+    const hasBody = options?.body !== undefined;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'Fineract-Platform-TenantId': this.config.tenantId
     };
+    if (hasBody) {
+      headers['Content-Type'] = 'application/json';
+    }
     if (auth) {
       headers['Authorization'] = auth;
     }
@@ -48,12 +51,13 @@ export class FineractClient {
     const res = await fetch(url, {
       method,
       headers,
-      body: options?.body !== undefined ? JSON.stringify(options.body) : undefined
+      body: hasBody ? JSON.stringify(options.body) : undefined
     });
+
+    const raw = await res.text();
 
     if (!res.ok) {
       let body: FineractApiError | null = null;
-      const raw = await res.text();
       if (raw) {
         try {
           body = JSON.parse(raw) as FineractApiError;
@@ -64,25 +68,27 @@ export class FineractClient {
       throw new FineractHttpError(res.status, body);
     }
 
-    if (res.status === 204) {
+    if (res.status === 204 || !raw.trim()) {
       return undefined as T;
     }
-    return (await res.json()) as T;
+
+    return JSON.parse(raw) as T;
   }
 
   get<T>(path: string, searchParams?: Record<string, string>): Promise<T> {
     return this.request<T>('GET', path, { searchParams });
   }
 
-  post<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>('POST', path, { body });
+  post<T>(path: string, body: unknown, searchParams?: Record<string, string>): Promise<T> {
+    return this.request<T>('POST', path, { body, searchParams });
   }
 
-  put<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>('PUT', path, { body });
+  put<T>(path: string, body: unknown, searchParams?: Record<string, string>): Promise<T> {
+    return this.request<T>('PUT', path, { body, searchParams });
   }
 
-  delete<T = void>(path: string): Promise<T> {
-    return this.request<T>('DELETE', path);
+  delete<T = void>(path: string, searchParams?: Record<string, string>): Promise<T> {
+    // Fineract DELETE endpoints declare @Consumes(APPLICATION_JSON).
+    return this.request<T>('DELETE', path, { body: {}, searchParams });
   }
 }

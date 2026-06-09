@@ -29,6 +29,21 @@
       "READ_CLIENTNOTE"
     ]
   },
+  "clients.collateral": {
+    "any": [
+      "READ_CLIENTCOLLATERAL"
+    ]
+  },
+  "clients.collateral.create": {
+    "any": [
+      "CREATE_CLIENTCOLLATERAL"
+    ]
+  },
+  "clients.collateral.delete": {
+    "any": [
+      "DELETE_CLIENTCOLLATERAL"
+    ]
+  },
   "navigation": {
     "any": [
       "READ_CLIENT"
@@ -69,9 +84,29 @@
       "READ_LOANPRODUCT"
     ]
   },
+  "products.loan.create": {
+    "any": [
+      "CREATE_LOANPRODUCT"
+    ]
+  },
+  "products.loan.update": {
+    "any": [
+      "UPDATE_LOANPRODUCT"
+    ]
+  },
   "products.savings": {
     "any": [
       "READ_SAVINGSPRODUCT"
+    ]
+  },
+  "products.savings.create": {
+    "any": [
+      "CREATE_SAVINGSPRODUCT"
+    ]
+  },
+  "products.savings.update": {
+    "any": [
+      "UPDATE_SAVINGSPRODUCT"
     ]
   },
   "organization": {
@@ -194,7 +229,7 @@
   },
   "system.externalEvents": {
     "any": [
-      "READ_CONFIGURATION"
+      "READ_EXTERNAL_EVENT_CONFIGURATION"
     ]
   },
   "system.entityMapping": {
@@ -274,9 +309,34 @@
       "READ_SHAREPRODUCT"
     ]
   },
+  "products.share.create": {
+    "any": [
+      "CREATE_SHAREPRODUCT"
+    ]
+  },
+  "products.share.update": {
+    "any": [
+      "UPDATE_SHAREPRODUCT"
+    ]
+  },
   "products.charges": {
     "any": [
       "READ_CHARGE"
+    ]
+  },
+  "products.charges.create": {
+    "any": [
+      "CREATE_CHARGE"
+    ]
+  },
+  "products.charges.update": {
+    "any": [
+      "UPDATE_CHARGE"
+    ]
+  },
+  "products.charges.delete": {
+    "any": [
+      "DELETE_CHARGE"
     ]
   },
   "products.mix": {
@@ -300,9 +360,29 @@
       "READ_RECURRINGDEPOSITPRODUCT"
     ]
   },
+  "products.recurringDeposit.create": {
+    "any": [
+      "CREATE_RECURRINGDEPOSITPRODUCT"
+    ]
+  },
+  "products.recurringDeposit.update": {
+    "any": [
+      "UPDATE_RECURRINGDEPOSITPRODUCT"
+    ]
+  },
   "products.fixedDeposit": {
     "any": [
       "READ_FIXEDDEPOSITPRODUCT"
+    ]
+  },
+  "products.fixedDeposit.create": {
+    "any": [
+      "CREATE_FIXEDDEPOSITPRODUCT"
+    ]
+  },
+  "products.fixedDeposit.update": {
+    "any": [
+      "UPDATE_FIXEDDEPOSITPRODUCT"
     ]
   },
   "products.floatingRates": {
@@ -313,6 +393,21 @@
   "products.collaterals": {
     "any": [
       "READ_COLLATERAL"
+    ]
+  },
+  "products.collaterals.create": {
+    "any": [
+      "CREATE_COLLATERAL"
+    ]
+  },
+  "products.collaterals.update": {
+    "any": [
+      "UPDATE_COLLATERAL"
+    ]
+  },
+  "products.collaterals.delete": {
+    "any": [
+      "DELETE_COLLATERAL"
     ]
   },
   "accounting.coa": {

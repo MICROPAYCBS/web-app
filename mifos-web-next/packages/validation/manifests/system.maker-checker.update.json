@@ -1,0 +1,9 @@
+{
+  "command": "system.maker-checker.update",
+  "fineractSources": [
+    "org.apache.fineract.useradministration.api.PermissionsApiResource"
+  ],
+  "fields": {
+    "permissions": { "required": true }
+  }
+}

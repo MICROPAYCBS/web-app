@@ -1,0 +1,6 @@
+{
+  "schemaId": "clients.command.activate",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.client.api.ClientsApiResource"
+  ]
+}

@@ -11,7 +11,7 @@ If you see **“Mifos® X WebApp”** with **Username / Password** fields and UR
 |------------------|------------------------|
 | `https://yoursite.vercel.app/#/login` | `https://yoursite.vercel.app/login` |
 | Username + password on page | Connect → server picker → demo session / future OAuth |
-| Title “Mifos® X WebApp” | Title “Mifos Web” |
+| Title “Mifos® X WebApp” | Title “MicroPay Banking” |
 
 **Fix:** In Vercel → Project → Settings → General, set **Root Directory** to `mifos-web-next/apps/web`, redeploy. Or create a **new** Vercel project for the Next app so Angular and Next can coexist.
 

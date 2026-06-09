@@ -1,0 +1,28 @@
+{
+  "command": "clients.loan-account.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
+    "org.apache.fineract.portfolio.loanaccount.data.LoanApplicationDataValidator"
+  ],
+  "fields": {
+    "productId": { "required": true },
+    "loanOfficerId": { "required": false },
+    "loanPurposeId": { "required": false },
+    "fundId": { "required": false },
+    "principal": { "required": true, "min": 0 },
+    "loanTermFrequency": { "required": true },
+    "numberOfRepayments": { "required": true },
+    "repaymentEvery": { "required": true },
+    "interestRatePerPeriod": { "required": true, "min": 0 },
+    "submittedOnDate": { "required": true },
+    "expectedDisbursementDate": { "required": true },
+    "graceOnPrincipalPayment": { "required": false, "default": 0 },
+    "graceOnInterestPayment": { "required": false, "default": 0 },
+    "graceOnInterestCharged": { "required": false, "default": 0 },
+    "transactionProcessingStrategyCode": { "required": true },
+    "collateral": { "required": false },
+    "guarantors": { "required": false },
+    "linkAccountId": { "required": false },
+    "disburseToSavings": { "required": true, "default": false }
+  }
+}

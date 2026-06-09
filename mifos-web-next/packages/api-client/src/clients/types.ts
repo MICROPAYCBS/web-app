@@ -28,6 +28,13 @@ export interface FineractOfficeOption {
   nameDecorated?: string;
 }
 
+/** Office reference on client when a transfer is proposed or on hold. */
+export interface FineractOfficeRef {
+  id: number;
+  name: string;
+  nameDecorated?: string;
+}
+
 export interface FineractSavingProductOption {
   id: number;
   name: string;
@@ -37,6 +44,10 @@ export interface FineractDatatableColumnHeader {
   columnName: string;
   columnDisplayType: string;
   isColumnNullable?: boolean;
+  columnLength?: number | string;
+  columnCode?: string;
+  isColumnUnique?: boolean;
+  isColumnIndexed?: boolean;
   columnValues?: { id: number; value: string }[];
 }
 
@@ -124,6 +135,20 @@ export interface FineractClientFamilyMember {
   dateOfBirth?: number[] | string;
 }
 
+export interface FineractClientGroupMembership {
+  id: number;
+  name: string;
+  accountNo?: string;
+}
+
+export interface FineractClientNonPersonDetails {
+  constitution?: FineractEnumOption;
+  mainBusinessLine?: FineractEnumOption;
+  incorpNumber?: string;
+  incorpValidityTillDate?: number[] | string;
+  remarks?: string;
+}
+
 export interface FineractClientSummary {
   id: number;
   accountNo: string;
@@ -142,21 +167,37 @@ export interface FineractClientsPage {
   pageItems: FineractClientSummary[];
 }
 
+/** GET /clients/{id}?template=true — client record plus dropdown options for edit. */
+export type FineractClientEditData = FineractClientDetail & FineractClientTemplate;
+
 export interface FineractClientDetail extends FineractClientSummary {
   middlename?: string;
   fullname?: string;
   mobileNo?: string;
   emailAddress?: string;
-  dateOfBirth?: number[];
+  dateOfBirth?: number[] | string;
+  isStaff?: boolean;
+  legalForm?: FineractEnumOption;
   timeline?: {
-    submittedOnDate?: number[];
-    activatedOnDate?: number[];
+    submittedOnDate?: number[] | string;
+    activatedOnDate?: number[] | string;
+    closedOnDate?: number[] | string;
   };
+  /** Present on some template/detail payloads alongside timeline dates. */
+  activationDate?: number[] | string;
   clientType?: FineractEnumOption;
   clientClassification?: FineractEnumOption;
   gender?: FineractEnumOption;
   officeId?: number;
   staffId?: number;
+  /** Destination office while transfer is in progress or on hold. */
+  transferToOffice?: FineractOfficeRef;
+  /** Proposed transfer date from client record (Fineract date array). */
+  proposedTransferDate?: number[];
+  savingsAccountId?: number;
+  savingsProductName?: string;
+  groups?: FineractClientGroupMembership[];
+  clientNonPersonDetails?: FineractClientNonPersonDetails;
 }
 
 export interface FineractCreateClientResponse {

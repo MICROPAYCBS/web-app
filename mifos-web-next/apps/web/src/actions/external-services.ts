@@ -26,9 +26,8 @@ import { getServerSession } from '@/lib/session/server';
 
 export type ExternalServiceActionResult = { ok: true } | { ok: false; message: string };
 
-function revalidateExternalServicePaths(slug: ExternalServiceSlug) {
+function revalidateExternalServicePaths() {
   revalidatePath('/system/external-services');
-  revalidatePath(`/system/external-services/${slug}`);
 }
 
 export async function updateExternalServiceAction(
@@ -94,7 +93,7 @@ export async function updateExternalServiceAction(
         return { ok: false, message: 'Unsupported external service.' };
     }
 
-    revalidateExternalServicePaths(slug);
+    revalidateExternalServicePaths();
     return { ok: true };
   } catch (error) {
     return toFineractActionError(error, 'Failed to update external service configuration.');

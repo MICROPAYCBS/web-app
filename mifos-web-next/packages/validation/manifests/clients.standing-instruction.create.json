@@ -1,0 +1,23 @@
+{
+  "command": "clients.standing-instruction.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.account.api.StandingInstructionApiResource",
+    "org.apache.fineract.portfolio.account.service.StandingInstructionWritePlatformServiceJpaRepositoryImpl"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "transferType": { "required": true },
+    "priority": { "required": true },
+    "status": { "required": true },
+    "fromAccountType": { "required": true },
+    "fromAccountId": { "required": true },
+    "toOfficeId": { "required": true },
+    "toClientId": { "required": true },
+    "toAccountType": { "required": true },
+    "toAccountId": { "required": true },
+    "instructionType": { "required": true },
+    "validFrom": { "required": true },
+    "validTill": { "required": true },
+    "recurrenceType": { "required": true }
+  }
+}

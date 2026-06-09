@@ -58,3 +58,25 @@ export async function updateExternalServiceConfiguration(
   const fineract = await createFineractClient();
   await fineract.put(`/externalservice/${serviceName}`, payload);
 }
+
+const ALL_EXTERNAL_SERVICE_NAMES: FineractExternalServiceName[] = [
+  'S3',
+  'SMTP',
+  'SMS',
+  'NOTIFICATION'
+];
+
+export async function listAllExternalServiceConfigurations(): Promise<
+  Record<FineractExternalServiceName, FineractExternalServiceProperty[]>
+> {
+  const entries = await Promise.all(
+    ALL_EXTERNAL_SERVICE_NAMES.map(async (serviceName) => {
+      const properties = await getExternalServiceConfiguration(serviceName);
+      return [serviceName, properties] as const;
+    })
+  );
+  return Object.fromEntries(entries) as Record<
+    FineractExternalServiceName,
+    FineractExternalServiceProperty[]
+  >;
+}

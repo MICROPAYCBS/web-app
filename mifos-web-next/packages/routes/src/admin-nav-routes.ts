@@ -31,7 +31,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.employees',
     navOrder: 20,
     navIcon: 'users',
-    keywords: ['staff']
+    keywords: ['staff', 'employee', 'relationship officer'],
+    parityStatus: 'in_progress'
   },
   {
     id: 'orgProvisioningCriteria',
@@ -163,7 +164,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.entityChecks',
     navOrder: 140,
     navIcon: 'table-2',
-    keywords: []
+    keywords: [],
+    parityStatus: 'in_progress'
   },
   {
     id: 'orgWorkingDays',
@@ -229,7 +231,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.codes',
     navOrder: 10,
     navIcon: 'code-2',
-    keywords: []
+    keywords: ['code', 'lookup'],
+    parityStatus: 'in_progress'
   },
   {
     id: 'sysExternalEvents',
@@ -240,7 +243,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.externalEvents',
     navOrder: 20,
     navIcon: 'zap',
-    keywords: []
+    keywords: ['external', 'events', 'configuration'],
+    parityStatus: 'done'
   },
   {
     id: 'sysEntityMapping',
@@ -251,7 +255,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.entityMapping',
     navOrder: 30,
     navIcon: 'link-2',
-    keywords: []
+    keywords: ['entity', 'mapping', 'access'],
+    parityStatus: 'done'
   },
   {
     id: 'sysExternalServices',
@@ -262,7 +267,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.externalServices',
     navOrder: 40,
     navIcon: 'cloud',
-    keywords: []
+    keywords: ['s3', 'smtp', 'sms', 'email', 'notification'],
+    parityStatus: 'done'
   },
   {
     id: 'sysDataTables',
@@ -273,7 +279,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.dataTables',
     navOrder: 50,
     navIcon: 'database',
-    keywords: ['datatable']
+    keywords: ['datatable'],
+    parityStatus: 'in_progress'
   },
   {
     id: 'sysHooks',
@@ -284,7 +291,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.hooks',
     navOrder: 60,
     navIcon: 'webhook',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'sysRoles',
@@ -295,7 +303,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.roles',
     navOrder: 70,
     navIcon: 'shield',
-    keywords: ['role', 'permission']
+    keywords: ['role', 'permission'],
+    parityStatus: 'done'
   },
   {
     id: 'sysMakerCheckerTasks',
@@ -306,7 +315,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.makerChecker',
     navOrder: 80,
     navIcon: 'check-square',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'sysSurveys',
@@ -339,7 +349,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.configurations',
     navOrder: 110,
     navIcon: 'sliders-horizontal',
-    keywords: ['configuration']
+    keywords: ['configuration'],
+    parityStatus: 'done'
   },
   {
     id: 'sysAccountNumberPrefs',
@@ -397,28 +408,6 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     keywords: []
   },
   {
-    id: 'prodShare',
-    path: '/products/share-products',
-    label: 'Share products',
-    navGroup: 'products',
-    webAppRef: 'products/share-products',
-    permissionKey: 'products.share',
-    navOrder: 30,
-    navIcon: 'pie-chart',
-    keywords: []
-  },
-  {
-    id: 'prodCharges',
-    path: '/products/charges',
-    label: 'Charges',
-    navGroup: 'products',
-    webAppRef: 'products/charges',
-    permissionKey: 'products.charges',
-    navOrder: 40,
-    navIcon: 'percent',
-    keywords: ['fee']
-  },
-  {
     id: 'prodMix',
     path: '/products/products-mix',
     label: 'Product mix',
@@ -452,28 +441,6 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     keywords: []
   },
   {
-    id: 'prodRecurringDeposit',
-    path: '/products/recurring-deposit-products',
-    label: 'Recurring deposit products',
-    navGroup: 'products',
-    webAppRef: 'products/recurring-deposit-products',
-    permissionKey: 'products.recurringDeposit',
-    navOrder: 80,
-    navIcon: 'refresh-cw',
-    keywords: []
-  },
-  {
-    id: 'prodFixedDeposit',
-    path: '/products/fixed-deposit-products',
-    label: 'Fixed deposit products',
-    navGroup: 'products',
-    webAppRef: 'products/fixed-deposit-products',
-    permissionKey: 'products.fixedDeposit',
-    navOrder: 90,
-    navIcon: 'lock',
-    keywords: []
-  },
-  {
     id: 'prodFloatingRates',
     path: '/products/floating-rates',
     label: 'Floating rates',
@@ -482,17 +449,6 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'products.floatingRates',
     navOrder: 100,
     navIcon: 'trending-up',
-    keywords: []
-  },
-  {
-    id: 'prodCollaterals',
-    path: '/products/collaterals',
-    label: 'Collaterals',
-    navGroup: 'products',
-    webAppRef: 'products/collaterals',
-    permissionKey: 'products.collaterals',
-    navOrder: 110,
-    navIcon: 'shield-check',
     keywords: []
   },
   {

@@ -1,0 +1,12 @@
+{
+  "command": "system.external-service.sms.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.configuration.api.ExternalServicesApiResource"
+  ],
+  "fields": {
+    "host_name": { "required": true },
+    "port_number": { "required": true },
+    "end_point": { "required": true },
+    "tenant_app_key": { "required": true }
+  }
+}

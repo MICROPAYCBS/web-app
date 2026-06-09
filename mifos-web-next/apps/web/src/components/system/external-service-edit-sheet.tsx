@@ -117,7 +117,7 @@ export function ExternalServiceEditSheet({
               label={field.label}
               required
               type={field.type === 'email' ? 'email' : field.type === 'password' ? 'password' : 'text'}
-              value={typeof values[field.key] === 'string' ? values[field.key] : ''}
+              value={typeof values[field.key] === 'string' ? (values[field.key] as string) : ''}
               onChange={(value) => setFieldValue(field.key, value)}
             />
           );

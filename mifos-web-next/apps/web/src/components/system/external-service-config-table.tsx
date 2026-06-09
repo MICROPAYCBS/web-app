@@ -62,7 +62,7 @@ export function ExternalServiceConfigTable({
   return (
     <DataTable
       table={table}
-      emptyTitle="No configuration"
+      emptyMessage="No configuration"
       emptyDescription="This service has no stored configuration values yet."
     />
   );
