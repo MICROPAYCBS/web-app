@@ -1,0 +1,164 @@
+import 'server-only';
+
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import type {
+  FineractAuditTrailDetail,
+  FineractAuditTrailListItem,
+  FineractAuditTrailSearchTemplate,
+  FineractAuditTrailUserOption,
+  FineractAuditTrailsPage
+} from '@mifos/api-client';
+import {
+  buildAuditTrailSearchParams,
+  type AuditTrailListQuery
+} from '@/lib/fineract/audit-trail-query';
+import { createFineractClient } from '@/lib/fineract/create-client';
+
+const AUDITS_PATH = '/audits';
+
+function normalizeAuditTrailListItem(raw: unknown): FineractAuditTrailListItem | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = Number(row.id);
+  if (!Number.isFinite(id)) {
+    return null;
+  }
+  return {
+    id,
+    resourceId: Number.isFinite(Number(row.resourceId)) ? Number(row.resourceId) : undefined,
+    processingResult: typeof row.processingResult === 'string' ? row.processingResult : undefined,
+    maker: typeof row.maker === 'string' ? row.maker : undefined,
+    actionName: typeof row.actionName === 'string' ? row.actionName : undefined,
+    entityName: typeof row.entityName === 'string' ? row.entityName : undefined,
+    officeName: typeof row.officeName === 'string' ? row.officeName : undefined,
+    madeOnDate:
+      typeof row.madeOnDate === 'string' || Array.isArray(row.madeOnDate)
+        ? (row.madeOnDate as string | number[])
+        : undefined,
+    checker: typeof row.checker === 'string' ? row.checker : undefined,
+    checkedOnDate:
+      typeof row.checkedOnDate === 'string' || Array.isArray(row.checkedOnDate)
+        ? (row.checkedOnDate as string | number[])
+        : undefined,
+    ip: typeof row.ip === 'string' ? row.ip : undefined,
+    clientName: typeof row.clientName === 'string' ? row.clientName : undefined
+  };
+}
+
+function normalizeAuditTrailDetail(raw: unknown): FineractAuditTrailDetail | null {
+  const summary = normalizeAuditTrailListItem(raw);
+  if (!summary || !raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  return {
+    ...summary,
+    commandAsJson: typeof row.commandAsJson === 'string' ? row.commandAsJson : undefined,
+    savingsAccountNo: typeof row.savingsAccountNo === 'string' ? row.savingsAccountNo : undefined,
+    groupLevelName: typeof row.groupLevelName === 'string' ? row.groupLevelName : undefined,
+    url: typeof row.url === 'string' ? row.url : undefined
+  };
+}
+
+function normalizeUserOption(raw: unknown): FineractAuditTrailUserOption | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = Number(row.id);
+  const username = typeof row.username === 'string' ? row.username : '';
+  if (!Number.isFinite(id) || !username) {
+    return null;
+  }
+  return {
+    id,
+    username,
+    firstname: typeof row.firstname === 'string' ? row.firstname : undefined,
+    lastname: typeof row.lastname === 'string' ? row.lastname : undefined
+  };
+}
+
+function normalizeSearchTemplate(raw: unknown): FineractAuditTrailSearchTemplate {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      appUsers: [],
+      actionNames: [],
+      entityNames: [],
+      processingResults: []
+    };
+  }
+  const row = raw as Record<string, unknown>;
+  return {
+    appUsers: Array.isArray(row.appUsers)
+      ? row.appUsers
+          .map((item) => normalizeUserOption(item))
+          .filter((item): item is FineractAuditTrailUserOption => item !== null)
+      : [],
+    actionNames: Array.isArray(row.actionNames)
+      ? row.actionNames.filter((item): item is string => typeof item === 'string')
+      : [],
+    entityNames: Array.isArray(row.entityNames)
+      ? row.entityNames.filter((item): item is string => typeof item === 'string')
+      : [],
+    processingResults: Array.isArray(row.processingResults)
+      ? row.processingResults
+          .map((item) => {
+            if (!item || typeof item !== 'object') {
+              return null;
+            }
+            const option = item as Record<string, unknown>;
+            const id = Number(option.id);
+            const processingResult =
+              typeof option.processingResult === 'string' ? option.processingResult : '';
+            if (!Number.isFinite(id) || !processingResult) {
+              return null;
+            }
+            return { id, processingResult };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null)
+      : [],
+    dateFormat: typeof row.dateFormat === 'string' ? row.dateFormat : undefined,
+    locale: typeof row.locale === 'string' ? row.locale : undefined
+  };
+}
+
+export async function listAuditTrails(query: AuditTrailListQuery): Promise<FineractAuditTrailsPage> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(AUDITS_PATH, buildAuditTrailSearchParams(query));
+  if (!raw || typeof raw !== 'object') {
+    return { totalFilteredRecords: 0, pageItems: [] };
+  }
+  const row = raw as Record<string, unknown>;
+  const pageItems = Array.isArray(row.pageItems)
+    ? row.pageItems
+        .map((item) => normalizeAuditTrailListItem(item))
+        .filter((item): item is FineractAuditTrailListItem => item !== null)
+    : [];
+  return {
+    totalFilteredRecords: Number.isFinite(Number(row.totalFilteredRecords))
+      ? Number(row.totalFilteredRecords)
+      : pageItems.length,
+    pageItems
+  };
+}
+
+export async function getAuditTrailSearchTemplate(): Promise<FineractAuditTrailSearchTemplate> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`${AUDITS_PATH}/searchtemplate`);
+  return normalizeSearchTemplate(raw);
+}
+
+export async function getAuditTrail(auditId: number): Promise<FineractAuditTrailDetail | null> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`${AUDITS_PATH}/${auditId}`);
+  return normalizeAuditTrailDetail(raw);
+}

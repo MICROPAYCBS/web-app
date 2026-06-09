@@ -409,7 +409,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.audit',
     navOrder: 160,
     navIcon: 'scroll-text',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'prodMix',

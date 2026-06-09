@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T13:37:25.603Z",
+  "generatedAt": "2026-06-09T13:54:41.347Z",
   "summary": {
-    "todo": 41,
+    "todo": 40,
     "in_progress": 14,
-    "done": 20,
+    "done": 21,
     "n/a": 0
   },
   "routes": [
@@ -546,7 +546,7 @@
       "domain": "system",
       "label": "Audit trails",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "system/audit-trails"
     },
     {

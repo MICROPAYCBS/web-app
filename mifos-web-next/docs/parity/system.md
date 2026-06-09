@@ -23,7 +23,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|   13 |       0 |       3 |
+|   14 |       0 |       2 |
 
 ---
 
@@ -46,7 +46,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-130 | `/system/reports`                    | Report configuration  | Planned     | Report CRUD + parameters                 |
 | SYS-140 | `/system/system-information`         | System information    | **Done**    | Tenant, versions, server, licensing      |
 | SYS-150 | `/system/about-us`                   | About us              | **Done**    | Static mission content                   |
-| SYS-160 | `/system/audit-trails`               | Audit trails          | Planned     | Search + detail                          |
+| SYS-160 | `/system/audit-trails`               | Audit trails          | **Done**    | Search, filters, CSV export, detail        |
 
 ---
 
@@ -56,7 +56,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 2. **Read-only wins** — system information, about us (done).
 3. **Surveys** — list → create/edit/view → activate/deactivate (`SYS-090`, done).
 4. **Account number preferences** — medium CRUD slice (`SYS-120`, done).
-5. **Audit trails** — search template + paginated list + detail (`SYS-160`).
+5. **Audit trails** — search template + paginated list + detail (`SYS-160`, done).
 6. **Manage jobs** — largest slice; defer until scheduler APIs are mapped (`SYS-100`).
 7. **Report configuration** — overlaps with `/reports` admin route (`SYS-130`).
 

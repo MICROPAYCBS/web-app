@@ -227,6 +227,15 @@ export type {
 } from './system/account-number-preference-types';
 
 export type {
+  FineractAuditTrailDetail,
+  FineractAuditTrailListItem,
+  FineractAuditTrailProcessingResultOption,
+  FineractAuditTrailSearchTemplate,
+  FineractAuditTrailUserOption,
+  FineractAuditTrailsPage
+} from './system/audit-trail-types';
+
+export type {
   EntityMappingFilterOptions,
   EntityMappingOption,
   FineractEntityMappingDetail,
