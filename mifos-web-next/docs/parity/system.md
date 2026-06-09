@@ -23,7 +23,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|   14 |       0 |       2 |
+|   15 |       0 |       1 |
 
 ---
 
@@ -40,7 +40,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-070 | `/system/roles-and-permissions`      | Roles                 | **Done**    | CRUD + permission assignment             |
 | SYS-080 | `/system/configure-mc-tasks`         | Maker checker         | **Done**    | Permission toggles                       |
 | SYS-090 | `/system/surveys`                    | Surveys               | **Done**    | List, create, view, edit, activate       |
-| SYS-100 | `/system/manage-jobs`                | Manage jobs           | Planned     | Scheduler + history + COB tabs           |
+| SYS-100 | `/system/manage-jobs`                | Manage jobs           | **Done**    | Scheduler, workflow, COB tabs + detail   |
 | SYS-110 | `/system/configurations`             | Global configurations | **Done**    | Inline edit sheet                        |
 | SYS-120 | `/system/account-number-preferences` | Account number prefs  | **Done**    | List, create sheet, view, edit, delete   |
 | SYS-130 | `/system/reports`                    | Report configuration  | Planned     | Report CRUD + parameters                 |
@@ -57,7 +57,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 3. **Surveys** — list → create/edit/view → activate/deactivate (`SYS-090`, done).
 4. **Account number preferences** — medium CRUD slice (`SYS-120`, done).
 5. **Audit trails** — search template + paginated list + detail (`SYS-160`, done).
-6. **Manage jobs** — largest slice; defer until scheduler APIs are mapped (`SYS-100`).
+6. **Manage jobs** — scheduler, workflow, COB tabs + detail/history (`SYS-100`, done).
 7. **Report configuration** — overlaps with `/reports` admin route (`SYS-130`).
 
 ---

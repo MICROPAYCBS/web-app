@@ -339,7 +339,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.jobs',
     navOrder: 100,
     navIcon: 'clock',
-    keywords: ['scheduler']
+    keywords: ['scheduler'],
+    parityStatus: 'done'
   },
   {
     id: 'sysConfigurations',

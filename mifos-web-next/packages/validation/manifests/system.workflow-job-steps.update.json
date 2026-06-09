@@ -1,0 +1,9 @@
+{
+  "command": "system.workflow-job-steps.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.jobs.api.SchedulerJobApiResource"
+  ],
+  "fields": {
+    "businessSteps": { "required": true }
+  }
+}

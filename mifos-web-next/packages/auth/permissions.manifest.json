@@ -284,6 +284,21 @@
       "READ_SCHEDULER"
     ]
   },
+  "system.jobs.update": {
+    "any": [
+      "UPDATE_SCHEDULER"
+    ]
+  },
+  "system.jobs.execute": {
+    "any": [
+      "EXECUTEJOB_SCHEDULER"
+    ]
+  },
+  "system.jobs.inlineCob": {
+    "any": [
+      "EXECUTE_INLINE_JOB"
+    ]
+  },
   "system.configurations": {
     "any": [
       "READ_CONFIGURATION"

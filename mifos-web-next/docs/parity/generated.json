@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T13:54:41.347Z",
+  "generatedAt": "2026-06-09T14:27:16.861Z",
   "summary": {
-    "todo": 40,
+    "todo": 39,
     "in_progress": 14,
-    "done": 21,
+    "done": 22,
     "n/a": 0
   },
   "routes": [
@@ -492,7 +492,7 @@
       "domain": "system",
       "label": "Manage jobs",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "system/manage-jobs"
     },
     {

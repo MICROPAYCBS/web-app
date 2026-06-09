@@ -236,6 +236,22 @@ export type {
 } from './system/audit-trail-types';
 
 export type {
+  FineractAvailableWorkflowStep,
+  FineractAvailableWorkflowSteps,
+  FineractCobCatchUpStatus,
+  FineractJobParameter,
+  FineractLockedLoan,
+  FineractLockedLoansPage,
+  FineractSchedulerJob,
+  FineractSchedulerJobHistoryPage,
+  FineractSchedulerJobRunHistory,
+  FineractSchedulerStatus,
+  FineractWorkflowJobNames,
+  FineractWorkflowJobStep,
+  FineractWorkflowJobSteps
+} from './system/job-types';
+
+export type {
   EntityMappingFilterOptions,
   EntityMappingOption,
   FineractEntityMappingDetail,

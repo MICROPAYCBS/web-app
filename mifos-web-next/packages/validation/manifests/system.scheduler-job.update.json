@@ -1,0 +1,11 @@
+{
+  "command": "system.scheduler-job.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.jobs.api.SchedulerJobApiResource"
+  ],
+  "fields": {
+    "displayName": { "required": true },
+    "cronExpression": { "required": true },
+    "active": { "required": true }
+  }
+}
