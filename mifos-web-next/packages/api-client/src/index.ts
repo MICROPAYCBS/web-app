@@ -219,6 +219,14 @@ export type {
 } from './system/survey-types';
 
 export type {
+  FineractAccountNumberPreferenceDetail,
+  FineractAccountNumberPreferenceListItem,
+  FineractAccountNumberPreferenceMutationResponse,
+  FineractAccountNumberPreferenceOption,
+  FineractAccountNumberPreferenceTemplate
+} from './system/account-number-preference-types';
+
+export type {
   EntityMappingFilterOptions,
   EntityMappingOption,
   FineractEntityMappingDetail,

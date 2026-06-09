@@ -1,0 +1,10 @@
+{
+  "command": "system.account-number-preference.create",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.accountnumberformat.api.AccountNumberFormatsApiResource"
+  ],
+  "fields": {
+    "accountType": { "required": true },
+    "prefixType": { "required": false }
+  }
+}

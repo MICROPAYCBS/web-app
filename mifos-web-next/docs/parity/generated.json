@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T13:13:42.115Z",
+  "generatedAt": "2026-06-09T13:37:25.603Z",
   "summary": {
-    "todo": 42,
+    "todo": 41,
     "in_progress": 14,
-    "done": 19,
+    "done": 20,
     "n/a": 0
   },
   "routes": [
@@ -510,7 +510,7 @@
       "domain": "system",
       "label": "Account number preferences",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "system/account-number-preferences"
     },
     {

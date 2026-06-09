@@ -362,7 +362,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.accountNumberPrefs',
     navOrder: 120,
     navIcon: 'hash',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'sysReports',

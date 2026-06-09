@@ -294,6 +294,21 @@
       "READ_ACCOUNTNUMBERFORMAT"
     ]
   },
+  "system.accountNumberPrefs.create": {
+    "any": [
+      "CREATE_ACCOUNTNUMBERFORMAT"
+    ]
+  },
+  "system.accountNumberPrefs.update": {
+    "any": [
+      "UPDATE_ACCOUNTNUMBERFORMAT"
+    ]
+  },
+  "system.accountNumberPrefs.delete": {
+    "any": [
+      "DELETE_ACCOUNTNUMBERFORMAT"
+    ]
+  },
   "system.reports": {
     "any": [
       "READ_REPORT"

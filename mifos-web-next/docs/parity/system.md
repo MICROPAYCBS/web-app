@@ -23,7 +23,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|   12 |       0 |       4 |
+|   13 |       0 |       3 |
 
 ---
 
@@ -42,7 +42,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-090 | `/system/surveys`                    | Surveys               | **Done**    | List, create, view, edit, activate       |
 | SYS-100 | `/system/manage-jobs`                | Manage jobs           | Planned     | Scheduler + history + COB tabs           |
 | SYS-110 | `/system/configurations`             | Global configurations | **Done**    | Inline edit sheet                        |
-| SYS-120 | `/system/account-number-preferences` | Account number prefs  | Planned     | List + CRUD                              |
+| SYS-120 | `/system/account-number-preferences` | Account number prefs  | **Done**    | List, create sheet, view, edit, delete   |
 | SYS-130 | `/system/reports`                    | Report configuration  | Planned     | Report CRUD + parameters                 |
 | SYS-140 | `/system/system-information`         | System information    | **Done**    | Tenant, versions, server, licensing      |
 | SYS-150 | `/system/about-us`                   | About us              | **Done**    | Static mission content                   |
@@ -55,7 +55,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 1. **Close foundation** — codes, data tables (done).
 2. **Read-only wins** — system information, about us (done).
 3. **Surveys** — list → create/edit/view → activate/deactivate (`SYS-090`, done).
-4. **Account number preferences** — medium CRUD slice (`SYS-120`).
+4. **Account number preferences** — medium CRUD slice (`SYS-120`, done).
 5. **Audit trails** — search template + paginated list + detail (`SYS-160`).
 6. **Manage jobs** — largest slice; defer until scheduler APIs are mapped (`SYS-100`).
 7. **Report configuration** — overlaps with `/reports` admin route (`SYS-130`).
