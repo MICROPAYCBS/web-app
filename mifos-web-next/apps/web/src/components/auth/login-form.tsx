@@ -19,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import type { FineractServerProfile } from '@mifos/servers';
+import { APP_NAME } from '@/lib/branding';
 import { cn } from '@/lib/utils';
 
 export interface LoginFormProps {
@@ -49,7 +50,10 @@ export function LoginForm({
           <div className="relative flex flex-col p-6 md:p-8">
             <ThemeToggle variant="icon" className="absolute top-4 right-4" />
             <FieldGroup>
-              <h1 className="pr-10 text-center text-2xl font-bold">Sign in</h1>
+              <div className="pr-10 text-center">
+                <p className="text-sm font-medium text-muted-foreground">{APP_NAME}</p>
+                <h1 className="text-2xl font-bold">Sign in</h1>
+              </div>
 
               {canSignIn && activeServer ? (
                 <LoginActiveServer
@@ -84,18 +88,6 @@ export function LoginForm({
                       required
                     />
                   </Field>
-                  <Field orientation="horizontal">
-                    <input
-                      type="checkbox"
-                      id="remember"
-                      name="remember"
-                      value="on"
-                      className="size-4 rounded border border-input"
-                    />
-                    <FieldLabel htmlFor="remember" className="font-normal">
-                      Remember me for 14 days
-                    </FieldLabel>
-                  </Field>
 
                   {loginError ? (
                     <p className="text-sm text-destructive" role="alert">
@@ -128,8 +120,8 @@ export function LoginForm({
 
           <div className="relative hidden min-h-[min(100%,32rem)] md:block">
             <Image
-              src="/images/cover_image_resized.webp"
-              alt=""
+              src="/images/login-hero-professionals-branded.png"
+              alt="MicroPay Banking professionals collaborating"
               fill
               className="object-cover"
               sizes="(min-width: 768px) 50vw, 0vw"

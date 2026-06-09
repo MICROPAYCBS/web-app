@@ -9,6 +9,7 @@
  */
 
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
+import Link from 'next/link';
 import { useMemo } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,8 @@ export interface ClientAccountRow {
   statusCode?: string;
   balanceLabel?: string;
   extraLabel?: string;
+  /** General tab for this account under the client (legacy `*-accounts/{id}/general`). */
+  href?: string;
 }
 
 function statusVariant(code?: string): 'default' | 'secondary' | 'outline' | 'destructive' {
@@ -45,12 +48,41 @@ function buildColumns(
     {
       accessorKey: 'accountNo',
       header: 'Account no.',
-      cell: ({ row }) => <span className="font-medium tabular-nums">{row.original.accountNo}</span>
+      cell: ({ row }) => {
+        const { accountNo, href } = row.original;
+        if (href) {
+          return (
+            <Link
+              href={href}
+              className="font-medium tabular-nums text-primary underline-offset-4 hover:underline"
+            >
+              {accountNo}
+            </Link>
+          );
+        }
+        return <span className="font-medium tabular-nums">{accountNo}</span>;
+      }
     },
     {
       accessorKey: 'productName',
       header: 'Product',
-      cell: ({ row }) => row.original.productName ?? '—'
+      cell: ({ row }) => {
+        const { productName, href } = row.original;
+        if (!productName) {
+          return '—';
+        }
+        if (href) {
+          return (
+            <Link
+              href={href}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {productName}
+            </Link>
+          );
+        }
+        return productName;
+      }
     },
     {
       id: 'status',
@@ -83,14 +115,10 @@ function buildColumns(
 
 export function ClientAccountsTable({
   rows,
-  emptyMessage,
-  emptyDescription,
   balanceHeader,
   extraHeader
 }: {
   rows: ClientAccountRow[];
-  emptyMessage: string;
-  emptyDescription?: string;
   balanceHeader?: string;
   extraHeader?: string;
 }) {
@@ -110,8 +138,6 @@ export function ClientAccountsTable({
     <DataTable
       table={table}
       stickyHeader={false}
-      emptyMessage={emptyMessage}
-      emptyDescription={emptyDescription}
     />
   );
 }

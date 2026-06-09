@@ -6,10 +6,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ComingSoonPage } from '@/components/platform/coming-soon-page';
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { SavingsProductsPageContent } from '@/components/products/savings/savings-products-page-content';
+import { listSavingsProducts } from '@/lib/fineract/savings-products';
+import { getServerSession } from '@/lib/session/server';
 
-export default function SavingsProductsPage() {
-  return (
-    <ComingSoonPage title="Savings products" description="Configure savings products and interest rules." />
-  );
+export default async function SavingsProductsPage() {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('products.savings'))) {
+    notFound();
+  }
+
+  const products = await listSavingsProducts();
+
+  return <SavingsProductsPageContent products={products} />;
 }

@@ -10,6 +10,7 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import { redirect } from 'next/navigation';
 import { CreateClientWizard } from '@/components/clients/create/create-client-wizard';
 import { getAddressFieldConfiguration, getClientTemplate } from '@/lib/fineract/clients';
+import { listEntityDatatableChecks } from '@/lib/fineract/entity-datatable-checks';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function CreateClientPage() {
@@ -24,12 +25,19 @@ export default async function CreateClientPage() {
     redirect('/forbidden');
   }
 
-  const [template, addressFieldConfig] = await Promise.all([
+  const [template, addressFieldConfig, entityDatatableChecks] = await Promise.all([
     getClientTemplate(),
-    getAddressFieldConfiguration().catch(() => [] as Awaited<ReturnType<typeof getAddressFieldConfiguration>>)
+    getAddressFieldConfiguration().catch(() => [] as Awaited<ReturnType<typeof getAddressFieldConfiguration>>),
+    listEntityDatatableChecks()
+      .then((page) => page.pageItems ?? [])
+      .catch(() => [])
   ]);
 
   return (
-    <CreateClientWizard initialTemplate={template} addressFieldConfig={addressFieldConfig} />
+    <CreateClientWizard
+      initialTemplate={template}
+      addressFieldConfig={addressFieldConfig}
+      entityDatatableChecks={entityDatatableChecks}
+    />
   );
 }

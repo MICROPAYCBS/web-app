@@ -157,7 +157,7 @@ export function ClientFamilyView({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">Family members linked to this client.</p>
+        <p className="text-sm text-muted-foreground">Next of kin linked to this client.</p>
         <div className="flex flex-wrap items-center gap-2">
           {initialMembers.length > 0 ? (
             <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
@@ -173,7 +173,7 @@ export function ClientFamilyView({
               }}
             >
               <Plus className="mr-2 size-4" />
-              Add family member
+              Add next of kin
             </Button>
           ) : null}
         </div>
@@ -188,8 +188,8 @@ export function ClientFamilyView({
       {initialMembers.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No family members on file"
-          description="Add family members linked to this client for household or next-of-kin records."
+          title="No next of kin on file"
+          description="Add next of kin linked to this client for household or emergency contacts."
           action={
             canUpdate ? (
               <Button
@@ -202,7 +202,7 @@ export function ClientFamilyView({
                 }}
               >
                 <Plus className="mr-2 size-4" />
-                Add family member
+                Add next of kin
               </Button>
             ) : undefined
           }

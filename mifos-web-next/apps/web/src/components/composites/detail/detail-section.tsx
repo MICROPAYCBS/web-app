@@ -18,19 +18,24 @@ import {
 
 export function DetailSection({
   title,
+  titleAccessory,
   description,
   actions,
   children
 }: {
   title: string;
+  titleAccessory?: ReactNode;
   description?: string;
   actions?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <Card>
+    <Card className="overflow-visible border border-border shadow-none ring-0">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <div className="flex flex-wrap items-center gap-2">
+          <CardTitle>{title}</CardTitle>
+          {titleAccessory}
+        </div>
         {description ? <CardDescription>{description}</CardDescription> : null}
         {actions ? <CardAction>{actions}</CardAction> : null}
       </CardHeader>

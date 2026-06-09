@@ -8,30 +8,39 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
+import { platformInset, platformInsetX } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export function ListPage({
   title,
   description,
+  backLink,
+  meta,
   actions,
   toolbar,
   children,
   className
 }: {
-  title: string;
+  title: ReactNode;
   description?: string;
+  /** Placed above the title — use {@link DetailBackLink}. */
+  backLink?: ReactNode;
+  /** Secondary line under the title (description context, not navigation). */
+  meta?: ReactNode;
   actions?: ReactNode;
   toolbar?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('flex min-h-0 flex-1 flex-col', className)}>
       <PageHeader>
         <div className="space-y-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1 pt-1">
+              {backLink ? <div>{backLink}</div> : null}
               <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+              {meta ? <div className="text-sm text-muted-foreground">{meta}</div> : null}
               {description ? (
                 <p className="text-sm text-muted-foreground">{description}</p>
               ) : null}
@@ -41,7 +50,9 @@ export function ListPage({
           {toolbar ? <div>{toolbar}</div> : null}
         </div>
       </PageHeader>
-      <div className="space-y-4">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className={cn(platformInset, 'space-y-4')}>{children}</div>
+      </div>
     </div>
   );
 }

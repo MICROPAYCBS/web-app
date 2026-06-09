@@ -12,9 +12,16 @@ import type {
   FineractClientShareAccount
 } from '@mifos/api-client';
 import type { ClientAccountRow } from '@/components/clients/detail/client-accounts-table';
+import {
+  clientAccountGeneralPath,
+  type ClientAccountProductKind
+} from '@/lib/fineract/client-account-links';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 
-export function toLoanAccountRows(accounts: FineractClientLoanAccount[]): ClientAccountRow[] {
+export function toLoanAccountRows(
+  accounts: FineractClientLoanAccount[],
+  clientId: string | number
+): ClientAccountRow[] {
   return accounts.map((account) => ({
     id: account.id,
     accountNo: account.accountNo,
@@ -22,22 +29,31 @@ export function toLoanAccountRows(accounts: FineractClientLoanAccount[]): Client
     statusLabel: account.status?.value,
     statusCode: account.status?.code,
     balanceLabel: formatAccountMoney(account.loanBalance, account.currency?.code),
-    extraLabel: account.inArrears ? 'In arrears' : account.productType === 'working-capital' ? 'Working capital' : undefined
+    extraLabel: account.inArrears ? 'In arrears' : account.productType === 'working-capital' ? 'Working capital' : undefined,
+    href: clientAccountGeneralPath(clientId, 'loan', account.id)
   }));
 }
 
-export function toSavingsAccountRows(accounts: FineractClientSavingsAccount[]): ClientAccountRow[] {
+export function toSavingsAccountRows(
+  accounts: FineractClientSavingsAccount[],
+  clientId: string | number,
+  kind: Extract<ClientAccountProductKind, 'savings' | 'fixedDeposit' | 'recurringDeposit'>
+): ClientAccountRow[] {
   return accounts.map((account) => ({
     id: account.id,
     accountNo: account.accountNo,
     productName: account.productName,
     statusLabel: account.status?.value,
     statusCode: account.status?.code,
-    balanceLabel: formatAccountMoney(account.accountBalance, account.currency?.code)
+    balanceLabel: formatAccountMoney(account.accountBalance, account.currency?.code),
+    href: clientAccountGeneralPath(clientId, kind, account.id)
   }));
 }
 
-export function toShareAccountRows(accounts: FineractClientShareAccount[]): ClientAccountRow[] {
+export function toShareAccountRows(
+  accounts: FineractClientShareAccount[],
+  clientId: string | number
+): ClientAccountRow[] {
   return accounts.map((account) => ({
     id: account.id,
     accountNo: account.accountNo,
@@ -50,6 +66,7 @@ export function toShareAccountRows(accounts: FineractClientShareAccount[]): Clie
       account.totalPendingForApprovalShares != null &&
       account.totalPendingForApprovalShares > 0
         ? `${account.totalPendingForApprovalShares} pending approval`
-        : undefined
+        : undefined,
+    href: clientAccountGeneralPath(clientId, 'share', account.id)
   }));
 }

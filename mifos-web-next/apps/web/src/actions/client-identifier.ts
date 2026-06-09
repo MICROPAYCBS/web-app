@@ -10,14 +10,15 @@
 
 import { assertCan } from '@mifos/auth';
 import {
-  clientIdentifierSchema,
   toFineractActionError,
+  validateClientIdentifier,
   type ClientIdentifierInput
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
   createClientIdentifier,
-  deleteClientIdentifier
+  deleteClientIdentifier,
+  getClientIdentifierTemplate
 } from '@/lib/fineract/client-identifiers';
 import { getServerSession } from '@/lib/session/server';
 
@@ -51,20 +52,35 @@ async function requireDeletePermission(): Promise<ClientIdentifierActionResult |
   return null;
 }
 
-function parseIdentifier(raw: unknown): ClientIdentifierActionResult | ClientIdentifierInput {
-  const parsed = clientIdentifierSchema.safeParse(raw);
-  if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const key = issue.path[0];
-      if (typeof key === 'string') {
-        fieldErrors[key] = issue.message;
-      }
+function zodFieldErrors(error: { issues: { path: (string | number)[]; message: string }[] }) {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = issue.path[0];
+    if (typeof key === 'string') {
+      fieldErrors[key] = issue.message;
     }
+  }
+  return fieldErrors;
+}
+
+async function parseIdentifier(
+  clientId: string,
+  raw: unknown
+): Promise<ClientIdentifierActionResult | ClientIdentifierInput> {
+  let firstDocumentTypeId: number | undefined;
+  try {
+    const template = await getClientIdentifierTemplate(clientId);
+    firstDocumentTypeId = template.allowedDocumentTypes?.[0]?.id;
+  } catch {
+    firstDocumentTypeId = undefined;
+  }
+
+  const parsed = validateClientIdentifier(raw, { firstDocumentTypeId });
+  if (!parsed.success) {
     return {
       ok: false,
       message: 'Please fix the highlighted fields.',
-      fieldErrors
+      fieldErrors: zodFieldErrors(parsed.error)
     };
   }
   return parsed.data;
@@ -79,7 +95,7 @@ export async function createClientIdentifierAction(
     return denied;
   }
 
-  const parsed = parseIdentifier(raw);
+  const parsed = await parseIdentifier(clientId, raw);
   if ('ok' in parsed) {
     return parsed;
   }

@@ -43,6 +43,8 @@ export interface SelectFieldProps {
   disabled?: boolean;
   className?: string;
   emptyMessage?: string;
+  hint?: string;
+  hintAriaLabel?: string;
 }
 
 const triggerClassName = cn(
@@ -68,7 +70,9 @@ export function SelectField({
   error,
   disabled = false,
   className,
-  emptyMessage = 'No results found.'
+  emptyMessage = 'No results found.',
+  hint,
+  hintAriaLabel
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false);
 
@@ -81,7 +85,13 @@ export function SelectField({
 
   return (
     <Field className={className} data-invalid={!!error}>
-      <FormLabel htmlFor={id} required={required} optional={optional ?? !required}>
+      <FormLabel
+        htmlFor={id}
+        required={required}
+        optional={optional ?? !required}
+        hint={hint}
+        hintAriaLabel={hintAriaLabel}
+      >
         {label}
       </FormLabel>
       <FieldContent>

@@ -48,6 +48,10 @@ export function filterOpenLoanAccounts(accounts: FineractClientLoanAccount[]): F
   return accounts.filter((account) => !CLOSED_LOAN_CODES.has(account.status?.code ?? ''));
 }
 
+export function filterClosedLoanAccounts(accounts: FineractClientLoanAccount[]): FineractClientLoanAccount[] {
+  return accounts.filter((account) => CLOSED_LOAN_CODES.has(account.status?.code ?? ''));
+}
+
 export function filterSavingsByDepositType(
   accounts: FineractClientSavingsAccount[],
   depositTypeValue: 'Savings' | 'Fixed Deposit' | 'Recurring Deposit'
@@ -61,6 +65,12 @@ export function filterOpenSavingsAccounts(
   return accounts.filter((account) => !CLOSED_SAVINGS_CODES.has(account.status?.code ?? ''));
 }
 
+export function filterClosedSavingsAccounts(
+  accounts: FineractClientSavingsAccount[]
+): FineractClientSavingsAccount[] {
+  return accounts.filter((account) => CLOSED_SAVINGS_CODES.has(account.status?.code ?? ''));
+}
+
 const CLOSED_SHARE_CODES = new Set([
   'shareAccountStatusType.closed',
   'shareAccountStatusType.rejected'
@@ -70,4 +80,10 @@ export function filterOpenShareAccounts(
   accounts: FineractClientShareAccount[]
 ): FineractClientShareAccount[] {
   return accounts.filter((account) => !CLOSED_SHARE_CODES.has(account.status?.code ?? ''));
+}
+
+export function filterClosedShareAccounts(
+  accounts: FineractClientShareAccount[]
+): FineractClientShareAccount[] {
+  return accounts.filter((account) => CLOSED_SHARE_CODES.has(account.status?.code ?? ''));
 }

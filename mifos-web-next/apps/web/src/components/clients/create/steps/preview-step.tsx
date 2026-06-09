@@ -10,6 +10,7 @@
 
 import type { FineractClientTemplate } from '@mifos/api-client';
 import { LEGAL_FORM_PERSON } from '@mifos/validation';
+import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
 import type { CreateClientDraft } from '../types';
 import { Separator } from '@/components/ui/separator';
 
@@ -37,6 +38,9 @@ export function PreviewStep({
   const g = draft.general;
   const office = template.officeOptions.find((o) => o.id === g.officeId);
   const legalForm = template.clientLegalFormOptions?.find((o) => o.id === g.legalFormId);
+  const gender = template.genderOptions?.find((o) => o.id === g.genderId);
+  const staff = template.staffOptions?.find((o) => o.id === g.staffId);
+  const clientType = template.clientTypeOptions?.find((o) => o.id === g.clientTypeId);
   const isPerson = (g.legalFormId ?? LEGAL_FORM_PERSON) === LEGAL_FORM_PERSON;
 
   return (
@@ -52,7 +56,7 @@ export function PreviewStep({
 
       <section className="space-y-2">
         <h2 className="text-sm font-medium">General</h2>
-        <Field label="Office" value={office?.nameDecorated ?? office?.name} />
+        <Field label="Branch" value={office?.nameDecorated ?? office?.name} />
         <Field label="Legal form" value={legalForm?.value ?? legalForm?.name} />
         {isPerson ? (
           <Field
@@ -62,8 +66,23 @@ export function PreviewStep({
         ) : (
           <Field label="Entity name" value={g.fullname} />
         )}
+        <Field
+          label={isPerson ? 'Date of birth' : 'Incorporation date'}
+          value={g.dateOfBirth}
+        />
+        {isPerson ? (
+          <Field label="Gender" value={gender?.name ?? gender?.value} />
+        ) : null}
+        <Field
+          label="Relationship officer"
+          value={
+            staff?.displayName ??
+            (staff ? `${staff.firstname ?? ''} ${staff.lastname ?? ''}`.trim() : undefined)
+          }
+        />
         <Field label="External ID" value={g.externalId} />
-        <Field label="Mobile" value={g.mobileNo} />
+        <Field label="Phone number" value={g.mobileNo} />
+        <Field label="Client type" value={clientType?.name ?? clientType?.value} />
         <Field label="Email" value={g.emailAddress} />
         <Field label="Submitted on" value={g.submittedOnDate} />
         <Field label="Active" value={g.active ? 'Yes' : 'No'} />
@@ -77,7 +96,7 @@ export function PreviewStep({
         <>
           <Separator />
           <section className="space-y-2">
-            <h2 className="text-sm font-medium">Family members ({draft.familyMembers.length})</h2>
+            <h2 className="text-sm font-medium">Next of kin ({draft.familyMembers.length})</h2>
             <ul className="list-disc pl-5 text-sm">
               {draft.familyMembers.map((m, i) => (
                 <li key={i}>
@@ -112,8 +131,29 @@ export function PreviewStep({
             <h2 className="text-sm font-medium">Custom data tables</h2>
             <ul className="list-disc pl-5 text-sm">
               {Object.keys(draft.datatables).map((name) => (
-                <li key={name}>{name}</li>
+                <li key={name}>{formatDatatableTableTitle(name)}</li>
               ))}
+            </ul>
+          </section>
+        </>
+      ) : null}
+
+      {Object.keys(draft.multiRowDatatables).some(
+        (name) => (draft.multiRowDatatables[name]?.length ?? 0) > 0
+      ) ? (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium">Multi-row data tables</h2>
+            <ul className="list-disc pl-5 text-sm">
+              {Object.entries(draft.multiRowDatatables)
+                .filter(([, rows]) => rows.length > 0)
+                .map(([name, rows]) => (
+                  <li key={name}>
+                    {formatDatatableTableTitle(name)} ({rows.length}{' '}
+                    {rows.length === 1 ? 'row' : 'rows'})
+                  </li>
+                ))}
             </ul>
           </section>
         </>

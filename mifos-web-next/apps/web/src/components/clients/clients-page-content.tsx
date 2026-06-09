@@ -14,9 +14,24 @@ import Link from 'next/link';
 import { ClientsTable } from '@/components/clients/clients-table';
 import { ListPage } from '@/components/composites/list-page';
 import { buttonVariants } from '@/components/ui/button';
+import type { ClientListSortColumn, ClientListSortOrder } from '@/lib/fineract/clients-list-query';
 import { cn } from '@/lib/utils';
 
-export function ClientsPageContent({ initialPage }: { initialPage: FineractClientsPage }) {
+export function ClientsPageContent({
+  initialPage,
+  initialPageSize,
+  initialQuery,
+  initialIncludeClosed,
+  initialSortColumn,
+  initialSortOrder
+}: {
+  initialPage: FineractClientsPage;
+  initialPageSize?: number;
+  initialQuery?: string;
+  initialIncludeClosed?: boolean;
+  initialSortColumn?: ClientListSortColumn;
+  initialSortOrder?: ClientListSortOrder;
+}) {
   return (
     <ListPage
       title="Clients"
@@ -29,7 +44,14 @@ export function ClientsPageContent({ initialPage }: { initialPage: FineractClien
         </Can>
       }
     >
-      <ClientsTable initialPage={initialPage} />
+      <ClientsTable
+        initialPage={initialPage}
+        initialPageSize={initialPageSize}
+        initialQuery={initialQuery}
+        initialIncludeClosed={initialIncludeClosed}
+        initialSortColumn={initialSortColumn}
+        initialSortOrder={initialSortOrder}
+      />
     </ListPage>
   );
 }

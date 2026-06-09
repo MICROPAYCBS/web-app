@@ -11,6 +11,7 @@
 import type { FineractClientDatatableTemplate } from '@mifos/api-client';
 import { useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
+import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -129,6 +130,32 @@ export function DatatableStep({
             );
           }
 
+          if (isNumericColumn(column.columnDisplayType)) {
+            const integerOnly = column.columnDisplayType === 'INTEGER';
+            return (
+              <NumericField
+                key={column.columnName}
+                id={controlName}
+                label={label}
+                required={required}
+                optional={!required}
+                integer={integerOnly}
+                value={String(values[controlName] ?? '')}
+                onChange={(v) =>
+                  setValue(
+                    controlName,
+                    v === ''
+                      ? ''
+                      : integerOnly
+                        ? Number.parseInt(v, 10)
+                        : Number(v)
+                  )
+                }
+                error={error}
+              />
+            );
+          }
+
           return (
             <TextField
               key={column.columnName}
@@ -136,18 +163,8 @@ export function DatatableStep({
               label={label}
               required={required}
               optional={!required}
-              type={isNumericColumn(column.columnDisplayType) ? 'number' : 'text'}
               value={String(values[controlName] ?? '')}
-              onChange={(v) =>
-                setValue(
-                  controlName,
-                  isNumericColumn(column.columnDisplayType)
-                    ? v === ''
-                      ? ''
-                      : Number(v)
-                    : v
-                )
-              }
+              onChange={(v) => setValue(controlName, v)}
               error={error}
             />
           );

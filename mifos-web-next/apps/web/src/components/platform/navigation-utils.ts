@@ -9,6 +9,7 @@
 import type {
   PlatformNavGroup,
   PlatformNavLink,
+  PlatformNavSearchResult,
   PlatformNavStructure
 } from './navigation-types';
 
@@ -62,29 +63,47 @@ export function filterNavGroups(
   );
 }
 
-/** Flat list of links matching find query (for root-level search results). */
-export function flattenMatchingNavLinks(
+const QUICK_ACCESS_SECTION = 'Quick access';
+
+/** Global Find results across featured links and every nav group. */
+export function searchNavLinks(
   nav: PlatformNavStructure,
   query: string
-): PlatformNavLink[] {
+): PlatformNavSearchResult[] {
   const q = query.trim().toLowerCase();
   if (!q) {
     return [];
   }
   const seenIds = new Set<string>();
   const seenHrefs = new Set<string>();
-  const results: PlatformNavLink[] = [];
-  const add = (item: PlatformNavLink) => {
-    if (seenIds.has(item.id) || seenHrefs.has(item.href)) {
+  const results: PlatformNavSearchResult[] = [];
+  const add = (link: PlatformNavLink, sectionLabel: string) => {
+    if (seenIds.has(link.id) || seenHrefs.has(link.href)) {
       return;
     }
-    if (matchesNavFindQuery(item, q)) {
-      seenIds.add(item.id);
-      seenHrefs.add(item.href);
-      results.push(item);
+    if (matchesNavFindQuery(link, q)) {
+      seenIds.add(link.id);
+      seenHrefs.add(link.href);
+      results.push({ link, sectionLabel });
     }
   };
-  nav.featured.forEach(add);
-  nav.groups.forEach((group) => group.items.forEach(add));
-  return results.sort((a, b) => a.label.localeCompare(b.label));
+  nav.featured.forEach((item) => add(item, QUICK_ACCESS_SECTION));
+  nav.groups.forEach((group) =>
+    group.items.forEach((item) => add(item, group.label))
+  );
+  return results.sort((a, b) => {
+    const byLabel = a.link.label.localeCompare(b.link.label);
+    if (byLabel !== 0) {
+      return byLabel;
+    }
+    return a.sectionLabel.localeCompare(b.sectionLabel);
+  });
+}
+
+/** Flat list of links matching find query (legacy helper). */
+export function flattenMatchingNavLinks(
+  nav: PlatformNavStructure,
+  query: string
+): PlatformNavLink[] {
+  return searchNavLinks(nav, query).map((result) => result.link);
 }

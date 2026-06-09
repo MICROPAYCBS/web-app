@@ -10,6 +10,7 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
+import { platformInset, platformInsetX } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface FormWizardStep {
@@ -84,7 +85,7 @@ export function FormWizard({
   const currentIndex = steps.findIndex((s) => s.id === currentStepId);
 
   return (
-    <div className={cn('mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-6', className)}>
+    <div className={cn('flex min-h-0 w-full flex-1 flex-col', className)}>
       <PageHeader>
         <div className="space-y-1 pt-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -94,12 +95,14 @@ export function FormWizard({
         </div>
       </PageHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-stretch lg:gap-8">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <nav
           aria-label="Progress"
-          className="w-full shrink-0 lg:sticky lg:top-24 lg:w-56 lg:self-start xl:w-60"
+          className={cn(
+            'w-full shrink-0 border-b border-border lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
+          )}
         >
-          <ol className="flex flex-col gap-1 border-b border-border pb-6 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-6">
+          <ol className={cn('flex flex-col gap-1', platformInset, 'lg:py-6')}>
             {steps.map((step, index) => {
               const isActive = step.id === currentStepId;
               const isPast = index < currentIndex;
@@ -163,10 +166,8 @@ export function FormWizard({
         </nav>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card shadow-sm">
-            <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">{children}</div>
-            {footer}
-          </div>
+          <div className={cn('min-h-0 flex-1 overflow-y-auto', platformInset)}>{children}</div>
+          {footer}
         </div>
       </div>
     </div>

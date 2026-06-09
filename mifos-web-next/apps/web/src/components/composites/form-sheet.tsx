@@ -74,6 +74,17 @@ export function FormSheet({
     onOpenChange(false);
   }
 
+  function handleFooterSubmit() {
+    if (formId) {
+      const form = document.getElementById(formId) as HTMLFormElement | null;
+      if (form) {
+        form.requestSubmit();
+        return;
+      }
+    }
+    onSubmit?.();
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -97,10 +108,9 @@ export function FormSheet({
             {cancelLabel}
           </Button>
           <Button
-            type={formId ? 'submit' : 'button'}
-            form={formId}
+            type="button"
             disabled={submitDisabled || submitLoading}
-            onClick={formId ? undefined : onSubmit}
+            onClick={handleFooterSubmit}
           >
             {submitLoading ? 'Saving…' : submitLabel}
           </Button>

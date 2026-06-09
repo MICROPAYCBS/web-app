@@ -11,7 +11,7 @@ export function formatAccountMoney(amount: number | undefined, currencyCode?: st
   if (amount == null || Number.isNaN(amount)) {
     return '—';
   }
-  const code = currencyCode ?? '';
+  const code = (currencyCode ?? '').trim().toUpperCase();
   const formatted = new Intl.NumberFormat(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2

@@ -10,6 +10,7 @@
 
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { platformInsetX } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface FormWizardFooterProps {
@@ -48,7 +49,9 @@ export function FormWizardFooter({
   return (
     <div
       className={cn(
-        'flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-card px-4 py-4 md:px-6',
+        'flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-background',
+        platformInsetX,
+        'py-4',
         className
       )}
     >

@@ -65,23 +65,23 @@ export function FamilyStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Add family members linked to this client (optional). You can skip this step.
+        Add next of kin linked to this client (optional). You can skip this step.
       </p>
 
       <Button type="button" variant="outline" size="sm" onClick={openAdd}>
         <Plus className="mr-2 size-4" />
-        Add family member
+        Add next of kin
       </Button>
 
       {members.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No family members added yet"
-          description="This step is optional. Add household or next-of-kin contacts if needed."
+          title="No next of kin added yet"
+          description="This step is optional. Add household or emergency contacts if needed."
           action={
             <Button type="button" variant="outline" size="sm" onClick={openAdd}>
               <Plus className="mr-2 size-4" />
-              Add family member
+              Add next of kin
             </Button>
           }
         />
@@ -134,7 +134,7 @@ export function FamilyStep({
         onOpenChange={setDialogOpen}
         options={template.familyMemberOptions}
         member={editIndex != null ? members[editIndex] : undefined}
-        onSave={(member) => {
+        onSave={async (member) => {
           if (editIndex != null) {
             const next = [...members];
             next[editIndex] = member;
@@ -142,6 +142,7 @@ export function FamilyStep({
           } else {
             onFamilyChange([...members, member]);
           }
+          return { ok: true as const };
         }}
       />
     </div>

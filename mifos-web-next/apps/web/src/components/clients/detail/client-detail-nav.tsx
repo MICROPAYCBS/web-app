@@ -9,27 +9,40 @@
  */
 
 import {
+  ArrowLeftRight,
   Banknote,
   ChartPie,
+  ChevronLeft,
   FileText,
   Fingerprint,
-  Link2,
   MapPin,
   NotebookPen,
   PiggyBank,
   Repeat,
+  Shield,
+  Table2,
   UserRound,
   Users,
   Vault
 } from 'lucide-react';
 import {
+  clientCollateralListPath,
+  clientStandingInstructionsListPath
+} from '@/lib/fineract/client-secondary-list-paths';
+import Link from 'next/link';
+import type { ClientDatatableNavItem } from '@/lib/fineract/client-datatable-nav';
+import {
   DetailNavSidebar,
   type DetailNavGroup
 } from '@/components/composites/detail/detail-nav-sidebar';
 
-export function clientDetailNavGroups(clientId: string | number): DetailNavGroup[] {
+export function clientDetailNavGroups(
+  clientId: string | number,
+  datatableNavItems: ClientDatatableNavItem[] = []
+): DetailNavGroup[] {
   const base = `/clients/${clientId}`;
-  return [
+  const datatableItems = datatableNavItems.map((item) => ({ ...item, icon: Table2 }));
+  const groups: DetailNavGroup[] = [
     {
       id: 'general',
       items: [{ id: 'general', label: 'General', href: `${base}/general`, icon: UserRound }]
@@ -86,16 +99,45 @@ export function clientDetailNavGroups(clientId: string | number): DetailNavGroup
           label: 'Notes',
           href: `${base}/notes`,
           icon: NotebookPen
+        },
+        {
+          id: 'collateral',
+          label: 'Collateral',
+          href: clientCollateralListPath(clientId),
+          icon: Shield
+        },
+        {
+          id: 'standing-instructions',
+          label: 'Standing instructions',
+          href: clientStandingInstructionsListPath(clientId),
+          icon: ArrowLeftRight
         }
       ]
     },
-    {
-      id: 'datatables',
-      items: [{ id: 'relations', label: 'Many to one', href: `${base}/relations`, icon: Link2 }]
-    }
+    ...(datatableItems.length > 0
+      ? [{ id: 'datatables', items: datatableItems }]
+      : [])
   ];
+  return groups;
 }
 
-export function ClientDetailNav({ clientId }: { clientId: string | number }) {
-  return <DetailNavSidebar groups={clientDetailNavGroups(clientId)} />;
+export function ClientDetailNav({
+  clientId,
+  datatableNavItems = []
+}: {
+  clientId: string | number;
+  datatableNavItems?: ClientDatatableNavItem[];
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <Link
+        href="/clients"
+        className="inline-flex items-center gap-1 px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ChevronLeft className="size-4 shrink-0" aria-hidden />
+        Back to clients
+      </Link>
+      <DetailNavSidebar groups={clientDetailNavGroups(clientId, datatableNavItems)} />
+    </div>
+  );
 }

@@ -15,21 +15,31 @@ import {
   type CreateClientPayload
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { addClientDatatableRowAction } from '@/actions/client-datatable';
 import { createClientAction } from '@/actions/clients';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
-import { buildDatatableDataPayload, filterSystemColumns } from '@/lib/fineract/datatables';
+import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fineract/dates';
+import { mandatoryClientDatatableNames } from '@/lib/fineract/mandatory-client-datatables';
 import { AddressStep } from './steps/address-step';
 import { DatatableStep } from './steps/datatable-step';
 import { FamilyStep } from './steps/family-step';
 import { GeneralStep } from './steps/general-step';
+import { MultiRowDatatableStep } from './steps/multi-row-datatable-step';
 import { PreviewStep } from './steps/preview-step';
+import {
+  buildCreateClientDatatablePayloads,
+  datatablesForLegalForm,
+  multiRowDatatablesForLegalForm,
+  singleRowDatatablesForLegalForm
+} from './datatable-payloads';
 import type { CreateClientDraft, CreateClientWizardProps } from './types';
 import {
-  datatablesForLegalForm,
+  findFirstInvalidCreateClientStep,
   validateStep,
+  type CreateClientValidationContext,
   type StepErrors
 } from './validation';
 
@@ -39,13 +49,22 @@ function buildSteps(
 ): FormWizardStep[] {
   const steps: FormWizardStep[] = [
     { id: 'general', label: 'General' },
-    { id: 'family', label: 'Family' }
+    { id: 'family', label: 'Next of kin' }
   ];
   if (template.isAddressEnabled) {
     steps.push({ id: 'address', label: 'Address' });
   }
-  for (const dt of datatablesForLegalForm(template, legalFormId)) {
-    steps.push({ id: `datatable:${dt.registeredTableName}`, label: dt.registeredTableName });
+  for (const dt of singleRowDatatablesForLegalForm(template, legalFormId)) {
+    steps.push({
+      id: `datatable:${dt.registeredTableName}`,
+      label: formatDatatableTableTitle(dt.registeredTableName)
+    });
+  }
+  for (const dt of multiRowDatatablesForLegalForm(template, legalFormId)) {
+    steps.push({
+      id: `multi-row-datatable:${dt.registeredTableName}`,
+      label: formatDatatableTableTitle(dt.registeredTableName)
+    });
   }
   steps.push({ id: 'preview', label: 'Preview' });
   return steps;
@@ -63,13 +82,15 @@ function emptyDraft(): CreateClientDraft {
     },
     familyMembers: [],
     addresses: [],
-    datatables: {}
+    datatables: {},
+    multiRowDatatables: {}
   };
 }
 
 export function CreateClientWizard({
   initialTemplate,
-  addressFieldConfig
+  addressFieldConfig,
+  entityDatatableChecks = []
 }: CreateClientWizardProps) {
   const router = useRouter();
   const [template, setTemplate] = useState(initialTemplate);
@@ -85,6 +106,22 @@ export function CreateClientWizard({
   const steps = useMemo(() => buildSteps(template, legalFormId), [template, legalFormId]);
   const resolvedStepId = steps.some((s) => s.id === stepId) ? stepId : 'general';
   const currentIndex = steps.findIndex((s) => s.id === resolvedStepId);
+
+  const mandatoryDatatableNames = useMemo(
+    () =>
+      mandatoryClientDatatableNames(entityDatatableChecks, {
+        active: draft.general.active ?? false,
+        savingsProductId: draft.general.savingsProductId
+      }),
+    [entityDatatableChecks, draft.general.active, draft.general.savingsProductId]
+  );
+
+  const validationContext = useMemo(
+    (): CreateClientValidationContext => ({
+      mandatoryDatatableNames
+    }),
+    [mandatoryDatatableNames]
+  );
 
   const markValidationAttempted = useCallback((id: string) => {
     setValidationAttemptedStepIds((prev) => {
@@ -103,16 +140,16 @@ export function CreateClientWizard({
       if (!stepIdSet.has(id) || id === 'preview') {
         return false;
       }
-      return Object.keys(validateStep(id, draft, template)).length > 0;
+      return Object.keys(validateStep(id, draft, template, validationContext)).length > 0;
     });
-  }, [validationAttemptedStepIds, steps, draft, template]);
+  }, [validationAttemptedStepIds, steps, draft, template, validationContext]);
 
   const stepErrors = useMemo((): StepErrors => {
     if (resolvedStepId === 'preview' || !validationAttemptedStepIds.has(resolvedStepId)) {
       return {};
     }
-    return validateStep(resolvedStepId, draft, template);
-  }, [validationAttemptedStepIds, resolvedStepId, draft, template]);
+    return validateStep(resolvedStepId, draft, template, validationContext);
+  }, [validationAttemptedStepIds, resolvedStepId, draft, template, validationContext]);
 
   const goNext = useCallback(() => {
     const next = steps[currentIndex + 1];
@@ -132,13 +169,13 @@ export function CreateClientWizard({
     if (resolvedStepId === 'preview') {
       return;
     }
-    const errors = validateStep(resolvedStepId, draft, template);
+    const errors = validateStep(resolvedStepId, draft, template, validationContext);
     if (Object.keys(errors).length > 0) {
       markValidationAttempted(resolvedStepId);
       return;
     }
     goNext();
-  }, [resolvedStepId, draft, template, goNext, markValidationAttempted]);
+  }, [resolvedStepId, draft, template, validationContext, goNext, markValidationAttempted]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -154,7 +191,7 @@ export function CreateClientWizard({
 
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = steps[i].id;
-        const errors = validateStep(stepToValidate, draft, template);
+        const errors = validateStep(stepToValidate, draft, template, validationContext);
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
           setStepId(stepToValidate);
@@ -164,35 +201,53 @@ export function CreateClientWizard({
 
       setStepId(targetStepId);
     },
-    [currentIndex, draft, steps, template, markValidationAttempted]
+    [currentIndex, draft, steps, template, validationContext, markValidationAttempted]
   );
 
   function patchGeneral(patch: Partial<import('./types').ClientGeneralFormState>) {
-    setDraft((d) => ({
-      ...d,
-      general: { ...d.general, ...patch }
-    }));
+    setDraft((d) => {
+      const nextGeneral = { ...d.general, ...patch };
+      let nextDatatables = d.datatables;
+      let nextMultiRowDatatables = d.multiRowDatatables;
+
+      if (patch.legalFormId != null && patch.legalFormId !== d.general.legalFormId) {
+        const allowedNames = new Set(
+          datatablesForLegalForm(template, patch.legalFormId).map(
+            (datatable) => datatable.registeredTableName
+          )
+        );
+        nextDatatables = Object.fromEntries(
+          Object.entries(d.datatables).filter(([name]) => allowedNames.has(name))
+        );
+        nextMultiRowDatatables = Object.fromEntries(
+          Object.entries(d.multiRowDatatables).filter(([name]) => allowedNames.has(name))
+        );
+      }
+
+      return {
+        ...d,
+        general: nextGeneral,
+        datatables: nextDatatables,
+        multiRowDatatables: nextMultiRowDatatables
+      };
+    });
   }
 
   function buildPayload(): CreateClientPayload | null {
-    const { general, familyMembers, addresses, datatables } = draft;
+    const { general, familyMembers, addresses, datatables, multiRowDatatables } = draft;
     const { addSavings, ...generalFields } = general;
     void addSavings;
 
-    const datatablePayloads = datatablesForLegalForm(template, legalFormId).map((dt) => {
-      const columns = filterSystemColumns(dt.columnHeaderData ?? []);
-      const values = datatables[dt.registeredTableName] ?? {};
-      const data = buildDatatableDataPayload(
-        columns,
-        values,
-        generalFields.dateFormat ?? FINERACT_DATE_FORMAT,
-        generalFields.locale ?? FINERACT_LOCALE
-      );
-      return {
-        registeredTableName: dt.registeredTableName,
-        data
-      };
-    });
+    const dateFormat = generalFields.dateFormat ?? FINERACT_DATE_FORMAT;
+    const locale = generalFields.locale ?? FINERACT_LOCALE;
+    const datatablePayloads = buildCreateClientDatatablePayloads(
+      template,
+      legalFormId,
+      datatables,
+      multiRowDatatables,
+      dateFormat,
+      locale
+    );
 
     const raw = {
       ...generalFields,
@@ -213,6 +268,17 @@ export function CreateClientWizard({
 
   function handleSubmit() {
     setSubmitError(null);
+    const invalidStep = findFirstInvalidCreateClientStep(
+      steps,
+      draft,
+      template,
+      validationContext
+    );
+    if (invalidStep) {
+      markValidationAttempted(invalidStep.stepId);
+      setStepId(invalidStep.stepId);
+      return;
+    }
     const payload = buildPayload();
     if (!payload) {
       return;
@@ -223,16 +289,55 @@ export function CreateClientWizard({
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-      router.push(`/clients/${result.clientId}`);
+
+      const clientId = String(result.clientId);
+      for (const dt of multiRowDatatablesForLegalForm(template, legalFormId)) {
+        const rows = draft.multiRowDatatables[dt.registeredTableName] ?? [];
+        for (const row of rows.slice(1)) {
+          const rowResult = await addClientDatatableRowAction(
+            clientId,
+            dt.registeredTableName,
+            row
+          );
+          if (!rowResult.ok) {
+            setSubmitError(
+              formatActionErrorMessage(
+                `Client was created, but a row for ${formatDatatableTableTitle(dt.registeredTableName)} could not be saved: ${rowResult.message}`,
+                rowResult.fieldErrors
+              )
+            );
+            router.push(`/clients/${clientId}`);
+            router.refresh();
+            return;
+          }
+        }
+      }
+
+      router.push(`/clients/${clientId}`);
       router.refresh();
     });
   }
 
   const activeDatatable = resolvedStepId.startsWith('datatable:')
-    ? datatablesForLegalForm(template, legalFormId).find(
+    ? singleRowDatatablesForLegalForm(template, legalFormId).find(
         (dt) => `datatable:${dt.registeredTableName}` === resolvedStepId
       )
     : undefined;
+
+  const activeMultiRowDatatable = resolvedStepId.startsWith('multi-row-datatable:')
+    ? multiRowDatatablesForLegalForm(template, legalFormId).find(
+        (dt) => `multi-row-datatable:${dt.registeredTableName}` === resolvedStepId
+      )
+    : undefined;
+
+  useEffect(() => {
+    if (resolvedStepId.startsWith('datatable:') && !activeDatatable) {
+      setStepId('general');
+    }
+    if (resolvedStepId.startsWith('multi-row-datatable:') && !activeMultiRowDatatable) {
+      setStepId('general');
+    }
+  }, [resolvedStepId, activeDatatable, activeMultiRowDatatable]);
 
   const isPreview = resolvedStepId === 'preview';
 
@@ -297,6 +402,24 @@ export function CreateClientWizard({
               datatables: {
                 ...d.datatables,
                 [activeDatatable.registeredTableName]: values
+              }
+            }))
+          }
+        />
+      ) : null}
+
+      {activeMultiRowDatatable ? (
+        <MultiRowDatatableStep
+          datatable={activeMultiRowDatatable}
+          rows={draft.multiRowDatatables[activeMultiRowDatatable.registeredTableName] ?? []}
+          errors={stepErrors}
+          required={mandatoryDatatableNames.has(activeMultiRowDatatable.registeredTableName)}
+          onChange={(rows) =>
+            setDraft((d) => ({
+              ...d,
+              multiRowDatatables: {
+                ...d.multiRowDatatables,
+                [activeMultiRowDatatable.registeredTableName]: rows
               }
             }))
           }

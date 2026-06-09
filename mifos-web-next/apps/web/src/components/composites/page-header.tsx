@@ -7,11 +7,12 @@
  */
 
 import type { ReactNode } from 'react';
+import { platformInsetX } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 /**
- * Sticky page title region inside the main scroll area (below the site header).
- * Negative horizontal margin aligns the border with the padded content edge.
+ * Fixed page title region — sits above a sibling scroll area (ListPage, DetailPage).
+ * Border spans the full content panel width; copy sits on the standard inset.
  */
 export function PageHeader({
   children,
@@ -23,8 +24,9 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'sticky top-0 z-20 -mx-4 border-b bg-background/95 px-4 pb-4 backdrop-blur md:-mx-6 md:px-6',
-        'supports-[backdrop-filter]:bg-background/80',
+        'z-20 shrink-0 border-b border-border bg-background',
+        platformInsetX,
+        'pb-4 pt-4',
         className
       )}
     >

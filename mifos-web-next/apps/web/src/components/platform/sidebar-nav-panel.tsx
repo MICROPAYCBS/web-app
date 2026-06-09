@@ -14,12 +14,16 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { NavIcon } from '@/components/platform/nav-icon';
 import { useNavigation } from '@/components/platform/navigation-provider';
-import type { PlatformNavGroup, PlatformNavLink } from '@/components/platform/navigation-types';
+import type {
+  PlatformNavGroup,
+  PlatformNavLink,
+  PlatformNavSearchResult
+} from '@/components/platform/navigation-types';
 import {
   filterNavGroups,
   filterNavLinks,
-  flattenMatchingNavLinks,
-  isNavPathActive
+  isNavPathActive,
+  searchNavLinks
 } from '@/components/platform/navigation-utils';
 import {
   SidebarGroup,
@@ -30,21 +34,33 @@ import {
   SidebarMenuItem
 } from '@/components/ui/sidebar';
 
-function NavMenuLink({ item }: { item: PlatformNavLink }) {
+function NavMenuLink({
+  item,
+  sectionLabel
+}: {
+  item: PlatformNavLink;
+  sectionLabel?: string;
+}) {
   const pathname = usePathname();
   const active = isNavPathActive(pathname, item.href);
   const soon = item.status === 'soon';
+  const tooltip = sectionLabel ? `${item.label} · ${sectionLabel}` : item.label;
 
   if (soon) {
     return (
       <SidebarMenuItem>
         <SidebarMenuButton
           disabled
-          tooltip={item.label}
+          tooltip={tooltip}
           className="cursor-not-allowed opacity-70"
         >
           <NavIcon name={item.icon} className="size-4" />
-          <span>{item.label}</span>
+          <span className="min-w-0 flex-1 truncate">
+            {item.label}
+            {sectionLabel ? (
+              <span className="text-muted-foreground"> · {sectionLabel}</span>
+            ) : null}
+          </span>
           <Badge variant="outline" className="ml-auto text-[10px] font-normal">
             Soon
           </Badge>
@@ -57,19 +73,52 @@ function NavMenuLink({ item }: { item: PlatformNavLink }) {
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={active}
-        tooltip={item.label}
+        tooltip={tooltip}
         render={<Link href={item.href} />}
       >
         <NavIcon name={item.icon} className="size-4" />
-        <span>{item.label}</span>
+        <span className="min-w-0 flex-1 truncate">
+          {item.label}
+          {sectionLabel ? (
+            <span className="text-muted-foreground"> · {sectionLabel}</span>
+          ) : null}
+        </span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
 }
 
+function SidebarNavSearchResults({ results }: { results: PlatformNavSearchResult[] }) {
+  return (
+    <SidebarGroup className="px-0">
+      <SidebarGroupLabel className="px-2">Results</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {results.length > 0 ? (
+            results.map((result) => (
+              <NavMenuLink
+                key={result.link.id}
+                item={result.link}
+                sectionLabel={result.sectionLabel}
+              />
+            ))
+          ) : (
+            <SidebarMenuItem>
+              <p className="px-2 py-3 text-xs text-muted-foreground">No matching pages.</p>
+            </SidebarMenuItem>
+          )}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
 function SidebarNavGroupView({ group }: { group: PlatformNavGroup }) {
-  const { findQuery, exitGroup } = useNavigation();
+  const { nav, findQuery, exitGroup } = useNavigation();
+  const query = findQuery.trim();
+  const isSearching = query.length > 0;
   const items = filterNavLinks(group.items, findQuery);
+  const searchResults = searchNavLinks(nav, findQuery);
 
   return (
     <>
@@ -89,19 +138,19 @@ function SidebarNavGroupView({ group }: { group: PlatformNavGroup }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroup>
-      <SidebarGroup className="px-0">
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {items.length > 0 ? (
-              items.map((item) => <NavMenuLink key={item.id} item={item} />)
-            ) : (
-              <SidebarMenuItem>
-                <p className="px-2 py-3 text-xs text-muted-foreground">No matching pages.</p>
-              </SidebarMenuItem>
-            )}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+      {isSearching ? (
+        <SidebarNavSearchResults results={searchResults} />
+      ) : (
+        <SidebarGroup className="px-0">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => (
+                <NavMenuLink key={item.id} item={item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
     </>
   );
 }
@@ -112,25 +161,10 @@ function SidebarNavRootView() {
   const isSearching = query.length > 0;
   const featured = filterNavLinks(nav.featured, findQuery);
   const groups = filterNavGroups(nav.groups, findQuery);
-  const flatResults = flattenMatchingNavLinks(nav, findQuery);
+  const searchResults = searchNavLinks(nav, findQuery);
 
   if (isSearching) {
-    return (
-      <SidebarGroup className="px-0">
-        <SidebarGroupLabel className="px-2">Results</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {flatResults.length > 0 ? (
-              flatResults.map((item) => <NavMenuLink key={item.id} item={item} />)
-            ) : (
-              <SidebarMenuItem>
-                <p className="px-2 py-3 text-xs text-muted-foreground">No matching pages.</p>
-              </SidebarMenuItem>
-            )}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
+    return <SidebarNavSearchResults results={searchResults} />;
   }
 
   return (

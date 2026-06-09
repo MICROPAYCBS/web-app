@@ -1,0 +1,29 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { CLIENT_SIGNATURE_DOCUMENT_NAME } from '@/lib/fineract/client-signature-constants';
+
+export async function uploadClientSignatureFile(
+  clientId: string,
+  file: File
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', CLIENT_SIGNATURE_DOCUMENT_NAME);
+  formData.append('description', 'Client signature');
+
+  const res = await fetch(`/api/clients/${clientId}/documents`, {
+    method: 'POST',
+    body: formData
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    return { ok: false, message: body?.message ?? 'Upload failed.' };
+  }
+  return { ok: true };
+}

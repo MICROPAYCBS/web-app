@@ -16,8 +16,10 @@ export { DetailFieldGrid } from './detail-field-grid';
 export { DetailSection } from './detail-section';
 export { DetailSummary, type DetailSummaryItem } from './detail-summary';
 export { DetailHeader } from './detail-header';
+export { DetailBackLink } from './detail-back-link';
 export { DetailPage } from './detail-page';
 export { DetailNavTabs, type DetailNavTab } from './detail-nav-tabs';
+export { DetailSectionNav, type DetailSectionNavItem } from './detail-section-nav';
 
 export {
   DetailNavSidebar,

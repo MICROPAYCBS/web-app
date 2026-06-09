@@ -153,7 +153,7 @@ export function AddressStep({
         template={template}
         fieldConfig={fieldConfig}
         address={editIndex != null ? addresses[editIndex] : undefined}
-        onSave={(entry) => {
+        onSave={async (entry) => {
           if (editIndex != null) {
             const next = [...addresses];
             next[editIndex] = entry;
@@ -161,6 +161,7 @@ export function AddressStep({
           } else {
             onAddressesChange([...addresses, entry]);
           }
+          return { ok: true as const };
         }}
       />
     </div>

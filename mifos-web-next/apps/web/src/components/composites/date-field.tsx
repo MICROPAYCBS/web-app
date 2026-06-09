@@ -45,6 +45,8 @@ export interface DateFieldProps {
    * transactions and backdated entries. Set true for expiry dates and similar.
    */
   allowFuture?: boolean;
+  /** Fineract tenant date format (from template); defaults to `dd MMMM yyyy`. */
+  dateFormat?: string;
 }
 
 function addYears(date: Date, years: number): Date {
@@ -56,6 +58,15 @@ function addYears(date: Date, years: number): Date {
 function subtractYears(date: Date, years: number): Date {
   return addYears(date, -years);
 }
+
+/** Matches `Input` / `SelectField` control height in form grids. */
+const dateTriggerClassName = cn(
+  'flex h-8 w-full min-w-0 items-center justify-start gap-2 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm font-normal shadow-none transition-colors outline-none',
+  'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+  'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+  'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20',
+  'dark:bg-input/30 dark:hover:bg-input/30'
+);
 
 function resolveEffectiveToDate(
   allowFuture: boolean,
@@ -84,10 +95,11 @@ export function DateField({
   placeholder = 'Pick a date',
   fromDate,
   toDate,
-  allowFuture = false
+  allowFuture = false,
+  dateFormat
 }: DateFieldProps) {
   const [open, setOpen] = useState(false);
-  const selected = useMemo(() => fineractDateToDate(value), [value]);
+  const selected = useMemo(() => fineractDateToDate(value, dateFormat), [value, dateFormat]);
   const today = useMemo(() => todayStart(), []);
 
   const effectiveToDate = useMemo(
@@ -124,14 +136,11 @@ export function DateField({
                 variant="outline"
                 disabled={disabled}
                 aria-invalid={!!error}
-                className={cn(
-                  'h-8 w-full justify-start px-2.5 font-normal',
-                  !display && 'text-muted-foreground'
-                )}
+                className={cn(dateTriggerClassName, !display && 'text-muted-foreground')}
               />
             }
           >
-            <CalendarIcon className="mr-2 size-4 shrink-0 opacity-60" />
+            <CalendarIcon className="size-4 shrink-0 opacity-60" />
             <span className="truncate">{display ?? placeholder}</span>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -139,7 +148,7 @@ export function DateField({
               mode="single"
               selected={selected}
               onSelect={(date) => {
-                onChange(dateToFineract(date));
+                onChange(dateToFineract(date, dateFormat));
                 setOpen(false);
               }}
               disabled={(date) => {

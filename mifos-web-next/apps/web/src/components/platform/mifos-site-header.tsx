@@ -9,33 +9,45 @@
  */
 
 import { Search } from 'lucide-react';
-import { useNavigation } from '@/components/platform/navigation-provider';
+import { useEntitySearch } from '@/components/platform/entity-search-provider';
+import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
-import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-/** dashboard-01 header — focuses sidebar navigation Find (⌘K / F). */
+/** dashboard-01 header — opens global entity search (⌘K / /). Sidebar Find uses F. */
 export function MifosSiteHeader() {
-  const { focusNavFind } = useNavigation();
+  const { openEntitySearch } = useEntitySearch();
 
   return (
-    <header className="z-20 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full flex-wrap items-center gap-2 px-4 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mx-1 hidden h-4 sm:block" />
-        <button
-          type="button"
-          onClick={focusNavFind}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-input bg-muted/40 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/70 sm:max-w-md"
-          aria-label="Focus navigation find"
-        >
-          <Search className="size-4 shrink-0 opacity-60" />
-          <span className="flex-1 truncate">Find navigation…</span>
-          <span className="hidden items-center gap-1 sm:flex">
-            <Kbd>⌘</Kbd>
-            <Kbd>K</Kbd>
-          </span>
-        </button>
+    <header className="z-20 flex h-(--header-height) shrink-0 items-stretch border-b border-border bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+      <div className="flex items-center border-r border-border px-2 sm:px-3">
+        <SidebarTrigger className="-ml-0.5" />
+      </div>
+      <div className="flex flex-1 items-center gap-2 px-4 lg:px-6">
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="ml-auto shrink-0"
+                onClick={openEntitySearch}
+                aria-label="Search records"
+              />
+            }
+          >
+            <Search className="size-4" aria-hidden />
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="flex items-center gap-1.5">
+            Search clients, accounts, groups…
+            <span className="inline-flex items-center gap-0.5">
+              <Kbd>⌘</Kbd>
+              <Kbd>K</Kbd>
+            </span>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </header>
   );

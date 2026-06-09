@@ -40,14 +40,19 @@ export function GeneralStep({
   const addSavings = g.addSavings ?? false;
   const nonPerson = g.clientNonPersonDetails ?? {};
 
-  async function reloadTemplateForOffice(officeId: number) {
+  async function reloadTemplateForBranch(officeId: number) {
     const res = await fetch(`/api/clients/template?officeId=${officeId}`);
     if (!res.ok) {
       return;
     }
     const data = (await res.json()) as FineractClientTemplate;
     if (data?.staffOptions) {
-      onTemplateChange({ ...template, ...data, officeOptions: template.officeOptions });
+      onTemplateChange({
+        ...template,
+        ...data,
+        officeOptions: template.officeOptions,
+        datatables: data.datatables ?? template.datatables
+      });
     }
   }
 
@@ -71,16 +76,16 @@ export function GeneralStep({
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
           id="officeId"
-          label="Office"
+          label="Branch"
           required
           value={g.officeId ? String(g.officeId) : undefined}
           onValueChange={(v) => {
             const id = Number(v);
             onDraftChange({ officeId: id });
-            void reloadTemplateForOffice(id);
+            void reloadTemplateForBranch(id);
           }}
           options={toSelectOptions(template.officeOptions)}
-          placeholder="Select office"
+          placeholder="Select branch"
           error={errors.officeId}
         />
 
@@ -167,20 +172,22 @@ export function GeneralStep({
         <DateField
           id="dateOfBirth"
           label={legalFormId === LEGAL_FORM_PERSON ? 'Date of birth' : 'Incorporation date'}
-          optional
+          required
           value={g.dateOfBirth}
           onChange={(v) => onDraftChange({ dateOfBirth: v })}
+          error={errors.dateOfBirth}
         />
 
         {legalFormId === LEGAL_FORM_PERSON ? (
           <SelectField
             id="genderId"
             label="Gender"
-            optional
+            required
             value={g.genderId ? String(g.genderId) : undefined}
             onValueChange={(v) => onDraftChange({ genderId: v ? Number(v) : undefined })}
             options={toSelectOptions(template.genderOptions)}
             placeholder="Select gender"
+            error={errors.genderId}
           />
         ) : null}
 
@@ -259,8 +266,8 @@ export function GeneralStep({
 
         <SelectField
           id="staffId"
-          label="Staff"
-          optional
+          label="Relationship officer"
+          required
           value={g.staffId ? String(g.staffId) : undefined}
           onValueChange={(v) => onDraftChange({ staffId: v ? Number(v) : undefined })}
           options={toSelectOptions(
@@ -268,10 +275,11 @@ export function GeneralStep({
               id: s.id,
               displayName:
                 s.displayName ??
-                (`${s.firstname ?? ''} ${s.lastname ?? ''}`.trim() || `Staff ${s.id}`)
+                (`${s.firstname ?? ''} ${s.lastname ?? ''}`.trim() || `Relationship officer ${s.id}`)
             }))
           )}
-          placeholder="Assign staff"
+          placeholder="Assign relationship officer"
+          error={errors.staffId}
         />
 
         {legalFormId === LEGAL_FORM_PERSON ? (
@@ -287,10 +295,11 @@ export function GeneralStep({
 
         <TextField
           id="mobileNo"
-          label="Mobile"
-          optional
+          label="Phone number"
+          required
           value={g.mobileNo ?? ''}
           onChange={(v) => onDraftChange({ mobileNo: v })}
+          error={errors.mobileNo}
         />
 
         <TextField
@@ -306,11 +315,12 @@ export function GeneralStep({
         <SelectField
           id="clientTypeId"
           label="Client type"
-          optional
+          required
           value={g.clientTypeId ? String(g.clientTypeId) : undefined}
           onValueChange={(v) => onDraftChange({ clientTypeId: v ? Number(v) : undefined })}
           options={toSelectOptions(template.clientTypeOptions)}
           placeholder="Select client type"
+          error={errors.clientTypeId}
         />
 
         <SelectField

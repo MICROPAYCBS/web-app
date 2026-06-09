@@ -7,6 +7,7 @@
  */
 
 import type { ReactNode } from 'react';
+import { FieldHintTooltip } from '@/components/composites/field-hint-tooltip';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,9 @@ export interface FormLabelProps {
   required?: boolean;
   /** When false and not required, shows “(optional)”. */
   optional?: boolean;
+  /** Shown in an info tooltip beside the label. */
+  hint?: string;
+  hintAriaLabel?: string;
   className?: string;
 }
 
@@ -24,20 +28,25 @@ export function FormLabel({
   children,
   required = false,
   optional = !required,
+  hint,
+  hintAriaLabel,
   className
 }: FormLabelProps) {
   return (
-    <Label htmlFor={htmlFor} className={cn('text-sm font-medium', className)}>
-      {children}
-      {required ? (
-        <span className="text-destructive" aria-hidden="true">
-          {' '}
-          *
-        </span>
-      ) : null}
-      {optional && !required ? (
-        <span className="font-normal text-muted-foreground"> (optional)</span>
-      ) : null}
-    </Label>
+    <div className={cn('flex items-center gap-1.5', className)}>
+      <Label htmlFor={htmlFor} className="text-sm font-medium">
+        {children}
+        {required ? (
+          <span className="text-destructive" aria-hidden="true">
+            {' '}
+            *
+          </span>
+        ) : null}
+        {optional && !required ? (
+          <span className="font-normal text-muted-foreground"> (optional)</span>
+        ) : null}
+      </Label>
+      {hint ? <FieldHintTooltip content={hint} ariaLabel={hintAriaLabel} /> : null}
+    </div>
   );
 }

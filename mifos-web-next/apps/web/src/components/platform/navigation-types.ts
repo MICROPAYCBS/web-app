@@ -29,3 +29,9 @@ export interface PlatformNavStructure {
   groups: PlatformNavGroup[];
   quickFind: PlatformNavLink[];
 }
+
+/** A nav link surfaced by Find, with the section it belongs to (group or quick access). */
+export interface PlatformNavSearchResult {
+  link: PlatformNavLink;
+  sectionLabel: string;
+}

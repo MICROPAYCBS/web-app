@@ -10,7 +10,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import { createClientSchema } from '@mifos/validation';
 import { jsonError, jsonOk } from '@/lib/bff/json-response';
 import { requireRoutePermission } from '@/lib/bff/require-session';
-import { createClient, listClients } from '@/lib/fineract/clients';
+import { createClient } from '@/lib/fineract/clients';
+import { fetchClientsList } from '@/lib/fineract/clients-list';
 
 /**
  * BFF: list / create clients — browser calls /api/clients, server calls Fineract.
@@ -26,9 +27,18 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const offset = Number(searchParams.get('offset') ?? '0');
     const limit = Number(searchParams.get('limit') ?? '25');
+    const query = searchParams.get('query')?.trim() || undefined;
+    const includeClosed = searchParams.get('includeClosed') === 'true';
     const orderBy = searchParams.get('orderBy') ?? undefined;
     const sortOrder = (searchParams.get('sortOrder') as 'ASC' | 'DESC' | null) ?? undefined;
-    const data = await listClients({ offset, limit, orderBy, sortOrder });
+    const data = await fetchClientsList({
+      offset,
+      limit,
+      query,
+      includeClosed,
+      orderBy,
+      sortOrder
+    });
     return jsonOk(data);
   } catch (err) {
     return jsonError(err);

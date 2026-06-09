@@ -1,7 +1,6 @@
 import { AppLink } from '@/components/routes/app-link';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
-import { ServerForm } from '@/components/servers/server-form';
-import { addServerAction } from '@/actions/servers';
+import { ServerAddForm } from '@/components/servers/server-add-form';
 import { SignOutButton } from '@/components/auth/sign-out-control';
 import { ServerSettingsRow } from '@/components/servers/server-settings-row';
 
@@ -47,7 +46,7 @@ export default async function ServerSettingsPage() {
 
       <div className="rounded-lg border border-border p-6">
         <h3 className="mb-4 text-sm font-semibold">Add server</h3>
-        <ServerForm submitLabel="Add server" onSubmit={(values) => addServerAction(values)} />
+        <ServerAddForm />
       </div>
     </div>
   );

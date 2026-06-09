@@ -18,8 +18,8 @@ import {
   deleteClientIdentifierAction
 } from '@/actions/client-identifier';
 import { ClientIdentifierListItem } from '@/components/clients/detail/client-identifier-sections';
+import { ClientDetailResourceView } from '@/components/clients/detail/client-detail-resource-view';
 import { ClientIdentifierFormSheet } from '@/components/clients/shared/client-identifier-form-sheet';
-import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -63,7 +63,8 @@ export function ClientIdentitiesView({
       if (!result.ok) {
         return {
           ok: false as const,
-          message: formatActionErrorMessage(result.message, result.fieldErrors)
+          message: formatActionErrorMessage(result.message, result.fieldErrors),
+          fieldErrors: result.fieldErrors
         };
       }
 
@@ -107,38 +108,31 @@ export function ClientIdentitiesView({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">Official IDs and reference numbers on file.</p>
-        {canCreate ? (
-          <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            Add identifier
-          </Button>
-        ) : null}
-      </div>
-
-      {actionError ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {actionError}
-        </p>
-      ) : null}
-
-      {identifiers.length === 0 ? (
-        <EmptyState
-          icon={Fingerprint}
-          title="No identifiers on file"
-          description="Add passport, national ID, or other reference numbers for this client."
-          action={
-            canCreate ? (
-              <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>
-                <Plus className="mr-2 size-4" />
-                Add identifier
-              </Button>
-            ) : undefined
-          }
-        />
-      ) : (
+    <>
+      <ClientDetailResourceView
+        description="Official IDs and reference numbers on file."
+        toolbar={
+          canCreate ? (
+            <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>
+              <Plus className="mr-2 size-4" />
+              Add identifier
+            </Button>
+          ) : undefined
+        }
+        error={actionError}
+        isEmpty={identifiers.length === 0}
+        emptyIcon={Fingerprint}
+        emptyTitle="No identifiers on file"
+        emptyDescription="Add passport, national ID, or other reference numbers for this client."
+        emptyAction={
+          canCreate ? (
+            <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>
+              <Plus className="mr-2 size-4" />
+              Add identifier
+            </Button>
+          ) : undefined
+        }
+      >
         <div className="divide-y divide-border rounded-lg border border-border">
           {identifiers.map((identifier) => (
             <ClientIdentifierListItem
@@ -149,7 +143,7 @@ export function ClientIdentitiesView({
             />
           ))}
         </div>
-      )}
+      </ClientDetailResourceView>
 
       <ClientIdentifierFormSheet
         open={sheetOpen}
@@ -184,6 +178,6 @@ export function ClientIdentitiesView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

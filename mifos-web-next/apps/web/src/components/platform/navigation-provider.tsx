@@ -136,12 +136,6 @@ export function NavigationProvider({
         target?.tagName === 'TEXTAREA' ||
         target?.isContentEditable;
 
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        focusNavFind();
-        return;
-      }
-
       if (!inField && !event.metaKey && !event.ctrlKey && !event.altKey && event.key === 'f') {
         event.preventDefault();
         focusNavFind();

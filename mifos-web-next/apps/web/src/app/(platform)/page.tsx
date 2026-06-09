@@ -4,12 +4,11 @@ import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { AppLink } from '@/components/routes/app-link';
-import { buttonVariants } from '@/components/ui/button';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormSheet } from '@/components/composites/form-sheet';
+import { APP_NAME } from '@/lib/branding';
+import { platformInset } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 const noteSchema = z.object({
@@ -41,26 +40,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className={cn(platformInset, 'mx-auto max-w-3xl space-y-6')}>
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
         <p className="mt-2 text-muted-foreground">
-          Mifos web client on Next.js 16.2.6. Routes are typed via{' '}
+          {APP_NAME} built on top of FINERACT and Next.js 16{' '}
           <code className="text-sm">@mifos/routes</code> and Next{' '}
           <code className="text-sm">strictRouteTypes</code>.
         </p>
       </div>
-      <div className="flex flex-wrap gap-3">
-        <AppLink route="clients" className={cn(buttonVariants())}>
-          Clients
-        </AppLink>
-        <AppLink route="login" className={cn(buttonVariants({ variant: 'outline' }))}>
-          Login
-        </AppLink>
-        <Button type="button" variant="secondary" onClick={() => setSheetOpen(true)}>
-          Open FormSheet demo
-        </Button>
-      </div>
+      
 
       <FormSheet
         open={sheetOpen}

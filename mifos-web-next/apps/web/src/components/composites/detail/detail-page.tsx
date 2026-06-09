@@ -8,7 +8,11 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
+import { platformInset, platformInsetX } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
+
+/** Fills the platform main area; only the detail body scrolls (sidebar + header stay put). */
+const DETAIL_SIDEBAR_LAYOUT = 'flex min-h-0 flex-1 flex-col lg:flex-row';
 
 export function DetailPage({
   header,
@@ -29,30 +33,42 @@ export function DetailPage({
 }) {
   const hasSidebar = Boolean(sidebar);
 
+  if (hasSidebar) {
+    return (
+      <div className={cn(DETAIL_SIDEBAR_LAYOUT, className)}>
+        <aside
+          className={cn(
+            'max-h-[min(40vh,20rem)] w-full shrink-0 overflow-y-auto border-b border-border',
+            'lg:max-h-none lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
+          )}
+        >
+          <div className={cn(platformInset, 'lg:py-6')}>{sidebar}</div>
+        </aside>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <PageHeader className="space-y-4 pt-1">
+            {header}
+            {summary}
+          </PageHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className={cn(platformInset, 'space-y-6 lg:pl-8')}>{children}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('flex min-h-0 flex-1 flex-col', className)}>
       <PageHeader>
         <div className="space-y-4 pt-1">
           {header}
           {summary}
-          {!hasSidebar ? tabs : null}
+          {tabs}
         </div>
       </PageHeader>
-
-      {hasSidebar ? (
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-0">
-          <aside
-            className={cn(
-              'w-full shrink-0 border-b border-border pb-6 lg:sticky lg:top-24 lg:z-10 lg:bg-background lg:w-56 lg:self-start lg:border-r lg:border-b-0 lg:pb-0 lg:pr-6 xl:w-60'
-            )}
-          >
-            {sidebar}
-          </aside>
-          <div className="min-w-0 flex-1 space-y-6 lg:pl-8">{children}</div>
-        </div>
-      ) : (
-        <div className="space-y-6">{children}</div>
-      )}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className={cn(platformInset, 'space-y-6')}>{children}</div>
+      </div>
     </div>
   );
 }

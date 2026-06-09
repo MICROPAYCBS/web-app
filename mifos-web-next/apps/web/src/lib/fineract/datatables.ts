@@ -23,7 +23,8 @@ const ENTITY_ID_FIELDS = [
 ];
 
 export function isSystemColumn(columnName: string): boolean {
-  return SYSTEM_FIELDS.includes(columnName) || ENTITY_ID_FIELDS.includes(columnName);
+  const normalized = columnName.trim().toLowerCase();
+  return SYSTEM_FIELDS.includes(normalized) || ENTITY_ID_FIELDS.includes(normalized);
 }
 
 export function filterSystemColumns(
@@ -37,6 +38,14 @@ export function getDatatableControlName(column: FineractDatatableColumnHeader): 
     return column.columnName.split('_cd_')[0];
   }
   return column.columnName;
+}
+
+export function getDatatableCodeName(columnName: string): string | null {
+  if (!columnName.includes('_cd_')) {
+    return null;
+  }
+  const codeName = columnName.split('_cd_')[0]?.trim();
+  return codeName || null;
 }
 
 export function toDatatableDisplayLabel(columnName: string): string {
@@ -104,4 +113,9 @@ export function buildDatatableDataPayload(
   }
 
   return output;
+}
+
+/** True when a datatable payload includes at least one user-entered column value. */
+export function hasDatatablePayloadData(data: Record<string, unknown>): boolean {
+  return Object.keys(data).some((key) => key !== 'locale' && key !== 'dateFormat');
 }

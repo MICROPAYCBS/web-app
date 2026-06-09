@@ -7,82 +7,186 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
+import { ClientFinancialSummarySection } from '@/components/clients/detail/client-financial-summary';
 import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
+import {
+  enumOptionLabel,
+  formatYesNo,
+  isClientEntity
+} from '@/lib/fineract/client-detail-labels';
+import type { ClientFinancialSummary } from '@/lib/fineract/client-financial-summary';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
-export function ClientGeneralSections({ client }: { client: FineractClientDetail }) {
-  const submittedLabel = formatFineractDateArray(client.timeline?.submittedOnDate);
-  const activatedLabel = formatFineractDateArray(client.timeline?.activatedOnDate);
-  const dobLabel = formatFineractDateArray(client.dateOfBirth);
+function ClientInformationSection({ client }: { client: FineractClientDetail }) {
+  const isEntity = isClientEntity(client);
+  const constructedName = [client.firstname, client.middlename, client.lastname]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  const apiDisplayName = client.displayName?.trim();
+  const showDisplayName =
+    Boolean(apiDisplayName) &&
+    Boolean(constructedName) &&
+    apiDisplayName !== constructedName;
 
   return (
-    <>
-      <DetailSection title="Identifiers">
-        <DetailFieldGrid>
-          <DetailField label="Client ID">
-            <TextValue value={String(client.id)} />
+    <DetailSection title="Client information">
+      <DetailFieldGrid>
+        {showDisplayName ? (
+          <DetailField label="Display name">
+            <TextValue value={client.displayName} />
           </DetailField>
-          <DetailField label="Account no.">
-            <TextValue value={client.accountNo} />
+        ) : null}
+        <DetailField label="Legal form">
+          <TextValue value={enumOptionLabel(client.legalForm)} />
+        </DetailField>
+        {!isEntity && client.firstname ? (
+          <DetailField label="First name">
+            <TextValue value={client.firstname} />
           </DetailField>
-          <DetailField label="Office">
-            <TextValue value={client.officeName} />
+        ) : null}
+        {!isEntity && client.middlename ? (
+          <DetailField label="Middle name">
+            <TextValue value={client.middlename} />
           </DetailField>
-          <DetailField label="Staff">
-            <TextValue value={client.staffName} />
+        ) : null}
+        {!isEntity && client.lastname ? (
+          <DetailField label="Last name">
+            <TextValue value={client.lastname} />
           </DetailField>
-        </DetailFieldGrid>
-      </DetailSection>
-
-      <DetailSection title="Personal">
-        <DetailFieldGrid>
-          {client.firstname ? (
-            <DetailField label="First name">
-              <TextValue value={client.firstname} />
-            </DetailField>
-          ) : null}
-          {client.middlename ? (
-            <DetailField label="Middle name">
-              <TextValue value={client.middlename} />
-            </DetailField>
-          ) : null}
-          {client.lastname ? (
-            <DetailField label="Last name">
-              <TextValue value={client.lastname} />
-            </DetailField>
-          ) : null}
-          {client.fullname ? (
-            <DetailField label="Entity name">
-              <TextValue value={client.fullname} />
-            </DetailField>
-          ) : null}
+        ) : null}
+        {isEntity && client.fullname ? (
+          <DetailField label="Entity name">
+            <TextValue value={client.fullname} />
+          </DetailField>
+        ) : null}
+        {!isEntity ? (
           <DetailField label="Gender">
-            <TextValue value={client.gender?.name ?? client.gender?.value} />
+            <TextValue value={enumOptionLabel(client.gender)} />
           </DetailField>
-          <DetailField label="Client type">
-            <TextValue value={client.clientType?.name ?? client.clientType?.value} />
+        ) : null}
+        {!isEntity ? (
+          <DetailField label="Is staff">
+            <TextValue value={formatYesNo(client.isStaff)} />
           </DetailField>
-          <DetailField label="Classification">
+        ) : null}
+        <DetailField label="Account number">
+          <TextValue value={client.accountNo} />
+        </DetailField>
+        <DetailField label="External ID">
+          <TextValue value={client.externalId} />
+        </DetailField>
+        <DetailField label="Branch">
+          <TextValue value={client.officeName} />
+        </DetailField>
+        <DetailField label="Relationship officer">
+          <TextValue value={client.staffName} />
+        </DetailField>
+        {client.savingsAccountId != null ? (
+          <DetailField label="Default savings account">
             <TextValue
-              value={client.clientClassification?.name ?? client.clientClassification?.value}
+              value={
+                client.savingsProductName
+                  ? `${client.savingsProductName} (${client.savingsAccountId})`
+                  : String(client.savingsAccountId)
+              }
             />
           </DetailField>
-        </DetailFieldGrid>
-      </DetailSection>
+        ) : null}
+        <DetailField label="Mobile number">
+          <TextValue value={client.mobileNo} />
+        </DetailField>
+        <DetailField label="Email">
+          <TextValue value={client.emailAddress} />
+        </DetailField>
+        <DetailField label="Client type">
+          <TextValue value={enumOptionLabel(client.clientType)} />
+        </DetailField>
+        <DetailField label="Classification">
+          <TextValue value={enumOptionLabel(client.clientClassification)} />
+        </DetailField>
+      </DetailFieldGrid>
+    </DetailSection>
+  );
+}
 
-      <DetailSection title="Dates">
-        <DetailFieldGrid>
-          <DetailField label="Submitted on">
-            <TextValue value={submittedLabel} />
+function ClientEntityDetailsSection({ client }: { client: FineractClientDetail }) {
+  const details = client.clientNonPersonDetails;
+  if (!isClientEntity(client) || !details) {
+    return null;
+  }
+
+  const hasAnyField =
+    details.constitution ||
+    details.mainBusinessLine ||
+    details.incorpNumber ||
+    details.incorpValidityTillDate ||
+    details.remarks;
+
+  if (!hasAnyField) {
+    return null;
+  }
+
+  return (
+    <DetailSection title="Entity details">
+      <DetailFieldGrid>
+        <DetailField label="Constitution">
+          <TextValue value={enumOptionLabel(details.constitution)} />
+        </DetailField>
+        <DetailField label="Main business line">
+          <TextValue value={enumOptionLabel(details.mainBusinessLine)} />
+        </DetailField>
+        <DetailField label="Incorporation number">
+          <TextValue value={details.incorpNumber} />
+        </DetailField>
+        <DetailField label="Incorporation valid until">
+          <TextValue value={formatFineractDateArray(details.incorpValidityTillDate)} />
+        </DetailField>
+        {details.remarks ? (
+          <DetailField label="Remarks" className="sm:col-span-2">
+            <TextValue value={details.remarks} />
           </DetailField>
-          <DetailField label="Activated on">
-            <TextValue value={activatedLabel} />
+        ) : null}
+      </DetailFieldGrid>
+    </DetailSection>
+  );
+}
+
+function ClientGroupMembershipSection({ client }: { client: FineractClientDetail }) {
+  const groups = client.groups?.filter((group) => group.name?.trim()) ?? [];
+  if (groups.length === 0) {
+    return null;
+  }
+
+  return (
+    <DetailSection title="Group membership">
+      <DetailFieldGrid>
+        {groups.map((group) => (
+          <DetailField key={group.id} label={group.accountNo ? `Group ${group.accountNo}` : 'Group'}>
+            <TextValue value={group.name} />
           </DetailField>
-          <DetailField label="Date of birth">
-            <TextValue value={dobLabel} />
-          </DetailField>
-        </DetailFieldGrid>
-      </DetailSection>
-    </>
+        ))}
+      </DetailFieldGrid>
+    </DetailSection>
+  );
+}
+
+export function ClientGeneralSections({
+  client,
+  financialSummary
+}: {
+  client: FineractClientDetail;
+  financialSummary: ClientFinancialSummary;
+}) {
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <div className="space-y-6">
+        <ClientInformationSection client={client} />
+        <ClientEntityDetailsSection client={client} />
+        <ClientGroupMembershipSection client={client} />
+      </div>
+
+      <ClientFinancialSummarySection summary={financialSummary} />
+    </div>
   );
 }

@@ -17,8 +17,9 @@ import type {
   FineractClientTemplate,
   FineractCreateClientResponse
 } from '@mifos/api-client';
-import type { CreateClientPayload } from '@mifos/validation';
+import type { CreateClientPayload, UpdateClientPayload } from '@mifos/validation';
 import { buildCreateClientPayload } from '@/lib/fineract/build-create-client-payload';
+import { buildUpdateClientPayload } from '@/lib/fineract/build-update-client-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 export interface ListClientsParams {
@@ -66,4 +67,14 @@ export async function createClient(
   const fineract = await createFineractClient();
   const body = buildCreateClientPayload(input);
   return fineract.post<FineractCreateClientResponse>('/clients', body);
+}
+
+export async function updateClient(
+  clientId: string | number,
+  input: UpdateClientPayload,
+  options?: { initial?: UpdateClientPayload }
+): Promise<void> {
+  const fineract = await createFineractClient();
+  const body = buildUpdateClientPayload(input, options);
+  await fineract.put(`/clients/${clientId}`, body);
 }

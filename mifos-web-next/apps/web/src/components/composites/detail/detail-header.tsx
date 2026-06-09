@@ -10,11 +10,14 @@ import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 export function DetailHeader({
+  backLink,
   title,
   status,
   meta,
   actions
 }: {
+  /** Placed above the title — use {@link DetailBackLink}. */
+  backLink?: ReactNode;
   title: ReactNode;
   status?: { label: string; variant?: 'default' | 'secondary' | 'outline' | 'destructive' };
   meta?: ReactNode;
@@ -23,6 +26,7 @@ export function DetailHeader({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0 space-y-2">
+        {backLink ? <div>{backLink}</div> : null}
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {status ? <Badge variant={status.variant ?? 'secondary'}>{status.label}</Badge> : null}

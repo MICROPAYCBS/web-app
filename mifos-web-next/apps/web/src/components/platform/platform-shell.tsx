@@ -10,9 +10,11 @@
 
 import type { CSSProperties, ReactNode } from 'react';
 import { MifosAppSidebar } from '@/components/platform/mifos-app-sidebar';
+import { EntitySearchProvider } from '@/components/platform/entity-search-provider';
 import { MifosSiteHeader } from '@/components/platform/mifos-site-header';
 import { NavigationProvider } from '@/components/platform/navigation-provider';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
+import { ErrorBoundary } from '@/components/composites/error-boundary';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 const shellStyle = {
@@ -21,8 +23,8 @@ const shellStyle = {
 } as CSSProperties;
 
 /**
- * Authenticated shell — shadcn dashboard-01 layout + Vercel-style sidebar nav Find.
- * Site header stays fixed; main content scrolls beneath it.
+ * Authenticated shell — shadcn dashboard-01 layout + sidebar nav Find (F) + header entity search (⌘K).
+ * Site header stays fixed. List/detail pages scroll in their body region; simple pages scroll in main.
  */
 export function PlatformShell({
   nav,
@@ -35,17 +37,24 @@ export function PlatformShell({
 }) {
   return (
     <NavigationProvider nav={nav}>
-      <SidebarProvider style={shellStyle}>
-        <MifosAppSidebar serverName={serverName} />
-        <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
-          <MifosSiteHeader />
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
-            <div className="@container/main flex min-h-0 flex-1 flex-col gap-2 p-4 md:p-6">
-              {children}
+      <EntitySearchProvider>
+        <SidebarProvider style={shellStyle}>
+          <MifosAppSidebar serverName={serverName} />
+          <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
+            <MifosSiteHeader />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <ErrorBoundary
+                title="This section failed to load"
+                description="Something went wrong while rendering this page. The sidebar and header are still available."
+              >
+                <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
+                  {children}
+                </div>
+              </ErrorBoundary>
             </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+          </SidebarInset>
+        </SidebarProvider>
+      </EntitySearchProvider>
     </NavigationProvider>
   );
 }

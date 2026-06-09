@@ -27,6 +27,9 @@ export interface TextFieldProps {
   rows?: number;
   className?: string;
   placeholder?: string;
+  hint?: string;
+  hintAriaLabel?: string;
+  disabled?: boolean;
 }
 
 export function TextField({
@@ -42,11 +45,20 @@ export function TextField({
   multiline = false,
   rows = 2,
   className,
-  placeholder
+  placeholder,
+  hint,
+  hintAriaLabel,
+  disabled = false
 }: TextFieldProps) {
   return (
     <Field className={className} data-invalid={!!error}>
-      <FormLabel htmlFor={id} required={required} optional={optional ?? !required}>
+      <FormLabel
+        htmlFor={id}
+        required={required}
+        optional={optional ?? !required}
+        hint={hint}
+        hintAriaLabel={hintAriaLabel}
+      >
         {label}
       </FormLabel>
       <FieldContent>
@@ -57,6 +69,7 @@ export function TextField({
             value={value}
             placeholder={placeholder}
             aria-invalid={!!error}
+            disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
           />
         ) : (
@@ -67,6 +80,7 @@ export function TextField({
             autoComplete={autoComplete}
             placeholder={placeholder}
             aria-invalid={!!error}
+            disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
           />
         )}

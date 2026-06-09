@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import { Geist_Mono, Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { AppProviders } from '@/providers/app-providers';
+import { APP_DESCRIPTION, APP_NAME } from '@/lib/branding';
 import { SHADCN_PRESET_CODE } from '@/lib/theme-config';
 import { cn } from '@/lib/utils';
 import './globals.css';
@@ -25,8 +26,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Mifos Web',
-  description: 'Mifos web client built with Next.js and shadcn/ui'
+  title: {
+    default: APP_NAME,
+    template: `%s | ${APP_NAME}`
+  },
+  description: APP_DESCRIPTION
 };
 
 export default function RootLayout({

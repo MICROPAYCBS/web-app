@@ -6,4 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export type FormSubmitResult = { ok: true } | { ok: false; message: string };
+export type FormSubmitResult =
+  | { ok: true }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };

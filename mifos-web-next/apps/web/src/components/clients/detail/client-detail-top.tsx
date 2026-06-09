@@ -7,26 +7,80 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
-import { ChevronLeft, Hash, Mail, Phone } from 'lucide-react';
-import Link from 'next/link';
+import { Calendar, Hash, Mail, Phone, UserRound, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ClientProfileAvatar } from '@/components/clients/detail/client-profile-avatar';
+import { ClientSignatureView } from '@/components/clients/detail/client-signature-view';
 import { DetailHeader, EmptyValue } from '@/components/composites';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ClientDetailActionsMenu } from '@/components/clients/detail/client-detail-actions-menu';
+import { enumOptionLabel, isClientEntity } from '@/lib/fineract/client-detail-labels';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
+import { formatFineractDateArray } from '@/lib/fineract/dates';
+
+function ClientHeaderDates({
+  submittedOn,
+  activatedOn,
+  closedOn,
+  birthOrIncorpLabel,
+  birthOrIncorpDate
+}: {
+  submittedOn?: string | null;
+  activatedOn?: string | null;
+  closedOn?: string | null;
+  birthOrIncorpLabel: string;
+  birthOrIncorpDate?: string | null;
+}) {
+  const itemClassName = 'inline-flex min-w-0 items-center gap-1.5 text-muted-foreground';
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+      <span className={itemClassName}>
+        <Calendar className="size-4 shrink-0" aria-hidden />
+        <span>
+          Submitted <span className="text-foreground">{submittedOn ?? '—'}</span>
+        </span>
+      </span>
+      <span className={itemClassName}>
+        <Calendar className="size-4 shrink-0" aria-hidden />
+        <span>
+          Activated <span className="text-foreground">{activatedOn ?? '—'}</span>
+        </span>
+      </span>
+      {closedOn ? (
+        <span className={itemClassName}>
+          <Calendar className="size-4 shrink-0" aria-hidden />
+          <span>
+            Closed <span className="text-foreground">{closedOn}</span>
+          </span>
+        </span>
+      ) : null}
+      <span className={itemClassName}>
+        <Calendar className="size-4 shrink-0" aria-hidden />
+        <span>
+          {birthOrIncorpLabel}{' '}
+          <span className="text-foreground">{birthOrIncorpDate ?? '—'}</span>
+        </span>
+      </span>
+    </div>
+  );
+}
 
 function ClientHeaderKeyInfo({
   mobileNo,
   emailAddress,
-  externalId
+  externalId,
+  staffName
 }: {
   mobileNo?: string;
   emailAddress?: string;
   externalId?: string;
+  staffName?: string;
 }) {
   const mobile = mobileNo?.trim();
   const email = emailAddress?.trim();
   const external = externalId?.trim();
+  const staff = staffName?.trim();
   const linkClassName =
     'inline-flex min-w-0 items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground';
   const missingClassName = 'inline-flex min-w-0 items-center gap-1.5 text-muted-foreground';
@@ -66,7 +120,55 @@ function ClientHeaderKeyInfo({
           <EmptyValue />
         </span>
       )}
+      {staff ? (
+        <span className={missingClassName} aria-label={`Relationship officer ${staff}`}>
+          <UserRound className="size-4 shrink-0" aria-hidden />
+          <span className="truncate">{staff}</span>
+        </span>
+      ) : (
+        <span className={missingClassName} aria-label="Relationship officer not assigned">
+          <UserRound className="size-4 shrink-0" aria-hidden />
+          <EmptyValue />
+        </span>
+      )}
     </div>
+  );
+}
+
+function ClientHeaderClassification({
+  clientType,
+  clientClassification
+}: {
+  clientType?: string;
+  clientClassification?: string;
+}) {
+  const parts = [clientType, clientClassification].filter(Boolean);
+  if (parts.length === 0) {
+    return null;
+  }
+
+  return (
+    <p className="text-sm text-muted-foreground">
+      {parts.join(' · ')}
+    </p>
+  );
+}
+
+function ClientHeaderGroups({ groups }: { groups: { id: number; name: string }[] }) {
+  if (groups.length === 0) {
+    return null;
+  }
+
+  const itemClassName = 'inline-flex min-w-0 items-start gap-1.5 text-sm text-muted-foreground';
+
+  return (
+    <p className={itemClassName}>
+      <Users className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>
+        Member of{' '}
+        <span className="text-foreground">{groups.map((group) => group.name).join(', ')}</span>
+      </span>
+    </p>
   );
 }
 
@@ -75,33 +177,45 @@ export function ClientDetailTop({
   initialImageSrc,
   canCreateImage,
   canDeleteImage,
+  hasSignature = false,
+  signatureDocumentId,
   summary
 }: {
   client: FineractClientDetail;
   initialImageSrc: string | null;
   canCreateImage: boolean;
   canDeleteImage: boolean;
+  hasSignature?: boolean;
+  signatureDocumentId?: number;
   summary?: ReactNode;
 }) {
   const name = clientDisplayName(client);
+  const submittedLabel = formatFineractDateArray(client.timeline?.submittedOnDate);
+  const activatedLabel = formatFineractDateArray(client.timeline?.activatedOnDate);
+  const dobLabel = formatFineractDateArray(client.dateOfBirth);
+  const closedLabel = formatFineractDateArray(client.timeline?.closedOnDate);
+  const isEntity = isClientEntity(client);
+  const legalFormLabel = enumOptionLabel(client.legalForm);
+  const groups = client.groups?.filter((group) => group.name?.trim()) ?? [];
 
   return (
     <div className="space-y-4">
-      <Link
-        href="/clients"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="size-4" aria-hidden />
-        Back to clients
-      </Link>
-
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        <ClientProfileAvatar
-          client={client}
-          initialImageSrc={initialImageSrc}
-          canCreateImage={canCreateImage}
-          canDeleteImage={canDeleteImage}
-        />
+        <div className="flex flex-col items-center gap-1">
+          <ClientProfileAvatar
+            client={client}
+            initialImageSrc={initialImageSrc}
+            canCreateImage={canCreateImage}
+            canDeleteImage={canDeleteImage}
+          />
+          <ClientSignatureView
+            clientId={String(client.id)}
+            hasSignature={hasSignature}
+            signatureDocumentId={signatureDocumentId}
+            canCreateImage={canCreateImage}
+            canDeleteImage={canDeleteImage}
+          />
+        </div>
 
         <div className="min-w-0 flex-1 space-y-4">
           <DetailHeader
@@ -112,22 +226,42 @@ export function ClientDetailTop({
             }}
             meta={
               <div className="space-y-2">
-                <span>
-                  Account {client.accountNo}
-                  {client.officeName ? ` · ${client.officeName}` : ''}
-                  {client.staffName ? ` · ${client.staffName}` : ''}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>
+                    Account {client.accountNo}
+                    {client.officeName ? ` · ${client.officeName}` : ''}
+                    {legalFormLabel ? ` · ${legalFormLabel}` : ''}
+                  </span>
+                  {!isEntity && client.isStaff ? (
+                    <Badge variant="outline">Staff client</Badge>
+                  ) : null}
+                </div>
+                <ClientHeaderClassification
+                  clientType={enumOptionLabel(client.clientType)}
+                  clientClassification={enumOptionLabel(client.clientClassification)}
+                />
+                <ClientHeaderGroups groups={groups} />
+                <ClientHeaderDates
+                  submittedOn={submittedLabel}
+                  activatedOn={activatedLabel}
+                  closedOn={closedLabel}
+                  birthOrIncorpLabel={isEntity ? 'Incorporation date' : 'Date of birth'}
+                  birthOrIncorpDate={dobLabel}
+                />
                 <ClientHeaderKeyInfo
                   mobileNo={client.mobileNo}
                   emailAddress={client.emailAddress}
                   externalId={client.externalId}
+                  staffName={client.staffName}
                 />
               </div>
             }
             actions={
-              <Button type="button" variant="outline" disabled>
-                Actions
-              </Button>
+              <ClientDetailActionsMenu
+                client={client}
+                hasSignature={hasSignature}
+                signatureDocumentId={signatureDocumentId}
+              />
             }
           />
 

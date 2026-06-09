@@ -6,7 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { toFineractDate } from '@/lib/fineract/dates';
+import { parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
+import {
+  formatFineractDateWithContext,
+  parseFineractDateWithContext,
+  resolveFineractDateContext
+} from '@/lib/fineract/fineract-date-context';
 
 /** `yyyy-MM-dd` from `<input type="date">` → Fineract date string. */
 export function isoDateToFineract(iso: string): string {
@@ -25,8 +30,8 @@ export function fineractDateToIso(value: string | undefined): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return value;
   }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseFineractDateString(value);
+  if (!parsed) {
     return '';
   }
   const y = parsed.getFullYear();
@@ -35,8 +40,11 @@ export function fineractDateToIso(value: string | undefined): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Parse Fineract or ISO date string to local `Date` (calendar). */
-export function fineractDateToDate(value: string | undefined): Date | undefined {
+/** Parse Fineract or ISO date string to local calendar `Date`. */
+export function fineractDateToDate(
+  value: string | undefined,
+  dateFormat?: string
+): Date | undefined {
   if (!value) {
     return undefined;
   }
@@ -44,16 +52,19 @@ export function fineractDateToDate(value: string | undefined): Date | undefined 
     const [year, month, day] = value.split('-').map(Number);
     return new Date(year, month - 1, day);
   }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return undefined;
-  }
-  return parsed;
+  const ctx = resolveFineractDateContext({ dateFormat });
+  return parseFineractDateWithContext(value, ctx) ?? parseFineractDateString(value) ?? undefined;
 }
 
-export function dateToFineract(date: Date | undefined): string | undefined {
+export function dateToFineract(
+  date: Date | undefined,
+  dateFormat?: string
+): string | undefined {
   if (!date) {
     return undefined;
+  }
+  if (dateFormat) {
+    return formatFineractDateWithContext(date, resolveFineractDateContext({ dateFormat }));
   }
   return toFineractDate(date);
 }

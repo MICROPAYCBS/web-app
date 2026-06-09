@@ -32,7 +32,7 @@ export function formatFamilyMemberSummary(member: {
   if (member.isDependent) {
     parts.push('Dependent');
   }
-  return parts.join(' · ') || 'Family member';
+  return parts.join(' · ') || 'Next of kin';
 }
 
 export function formatFamilyMemberInputSummary(

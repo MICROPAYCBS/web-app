@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { APP_LOGO_ABBREV, APP_NAME } from '@/lib/branding';
 import { MifosNavUser } from '@/components/platform/mifos-nav-user';
 import { QuickCreate } from '@/components/platform/quick-create';
 import { SidebarNavFind } from '@/components/platform/sidebar-nav-find';
@@ -33,11 +34,11 @@ export function MifosAppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" className="pointer-events-none">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground">
-                M
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
+                {APP_LOGO_ABBREV}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Mifos Web</span>
+                <span className="truncate font-semibold">{APP_NAME}</span>
                 <span className="truncate text-xs text-muted-foreground">
                   {serverName ?? 'Server'}
                 </span>
