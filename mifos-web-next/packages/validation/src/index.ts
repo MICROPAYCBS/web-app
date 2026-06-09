@@ -296,6 +296,19 @@ export {
   type UpdateAccountNumberPreferenceInput
 } from './system/account-number-preference.schema';
 export {
+  buildCreateReportPayload,
+  buildUpdateReportPayload,
+  REPORT_CATEGORIES,
+  reportParameterInputSchema,
+  updateCoreReportFormSchema,
+  upsertReportFormSchema,
+  validateUpdateCoreReportForm,
+  validateUpsertReportForm,
+  type ReportParameterInput,
+  type UpdateCoreReportFormInput,
+  type UpsertReportFormInput
+} from './system/report.schema';
+export {
   inlineCobSchema,
   jobParameterSchema,
   runJobWithParametersSchema,

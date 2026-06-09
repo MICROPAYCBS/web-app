@@ -1,0 +1,16 @@
+{
+  "command": "system.report.create",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.dataqueries.api.ReportsApiResource"
+  ],
+  "fields": {
+    "reportName": { "required": true },
+    "reportType": { "required": true },
+    "reportSubType": { "required": false },
+    "reportCategory": { "required": false },
+    "description": { "required": false },
+    "useReport": { "required": false },
+    "reportSql": { "required": false },
+    "reportParameters": { "required": false }
+  }
+}

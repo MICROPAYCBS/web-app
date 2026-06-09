@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T14:27:16.861Z",
+  "generatedAt": "2026-06-09T14:44:37.494Z",
   "summary": {
-    "todo": 39,
+    "todo": 38,
     "in_progress": 14,
-    "done": 22,
+    "done": 23,
     "n/a": 0
   },
   "routes": [
@@ -519,7 +519,7 @@
       "domain": "system",
       "label": "Report configuration",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "system/reports"
     },
     {

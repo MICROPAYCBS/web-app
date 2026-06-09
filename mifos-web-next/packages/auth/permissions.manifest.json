@@ -329,6 +329,21 @@
       "READ_REPORT"
     ]
   },
+  "system.reports.create": {
+    "any": [
+      "CREATE_REPORT"
+    ]
+  },
+  "system.reports.update": {
+    "any": [
+      "UPDATE_REPORT"
+    ]
+  },
+  "system.reports.delete": {
+    "any": [
+      "DELETE_REPORT"
+    ]
+  },
   "system.information": {
     "any": [
       "READ_CONFIGURATION"

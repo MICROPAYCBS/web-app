@@ -23,7 +23,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|   15 |       0 |       1 |
+|   16 |       0 |       0 |
 
 ---
 
@@ -43,7 +43,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-100 | `/system/manage-jobs`                | Manage jobs           | **Done**    | Scheduler, workflow, COB tabs + detail   |
 | SYS-110 | `/system/configurations`             | Global configurations | **Done**    | Inline edit sheet                        |
 | SYS-120 | `/system/account-number-preferences` | Account number prefs  | **Done**    | List, create sheet, view, edit, delete   |
-| SYS-130 | `/system/reports`                    | Report configuration  | Planned     | Report CRUD + parameters                 |
+| SYS-130 | `/system/reports`                    | Report configuration  | **Done**    | List, create, view, edit, delete, params |
 | SYS-140 | `/system/system-information`         | System information    | **Done**    | Tenant, versions, server, licensing      |
 | SYS-150 | `/system/about-us`                   | About us              | **Done**    | Static mission content                   |
 | SYS-160 | `/system/audit-trails`               | Audit trails          | **Done**    | Search, filters, CSV export, detail        |
@@ -58,7 +58,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 4. **Account number preferences** — medium CRUD slice (`SYS-120`, done).
 5. **Audit trails** — search template + paginated list + detail (`SYS-160`, done).
 6. **Manage jobs** — scheduler, workflow, COB tabs + detail/history (`SYS-100`, done).
-7. **Report configuration** — overlaps with `/reports` admin route (`SYS-130`).
+7. **Report configuration** — report CRUD + parameters (`SYS-130`, done).
 
 ---
 

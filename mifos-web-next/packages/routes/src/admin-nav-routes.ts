@@ -375,7 +375,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.reports',
     navOrder: 130,
     navIcon: 'file-bar-chart',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'sysSystemInformation',

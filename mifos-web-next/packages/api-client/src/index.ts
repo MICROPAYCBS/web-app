@@ -236,6 +236,15 @@ export type {
 } from './system/audit-trail-types';
 
 export type {
+  FineractReportAllowedParameter,
+  FineractReportDetail,
+  FineractReportListItem,
+  FineractReportMutationResponse,
+  FineractReportParameter,
+  FineractReportTemplate
+} from './system/report-types';
+
+export type {
   FineractAvailableWorkflowStep,
   FineractAvailableWorkflowSteps,
   FineractCobCatchUpStatus,
