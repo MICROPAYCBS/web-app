@@ -94,8 +94,7 @@ export function SystemDatatableColumnSheet({
       return;
     }
 
-    const kind: SystemDatatableColumnKind =
-      mode === 'add' ? 'new' : (column?.kind ?? 'existing');
+    const kind: SystemDatatableColumnKind = mode === 'add' ? 'new' : (column?.kind ?? 'existing');
 
     onSave({
       columnName: name.trim(),

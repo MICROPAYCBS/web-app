@@ -232,7 +232,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 10,
     navIcon: 'code-2',
     keywords: ['code', 'lookup'],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'sysExternalEvents',
@@ -280,7 +280,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 50,
     navIcon: 'database',
     keywords: ['datatable'],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'sysHooks',
@@ -327,7 +327,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.surveys',
     navOrder: 90,
     navIcon: 'clipboard-list',
-    keywords: []
+    keywords: [],
+    parityStatus: 'in_progress'
   },
   {
     id: 'sysJobs',
@@ -383,7 +384,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.information',
     navOrder: 140,
     navIcon: 'info',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'sysAboutUs',
@@ -394,7 +396,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.aboutUs',
     navOrder: 150,
     navIcon: 'info',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'sysAuditTrails',
@@ -582,7 +585,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 40,
     navIcon: 'file-bar-chart',
     keywords: ['report']
-  },
+  }
 ];
 
 export const ADMIN_NAV_ROUTES = adminRoutesToRecord([...ADMIN_NAV_ROUTE_ENTRIES]);

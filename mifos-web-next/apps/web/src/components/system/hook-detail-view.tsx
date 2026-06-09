@@ -181,7 +181,12 @@ export function HookDetailView({
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={pending}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDeleteOpen(false)}
+                disabled={pending}
+              >
                 Cancel
               </Button>
               <Button type="button" variant="destructive" onClick={handleDelete} disabled={pending}>

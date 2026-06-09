@@ -47,8 +47,7 @@ const columns: ColumnDef<FineractDatatableRegistration>[] = [
   {
     id: 'entitySubType',
     header: 'Sub type',
-    cell: ({ row }) =>
-      formatEntitySubType(row.original.entitySubType ?? row.original.subentityType)
+    cell: ({ row }) => formatEntitySubType(row.original.entitySubType ?? row.original.subentityType)
   }
 ];
 

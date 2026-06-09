@@ -39,9 +39,7 @@ const columns: ColumnDef<FineractDatatableColumnHeader>[] = [
       return (
         <div className="space-y-0.5">
           <div>{toDatatableDisplayLabel(row.original.columnName)}</div>
-          {codeName ? (
-            <div className="text-xs text-muted-foreground">({codeName})</div>
-          ) : null}
+          {codeName ? <div className="text-xs text-muted-foreground">({codeName})</div> : null}
         </div>
       );
     }
@@ -88,10 +86,7 @@ export function SystemDataTableColumnsTable({
     pageSize: 25
   });
 
-  const userColumns = useMemo(
-    () => filterUserDatatableColumns(columnHeaders),
-    [columnHeaders]
-  );
+  const userColumns = useMemo(() => filterUserDatatableColumns(columnHeaders), [columnHeaders]);
 
   const table = useReactTable({
     data: userColumns,

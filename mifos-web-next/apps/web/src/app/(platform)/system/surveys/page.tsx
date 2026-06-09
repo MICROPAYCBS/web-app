@@ -7,15 +7,17 @@
  */
 
 import { can, resolvePermission } from '@mifos/auth';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
+import { SurveysPageContent } from '@/components/system/surveys-page-content';
+import { listSurveys } from '@/lib/fineract/surveys';
 import { getServerSession } from '@/lib/session/server';
 
-/** Legacy create route — creation now uses the sidebar on the roles list. */
-export default async function CreateRolePage() {
+export default async function SurveysPage() {
   const session = await getServerSession();
-  if (!can(session, resolvePermission('system.roles')) || !can(session, 'CREATE_ROLE')) {
+  if (!can(session, resolvePermission('system.surveys'))) {
     notFound();
   }
 
-  return redirect('/system/roles-and-permissions?create=1');
+  const surveys = await listSurveys();
+  return <SurveysPageContent surveys={surveys} />;
 }

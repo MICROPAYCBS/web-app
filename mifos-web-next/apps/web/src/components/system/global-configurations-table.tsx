@@ -29,12 +29,7 @@ import { GlobalConfigurationEditSheet } from '@/components/system/global-configu
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   applyGlobalConfigurationChanges,
   formatGlobalConfigurationDateValue,
@@ -76,9 +71,7 @@ export function GlobalConfigurationsTable({
 
       const previousEnabled = configuration.enabled;
       setConfigurations((current) =>
-        current.map((row) =>
-          row.id === configuration.id ? { ...row, enabled } : row
-        )
+        current.map((row) => (row.id === configuration.id ? { ...row, enabled } : row))
       );
       setActionError(null);
       setTogglingId(configuration.id);

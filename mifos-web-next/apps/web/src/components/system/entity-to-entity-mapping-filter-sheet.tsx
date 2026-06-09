@@ -17,7 +17,10 @@ import { Button } from '@/components/ui/button';
 const ALL_OPTION = { value: '0', label: 'All' };
 
 function toSelectOptions(options: EntityMappingFilterOptions['fromOptions']) {
-  return [ALL_OPTION, ...options.map((option) => ({ value: String(option.id), label: option.name }))];
+  return [
+    ALL_OPTION,
+    ...options.map((option) => ({ value: String(option.id), label: option.name }))
+  ];
 }
 
 export function EntityToEntityMappingFilterSheet({

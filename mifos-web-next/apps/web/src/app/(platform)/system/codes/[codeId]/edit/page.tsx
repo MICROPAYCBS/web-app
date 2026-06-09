@@ -33,5 +33,5 @@ export default async function SystemCodeEditPage({
     notFound();
   }
 
-  redirect(`/system/codes/${codeId}?tab=general`);
+  return redirect(`/system/codes/${codeId}?tab=general`);
 }

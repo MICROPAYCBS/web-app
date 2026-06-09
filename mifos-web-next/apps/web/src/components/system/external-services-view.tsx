@@ -35,10 +35,7 @@ export function ExternalServicesView({
     () => EXTERNAL_SERVICE_DEFINITIONS.map((definition) => definition.slug),
     []
   );
-  const { activeSection, setSection } = useDetailSection(
-    sectionIds,
-    DEFAULT_EXTERNAL_SERVICE_SLUG
-  );
+  const { activeSection, setSection } = useDetailSection(sectionIds, DEFAULT_EXTERNAL_SERVICE_SLUG);
   const activeSlug = activeSection as ExternalServiceSlug;
   const definition =
     EXTERNAL_SERVICE_DEFINITIONS.find((item) => item.slug === activeSlug) ??
@@ -70,11 +67,7 @@ export function ExternalServicesView({
           />
         }
         sidebar={
-          <DetailSectionNav
-            items={navItems}
-            activeId={definition.slug}
-            onSelect={setSection}
-          />
+          <DetailSectionNav items={navItems} activeId={definition.slug} onSelect={setSection} />
         }
       >
         <div className="space-y-6">

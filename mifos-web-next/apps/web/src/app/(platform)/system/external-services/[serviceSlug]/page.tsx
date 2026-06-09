@@ -43,14 +43,10 @@ export default async function ExternalServiceLegacyDetailPage({
 
 
   if (!isExternalServiceSlug(serviceSlug)) {
-
-    redirect('/system/external-services');
-
+    return redirect('/system/external-services');
   }
 
-
-
-  redirect(externalServiceSectionHref(serviceSlug));
+  return redirect(externalServiceSectionHref(serviceSlug));
 
 }
 

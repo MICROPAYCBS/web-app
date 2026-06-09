@@ -29,10 +29,7 @@ export function RolesPageContent({
       description="Define roles and control which actions users can perform across the application."
       actions={
         <Can permission="CREATE_ROLE">
-          <Link
-            href="/system/roles-and-permissions?create=1"
-            className={cn(buttonVariants())}
-          >
+          <Link href="/system/roles-and-permissions?create=1" className={cn(buttonVariants())}>
             Add role
           </Link>
         </Can>

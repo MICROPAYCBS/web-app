@@ -87,10 +87,7 @@ export type {
   FineractEntityDatatableCheckTemplate
 } from './clients/entity-datatable-check-types';
 
-export type {
-  FineractSearchEntityStatus,
-  FineractSearchResult
-} from './clients/search-types';
+export type { FineractSearchEntityStatus, FineractSearchResult } from './clients/search-types';
 
 export type {
   CreateStandingInstructionResponse,
@@ -212,6 +209,8 @@ export type {
   FineractRolePermissionUsage,
   FineractRolePermissionsDetail
 } from './system/role-types';
+
+export type { FineractSurveyListItem } from './system/survey-types';
 
 export type {
   EntityMappingFilterOptions,

@@ -116,7 +116,9 @@ export function ExternalServiceEditSheet({
               key={field.key}
               label={field.label}
               required
-              type={field.type === 'email' ? 'email' : field.type === 'password' ? 'password' : 'text'}
+              type={
+                field.type === 'email' ? 'email' : field.type === 'password' ? 'password' : 'text'
+              }
               value={typeof values[field.key] === 'string' ? (values[field.key] as string) : ''}
               onChange={(value) => setFieldValue(field.key, value)}
             />

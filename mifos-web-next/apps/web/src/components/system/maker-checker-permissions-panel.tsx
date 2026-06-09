@@ -62,10 +62,7 @@ export function MakerCheckerPermissionsPanel({
     );
   }
 
-  function setGroupSelection(
-    groupPermissions: FineractRolePermissionUsage[],
-    selected: boolean
-  ) {
+  function setGroupSelection(groupPermissions: FineractRolePermissionUsage[], selected: boolean) {
     const codes = new Set(groupPermissions.map((permission) => permission.code));
     setPermissions((current) =>
       current.map((permission) =>
@@ -101,8 +98,7 @@ export function MakerCheckerPermissionsPanel({
       <div className="flex flex-col gap-4 border-b border-border pb-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Enabled{' '}
-            <span className="font-medium text-foreground">{enabledCount}</span> /{' '}
+            Enabled <span className="font-medium text-foreground">{enabledCount}</span> /{' '}
             {permissions.length}
             {canUpdate && !editing ? (
               <span className="mt-1 block text-xs">
@@ -130,7 +126,12 @@ export function MakerCheckerPermissionsPanel({
           <div className="flex shrink-0 flex-wrap gap-2">
             {editing ? (
               <>
-                <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={pending}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={pending}
+                >
                   Cancel
                 </Button>
                 <Button type="button" onClick={handleSave} disabled={pending}>

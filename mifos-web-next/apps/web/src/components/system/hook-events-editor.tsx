@@ -10,11 +10,7 @@
 
 import type { FineractHookTemplate } from '@mifos/api-client';
 import type { HookEventInput } from '@mifos/validation';
-import {
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef
-} from '@tanstack/react-table';
+import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { Plus, Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
@@ -107,9 +103,7 @@ export function HookEventsEditor({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-medium">Events</h3>
-          <p className="text-sm text-muted-foreground">
-            Choose when this hook should run.
-          </p>
+          <p className="text-sm text-muted-foreground">Choose when this hook should run.</p>
         </div>
         <Button type="button" variant="outline" onClick={() => setAddOpen(true)}>
           <Plus className="mr-2 size-4" />
@@ -147,9 +141,7 @@ export function HookEventsEditor({
                 : 'Remove this event?'}
             </DialogDescription>
           </DialogHeader>
-          {deleteError ? (
-            <p className="text-sm text-destructive">{deleteError}</p>
-          ) : null}
+          {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setDeleteIndex(null)}>
               Cancel

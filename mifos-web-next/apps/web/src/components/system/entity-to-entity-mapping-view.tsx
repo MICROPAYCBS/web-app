@@ -40,11 +40,7 @@ import {
   getEntityMappingFilterOptionsAction,
   listEntityMappingsForFilterAction
 } from '@/actions/entity-to-entity-mapping';
-import {
-  DetailHeader,
-  DetailPage,
-  DetailSectionNav
-} from '@/components/composites';
+import { DetailHeader, DetailPage, DetailSectionNav } from '@/components/composites';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { EntityToEntityMappingFilterSheet } from '@/components/system/entity-to-entity-mapping-filter-sheet';
@@ -129,9 +125,7 @@ export function EntityToEntityMappingView({
   });
 
   const selectedType = mappingTypes.find((type) => type.id === selectedTypeId) ?? null;
-  const filterLabels = selectedType
-    ? entityMappingFilterLabels(selectedType.mappingTypes)
-    : null;
+  const filterLabels = selectedType ? entityMappingFilterLabels(selectedType.mappingTypes) : null;
 
   const filterSummary = useMemo(() => {
     if (!filterOptions) {
@@ -358,11 +352,7 @@ export function EntityToEntityMappingView({
         }
         sidebar={
           navItems.length > 0 ? (
-            <DetailSectionNav
-              items={navItems}
-              activeId={activeSection}
-              onSelect={setSection}
-            />
+            <DetailSectionNav items={navItems} activeId={activeSection} onSelect={setSection} />
           ) : undefined
         }
       >

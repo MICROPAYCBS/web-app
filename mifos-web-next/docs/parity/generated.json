@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T11:53:18.121Z",
+  "generatedAt": "2026-06-09T12:52:31.308Z",
   "summary": {
-    "todo": 45,
-    "in_progress": 16,
-    "done": 14,
+    "todo": 42,
+    "in_progress": 15,
+    "done": 18,
     "n/a": 0
   },
   "routes": [
@@ -411,7 +411,7 @@
       "domain": "system",
       "label": "Codes",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "system/codes"
     },
     {
@@ -447,7 +447,7 @@
       "domain": "system",
       "label": "Data tables",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "system/data-tables"
     },
     {
@@ -483,7 +483,7 @@
       "domain": "system",
       "label": "Surveys",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "system/surveys"
     },
     {
@@ -528,7 +528,7 @@
       "domain": "system",
       "label": "System information",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "system/system-information"
     },
     {
@@ -537,7 +537,7 @@
       "domain": "system",
       "label": "About us",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "system/about-us"
     },
     {

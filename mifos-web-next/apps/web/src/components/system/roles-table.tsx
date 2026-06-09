@@ -115,8 +115,7 @@ export function RolesTable({
       }
       const role = row.original;
       return (
-        role.name.toLowerCase().includes(query) ||
-        role.description.toLowerCase().includes(query)
+        role.name.toLowerCase().includes(query) || role.description.toLowerCase().includes(query)
       );
     },
     getCoreRowModel: getCoreRowModel(),

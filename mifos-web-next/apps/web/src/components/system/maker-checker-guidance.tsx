@@ -42,7 +42,7 @@ export function MakerCheckerGuidance() {
           <PopoverDescription>
             Task toggles saved here only take effect when maker-checker is enabled under{' '}
             <AppLink
-              route="sysConfigurations"
+              href="/system/configurations"
               className="font-medium text-foreground underline-offset-4 hover:underline"
             >
               Global configurations

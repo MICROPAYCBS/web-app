@@ -14,16 +14,8 @@ import { Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import {
-  deleteRoleAction,
-  disableRoleAction,
-  enableRoleAction
-} from '@/actions/system-roles';
-import {
-  DetailBackLink,
-  DetailHeader,
-  DetailPage
-} from '@/components/composites';
+import { deleteRoleAction, disableRoleAction, enableRoleAction } from '@/actions/system-roles';
+import { DetailBackLink, DetailHeader, DetailPage } from '@/components/composites';
 import { RolePermissionsPanel } from '@/components/system/role-permissions-panel';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -84,9 +76,7 @@ export function RoleDetailView({
       <DetailPage
         header={
           <DetailHeader
-            backLink={
-              <DetailBackLink href="/system/roles-and-permissions" label="Back to roles" />
-            }
+            backLink={<DetailBackLink href="/system/roles-and-permissions" label="Back to roles" />}
             title={role.name}
             status={
               role.disabled
@@ -176,7 +166,12 @@ export function RoleDetailView({
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={pending}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDeleteOpen(false)}
+                disabled={pending}
+              >
                 Cancel
               </Button>
               <Button type="button" variant="destructive" onClick={handleDelete} disabled={pending}>

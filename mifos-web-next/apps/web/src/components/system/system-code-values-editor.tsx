@@ -169,9 +169,7 @@ export function SystemCodeValuesEditor({
         id: 'description',
         header: 'Description',
         cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {row.original.description?.trim() || '—'}
-          </span>
+          <span className="text-muted-foreground">{row.original.description?.trim() || '—'}</span>
         )
       },
       {

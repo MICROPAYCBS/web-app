@@ -9,11 +9,7 @@
  */
 
 import type { FineractExternalServiceProperty } from '@mifos/api-client';
-import {
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef
-} from '@tanstack/react-table';
+import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import {

@@ -42,10 +42,9 @@ export function EntityToEntityMappingGuidance() {
           <PopoverTitle>Mappings work with global configurations</PopoverTitle>
           <PopoverDescription>
             Rules you add here define which offices or roles can access loan products, savings
-            products, and charges. They only take effect when the related settings are enabled
-            under{' '}
+            products, and charges. They only take effect when the related settings are enabled under{' '}
             <AppLink
-              route="sysConfigurations"
+              href="/system/configurations"
               className="font-medium text-foreground underline-offset-4 hover:underline"
             >
               Global configurations

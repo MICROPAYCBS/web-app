@@ -64,10 +64,7 @@ export function RolePermissionsPanel({
     );
   }
 
-  function setGroupSelection(
-    groupPermissions: FineractRolePermissionUsage[],
-    selected: boolean
-  ) {
+  function setGroupSelection(groupPermissions: FineractRolePermissionUsage[], selected: boolean) {
     const codes = new Set(groupPermissions.map((permission) => permission.code));
     setPermissions((current) =>
       current.map((permission) =>
@@ -113,8 +110,7 @@ export function RolePermissionsPanel({
             </p>
           </div>
           <p className="text-sm text-muted-foreground">
-            Selected{' '}
-            <span className="font-medium text-foreground">{selectedCount}</span> /{' '}
+            Selected <span className="font-medium text-foreground">{selectedCount}</span> /{' '}
             {permissions.length}
           </p>
           <div className="relative w-full max-w-xl">
@@ -136,7 +132,12 @@ export function RolePermissionsPanel({
           <div className="flex shrink-0 flex-wrap gap-2">
             {editing ? (
               <>
-                <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={pending}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={pending}
+                >
                   Cancel
                 </Button>
                 <Button type="button" onClick={handleSave} disabled={pending}>

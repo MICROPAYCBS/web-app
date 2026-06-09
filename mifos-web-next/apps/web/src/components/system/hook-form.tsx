@@ -9,7 +9,11 @@
  */
 
 import type { FineractHookTemplate, FineractHookTemplateName } from '@mifos/api-client';
-import { formatActionErrorMessage, validateUpsertHookForm, type UpsertHookFormInput } from '@mifos/validation';
+import {
+  formatActionErrorMessage,
+  validateUpsertHookForm,
+  type UpsertHookFormInput
+} from '@mifos/validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';

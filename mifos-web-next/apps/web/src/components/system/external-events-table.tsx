@@ -96,9 +96,7 @@ export function ExternalEventsTable({
       {
         accessorKey: 'type',
         header: 'Event type',
-        cell: ({ row }) => (
-          <span className="font-medium break-all">{row.original.type}</span>
-        )
+        cell: ({ row }) => <span className="font-medium break-all">{row.original.type}</span>
       },
       {
         id: 'status',
