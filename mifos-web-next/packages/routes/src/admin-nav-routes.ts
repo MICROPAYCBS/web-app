@@ -328,7 +328,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 90,
     navIcon: 'clipboard-list',
     keywords: [],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'sysJobs',

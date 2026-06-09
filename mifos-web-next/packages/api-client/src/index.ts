@@ -210,7 +210,13 @@ export type {
   FineractRolePermissionsDetail
 } from './system/role-types';
 
-export type { FineractSurveyListItem } from './system/survey-types';
+export type {
+  FineractSurveyDetail,
+  FineractSurveyListItem,
+  FineractSurveyMutationResponse,
+  FineractSurveyQuestionData,
+  FineractSurveyResponseData
+} from './system/survey-types';
 
 export type {
   EntityMappingFilterOptions,

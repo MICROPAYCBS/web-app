@@ -8,38 +8,30 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ListPage } from '@/components/composites/list-page';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { SurveyDetailView } from '@/components/system/survey-detail-view';
+import { getSurvey } from '@/lib/fineract/surveys';
 import { getServerSession } from '@/lib/session/server';
 
-/** Placeholder until survey detail slice (SYS-090) ships. */
-export default async function SurveyDetailPlaceholderPage({
+export default async function SurveyDetailPage({
   params
 }: {
   params: Promise<{ surveyId: string }>;
 }) {
+  const { surveyId } = await params;
   const session = await getServerSession();
   if (!can(session, resolvePermission('system.surveys'))) {
     notFound();
   }
 
-  const { surveyId } = await params;
+  const id = Number(surveyId);
+  if (!Number.isFinite(id)) {
+    notFound();
+  }
 
-  return (
-    <ListPage
-      title="Survey detail"
-      description={`Detail view for survey ${surveyId} is in progress.`}
-      actions={
-        <Link href="/system/surveys" className={cn(buttonVariants({ variant: 'outline' }))}>
-          Back to surveys
-        </Link>
-      }
-    >
-      <p className="text-sm text-muted-foreground">
-        Create, edit, activate, and question management will be added in the next surveys wave.
-      </p>
-    </ListPage>
-  );
+  const survey = await getSurvey(id);
+  if (!survey) {
+    notFound();
+  }
+
+  return <SurveyDetailView survey={survey} canUpdate={can(session, 'UPDATE_SURVEY')} />;
 }

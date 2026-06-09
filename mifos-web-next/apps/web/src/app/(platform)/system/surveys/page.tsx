@@ -19,5 +19,7 @@ export default async function SurveysPage() {
   }
 
   const surveys = await listSurveys();
-  return <SurveysPageContent surveys={surveys} />;
+  return (
+    <SurveysPageContent surveys={surveys} canUpdate={can(session, 'UPDATE_SURVEY')} />
+  );
 }

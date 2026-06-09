@@ -23,9 +23,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|    9 |       1 |       6 |
-
-_After SYS-140/150 ship: Done 11, Planned 5._
+|   12 |       0 |       4 |
 
 ---
 
@@ -41,7 +39,7 @@ _After SYS-140/150 ship: Done 11, Planned 5._
 | SYS-060 | `/system/hooks`                      | Hooks                 | **Done**    | Full CRUD + events                       |
 | SYS-070 | `/system/roles-and-permissions`      | Roles                 | **Done**    | CRUD + permission assignment             |
 | SYS-080 | `/system/configure-mc-tasks`         | Maker checker         | **Done**    | Permission toggles                       |
-| SYS-090 | `/system/surveys`                    | Surveys               | **Partial** | List shipped; create/view/edit next      |
+| SYS-090 | `/system/surveys`                    | Surveys               | **Done**    | List, create, view, edit, activate       |
 | SYS-100 | `/system/manage-jobs`                | Manage jobs           | Planned     | Scheduler + history + COB tabs           |
 | SYS-110 | `/system/configurations`             | Global configurations | **Done**    | Inline edit sheet                        |
 | SYS-120 | `/system/account-number-preferences` | Account number prefs  | Planned     | List + CRUD                              |
@@ -56,7 +54,7 @@ _After SYS-140/150 ship: Done 11, Planned 5._
 
 1. **Close foundation** — codes, data tables (done).
 2. **Read-only wins** — system information, about us (done).
-3. **Surveys** — list → create/edit/view → activate/deactivate (`SYS-090`).
+3. **Surveys** — list → create/edit/view → activate/deactivate (`SYS-090`, done).
 4. **Account number preferences** — medium CRUD slice (`SYS-120`).
 5. **Audit trails** — search template + paginated list + detail (`SYS-160`).
 6. **Manage jobs** — largest slice; defer until scheduler APIs are mapped (`SYS-100`).

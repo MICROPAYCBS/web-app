@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T12:52:31.308Z",
+  "generatedAt": "2026-06-09T13:13:42.115Z",
   "summary": {
     "todo": 42,
-    "in_progress": 15,
-    "done": 18,
+    "in_progress": 14,
+    "done": 19,
     "n/a": 0
   },
   "routes": [
@@ -483,7 +483,7 @@
       "domain": "system",
       "label": "Surveys",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "system/surveys"
     },
     {

@@ -276,6 +276,16 @@ export {
   type WebHookFormInput
 } from './system/hook.schema';
 export {
+  buildSurveyApiPayload,
+  surveyQuestionSchema,
+  surveyResponseSchema,
+  upsertSurveyFormSchema,
+  validateUpsertSurveyForm,
+  type SurveyQuestionInput,
+  type SurveyResponseInput,
+  type UpsertSurveyFormInput
+} from './system/survey.schema';
+export {
   updateGlobalConfigurationEnabledSchema,
   updateGlobalConfigurationValuesSchema,
   validateUpdateGlobalConfigurationEnabled,

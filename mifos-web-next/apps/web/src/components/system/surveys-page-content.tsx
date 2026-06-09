@@ -9,16 +9,33 @@
  */
 
 import type { FineractSurveyListItem } from '@mifos/api-client';
+import { Can } from '@mifos/auth';
+import Link from 'next/link';
 import { ListPage } from '@/components/composites/list-page';
 import { SurveysTable } from '@/components/system/surveys-table';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-export function SurveysPageContent({ surveys }: { surveys: FineractSurveyListItem[] }) {
+export function SurveysPageContent({
+  surveys,
+  canUpdate
+}: {
+  surveys: FineractSurveyListItem[];
+  canUpdate: boolean;
+}) {
   return (
     <ListPage
       title="Surveys"
       description="Manage questionnaires used for client and group assessments."
+      actions={
+        <Can permission="CREATE_SURVEY">
+          <Link href="/system/surveys/create" className={cn(buttonVariants())}>
+            Create survey
+          </Link>
+        </Can>
+      }
     >
-      <SurveysTable surveys={surveys} />
+      <SurveysTable surveys={surveys} canUpdate={canUpdate} />
     </ListPage>
   );
 }

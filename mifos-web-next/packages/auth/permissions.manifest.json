@@ -269,6 +269,16 @@
       "READ_SURVEY"
     ]
   },
+  "system.surveys.create": {
+    "any": [
+      "CREATE_SURVEY"
+    ]
+  },
+  "system.surveys.update": {
+    "any": [
+      "UPDATE_SURVEY"
+    ]
+  },
   "system.jobs": {
     "any": [
       "READ_SCHEDULER"
