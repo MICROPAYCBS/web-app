@@ -129,28 +129,29 @@ export function PaymentTypesTable({
         header: 'Actions',
         meta: { sticky: 'right' },
         cell: ({ row }) => (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-1">
             {canEdit ? (
               <Link
                 href={paymentTypeEditPath(row.original.id)}
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}
+                aria-label={`Edit ${row.original.name}`}
               >
-                <Pencil className="mr-1 size-4" />
-                Edit
+                <Pencil className="size-4" />
               </Link>
             ) : null}
             {canDelete && !row.original.isSystemDefined ? (
               <Button
                 type="button"
-                variant="destructive"
-                size="sm"
+                variant="ghost"
+                size="icon-sm"
+                className="text-destructive hover:text-destructive"
+                aria-label={`Delete ${row.original.name}`}
                 onClick={() => {
                   setActionError(null);
                   setDeleteTarget(row.original);
                 }}
               >
-                <Trash2 className="mr-1 size-4" />
-                Delete
+                <Trash2 className="size-4" />
               </Button>
             ) : null}
           </div>
