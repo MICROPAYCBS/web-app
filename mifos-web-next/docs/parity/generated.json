@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-06-09T14:44:37.494Z",
+  "generatedAt": "2026-06-10T21:17:14.810Z",
   "summary": {
-    "todo": 38,
-    "in_progress": 14,
+    "todo": 30,
+    "in_progress": 22,
     "done": 23,
     "n/a": 0
   },
@@ -591,7 +591,7 @@
       "domain": "accounting",
       "label": "Chart of accounts",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "accounting/chart-of-accounts"
     },
     {
@@ -600,7 +600,7 @@
       "domain": "accounting",
       "label": "Journal entries",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "accounting/journal-entries"
     },
     {
@@ -609,7 +609,7 @@
       "domain": "accounting",
       "label": "Frequent postings",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "accounting/journal-entries/frequent-postings"
     },
     {
@@ -618,7 +618,7 @@
       "domain": "accounting",
       "label": "Financial activity mappings",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "accounting/financial-activity-mappings"
     },
     {
@@ -645,7 +645,7 @@
       "domain": "accounting",
       "label": "Accounting rules",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "accounting/accounting-rules"
     },
     {
@@ -672,7 +672,7 @@
       "domain": "appusers",
       "label": "Users",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "appusers"
     },
     {
@@ -681,7 +681,7 @@
       "domain": "templates",
       "label": "Templates",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "templates"
     },
     {
@@ -690,7 +690,7 @@
       "domain": "reports",
       "label": "Reports",
       "kind": "page",
-      "status": "todo",
+      "status": "in_progress",
       "webAppRef": "reports"
     }
   ]

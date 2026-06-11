@@ -256,6 +256,9 @@ importers:
       '@mifos/api-client':
         specifier: workspace:*
         version: link:../api-client
+      '@mifos/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@mifos/i18n':
         specifier: workspace:*
         version: link:../i18n

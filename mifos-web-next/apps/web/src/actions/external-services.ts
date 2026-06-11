@@ -18,9 +18,9 @@ import {
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
-  getExternalServiceDefinition,
+  externalServiceApiName,
   type ExternalServiceSlug
-} from '@/lib/fineract/external-service-display';
+} from '@/lib/fineract/external-service-shared';
 import { updateExternalServiceConfiguration } from '@/lib/fineract/external-services';
 import { getServerSession } from '@/lib/session/server';
 
@@ -41,10 +41,10 @@ export async function updateExternalServiceAction(
     return { ok: false, message: 'You do not have permission to update external services.' };
   }
 
-  const definition = getExternalServiceDefinition(slug);
+  const apiName = externalServiceApiName(slug);
 
   try {
-    switch (definition.apiName) {
+    switch (apiName) {
       case 'S3': {
         const parsed = validateUpdateS3ExternalService(input);
         if (!parsed.success) {
@@ -53,7 +53,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid S3 configuration.'
           };
         }
-        await updateExternalServiceConfiguration(definition.apiName, parsed.data);
+        await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       case 'SMTP': {
@@ -64,7 +64,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid email configuration.'
           };
         }
-        await updateExternalServiceConfiguration(definition.apiName, parsed.data);
+        await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       case 'SMS': {
@@ -75,7 +75,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid SMS configuration.'
           };
         }
-        await updateExternalServiceConfiguration(definition.apiName, parsed.data);
+        await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       case 'NOTIFICATION': {
@@ -86,7 +86,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid notification configuration.'
           };
         }
-        await updateExternalServiceConfiguration(definition.apiName, parsed.data);
+        await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       default:

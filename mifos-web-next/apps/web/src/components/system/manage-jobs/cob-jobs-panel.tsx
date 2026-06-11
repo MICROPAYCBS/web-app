@@ -58,6 +58,10 @@ export function CobJobsPanel({
 
   return (
     <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        Monitor close-of-business catch-up, review loans locked during processing, and run inline
+        COB for selected accounts.
+      </p>
       <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium">Catch-up status</p>
@@ -92,7 +96,7 @@ export function CobJobsPanel({
       <LockedLoansTable
         loans={loans}
         canExecuteInline={canExecuteInline}
-        onSelectionChange={setSelectedLoans}
+        onSelectedLoansChange={setSelectedLoans}
       />
     </div>
   );

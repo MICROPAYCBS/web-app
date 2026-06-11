@@ -12,8 +12,23 @@ import type {
 } from '@mifos/api-client';
 import type { LucideIcon } from 'lucide-react';
 import { Bell, Cloud, Mail, MessageSquare } from 'lucide-react';
+import {
+  DEFAULT_EXTERNAL_SERVICE_SLUG,
+  type ExternalServiceSlug,
+  externalServiceListPath,
+  externalServiceSectionHref,
+  configurationsBySlug,
+  isExternalServiceSlug
+} from '@/lib/fineract/external-service-shared';
 
-export type ExternalServiceSlug = 'amazon-s3' | 'email' | 'sms' | 'notification';
+export {
+  DEFAULT_EXTERNAL_SERVICE_SLUG,
+  type ExternalServiceSlug,
+  configurationsBySlug,
+  externalServiceListPath,
+  externalServiceSectionHref,
+  isExternalServiceSlug
+};
 
 export interface ExternalServiceFieldDefinition {
   key: string;
@@ -30,8 +45,6 @@ export interface ExternalServiceDefinition {
   icon: LucideIcon;
   fields: ExternalServiceFieldDefinition[];
 }
-
-export const DEFAULT_EXTERNAL_SERVICE_SLUG: ExternalServiceSlug = 'amazon-s3';
 
 export const EXTERNAL_SERVICE_DEFINITIONS: ExternalServiceDefinition[] = [
   {
@@ -93,10 +106,6 @@ const slugByApiName = new Map(
   EXTERNAL_SERVICE_DEFINITIONS.map((definition) => [definition.apiName, definition.slug])
 );
 
-export function isExternalServiceSlug(value: string): value is ExternalServiceSlug {
-  return EXTERNAL_SERVICE_DEFINITIONS.some((definition) => definition.slug === value);
-}
-
 export function getExternalServiceDefinition(
   slug: ExternalServiceSlug
 ): ExternalServiceDefinition {
@@ -107,31 +116,9 @@ export function getExternalServiceDefinition(
   return definition;
 }
 
-export function externalServiceListPath(): string {
-  return '/system/external-services';
-}
-
-export function externalServiceSectionHref(slug: ExternalServiceSlug): string {
-  const base = externalServiceListPath();
-  if (slug === DEFAULT_EXTERNAL_SERVICE_SLUG) {
-    return base;
-  }
-  return `${base}?section=${slug}`;
-}
-
 /** @deprecated Use {@link externalServiceSectionHref} — nested routes redirect to section query. */
 export function externalServicePath(slug: ExternalServiceSlug): string {
   return externalServiceSectionHref(slug);
-}
-
-export function configurationsBySlug(
-  configurations: Record<FineractExternalServiceName, FineractExternalServiceProperty[]>
-): Record<ExternalServiceSlug, FineractExternalServiceProperty[]> {
-  const bySlug = {} as Record<ExternalServiceSlug, FineractExternalServiceProperty[]>;
-  for (const definition of EXTERNAL_SERVICE_DEFINITIONS) {
-    bySlug[definition.slug] = configurations[definition.apiName] ?? [];
-  }
-  return bySlug;
 }
 
 export function externalServicePropertyLabel(
@@ -209,3 +196,4 @@ export function externalServiceSlugFromApiName(
   }
   return slug;
 }
+

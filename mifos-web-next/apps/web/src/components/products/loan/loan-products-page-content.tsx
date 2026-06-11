@@ -12,6 +12,7 @@ import type { LoanProductKind, LoanProductListItem } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
 import { LoanProductsTable } from '@/components/products/loan/loan-products-table';
 import { buttonVariants } from '@/components/ui/button';
@@ -33,10 +34,12 @@ import { cn } from '@/lib/utils';
 
 export function LoanProductsPageContent({
   products,
-  productKind
+  productKind,
+  loadError
 }: {
   products: LoanProductListItem[];
   productKind: LoanProductKind;
+  loadError?: string;
 }) {
   const router = useRouter();
 
@@ -75,6 +78,9 @@ export function LoanProductsPageContent({
         </div>
       }
     >
+      {loadError ? (
+        <LoadErrorAlert message={loadError} title="Could not load loan products" />
+      ) : null}
       <LoanProductsTable products={products} productKind={productKind} />
     </ListPage>
   );

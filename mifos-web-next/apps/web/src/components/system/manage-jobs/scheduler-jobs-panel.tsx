@@ -65,7 +65,11 @@ export function SchedulerJobsPanel({
           Refresh
         </Button>
       )}
-      <SchedulerJobsTable jobs={jobs} canExecute={canExecute} onSelectionChange={setSelectedJobs} />
+      <SchedulerJobsTable
+        jobs={jobs}
+        canExecute={canExecute}
+        onSelectedJobsChange={setSelectedJobs}
+      />
       <RunJobsDialog open={runDialogOpen} onOpenChange={setRunDialogOpen} jobs={selectedJobs} />
       <CustomParametersDialog
         open={customDialogOpen}

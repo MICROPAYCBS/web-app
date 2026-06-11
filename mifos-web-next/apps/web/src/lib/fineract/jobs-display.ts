@@ -38,3 +38,69 @@ export function jobHasError(job: FineractSchedulerJob): boolean {
 export function yesNoLabel(value: boolean | undefined): string {
   return value ? 'Yes' : 'No';
 }
+
+function parseJobDateTime(value: string | number[] | undefined): Date | null {
+  if (value == null || value === '') {
+    return null;
+  }
+  if (Array.isArray(value)) {
+    if (value.length >= 6) {
+      const [year, month, day, hour, minute, second] = value;
+      return new Date(year, month - 1, day, hour, minute, second);
+    }
+    if (value.length >= 3) {
+      const [year, month, day] = value;
+      return new Date(year, month - 1, day);
+    }
+    return null;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export function formatJobRunDuration(history: FineractSchedulerJobRunHistory | undefined): string {
+  const start = parseJobDateTime(history?.jobRunStartTime);
+  const end = parseJobDateTime(history?.jobRunEndTime);
+  if (!start || !end) {
+    return '—';
+  }
+  const milliseconds = end.getTime() - start.getTime();
+  if (milliseconds < 0) {
+    return '—';
+  }
+  if (milliseconds < 1000) {
+    return `${milliseconds} ms`;
+  }
+  const seconds = Math.round(milliseconds / 1000);
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return remainder > 0 ? `${minutes}m ${remainder}s` : `${minutes}m`;
+}
+
+export function formatJobRunLogContent(history: FineractSchedulerJobRunHistory | undefined): string {
+  if (!history) {
+    return 'No log available for this run.';
+  }
+
+  const message = history.jobRunErrorMessage?.trim();
+  const log = history.jobRunErrorLog?.trim();
+
+  if (message && log) {
+    if (message === log || log.includes(message) || message.includes(log)) {
+      return log;
+    }
+    return `${message}\n\n${log}`;
+  }
+
+  return message || log || 'No log available for this run.';
+}
+
+export function formatJobRunStatusLabel(status: string | undefined): string {
+  if (!status) {
+    return '—';
+  }
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}

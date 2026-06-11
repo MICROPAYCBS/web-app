@@ -1,0 +1,10 @@
+{
+  "command": "accounting.financial-activity-mapping.update",
+  "fineractSources": [
+    "org.apache.fineract.accounting.financialactivityaccount.api.FinancialActivityAccountsApiResource"
+  ],
+  "fields": {
+    "financialActivityId": { "required": true },
+    "glAccountId": { "required": true }
+  }
+}

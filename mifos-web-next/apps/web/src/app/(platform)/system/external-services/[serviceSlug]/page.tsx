@@ -18,11 +18,13 @@ import { redirect } from 'next/navigation';
 
 import {
 
+  externalServiceListPath,
+
   externalServiceSectionHref,
 
   isExternalServiceSlug
 
-} from '@/lib/fineract/external-service-display';
+} from '@/lib/fineract/external-service-shared';
 
 
 
@@ -43,8 +45,12 @@ export default async function ExternalServiceLegacyDetailPage({
 
 
   if (!isExternalServiceSlug(serviceSlug)) {
-    return redirect('/system/external-services');
+
+    return redirect(externalServiceListPath());
+
   }
+
+
 
   return redirect(externalServiceSectionHref(serviceSlug));
 

@@ -150,6 +150,7 @@ export function SchedulerJobHistoryTable({
       <JobErrorLogDialog
         open={errorHistory != null}
         onOpenChange={(open) => !open && setErrorHistory(null)}
+        jobName={job.displayName}
         history={errorHistory ?? undefined}
       />
     </DetailPage>

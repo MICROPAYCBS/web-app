@@ -467,7 +467,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.coa',
     navOrder: 10,
     navIcon: 'book-open',
-    keywords: ['gl', 'coa']
+    keywords: ['gl', 'coa'],
+    parityStatus: 'in_progress'
   },
   {
     id: 'acctJournal',
@@ -478,7 +479,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.journal',
     navOrder: 20,
     navIcon: 'notebook-pen',
-    keywords: []
+    keywords: [],
+    parityStatus: 'in_progress'
   },
   {
     id: 'acctFrequentPostings',
@@ -489,7 +491,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.frequentPostings',
     navOrder: 25,
     navIcon: 'repeat-2',
-    keywords: []
+    keywords: [],
+    parityStatus: 'in_progress'
   },
   {
     id: 'acctFinancialActivity',
@@ -500,7 +503,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.financialActivity',
     navOrder: 30,
     navIcon: 'activity',
-    keywords: []
+    keywords: [],
+    parityStatus: 'in_progress'
   },
   {
     id: 'acctMigrateBalances',
@@ -533,7 +537,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.rules',
     navOrder: 60,
     navIcon: 'gavel',
-    keywords: []
+    keywords: [],
+    parityStatus: 'in_progress'
   },
   {
     id: 'acctAccruals',
@@ -566,7 +571,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'administration.users',
     navOrder: 20,
     navIcon: 'user',
-    keywords: ['app user']
+    keywords: ['app user'],
+    parityStatus: 'in_progress'
   },
   {
     id: 'adminTemplates',
@@ -577,7 +583,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'administration.templates',
     navOrder: 30,
     navIcon: 'file-text',
-    keywords: []
+    keywords: [],
+    parityStatus: 'in_progress'
   },
   {
     id: 'adminReports',
@@ -588,7 +595,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'administration.reports',
     navOrder: 40,
     navIcon: 'file-bar-chart',
-    keywords: ['report']
+    keywords: ['report'],
+    parityStatus: 'in_progress'
   }
 ];
 

@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@mifos/api-client": "workspace:*",
+    "@mifos/domain": "workspace:*",
     "@mifos/i18n": "workspace:*",
     "zod": "^3.24.2"
   },

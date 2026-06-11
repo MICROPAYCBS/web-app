@@ -34,6 +34,105 @@ export const DEFAULT_PASSWORD_POLICY: PasswordPolicyRules = {
     'Password must be 12–50 characters with uppercase, lowercase, a number, and a special character. No spaces or consecutive repeating characters.'
 };
 
+export type PasswordPolicyCheckId =
+  | 'minLength'
+  | 'maxLength'
+  | 'uppercase'
+  | 'lowercase'
+  | 'digit'
+  | 'specialChar'
+  | 'noSpaces'
+  | 'noConsecutiveRepeats';
+
+export interface PasswordPolicyCheck {
+  id: PasswordPolicyCheckId;
+  label: string;
+  met: boolean;
+}
+
+/** Human-readable checklist derived from the active Fineract password preference. */
+export function buildPasswordPolicyChecks(
+  password: string,
+  rules: PasswordPolicyRules
+): PasswordPolicyCheck[] {
+  const checks: PasswordPolicyCheck[] = [
+    {
+      id: 'minLength',
+      label: `At least ${rules.minLength} characters`,
+      met: password.length >= rules.minLength
+    }
+  ];
+
+  if (rules.maxLength < Number.MAX_SAFE_INTEGER) {
+    checks.push({
+      id: 'maxLength',
+      label: `No more than ${rules.maxLength} characters`,
+      met: password.length <= rules.maxLength
+    });
+  }
+
+  if (rules.requireUppercase) {
+    checks.push({
+      id: 'uppercase',
+      label: 'One uppercase letter',
+      met: /[A-Z]/.test(password)
+    });
+  }
+
+  if (rules.requireLowercase) {
+    checks.push({
+      id: 'lowercase',
+      label: 'One lowercase letter',
+      met: /[a-z]/.test(password)
+    });
+  }
+
+  if (rules.requireDigit) {
+    checks.push({
+      id: 'digit',
+      label: 'One number',
+      met: /\d/.test(password)
+    });
+  }
+
+  if (rules.requireSpecialChar) {
+    checks.push({
+      id: 'specialChar',
+      label: 'One special character',
+      met: /[^\w\s]/.test(password)
+    });
+  }
+
+  if (rules.disallowSpaces) {
+    checks.push({
+      id: 'noSpaces',
+      label: 'No spaces',
+      met: password.length === 0 || !/\s/.test(password)
+    });
+  }
+
+  if (rules.disallowConsecutiveRepeats) {
+    checks.push({
+      id: 'noConsecutiveRepeats',
+      label: 'No consecutive repeating characters',
+      met: password.length === 0 || !/(.)\1/.test(password)
+    });
+  }
+
+  return checks;
+}
+
+export function allPasswordPolicyChecksMet(checks: PasswordPolicyCheck[]): boolean {
+  return checks.every((check) => check.met);
+}
+
+export function passwordMeetsPolicy(password: string, rules: PasswordPolicyRules): boolean {
+  if (!password) {
+    return false;
+  }
+  return allPasswordPolicyChecksMet(buildPasswordPolicyChecks(password, rules));
+}
+
 export function validatePasswordAgainstPolicy(
   password: string,
   rules: PasswordPolicyRules

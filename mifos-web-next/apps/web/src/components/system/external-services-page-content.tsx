@@ -10,7 +10,7 @@
 
 import type { FineractExternalServiceProperty } from '@mifos/api-client';
 import { ExternalServicesView } from '@/components/system/external-services-view';
-import type { ExternalServiceSlug } from '@/lib/fineract/external-service-display';
+import type { ExternalServiceSlug } from '@/lib/fineract/external-service-shared';
 
 export function ExternalServicesPageContent({
   configurations,

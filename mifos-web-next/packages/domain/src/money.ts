@@ -50,6 +50,32 @@ export function toDecimal(
   }
 }
 
+export const JOURNAL_ENTRY_UNBALANCED_MESSAGE =
+  'Total debits must equal total credits.';
+
+export function sumJournalEntryLineAmounts(
+  lines: ReadonlyArray<{ amount: number }>
+): Decimal {
+  return lines.reduce((total, line) => {
+    const amount = toDecimal(line.amount);
+    return amount ? total.plus(amount) : total;
+  }, new Decimal(0));
+}
+
+export function areJournalEntryTotalsBalanced(
+  debits: ReadonlyArray<{ amount: number }>,
+  credits: ReadonlyArray<{ amount: number }>
+): boolean {
+  return sumJournalEntryLineAmounts(debits).equals(sumJournalEntryLineAmounts(credits));
+}
+
+export function journalEntryBalanceDifference(
+  debits: ReadonlyArray<{ amount: number }>,
+  credits: ReadonlyArray<{ amount: number }>
+): Decimal {
+  return sumJournalEntryLineAmounts(debits).minus(sumJournalEntryLineAmounts(credits));
+}
+
 /**
  * Display money with ISO 4217 currency code (e.g. `UGX 1,234.00`, `USD 1,234.00`).
  * Always uses the 3-letter code — never the locale currency symbol.

@@ -1,0 +1,17 @@
+{
+  "command": "accounting.gl-account.update",
+  "fineractSources": [
+    "org.apache.fineract.accounting.glaccount.api.GLAccountsApiResource"
+  ],
+  "fields": {
+    "type": { "required": true },
+    "name": { "required": true },
+    "usage": { "required": true },
+    "glCode": { "required": true },
+    "parentId": { "required": false },
+    "tagId": { "required": false },
+    "manualEntriesAllowed": { "required": false },
+    "description": { "required": false },
+    "disabled": { "required": false }
+  }
+}

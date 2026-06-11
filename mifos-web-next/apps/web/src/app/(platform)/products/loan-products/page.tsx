@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 import { LoanProductsPageContent } from '@/components/products/loan/loan-products-page-content';
 import { listLoanProducts } from '@/lib/fineract/loan-products';
 import { parseLoanProductKind } from '@/lib/fineract/loan-product-paths';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function LoanProductsPage({
@@ -25,7 +26,16 @@ export default async function LoanProductsPage({
 
   const { productType } = await searchParams;
   const kind = parseLoanProductKind(productType);
-  const products = await listLoanProducts(kind);
+  const result = await tryFineractLoad(
+    () => listLoanProducts(kind),
+    'Could not load loan products.'
+  );
 
-  return <LoanProductsPageContent products={products} productKind={kind} />;
+  return (
+    <LoanProductsPageContent
+      products={result.ok ? result.data : []}
+      productKind={kind}
+      loadError={result.ok ? undefined : result.message}
+    />
+  );
 }

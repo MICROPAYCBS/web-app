@@ -8,7 +8,8 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { ReportForm } from '@/components/system/report-form';
+import { ReportWizard } from '@/components/system/report-wizard/report-wizard';
+import { initialReportWizardDraft } from '@/lib/fineract/report-display';
 import { getReportTemplate } from '@/lib/fineract/reports';
 import { getServerSession } from '@/lib/session/server';
 
@@ -19,5 +20,7 @@ export default async function CreateReportPage() {
   }
 
   const template = await getReportTemplate();
-  return <ReportForm mode="create" template={template} />;
+  const initialDraft = initialReportWizardDraft(undefined, template);
+
+  return <ReportWizard mode="create" template={template} initialDraft={initialDraft} />;
 }
