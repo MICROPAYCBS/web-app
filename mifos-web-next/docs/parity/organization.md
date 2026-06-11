@@ -116,4 +116,5 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Organization-wide execution history search (not the client standing-instructions list).
 - Search filters: client name, client ID, transfer type, account type, from account ID (when account type selected), from/to dates.
 - Results table: from client, from account, to client, to account, execution time, amount, status, error log (tooltip when failed).
-- UI toggles between the search form and results; **Parameters** returns to the form (legacy parity).
+- Default view is an **EmptyState** with **Specify parameters**; the search form opens in a floating `FormSheet` sidebar (report-run pattern).
+- After search, results render in the main area; **Parameters** in the header reopens the sidebar.
