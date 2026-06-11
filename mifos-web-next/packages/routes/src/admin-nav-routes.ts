@@ -14,13 +14,14 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
   {
     id: 'orgOffices',
     path: '/organization/offices',
-    label: 'Offices',
+    label: 'Branches',
     navGroup: 'organization',
     webAppRef: 'organization/offices',
     permissionKey: 'organization.offices',
     navOrder: 10,
     navIcon: 'building',
-    keywords: ['branch', 'office']
+    keywords: ['branch', 'office'],
+    parityStatus: 'done'
   },
   {
     id: 'orgEmployees',

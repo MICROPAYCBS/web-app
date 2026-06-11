@@ -130,6 +130,16 @@
       "READ_OFFICE"
     ]
   },
+  "organization.offices.create": {
+    "any": [
+      "CREATE_OFFICE"
+    ]
+  },
+  "organization.offices.update": {
+    "any": [
+      "UPDATE_OFFICE"
+    ]
+  },
   "organization.employees": {
     "any": [
       "READ_STAFF"

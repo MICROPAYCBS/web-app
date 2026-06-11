@@ -473,3 +473,13 @@ export {
   type UpdateStaffInput,
   type UpdateStaffPayload
 } from './organization/staff.schema';
+export {
+  createOfficeSchema,
+  updateOfficeSchema,
+  validateCreateOffice,
+  validateUpdateOffice,
+  type CreateOfficeInput,
+  type CreateOfficePayload,
+  type UpdateOfficeInput,
+  type UpdateOfficePayload
+} from './organization/office.schema';

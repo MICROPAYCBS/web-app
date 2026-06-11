@@ -19,6 +19,7 @@ Produces **[generated.json](generated.json)** from `@mifos/routes` (`APP_ROUTES.
 | System (admin)         | In progress | [system.md](system.md)   |
 | Loans                  | Not started | —                        |
 | Accounting             | In progress | [accounting.md](accounting.md) |
+| Organization           | In progress | [organization.md](organization.md) |
 
 ## Manual notes
 

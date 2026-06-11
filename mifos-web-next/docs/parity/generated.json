@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T11:45:56.907Z",
+  "generatedAt": "2026-06-11T14:23:01.185Z",
   "summary": {
-    "todo": 22,
+    "todo": 21,
     "in_progress": 22,
-    "done": 31,
+    "done": 32,
     "n/a": 0
   },
   "routes": [
@@ -238,9 +238,9 @@
       "id": "orgOffices",
       "path": "/organization/offices",
       "domain": "organization",
-      "label": "Offices",
+      "label": "Branches",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/offices"
     },
     {

@@ -385,6 +385,13 @@ export type {
 } from './staff/types';
 
 export type {
+  FineractCreateOfficeResponse,
+  FineractOfficeDetail,
+  FineractOfficeEditTemplate,
+  FineractOfficeListItem
+} from './organization/office-types';
+
+export type {
   FineractProvisioningCategory,
   FineractProvisioningEntriesPage,
   FineractProvisioningEntryDetail,

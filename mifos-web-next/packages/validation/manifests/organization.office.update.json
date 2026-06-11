@@ -1,0 +1,13 @@
+{
+  "schemaId": "organization.office.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.office.api.OfficesApiResource",
+    "org.apache.fineract.organisation.office.domain.Office"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 100 },
+    "parentId": { "required": false, "type": "integer" },
+    "openingDate": { "required": true, "type": "date" },
+    "externalId": { "required": false }
+  }
+}
