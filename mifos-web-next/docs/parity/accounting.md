@@ -45,13 +45,29 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 ## Wave plan (recommended order)
 
-1. **Provisioning entries** — list, create sheet, detail report, journal entries (`ACCT-080`, done).
-2. **Closing entries** — list, create sheet, detail, edit comments, delete (`ACCT-050`, done).
-3. **Periodic accruals** — execute till date (`ACCT-070`, done).
-4. **Chart of accounts** — tree/list CRUD (`ACCT-010`).
-5. **Journal entries** — search, create, view (`ACCT-020`).
-6. **Frequent postings** — shortcut journal form (`ACCT-025`).
-7. **Remaining slices** — mappings, migrate balances, rules.
+### Shipped (4/9)
+
+1. **Provisioning entries** (`ACCT-080`) — list, create, detail, journal, recreate.
+2. **Closing entries** (`ACCT-050`) — list, create, view, edit comments, delete.
+3. **Periodic accruals** (`ACCT-070`) — execute till date.
+4. **Migrate opening balances** (`ACCT-040`) — retrieve by office, define balanced entry.
+
+### Remaining (5/9)
+
+5. **Chart of accounts** (`ACCT-010`) — tree/list, create, view, edit GL accounts. Foundation for journal entry GL pickers.
+6. **Journal entries** (`ACCT-020`) — search, create, transaction view (`/journal-entries/transactions/view/:id`). Unblocks post-submit redirects from opening balances and manual entries.
+7. **Frequent postings** (`ACCT-025`) — shortcut journal form; depends on accounting-rules associations.
+8. **Financial activity mappings** (`ACCT-030`) — list, create, view, edit.
+9. **Accounting rules** (`ACCT-060`) — list, create, view, edit; needed for frequent postings resolver data.
+
+### Open PRs (draft → `dev`)
+
+| PR | Slice | ID |
+| --- | --- | --- |
+| [#3](https://github.com/MICROPAYCBS/web-app/pull/3) | Provisioning entries | ACCT-080 |
+| [#4](https://github.com/MICROPAYCBS/web-app/pull/4) | Closing entries | ACCT-050 |
+| [#5](https://github.com/MICROPAYCBS/web-app/pull/5) | Periodic accruals | ACCT-070 |
+| [#6](https://github.com/MICROPAYCBS/web-app/pull/6) | Migrate opening balances | ACCT-040 |
 
 ---
 
