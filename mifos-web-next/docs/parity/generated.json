@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T05:53:25.468Z",
+  "generatedAt": "2026-06-11T10:12:53.913Z",
   "summary": {
-    "todo": 26,
+    "todo": 25,
     "in_progress": 22,
-    "done": 27,
+    "done": 28,
     "n/a": 0
   },
   "routes": [
@@ -555,7 +555,7 @@
       "domain": "products",
       "label": "Product mix",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "products/products-mix"
     },
     {

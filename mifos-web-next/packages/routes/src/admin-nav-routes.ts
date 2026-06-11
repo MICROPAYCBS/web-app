@@ -423,7 +423,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'products.mix',
     navOrder: 50,
     navIcon: 'layers',
-    keywords: []
+    keywords: ['loan product mix', 'restricted products'],
+    parityStatus: 'done'
   },
   {
     id: 'prodTax',

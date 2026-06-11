@@ -399,6 +399,21 @@
       "READ_PRODUCTMIX"
     ]
   },
+  "products.mix.create": {
+    "any": [
+      "CREATE_PRODUCTMIX"
+    ]
+  },
+  "products.mix.update": {
+    "any": [
+      "UPDATE_PRODUCTMIX"
+    ]
+  },
+  "products.mix.delete": {
+    "any": [
+      "DELETE_PRODUCTMIX"
+    ]
+  },
   "products.tax": {
     "any": [
       "READ_TAXCOMPONENT",

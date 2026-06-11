@@ -163,6 +163,15 @@ export type {
 } from './products/charge-types';
 
 export type {
+  ProductMixCreateTemplate,
+  ProductMixDetail,
+  ProductMixFormOptions,
+  ProductMixListItem,
+  ProductMixMutationResponse,
+  ProductMixProductOption
+} from './products/product-mix-types';
+
+export type {
   FineractCode,
   FineractCodeValue,
   FineractCreateCodeResponse,

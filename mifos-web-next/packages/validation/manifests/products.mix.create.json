@@ -1,0 +1,10 @@
+{
+  "command": "products.mix.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanproduct.productmix.api.ProductMixApiResource"
+  ],
+  "fields": {
+    "productId": { "required": true },
+    "restrictedProducts": { "required": true }
+  }
+}

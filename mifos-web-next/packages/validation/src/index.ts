@@ -123,6 +123,12 @@ export {
   type UpsertCollateralProductInput
 } from './products/upsert-collateral-product.schema';
 export {
+  createProductMixSchema,
+  updateProductMixSchema,
+  type CreateProductMixInput,
+  type UpdateProductMixInput
+} from './products/product-mix.schema';
+export {
   upsertChargeSchema,
   type UpsertChargeInput
 } from './products/upsert-charge.schema';
