@@ -408,6 +408,11 @@ export type {
 } from './organization/currency-types';
 
 export type {
+  OrganizationPaymentType,
+  OrganizationPaymentTypeMutationResponse
+} from './organization/payment-type-types';
+
+export type {
   SmsCampaignBusinessRule,
   SmsCampaignDetail,
   SmsCampaignListItem,

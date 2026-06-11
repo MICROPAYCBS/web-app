@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T16:01:50.831Z",
+  "generatedAt": "2026-06-11T16:55:30.511Z",
   "summary": {
-    "todo": 18,
+    "todo": 17,
     "in_progress": 22,
-    "done": 35,
+    "done": 36,
     "n/a": 0
   },
   "routes": [
@@ -330,7 +330,7 @@
       "domain": "organization",
       "label": "Payment types",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/payment-types"
     },
     {

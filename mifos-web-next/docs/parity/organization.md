@@ -69,3 +69,18 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Business rule parameters reuse report parameter metadata (`GET /runreports/FullParameterList`).
 - Edit is message-only when campaign is not active (legacy parity).
 - Detail view includes SMS status tabs (pending, sent, delivered, failed) with optional date range search.
+
+## Payment types
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/payment-types` | GET | PaymentTypesComponent | `GET /paymenttypes` | — | — | done |
+| `/organization/payment-types/create` | POST | CreatePaymentTypeComponent | `POST /paymenttypes` | `organization.payment-type.create` | — | done |
+| `/organization/payment-types/[paymentTypeId]/edit` | PUT | EditPaymentTypeComponent | `PUT /paymenttypes/{id}` | `organization.payment-type.update` | — | done |
+| `/organization/payment-types` | DELETE | PaymentTypesComponent | `DELETE /paymenttypes/{id}` | — | — | done |
+
+### Notes
+
+- List columns: name, description, code, system defined, cash payment, position, actions.
+- System-defined types: edit allows name and description only; delete is hidden.
+- Custom types: full edit and delete from the list actions column.

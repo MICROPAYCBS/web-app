@@ -135,7 +135,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.paymentTypes',
     navOrder: 110,
     navIcon: 'credit-card',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgPasswordPreferences',

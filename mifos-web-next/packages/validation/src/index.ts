@@ -500,6 +500,19 @@ export {
   type UpdateOrganizationCurrenciesPayload
 } from './organization/currency.schema';
 export {
+  createPaymentTypeSchema,
+  updatePaymentTypeSchema,
+  updateSystemPaymentTypeSchema,
+  validateCreatePaymentType,
+  validateUpdatePaymentType,
+  type CreatePaymentTypeInput,
+  type CreatePaymentTypePayload,
+  type UpdatePaymentTypeInput,
+  type UpdatePaymentTypePayload,
+  type UpdateSystemPaymentTypeInput,
+  type UpdateSystemPaymentTypePayload
+} from './organization/payment-type.schema';
+export {
   createSmsCampaignSchema,
   smsCampaignActivateCommandSchema,
   smsCampaignCloseCommandSchema,

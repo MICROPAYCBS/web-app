@@ -242,6 +242,21 @@
       "READ_PAYMENTTYPE"
     ]
   },
+  "organization.paymentTypes.create": {
+    "any": [
+      "CREATE_PAYMENTTYPE"
+    ]
+  },
+  "organization.paymentTypes.update": {
+    "any": [
+      "UPDATE_PAYMENTTYPE"
+    ]
+  },
+  "organization.paymentTypes.delete": {
+    "any": [
+      "DELETE_PAYMENTTYPE"
+    ]
+  },
   "organization.passwordPreferences": {
     "any": [
       "READ_CONFIGURATION"
