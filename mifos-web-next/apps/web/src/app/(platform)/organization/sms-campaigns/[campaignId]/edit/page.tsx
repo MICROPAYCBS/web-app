@@ -9,7 +9,12 @@
 import { can } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { SmsCampaignEditForm } from '@/components/organization/sms-campaign-edit-form';
+import { DetailBackLink } from '@/components/composites';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
+import { ListPage } from '@/components/composites/list-page';
 import { getSmsCampaign } from '@/lib/fineract/sms-campaigns';
+import { smsCampaignDetailPath } from '@/lib/fineract/sms-campaign-paths';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationSmsCampaignEditPage({
@@ -24,12 +29,29 @@ export default async function OrganizationSmsCampaignEditPage({
     notFound();
   }
 
-  let campaign;
-  try {
-    campaign = await getSmsCampaign(campaignId);
-  } catch {
-    notFound();
+  const result = await tryFineractLoad(
+    () => getSmsCampaign(campaignId),
+    'Could not load SMS campaign.'
+  );
+
+  if (!result.ok) {
+    return (
+      <ListPage
+        backLink={
+          <DetailBackLink
+            href={smsCampaignDetailPath(campaignId)}
+            label="Back to SMS campaign"
+          />
+        }
+        title="Edit SMS campaign"
+        description="Update campaign settings and message content."
+      >
+        <LoadErrorAlert title="Could not load SMS campaign" message={result.message} />
+      </ListPage>
+    );
   }
+
+  const campaign = result.data;
 
   if (campaign.campaignStatus?.value?.toLowerCase() === 'active') {
     notFound();

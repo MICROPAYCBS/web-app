@@ -9,7 +9,12 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { SmsCampaignDetailView } from '@/components/organization/sms-campaign-detail-view';
+import { DetailBackLink } from '@/components/composites';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
+import { ListPage } from '@/components/composites/list-page';
 import { getSmsCampaign } from '@/lib/fineract/sms-campaigns';
+import { SMS_CAMPAIGN_LIST_PATH } from '@/lib/fineract/sms-campaign-paths';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationSmsCampaignDetailPage({
@@ -24,16 +29,27 @@ export default async function OrganizationSmsCampaignDetailPage({
     notFound();
   }
 
-  let campaign;
-  try {
-    campaign = await getSmsCampaign(campaignId);
-  } catch {
-    notFound();
+  const result = await tryFineractLoad(
+    () => getSmsCampaign(campaignId),
+    'Could not load SMS campaign.'
+  );
+
+  if (!result.ok) {
+    return (
+      <ListPage
+        backLink={
+          <DetailBackLink href={SMS_CAMPAIGN_LIST_PATH} label="Back to SMS campaigns" />
+        }
+        title="SMS campaign"
+      >
+        <LoadErrorAlert title="Could not load SMS campaign" message={result.message} />
+      </ListPage>
+    );
   }
 
   return (
     <SmsCampaignDetailView
-      campaign={campaign}
+      campaign={result.data}
       canEdit={can(session, 'UPDATE_SMSCAMPAIGN')}
       canActivate={can(session, 'ACTIVATE_SMSCAMPAIGN')}
       canClose={can(session, 'CLOSE_SMSCAMPAIGN')}

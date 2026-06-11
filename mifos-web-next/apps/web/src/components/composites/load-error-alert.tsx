@@ -14,10 +14,12 @@ import { Button } from '@/components/ui/button';
 
 export function LoadErrorAlert({
   message,
-  title = 'Could not load data'
+  title = 'Could not load data',
+  hint
 }: {
   message: string;
   title?: string;
+  hint?: string;
 }) {
   const router = useRouter();
 
@@ -32,6 +34,7 @@ export function LoadErrorAlert({
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-sm font-medium text-destructive">{title}</p>
           <p className="text-sm text-destructive/90">{message}</p>
+          {hint ? <p className="text-sm text-muted-foreground">{hint}</p> : null}
           <Button type="button" variant="outline" size="sm" onClick={() => router.refresh()}>
             <RotateCcw className="mr-2 size-4" />
             Try again
