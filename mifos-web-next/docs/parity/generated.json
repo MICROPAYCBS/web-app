@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T20:02:37.642Z",
+  "generatedAt": "2026-06-11T20:47:20.310Z",
   "summary": {
-    "todo": 15,
+    "todo": 14,
     "in_progress": 22,
-    "done": 38,
+    "done": 39,
     "n/a": 0
   },
   "routes": [
@@ -294,7 +294,7 @@
       "domain": "organization",
       "label": "Fund mapping",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/fund-mapping"
     },
     {

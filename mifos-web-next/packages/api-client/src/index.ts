@@ -414,6 +414,12 @@ export type {
   OrganizationPaymentTypeMutationResponse
 } from './organization/payment-type-types';
 export type {
+  FundMappingAdvanceSearchTemplate,
+  FundMappingLoanProductOption,
+  FundMappingOfficeOption,
+  FundMappingSearchResultItem
+} from './organization/fund-mapping-types';
+export type {
   OrganizationCashierListItem,
   OrganizationTeller,
   OrganizationTellerListItem,

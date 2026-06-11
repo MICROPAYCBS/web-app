@@ -118,3 +118,17 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Results table: from client, from account, to client, to account, execution time, amount, status, error log (tooltip when failed).
 - Default view is an **EmptyState** with **Specify parameters**; the search form opens in a floating `FormSheet` sidebar (report-run pattern).
 - After search, results render in the main area; **Parameters** in the header reopens the sidebar.
+
+## Fund mapping
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/fund-mapping` | GET/POST | FundMappingComponent | `GET /search/template`, `POST /search/advance` | `organization.fund-mapping.search` | — | done |
+
+### Notes
+
+- Advance loan search summary grouped by branch and product (legacy fund mapping screen).
+- Default view is an **EmptyState** with **Specify parameters**; the search form opens in a floating sidebar.
+- Search filters: loan status, products, branches, date type, from/to dates, outstanding percentage and amount comparisons.
+- Results table: branch, product, count, outstanding, percentage.
+- Submit label **View summary** (legacy **Summary** button).

@@ -547,3 +547,9 @@ export {
   validateStandingInstructionHistorySearch,
   type StandingInstructionHistorySearchInput
 } from './organization/standing-instruction-history-search.schema';
+export {
+  fundMappingSearchSchema,
+  validateFundMappingSearch,
+  type FundMappingSearchInput,
+  type FundMappingSearchPayload
+} from './organization/fund-mapping-search.schema';
