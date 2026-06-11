@@ -181,6 +181,36 @@
       "READ_SMSCAMPAIGN"
     ]
   },
+  "organization.smsCampaigns.create": {
+    "any": [
+      "CREATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.update": {
+    "any": [
+      "UPDATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.activate": {
+    "any": [
+      "ACTIVATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.close": {
+    "any": [
+      "CLOSE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.reactivate": {
+    "any": [
+      "REACTIVATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.delete": {
+    "any": [
+      "DELETE_SMSCAMPAIGN"
+    ]
+  },
   "organization.standingInstructions": {
     "any": [
       "READ_STANDINGINSTRUCTION"

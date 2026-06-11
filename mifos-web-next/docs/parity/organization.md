@@ -49,3 +49,23 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Not per-currency CRUD — the UI toggles which codes are enabled via bulk `PUT { currencies: ["USD", ...] }`.
 - `GET /currencies` returns `selectedCurrencyOptions` (enabled) and `currencyOptions` (master catalog).
 - Add/remove on manage page updates immediately (legacy parity); duplicate adds are ignored.
+
+## SMS campaigns
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/sms-campaigns` | GET | SmsCampaignsComponent | `GET /smscampaigns` | — | — | done |
+| `/organization/sms-campaigns/create` | POST | CreateCampaignComponent | `POST /smscampaigns` | `organization.sms-campaign.create` | — | done |
+| `/organization/sms-campaigns/[campaignId]` | GET | ViewCampaignComponent | `GET /smscampaigns/{id}` | — | — | done |
+| `/organization/sms-campaigns/[campaignId]/edit` | PUT | EditCampaignComponent | `PUT /smscampaigns/{id}` | `organization.sms-campaign.update` | — | done |
+| `/organization/sms-campaigns/[campaignId]` | POST | ViewCampaignComponent | `POST /smscampaigns/{id}?command=activate\|close\|reactivate` | `organization.sms-campaign.activate` / `.close` | — | done |
+| `/organization/sms-campaigns/[campaignId]` | DELETE | ViewCampaignComponent | `DELETE /smscampaigns/{id}` | — | — | done |
+| `/organization/sms-campaigns/[campaignId]` | GET | ViewCampaignComponent | `GET /sms/{id}/messageByStatus` | — | — | done |
+
+### Notes
+
+- Create template: `GET /smscampaigns/template`.
+- Create wizard: campaign (trigger, business rule, report parameters) → message (placeholders from report run) → preview.
+- Business rule parameters reuse report parameter metadata (`GET /runreports/FullParameterList`).
+- Edit is message-only when campaign is not active (legacy parity).
+- Detail view includes SMS status tabs (pending, sent, delivered, failed) with optional date range search.

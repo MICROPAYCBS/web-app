@@ -68,7 +68,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.smsCampaigns',
     navOrder: 50,
     navIcon: 'message-square',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgStandingInstructions',

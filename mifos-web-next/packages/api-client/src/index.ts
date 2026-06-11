@@ -408,6 +408,18 @@ export type {
 } from './organization/currency-types';
 
 export type {
+  SmsCampaignBusinessRule,
+  SmsCampaignDetail,
+  SmsCampaignListItem,
+  SmsCampaignListPage,
+  SmsCampaignMessageByStatusItem,
+  SmsCampaignMessageByStatusPage,
+  SmsCampaignMutationResponse,
+  SmsCampaignTemplate,
+  SmsCampaignTimeline
+} from './organization/sms-campaign-types';
+
+export type {
   FineractProvisioningCategory,
   FineractProvisioningEntriesPage,
   FineractProvisioningEntryDetail,

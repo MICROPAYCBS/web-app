@@ -9,6 +9,7 @@
 import { format, isValid, parse } from 'date-fns';
 
 export const FINERACT_DATE_FORMAT = 'dd MMMM yyyy';
+export const FINERACT_DATETIME_FORMAT = 'dd MMMM yyyy HH:mm:ss';
 export const FINERACT_LOCALE = 'en';
 
 const FINERACT_PARSE_FORMATS = ['dd MMMM yyyy', 'd MMMM yyyy'] as const;

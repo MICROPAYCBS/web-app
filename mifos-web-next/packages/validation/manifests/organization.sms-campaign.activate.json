@@ -1,0 +1,9 @@
+{
+  "schemaId": "organization.sms-campaign.activate",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.campaigns.sms.api.SmsCampaignApiResource"
+  ],
+  "fields": {
+    "activationDate": { "required": true, "type": "date" }
+  }
+}

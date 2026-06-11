@@ -499,3 +499,23 @@ export {
   type UpdateOrganizationCurrenciesInput,
   type UpdateOrganizationCurrenciesPayload
 } from './organization/currency.schema';
+export {
+  createSmsCampaignSchema,
+  smsCampaignActivateCommandSchema,
+  smsCampaignCloseCommandSchema,
+  smsCampaignMessagesQuerySchema,
+  smsCampaignParamValueSchema,
+  updateSmsCampaignSchema,
+  validateCreateSmsCampaign,
+  validateSmsCampaignActivateCommand,
+  validateSmsCampaignCloseCommand,
+  validateSmsCampaignMessagesQuery,
+  validateUpdateSmsCampaign,
+  type CreateSmsCampaignInput,
+  type CreateSmsCampaignPayload,
+  type SmsCampaignActivateCommandInput,
+  type SmsCampaignCloseCommandInput,
+  type SmsCampaignMessagesQueryInput,
+  type UpdateSmsCampaignInput,
+  type UpdateSmsCampaignPayload
+} from './organization/sms-campaign.schema';
