@@ -285,3 +285,9 @@ export type {
   FineractProvisioningJournalEntriesPage,
   FineractProvisioningJournalEntry
 } from './accounting/provisioning-entry-types';
+
+export type {
+  FineractGlClosureDetail,
+  FineractGlClosureListItem,
+  FineractGlClosureMutationResponse
+} from './accounting/gl-closure-types';

@@ -23,7 +23,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|    1 |       0 |       8 |
+|    2 |       0 |       7 |
 
 ---
 
@@ -36,7 +36,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 | ACCT-025 | `/accounting/journal-entries/frequent-postings` | Frequent postings            | **Planned** |                                            |
 | ACCT-030 | `/accounting/financial-activity-mappings`       | Financial activity mappings  | **Planned** |                                            |
 | ACCT-040 | `/accounting/migrate-opening-balances`          | Migrate opening balances     | **Planned** |                                            |
-| ACCT-050 | `/accounting/closing-entries`                   | Closing entries              | **Planned** |                                            |
+| ACCT-050 | `/accounting/closing-entries`                   | Closing entries              | **Done**    | List, create, view, edit comments, delete  |
 | ACCT-060 | `/accounting/accounting-rules`                  | Accounting rules             | **Planned** |                                            |
 | ACCT-070 | `/accounting/periodic-accruals`                 | Periodic accruals            | **Planned** |                                            |
 | ACCT-080 | `/accounting/provisioning-entries`              | Provisioning entries         | **Done**    | List, create, detail, journal, recreate    |
@@ -46,10 +46,11 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 ## Wave plan (recommended order)
 
 1. **Provisioning entries** — list, create sheet, detail report, journal entries (`ACCT-080`, done).
-2. **Chart of accounts** — tree/list CRUD (`ACCT-010`).
-3. **Journal entries** — search, create, view (`ACCT-020`).
-4. **Frequent postings** — shortcut journal form (`ACCT-025`).
-5. **Remaining slices** — mappings, migrate balances, closing, rules, accruals.
+2. **Closing entries** — list, create sheet, detail, edit comments, delete (`ACCT-050`, done).
+3. **Chart of accounts** — tree/list CRUD (`ACCT-010`).
+4. **Journal entries** — search, create, view (`ACCT-020`).
+5. **Frequent postings** — shortcut journal form (`ACCT-025`).
+6. **Remaining slices** — mappings, migrate balances, rules, accruals.
 
 ---
 

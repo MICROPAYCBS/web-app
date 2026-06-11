@@ -302,6 +302,16 @@ export {
   type CreateProvisioningEntryInput
 } from './accounting/provisioning-entry.schema';
 export {
+  buildCreateGlClosurePayload,
+  buildUpdateGlClosurePayload,
+  createGlClosureSchema,
+  updateGlClosureSchema,
+  validateCreateGlClosure,
+  validateUpdateGlClosure,
+  type CreateGlClosureInput,
+  type UpdateGlClosureInput
+} from './accounting/gl-closure.schema';
+export {
   buildCreateReportPayload,
   buildUpdateReportPayload,
   REPORT_CATEGORIES,

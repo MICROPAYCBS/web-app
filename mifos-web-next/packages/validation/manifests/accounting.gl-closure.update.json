@@ -1,0 +1,9 @@
+{
+  "command": "accounting.gl-closure.update",
+  "fineractSources": [
+    "org.apache.fineract.accounting.closure.api.GLClosuresApiResource"
+  ],
+  "fields": {
+    "comments": { "required": false }
+  }
+}

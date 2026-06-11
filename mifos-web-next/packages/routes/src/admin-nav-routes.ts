@@ -522,7 +522,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.closing',
     navOrder: 50,
     navIcon: 'door-closed',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'acctRules',

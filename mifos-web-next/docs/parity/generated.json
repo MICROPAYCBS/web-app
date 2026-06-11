@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T04:28:27.191Z",
+  "generatedAt": "2026-06-11T04:37:48.042Z",
   "summary": {
-    "todo": 37,
+    "todo": 36,
     "in_progress": 14,
-    "done": 24,
+    "done": 25,
     "n/a": 0
   },
   "routes": [
@@ -636,7 +636,7 @@
       "domain": "accounting",
       "label": "Closing entries",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "accounting/closing-entries"
     },
     {
