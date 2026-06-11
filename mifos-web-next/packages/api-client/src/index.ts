@@ -185,6 +185,13 @@ export type {
 } from './products/tax-types';
 
 export type {
+  FloatingRateDetail,
+  FloatingRateListItem,
+  FloatingRateMutationResponse,
+  FloatingRatePeriod
+} from './products/floating-rate-types';
+
+export type {
   DelinquencyBucketApiType,
   DelinquencyBucketDetail,
   DelinquencyBucketListItem,

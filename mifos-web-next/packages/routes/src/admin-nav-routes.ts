@@ -459,7 +459,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'products.floatingRates',
     navOrder: 100,
     navIcon: 'trending-up',
-    keywords: []
+    keywords: ['floating interest', 'base lending rate', 'variable rate'],
+    parityStatus: 'done'
   },
   {
     id: 'acctCoa',

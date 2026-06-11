@@ -141,6 +141,12 @@ export {
   type UpsertTaxGroupInput
 } from './products/tax-group.schema';
 export {
+  floatingRatePeriodSchema,
+  upsertFloatingRateSchema,
+  type FloatingRatePeriodInput,
+  type UpsertFloatingRateInput
+} from './products/floating-rate.schema';
+export {
   createDelinquencyRangeSchema,
   updateDelinquencyRangeSchema,
   type CreateDelinquencyRangeInput,

@@ -532,6 +532,16 @@
       "READ_FLOATINGRATE"
     ]
   },
+  "products.floatingRates.create": {
+    "any": [
+      "CREATE_FLOATINGRATE"
+    ]
+  },
+  "products.floatingRates.update": {
+    "any": [
+      "UPDATE_FLOATINGRATE"
+    ]
+  },
   "products.collaterals": {
     "any": [
       "READ_COLLATERAL"

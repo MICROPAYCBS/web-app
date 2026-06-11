@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T11:30:46.676Z",
+  "generatedAt": "2026-06-11T11:45:56.907Z",
   "summary": {
-    "todo": 23,
+    "todo": 22,
     "in_progress": 22,
-    "done": 30,
+    "done": 31,
     "n/a": 0
   },
   "routes": [
@@ -582,7 +582,7 @@
       "domain": "products",
       "label": "Floating rates",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "products/floating-rates"
     },
     {

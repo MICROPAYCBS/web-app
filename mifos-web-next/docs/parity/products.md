@@ -42,6 +42,15 @@ Reference: `openMF/web-app` → `src/app/products/`
 | `/products/delinquency-bucket-configurations/buckets/[id]/edit` | PUT | EditBucketComponent | `PUT /delinquency/buckets/{id}` | `products.delinquency-bucket.update` | — | done |
 | `/products/delinquency-bucket-configurations/buckets/[id]` | DELETE | ViewBucketComponent | `DELETE /delinquency/buckets/{id}` | — | — | done |
 
+## Floating rates
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/products/floating-rates` | GET | FloatingRatesComponent | `GET /floatingrates` | — | — | done |
+| `/products/floating-rates/create` | POST | CreateFloatingRateComponent | `POST /floatingrates` | `products.floating-rate.create` | — | done |
+| `/products/floating-rates/[id]` | GET | ViewFloatingRateComponent | `GET /floatingrates/{id}` | — | — | done |
+| `/products/floating-rates/[id]/edit` | PUT | EditFloatingRateComponent | `PUT /floatingrates/{id}` | `products.floating-rate.update` | — | done |
+
 ## Notes
 
 - Product mix create flow loads per-product options via `GET /loanproducts/{productId}/productmix?template=true`.
@@ -50,3 +59,4 @@ Reference: `openMF/web-app` → `src/app/products/`
 - Tax group create template: `GET /taxes/group/template`; edit loads `GET /taxes/group/{id}?template=true`.
 - Delinquency bucket create/edit for working capital loads `GET /delinquency/buckets/template`; regular buckets use `GET /delinquency/ranges` for range picker options.
 - Bucket detail and edit links carry `?bucketType=regular|workingcapital` to match legacy navigation.
+- Floating rate periods use effective from-dates; new periods must start after today (legacy uses business date + 1 day).
