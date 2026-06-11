@@ -555,7 +555,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.provisioning',
     navOrder: 80,
     navIcon: 'file-stack',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'adminUsers',

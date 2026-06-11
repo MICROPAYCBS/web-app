@@ -1,0 +1,12 @@
+{
+  "command": "accounting.provisioning-entry.create",
+  "fineractSources": [
+    "org.apache.fineract.accounting.provisioning.api.ProvisioningEntriesApiResource"
+  ],
+  "fields": {
+    "date": { "required": true },
+    "createjournalentries": { "required": false },
+    "dateFormat": { "required": true },
+    "locale": { "required": true }
+  }
+}

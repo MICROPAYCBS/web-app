@@ -296,6 +296,12 @@ export {
   type UpdateAccountNumberPreferenceInput
 } from './system/account-number-preference.schema';
 export {
+  buildCreateProvisioningEntryPayload,
+  createProvisioningEntrySchema,
+  validateCreateProvisioningEntry,
+  type CreateProvisioningEntryInput
+} from './accounting/provisioning-entry.schema';
+export {
   buildCreateReportPayload,
   buildUpdateReportPayload,
   REPORT_CATEGORIES,

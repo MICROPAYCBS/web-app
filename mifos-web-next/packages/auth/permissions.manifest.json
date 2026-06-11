@@ -510,6 +510,16 @@
       "READ_PROVISIONINGENTRY"
     ]
   },
+  "accounting.provisioning.create": {
+    "any": [
+      "CREATE_PROVISIONING_ENTRIES"
+    ]
+  },
+  "accounting.provisioning.journal": {
+    "any": [
+      "CREATE_JOURNALENTRY"
+    ]
+  },
   "administration.users": {
     "any": [
       "READ_USER"

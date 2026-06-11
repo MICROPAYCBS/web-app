@@ -273,3 +273,15 @@ export type {
   FineractStaffEditTemplate,
   FineractStaffListItem
 } from './staff/types';
+
+export type {
+  FineractProvisioningCategory,
+  FineractProvisioningEntriesPage,
+  FineractProvisioningEntryDetail,
+  FineractProvisioningEntryLineItem,
+  FineractProvisioningEntryLinesPage,
+  FineractProvisioningEntryListItem,
+  FineractProvisioningEntryMutationResponse,
+  FineractProvisioningJournalEntriesPage,
+  FineractProvisioningJournalEntry
+} from './accounting/provisioning-entry-types';

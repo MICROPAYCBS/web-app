@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T14:44:37.494Z",
+  "generatedAt": "2026-06-11T04:28:27.191Z",
   "summary": {
-    "todo": 38,
+    "todo": 37,
     "in_progress": 14,
-    "done": 23,
+    "done": 24,
     "n/a": 0
   },
   "routes": [
@@ -663,7 +663,7 @@
       "domain": "accounting",
       "label": "Provisioning entries",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "accounting/provisioning-entries"
     },
     {
