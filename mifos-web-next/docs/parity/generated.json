@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T04:43:39.458Z",
+  "generatedAt": "2026-06-11T04:55:50.681Z",
   "summary": {
-    "todo": 35,
+    "todo": 34,
     "in_progress": 14,
-    "done": 26,
+    "done": 27,
     "n/a": 0
   },
   "routes": [
@@ -627,7 +627,7 @@
       "domain": "accounting",
       "label": "Migrate opening balances",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "accounting/migrate-opening-balances"
     },
     {

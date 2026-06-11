@@ -23,7 +23,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|    3 |       0 |       6 |
+|    4 |       0 |       5 |
 
 ---
 
@@ -35,7 +35,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 | ACCT-020 | `/accounting/journal-entries`                   | Journal entries              | **Planned** |                                            |
 | ACCT-025 | `/accounting/journal-entries/frequent-postings` | Frequent postings            | **Planned** |                                            |
 | ACCT-030 | `/accounting/financial-activity-mappings`       | Financial activity mappings  | **Planned** |                                            |
-| ACCT-040 | `/accounting/migrate-opening-balances`          | Migrate opening balances     | **Planned** |                                            |
+| ACCT-040 | `/accounting/migrate-opening-balances`          | Migrate opening balances     | **Done**    | Retrieve by office, define balanced entry  |
 | ACCT-050 | `/accounting/closing-entries`                   | Closing entries              | **Done**    | List, create, view, edit comments, delete  |
 | ACCT-060 | `/accounting/accounting-rules`                  | Accounting rules             | **Planned** |                                            |
 | ACCT-070 | `/accounting/periodic-accruals`                 | Periodic accruals            | **Done**    | Execute accruals till date                 |

@@ -511,7 +511,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.migrateBalances',
     navOrder: 40,
     navIcon: 'arrow-right-left',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'acctClosing',

@@ -293,3 +293,10 @@ export type {
 } from './accounting/gl-closure-types';
 
 export type { FineractPeriodicAccrualsMutationResponse } from './accounting/periodic-accruals-types';
+
+export type {
+  FineractDefineOpeningBalanceMutationResponse,
+  FineractOpeningBalanceContraAccount,
+  FineractOpeningBalanceGlAccount,
+  FineractOpeningBalanceTemplate
+} from './accounting/opening-balance-types';

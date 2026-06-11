@@ -318,6 +318,13 @@ export {
   type ExecutePeriodicAccrualsInput
 } from './accounting/periodic-accruals.schema';
 export {
+  buildDefineOpeningBalancePayload,
+  defineOpeningBalanceSchema,
+  validateDefineOpeningBalance,
+  type DefineOpeningBalanceInput,
+  type OpeningBalanceLineInput
+} from './accounting/opening-balance.schema';
+export {
   buildCreateReportPayload,
   buildUpdateReportPayload,
   REPORT_CATEGORIES,

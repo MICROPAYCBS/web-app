@@ -490,6 +490,11 @@
       "READ_JOURNALENTRY"
     ]
   },
+  "accounting.migrateBalances.define": {
+    "any": [
+      "DEFINEOPENINGBALANCE_JOURNALENTRY"
+    ]
+  },
   "accounting.closing": {
     "any": [
       "READ_GLCLOSURE"
