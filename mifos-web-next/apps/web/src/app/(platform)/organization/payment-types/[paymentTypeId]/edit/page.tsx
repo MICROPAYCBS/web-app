@@ -6,30 +6,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { PaymentTypeEditForm } from '@/components/organization/payment-type-form';
-import { getOrganizationPaymentType } from '@/lib/fineract/payment-types';
-import { getServerSession } from '@/lib/session/server';
+import { redirect } from 'next/navigation';
+import { paymentTypeEditPath } from '@/lib/fineract/payment-type-paths';
 
+/** Legacy edit URL → list with edit side panel. */
 export default async function OrganizationPaymentTypeEditPage({
   params
 }: {
   params: Promise<{ paymentTypeId: string }>;
-}) {
+}): Promise<never> {
   const { paymentTypeId } = await params;
-  const session = await getServerSession();
-
-  if (!can(session, 'UPDATE_PAYMENTTYPE')) {
-    notFound();
-  }
-
-  let paymentType;
-  try {
-    paymentType = await getOrganizationPaymentType(paymentTypeId);
-  } catch {
-    notFound();
-  }
-
-  return <PaymentTypeEditForm paymentType={paymentType} />;
+  redirect(paymentTypeEditPath(paymentTypeId));
 }

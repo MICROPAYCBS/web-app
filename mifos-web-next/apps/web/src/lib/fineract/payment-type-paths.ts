@@ -9,9 +9,14 @@
 export const PAYMENT_TYPE_LIST_PATH = '/organization/payment-types';
 
 export function paymentTypeCreatePath(): string {
-  return `${PAYMENT_TYPE_LIST_PATH}/create`;
+  return `${PAYMENT_TYPE_LIST_PATH}?create=1`;
 }
 
 export function paymentTypeEditPath(paymentTypeId: string | number): string {
+  return `${PAYMENT_TYPE_LIST_PATH}?edit=${paymentTypeId}`;
+}
+
+/** Legacy web-app edit route — redirects to the list with edit side panel. */
+export function paymentTypeLegacyEditPath(paymentTypeId: string | number): string {
   return `${PAYMENT_TYPE_LIST_PATH}/${paymentTypeId}/edit`;
 }

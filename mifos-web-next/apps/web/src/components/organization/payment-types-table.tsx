@@ -15,7 +15,8 @@ import {
   getPaginationRowModel,
   useReactTable,
   type ColumnDef,
-  type PaginationState
+  type PaginationState,
+  type VisibilityState
 } from '@tanstack/react-table';
 import { CheckCircle2, Pencil, Trash2, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -45,6 +46,10 @@ function BooleanIcon({ value }: { value?: boolean }) {
   );
 }
 
+const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
+  description: false
+};
+
 export function PaymentTypesTable({
   paymentTypes,
   canEdit,
@@ -55,6 +60,8 @@ export function PaymentTypesTable({
   canDelete: boolean;
 }) {
   const [filter, setFilter] = useState('');
+  const [columnVisibility, setColumnVisibility] =
+    useState<VisibilityState>(DEFAULT_COLUMN_VISIBILITY);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 25
@@ -120,6 +127,7 @@ export function PaymentTypesTable({
       {
         id: 'actions',
         header: 'Actions',
+        meta: { sticky: 'right' },
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-2">
             {canEdit ? (
@@ -155,8 +163,9 @@ export function PaymentTypesTable({
   const table = useReactTable({
     data: filteredRows,
     columns,
-    state: { pagination },
+    state: { pagination, columnVisibility },
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel()
   });
@@ -192,6 +201,7 @@ export function PaymentTypesTable({
         />
         <DataTable
           table={table}
+          stickyHeader={false}
           emptyMessage="No payment types found"
           emptyDescription="Create a payment type to classify how money is received or disbursed."
         />

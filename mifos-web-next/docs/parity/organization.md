@@ -75,12 +75,13 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 | Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
 |-------|--------|----------------|--------------|-----------|-----|--------|
 | `/organization/payment-types` | GET | PaymentTypesComponent | `GET /paymenttypes` | — | — | done |
-| `/organization/payment-types/create` | POST | CreatePaymentTypeComponent | `POST /paymenttypes` | `organization.payment-type.create` | — | done |
-| `/organization/payment-types/[paymentTypeId]/edit` | PUT | EditPaymentTypeComponent | `PUT /paymenttypes/{id}` | `organization.payment-type.update` | — | done |
+| `/organization/payment-types?create=1` | POST | CreatePaymentTypeComponent | `POST /paymenttypes` | `organization.payment-type.create` | — | done |
+| `/organization/payment-types?edit={paymentTypeId}` | PUT | EditPaymentTypeComponent | `PUT /paymenttypes/{id}` | `organization.payment-type.update` | — | done |
 | `/organization/payment-types` | DELETE | PaymentTypesComponent | `DELETE /paymenttypes/{id}` | — | — | done |
 
 ### Notes
 
-- List columns: name, description, code, system defined, cash payment, position, actions.
+- Create and edit use `FormSheet` side panels on the list page (`?create=1`, `?edit={id}`). Legacy `/create` and `/[id]/edit` routes redirect to these query URLs.
+- List columns: name, description (hidden by default), code, system defined, cash payment, position, actions (sticky right).
 - System-defined types: edit allows name and description only; delete is hidden.
 - Custom types: full edit and delete from the list actions column.

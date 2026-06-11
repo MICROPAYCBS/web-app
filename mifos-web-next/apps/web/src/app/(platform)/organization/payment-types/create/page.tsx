@@ -6,16 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { PaymentTypeCreateForm } from '@/components/organization/payment-type-form';
-import { getServerSession } from '@/lib/session/server';
+import { redirect } from 'next/navigation';
+import { paymentTypeCreatePath } from '@/lib/fineract/payment-type-paths';
 
-export default async function OrganizationPaymentTypeCreatePage() {
-  const session = await getServerSession();
-  if (!can(session, 'CREATE_PAYMENTTYPE')) {
-    notFound();
-  }
-
-  return <PaymentTypeCreateForm />;
+/** Legacy create URL → list with create side panel. */
+export default function OrganizationPaymentTypeCreatePage(): never {
+  redirect(paymentTypeCreatePath());
 }

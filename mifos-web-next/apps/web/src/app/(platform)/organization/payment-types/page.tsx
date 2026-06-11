@@ -23,6 +23,7 @@ export default async function OrganizationPaymentTypesPage() {
   return (
     <PaymentTypesPageContent
       paymentTypes={paymentTypes}
+      canCreate={can(session, 'CREATE_PAYMENTTYPE')}
       canEdit={can(session, 'UPDATE_PAYMENTTYPE')}
       canDelete={can(session, 'DELETE_PAYMENTTYPE')}
     />

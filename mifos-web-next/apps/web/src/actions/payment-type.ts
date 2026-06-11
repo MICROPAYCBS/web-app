@@ -20,7 +20,8 @@ import {
 import { revalidatePath } from 'next/cache';
 import {
   PAYMENT_TYPE_LIST_PATH,
-  paymentTypeEditPath
+  paymentTypeEditPath,
+  paymentTypeLegacyEditPath
 } from '@/lib/fineract/payment-type-paths';
 import {
   createOrganizationPaymentType,
@@ -47,6 +48,7 @@ function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, st
 function revalidatePaymentTypeViews(paymentTypeId: string | number) {
   revalidatePath(PAYMENT_TYPE_LIST_PATH);
   revalidatePath(paymentTypeEditPath(paymentTypeId));
+  revalidatePath(paymentTypeLegacyEditPath(paymentTypeId));
 }
 
 export async function createPaymentTypeAction(
