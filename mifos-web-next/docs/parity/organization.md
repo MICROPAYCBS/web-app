@@ -85,3 +85,22 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - List columns: name, description (hidden by default), code, system defined, cash payment, position, actions (sticky right).
 - System-defined types: edit allows name and description only; delete is hidden.
 - Custom types: full edit and delete from the list actions column.
+
+## Tellers
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/tellers` | GET | TellersComponent | `GET /tellers` | — | — | done |
+| `/organization/tellers?create=1` | POST | CreateTellerComponent | `POST /tellers` | `organization.teller.create` | — | done |
+| `/organization/tellers/[tellerId]` | GET | ViewTellerComponent | `GET /tellers/{id}` | — | — | done |
+| `/organization/tellers/[tellerId]?edit=1` | PUT | EditTellerComponent | `PUT /tellers/{id}` | `organization.teller.update` | — | done |
+| `/organization/tellers/[tellerId]` | DELETE | ViewTellerComponent | `DELETE /tellers/{id}` | — | — | done |
+| `/organization/tellers/[tellerId]/cashiers` | GET | CashiersComponent | `GET /tellers/{id}/cashiers` | — | — | done |
+
+### Notes
+
+- Create and edit use `FormSheet` side panels (`?create=1` on list, `?edit=1` on detail). Legacy `/create` and `/[id]/edit` routes redirect.
+- List columns: branch, teller name (links to detail), status, started on, actions (view cashiers icon, sticky right).
+- Edit locks branch assignment (legacy parity).
+- Status values: Active (300), Inactive (400).
+- Cashiers list is read-only; create/allocate/settle cashier flows are not yet implemented.

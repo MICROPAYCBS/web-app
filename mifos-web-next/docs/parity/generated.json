@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T17:12:20.263Z",
+  "generatedAt": "2026-06-11T17:27:15.127Z",
   "summary": {
-    "todo": 17,
+    "todo": 16,
     "in_progress": 22,
-    "done": 36,
+    "done": 37,
     "n/a": 0
   },
   "routes": [
@@ -321,7 +321,7 @@
       "domain": "organization",
       "label": "Tellers",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/tellers"
     },
     {

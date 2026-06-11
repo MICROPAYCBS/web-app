@@ -237,6 +237,21 @@
       "READ_TELLER"
     ]
   },
+  "organization.tellers.create": {
+    "any": [
+      "CREATE_TELLER"
+    ]
+  },
+  "organization.tellers.update": {
+    "any": [
+      "UPDATE_TELLER"
+    ]
+  },
+  "organization.tellers.delete": {
+    "any": [
+      "DELETE_TELLER"
+    ]
+  },
   "organization.paymentTypes": {
     "any": [
       "READ_PAYMENTTYPE"

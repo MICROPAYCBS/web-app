@@ -1,0 +1,13 @@
+{
+  "schemaId": "organization.teller.create",
+  "fineractSources": [
+    "org.apache.fineract.organisation.teller.api.TellerApiResource",
+    "org.apache.fineract.organisation.teller.data.TellerDataValidator"
+  ],
+  "fields": {
+    "officeId": { "required": true, "type": "integer" },
+    "name": { "required": true, "maxLength": 200 },
+    "startDate": { "required": true, "type": "date" },
+    "status": { "required": true, "type": "integer" }
+  }
+}

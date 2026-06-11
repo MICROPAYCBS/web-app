@@ -411,6 +411,12 @@ export type {
   OrganizationPaymentType,
   OrganizationPaymentTypeMutationResponse
 } from './organization/payment-type-types';
+export type {
+  OrganizationCashierListItem,
+  OrganizationTeller,
+  OrganizationTellerListItem,
+  OrganizationTellerMutationResponse
+} from './organization/teller-types';
 
 export type {
   SmsCampaignBusinessRule,

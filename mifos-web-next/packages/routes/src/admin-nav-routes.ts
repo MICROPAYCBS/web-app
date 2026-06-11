@@ -124,7 +124,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.tellers',
     navOrder: 100,
     navIcon: 'store',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgPaymentTypes',

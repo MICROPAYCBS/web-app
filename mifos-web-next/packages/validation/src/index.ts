@@ -532,3 +532,13 @@ export {
   type UpdateSmsCampaignInput,
   type UpdateSmsCampaignPayload
 } from './organization/sms-campaign.schema';
+export {
+  createTellerSchema,
+  updateTellerSchema,
+  validateCreateTeller,
+  validateUpdateTeller,
+  type CreateTellerInput,
+  type CreateTellerPayload,
+  type UpdateTellerInput,
+  type UpdateTellerPayload
+} from './organization/teller.schema';
