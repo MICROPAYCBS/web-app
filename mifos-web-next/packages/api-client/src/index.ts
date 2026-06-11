@@ -172,6 +172,19 @@ export type {
 } from './products/product-mix-types';
 
 export type {
+  TaxComponentDetail,
+  TaxComponentGlAccountOptions,
+  TaxComponentListItem,
+  TaxComponentOption,
+  TaxComponentTemplate,
+  TaxGroupAssociation,
+  TaxGroupDetail,
+  TaxGroupListItem,
+  TaxGroupTemplate,
+  TaxMutationResponse
+} from './products/tax-types';
+
+export type {
   FineractCode,
   FineractCodeValue,
   FineractCreateCodeResponse,

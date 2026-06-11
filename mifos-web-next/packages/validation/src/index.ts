@@ -129,6 +129,18 @@ export {
   type UpdateProductMixInput
 } from './products/product-mix.schema';
 export {
+  createTaxComponentSchema,
+  updateTaxComponentSchema,
+  type CreateTaxComponentInput,
+  type UpdateTaxComponentInput
+} from './products/tax-component.schema';
+export {
+  taxGroupMemberSchema,
+  upsertTaxGroupSchema,
+  type TaxGroupMemberInput,
+  type UpsertTaxGroupInput
+} from './products/tax-group.schema';
+export {
   upsertChargeSchema,
   type UpsertChargeInput
 } from './products/upsert-charge.schema';

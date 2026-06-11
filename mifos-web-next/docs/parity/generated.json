@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T10:12:53.913Z",
+  "generatedAt": "2026-06-11T10:30:35.964Z",
   "summary": {
-    "todo": 25,
+    "todo": 24,
     "in_progress": 22,
-    "done": 28,
+    "done": 29,
     "n/a": 0
   },
   "routes": [
@@ -564,7 +564,7 @@
       "domain": "products",
       "label": "Tax configurations",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "products/tax-configurations"
     },
     {

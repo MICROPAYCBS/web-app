@@ -420,6 +420,36 @@
       "READ_TAXGROUP"
     ]
   },
+  "products.tax.components": {
+    "any": [
+      "READ_TAXCOMPONENT"
+    ]
+  },
+  "products.tax.components.create": {
+    "any": [
+      "CREATE_TAXCOMPONENT"
+    ]
+  },
+  "products.tax.components.update": {
+    "any": [
+      "UPDATE_TAXCOMPONENT"
+    ]
+  },
+  "products.tax.groups": {
+    "any": [
+      "READ_TAXGROUP"
+    ]
+  },
+  "products.tax.groups.create": {
+    "any": [
+      "CREATE_TAXGROUP"
+    ]
+  },
+  "products.tax.groups.update": {
+    "any": [
+      "UPDATE_TAXGROUP"
+    ]
+  },
   "products.delinquency": {
     "any": [
       "READ_DELINQUENCY"

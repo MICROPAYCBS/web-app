@@ -435,7 +435,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'products.tax',
     navOrder: 60,
     navIcon: 'receipt',
-    keywords: []
+    keywords: ['tax component', 'tax group'],
+    parityStatus: 'done'
   },
   {
     id: 'prodDelinquency',

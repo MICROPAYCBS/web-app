@@ -1,0 +1,10 @@
+{
+  "command": "products.tax-group.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.tax.api.TaxGroupApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "taxComponents": { "required": true }
+  }
+}
