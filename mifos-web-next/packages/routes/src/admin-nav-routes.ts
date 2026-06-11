@@ -56,7 +56,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.currencies',
     navOrder: 40,
     navIcon: 'coins',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgSmsCampaigns',

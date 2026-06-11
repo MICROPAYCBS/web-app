@@ -171,6 +171,11 @@
       "READ_CURRENCY"
     ]
   },
+  "organization.currencies.update": {
+    "any": [
+      "UPDATE_CURRENCY"
+    ]
+  },
   "organization.smsCampaigns": {
     "any": [
       "READ_SMSCAMPAIGN"

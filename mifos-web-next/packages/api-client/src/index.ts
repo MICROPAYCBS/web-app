@@ -403,6 +403,11 @@ export type {
 } from './organization/provisioning-criteria-types';
 
 export type {
+  OrganizationCurrenciesConfiguration,
+  OrganizationCurrenciesMutationResponse
+} from './organization/currency-types';
+
+export type {
   FineractProvisioningCategory,
   FineractProvisioningEntriesPage,
   FineractProvisioningEntryDetail,

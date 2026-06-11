@@ -36,3 +36,16 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Edit template: `GET /provisioningcriteria/{id}?template=true` (merges `loanProducts` + `selectedLoanProducts`).
 - Each provisioning category definition is edited via a dialog (min/max age, percentage, liability and expense GL accounts).
 - Create requires every category definition to be configured before submit (legacy parity).
+
+## Currencies
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/currencies` | GET | CurrenciesComponent | `GET /currencies` | — | — | done |
+| `/organization/currencies/manage` | PUT | ManageCurrenciesComponent | `PUT /currencies` | `organization.currency.update` | — | done |
+
+### Notes
+
+- Not per-currency CRUD — the UI toggles which codes are enabled via bulk `PUT { currencies: ["USD", ...] }`.
+- `GET /currencies` returns `selectedCurrencyOptions` (enabled) and `currencyOptions` (master catalog).
+- Add/remove on manage page updates immediately (legacy parity); duplicate adds are ignored.

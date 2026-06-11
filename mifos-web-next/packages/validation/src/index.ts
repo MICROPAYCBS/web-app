@@ -493,3 +493,9 @@ export {
   type UpsertProvisioningCriteriaInput,
   type UpsertProvisioningCriteriaPayload
 } from './organization/provisioning-criteria.schema';
+export {
+  updateOrganizationCurrenciesSchema,
+  validateUpdateOrganizationCurrencies,
+  type UpdateOrganizationCurrenciesInput,
+  type UpdateOrganizationCurrenciesPayload
+} from './organization/currency.schema';

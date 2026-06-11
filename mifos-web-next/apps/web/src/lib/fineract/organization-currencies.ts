@@ -8,7 +8,12 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractCurrencyOption } from '@mifos/api-client';
+import type {
+  FineractCurrencyOption,
+  OrganizationCurrenciesConfiguration,
+  OrganizationCurrenciesMutationResponse
+} from '@mifos/api-client';
+import type { UpdateOrganizationCurrenciesPayload } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 function parseCurrencyOptions(value: unknown): FineractCurrencyOption[] {
@@ -35,15 +40,31 @@ function parseCurrencyOptions(value: unknown): FineractCurrencyOption[] {
   return options;
 }
 
-/** Currencies enabled for the organization (`GET /currencies`). */
-export async function getOrganizationSelectedCurrencies(): Promise<FineractCurrencyOption[]> {
+/** Full currency configuration (`GET /currencies`). */
+export async function getOrganizationCurrenciesConfiguration(): Promise<OrganizationCurrenciesConfiguration> {
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>('/currencies');
   if (!raw || typeof raw !== 'object') {
-    return [];
+    return { selectedCurrencyOptions: [], currencyOptions: [] };
   }
-  const selected = (raw as Record<string, unknown>).selectedCurrencyOptions;
-  return parseCurrencyOptions(selected);
+  const row = raw as Record<string, unknown>;
+  return {
+    selectedCurrencyOptions: parseCurrencyOptions(row.selectedCurrencyOptions),
+    currencyOptions: parseCurrencyOptions(row.currencyOptions)
+  };
+}
+
+/** Currencies enabled for the organization (`GET /currencies`). */
+export async function getOrganizationSelectedCurrencies(): Promise<FineractCurrencyOption[]> {
+  const configuration = await getOrganizationCurrenciesConfiguration();
+  return configuration.selectedCurrencyOptions;
+}
+
+export async function updateOrganizationCurrencies(
+  input: UpdateOrganizationCurrenciesPayload
+): Promise<OrganizationCurrenciesMutationResponse> {
+  const fineract = await createFineractClient();
+  return fineract.put<OrganizationCurrenciesMutationResponse>('/currencies', input);
 }
 
 export function filterCurrencyOptionsBySelected(
