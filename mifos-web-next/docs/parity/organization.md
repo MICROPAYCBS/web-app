@@ -132,3 +132,20 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Search filters: loan status, products, branches, date type, from/to dates, outstanding percentage and amount comparisons.
 - Results table: branch, product, count, outstanding, percentage.
 - Submit label **View summary** (legacy **Summary** button).
+
+## Investors
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/investors` | GET/POST | InvestorsComponent | `POST /external-asset-owners/search`, `POST /external-asset-owners/transfers/{id}?command=cancel` | `organization.investor-transfer.cancel` | — | done |
+
+### Notes
+
+- External asset owner transfer search and management (legacy investors screen).
+- Loads transfer history on first visit (legacy `ngOnInit` auto-search with empty filters).
+- Search filters: text, effective from/to dates, settlement from/to dates (`yyyy-MM-dd` in API payload).
+- Results render as expandable cards per transfer (legacy accordion panels).
+- Server-side pagination (50/100/200 rows).
+- **Parameters** opens a floating sidebar for search filters.
+- Pending transfers can be cancelled with confirmation dialog.
+- External IDs support copy-to-clipboard.

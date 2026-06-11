@@ -553,3 +553,12 @@ export {
   type FundMappingSearchInput,
   type FundMappingSearchPayload
 } from './organization/fund-mapping-search.schema';
+export {
+  cancelInvestorTransferSchema,
+  investorSearchSchema,
+  validateCancelInvestorTransfer,
+  validateInvestorSearch,
+  type CancelInvestorTransferInput,
+  type InvestorSearchInput,
+  type InvestorSearchPayload
+} from './organization/investor-search.schema';

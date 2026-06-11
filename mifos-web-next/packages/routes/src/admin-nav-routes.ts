@@ -104,7 +104,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.investors',
     navOrder: 80,
     navIcon: 'trending-up',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgAdhocQuery',

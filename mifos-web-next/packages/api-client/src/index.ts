@@ -420,6 +420,12 @@ export type {
   FundMappingSearchResultItem
 } from './organization/fund-mapping-types';
 export type {
+  InvestorTransferDetails,
+  InvestorTransferItem,
+  InvestorTransferOwner,
+  InvestorTransferSearchPage
+} from './organization/investor-types';
+export type {
   OrganizationCashierListItem,
   OrganizationTeller,
   OrganizationTellerListItem,

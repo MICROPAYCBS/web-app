@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T20:47:20.310Z",
+  "generatedAt": "2026-06-11T21:02:13.226Z",
   "summary": {
-    "todo": 14,
+    "todo": 13,
     "in_progress": 22,
-    "done": 39,
+    "done": 40,
     "n/a": 0
   },
   "routes": [
@@ -303,7 +303,7 @@
       "domain": "organization",
       "label": "Investors",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/investors"
     },
     {
