@@ -1,0 +1,11 @@
+{
+  "command": "accounting.periodic-accruals.execute",
+  "fineractSources": [
+    "org.apache.fineract.accounting.accrual.api.PeriodicAccrualAccountingApiResource"
+  ],
+  "fields": {
+    "tillDate": { "required": true },
+    "dateFormat": { "required": true },
+    "locale": { "required": true }
+  }
+}

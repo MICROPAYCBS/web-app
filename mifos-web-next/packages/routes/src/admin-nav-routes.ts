@@ -545,7 +545,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.accruals',
     navOrder: 70,
     navIcon: 'timer',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'acctProvisioning',

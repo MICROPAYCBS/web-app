@@ -23,7 +23,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|    2 |       0 |       7 |
+|    3 |       0 |       6 |
 
 ---
 
@@ -38,7 +38,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 | ACCT-040 | `/accounting/migrate-opening-balances`          | Migrate opening balances     | **Planned** |                                            |
 | ACCT-050 | `/accounting/closing-entries`                   | Closing entries              | **Done**    | List, create, view, edit comments, delete  |
 | ACCT-060 | `/accounting/accounting-rules`                  | Accounting rules             | **Planned** |                                            |
-| ACCT-070 | `/accounting/periodic-accruals`                 | Periodic accruals            | **Planned** |                                            |
+| ACCT-070 | `/accounting/periodic-accruals`                 | Periodic accruals            | **Done**    | Execute accruals till date                 |
 | ACCT-080 | `/accounting/provisioning-entries`              | Provisioning entries         | **Done**    | List, create, detail, journal, recreate    |
 
 ---
@@ -47,10 +47,11 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 1. **Provisioning entries** — list, create sheet, detail report, journal entries (`ACCT-080`, done).
 2. **Closing entries** — list, create sheet, detail, edit comments, delete (`ACCT-050`, done).
-3. **Chart of accounts** — tree/list CRUD (`ACCT-010`).
-4. **Journal entries** — search, create, view (`ACCT-020`).
-5. **Frequent postings** — shortcut journal form (`ACCT-025`).
-6. **Remaining slices** — mappings, migrate balances, rules, accruals.
+3. **Periodic accruals** — execute till date (`ACCT-070`, done).
+4. **Chart of accounts** — tree/list CRUD (`ACCT-010`).
+5. **Journal entries** — search, create, view (`ACCT-020`).
+6. **Frequent postings** — shortcut journal form (`ACCT-025`).
+7. **Remaining slices** — mappings, migrate balances, rules.
 
 ---
 

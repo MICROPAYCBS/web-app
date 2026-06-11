@@ -312,6 +312,12 @@ export {
   type UpdateGlClosureInput
 } from './accounting/gl-closure.schema';
 export {
+  buildExecutePeriodicAccrualsPayload,
+  executePeriodicAccrualsSchema,
+  validateExecutePeriodicAccruals,
+  type ExecutePeriodicAccrualsInput
+} from './accounting/periodic-accruals.schema';
+export {
   buildCreateReportPayload,
   buildUpdateReportPayload,
   REPORT_CATEGORIES,

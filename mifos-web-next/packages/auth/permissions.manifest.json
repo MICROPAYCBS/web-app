@@ -517,7 +517,13 @@
   },
   "accounting.accruals": {
     "any": [
-      "READ_JOURNALENTRY"
+      "READ_JOURNALENTRY",
+      "EXECUTE_PERIODICACCRUALACCOUNTING"
+    ]
+  },
+  "accounting.accruals.execute": {
+    "any": [
+      "EXECUTE_PERIODICACCRUALACCOUNTING"
     ]
   },
   "accounting.provisioning": {

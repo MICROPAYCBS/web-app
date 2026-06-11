@@ -291,3 +291,5 @@ export type {
   FineractGlClosureListItem,
   FineractGlClosureMutationResponse
 } from './accounting/gl-closure-types';
+
+export type { FineractPeriodicAccrualsMutationResponse } from './accounting/periodic-accruals-types';

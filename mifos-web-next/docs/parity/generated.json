@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T04:37:48.042Z",
+  "generatedAt": "2026-06-11T04:43:39.458Z",
   "summary": {
-    "todo": 36,
+    "todo": 35,
     "in_progress": 14,
-    "done": 25,
+    "done": 26,
     "n/a": 0
   },
   "routes": [
@@ -654,7 +654,7 @@
       "domain": "accounting",
       "label": "Periodic accruals",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "accounting/periodic-accruals"
     },
     {
