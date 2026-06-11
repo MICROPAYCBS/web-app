@@ -23,7 +23,6 @@ function toPlatformNav(structure: ReturnType<typeof buildNavStructure>): Platfor
     label: item.label,
     icon: item.icon,
     status: item.status,
-    parityStatus: item.parityStatus,
     keywords: item.keywords
   });
   return {

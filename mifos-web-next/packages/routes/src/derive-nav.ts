@@ -1,6 +1,6 @@
 import { APP_ROUTES } from './app-routes';
 import { NAV_GROUPS } from './nav-groups';
-import type { NavGroupId, ParityStatus, RouteDefinition } from './types';
+import type { NavGroupId, RouteDefinition } from './types';
 
 export type NavLinkStatus = 'live' | 'soon';
 
@@ -12,7 +12,6 @@ export interface NavLinkItem {
   icon?: string;
   permissionKey?: string;
   status: NavLinkStatus;
-  parityStatus: ParityStatus;
   keywords: string[];
   groupId?: NavGroupId;
   featured?: boolean;
@@ -48,7 +47,6 @@ function toNavLink(route: RouteDefinition): NavLinkItem {
     icon: route.navIcon,
     permissionKey: route.permissionKey,
     status: routeStatus(route),
-    parityStatus: route.parity.status,
     keywords: route.keywords ?? [],
     groupId: route.navGroup,
     featured: route.navFeatured === true
