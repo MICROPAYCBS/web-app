@@ -104,14 +104,14 @@ export function ProductMixDetailView({
       >
         <DetailSection title="Restricted products">
           <ProductMixProductsTable
-            title="Restricted products"
+            title=""
             products={mix.restrictedProducts}
             emptyMessage="No restricted products configured."
           />
         </DetailSection>
         <DetailSection title="Allowed products">
           <ProductMixProductsTable
-            title="Allowed products"
+            title=""
             products={mix.allowedProducts}
             emptyMessage="No allowed products listed."
           />
