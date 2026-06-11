@@ -151,6 +151,21 @@
       "READ_PROVISIONINGENTRY"
     ]
   },
+  "organization.provisioning.create": {
+    "any": [
+      "CREATE_PROVISIONING_CRITERIA"
+    ]
+  },
+  "organization.provisioning.update": {
+    "any": [
+      "UPDATE_CRITERIA"
+    ]
+  },
+  "organization.provisioning.delete": {
+    "any": [
+      "DELETE_CRITERIA"
+    ]
+  },
   "organization.currencies": {
     "any": [
       "READ_CURRENCY"

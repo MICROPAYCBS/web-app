@@ -392,6 +392,17 @@ export type {
 } from './organization/office-types';
 
 export type {
+  ProvisioningCriteriaCreateTemplate,
+  ProvisioningCriteriaDefinition,
+  ProvisioningCriteriaDetail,
+  ProvisioningCriteriaEditTemplate,
+  ProvisioningCriteriaGlAccount,
+  ProvisioningCriteriaListItem,
+  ProvisioningCriteriaLoanProduct,
+  ProvisioningCriteriaMutationResponse
+} from './organization/provisioning-criteria-types';
+
+export type {
   FineractProvisioningCategory,
   FineractProvisioningEntriesPage,
   FineractProvisioningEntryDetail,

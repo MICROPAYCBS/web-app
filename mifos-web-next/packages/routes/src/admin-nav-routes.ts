@@ -44,7 +44,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.provisioning',
     navOrder: 30,
     navIcon: 'scale',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgCurrencies',

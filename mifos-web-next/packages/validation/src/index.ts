@@ -483,3 +483,13 @@ export {
   type UpdateOfficeInput,
   type UpdateOfficePayload
 } from './organization/office.schema';
+export {
+  provisioningCriteriaDefinitionSchema,
+  upsertProvisioningCriteriaSchema,
+  validateUpsertProvisioningCriteria,
+  isProvisioningDefinitionComplete,
+  type ProvisioningCriteriaDefinitionInput,
+  type ProvisioningCriteriaDefinitionPayload,
+  type UpsertProvisioningCriteriaInput,
+  type UpsertProvisioningCriteriaPayload
+} from './organization/provisioning-criteria.schema';

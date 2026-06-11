@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T14:23:01.185Z",
+  "generatedAt": "2026-06-11T15:16:33.349Z",
   "summary": {
-    "todo": 21,
+    "todo": 20,
     "in_progress": 22,
-    "done": 32,
+    "done": 33,
     "n/a": 0
   },
   "routes": [
@@ -258,7 +258,7 @@
       "domain": "organization",
       "label": "Provisioning criteria",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/provisioning-criteria"
     },
     {

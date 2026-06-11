@@ -1,0 +1,12 @@
+{
+  "schemaId": "organization.provisioning-criteria.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.provisioning.api.ProvisioningCriteriaApiResource",
+    "org.apache.fineract.organisation.provisioning.data.ProvisioningCriteriaDefinitionData"
+  ],
+  "fields": {
+    "criteriaName": { "required": true, "maxLength": 200 },
+    "loanProducts": { "required": true, "type": "array" },
+    "definitions": { "required": true, "type": "array" }
+  }
+}
