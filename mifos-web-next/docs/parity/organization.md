@@ -104,3 +104,16 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Edit locks branch assignment (legacy parity).
 - Status values: Active (300), Inactive (400).
 - Cashiers list is read-only; create/allocate/settle cashier flows are not yet implemented.
+
+## Standing instructions history
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/standing-instructions-history` | GET | StandingInstructionsHistoryComponent | `GET /standinginstructions/template`, `GET /standinginstructionrunhistory` | — | — | done |
+
+### Notes
+
+- Organization-wide execution history search (not the client standing-instructions list).
+- Search filters: client name, client ID, transfer type, account type, from account ID (when account type selected), from/to dates.
+- Results table: from client, from account, to client, to account, execution time, amount, status, error log (tooltip when failed).
+- UI toggles between the search form and results; **Parameters** returns to the form (legacy parity).

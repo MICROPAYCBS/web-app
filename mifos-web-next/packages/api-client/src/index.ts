@@ -94,6 +94,8 @@ export type {
   StandingInstructionAccountRef,
   StandingInstructionClientRef,
   StandingInstructionListItem,
+  StandingInstructionRunHistoryItem,
+  StandingInstructionRunHistoryPage,
   StandingInstructionTemplate,
   StandingInstructionsPage
 } from './standing-instructions/types';

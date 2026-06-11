@@ -542,3 +542,8 @@ export {
   type UpdateTellerInput,
   type UpdateTellerPayload
 } from './organization/teller.schema';
+export {
+  standingInstructionHistorySearchSchema,
+  validateStandingInstructionHistorySearch,
+  type StandingInstructionHistorySearchInput
+} from './organization/standing-instruction-history-search.schema';

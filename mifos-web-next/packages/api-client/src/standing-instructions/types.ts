@@ -61,3 +61,19 @@ export interface StandingInstructionTemplate {
 export interface CreateStandingInstructionResponse {
   resourceId: number;
 }
+
+export interface StandingInstructionRunHistoryItem {
+  fromClient?: StandingInstructionClientRef;
+  toClient?: StandingInstructionClientRef;
+  fromAccount?: StandingInstructionAccountRef;
+  toAccount?: StandingInstructionAccountRef;
+  executionTime?: string;
+  amount?: number;
+  status?: string;
+  errorLog?: string;
+}
+
+export interface StandingInstructionRunHistoryPage {
+  pageItems: StandingInstructionRunHistoryItem[];
+  totalFilteredRecords?: number;
+}

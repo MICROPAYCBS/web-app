@@ -80,7 +80,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.standingInstructions',
     navOrder: 60,
     navIcon: 'arrow-left-right',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgFundMapping',

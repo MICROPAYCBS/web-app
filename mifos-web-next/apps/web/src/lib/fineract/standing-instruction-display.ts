@@ -6,7 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractEnumOption } from '@mifos/api-client';
+import type {
+  FineractEnumOption,
+  StandingInstructionAccountRef,
+  StandingInstructionClientRef
+} from '@mifos/api-client';
+import { formatAmount, toDecimal } from '@mifos/domain';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
 export function standingInstructionEnumLabel(option?: FineractEnumOption): string {
@@ -29,4 +34,37 @@ export function standingInstructionValidityLabel(
       ? validTill
       : formatFineractDateArray(validTill) ?? '—';
   return `${from} to ${till}`;
+}
+
+export function standingInstructionClientLabel(client?: StandingInstructionClientRef): string {
+  if (!client) {
+    return '—';
+  }
+  const name = client.displayName?.trim();
+  if (name) {
+    return `${name} (${client.id})`;
+  }
+  return String(client.id);
+}
+
+export function standingInstructionAccountLabel(account?: StandingInstructionAccountRef): string {
+  if (!account) {
+    return '—';
+  }
+  const label = account.productName?.trim() || account.accountNo?.trim();
+  if (label) {
+    return `${label} (${account.id})`;
+  }
+  return String(account.id);
+}
+
+export function standingInstructionRunAmountLabel(amount?: number): string {
+  if (amount == null || Number.isNaN(amount)) {
+    return '—';
+  }
+  const decimal = toDecimal(amount);
+  if (!decimal) {
+    return '—';
+  }
+  return formatAmount(decimal);
 }
