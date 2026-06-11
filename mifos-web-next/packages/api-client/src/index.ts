@@ -426,6 +426,13 @@ export type {
   InvestorTransferSearchPage
 } from './organization/investor-types';
 export type {
+  AdhocQueryDetail,
+  AdhocQueryEditTemplate,
+  AdhocQueryListItem,
+  AdhocQueryMutationResponse,
+  AdhocQueryTemplate
+} from './organization/adhoc-query-types';
+export type {
   OrganizationCashierListItem,
   OrganizationTeller,
   OrganizationTellerListItem,

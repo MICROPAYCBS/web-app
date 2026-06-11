@@ -116,7 +116,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.adhocQuery',
     navOrder: 90,
     navIcon: 'terminal',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgTellers',

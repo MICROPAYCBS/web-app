@@ -562,3 +562,10 @@ export {
   type InvestorSearchInput,
   type InvestorSearchPayload
 } from './organization/investor-search.schema';
+export {
+  ADHOC_QUERY_CUSTOM_FREQUENCY_ID,
+  upsertAdhocQuerySchema,
+  validateUpsertAdhocQuery,
+  type UpsertAdhocQueryInput,
+  type UpsertAdhocQueryPayload
+} from './organization/adhoc-query.schema';

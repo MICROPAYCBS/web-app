@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T21:02:13.226Z",
+  "generatedAt": "2026-06-11T21:17:23.843Z",
   "summary": {
-    "todo": 13,
+    "todo": 12,
     "in_progress": 22,
-    "done": 40,
+    "done": 41,
     "n/a": 0
   },
   "routes": [
@@ -312,7 +312,7 @@
       "domain": "organization",
       "label": "Ad hoc query",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/adhoc-query"
     },
     {

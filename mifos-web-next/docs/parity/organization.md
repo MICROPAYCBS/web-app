@@ -149,3 +149,20 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - **Parameters** opens a floating sidebar for search filters.
 - Pending transfers can be cancelled with confirmation dialog.
 - External IDs support copy-to-clipboard.
+
+## Ad hoc query
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/adhoc-query` | GET | AdhocQueryComponent | `GET /adhocquery` | — | — | done |
+| `/organization/adhoc-query/create` | POST | CreateAdhocQueryComponent | `GET /adhocquery/template`, `POST /adhocquery` | `organization.adhoc-query.create` | — | done |
+| `/organization/adhoc-query/[adhocQueryId]` | GET | ViewAdhocQueryComponent | `GET /adhocquery/{id}` | — | — | done |
+| `/organization/adhoc-query/[adhocQueryId]/edit` | PUT | EditAdhocQueryComponent | `GET /adhocquery/{id}?template=true`, `PUT /adhocquery/{id}` | `organization.adhoc-query.update` | — | done |
+
+### Notes
+
+- Custom SQL queries that insert results into a target table with optional email delivery.
+- List table: name, SQL query, table affected, email, report run frequency, status, created by.
+- Client-side filter and pagination on the list view.
+- Create/edit form: name, SQL query, insert table, table fields, email, report run frequency (with custom day interval when frequency id is 5), active flag.
+- Detail view supports edit and delete with confirmation.

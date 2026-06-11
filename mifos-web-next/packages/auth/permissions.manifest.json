@@ -232,6 +232,21 @@
       "READ_ADHOC"
     ]
   },
+  "organization.adhocQuery.create": {
+    "any": [
+      "CREATE_ADHOC"
+    ]
+  },
+  "organization.adhocQuery.update": {
+    "any": [
+      "UPDATE_ADHOC"
+    ]
+  },
+  "organization.adhocQuery.delete": {
+    "any": [
+      "DELETE_ADHOC"
+    ]
+  },
   "organization.tellers": {
     "any": [
       "READ_TELLER"
