@@ -36,14 +36,19 @@ import {
 
 function NavMenuLink({
   item,
-  sectionLabel
+  sectionLabel,
+  groupId
 }: {
   item: PlatformNavLink;
   sectionLabel?: string;
+  groupId?: string;
 }) {
   const pathname = usePathname();
   const active = isNavPathActive(pathname, item.href);
   const soon = item.status === 'soon';
+  const showDoneBadge =
+    item.parityStatus === 'done' &&
+    (groupId === 'accounting' || sectionLabel === 'Accounting');
   const tooltip = sectionLabel ? `${item.label} · ${sectionLabel}` : item.label;
 
   if (soon) {
@@ -83,6 +88,11 @@ function NavMenuLink({
             <span className="text-muted-foreground"> · {sectionLabel}</span>
           ) : null}
         </span>
+        {showDoneBadge ? (
+          <Badge variant="secondary" className="ml-auto text-[10px] font-normal">
+            Done
+          </Badge>
+        ) : null}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -145,7 +155,7 @@ function SidebarNavGroupView({ group }: { group: PlatformNavGroup }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <NavMenuLink key={item.id} item={item} />
+                <NavMenuLink key={item.id} item={item} groupId={group.id} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

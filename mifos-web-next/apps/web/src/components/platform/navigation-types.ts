@@ -13,6 +13,7 @@ export interface PlatformNavLink {
   label: string;
   icon?: string;
   status: 'live' | 'soon';
+  parityStatus: 'todo' | 'in_progress' | 'done' | 'n/a';
   keywords: string[];
 }
 
