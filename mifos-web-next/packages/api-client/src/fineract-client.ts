@@ -9,6 +9,21 @@
 import { getFineractErrorMessage } from '@mifos/i18n';
 import type { FineractApiError, FineractClientConfig } from './types';
 
+function resolveNetworkErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      return 'The server did not respond in time.';
+    }
+    if (error.message === 'fetch failed') {
+      return 'Could not reach the server. Check that it is running and your network connection.';
+    }
+    if (error.message) {
+      return `Could not reach the server (${error.message}).`;
+    }
+  }
+  return 'Could not reach the server.';
+}
+
 export class FineractHttpError extends Error {
   constructor(
     public readonly status: number,
@@ -48,13 +63,23 @@ export class FineractClient {
       headers['Authorization'] = auth;
     }
 
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: hasBody ? JSON.stringify(options.body) : undefined
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method,
+        headers,
+        body: hasBody ? JSON.stringify(options.body) : undefined
+      });
+    } catch (error) {
+      throw new FineractHttpError(0, { defaultUserMessage: resolveNetworkErrorMessage(error) });
+    }
 
-    const raw = await res.text();
+    let raw: string;
+    try {
+      raw = await res.text();
+    } catch (error) {
+      throw new FineractHttpError(0, { defaultUserMessage: resolveNetworkErrorMessage(error) });
+    }
 
     if (!res.ok) {
       let body: FineractApiError | null = null;

@@ -32,15 +32,28 @@ import { formatJobDateTime, jobRunSucceeded, yesNoLabel } from '@/lib/fineract/j
 export function SchedulerJobsTable({
   jobs,
   canExecute,
-  onSelectionChange
+  onSelectedJobsChange
 }: {
   jobs: FineractSchedulerJob[];
   canExecute: boolean;
-  onSelectionChange?: (selected: FineractSchedulerJob[]) => void;
+  onSelectedJobsChange?: (jobs: FineractSchedulerJob[]) => void;
 }) {
   const [filter, setFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [errorJob, setErrorJob] = useState<FineractSchedulerJob | null>(null);
+
+  const selectedJobs = useMemo(
+    () =>
+      Object.entries(rowSelection)
+        .filter(([, selected]) => selected)
+        .map(([jobId]) => jobs.find((job) => String(job.jobId) === jobId))
+        .filter((job): job is FineractSchedulerJob => job != null),
+    [jobs, rowSelection]
+  );
+
+  useEffect(() => {
+    onSelectedJobsChange?.(selectedJobs);
+  }, [onSelectedJobsChange, selectedJobs]);
 
   const columns = useMemo<ColumnDef<FineractSchedulerJob>[]>(
     () => [
@@ -118,6 +131,7 @@ export function SchedulerJobsTable({
       {
         id: 'errorLog',
         header: 'Error log',
+        meta: { sticky: 'right' },
         cell: ({ row }) =>
           row.original.lastRunHistory?.jobRunErrorLog ||
           row.original.lastRunHistory?.jobRunErrorMessage ? (
@@ -141,6 +155,7 @@ export function SchedulerJobsTable({
   const table = useReactTable({
     data: jobs,
     columns,
+    getRowId: (row) => String(row.jobId),
     state: {
       globalFilter: filter,
       rowSelection
@@ -160,12 +175,6 @@ export function SchedulerJobsTable({
       pagination: { pageSize: 50 }
     }
   });
-
-  const selectedJobs = table.getSelectedRowModel().rows.map((row) => row.original);
-
-  useEffect(() => {
-    onSelectionChange?.(selectedJobs);
-  }, [onSelectionChange, selectedJobs]);
 
   return (
     <div className="space-y-4">
@@ -188,6 +197,7 @@ export function SchedulerJobsTable({
       <JobErrorLogDialog
         open={errorJob != null}
         onOpenChange={(open) => !open && setErrorJob(null)}
+        jobName={errorJob?.displayName}
         history={errorJob?.lastRunHistory}
       />
     </div>

@@ -211,6 +211,64 @@ export type {
 } from './system/role-types';
 
 export type {
+  FineractUserDetail,
+  FineractUserListItem,
+  FineractUserMutationResponse,
+  FineractUserRoleRef,
+  FineractUserStaffRef,
+  FineractUserTemplate
+} from './administration/user-types';
+
+export type {
+  FineractTemplateDetail,
+  FineractTemplateFormTemplate,
+  FineractTemplateListItem,
+  FineractTemplateMapper,
+  FineractTemplateMutationResponse,
+  FineractTemplateOption
+} from './administration/template-types';
+
+export type {
+  FineractAccountingRuleDetail,
+  FineractAccountingRuleFormTemplate,
+  FineractAccountingRuleGlAccountRef,
+  FineractAccountingRuleListItem,
+  FineractAccountingRuleMutationResponse,
+  FineractAccountingRuleTagRef,
+  FineractAccountingRuleTemplateOption
+} from './accounting/accounting-rule-types';
+export type {
+  FineractFinancialActivityGlAccountOptions,
+  FineractFinancialActivityGlAccountRef,
+  FineractFinancialActivityMappingDetail,
+  FineractFinancialActivityMappingEditData,
+  FineractFinancialActivityMappingFormTemplate,
+  FineractFinancialActivityMappingListItem,
+  FineractFinancialActivityMappingMutationResponse,
+  FineractFinancialActivityRef
+} from './accounting/financial-activity-mapping-types';
+
+export type {
+  FineractGlAccountDetail,
+  FineractGlAccountEditData,
+  FineractGlAccountFormTemplate,
+  FineractGlAccountListItem,
+  FineractGlAccountMutationResponse,
+  FineractGlAccountRef,
+  FineractGlAccountToggleResponse
+} from './accounting/gl-account-types';
+
+export type {
+  FineractJournalEntriesPage,
+  FineractJournalEntryCurrency,
+  FineractJournalEntryGlAccountOption,
+  FineractJournalEntryListItem,
+  FineractJournalEntryMutationResponse,
+  FineractJournalEntryRevertResponse,
+  FineractPaymentTypeOption
+} from './accounting/journal-entry-types';
+
+export type {
   FineractSurveyDetail,
   FineractSurveyListItem,
   FineractSurveyMutationResponse,
@@ -243,6 +301,14 @@ export type {
   FineractReportParameter,
   FineractReportTemplate
 } from './system/report-types';
+
+export type {
+  FineractReportRunColumnHeader,
+  FineractReportRunParameter,
+  FineractReportRunParameterMetadata,
+  FineractReportRunParameterOption,
+  FineractReportRunResult
+} from './system/report-run-types';
 
 export type {
   FineractAvailableWorkflowStep,

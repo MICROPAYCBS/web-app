@@ -6,8 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ComingSoonPage } from '@/components/platform/coming-soon-page';
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { AccountingHubContent } from '@/components/accounting/accounting-hub-content';
+import { getServerSession } from '@/lib/session/server';
 
-export default function Page() {
-  return <ComingSoonPage title="Accounting" description="General ledger, journals, and chart of accounts." />;
+export default async function AccountingPage() {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('accounting'))) {
+    notFound();
+  }
+
+  return <AccountingHubContent />;
 }

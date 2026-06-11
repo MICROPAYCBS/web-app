@@ -12,5 +12,7 @@ declare module '@tanstack/react-table' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData, TValue> {
     sticky?: 'left' | 'right';
+    /** Human label for column visibility menus. */
+    label?: string;
   }
 }

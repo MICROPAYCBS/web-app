@@ -1,0 +1,17 @@
+{
+  "command": "accounting.accounting-rule.create",
+  "fineractSources": [
+    "org.apache.fineract.accounting.rule.api.AccountingRuleApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "officeId": { "required": true },
+    "accountToDebit": { "required": false },
+    "debitTags": { "required": false },
+    "allowMultipleDebitEntries": { "required": false },
+    "accountToCredit": { "required": false },
+    "creditTags": { "required": false },
+    "allowMultipleCreditEntries": { "required": false },
+    "description": { "required": false }
+  }
+}

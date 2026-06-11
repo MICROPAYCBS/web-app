@@ -22,7 +22,7 @@ import { Suspense } from 'react';
 
 import { ExternalServicesPageContent } from '@/components/system/external-services-page-content';
 
-import { configurationsBySlug } from '@/lib/fineract/external-service-display';
+import { configurationsBySlug } from '@/lib/fineract/external-service-shared';
 
 import { listAllExternalServiceConfigurations } from '@/lib/fineract/external-services';
 

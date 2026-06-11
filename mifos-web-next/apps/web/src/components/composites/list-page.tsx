@@ -7,6 +7,7 @@
  */
 
 import type { ReactNode } from 'react';
+import { TitleWithHint } from '@/components/composites/field-hint-tooltip';
 import { PageHeader } from '@/components/composites/page-header';
 import { platformInset, platformInsetX } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,8 @@ import { cn } from '@/lib/utils';
 export function ListPage({
   title,
   description,
+  titleHint,
+  titleHintAriaLabel,
   backLink,
   meta,
   actions,
@@ -23,6 +26,9 @@ export function ListPage({
 }: {
   title: ReactNode;
   description?: string;
+  /** Shown in an info tooltip beside the title — prefer over `description` for long copy. */
+  titleHint?: string;
+  titleHintAriaLabel?: string;
   /** Placed above the title — use {@link DetailBackLink}. */
   backLink?: ReactNode;
   /** Secondary line under the title (description context, not navigation). */
@@ -39,7 +45,11 @@ export function ListPage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1 pt-1">
               {backLink ? <div>{backLink}</div> : null}
-              <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                <TitleWithHint hint={titleHint} hintAriaLabel={titleHintAriaLabel}>
+                  {title}
+                </TitleWithHint>
+              </h1>
               {meta ? <div className="text-sm text-muted-foreground">{meta}</div> : null}
               {description ? (
                 <p className="text-sm text-muted-foreground">{description}</p>

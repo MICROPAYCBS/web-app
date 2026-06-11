@@ -41,7 +41,7 @@ export { PageHeader } from './page-header';
 export { ListPage } from './list-page';
 export { DateField, type DateFieldProps } from './date-field';
 export { FormLabel, type FormLabelProps } from './form-label';
-export { FieldHintTooltip } from './field-hint-tooltip';
+export { FieldHintTooltip, TitleWithHint } from './field-hint-tooltip';
 export { SelectField, type SelectFieldProps, type SelectOption } from './select-field';
 export { TextField, type TextFieldProps } from './text-field';
 export { MoneyField, sanitizeMoneyInput, formatMoneyInputDisplay, type MoneyFieldProps } from './money-field';

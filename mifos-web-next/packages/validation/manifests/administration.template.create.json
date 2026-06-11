@@ -1,0 +1,13 @@
+{
+  "command": "administration.template.create",
+  "fineractSources": [
+    "org.apache.fineract.template.api.TemplatesApiResource"
+  ],
+  "fields": {
+    "entity": { "required": true },
+    "type": { "required": true },
+    "name": { "required": true },
+    "text": { "required": true },
+    "mappers": { "required": false }
+  }
+}

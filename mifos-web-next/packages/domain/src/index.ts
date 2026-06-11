@@ -9,8 +9,12 @@
 export {
   AMOUNT_MAX_DECIMAL_PLACES,
   AMOUNT_MAX_INTEGER_DIGITS,
+  areJournalEntryTotalsBalanced,
   formatAmount,
   formatMoney,
+  journalEntryBalanceDifference,
+  JOURNAL_ENTRY_UNBALANCED_MESSAGE,
   parseAmount,
+  sumJournalEntryLineAmounts,
   toDecimal
 } from './money';

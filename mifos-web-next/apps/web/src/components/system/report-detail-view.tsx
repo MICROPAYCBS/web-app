@@ -9,7 +9,7 @@
  */
 
 import type { FineractReportDetail } from '@mifos/api-client';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Play, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -37,11 +37,13 @@ import { cn } from '@/lib/utils';
 export function ReportDetailView({
   report,
   canUpdate,
-  canDelete
+  canDelete,
+  canRun = false
 }: {
   report: FineractReportDetail;
   canUpdate: boolean;
   canDelete: boolean;
+  canRun?: boolean;
 }) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -73,6 +75,12 @@ export function ReportDetailView({
           meta={`${report.reportType}${report.reportSubType ? ` · ${report.reportSubType}` : ''}`}
           actions={
             <div className="flex flex-wrap gap-2">
+              {canRun && report.useReport ? (
+                <Link href={`/reports/${report.id}`} className={cn(buttonVariants({ variant: 'outline' }))}>
+                  <Play className="mr-2 size-4" />
+                  Run report
+                </Link>
+              ) : null}
               {canUpdate ? (
                 <Link href={`${basePath}/edit`} className={cn(buttonVariants())}>
                   <Pencil className="mr-2 size-4" />

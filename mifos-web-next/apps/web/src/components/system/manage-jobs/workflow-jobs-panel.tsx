@@ -156,6 +156,10 @@ export function WorkflowJobsPanel({
 
   return (
     <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        Choose a business workflow job and configure the ordered steps that run during batch
+        processing. Reorder, add, or remove steps, then apply changes.
+      </p>
       <div className="max-w-md space-y-2">
         <Label htmlFor="workflow-job">Workflow job</Label>
         <Select

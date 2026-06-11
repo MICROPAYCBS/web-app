@@ -38,6 +38,7 @@ export default async function ReportDetailPage({
       report={report}
       canUpdate={can(session, 'UPDATE_REPORT')}
       canDelete={can(session, 'DELETE_REPORT')}
+      canRun={can(session, resolvePermission('administration.reports'))}
     />
   );
 }

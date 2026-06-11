@@ -19,6 +19,12 @@ export function formatErrorMessage(error: unknown): string {
     return error.message;
   }
   if (error instanceof Error) {
+    if (error.message === 'fetch failed') {
+      return 'Could not reach the server. Check that it is running and your network connection.';
+    }
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      return 'The server did not respond in time.';
+    }
     return error.message || error.name || 'Something went wrong.';
   }
   if (typeof error === 'string') {

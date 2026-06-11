@@ -6,8 +6,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { RegistryRoutePage } from '@/components/platform/registry-route-page';
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { ReportsCatalogContent } from '@/components/reports/reports-catalog-content';
+import { listRunnableReports } from '@/lib/fineract/report-run-display';
+import { listReports } from '@/lib/fineract/reports';
+import { getServerSession } from '@/lib/session/server';
 
-export default function ReportsPage() {
-  return <RegistryRoutePage pathname="/reports" />;
+export default async function ReportsPage() {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('administration.reports'))) {
+    notFound();
+  }
+
+  const reports = listRunnableReports(await listReports());
+
+  return <ReportsCatalogContent reports={reports} />;
 }

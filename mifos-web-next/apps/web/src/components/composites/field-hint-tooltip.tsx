@@ -9,6 +9,7 @@
  */
 
 import { CircleHelp } from 'lucide-react';
+import type { ReactNode } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -36,5 +37,27 @@ export function FieldHintTooltip({
         {content}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+/** Page or section title with optional help tooltip — same pattern as {@link FormLabel} hints. */
+export function TitleWithHint({
+  children,
+  hint,
+  hintAriaLabel = 'More information'
+}: {
+  children: ReactNode;
+  hint?: string;
+  hintAriaLabel?: string;
+}) {
+  if (!hint) {
+    return children;
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {children}
+      <FieldHintTooltip content={hint} ariaLabel={hintAriaLabel} />
+    </span>
   );
 }

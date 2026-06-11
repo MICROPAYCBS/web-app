@@ -38,17 +38,30 @@ import { formatJobDateTime } from '@/lib/fineract/jobs-display';
 export function LockedLoansTable({
   loans,
   canExecuteInline,
-  onSelectionChange
+  onSelectedLoansChange
 }: {
   loans: FineractLockedLoan[];
   canExecuteInline: boolean;
-  onSelectionChange?: (selected: FineractLockedLoan[]) => void;
+  onSelectedLoansChange?: (loans: FineractLockedLoan[]) => void;
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [stacktraceLoan, setStacktraceLoan] = useState<FineractLockedLoan | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const selectedLoans = useMemo(
+    () =>
+      Object.entries(rowSelection)
+        .filter(([, selected]) => selected)
+        .map(([loanId]) => loans.find((loan) => String(loan.loanId) === loanId))
+        .filter((loan): loan is FineractLockedLoan => loan != null),
+    [loans, rowSelection]
+  );
+
+  useEffect(() => {
+    onSelectedLoansChange?.(selectedLoans);
+  }, [onSelectedLoansChange, selectedLoans]);
 
   const columns = useMemo<ColumnDef<FineractLockedLoan>[]>(
     () => [
@@ -138,6 +151,7 @@ export function LockedLoansTable({
   const table = useReactTable({
     data: loans,
     columns,
+    getRowId: (row) => String(row.loanId),
     state: {
       globalFilter: filter,
       rowSelection
@@ -159,12 +173,6 @@ export function LockedLoansTable({
       pagination: { pageSize: 100 }
     }
   });
-
-  const selectedLoans = table.getSelectedRowModel().rows.map((row) => row.original);
-
-  useEffect(() => {
-    onSelectionChange?.(selectedLoans);
-  }, [onSelectionChange, selectedLoans]);
 
   if (!loans.length) {
     return (

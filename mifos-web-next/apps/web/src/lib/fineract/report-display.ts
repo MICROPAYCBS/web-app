@@ -6,10 +6,64 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractReportAllowedParameter, FineractReportParameter } from '@mifos/api-client';
-import { REPORT_CATEGORIES } from '@mifos/validation';
+import type {
+  FineractReportAllowedParameter,
+  FineractReportDetail,
+  FineractReportParameter
+} from '@mifos/api-client';
+import { REPORT_CATEGORIES, type UpsertReportFormInput } from '@mifos/validation';
 
 export { REPORT_CATEGORIES };
+
+export type ReportParameterRowInput = {
+  id?: string | number;
+  parameterId: number;
+  parameterName: string;
+  reportParameterName?: string;
+};
+
+export type ReportWizardDraftInput = {
+  form: UpsertReportFormInput;
+  parameters: ReportParameterRowInput[];
+};
+
+export function defaultReportFormValues(): UpsertReportFormInput {
+  return {
+    reportName: '',
+    reportType: '',
+    reportSubType: '',
+    reportCategory: '',
+    description: '',
+    useReport: false,
+    reportSql: '',
+    reportParameters: []
+  };
+}
+
+export function reportToFormValues(report: FineractReportDetail): UpsertReportFormInput {
+  return {
+    reportName: report.reportName,
+    reportType: report.reportType,
+    reportSubType: report.reportSubType ?? '',
+    reportCategory: (report.reportCategory as UpsertReportFormInput['reportCategory']) ?? '',
+    description: report.description ?? '',
+    useReport: report.useReport ?? false,
+    reportSql: report.reportSql ?? '',
+    reportParameters: []
+  };
+}
+
+export function initialReportWizardDraft(
+  report: FineractReportDetail | undefined,
+  template: { allowedParameters: FineractReportAllowedParameter[] }
+): ReportWizardDraftInput {
+  return {
+    form: report ? reportToFormValues(report) : defaultReportFormValues(),
+    parameters: report
+      ? toReportParameterRows(report.reportParameters, template.allowedParameters)
+      : []
+  };
+}
 
 const SQL_OPTIONAL_REPORT_TYPES = new Set(['Pentaho', 'BIRT']);
 

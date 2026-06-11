@@ -6,8 +6,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { RegistryRoutePage } from '@/components/platform/registry-route-page';
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { TemplatesPageContent } from '@/components/templates/templates-page-content';
+import { listTemplates } from '@/lib/fineract/templates';
+import { getServerSession } from '@/lib/session/server';
 
-export default function TemplatesPage() {
-  return <RegistryRoutePage pathname="/templates" />;
+export default async function TemplatesPage() {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('administration.templates'))) {
+    notFound();
+  }
+
+  const templates = await listTemplates();
+
+  return <TemplatesPageContent templates={templates} />;
 }

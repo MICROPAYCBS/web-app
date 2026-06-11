@@ -14,7 +14,8 @@ import type {
   FineractSchedulerStatus
 } from '@mifos/api-client';
 import { useRouter } from 'next/navigation';
-import { useCallback, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
+import { fetchCobStatusAction, fetchLockedLoansAction } from '@/actions/jobs';
 import { ListPage } from '@/components/composites/list-page';
 import { CobJobsPanel } from '@/components/system/manage-jobs/cob-jobs-panel';
 import { SchedulerJobsPanel } from '@/components/system/manage-jobs/scheduler-jobs-panel';
@@ -50,11 +51,54 @@ export function ManageJobsPageContent({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<ManageJobsTab>(tab);
+  const [cobCatchUpRunning, setCobCatchUpRunning] = useState(isCatchUpRunning);
+  const [cobLoans, setCobLoans] = useState(lockedLoans);
+  const [cobLoading, setCobLoading] = useState(false);
+
+  useEffect(() => {
+    setActiveTab(tab);
+  }, [tab]);
+
+  useEffect(() => {
+    setCobCatchUpRunning(isCatchUpRunning);
+    setCobLoans(lockedLoans);
+  }, [isCatchUpRunning, lockedLoans]);
+
+  useEffect(() => {
+    if (activeTab !== 'cob') {
+      return;
+    }
+
+    let cancelled = false;
+    setCobLoading(true);
+    void (async () => {
+      const [statusResult, loansResult] = await Promise.all([
+        fetchCobStatusAction(),
+        fetchLockedLoansAction()
+      ]);
+      if (cancelled) {
+        return;
+      }
+      if (statusResult.ok) {
+        setCobCatchUpRunning(statusResult.isCatchUpRunning);
+      }
+      if (loansResult.ok) {
+        setCobLoans(loansResult.loans);
+      }
+      setCobLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   const navigateTab = useCallback(
     (nextTab: ManageJobsTab) => {
+      setActiveTab(nextTab);
       startTransition(() => {
-        router.push(buildManageJobsUrl(nextTab));
+        router.replace(buildManageJobsUrl(nextTab), { scroll: false });
       });
     },
     [router]
@@ -65,7 +109,7 @@ export function ManageJobsPageContent({
       title="Manage jobs"
       description="Scheduler jobs, workflow steps, and close-of-business processing."
     >
-      <Tabs value={tab} onValueChange={(value) => navigateTab(value as ManageJobsTab)}>
+      <Tabs value={activeTab} onValueChange={(value) => navigateTab(value as ManageJobsTab)}>
         <TabsList>
           <TabsTrigger value="scheduler" disabled={pending}>
             Scheduler jobs
@@ -89,16 +133,23 @@ export function ManageJobsPageContent({
           {workflowJobNames.length ? (
             <WorkflowJobsPanel jobNames={workflowJobNames} canUpdate={canUpdate} />
           ) : (
-            <p className="text-sm text-muted-foreground">No workflow jobs are configured.</p>
+            <p className="text-sm text-muted-foreground">
+              No workflow jobs are configured on this server. Workflow jobs define the ordered
+              business steps executed during loan and savings processing.
+            </p>
           )}
         </TabsContent>
         <TabsContent value="cob" className="mt-6">
-          <CobJobsPanel
-            isCatchUpRunning={isCatchUpRunning}
-            loans={lockedLoans}
-            canUpdate={canUpdate}
-            canExecuteInline={canExecuteInline}
-          />
+          {cobLoading ? (
+            <p className="text-sm text-muted-foreground">Loading close-of-business status…</p>
+          ) : (
+            <CobJobsPanel
+              isCatchUpRunning={cobCatchUpRunning}
+              loans={cobLoans}
+              canUpdate={canUpdate}
+              canExecuteInline={canExecuteInline}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </ListPage>
