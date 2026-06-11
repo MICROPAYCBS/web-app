@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T10:30:35.964Z",
+  "generatedAt": "2026-06-11T11:30:46.676Z",
   "summary": {
-    "todo": 24,
+    "todo": 23,
     "in_progress": 22,
-    "done": 29,
+    "done": 30,
     "n/a": 0
   },
   "routes": [
@@ -573,7 +573,7 @@
       "domain": "products",
       "label": "Delinquency buckets",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "products/delinquency-bucket-configurations"
     },
     {

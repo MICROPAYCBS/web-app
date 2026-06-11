@@ -141,6 +141,18 @@ export {
   type UpsertTaxGroupInput
 } from './products/tax-group.schema';
 export {
+  createDelinquencyRangeSchema,
+  updateDelinquencyRangeSchema,
+  type CreateDelinquencyRangeInput,
+  type UpdateDelinquencyRangeInput
+} from './products/delinquency-range.schema';
+export {
+  createDelinquencyBucketSchema,
+  updateDelinquencyBucketSchema,
+  type CreateDelinquencyBucketInput,
+  type UpdateDelinquencyBucketInput
+} from './products/delinquency-bucket.schema';
+export {
   upsertChargeSchema,
   type UpsertChargeInput
 } from './products/upsert-charge.schema';

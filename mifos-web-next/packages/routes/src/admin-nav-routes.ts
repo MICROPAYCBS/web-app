@@ -447,7 +447,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'products.delinquency',
     navOrder: 70,
     navIcon: 'alert-triangle',
-    keywords: []
+    keywords: ['delinquency range', 'delinquency bucket', 'overdue'],
+    parityStatus: 'done'
   },
   {
     id: 'prodFloatingRates',

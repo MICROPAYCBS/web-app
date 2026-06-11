@@ -452,7 +452,49 @@
   },
   "products.delinquency": {
     "any": [
-      "READ_DELINQUENCY"
+      "READ_DELINQUENCY",
+      "READ_DELINQUENCY_RANGE",
+      "READ_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.ranges": {
+    "any": [
+      "READ_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.ranges.create": {
+    "any": [
+      "CREATE_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.ranges.update": {
+    "any": [
+      "UPDATE_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.ranges.delete": {
+    "any": [
+      "DELETE_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.buckets": {
+    "any": [
+      "READ_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.buckets.create": {
+    "any": [
+      "CREATE_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.buckets.update": {
+    "any": [
+      "UPDATE_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.buckets.delete": {
+    "any": [
+      "DELETE_DELINQUENCY_BUCKET"
     ]
   },
   "products.recurringDeposit": {

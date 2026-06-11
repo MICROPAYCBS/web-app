@@ -185,6 +185,21 @@ export type {
 } from './products/tax-types';
 
 export type {
+  DelinquencyBucketApiType,
+  DelinquencyBucketDetail,
+  DelinquencyBucketListItem,
+  DelinquencyBucketTypeOption,
+  DelinquencyBucketQueryType,
+  DelinquencyBucketRangeRef,
+  DelinquencyBucketTemplate,
+  DelinquencyMinimumPaymentRule,
+  DelinquencyMutationResponse,
+  DelinquencyRangeDetail,
+  DelinquencyRangeListItem,
+  DelinquencyStringEnumOption
+} from './products/delinquency-types';
+
+export type {
   FineractCode,
   FineractCodeValue,
   FineractCreateCodeResponse,

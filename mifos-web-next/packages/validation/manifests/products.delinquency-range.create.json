@@ -1,0 +1,12 @@
+{
+  "command": "products.delinquency-range.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.delinquency.api.DelinquencyApiResource",
+    "org.apache.fineract.portfolio.delinquency.validator.DelinquencyRangeParseAndValidator"
+  ],
+  "fields": {
+    "classification": { "required": true },
+    "minimumAgeDays": { "required": true },
+    "maximumAgeDays": { "required": false }
+  }
+}
