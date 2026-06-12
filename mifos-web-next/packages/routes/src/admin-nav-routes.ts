@@ -164,7 +164,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.bulkLoan',
     navOrder: 130,
     navIcon: 'shuffle',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgEntityDatatableChecks',

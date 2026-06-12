@@ -609,3 +609,9 @@ export {
   type UpdateLoanOriginatorInput,
   type UpdateLoanOriginatorPayload
 } from './organization/loan-originator.schema';
+export {
+  bulkLoanReassignmentSchema,
+  validateBulkLoanReassignment,
+  type BulkLoanReassignmentInput,
+  type BulkLoanReassignmentPayload
+} from './organization/bulk-loan-reassignment.schema';

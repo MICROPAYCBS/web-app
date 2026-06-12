@@ -37,6 +37,19 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Each provisioning category definition is edited via a dialog (min/max age, percentage, liability and expense GL accounts).
 - Create requires every category definition to be configured before submit (legacy parity).
 
+## Bulk loan reassignment
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/bulkloan` | GET/POST | BulkLoanReassignmnetComponent | `GET /loans/loanreassignment/template`, `POST /loans/loanreassignment` | `organization.bulk-loan-reassignment.create` | — | done |
+
+### Notes
+
+- Reassign multiple loans from one loan officer to another within a branch.
+- Cascading form: branch → assignment date → from/to loan officers → loan checkboxes.
+- Loan lists load from officer template (`accountSummaryCollection.clients` and `.groups`).
+- Requires `BULKREASSIGN_LOAN` to view and submit.
+
 ## Loan originators
 
 | Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |

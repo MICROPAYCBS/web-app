@@ -425,6 +425,15 @@ export type {
   LoanOriginatorTemplate
 } from './organization/loan-originator-types';
 export type {
+  BulkLoanReassignmentAccountOwner,
+  BulkLoanReassignmentAccountSummaryCollection,
+  BulkLoanReassignmentLoanOfficerOption,
+  BulkLoanReassignmentLoanSummary,
+  BulkLoanReassignmentMutationResponse,
+  BulkLoanReassignmentOfficeTemplate,
+  BulkLoanReassignmentOfficerTemplate
+} from './organization/bulk-loan-reassignment-types';
+export type {
   FundMappingAdvanceSearchTemplate,
   FundMappingLoanProductOption,
   FundMappingOfficeOption,
