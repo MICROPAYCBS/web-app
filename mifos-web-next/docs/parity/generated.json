@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-12T05:39:15.888Z",
+  "generatedAt": "2026-06-12T05:56:58.043Z",
   "summary": {
-    "todo": 7,
+    "todo": 6,
     "in_progress": 22,
-    "done": 46,
+    "done": 47,
     "n/a": 0
   },
   "routes": [
@@ -393,7 +393,7 @@
       "domain": "organization",
       "label": "Bulk import",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/bulk-import"
     },
     {

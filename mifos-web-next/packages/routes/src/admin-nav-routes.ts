@@ -223,7 +223,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.bulkImport',
     navOrder: 180,
     navIcon: 'upload',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgHolidays',

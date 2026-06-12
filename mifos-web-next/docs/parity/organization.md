@@ -6,12 +6,12 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Branches
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/offices` | GET | OfficesComponent | `GET /offices` | — | — | done |
-| `/organization/offices?create=1` | POST | CreateOfficeComponent | `POST /offices` | `organization.office.create` | — | done |
-| `/organization/offices/[officeId]` | GET | GeneralTabComponent | `GET /offices/{id}` | — | — | done |
-| `/organization/offices/[officeId]?edit=1` | PUT | EditOfficeComponent | `PUT /offices/{id}` | `organization.office.update` | — | done |
+| Route                                     | Method | web-app screen        | Fineract API        | Schema ID                    | E2E | Status |
+| ----------------------------------------- | ------ | --------------------- | ------------------- | ---------------------------- | --- | ------ |
+| `/organization/offices`                   | GET    | OfficesComponent      | `GET /offices`      | —                            | —   | done   |
+| `/organization/offices?create=1`          | POST   | CreateOfficeComponent | `POST /offices`     | `organization.office.create` | —   | done   |
+| `/organization/offices/[officeId]`        | GET    | GeneralTabComponent   | `GET /offices/{id}` | —                            | —   | done   |
+| `/organization/offices/[officeId]?edit=1` | PUT    | EditOfficeComponent   | `PUT /offices/{id}` | `organization.office.update` | —   | done   |
 
 ## Notes
 
@@ -22,13 +22,13 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Provisioning criteria
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/provisioning-criteria` | GET | LoanProvisioningCriteriaComponent | `GET /provisioningcriteria` | — | — | done |
-| `/organization/provisioning-criteria/create` | POST | CreateLoanProvisioningCriteriaComponent | `POST /provisioningcriteria` | `organization.provisioning-criteria.create` | — | done |
-| `/organization/provisioning-criteria/[criteriaId]` | GET | ViewLoanProvisioningCriteriaComponent | `GET /provisioningcriteria/{id}` | — | — | done |
-| `/organization/provisioning-criteria/[criteriaId]/edit` | PUT | EditLoanProvisioningCriteriaComponent | `PUT /provisioningcriteria/{id}` | `organization.provisioning-criteria.update` | — | done |
-| `/organization/provisioning-criteria/[criteriaId]` | DELETE | ViewLoanProvisioningCriteriaComponent | `DELETE /provisioningcriteria/{id}` | — | — | done |
+| Route                                                   | Method | web-app screen                          | Fineract API                        | Schema ID                                   | E2E | Status |
+| ------------------------------------------------------- | ------ | --------------------------------------- | ----------------------------------- | ------------------------------------------- | --- | ------ |
+| `/organization/provisioning-criteria`                   | GET    | LoanProvisioningCriteriaComponent       | `GET /provisioningcriteria`         | —                                           | —   | done   |
+| `/organization/provisioning-criteria/create`            | POST   | CreateLoanProvisioningCriteriaComponent | `POST /provisioningcriteria`        | `organization.provisioning-criteria.create` | —   | done   |
+| `/organization/provisioning-criteria/[criteriaId]`      | GET    | ViewLoanProvisioningCriteriaComponent   | `GET /provisioningcriteria/{id}`    | —                                           | —   | done   |
+| `/organization/provisioning-criteria/[criteriaId]/edit` | PUT    | EditLoanProvisioningCriteriaComponent   | `PUT /provisioningcriteria/{id}`    | `organization.provisioning-criteria.update` | —   | done   |
+| `/organization/provisioning-criteria/[criteriaId]`      | DELETE | ViewLoanProvisioningCriteriaComponent   | `DELETE /provisioningcriteria/{id}` | —                                           | —   | done   |
 
 ### Notes
 
@@ -39,9 +39,9 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Bulk loan reassignment
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/bulkloan` | GET/POST | BulkLoanReassignmnetComponent | `GET /loans/loanreassignment/template`, `POST /loans/loanreassignment` | `organization.bulk-loan-reassignment.create` | — | done |
+| Route                    | Method   | web-app screen                | Fineract API                                                           | Schema ID                                    | E2E | Status |
+| ------------------------ | -------- | ----------------------------- | ---------------------------------------------------------------------- | -------------------------------------------- | --- | ------ |
+| `/organization/bulkloan` | GET/POST | BulkLoanReassignmnetComponent | `GET /loans/loanreassignment/template`, `POST /loans/loanreassignment` | `organization.bulk-loan-reassignment.create` | —   | done   |
 
 ### Notes
 
@@ -50,15 +50,31 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Loan lists load from officer template (`accountSummaryCollection.clients` and `.groups`).
 - Requires `BULKREASSIGN_LOAN` to view and submit.
 
+## Bulk import
+
+| Route                                    | Method   | web-app screen          | Fineract API                                                                                                                 | Schema ID | E2E | Status |
+| ---------------------------------------- | -------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------- | --- | ------ |
+| `/organization/bulk-import`              | GET      | BulkImportComponent     | —                                                                                                                            | —         | —   | done   |
+| `/organization/bulk-import/[importName]` | GET/POST | ViewBulkImportComponent | `GET /imports`, `GET {urlSuffix}/downloadtemplate`, `POST {urlSuffix}/uploadtemplate`, `GET /imports/downloadOutputTemplate` | —         | —   | done   |
+
+### Notes
+
+- List page shows 17 import types in two columns, each gated by its list permission.
+- Detail pages use URL-encoded import names (e.g. `Loan%20Accounts`).
+- Template download supports optional branch, staff, and legal form fields per import type.
+- Excel upload (`.xls`, `.xlsx`); client imports infer legal form from filename (`person` / `entity`).
+- Import history table with refresh; document download requires `READ_DOCUMENT`.
+- Binary template and document downloads are proxied via BFF API routes.
+
 ## Loan originators
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/manage-loan-originators` | GET | LoanOriginatorsComponent | `GET /loan-originators` | — | — | done |
-| `/organization/manage-loan-originators?create=1` | POST | CreateLoanOriginatorComponent | `GET /loan-originators/template`, `POST /loan-originators` | `organization.loan-originator.create` | — | done |
-| `/organization/manage-loan-originators/[loanOriginatorId]` | GET | ViewLoanOriginatorComponent | `GET /loan-originators/{id}` | — | — | done |
-| `/organization/manage-loan-originators/[loanOriginatorId]?edit=1` | PUT | EditLoanOriginatorComponent | `GET /loan-originators/template`, `PUT /loan-originators/{id}` | `organization.loan-originator.update` | — | done |
-| `/organization/manage-loan-originators` | DELETE | LoanOriginatorsComponent | `DELETE /loan-originators/{id}` | — | — | done |
+| Route                                                             | Method | web-app screen                | Fineract API                                                   | Schema ID                             | E2E | Status |
+| ----------------------------------------------------------------- | ------ | ----------------------------- | -------------------------------------------------------------- | ------------------------------------- | --- | ------ |
+| `/organization/manage-loan-originators`                           | GET    | LoanOriginatorsComponent      | `GET /loan-originators`                                        | —                                     | —   | done   |
+| `/organization/manage-loan-originators?create=1`                  | POST   | CreateLoanOriginatorComponent | `GET /loan-originators/template`, `POST /loan-originators`     | `organization.loan-originator.create` | —   | done   |
+| `/organization/manage-loan-originators/[loanOriginatorId]`        | GET    | ViewLoanOriginatorComponent   | `GET /loan-originators/{id}`                                   | —                                     | —   | done   |
+| `/organization/manage-loan-originators/[loanOriginatorId]?edit=1` | PUT    | EditLoanOriginatorComponent   | `GET /loan-originators/template`, `PUT /loan-originators/{id}` | `organization.loan-originator.update` | —   | done   |
+| `/organization/manage-loan-originators`                           | DELETE | LoanOriginatorsComponent      | `DELETE /loan-originators/{id}`                                | —                                     | —   | done   |
 
 ### Notes
 
@@ -70,9 +86,9 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Password preferences
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/password-preferences` | GET/PUT | PasswordPreferencesComponent | `GET /passwordpreferences/template`, `PUT /passwordpreferences` | `organization.password-preferences.update` | — | done |
+| Route                                | Method  | web-app screen               | Fineract API                                                    | Schema ID                                  | E2E | Status |
+| ------------------------------------ | ------- | ---------------------------- | --------------------------------------------------------------- | ------------------------------------------ | --- | ------ |
+| `/organization/password-preferences` | GET/PUT | PasswordPreferencesComponent | `GET /passwordpreferences/template`, `PUT /passwordpreferences` | `organization.password-preferences.update` | —   | done   |
 
 ### Notes
 
@@ -82,10 +98,10 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Currencies
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/currencies` | GET | CurrenciesComponent | `GET /currencies` | — | — | done |
-| `/organization/currencies/manage` | PUT | ManageCurrenciesComponent | `PUT /currencies` | `organization.currency.update` | — | done |
+| Route                             | Method | web-app screen            | Fineract API      | Schema ID                      | E2E | Status |
+| --------------------------------- | ------ | ------------------------- | ----------------- | ------------------------------ | --- | ------ |
+| `/organization/currencies`        | GET    | CurrenciesComponent       | `GET /currencies` | —                              | —   | done   |
+| `/organization/currencies/manage` | PUT    | ManageCurrenciesComponent | `PUT /currencies` | `organization.currency.update` | —   | done   |
 
 ### Notes
 
@@ -95,15 +111,15 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## SMS campaigns
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/sms-campaigns` | GET | SmsCampaignsComponent | `GET /smscampaigns` | — | — | done |
-| `/organization/sms-campaigns/create` | POST | CreateCampaignComponent | `POST /smscampaigns` | `organization.sms-campaign.create` | — | done |
-| `/organization/sms-campaigns/[campaignId]` | GET | ViewCampaignComponent | `GET /smscampaigns/{id}` | — | — | done |
-| `/organization/sms-campaigns/[campaignId]/edit` | PUT | EditCampaignComponent | `PUT /smscampaigns/{id}` | `organization.sms-campaign.update` | — | done |
-| `/organization/sms-campaigns/[campaignId]` | POST | ViewCampaignComponent | `POST /smscampaigns/{id}?command=activate\|close\|reactivate` | `organization.sms-campaign.activate` / `.close` | — | done |
-| `/organization/sms-campaigns/[campaignId]` | DELETE | ViewCampaignComponent | `DELETE /smscampaigns/{id}` | — | — | done |
-| `/organization/sms-campaigns/[campaignId]` | GET | ViewCampaignComponent | `GET /sms/{id}/messageByStatus` | — | — | done |
+| Route                                           | Method | web-app screen          | Fineract API                                                  | Schema ID                                       | E2E | Status |
+| ----------------------------------------------- | ------ | ----------------------- | ------------------------------------------------------------- | ----------------------------------------------- | --- | ------ |
+| `/organization/sms-campaigns`                   | GET    | SmsCampaignsComponent   | `GET /smscampaigns`                                           | —                                               | —   | done   |
+| `/organization/sms-campaigns/create`            | POST   | CreateCampaignComponent | `POST /smscampaigns`                                          | `organization.sms-campaign.create`              | —   | done   |
+| `/organization/sms-campaigns/[campaignId]`      | GET    | ViewCampaignComponent   | `GET /smscampaigns/{id}`                                      | —                                               | —   | done   |
+| `/organization/sms-campaigns/[campaignId]/edit` | PUT    | EditCampaignComponent   | `PUT /smscampaigns/{id}`                                      | `organization.sms-campaign.update`              | —   | done   |
+| `/organization/sms-campaigns/[campaignId]`      | POST   | ViewCampaignComponent   | `POST /smscampaigns/{id}?command=activate\|close\|reactivate` | `organization.sms-campaign.activate` / `.close` | —   | done   |
+| `/organization/sms-campaigns/[campaignId]`      | DELETE | ViewCampaignComponent   | `DELETE /smscampaigns/{id}`                                   | —                                               | —   | done   |
+| `/organization/sms-campaigns/[campaignId]`      | GET    | ViewCampaignComponent   | `GET /sms/{id}/messageByStatus`                               | —                                               | —   | done   |
 
 ### Notes
 
@@ -115,12 +131,12 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Payment types
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/payment-types` | GET | PaymentTypesComponent | `GET /paymenttypes` | — | — | done |
-| `/organization/payment-types?create=1` | POST | CreatePaymentTypeComponent | `POST /paymenttypes` | `organization.payment-type.create` | — | done |
-| `/organization/payment-types?edit={paymentTypeId}` | PUT | EditPaymentTypeComponent | `PUT /paymenttypes/{id}` | `organization.payment-type.update` | — | done |
-| `/organization/payment-types` | DELETE | PaymentTypesComponent | `DELETE /paymenttypes/{id}` | — | — | done |
+| Route                                              | Method | web-app screen             | Fineract API                | Schema ID                          | E2E | Status |
+| -------------------------------------------------- | ------ | -------------------------- | --------------------------- | ---------------------------------- | --- | ------ |
+| `/organization/payment-types`                      | GET    | PaymentTypesComponent      | `GET /paymenttypes`         | —                                  | —   | done   |
+| `/organization/payment-types?create=1`             | POST   | CreatePaymentTypeComponent | `POST /paymenttypes`        | `organization.payment-type.create` | —   | done   |
+| `/organization/payment-types?edit={paymentTypeId}` | PUT    | EditPaymentTypeComponent   | `PUT /paymenttypes/{id}`    | `organization.payment-type.update` | —   | done   |
+| `/organization/payment-types`                      | DELETE | PaymentTypesComponent      | `DELETE /paymenttypes/{id}` | —                                  | —   | done   |
 
 ### Notes
 
@@ -131,14 +147,14 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Tellers
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/tellers` | GET | TellersComponent | `GET /tellers` | — | — | done |
-| `/organization/tellers?create=1` | POST | CreateTellerComponent | `POST /tellers` | `organization.teller.create` | — | done |
-| `/organization/tellers/[tellerId]` | GET | ViewTellerComponent | `GET /tellers/{id}` | — | — | done |
-| `/organization/tellers/[tellerId]?edit=1` | PUT | EditTellerComponent | `PUT /tellers/{id}` | `organization.teller.update` | — | done |
-| `/organization/tellers/[tellerId]` | DELETE | ViewTellerComponent | `DELETE /tellers/{id}` | — | — | done |
-| `/organization/tellers/[tellerId]/cashiers` | GET | CashiersComponent | `GET /tellers/{id}/cashiers` | — | — | done |
+| Route                                       | Method | web-app screen        | Fineract API                 | Schema ID                    | E2E | Status |
+| ------------------------------------------- | ------ | --------------------- | ---------------------------- | ---------------------------- | --- | ------ |
+| `/organization/tellers`                     | GET    | TellersComponent      | `GET /tellers`               | —                            | —   | done   |
+| `/organization/tellers?create=1`            | POST   | CreateTellerComponent | `POST /tellers`              | `organization.teller.create` | —   | done   |
+| `/organization/tellers/[tellerId]`          | GET    | ViewTellerComponent   | `GET /tellers/{id}`          | —                            | —   | done   |
+| `/organization/tellers/[tellerId]?edit=1`   | PUT    | EditTellerComponent   | `PUT /tellers/{id}`          | `organization.teller.update` | —   | done   |
+| `/organization/tellers/[tellerId]`          | DELETE | ViewTellerComponent   | `DELETE /tellers/{id}`       | —                            | —   | done   |
+| `/organization/tellers/[tellerId]/cashiers` | GET    | CashiersComponent     | `GET /tellers/{id}/cashiers` | —                            | —   | done   |
 
 ### Notes
 
@@ -150,9 +166,9 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Standing instructions history
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/standing-instructions-history` | GET | StandingInstructionsHistoryComponent | `GET /standinginstructions/template`, `GET /standinginstructionrunhistory` | — | — | done |
+| Route                                         | Method | web-app screen                       | Fineract API                                                               | Schema ID | E2E | Status |
+| --------------------------------------------- | ------ | ------------------------------------ | -------------------------------------------------------------------------- | --------- | --- | ------ |
+| `/organization/standing-instructions-history` | GET    | StandingInstructionsHistoryComponent | `GET /standinginstructions/template`, `GET /standinginstructionrunhistory` | —         | —   | done   |
 
 ### Notes
 
@@ -164,9 +180,9 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Fund mapping
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/fund-mapping` | GET/POST | FundMappingComponent | `GET /search/template`, `POST /search/advance` | `organization.fund-mapping.search` | — | done |
+| Route                        | Method   | web-app screen       | Fineract API                                   | Schema ID                          | E2E | Status |
+| ---------------------------- | -------- | -------------------- | ---------------------------------------------- | ---------------------------------- | --- | ------ |
+| `/organization/fund-mapping` | GET/POST | FundMappingComponent | `GET /search/template`, `POST /search/advance` | `organization.fund-mapping.search` | —   | done   |
 
 ### Notes
 
@@ -178,9 +194,9 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Investors
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/investors` | GET/POST | InvestorsComponent | `POST /external-asset-owners/search`, `POST /external-asset-owners/transfers/{id}?command=cancel` | `organization.investor-transfer.cancel` | — | done |
+| Route                     | Method   | web-app screen     | Fineract API                                                                                      | Schema ID                               | E2E | Status |
+| ------------------------- | -------- | ------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------- | --- | ------ |
+| `/organization/investors` | GET/POST | InvestorsComponent | `POST /external-asset-owners/search`, `POST /external-asset-owners/transfers/{id}?command=cancel` | `organization.investor-transfer.cancel` | —   | done   |
 
 ### Notes
 
@@ -195,12 +211,12 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Ad hoc query
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/adhoc-query` | GET | AdhocQueryComponent | `GET /adhocquery` | — | — | done |
-| `/organization/adhoc-query/create` | POST | CreateAdhocQueryComponent | `GET /adhocquery/template`, `POST /adhocquery` | `organization.adhoc-query.create` | — | done |
-| `/organization/adhoc-query/[adhocQueryId]` | GET | ViewAdhocQueryComponent | `GET /adhocquery/{id}` | — | — | done |
-| `/organization/adhoc-query/[adhocQueryId]/edit` | PUT | EditAdhocQueryComponent | `GET /adhocquery/{id}?template=true`, `PUT /adhocquery/{id}` | `organization.adhoc-query.update` | — | done |
+| Route                                           | Method | web-app screen            | Fineract API                                                 | Schema ID                         | E2E | Status |
+| ----------------------------------------------- | ------ | ------------------------- | ------------------------------------------------------------ | --------------------------------- | --- | ------ |
+| `/organization/adhoc-query`                     | GET    | AdhocQueryComponent       | `GET /adhocquery`                                            | —                                 | —   | done   |
+| `/organization/adhoc-query/create`              | POST   | CreateAdhocQueryComponent | `GET /adhocquery/template`, `POST /adhocquery`               | `organization.adhoc-query.create` | —   | done   |
+| `/organization/adhoc-query/[adhocQueryId]`      | GET    | ViewAdhocQueryComponent   | `GET /adhocquery/{id}`                                       | —                                 | —   | done   |
+| `/organization/adhoc-query/[adhocQueryId]/edit` | PUT    | EditAdhocQueryComponent   | `GET /adhocquery/{id}?template=true`, `PUT /adhocquery/{id}` | `organization.adhoc-query.update` | —   | done   |
 
 ### Notes
 
@@ -212,12 +228,12 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Holidays
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/holidays` | GET | HolidaysComponent | `GET /holidays?officeId=`, `GET /offices` | — | — | done |
-| `/organization/holidays/create` | POST | CreateHolidayComponent | `GET /holidays/template`, `POST /holidays` | `organization.holiday.create` | — | done |
-| `/organization/holidays/[holidayId]` | GET | ViewHolidaysComponent | `GET /holidays/{id}`, `POST /holidays/{id}?command=activate` | `organization.holiday.activate` | — | done |
-| `/organization/holidays/[holidayId]/edit` | PUT | EditHolidayComponent | `PUT /holidays/{id}` | `organization.holiday.update` | — | done |
+| Route                                     | Method | web-app screen         | Fineract API                                                 | Schema ID                       | E2E | Status |
+| ----------------------------------------- | ------ | ---------------------- | ------------------------------------------------------------ | ------------------------------- | --- | ------ |
+| `/organization/holidays`                  | GET    | HolidaysComponent      | `GET /holidays?officeId=`, `GET /offices`                    | —                               | —   | done   |
+| `/organization/holidays/create`           | POST   | CreateHolidayComponent | `GET /holidays/template`, `POST /holidays`                   | `organization.holiday.create`   | —   | done   |
+| `/organization/holidays/[holidayId]`      | GET    | ViewHolidaysComponent  | `GET /holidays/{id}`, `POST /holidays/{id}?command=activate` | `organization.holiday.activate` | —   | done   |
+| `/organization/holidays/[holidayId]/edit` | PUT    | EditHolidayComponent   | `PUT /holidays/{id}`                                         | `organization.holiday.update`   | —   | done   |
 
 ### Notes
 
@@ -230,9 +246,9 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 
 ## Working days
 
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/organization/working-days` | GET/PUT | WorkingDaysComponent | `GET /workingdays`, `PUT /workingdays` | `organization.working-days.update` | — | done |
+| Route                        | Method  | web-app screen       | Fineract API                           | Schema ID                          | E2E | Status |
+| ---------------------------- | ------- | -------------------- | -------------------------------------- | ---------------------------------- | --- | ------ |
+| `/organization/working-days` | GET/PUT | WorkingDaysComponent | `GET /workingdays`, `PUT /workingdays` | `organization.working-days.update` | —   | done   |
 
 ### Notes
 

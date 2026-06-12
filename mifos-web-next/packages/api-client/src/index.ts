@@ -434,6 +434,10 @@ export type {
   BulkLoanReassignmentOfficerTemplate
 } from './organization/bulk-loan-reassignment-types';
 export type {
+  BulkImportHistoryItem,
+  BulkImportStaffOption
+} from './organization/bulk-import-types';
+export type {
   FundMappingAdvanceSearchTemplate,
   FundMappingLoanProductOption,
   FundMappingOfficeOption,
