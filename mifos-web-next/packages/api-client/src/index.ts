@@ -338,6 +338,11 @@ export type {
   FineractAuditTrailUserOption,
   FineractAuditTrailsPage
 } from './system/audit-trail-types';
+export type {
+  CheckerInboxActionCommand,
+  CheckerInboxListItem,
+  CheckerInboxSearchTemplate
+} from './tasks/checker-inbox-types';
 
 export type {
   FineractReportAllowedParameter,

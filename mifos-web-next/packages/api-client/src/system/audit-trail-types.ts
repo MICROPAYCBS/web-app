@@ -37,6 +37,7 @@ export interface FineractAuditTrailDetail extends FineractAuditTrailListItem {
   commandAsJson?: string;
   savingsAccountNo?: string;
   groupLevelName?: string;
+  groupName?: string;
   url?: string;
 }
 

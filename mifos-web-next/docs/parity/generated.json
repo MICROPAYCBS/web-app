@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-12T05:56:58.043Z",
+  "generatedAt": "2026-06-12T06:51:37.521Z",
   "summary": {
-    "todo": 6,
+    "todo": 5,
     "in_progress": 22,
-    "done": 47,
+    "done": 48,
     "n/a": 0
   },
   "routes": [
@@ -213,7 +213,7 @@
       "domain": "tasks",
       "label": "Checker inbox",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "tasks/checker-inbox-and-tasks"
     },
     {

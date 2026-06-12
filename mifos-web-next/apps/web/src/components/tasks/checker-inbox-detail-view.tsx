@@ -1,0 +1,204 @@
+'use client';
+
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import type { FineractAuditTrailDetail } from '@mifos/api-client';
+import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
+import { Check, Trash2, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import {
+  deleteCheckerInboxItemAction,
+  executeCheckerInboxActionAction
+} from '@/actions/checker-inbox';
+import {
+  DetailBackLink,
+  DetailField,
+  DetailFieldGrid,
+  DetailHeader,
+  DetailPage
+} from '@/components/composites';
+import { DataTable } from '@/components/composites/data-table/data-table';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import {
+  formatAuditTrailDateTime,
+  parseAuditTrailCommands
+} from '@/lib/fineract/audit-trail-display';
+import { CHECKER_INBOX_LIST_PATH } from '@/lib/fineract/checker-inbox-paths';
+
+type ConfirmAction = 'approve' | 'reject' | 'delete';
+
+export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetail }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+
+  const commands = useMemo(() => parseAuditTrailCommands(item.commandAsJson), [item.commandAsJson]);
+
+  const columns = useMemo<ColumnDef<{ command: string; commandValue: string }>[]>(
+    () => [
+      { accessorKey: 'command', header: 'Command' },
+      { accessorKey: 'commandValue', header: 'Command value' }
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data: commands,
+    columns,
+    getCoreRowModel: getCoreRowModel()
+  });
+
+  function runAction(action: ConfirmAction) {
+    startTransition(async () => {
+      const result =
+        action === 'delete'
+          ? await deleteCheckerInboxItemAction(item.id)
+          : await executeCheckerInboxActionAction(item.id, action);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success(
+        action === 'approve'
+          ? 'Checker item approved.'
+          : action === 'reject'
+            ? 'Checker item rejected.'
+            : 'Checker item deleted.'
+      );
+      setConfirmAction(null);
+      router.push(CHECKER_INBOX_LIST_PATH);
+      router.refresh();
+    });
+  }
+
+  return (
+    <>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Button type="button" disabled={pending} onClick={() => setConfirmAction('approve')}>
+          <Check className="mr-2 size-4" />
+          Approve
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          disabled={pending}
+          onClick={() => setConfirmAction('delete')}
+        >
+          <Trash2 className="mr-2 size-4" />
+          Delete
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending}
+          onClick={() => setConfirmAction('reject')}
+        >
+          <X className="mr-2 size-4" />
+          Reject
+        </Button>
+      </div>
+
+      <DetailPage
+        header={
+          <DetailHeader
+            backLink={
+              <DetailBackLink href={CHECKER_INBOX_LIST_PATH} label="Back to checker inbox" />
+            }
+            title={`Checker inbox ${item.id}`}
+            meta={
+              item.actionName ? `${item.actionName} on ${item.entityName ?? 'resource'}` : undefined
+            }
+          />
+        }
+        summary={
+          <DetailFieldGrid columns={2}>
+            <DetailField label="ID">{item.id}</DetailField>
+            <DetailField label="Status">{item.processingResult ?? '—'}</DetailField>
+            <DetailField label="User">{item.maker ?? '—'}</DetailField>
+            <DetailField label="Action">{item.actionName ?? '—'}</DetailField>
+            <DetailField label="Entity">{item.entityName ?? '—'}</DetailField>
+            {item.resourceId != null ? (
+              <DetailField label="Resource ID">{item.resourceId}</DetailField>
+            ) : null}
+            <DetailField label="Date">{formatAuditTrailDateTime(item.madeOnDate)}</DetailField>
+            {item.officeName ? <DetailField label="Branch">{item.officeName}</DetailField> : null}
+            {item.savingsAccountNo ? (
+              <DetailField label="Savings account number">{item.savingsAccountNo}</DetailField>
+            ) : null}
+            {item.groupLevelName ? (
+              <DetailField label={item.groupLevelName}>{item.groupName ?? '—'}</DetailField>
+            ) : null}
+          </DetailFieldGrid>
+        }
+      >
+        <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
+          <h3 className="text-sm font-medium">Command</h3>
+          {commands.length ? (
+            <DataTable
+              table={table}
+              stickyHeader={false}
+              emptyMessage="No command fields"
+              emptyDescription="This checker item has no parsed command payload."
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">No command payload available.</p>
+          )}
+        </div>
+      </DetailPage>
+
+      <Dialog open={confirmAction != null} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction === 'approve'
+                ? 'Approve checker'
+                : confirmAction === 'reject'
+                  ? 'Reject checker'
+                  : 'Delete checker'}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction === 'approve'
+                ? 'Are you sure you want to approve this checker item?'
+                : confirmAction === 'reject'
+                  ? 'Are you sure you want to reject this checker item?'
+                  : 'Are you sure you want to delete this checker item?'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={confirmAction === 'delete' ? 'destructive' : 'default'}
+              disabled={pending}
+              onClick={() => confirmAction && runAction(confirmAction)}
+            >
+              {confirmAction === 'approve'
+                ? 'Approve'
+                : confirmAction === 'reject'
+                  ? 'Reject'
+                  : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

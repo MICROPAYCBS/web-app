@@ -366,7 +366,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'checkerInbox',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'todo', webAppRef: 'tasks/checker-inbox-and-tasks' }
+    parity: { status: 'done', webAppRef: 'tasks/checker-inbox-and-tasks' }
   },
   settingsServers: {
     id: 'settingsServers',

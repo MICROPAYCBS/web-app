@@ -65,6 +65,7 @@ function normalizeAuditTrailDetail(raw: unknown): FineractAuditTrailDetail | nul
     commandAsJson: typeof row.commandAsJson === 'string' ? row.commandAsJson : undefined,
     savingsAccountNo: typeof row.savingsAccountNo === 'string' ? row.savingsAccountNo : undefined,
     groupLevelName: typeof row.groupLevelName === 'string' ? row.groupLevelName : undefined,
+    groupName: typeof row.groupName === 'string' ? row.groupName : undefined,
     url: typeof row.url === 'string' ? row.url : undefined
   };
 }
@@ -131,7 +132,9 @@ function normalizeSearchTemplate(raw: unknown): FineractAuditTrailSearchTemplate
   };
 }
 
-export async function listAuditTrails(query: AuditTrailListQuery): Promise<FineractAuditTrailsPage> {
+export async function listAuditTrails(
+  query: AuditTrailListQuery
+): Promise<FineractAuditTrailsPage> {
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(AUDITS_PATH, buildAuditTrailSearchParams(query));
   if (!raw || typeof raw !== 'object') {

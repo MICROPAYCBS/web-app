@@ -6,9 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { redirect } from 'next/navigation';
-import { CHECKER_INBOX_LIST_PATH } from '@/lib/fineract/checker-inbox-paths';
+export const CHECKER_INBOX_LIST_PATH = '/checker-inbox-and-tasks/checker-inbox';
 
-export default function CheckerInboxAndTasksPage(): never {
-  redirect(CHECKER_INBOX_LIST_PATH);
+export function checkerInboxDetailPath(id: string | number) {
+  return `${CHECKER_INBOX_LIST_PATH}/${id}`;
 }
