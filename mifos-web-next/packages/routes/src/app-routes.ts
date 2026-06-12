@@ -142,7 +142,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'clients.list',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'todo', webAppRef: 'centers' }
+    parity: { status: 'done', webAppRef: 'centers' }
   },
   loans: {
     id: 'loans',

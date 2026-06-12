@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-12T06:51:37.521Z",
+  "generatedAt": "2026-06-12T07:13:03.925Z",
   "summary": {
-    "todo": 5,
+    "todo": 4,
     "in_progress": 22,
-    "done": 48,
+    "done": 49,
     "n/a": 0
   },
   "routes": [
@@ -96,7 +96,7 @@
       "domain": "centers",
       "label": "Centers",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "centers"
     },
     {

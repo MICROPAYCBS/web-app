@@ -343,6 +343,21 @@ export type {
   CheckerInboxListItem,
   CheckerInboxSearchTemplate
 } from './tasks/checker-inbox-types';
+export type {
+  CenterCreateTemplate,
+  CenterDetail,
+  CenterEditTemplate,
+  CenterGroupMember,
+  CenterGroupOption,
+  CenterListItem,
+  CenterMeetingCalendar,
+  CenterMutationResponse,
+  CenterSavingsAccount,
+  CenterStaffOption,
+  CenterSummary,
+  CenterTimeline,
+  CentersPage
+} from './centers/types';
 
 export type {
   FineractReportAllowedParameter,

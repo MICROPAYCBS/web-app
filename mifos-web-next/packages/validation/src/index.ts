@@ -158,10 +158,7 @@ export {
   type CreateDelinquencyBucketInput,
   type UpdateDelinquencyBucketInput
 } from './products/delinquency-bucket.schema';
-export {
-  upsertChargeSchema,
-  type UpsertChargeInput
-} from './products/upsert-charge.schema';
+export { upsertChargeSchema, type UpsertChargeInput } from './products/upsert-charge.schema';
 export {
   upsertSavingsProductSchema,
   savingsProductDetailsStepSchema,
@@ -609,6 +606,16 @@ export {
   type UpdateLoanOriginatorInput,
   type UpdateLoanOriginatorPayload
 } from './organization/loan-originator.schema';
+export {
+  createCenterSchema,
+  updateCenterSchema,
+  validateCreateCenter,
+  validateUpdateCenter,
+  type CreateCenterInput,
+  type CreateCenterPayload,
+  type UpdateCenterInput,
+  type UpdateCenterPayload
+} from './centers/center.schema';
 export {
   bulkLoanReassignmentSchema,
   validateBulkLoanReassignment,

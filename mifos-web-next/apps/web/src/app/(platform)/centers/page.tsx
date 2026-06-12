@@ -6,8 +6,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ComingSoonPage } from '@/components/platform/coming-soon-page';
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { CentersPageContent } from '@/components/centers/centers-page-content';
+import { fetchCentersList } from '@/lib/fineract/centers-list';
+import { parseCentersListQuery } from '@/lib/fineract/centers-list-query';
+import { getServerSession } from '@/lib/session/server';
 
-export default function Page() {
-  return <ComingSoonPage title="Centers" description="Center management for microfinance." />;
+export default async function CentersPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('clients.list'))) {
+    notFound();
+  }
+
+  const params = await searchParams;
+  const query = parseCentersListQuery(params);
+  const initialPage = await fetchCentersList(query);
+
+  return (
+    <Suspense fallback={<p className="text-muted-foreground">Loading centers…</p>}>
+      <CentersPageContent initialPage={initialPage} initialQuery={query} />
+    </Suspense>
+  );
 }
