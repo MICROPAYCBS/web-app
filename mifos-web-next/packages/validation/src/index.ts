@@ -569,3 +569,19 @@ export {
   type UpsertAdhocQueryInput,
   type UpsertAdhocQueryPayload
 } from './organization/adhoc-query.schema';
+export {
+  createHolidaySchema,
+  HOLIDAY_RESCHEDULE_NEXT_REPAYMENT,
+  HOLIDAY_RESCHEDULE_SPECIFIC_DATE,
+  updateActiveHolidaySchema,
+  updatePendingHolidaySchema,
+  validateCreateHoliday,
+  validateUpdateActiveHoliday,
+  validateUpdatePendingHoliday,
+  type CreateHolidayInput,
+  type CreateHolidayPayload,
+  type UpdateActiveHolidayInput,
+  type UpdateActiveHolidayPayload,
+  type UpdatePendingHolidayInput,
+  type UpdatePendingHolidayPayload
+} from './organization/holiday.schema';

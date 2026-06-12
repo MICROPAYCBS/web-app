@@ -230,7 +230,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.holidays',
     navOrder: 190,
     navIcon: 'calendar',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'sysCodes',

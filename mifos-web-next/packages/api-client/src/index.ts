@@ -433,6 +433,14 @@ export type {
   AdhocQueryTemplate
 } from './organization/adhoc-query-types';
 export type {
+  HolidayDetail,
+  HolidayListItem,
+  HolidayMutationResponse,
+  HolidayOfficeRef,
+  HolidayReschedulingTypeOption,
+  HolidayStatus
+} from './organization/holiday-types';
+export type {
   OrganizationCashierListItem,
   OrganizationTeller,
   OrganizationTellerListItem,

@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-11T21:17:23.843Z",
+  "generatedAt": "2026-06-12T04:23:48.737Z",
   "summary": {
-    "todo": 12,
+    "todo": 11,
     "in_progress": 22,
-    "done": 41,
+    "done": 42,
     "n/a": 0
   },
   "routes": [
@@ -402,7 +402,7 @@
       "domain": "organization",
       "label": "Holidays",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/holidays"
     },
     {

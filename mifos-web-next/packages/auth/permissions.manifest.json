@@ -327,6 +327,26 @@
       "READ_HOLIDAY"
     ]
   },
+  "organization.holidays.create": {
+    "any": [
+      "CREATE_HOLIDAY"
+    ]
+  },
+  "organization.holidays.update": {
+    "any": [
+      "UPDATE_HOLIDAY"
+    ]
+  },
+  "organization.holidays.delete": {
+    "any": [
+      "DELETE_HOLIDAY"
+    ]
+  },
+  "organization.holidays.activate": {
+    "any": [
+      "ACTIVATE_HOLIDAY"
+    ]
+  },
   "system.codes": {
     "any": [
       "READ_CODE"

@@ -166,3 +166,21 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Client-side filter and pagination on the list view.
 - Create/edit form: name, SQL query, insert table, table fields, email, report run frequency (with custom day interval when frequency id is 5), active flag.
 - Detail view supports edit and delete with confirmation.
+
+## Holidays
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/holidays` | GET | HolidaysComponent | `GET /holidays?officeId=`, `GET /offices` | — | — | done |
+| `/organization/holidays/create` | POST | CreateHolidayComponent | `GET /holidays/template`, `POST /holidays` | `organization.holiday.create` | — | done |
+| `/organization/holidays/[holidayId]` | GET | ViewHolidaysComponent | `GET /holidays/{id}`, `POST /holidays/{id}?command=activate` | `organization.holiday.activate` | — | done |
+| `/organization/holidays/[holidayId]/edit` | PUT | EditHolidayComponent | `PUT /holidays/{id}` | `organization.holiday.update` | — | done |
+
+### Notes
+
+- Branch-scoped holiday list (select a branch to load holidays; deleted holidays excluded).
+- List table: name, start date, end date, repayments scheduled to, status.
+- Create form: dates, repayment scheduling type (specific date when type id is 2), description, applicable branches.
+- Active holidays: edit name and description only (legacy parity).
+- Pending holidays: full edit including dates and rescheduling rules.
+- Detail view: activate (when not active), edit, delete with confirmation.
