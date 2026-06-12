@@ -6,19 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { PasswordPreferenceTemplateItem } from '@mifos/api-client';
 import { DEFAULT_PASSWORD_POLICY, type PasswordPolicyRules } from '@/lib/password-policy-validate';
 
 /**
  * Fineract GET /passwordpreferences/template item.
  * Example (sandbox): simple (id 1), secure (id 2), strong (id 3, 12–50 chars).
  */
-export interface FineractPasswordPreference {
-  id: number;
-  description?: string;
-  active?: boolean;
-  key?: string;
-  regex?: string;
-}
+export type FineractPasswordPreference = PasswordPreferenceTemplateItem;
 
 /** Fineract "secure" / standard tier (6+ chars, mixed case, digit, no spaces). */
 const SECURE_POLICY_RULES: PasswordPolicyRules = {

@@ -414,6 +414,10 @@ export type {
   OrganizationPaymentTypeMutationResponse
 } from './organization/payment-type-types';
 export type {
+  PasswordPreferencesMutationResponse,
+  PasswordPreferenceTemplateItem
+} from './organization/password-preferences-types';
+export type {
   FundMappingAdvanceSearchTemplate,
   FundMappingLoanProductOption,
   FundMappingOfficeOption,

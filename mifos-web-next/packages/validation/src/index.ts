@@ -593,3 +593,9 @@ export {
   type UpdateWorkingDaysPayload,
   type WorkingWeekDayCode
 } from './organization/working-days.schema';
+export {
+  updatePasswordPreferencesSchema,
+  validateUpdatePasswordPreferences,
+  type UpdatePasswordPreferencesInput,
+  type UpdatePasswordPreferencesPayload
+} from './organization/password-preferences.schema';

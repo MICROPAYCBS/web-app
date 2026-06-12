@@ -37,6 +37,18 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Each provisioning category definition is edited via a dialog (min/max age, percentage, liability and expense GL accounts).
 - Create requires every category definition to be configured before submit (legacy parity).
 
+## Password preferences
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/password-preferences` | GET/PUT | PasswordPreferencesComponent | `GET /passwordpreferences/template`, `PUT /passwordpreferences` | `organization.password-preferences.update` | — | done |
+
+### Notes
+
+- Single settings page to choose the tenant password validation policy (Basic, Standard, Strong).
+- Policy options render as selectable cards with Fineract template descriptions.
+- Save requires `UPDATE_PASSWORD_VALIDATION_POLICY`; view requires `READ_CONFIGURATION`.
+
 ## Currencies
 
 | Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |

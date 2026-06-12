@@ -152,7 +152,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.passwordPreferences',
     navOrder: 120,
     navIcon: 'key-round',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgBulkLoanReassignment',

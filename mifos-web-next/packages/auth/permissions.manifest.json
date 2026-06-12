@@ -292,6 +292,11 @@
       "READ_CONFIGURATION"
     ]
   },
+  "organization.passwordPreferences.update": {
+    "any": [
+      "UPDATE_PASSWORD_VALIDATION_POLICY"
+    ]
+  },
   "organization.bulkLoan": {
     "any": [
       "BULKREASSIGN_LOAN"

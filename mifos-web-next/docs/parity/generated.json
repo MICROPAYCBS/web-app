@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-12T04:42:35.816Z",
+  "generatedAt": "2026-06-12T05:12:06.413Z",
   "summary": {
-    "todo": 10,
+    "todo": 9,
     "in_progress": 22,
-    "done": 43,
+    "done": 44,
     "n/a": 0
   },
   "routes": [
@@ -339,7 +339,7 @@
       "domain": "organization",
       "label": "Password preferences",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/password-preferences"
     },
     {
