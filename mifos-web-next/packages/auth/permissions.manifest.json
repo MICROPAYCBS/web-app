@@ -307,6 +307,11 @@
       "READ_WORKINGDAYS"
     ]
   },
+  "organization.workingDays.update": {
+    "any": [
+      "UPDATE_WORKINGDAYS"
+    ]
+  },
   "organization.loanOriginators": {
     "any": [
       "READ_OFFICE"

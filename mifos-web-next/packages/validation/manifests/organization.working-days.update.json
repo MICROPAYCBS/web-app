@@ -1,0 +1,12 @@
+{
+  "schemaId": "organization.working-days.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.workingdays.api.WorkingDaysApiResource",
+    "org.apache.fineract.organisation.workingdays.data.WorkingDaysDataValidator"
+  ],
+  "fields": {
+    "recurrence": { "required": true, "type": "string" },
+    "repaymentRescheduleType": { "required": true, "type": "number" },
+    "extendTermForDailyRepayments": { "required": false, "type": "boolean" }
+  }
+}

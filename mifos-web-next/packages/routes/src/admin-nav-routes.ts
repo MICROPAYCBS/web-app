@@ -186,7 +186,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.workingDays',
     navOrder: 150,
     navIcon: 'calendar-days',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgLoanOriginators',

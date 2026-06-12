@@ -585,3 +585,11 @@ export {
   type UpdatePendingHolidayInput,
   type UpdatePendingHolidayPayload
 } from './organization/holiday.schema';
+export {
+  updateWorkingDaysSchema,
+  validateUpdateWorkingDays,
+  WORKING_WEEK_DAY_CODES,
+  type UpdateWorkingDaysInput,
+  type UpdateWorkingDaysPayload,
+  type WorkingWeekDayCode
+} from './organization/working-days.schema';

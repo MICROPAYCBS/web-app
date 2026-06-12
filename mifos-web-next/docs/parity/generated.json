@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-12T04:23:48.737Z",
+  "generatedAt": "2026-06-12T04:42:35.816Z",
   "summary": {
-    "todo": 11,
+    "todo": 10,
     "in_progress": 22,
-    "done": 42,
+    "done": 43,
     "n/a": 0
   },
   "routes": [
@@ -366,7 +366,7 @@
       "domain": "organization",
       "label": "Working days",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/working-days"
     },
     {

@@ -441,6 +441,10 @@ export type {
   HolidayStatus
 } from './organization/holiday-types';
 export type {
+  WorkingDaysConfiguration,
+  WorkingDaysMutationResponse
+} from './organization/working-days-types';
+export type {
   OrganizationCashierListItem,
   OrganizationTeller,
   OrganizationTellerListItem,

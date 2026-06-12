@@ -184,3 +184,16 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Active holidays: edit name and description only (legacy parity).
 - Pending holidays: full edit including dates and rescheduling rules.
 - Detail view: activate (when not active), edit, delete with confirmation.
+
+## Working days
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+|-------|--------|----------------|--------------|-----------|-----|--------|
+| `/organization/working-days` | GET/PUT | WorkingDaysComponent | `GET /workingdays`, `PUT /workingdays` | `organization.working-days.update` | — | done |
+
+### Notes
+
+- Organization-wide settings page (not CRUD list/detail).
+- Weekly working days use iCal recurrence (`FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU,...`).
+- Form fields: working day checkboxes, repayment reschedule type for payments due on non-working days, extend term for daily repayment schedules.
+- Save requires `UPDATE_WORKINGDAYS`; view requires `READ_WORKINGDAYS`.
