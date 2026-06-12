@@ -42,15 +42,17 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 | Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
 |-------|--------|----------------|--------------|-----------|-----|--------|
 | `/organization/manage-loan-originators` | GET | LoanOriginatorsComponent | `GET /loan-originators` | — | — | done |
-| `/organization/manage-loan-originators/create` | POST | CreateLoanOriginatorComponent | `GET /loan-originators/template`, `POST /loan-originators` | `organization.loan-originator.create` | — | done |
+| `/organization/manage-loan-originators?create=1` | POST | CreateLoanOriginatorComponent | `GET /loan-originators/template`, `POST /loan-originators` | `organization.loan-originator.create` | — | done |
 | `/organization/manage-loan-originators/[loanOriginatorId]` | GET | ViewLoanOriginatorComponent | `GET /loan-originators/{id}` | — | — | done |
-| `/organization/manage-loan-originators/[loanOriginatorId]/edit` | PUT | EditLoanOriginatorComponent | `GET /loan-originators/template`, `PUT /loan-originators/{id}` | `organization.loan-originator.update` | — | done |
+| `/organization/manage-loan-originators/[loanOriginatorId]?edit=1` | PUT | EditLoanOriginatorComponent | `GET /loan-originators/template`, `PUT /loan-originators/{id}` | `organization.loan-originator.update` | — | done |
+| `/organization/manage-loan-originators` | DELETE | LoanOriginatorsComponent | `DELETE /loan-originators/{id}` | — | — | done |
 
 ### Notes
 
 - Full CRUD for loan originators attached to loan accounts.
+- Create and edit use `FormSheet` side panels (`?create=1` on list, `?edit=1` on detail). Legacy `/create` and `/[id]/edit` routes redirect.
 - List table: ID, name, external ID (copy), status, originator type, channel type, delete action.
-- Create/edit form: name, external ID (create only), status, originator type, channel type.
+- Form fields: name, external ID (create only), status, originator type, channel type.
 - Detail view supports edit; delete is available from the list (legacy parity).
 
 ## Password preferences

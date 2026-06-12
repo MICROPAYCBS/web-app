@@ -6,19 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can, resolvePermission } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { LoanOriginatorFormPage } from '@/components/organization/loan-originator-form-page';
-import { getLoanOriginatorTemplate } from '@/lib/fineract/loan-originators';
-import { getServerSession } from '@/lib/session/server';
+import { redirect } from 'next/navigation';
+import { loanOriginatorCreatePath } from '@/lib/fineract/loan-originator-paths';
 
-export default async function OrganizationCreateLoanOriginatorPage() {
-  const session = await getServerSession();
-  if (!can(session, resolvePermission('organization.loanOriginators.create'))) {
-    notFound();
-  }
-
-  const template = await getLoanOriginatorTemplate();
-
-  return <LoanOriginatorFormPage mode="create" template={template} />;
+/** Legacy create URL → list with create side panel. */
+export default function OrganizationCreateLoanOriginatorPage(): never {
+  redirect(loanOriginatorCreatePath());
 }

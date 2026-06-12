@@ -19,8 +19,7 @@ import {
 import { revalidatePath } from 'next/cache';
 import {
   LOAN_ORIGINATOR_LIST_PATH,
-  loanOriginatorDetailPath,
-  loanOriginatorEditPath
+  loanOriginatorDetailPath
 } from '@/lib/fineract/loan-originator-paths';
 import {
   createLoanOriginator,
@@ -47,7 +46,6 @@ function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, st
 function revalidateLoanOriginatorViews(loanOriginatorId: string | number) {
   revalidatePath(LOAN_ORIGINATOR_LIST_PATH);
   revalidatePath(loanOriginatorDetailPath(loanOriginatorId));
-  revalidatePath(loanOriginatorEditPath(loanOriginatorId));
 }
 
 export async function createLoanOriginatorAction(

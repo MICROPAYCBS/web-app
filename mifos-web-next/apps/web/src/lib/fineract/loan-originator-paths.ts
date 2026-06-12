@@ -12,10 +12,15 @@ export function loanOriginatorDetailPath(loanOriginatorId: string | number) {
   return `${LOAN_ORIGINATOR_LIST_PATH}/${loanOriginatorId}`;
 }
 
-export function loanOriginatorEditPath(loanOriginatorId: string | number) {
-  return `${LOAN_ORIGINATOR_LIST_PATH}/${loanOriginatorId}/edit`;
+export function loanOriginatorCreatePath() {
+  return `${LOAN_ORIGINATOR_LIST_PATH}?create=1`;
 }
 
-export function loanOriginatorCreatePath() {
-  return `${LOAN_ORIGINATOR_LIST_PATH}/create`;
+export function loanOriginatorDetailEditPath(loanOriginatorId: string | number) {
+  return `${loanOriginatorDetailPath(loanOriginatorId)}?edit=1`;
+}
+
+/** Legacy web-app edit route — redirects to detail with edit side panel. */
+export function loanOriginatorLegacyEditPath(loanOriginatorId: string | number) {
+  return `${LOAN_ORIGINATOR_LIST_PATH}/${loanOriginatorId}/edit`;
 }

@@ -8,8 +8,13 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { LoanOriginatorDetailEditUrlPanel } from '@/components/organization/loan-originator-detail-edit-url-panel';
 import { LoanOriginatorDetailView } from '@/components/organization/loan-originator-detail-view';
-import { getLoanOriginator } from '@/lib/fineract/loan-originators';
+import {
+  getLoanOriginator,
+  getLoanOriginatorTemplate
+} from '@/lib/fineract/loan-originators';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationLoanOriginatorDetailPage({
@@ -33,5 +38,16 @@ export default async function OrganizationLoanOriginatorDetailPage({
     notFound();
   }
 
-  return <LoanOriginatorDetailView originator={originator} canEdit={canEdit} />;
+  const template = canEdit ? await getLoanOriginatorTemplate() : undefined;
+
+  return (
+    <>
+      <LoanOriginatorDetailView originator={originator} canEdit={canEdit} />
+      {canEdit && template ? (
+        <Suspense fallback={null}>
+          <LoanOriginatorDetailEditUrlPanel originator={originator} template={template} />
+        </Suspense>
+      ) : null}
+    </>
+  );
 }

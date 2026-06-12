@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
   LOAN_ORIGINATOR_LIST_PATH,
-  loanOriginatorEditPath
+  loanOriginatorDetailEditPath
 } from '@/lib/fineract/loan-originator-paths';
 import {
   formatLoanOriginatorStatus,
@@ -49,7 +49,7 @@ export function LoanOriginatorDetailView({
           actions={
             canEdit ? (
               <Link
-                href={loanOriginatorEditPath(originator.id)}
+                href={loanOriginatorDetailEditPath(originator.id)}
                 className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
               >
                 <Pencil className="mr-1 size-4" />

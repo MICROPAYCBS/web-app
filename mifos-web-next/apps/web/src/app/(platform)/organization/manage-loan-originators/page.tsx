@@ -9,7 +9,10 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { LoanOriginatorsPageContent } from '@/components/organization/loan-originators-page-content';
-import { listLoanOriginators } from '@/lib/fineract/loan-originators';
+import {
+  getLoanOriginatorTemplate,
+  listLoanOriginators
+} from '@/lib/fineract/loan-originators';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationLoanOriginatorsPage() {
@@ -18,8 +21,20 @@ export default async function OrganizationLoanOriginatorsPage() {
     notFound();
   }
 
-  const originators = await listLoanOriginators();
+  const canCreate = can(session, 'CREATE_LOAN_ORIGINATOR');
   const canDelete = can(session, 'DELETE_LOAN_ORIGINATOR');
 
-  return <LoanOriginatorsPageContent originators={originators} canDelete={canDelete} />;
+  const [originators, template] = await Promise.all([
+    listLoanOriginators(),
+    canCreate ? getLoanOriginatorTemplate() : Promise.resolve(undefined)
+  ]);
+
+  return (
+    <LoanOriginatorsPageContent
+      originators={originators}
+      template={template}
+      canDelete={canDelete}
+      canCreate={canCreate}
+    />
+  );
 }
