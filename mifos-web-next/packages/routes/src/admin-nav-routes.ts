@@ -199,7 +199,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.loanOriginators',
     navOrder: 160,
     navIcon: 'handshake',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgFunds',

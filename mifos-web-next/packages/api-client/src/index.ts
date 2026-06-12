@@ -418,6 +418,13 @@ export type {
   PasswordPreferenceTemplateItem
 } from './organization/password-preferences-types';
 export type {
+  LoanOriginatorCodeValue,
+  LoanOriginatorDetail,
+  LoanOriginatorListItem,
+  LoanOriginatorMutationResponse,
+  LoanOriginatorTemplate
+} from './organization/loan-originator-types';
+export type {
   FundMappingAdvanceSearchTemplate,
   FundMappingLoanProductOption,
   FundMappingOfficeOption,

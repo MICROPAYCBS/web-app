@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-12T05:12:06.413Z",
+  "generatedAt": "2026-06-12T05:17:22.616Z",
   "summary": {
-    "todo": 9,
+    "todo": 8,
     "in_progress": 22,
-    "done": 44,
+    "done": 45,
     "n/a": 0
   },
   "routes": [
@@ -375,7 +375,7 @@
       "domain": "organization",
       "label": "Loan originators",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/manage-loan-originators"
     },
     {

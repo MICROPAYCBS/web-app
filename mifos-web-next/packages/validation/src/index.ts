@@ -599,3 +599,13 @@ export {
   type UpdatePasswordPreferencesInput,
   type UpdatePasswordPreferencesPayload
 } from './organization/password-preferences.schema';
+export {
+  createLoanOriginatorSchema,
+  updateLoanOriginatorSchema,
+  validateCreateLoanOriginator,
+  validateUpdateLoanOriginator,
+  type CreateLoanOriginatorInput,
+  type CreateLoanOriginatorPayload,
+  type UpdateLoanOriginatorInput,
+  type UpdateLoanOriginatorPayload
+} from './organization/loan-originator.schema';

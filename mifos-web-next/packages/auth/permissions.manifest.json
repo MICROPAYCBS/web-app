@@ -319,7 +319,22 @@
   },
   "organization.loanOriginators": {
     "any": [
-      "READ_OFFICE"
+      "READ_LOAN_ORIGINATOR"
+    ]
+  },
+  "organization.loanOriginators.create": {
+    "any": [
+      "CREATE_LOAN_ORIGINATOR"
+    ]
+  },
+  "organization.loanOriginators.update": {
+    "any": [
+      "UPDATE_LOAN_ORIGINATOR"
+    ]
+  },
+  "organization.loanOriginators.delete": {
+    "any": [
+      "DELETE_LOAN_ORIGINATOR"
     ]
   },
   "organization.funds": {
