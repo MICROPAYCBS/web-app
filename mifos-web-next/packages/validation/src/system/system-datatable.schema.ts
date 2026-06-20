@@ -31,7 +31,10 @@ const systemDatatableColumnSchema = z
     unique: z.boolean().optional(),
     indexed: z.boolean().optional(),
     length: z.coerce.number().int().min(1).optional(),
-    code: z.string().trim().optional()
+    code: z.string().trim().optional(),
+    validationRegex: z.string().trim().max(500).optional(),
+    validationExample: z.string().trim().max(255).optional(),
+    validationMessage: z.string().trim().max(500).optional()
   })
   .superRefine((column, ctx) => {
     if (column.type === 'String' && column.length == null) {
@@ -47,6 +50,18 @@ const systemDatatableColumnSchema = z
         message: 'Code is required for dropdown columns',
         path: ['code']
       });
+    }
+    if (column.validationRegex?.trim()) {
+      try {
+        // eslint-disable-next-line no-new -- validate regex at configuration time
+        new RegExp(column.validationRegex);
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Validation regex is invalid',
+          path: ['validationRegex']
+        });
+      }
     }
   });
 
@@ -80,7 +95,7 @@ export const createSystemDatatableSchema = z
       if (normalized !== 'person' && normalized !== 'entity') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Sub type must be Person or Entity for client data tables',
+          message: 'Sub type must be Person or Entity for customer data tables',
           path: ['entitySubType']
         });
       }

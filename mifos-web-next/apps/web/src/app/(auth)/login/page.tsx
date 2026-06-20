@@ -42,7 +42,7 @@ function buildLoginQuery(params: {
   return s ? `?${s}` : '';
 }
 
-/** login-04 page shell with integrated Fineract server manager sheet */
+/** Full-viewport split login with server manager sheet */
 export default async function LoginPage({
   searchParams
 }: {
@@ -73,16 +73,12 @@ export default async function LoginPage({
   const openServers = params.servers === '1' && !hasActiveServer;
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
-        <LoginShell
-          catalog={catalog}
-          redirectTo={redirectTo}
-          loginError={loginError}
-          demoEnabled={isDemoSessionEnabled()}
-          initialServersOpen={openServers}
-        />
-      </div>
-    </div>
+    <LoginShell
+      catalog={catalog}
+      redirectTo={redirectTo}
+      loginError={loginError}
+      demoEnabled={isDemoSessionEnabled()}
+      initialServersOpen={openServers}
+    />
   );
 }

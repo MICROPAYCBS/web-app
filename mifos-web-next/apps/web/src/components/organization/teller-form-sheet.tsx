@@ -15,6 +15,7 @@ import { useId, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { createTellerAction, updateTellerAction } from '@/actions/teller';
 import { DateField } from '@/components/composites/date-field';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
@@ -212,13 +213,11 @@ export function TellerFormSheet({
       submitDisabled={!canSubmit}
       submitLoading={pending}
       className="data-[side=right]:sm:max-w-lg"
+      error={
+        submitError ? <FormErrorAlert>{submitError}</FormErrorAlert> : null
+      }
     >
       <form id={formId} className="grid gap-4" onSubmit={handleSubmit}>
-        {submitError ? (
-          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {submitError}
-          </p>
-        ) : null}
         <SelectField
           id={`${formId}-officeId`}
           label="Branch"

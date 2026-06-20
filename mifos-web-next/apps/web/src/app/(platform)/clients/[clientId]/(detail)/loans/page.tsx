@@ -32,13 +32,13 @@ export default async function ClientLoansPage({
   return (
     <ClientAccountsSection
       title="Loan accounts"
-      description="Loan and working-capital accounts for this client."
+      description="Loan and working-capital accounts for this customer."
       openRows={openRows}
       closedRows={closedRows}
       openEmptyMessage="No open loan accounts"
-      openEmptyDescription="This client has no open loan or working-capital accounts."
+      openEmptyDescription="This customer has no open loan or working-capital accounts."
       closedEmptyMessage="No closed loan accounts"
-      closedEmptyDescription="This client has no closed loan accounts."
+      closedEmptyDescription="This customer has no closed loan accounts."
       createAction={clientAccountCreateAction(clientId, 'loan', client)}
       accountKind="loan"
     />

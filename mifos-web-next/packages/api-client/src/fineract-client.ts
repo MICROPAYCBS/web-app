@@ -64,8 +64,9 @@ export class FineractClient {
     }
 
     let res: Response;
+    const fetchFn = this.config.fetch ?? fetch;
     try {
-      res = await fetch(url, {
+      res = await fetchFn(url, {
         method,
         headers,
         body: hasBody ? JSON.stringify(options.body) : undefined

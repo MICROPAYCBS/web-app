@@ -123,7 +123,7 @@ export function ClientIdentitiesView({
         isEmpty={identifiers.length === 0}
         emptyIcon={Fingerprint}
         emptyTitle="No identifiers on file"
-        emptyDescription="Add passport, national ID, or other reference numbers for this client."
+        emptyDescription="Add passport, national ID, or other reference numbers for this customer."
         emptyAction={
           canCreate ? (
             <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>

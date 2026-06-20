@@ -65,7 +65,7 @@ export function FamilyStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Add next of kin linked to this client (optional). You can skip this step.
+        Add next of kin linked to this customer (optional). You can skip this step.
       </p>
 
       <Button type="button" variant="outline" size="sm" onClick={openAdd}>

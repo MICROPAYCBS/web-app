@@ -10,11 +10,24 @@
 
 import type { FineractReportRunParameter } from '@mifos/api-client';
 import { useMemo, useState } from 'react';
+import { DateField } from '@/components/composites/date-field';
 import { ReportParameterSelect } from '@/components/reports/report-parameter-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { isoDateToFineract } from '@/lib/fineract/date-input';
+import { dateToFineract, fineractDateToDate, isoDateToFineract } from '@/lib/fineract/date-input';
+
+function formatReportDateValue(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return isoDateToFineract(trimmed);
+  }
+  const parsed = fineractDateToDate(trimmed);
+  return parsed ? (dateToFineract(parsed) ?? trimmed) : trimmed;
+}
 
 export function ReportParameterForm({
   formId,
@@ -88,7 +101,7 @@ export function ReportParameterForm({
         continue;
       }
 
-      formatted[fieldName] = isDate ? isoDateToFineract(stringValue) : stringValue;
+      formatted[fieldName] = isDate ? formatReportDateValue(stringValue) : stringValue;
     }
 
     if (Object.keys(nextErrors).length) {
@@ -145,16 +158,16 @@ export function ReportParameterForm({
                 placeholder={`Select ${label}`}
               />
             ) : isDate ? (
-              <>
-                <FieldLabel htmlFor={fieldName}>{label}</FieldLabel>
-                <Input
-                  id={fieldName}
-                  type="date"
-                  value={String(values[fieldName] ?? '')}
-                  onChange={(event) => setFieldValue(fieldName, event.target.value)}
-                  disabled={disabled}
-                />
-              </>
+              <DateField
+                id={fieldName}
+                label={label}
+                required
+                value={String(values[fieldName] ?? '') || undefined}
+                onChange={(value) => setFieldValue(fieldName, value ?? '')}
+                disabled={disabled}
+                error={fieldErrors[fieldName]}
+                allowFuture
+              />
             ) : isCheckbox ? (
               <Field orientation="horizontal" className="items-center gap-3">
                 <Checkbox
@@ -179,7 +192,7 @@ export function ReportParameterForm({
                 />
               </>
             )}
-            {!isSelect && fieldErrors[fieldName] ? (
+            {!isSelect && !isDate && fieldErrors[fieldName] ? (
               <p className="text-sm text-destructive">{fieldErrors[fieldName]}</p>
             ) : null}
           </div>

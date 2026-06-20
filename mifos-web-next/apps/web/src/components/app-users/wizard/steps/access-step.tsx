@@ -32,7 +32,13 @@ export function AccessStep({
     () => toSelectOptions(template.allowedOffices),
     [template.allowedOffices]
   );
-  const staffSelectOptions = useMemo(() => toSelectOptions(staffOptions), [staffOptions]);
+  const staffSelectOptions = useMemo(() => {
+    const options = toSelectOptions(staffOptions);
+    if (mode === 'edit') {
+      return [{ value: '', label: 'None' }, ...options];
+    }
+    return options;
+  }, [mode, staffOptions]);
 
   useEffect(() => {
     if (!draft.officeId) {
@@ -59,33 +65,35 @@ export function AccessStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Choose the office and roles that define where this user works and what they can do.
+        Choose the branch and roles that define where this user works and what they can do.
       </p>
       <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
         <SelectField
-          label="Office"
+          label="Branch"
           required
           value={draft.officeId || undefined}
           onValueChange={(value) => onChange({ officeId: value ?? '', staffId: '' })}
           options={officeOptions}
           error={errors.officeId}
-          placeholder="Select office"
+          placeholder="Select branch"
         />
         <SelectField
           label="Staff"
           optional
-          value={draft.staffId || undefined}
+          value={draft.staffId}
           onValueChange={(value) => onChange({ staffId: value ?? '' })}
           options={staffSelectOptions}
           disabled={!draft.officeId || staffLoading}
           placeholder={
             !draft.officeId
-              ? 'Select an office first'
+              ? 'Select a branch first'
               : staffLoading
                 ? 'Loading staff…'
-                : 'Select staff (optional)'
+                : mode === 'edit'
+                  ? 'No staff linked'
+                  : 'Select staff (optional)'
           }
-          emptyMessage={staffLoading ? 'Loading staff…' : 'No staff found for this office.'}
+          emptyMessage={staffLoading ? 'Loading staff…' : 'No staff found for this branch.'}
         />
         <RoleCheckboxGroup
           roles={template.availableRoles}
@@ -93,13 +101,26 @@ export function AccessStep({
           onChange={(roles) => onChange({ roles })}
           error={errors.roles}
         />
-        {mode === 'edit' ? (
+        <div className="space-y-4 border-t border-border pt-4">
+          <p className="text-sm font-medium text-foreground">Sign-in policy</p>
           <SwitchField
             label="Password never expires"
             checked={draft.passwordNeverExpires}
             onCheckedChange={(checked) => onChange({ passwordNeverExpires: checked })}
           />
-        ) : null}
+          <SwitchField
+            label="Enable login retry limit"
+            checked={draft.isLoginRetriesEnabled}
+            onCheckedChange={(checked) => onChange({ isLoginRetriesEnabled: checked })}
+          />
+          {mode === 'edit' ? (
+            <SwitchField
+              label="Allow password reset"
+              checked={draft.isPasswordResetAllowed}
+              onCheckedChange={(checked) => onChange({ isPasswordResetAllowed: checked })}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );

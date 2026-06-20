@@ -34,7 +34,7 @@ export function SearchPageContent({
       description={
         hasQuery
           ? `Results for “${query}” in ${resourceLabel.toLowerCase()}.`
-          : 'Enter a search term from the header to find clients, accounts, and groups.'
+          : 'Enter a search term from the header to find customers, accounts, and groups.'
       }
     >
       {hint ? (

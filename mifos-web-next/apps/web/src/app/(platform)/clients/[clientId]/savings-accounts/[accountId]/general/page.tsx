@@ -1,0 +1,97 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { can } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { SavingsAccountDetailView } from '@/components/clients/savings/savings-account-detail-view';
+import type { SavingsAccountActionPermissions } from '@/components/clients/savings/actions/savings-account-actions';
+import { DetailBackLink } from '@/components/composites';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
+import { ListPage } from '@/components/composites/list-page';
+import {
+  CLIENT_ACCOUNT_RESERVED_IDS,
+  clientGeneralPath
+} from '@/lib/fineract/client-action-paths';
+import { clientAccountListPath } from '@/lib/fineract/client-account-links';
+import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
+import { getServerSession } from '@/lib/session/server';
+
+function savingsAccountPermissions(session: Awaited<ReturnType<typeof getServerSession>>): SavingsAccountActionPermissions {
+  return {
+    approve: can(session, 'APPROVE_SAVINGSACCOUNT'),
+    activate: can(session, 'ACTIVATE_SAVINGSACCOUNT'),
+    reject: can(session, 'REJECT_SAVINGSACCOUNT'),
+    withdrawnByApplicant: can(session, 'WITHDRAW_SAVINGSACCOUNT'),
+    undoApproval: can(session, 'APPROVALUNDO_SAVINGSACCOUNT'),
+    deposit: can(session, 'DEPOSIT_SAVINGSACCOUNT'),
+    withdraw: can(session, 'WITHDRAWAL_SAVINGSACCOUNT'),
+    close: can(session, 'CLOSE_SAVINGSACCOUNT'),
+    block: can(session, 'BLOCK_SAVINGSACCOUNT'),
+    unblock: can(session, 'UNBLOCK_SAVINGSACCOUNT'),
+    blockCredit: can(session, 'BLOCKCREDIT_SAVINGSACCOUNT'),
+    unblockCredit: can(session, 'UNBLOCKCREDIT_SAVINGSACCOUNT'),
+    blockDebit: can(session, 'BLOCKDEBIT_SAVINGSACCOUNT'),
+    unblockDebit: can(session, 'UNBLOCKDEBIT_SAVINGSACCOUNT')
+  };
+}
+
+export default async function SavingsAccountGeneralPage({
+  params
+}: {
+  params: Promise<{ clientId: string; accountId: string }>;
+}) {
+  const { clientId, accountId } = await params;
+  const session = await getServerSession();
+
+  if (CLIENT_ACCOUNT_RESERVED_IDS.has(accountId)) {
+    notFound();
+  }
+
+  const result = await tryFineractLoad(
+    () => getSavingsAccount(accountId),
+    'Could not load savings account.'
+  );
+
+  if (!result.ok) {
+    return (
+      <ListPage
+        backLink={
+          <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
+            <DetailBackLink href={clientGeneralPath(clientId)} label="Back to customer" />
+            <span className="text-muted-foreground" aria-hidden>
+              ·
+            </span>
+            <DetailBackLink
+              href={clientAccountListPath(clientId, 'savings')}
+              label="Savings accounts"
+            />
+          </div>
+        }
+        title="Savings account"
+      >
+        <LoadErrorAlert title="Could not load savings account" message={result.message} />
+      </ListPage>
+    );
+  }
+
+  if (!result.data) {
+    notFound();
+  }
+
+  return (
+    <Suspense fallback={null}>
+      <SavingsAccountDetailView
+        account={result.data}
+        clientId={clientId}
+        permissions={savingsAccountPermissions(session)}
+      />
+    </Suspense>
+  );
+}

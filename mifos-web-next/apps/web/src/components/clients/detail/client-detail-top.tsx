@@ -233,7 +233,7 @@ export function ClientDetailTop({
                     {legalFormLabel ? ` · ${legalFormLabel}` : ''}
                   </span>
                   {!isEntity && client.isStaff ? (
-                    <Badge variant="outline">Staff client</Badge>
+                    <Badge variant="outline">Staff customer</Badge>
                   ) : null}
                 </div>
                 <ClientHeaderClassification

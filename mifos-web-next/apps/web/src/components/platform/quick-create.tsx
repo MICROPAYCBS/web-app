@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Can, resolvePermission } from '@mifos/auth';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
-/** Primary platform action — Create client (below sidebar Find). */
+/** Primary platform action — Create customer (below sidebar Find). */
 export function QuickCreate() {
   return (
     <Can permission={resolvePermission('clients.create')}>
@@ -21,11 +21,11 @@ export function QuickCreate() {
         <SidebarMenuItem>
           <SidebarMenuButton
             render={<Link href="/clients/create" />}
-            tooltip="Create client"
+            tooltip="Create customer"
             className="h-8 w-full min-w-0 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
           >
             <CirclePlus className="size-4 shrink-0" />
-            <span className="truncate">Create client</span>
+            <span className="truncate">Create customer</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

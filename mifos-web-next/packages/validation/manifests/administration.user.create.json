@@ -10,6 +10,9 @@
     "officeId": { "required": true },
     "roles": { "required": true },
     "email": { "required": "when sendPasswordToEmail" },
-    "password": { "required": "when not sendPasswordToEmail" }
+    "password": { "required": "when not sendPasswordToEmail" },
+    "staffId": { "required": false },
+    "passwordNeverExpires": { "required": false },
+    "isLoginRetriesEnabled": { "required": false }
   }
 }

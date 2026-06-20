@@ -339,7 +339,7 @@ export function BulkLoanReassignmentPageContent({
           <div className="space-y-3">
             <div className="grid gap-4 lg:grid-cols-2">
               <LoanOwnerSection
-                title="Clients"
+                title="Customers"
                 owners={accountSummary.clients}
                 selectedLoanIds={selectedLoanIds}
                 disabled={disabled || loadingOfficer}

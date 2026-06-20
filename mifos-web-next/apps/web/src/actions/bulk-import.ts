@@ -13,10 +13,10 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import { toFineractActionError } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { getBulkImportDefinition } from '@/lib/fineract/bulk-import-config';
+import { resolveClientLegalFormTypeFromFilename } from '@/lib/fineract/bulk-import-display';
 import {
   listActiveStaffByOffice,
   listBulkImportHistory,
-  resolveClientLegalFormTypeFromFilename,
   uploadBulkImportTemplate
 } from '@/lib/fineract/bulk-import';
 import { bulkImportDetailPath } from '@/lib/fineract/bulk-import-paths';

@@ -16,7 +16,7 @@ import type { SelectOption } from '@/components/composites/select-field';
 import { filterSystemColumns, isSystemColumn } from '@/lib/fineract/datatables';
 
 export const APPLICATION_TABLE_OPTIONS: SelectOption[] = [
-  { value: 'm_client', label: 'Client' },
+  { value: 'm_client', label: 'Customer' },
   { value: 'm_group', label: 'Group' },
   { value: 'm_center', label: 'Center' },
   { value: 'm_office', label: 'Office' },
@@ -73,6 +73,10 @@ export interface SystemDatatableColumnDraft {
   isColumnIndexed?: boolean;
   columnLength?: number | string;
   columnCode?: string;
+  /** Optional string validation metadata (stored in x_table_column_validation). */
+  validationRegex?: string;
+  validationExample?: string;
+  validationMessage?: string;
   kind: SystemDatatableColumnKind;
   /** Stable name for existing columns after renames (edit mode). */
   originalColumnName?: string;
@@ -125,6 +129,9 @@ export function toDraftFromHeader(
     isColumnIndexed: column.isColumnIndexed,
     columnLength: column.columnLength,
     columnCode: column.columnCode,
+    validationRegex: column.validationRegex,
+    validationExample: column.validationExample,
+    validationMessage: column.validationMessage,
     kind: isSystemColumn(column.columnName) ? 'system' : kind,
     originalColumnName: column.columnName
   };
@@ -260,4 +267,55 @@ export function entitySubTypeOptionsForAppTable(appTableName: string): SelectOpt
 
 export function showEntitySubTypeField(appTableName: string): boolean {
   return appTableName === 'm_client' || appTableName === 'm_savings_product';
+}
+
+export interface SystemDatatableColumnValidationInput {
+  columnName: string;
+  validationRegex?: string;
+  validationExample?: string;
+  validationMessage?: string;
+}
+
+export function isStringLikeColumnType(type: SystemDatatableColumnType): boolean {
+  return type === 'String' || type === 'Text';
+}
+
+export function columnValidationsFromDrafts(
+  columns: SystemDatatableColumnDraft[]
+): SystemDatatableColumnValidationInput[] {
+  return filterEditableColumnDrafts(columns)
+    .filter((column) => isStringLikeColumnType(column.columnDisplayType))
+    .map((column) => ({
+      columnName: column.columnName,
+      validationRegex: column.validationRegex?.trim() || undefined,
+      validationExample: column.validationExample?.trim() || undefined,
+      validationMessage: column.validationMessage?.trim() || undefined
+    }));
+}
+
+export function buildColumnValidationDeleteNames(
+  initialColumns: SystemDatatableColumnDraft[],
+  currentColumns: SystemDatatableColumnDraft[]
+): string[] {
+  const editableInitial = filterEditableColumnDrafts(initialColumns);
+  const editableCurrent = filterEditableColumnDrafts(currentColumns);
+  const currentNames = new Set(
+    editableCurrent.map((column) => (column.originalColumnName ?? column.columnName).toLowerCase())
+  );
+
+  const dropped = editableInitial
+    .filter((column) => {
+      const lookupName = column.originalColumnName ?? column.columnName;
+      return !currentNames.has(lookupName.toLowerCase());
+    })
+    .map((column) => column.originalColumnName ?? column.columnName);
+
+  const renamed = editableCurrent
+    .filter((column) => {
+      const lookupName = column.originalColumnName ?? column.columnName;
+      return column.columnName.toLowerCase() !== lookupName.toLowerCase();
+    })
+    .map((column) => column.originalColumnName ?? column.columnName);
+
+  return [...new Set([...dropped, ...renamed])];
 }

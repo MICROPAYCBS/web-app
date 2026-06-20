@@ -7,7 +7,7 @@
  */
 
 const APPLICATION_TABLE_LABELS: Record<string, string> = {
-  m_client: 'Client',
+  m_client: 'Customer',
   m_group: 'Group',
   m_center: 'Center',
   m_office: 'Office',

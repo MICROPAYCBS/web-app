@@ -80,7 +80,7 @@ export function ClientDocumentFormSheet({
       open={open}
       onOpenChange={handleOpenChange}
       title="Upload document"
-      description="Attach a file to this client record."
+      description="Attach a file to this customer record."
       formId={formId}
       onSubmit={handleSubmit}
       submitLabel="Upload"

@@ -43,13 +43,13 @@ export default async function ClientFixedDepositsPage({
     <>
       <ClientAccountsSection
         title="Fixed deposit accounts"
-        description="Fixed deposit accounts for this client."
+        description="Fixed deposit accounts for this customer."
         openRows={openRows}
         closedRows={closedRows}
         openEmptyMessage="No open fixed deposit accounts"
-        openEmptyDescription="This client has no open fixed deposit accounts."
+        openEmptyDescription="This customer has no open fixed deposit accounts."
         closedEmptyMessage="No closed fixed deposit accounts"
-        closedEmptyDescription="This client has no closed fixed deposit accounts."
+        closedEmptyDescription="This customer has no closed fixed deposit accounts."
         createAction={clientAccountCreateAction(clientId, 'fixedDeposit', client)}
         accountKind="fixed-deposit"
       />

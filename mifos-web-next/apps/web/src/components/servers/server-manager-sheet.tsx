@@ -76,7 +76,9 @@ export function ServerManagerSheet({
                 : 'Servers'}
           </SheetTitle>
           {view.mode === 'list' ? (
-            <SheetDescription>Tap a server to use it for sign-in.</SheetDescription>
+            <SheetDescription>
+              Tap a server to use it for sign-in. Switching servers while signed in signs you out.
+            </SheetDescription>
           ) : null}
         </SheetHeader>
 

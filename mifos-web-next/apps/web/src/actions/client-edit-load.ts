@@ -28,13 +28,13 @@ export async function loadClientForEditAction(
   try {
     assertCan(session, resolvePermission('clients.update'));
   } catch {
-    return { ok: false, message: 'You do not have permission to update clients.' };
+    return { ok: false, message: 'You do not have permission to update customers.' };
   }
 
   try {
     const data = await getClientForEdit(clientId);
     return { ok: true, data };
   } catch {
-    return { ok: false, message: 'Could not load client details for editing.' };
+    return { ok: false, message: 'Could not load customer details for editing.' };
   }
 }

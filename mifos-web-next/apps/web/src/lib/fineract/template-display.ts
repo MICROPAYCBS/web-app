@@ -18,7 +18,7 @@ export const CLIENT_ENTITY_ID = 0;
 export const LOAN_ENTITY_ID = 1;
 
 const FALLBACK_ENTITY_LABELS: Record<number, string> = {
-  [CLIENT_ENTITY_ID]: 'Client',
+  [CLIENT_ENTITY_ID]: 'Customer',
   [LOAN_ENTITY_ID]: 'Loan'
 };
 

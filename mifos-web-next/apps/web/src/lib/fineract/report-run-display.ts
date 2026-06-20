@@ -13,6 +13,7 @@ import type {
   FineractReportRunParameterMetadata,
   FineractReportRunResult
 } from '@mifos/api-client';
+import { reportEngineParameterName } from '@mifos/domain';
 import { parseFineractDateString } from '@/lib/fineract/dates';
 import { fineractDateToIso } from '@/lib/fineract/date-input';
 
@@ -122,19 +123,24 @@ export function mergeReportRunParameters(
   definition?: FineractReportDetail
 ): FineractReportRunParameter[] {
   if (!metadata.length) {
-    return (definition?.reportParameters ?? []).map((parameter) => ({
-      parameterName: parameter.parameterName ?? String(parameter.parameterId),
-      parameterLabel: parameter.parameterName ?? String(parameter.parameterId),
-      parameterVariable: parameter.reportParameterName ?? parameter.parameterName,
-      id: parameter.id,
-      reportParameterName: parameter.reportParameterName
-    }));
+    return (definition?.reportParameters ?? []).map((parameter) => {
+      const parameterName = parameter.parameterName ?? String(parameter.parameterId);
+      return {
+        parameterName,
+        parameterLabel: parameterName,
+        parameterVariable:
+          reportEngineParameterName(parameterName, parameter.reportParameterName) ?? parameterName,
+        id: parameter.id,
+        reportParameterName: parameter.reportParameterName
+      };
+    });
   }
 
   return metadata.map((meta) => {
     const reportParam = definition?.reportParameters?.find(
       (parameter) => parameter.parameterName === meta.parameterName
     );
+    const catalogName = reportParam?.parameterName ?? meta.parameterName;
     return {
       ...reportParam,
       ...meta,
@@ -142,7 +148,11 @@ export function mergeReportRunParameters(
       parameterName: meta.parameterName,
       parameterLabel: meta.parameterLabel || reportParam?.parameterName || meta.parameterName,
       parameterVariable:
-        meta.parameterVariable || reportParam?.reportParameterName || meta.parameterName,
+        meta.parameterVariable ||
+        (catalogName
+          ? reportEngineParameterName(catalogName, reportParam?.reportParameterName)
+          : undefined) ||
+        meta.parameterName,
       selectAll: Boolean(meta.selectAll),
       selectOne: Boolean(meta.selectOne),
       parentParameterName: meta.parentParameterName || undefined,

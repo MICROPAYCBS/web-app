@@ -15,7 +15,7 @@ const downloadLinkClassName =
   'inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted';
 
 export function formatDocumentSummary(document: FineractEntityDocument): string {
-  return document.description?.trim() || document.fileName || 'Client document';
+  return document.description?.trim() || document.fileName || 'Customer document';
 }
 
 export function ClientDocumentListItem({

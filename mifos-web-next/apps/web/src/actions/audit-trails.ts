@@ -69,7 +69,7 @@ export async function exportAuditTrailsCsvAction(
       'Checker',
       'Entity',
       'Action',
-      'Client'
+      'Customer'
     ].join(',');
     const rows = page.pageItems.map((row) => auditTrailToCsvRow(row));
     return {

@@ -39,6 +39,8 @@ export interface FormSheetProps {
   submitLoading?: boolean;
   /** Optional form id — wires footer Submit to <form id={formId}> */
   formId?: string;
+  /** Form-level error shown above children on its own row (not inside field grids). */
+  error?: ReactNode;
   side?: 'left' | 'right';
   /** Panel width at `sm+`. Must use `data-[side=*]:` variants to override Sheet defaults. */
   className?: string;
@@ -66,6 +68,7 @@ export function FormSheet({
   submitDisabled = false,
   submitLoading = false,
   formId,
+  error,
   side = 'right',
   className
 }: FormSheetProps) {
@@ -101,7 +104,10 @@ export function FormSheet({
           {description ? <SheetDescription>{description}</SheetDescription> : null}
         </SheetHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          {error ? <div className="mb-4">{error}</div> : null}
+          {children}
+        </div>
 
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background">
           <Button type="button" variant="outline" onClick={handleCancel} disabled={submitLoading}>

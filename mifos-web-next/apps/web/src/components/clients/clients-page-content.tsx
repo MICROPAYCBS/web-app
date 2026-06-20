@@ -34,12 +34,12 @@ export function ClientsPageContent({
 }) {
   return (
     <ListPage
-      title="Clients"
-      description="Browse and manage clients."
+      title="Customers"
+      description="Browse and manage customers."
       actions={
         <Can permission={resolvePermission('clients.create')}>
           <Link href="/clients/create" className={cn(buttonVariants())}>
-            New client
+            New customer
           </Link>
         </Can>
       }

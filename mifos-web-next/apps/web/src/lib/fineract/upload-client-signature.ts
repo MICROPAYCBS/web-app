@@ -15,7 +15,7 @@ export async function uploadClientSignatureFile(
   const formData = new FormData();
   formData.append('file', file);
   formData.append('name', CLIENT_SIGNATURE_DOCUMENT_NAME);
-  formData.append('description', 'Client signature');
+  formData.append('description', 'Customer signature');
 
   const res = await fetch(`/api/clients/${clientId}/documents`, {
     method: 'POST',

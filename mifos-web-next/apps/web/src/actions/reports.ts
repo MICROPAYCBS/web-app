@@ -12,6 +12,10 @@ import { assertCan } from '@mifos/auth';
 import { toFineractActionError, validateUpsertReportForm, type UpsertReportFormInput } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createReport, deleteReport, getReport, updateReport } from '@/lib/fineract/reports';
+import {
+  formatReportDeletePermissionError,
+  isMissingReportReadPermissionError
+} from '@/lib/fineract/report-permissions';
 import { getServerSession } from '@/lib/session/server';
 
 const LIST_PATH = '/system/reports';
@@ -120,10 +124,13 @@ export async function deleteReportAction(reportId: number): Promise<ReportsActio
   }
 
   try {
-    await deleteReport(reportId);
+    await deleteReport(reportId, existing.reportName);
     revalidateReportViews();
     return { ok: true };
   } catch (error) {
+    if (isMissingReportReadPermissionError(error, existing.reportName)) {
+      return { ok: false, message: formatReportDeletePermissionError(existing.reportName) };
+    }
     return toFineractActionError(error, 'Failed to delete report.');
   }
 }

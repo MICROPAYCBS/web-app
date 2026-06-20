@@ -100,7 +100,7 @@ export function StandingInstructionHistoryParameterSheet({
         }}
       >
         <div className="space-y-2">
-          <Label htmlFor="si-client-name">Client name</Label>
+          <Label htmlFor="si-client-name">Customer name</Label>
           <Input
             id="si-client-name"
             value={form.clientName}
@@ -108,7 +108,7 @@ export function StandingInstructionHistoryParameterSheet({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="si-client-id">Client ID</Label>
+          <Label htmlFor="si-client-id">Customer ID</Label>
           <Input
             id="si-client-id"
             inputMode="numeric"

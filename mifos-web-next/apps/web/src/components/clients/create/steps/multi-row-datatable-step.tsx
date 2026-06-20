@@ -104,7 +104,7 @@ export function MultiRowDatatableStep({
       <p className="text-sm text-muted-foreground">
         Add one or more rows for <strong>{title}</strong>.
         {required
-          ? ' At least one row is required for the client status you selected.'
+          ? ' At least one row is required for the customer status you selected.'
           : ' This step is optional unless required fields are filled in.'}
       </p>
 
@@ -123,7 +123,7 @@ export function MultiRowDatatableStep({
         <EmptyState
           icon={Table2}
           title="No rows added yet"
-          description="Multi-row tables can hold multiple records for this client."
+          description="Multi-row tables can hold multiple records for this customer."
           action={
             <Button type="button" variant="outline" size="sm" onClick={openAdd}>
               <Plus className="mr-2 size-4" />

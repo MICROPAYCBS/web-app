@@ -26,7 +26,7 @@ export function SurveysPageContent({
   return (
     <ListPage
       title="Surveys"
-      description="Manage questionnaires used for client and group assessments."
+      description="Manage questionnaires used for customer and group assessments."
       actions={
         <Can permission="CREATE_SURVEY">
           <Link href="/system/surveys/create" className={cn(buttonVariants())}>

@@ -31,13 +31,13 @@ export default async function ClientSharesPage({
   return (
     <ClientAccountsSection
       title="Share accounts"
-      description="Share accounts for this client."
+      description="Share accounts for this customer."
       openRows={openRows}
       closedRows={closedRows}
       openEmptyMessage="No open share accounts"
-      openEmptyDescription="This client has no open share accounts."
+      openEmptyDescription="This customer has no open share accounts."
       closedEmptyMessage="No closed share accounts"
-      closedEmptyDescription="This client has no closed share accounts."
+      closedEmptyDescription="This customer has no closed share accounts."
       balanceHeader="Approved shares"
       extraHeader="Pending approval"
       createAction={clientAccountCreateAction(clientId, 'share', client)}

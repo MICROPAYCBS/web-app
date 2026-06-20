@@ -11,3 +11,12 @@ export const platformInsetX = 'px-4 md:px-6';
 
 /** Standard padded region inside a full-bleed bordered section. */
 export const platformInset = 'px-4 py-4 md:px-6 md:py-6';
+
+/**
+ * Fixed page header padding — use via {@link PageHeader} only.
+ * Detail, list, and wizard shells share this top spacing.
+ */
+export const pageHeaderPadding = 'pb-4 pt-5';
+
+/** Vertical rhythm between blocks inside a page header (back link, title, toolbar). */
+export const pageHeaderContentSpacing = 'space-y-4';

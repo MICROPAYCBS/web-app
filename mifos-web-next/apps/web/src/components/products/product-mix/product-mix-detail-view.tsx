@@ -123,7 +123,7 @@ export function ProductMixDetailView({
           <DialogHeader>
             <DialogTitle>Delete product mix?</DialogTitle>
             <DialogDescription>
-              This removes the product mix for {title}. Clients will no longer be restricted from
+              This removes the product mix for {title}. Customers will no longer be restricted from
               holding the selected products together.
             </DialogDescription>
           </DialogHeader>

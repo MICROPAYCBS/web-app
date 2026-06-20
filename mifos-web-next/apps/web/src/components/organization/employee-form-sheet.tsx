@@ -9,12 +9,17 @@
  */
 
 import type { FineractOfficeOption } from '@mifos/api-client';
-import type { CreateStaffInput, UpdateStaffInput } from '@mifos/validation';
-import { formatActionErrorMessage } from '@mifos/validation';
+import {
+  formatActionErrorMessage,
+  UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER,
+  type CreateStaffInput,
+  type UpdateStaffInput
+} from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useId, useState, useTransition } from 'react';
 import { createStaffAction, updateStaffAction } from '@/actions/staff';
 import { DateField } from '@/components/composites/date-field';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
@@ -188,13 +193,11 @@ export function EmployeeFormSheet({
       submitDisabled={!canSubmit}
       submitLoading={pending}
       className="data-[side=right]:sm:max-w-lg"
+      error={
+        submitError ? <FormErrorAlert>{submitError}</FormErrorAlert> : null
+      }
     >
-      <form id={formId} className="grid gap-4" onSubmit={handleSubmit}>
-        {submitError ? (
-          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {submitError}
-          </p>
-        ) : null}
+      <form id={formId} className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
         <SelectField
           id={`${formId}-officeId`}
           label="Branch"
@@ -227,6 +230,7 @@ export function EmployeeFormSheet({
           id={`${formId}-isLoanOfficer`}
           label="Loan officer"
           optional
+          className="sm:col-span-2"
           checked={form.isLoanOfficer}
           onCheckedChange={(checked) => patchForm({ isLoanOfficer: checked })}
         />
@@ -238,6 +242,8 @@ export function EmployeeFormSheet({
           onChange={(value) => patchForm({ mobileNo: value })}
           error={fieldErrors.mobileNo}
           autoComplete="tel"
+          type="tel"
+          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
         />
         <DateField
           id={`${formId}-joiningDate`}
@@ -252,6 +258,7 @@ export function EmployeeFormSheet({
             id={`${formId}-isActive`}
             label="Active"
             optional
+            className="sm:col-span-2"
             checked={form.isActive}
             onCheckedChange={(checked) => patchForm({ isActive: checked })}
           />

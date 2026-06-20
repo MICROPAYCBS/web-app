@@ -21,7 +21,7 @@ export function ProductMixPageContent({ mixes }: { mixes: ProductMixListItem[] }
   return (
     <ListPage
       title="Product mix"
-      description="Define which loan products cannot be held together by the same client."
+      description="Define which loan products cannot be held together by the same customer."
       actions={
         <Can permission="CREATE_PRODUCTMIX">
           <Link href={productMixCreatePath()} className={cn(buttonVariants())}>

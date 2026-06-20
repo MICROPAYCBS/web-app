@@ -282,7 +282,7 @@ export function ClientStandingInstructionsView({
 
         id: 'client',
 
-        header: 'Client',
+        header: 'Customer',
 
         cell: ({ row }) => {
 
@@ -468,7 +468,7 @@ export function ClientStandingInstructionsView({
 
         <p className="mb-3 text-sm text-muted-foreground">
 
-          Client: <span className="text-foreground">{clientName}</span>
+          Customer: <span className="text-foreground">{clientName}</span>
 
         </p>
 
@@ -574,7 +574,7 @@ export function ClientStandingInstructionsView({
 
               ? 'Try different filter criteria or clear the filter and apply again.'
 
-              : "Create one to schedule transfers from this client's accounts."
+              : "Create one to schedule transfers from this customer's accounts."
 
           }
 
@@ -600,7 +600,7 @@ export function ClientStandingInstructionsView({
 
       <ClientDetailResourceView
 
-        description="Automated transfers configured for this client."
+        description="Automated transfers configured for this customer."
 
         toolbar={createButton}
 
@@ -612,7 +612,7 @@ export function ClientStandingInstructionsView({
 
         emptyTitle="No standing instructions on file"
 
-        emptyDescription="Create one to schedule transfers from this client's accounts."
+        emptyDescription="Create one to schedule transfers from this customer's accounts."
 
         emptyAction={createButton}
 

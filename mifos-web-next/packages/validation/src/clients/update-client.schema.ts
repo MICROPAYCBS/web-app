@@ -9,6 +9,7 @@
 import { z } from 'zod';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 import { clientNonPersonDetailsSchema } from './create-client.schema';
+import { optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 
 const namePattern = /^[A-Za-z].*/;
 const fineractDate = z.string().trim().min(1);
@@ -18,8 +19,12 @@ const updateClientBaseSchema = z.object({
   staffId: z.coerce.number().int().positive().optional(),
   legalFormId: z.coerce.number().int(),
   externalId: z.string().trim().max(100).optional(),
-  mobileNo: z.string().trim().max(50).optional(),
+  mobileNo: optionalUgandaMobileInternationalSchema,
   emailAddress: z.string().trim().email().optional().or(z.literal('')),
+  taxIdentificationNumber: z.string().trim().max(50).optional().or(z.literal('')),
+  alternativeMobileNo: optionalUgandaMobileInternationalSchema,
+  alternativeEmailAddress: z.string().trim().email().optional().or(z.literal('')),
+  subIndustryId: z.coerce.number().int().positive().optional(),
   dateOfBirth: optionalFineractDate,
   genderId: z.coerce.number().int().positive().optional(),
   isStaff: z.boolean().optional(),
@@ -57,7 +62,7 @@ export const updateClientSchema = z
     if (data.active && !data.activationDate?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Activation date is required when client is active',
+        message: 'Activation date is required when the customer is active',
         path: ['activationDate']
       });
     }

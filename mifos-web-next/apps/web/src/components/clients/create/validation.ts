@@ -7,14 +7,15 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, isValidUgandaMobileInternational } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
   filterSystemColumns,
   getDatatableControlName,
   hasDatatablePayloadData,
-  toDatatableDisplayLabel
+  toDatatableDisplayLabel,
+  validateDatatableColumnValue
 } from '@/lib/fineract/datatables';
 import {
   mandatoryDatatableError,
@@ -40,13 +41,22 @@ export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
     errors.submittedOnDate = 'Submitted on is required';
   }
   if (g.active && !g.activationDate?.trim()) {
-    errors.activationDate = 'Activation date is required when the client is active';
+    errors.activationDate = 'Activation date is required when the customer is active';
   }
   if (g.addSavings && !g.savingsProductId) {
     errors.savingsProductId = 'Savings product is required when opening an account';
   }
   if (g.emailAddress?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.emailAddress.trim())) {
     errors.emailAddress = 'Enter a valid email address';
+  }
+  if (g.alternativeEmailAddress?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.alternativeEmailAddress.trim())) {
+    errors.alternativeEmailAddress = 'Enter a valid email address';
+  }
+  if (g.alternativeMobileNo?.trim() && !isValidUgandaMobileInternational(g.alternativeMobileNo.trim())) {
+    errors.alternativeMobileNo = UGANDA_MOBILE_INTERNATIONAL_MESSAGE;
+  }
+  if (g.taxIdentificationNumber && g.taxIdentificationNumber.trim().length > 50) {
+    errors.taxIdentificationNumber = 'TIN must be at most 50 characters';
   }
 
   if (legalFormId === LEGAL_FORM_PERSON) {
@@ -79,9 +89,11 @@ export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
   }
   if (!g.mobileNo?.trim()) {
     errors.mobileNo = 'Phone number is required';
+  } else if (!isValidUgandaMobileInternational(g.mobileNo)) {
+    errors.mobileNo = UGANDA_MOBILE_INTERNATIONAL_MESSAGE;
   }
   if (!g.clientTypeId) {
-    errors.clientTypeId = 'Client type is required';
+    errors.clientTypeId = 'Customer type is required';
   }
 
   return errors;
@@ -94,7 +106,7 @@ export function validateFamilyStep(): StepErrors {
 
 export function validateAddressStep(draft: CreateClientDraft): StepErrors {
   if (draft.addresses.length === 0) {
-    return { address: 'Add at least one address for this client' };
+    return { address: 'Add at least one address for this customer' };
   }
   return {};
 }
@@ -107,13 +119,10 @@ export function validateDatatableStep(
   const columns = filterSystemColumns(datatable.columnHeaderData ?? []);
 
   for (const column of columns) {
-    if (column.isColumnNullable) {
-      continue;
-    }
     const controlName = getDatatableControlName(column);
-    const raw = values[controlName];
-    if (raw === '' || raw === undefined || raw === null) {
-      errors[controlName] = `${toDatatableDisplayLabel(column.columnName)} is required`;
+    const validationError = validateDatatableColumnValue(column, values[controlName]);
+    if (validationError) {
+      errors[controlName] = validationError;
     }
   }
 

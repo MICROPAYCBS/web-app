@@ -46,6 +46,11 @@ export function formatActionErrorMessage(
     return message;
   }
 
+  // Field-level errors render on inputs; keep the form banner to a short summary.
+  if (message === 'Fix the highlighted fields.') {
+    return message;
+  }
+
   const fieldParts = Object.entries(fieldErrors).map(([field, fieldMessage]) => {
     if (message.includes(fieldMessage)) {
       return fieldMessage;

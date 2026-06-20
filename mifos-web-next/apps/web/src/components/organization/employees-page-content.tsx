@@ -20,7 +20,7 @@ export function EmployeesPageContent({ staff }: { staff: FineractStaffListItem[]
   return (
     <ListPage
       title="Employees"
-      description="People who work at your institution and can be assigned as relationship officers on clients."
+      description="People who work at your institution and can be assigned as relationship officers on customers."
       actions={
         <Can permission="CREATE_STAFF">
           <Link href="/organization/employees?create=1" className={cn(buttonVariants())}>

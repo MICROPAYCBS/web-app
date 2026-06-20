@@ -1,0 +1,401 @@
+[
+  {
+    "subIndustryId": 1,
+    "sectorName": "Agriculture",
+    "industryName": "Crop Farming",
+    "subIndustryName": "Coffee Farming",
+    "subIndustryCode": "SI001"
+  },
+  {
+    "subIndustryId": 2,
+    "sectorName": "Agriculture",
+    "industryName": "Crop Farming",
+    "subIndustryName": "Tea Farming",
+    "subIndustryCode": "SI002"
+  },
+  {
+    "subIndustryId": 3,
+    "sectorName": "Agriculture",
+    "industryName": "Crop Farming",
+    "subIndustryName": "Maize Farming",
+    "subIndustryCode": "SI003"
+  },
+  {
+    "subIndustryId": 4,
+    "sectorName": "Agriculture",
+    "industryName": "Crop Farming",
+    "subIndustryName": "Horticulture",
+    "subIndustryCode": "SI004"
+  },
+  {
+    "subIndustryId": 5,
+    "sectorName": "Agriculture",
+    "industryName": "Livestock Farming",
+    "subIndustryName": "Dairy Farming",
+    "subIndustryCode": "SI005"
+  },
+  {
+    "subIndustryId": 6,
+    "sectorName": "Agriculture",
+    "industryName": "Livestock Farming",
+    "subIndustryName": "Pig Farming",
+    "subIndustryCode": "SI006"
+  },
+  {
+    "subIndustryId": 7,
+    "sectorName": "Agriculture",
+    "industryName": "Livestock Farming",
+    "subIndustryName": "Poultry Farming",
+    "subIndustryCode": "SI007"
+  },
+  {
+    "subIndustryId": 8,
+    "sectorName": "Agriculture",
+    "industryName": "Fisheries",
+    "subIndustryName": "Fish Farming",
+    "subIndustryCode": "SI008"
+  },
+  {
+    "subIndustryId": 9,
+    "sectorName": "Manufacturing",
+    "industryName": "Food Processing",
+    "subIndustryName": "Dairy Products",
+    "subIndustryCode": "SI009"
+  },
+  {
+    "subIndustryId": 10,
+    "sectorName": "Manufacturing",
+    "industryName": "Food Processing",
+    "subIndustryName": "Grain Milling",
+    "subIndustryCode": "SI010"
+  },
+  {
+    "subIndustryId": 11,
+    "sectorName": "Manufacturing",
+    "industryName": "Food Processing",
+    "subIndustryName": "Beverage Production",
+    "subIndustryCode": "SI011"
+  },
+  {
+    "subIndustryId": 12,
+    "sectorName": "Manufacturing",
+    "industryName": "Textile Manufacturing",
+    "subIndustryName": "Garment Production",
+    "subIndustryCode": "SI012"
+  },
+  {
+    "subIndustryId": 13,
+    "sectorName": "Manufacturing",
+    "industryName": "Chemical Manufacturing",
+    "subIndustryName": "Fertilizer Production",
+    "subIndustryCode": "SI013"
+  },
+  {
+    "subIndustryId": 14,
+    "sectorName": "Manufacturing",
+    "industryName": "Construction Materials",
+    "subIndustryName": "Cement Production",
+    "subIndustryCode": "SI014"
+  },
+  {
+    "subIndustryId": 15,
+    "sectorName": "Trade & Commerce",
+    "industryName": "Wholesale Trade",
+    "subIndustryName": "Agricultural Inputs",
+    "subIndustryCode": "SI015"
+  },
+  {
+    "subIndustryId": 16,
+    "sectorName": "Trade & Commerce",
+    "industryName": "Wholesale Trade",
+    "subIndustryName": "Consumer Goods",
+    "subIndustryCode": "SI016"
+  },
+  {
+    "subIndustryId": 17,
+    "sectorName": "Trade & Commerce",
+    "industryName": "Retail Trade",
+    "subIndustryName": "Supermarkets",
+    "subIndustryCode": "SI017"
+  },
+  {
+    "subIndustryId": 18,
+    "sectorName": "Trade & Commerce",
+    "industryName": "Retail Trade",
+    "subIndustryName": "Hardware Stores",
+    "subIndustryCode": "SI018"
+  },
+  {
+    "subIndustryId": 19,
+    "sectorName": "Trade & Commerce",
+    "industryName": "Retail Trade",
+    "subIndustryName": "Pharmacies",
+    "subIndustryCode": "SI019"
+  },
+  {
+    "subIndustryId": 20,
+    "sectorName": "Financial Services",
+    "industryName": "Banking",
+    "subIndustryName": "Commercial Banking",
+    "subIndustryCode": "SI020"
+  },
+  {
+    "subIndustryId": 21,
+    "sectorName": "Financial Services",
+    "industryName": "Banking",
+    "subIndustryName": "Microfinance",
+    "subIndustryCode": "SI021"
+  },
+  {
+    "subIndustryId": 22,
+    "sectorName": "Financial Services",
+    "industryName": "Insurance",
+    "subIndustryName": "Life Insurance",
+    "subIndustryCode": "SI022"
+  },
+  {
+    "subIndustryId": 23,
+    "sectorName": "Financial Services",
+    "industryName": "Insurance",
+    "subIndustryName": "General Insurance",
+    "subIndustryCode": "SI023"
+  },
+  {
+    "subIndustryId": 24,
+    "sectorName": "Financial Services",
+    "industryName": "FinTech",
+    "subIndustryName": "Mobile Money Services",
+    "subIndustryCode": "SI024"
+  },
+  {
+    "subIndustryId": 25,
+    "sectorName": "Financial Services",
+    "industryName": "FinTech",
+    "subIndustryName": "Payment Processing",
+    "subIndustryCode": "SI025"
+  },
+  {
+    "subIndustryId": 26,
+    "sectorName": "Information Technology",
+    "industryName": "Software Development",
+    "subIndustryName": "Banking Software",
+    "subIndustryCode": "SI026"
+  },
+  {
+    "subIndustryId": 27,
+    "sectorName": "Information Technology",
+    "industryName": "Software Development",
+    "subIndustryName": "Mobile Applications",
+    "subIndustryCode": "SI027"
+  },
+  {
+    "subIndustryId": 28,
+    "sectorName": "Information Technology",
+    "industryName": "IT Services",
+    "subIndustryName": "Cloud Services",
+    "subIndustryCode": "SI028"
+  },
+  {
+    "subIndustryId": 29,
+    "sectorName": "Information Technology",
+    "industryName": "IT Services",
+    "subIndustryName": "Cybersecurity",
+    "subIndustryCode": "SI029"
+  },
+  {
+    "subIndustryId": 30,
+    "sectorName": "Telecommunications",
+    "industryName": "Mobile Services",
+    "subIndustryName": "Mobile Network Operations",
+    "subIndustryCode": "SI030"
+  },
+  {
+    "subIndustryId": 31,
+    "sectorName": "Telecommunications",
+    "industryName": "Internet Services",
+    "subIndustryName": "Internet Service Providers",
+    "subIndustryCode": "SI031"
+  },
+  {
+    "subIndustryId": 32,
+    "sectorName": "Healthcare",
+    "industryName": "Medical Services",
+    "subIndustryName": "Hospitals",
+    "subIndustryCode": "SI032"
+  },
+  {
+    "subIndustryId": 33,
+    "sectorName": "Healthcare",
+    "industryName": "Medical Services",
+    "subIndustryName": "Clinics",
+    "subIndustryCode": "SI033"
+  },
+  {
+    "subIndustryId": 34,
+    "sectorName": "Healthcare",
+    "industryName": "Pharmaceutical",
+    "subIndustryName": "Drug Manufacturing",
+    "subIndustryCode": "SI034"
+  },
+  {
+    "subIndustryId": 35,
+    "sectorName": "Education",
+    "industryName": "Primary Education",
+    "subIndustryName": "Private Schools",
+    "subIndustryCode": "SI035"
+  },
+  {
+    "subIndustryId": 36,
+    "sectorName": "Education",
+    "industryName": "Secondary Education",
+    "subIndustryName": "Boarding Schools",
+    "subIndustryCode": "SI036"
+  },
+  {
+    "subIndustryId": 37,
+    "sectorName": "Education",
+    "industryName": "Higher Education",
+    "subIndustryName": "Universities",
+    "subIndustryCode": "SI037"
+  },
+  {
+    "subIndustryId": 38,
+    "sectorName": "Construction",
+    "industryName": "Building Construction",
+    "subIndustryName": "Residential Buildings",
+    "subIndustryCode": "SI038"
+  },
+  {
+    "subIndustryId": 39,
+    "sectorName": "Construction",
+    "industryName": "Building Construction",
+    "subIndustryName": "Commercial Buildings",
+    "subIndustryCode": "SI039"
+  },
+  {
+    "subIndustryId": 40,
+    "sectorName": "Construction",
+    "industryName": "Civil Engineering",
+    "subIndustryName": "Roads & Bridges",
+    "subIndustryCode": "SI040"
+  },
+  {
+    "subIndustryId": 41,
+    "sectorName": "Transport & Logistics",
+    "industryName": "Road Transport",
+    "subIndustryName": "Passenger Transport",
+    "subIndustryCode": "SI041"
+  },
+  {
+    "subIndustryId": 42,
+    "sectorName": "Transport & Logistics",
+    "industryName": "Road Transport",
+    "subIndustryName": "Freight Transport",
+    "subIndustryCode": "SI042"
+  },
+  {
+    "subIndustryId": 43,
+    "sectorName": "Transport & Logistics",
+    "industryName": "Warehousing",
+    "subIndustryName": "Storage Facilities",
+    "subIndustryCode": "SI043"
+  },
+  {
+    "subIndustryId": 44,
+    "sectorName": "Hospitality & Tourism",
+    "industryName": "Accommodation",
+    "subIndustryName": "Hotels",
+    "subIndustryCode": "SI044"
+  },
+  {
+    "subIndustryId": 45,
+    "sectorName": "Hospitality & Tourism",
+    "industryName": "Accommodation",
+    "subIndustryName": "Guest Houses",
+    "subIndustryCode": "SI045"
+  },
+  {
+    "subIndustryId": 46,
+    "sectorName": "Hospitality & Tourism",
+    "industryName": "Food Services",
+    "subIndustryName": "Restaurants",
+    "subIndustryCode": "SI046"
+  },
+  {
+    "subIndustryId": 47,
+    "sectorName": "Hospitality & Tourism",
+    "industryName": "Tourism Services",
+    "subIndustryName": "Tour Operators",
+    "subIndustryCode": "SI047"
+  },
+  {
+    "subIndustryId": 48,
+    "sectorName": "Energy & Utilities",
+    "industryName": "Energy Generation",
+    "subIndustryName": "Solar Energy",
+    "subIndustryCode": "SI048"
+  },
+  {
+    "subIndustryId": 49,
+    "sectorName": "Energy & Utilities",
+    "industryName": "Energy Generation",
+    "subIndustryName": "Hydropower",
+    "subIndustryCode": "SI049"
+  },
+  {
+    "subIndustryId": 50,
+    "sectorName": "Energy & Utilities",
+    "industryName": "Utilities",
+    "subIndustryName": "Water Supply",
+    "subIndustryCode": "SI050"
+  },
+  {
+    "subIndustryId": 51,
+    "sectorName": "Mining & Quarrying",
+    "industryName": "Mining",
+    "subIndustryName": "Gold Mining",
+    "subIndustryCode": "SI051"
+  },
+  {
+    "subIndustryId": 52,
+    "sectorName": "Mining & Quarrying",
+    "industryName": "Mining",
+    "subIndustryName": "Limestone Mining",
+    "subIndustryCode": "SI052"
+  },
+  {
+    "subIndustryId": 53,
+    "sectorName": "Real Estate",
+    "industryName": "Property Development",
+    "subIndustryName": "Residential Estates",
+    "subIndustryCode": "SI053"
+  },
+  {
+    "subIndustryId": 54,
+    "sectorName": "Real Estate",
+    "industryName": "Property Management",
+    "subIndustryName": "Rental Property Management",
+    "subIndustryCode": "SI054"
+  },
+  {
+    "subIndustryId": 55,
+    "sectorName": "Professional Services",
+    "industryName": "Consulting",
+    "subIndustryName": "Management Consulting",
+    "subIndustryCode": "SI055"
+  },
+  {
+    "subIndustryId": 56,
+    "sectorName": "Professional Services",
+    "industryName": "Legal Services",
+    "subIndustryName": "Law Firms",
+    "subIndustryCode": "SI056"
+  },
+  {
+    "subIndustryId": 57,
+    "sectorName": "Professional Services",
+    "industryName": "Accounting",
+    "subIndustryName": "Audit Services",
+    "subIndustryCode": "SI057"
+  }
+]

@@ -116,7 +116,7 @@ export function ClientNotesView({
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">Internal notes about this client.</p>
+      <p className="text-sm text-muted-foreground">Internal notes about this customer.</p>
 
       {canWrite ? (
         <div className="space-y-2">
@@ -146,7 +146,7 @@ export function ClientNotesView({
         <EmptyState
           icon={NotebookPen}
           title="No notes yet"
-          description="Notes help your team track conversations, follow-ups, and context for this client."
+          description="Notes help your team track conversations, follow-ups, and context for this customer."
         />
       ) : (
         <div className="space-y-3">
@@ -201,7 +201,7 @@ export function ClientNotesView({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit note</DialogTitle>
-            <DialogDescription>Update the note text for this client.</DialogDescription>
+            <DialogDescription>Update the note text for this customer.</DialogDescription>
           </DialogHeader>
           <Textarea
             value={editDraft}

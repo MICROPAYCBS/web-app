@@ -37,7 +37,7 @@ export function StandingInstructionHistoryTable({
     () => [
       {
         id: 'fromClient',
-        header: 'From client',
+        header: 'From customer',
         cell: ({ row }) => standingInstructionClientLabel(row.original.fromClient)
       },
       {
@@ -47,7 +47,7 @@ export function StandingInstructionHistoryTable({
       },
       {
         id: 'toClient',
-        header: 'To client',
+        header: 'To customer',
         cell: ({ row }) => standingInstructionClientLabel(row.original.toClient)
       },
       {

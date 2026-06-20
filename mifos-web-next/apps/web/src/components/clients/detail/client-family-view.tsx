@@ -157,7 +157,7 @@ export function ClientFamilyView({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">Next of kin linked to this client.</p>
+        <p className="text-sm text-muted-foreground">Next of kin linked to this customer.</p>
         <div className="flex flex-wrap items-center gap-2">
           {initialMembers.length > 0 ? (
             <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
@@ -189,7 +189,7 @@ export function ClientFamilyView({
         <EmptyState
           icon={Users}
           title="No next of kin on file"
-          description="Add next of kin linked to this client for household or emergency contacts."
+          description="Add next of kin linked to this customer for household or emergency contacts."
           action={
             canUpdate ? (
               <Button
@@ -233,7 +233,7 @@ export function ClientFamilyView({
             <DialogTitle>Delete family member</DialogTitle>
             <DialogDescription>
               {deleteTarget
-                ? `Remove ${familyMemberDisplayName(deleteTarget)} from this client? This cannot be undone.`
+                ? `Remove ${familyMemberDisplayName(deleteTarget)} from this customer? This cannot be undone.`
                 : null}
             </DialogDescription>
           </DialogHeader>

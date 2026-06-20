@@ -64,7 +64,7 @@ export function ReviewStep({
 
       <DetailSection title="Access">
         <DetailFieldGrid columns={2}>
-          <DetailField label="Office">
+          <DetailField label="Branch">
             {optionLabelById(template.allowedOffices, draft.officeId)}
           </DetailField>
           <DetailField label="Staff">{staffLabel || '—'}</DetailField>
@@ -81,6 +81,9 @@ export function ReviewStep({
             <DetailField label="Password never expires">
               {yesNoLabel(draft.passwordNeverExpires)}
             </DetailField>
+            <DetailField label="Enable login retry limit">
+              {yesNoLabel(draft.isLoginRetriesEnabled)}
+            </DetailField>
             {!sendPasswordToEmail ? (
               <DetailField label="Password set manually">Yes</DetailField>
             ) : null}
@@ -88,9 +91,15 @@ export function ReviewStep({
         </DetailSection>
       ) : (
         <DetailSection title="Sign-in">
-          <DetailFieldGrid columns={1}>
+          <DetailFieldGrid columns={2}>
             <DetailField label="Password never expires">
               {yesNoLabel(draft.passwordNeverExpires)}
+            </DetailField>
+            <DetailField label="Enable login retry limit">
+              {yesNoLabel(draft.isLoginRetriesEnabled)}
+            </DetailField>
+            <DetailField label="Allow password reset">
+              {yesNoLabel(draft.isPasswordResetAllowed)}
             </DetailField>
           </DetailFieldGrid>
         </DetailSection>

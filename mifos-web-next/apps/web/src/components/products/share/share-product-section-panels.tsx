@@ -95,7 +95,7 @@ function ShareProductTermsSection({ product }: { product: ShareProductDetail }) 
         <DetailField label="Lock-in period type">
           {enumOptionLabel(product.lockPeriodTypeEnum) ?? '—'}
         </DetailField>
-        <DetailField label="Allow dividends for inactive clients">
+        <DetailField label="Allow dividends for inactive customers">
           {formatYesNo(product.allowDividendCalculationForInactiveClients)}
         </DetailField>
       </DetailFieldGrid>

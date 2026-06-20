@@ -9,11 +9,12 @@
  */
 
 import type { FineractClientEditData } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, type UpdateClientInput } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, type UpdateClientInput, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER } from '@mifos/validation';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
+import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
 import { fineractDateToDate } from '@/lib/fineract/date-input';
 import { toSelectOptions } from '@/lib/form/select-options';
 
@@ -192,17 +193,33 @@ export function EditClientFormFields({
             label="Is staff"
             optional
             checked={form.isStaff ?? false}
-            description="Mark if this client is also an employee of the institution."
+            description="Mark if this customer is also an employee of the institution."
             onCheckedChange={(checked) => onPatch({ isStaff: checked })}
           />
         ) : null}
 
         <TextField
           id="mobileNo"
-          label="Mobile"
+          label="Phone number"
           optional
+          type="tel"
+          autoComplete="tel"
+          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
           value={form.mobileNo ?? ''}
           onChange={(v) => onPatch({ mobileNo: v })}
+          error={fieldError(fieldErrors, 'mobileNo')}
+        />
+
+        <TextField
+          id="alternativeMobileNo"
+          label="Alternative phone number"
+          optional
+          type="tel"
+          autoComplete="tel"
+          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
+          value={form.alternativeMobileNo ?? ''}
+          onChange={(v) => onPatch({ alternativeMobileNo: v })}
+          error={fieldError(fieldErrors, 'alternativeMobileNo')}
         />
 
         <TextField
@@ -215,19 +232,45 @@ export function EditClientFormFields({
           error={fieldError(fieldErrors, 'emailAddress')}
         />
 
+        <TextField
+          id="alternativeEmailAddress"
+          label="Alternative email"
+          optional
+          type="email"
+          value={form.alternativeEmailAddress ?? ''}
+          onChange={(v) => onPatch({ alternativeEmailAddress: v })}
+          error={fieldError(fieldErrors, 'alternativeEmailAddress')}
+        />
+
+        <TextField
+          id="taxIdentificationNumber"
+          label="Tax identification number (TIN)"
+          optional
+          value={form.taxIdentificationNumber ?? ''}
+          onChange={(v) => onPatch({ taxIdentificationNumber: v })}
+          error={fieldError(fieldErrors, 'taxIdentificationNumber')}
+          hint="Optional. Minors and others may not have a TIN."
+        />
+
+        <SectorCascadeSelect
+          subIndustryId={form.subIndustryId}
+          onSubIndustryIdChange={(subIndustryId) => onPatch({ subIndustryId })}
+          error={fieldError(fieldErrors, 'subIndustryId')}
+        />
+
         <SelectField
           id="clientTypeId"
-          label="Client type"
+          label="Customer type"
           optional
           value={form.clientTypeId ? String(form.clientTypeId) : undefined}
           onValueChange={(v) => onPatch({ clientTypeId: v ? Number(v) : undefined })}
           options={toSelectOptions(initial.clientTypeOptions)}
-          placeholder="Select client type"
+          placeholder="Select customer type"
         />
 
         <SelectField
           id="clientClassificationId"
-          label="Client classification"
+          label="Customer classification"
           optional
           value={
             form.clientClassificationId ? String(form.clientClassificationId) : undefined

@@ -5,11 +5,16 @@ import type { UpsertServerInput } from '@mifos/servers';
 import {
   addFineractServer,
   deleteFineractServer,
+  getServerCatalog,
   selectFineractServer,
   updateFineractServer
 } from '@/lib/servers/catalog-store';
+import { clearSessionCookie } from '@/lib/session/cookie';
+import { getServerSession } from '@/lib/session/server';
 
-export type ServerActionResult = { ok: true } | { ok: false; message: string };
+export type ServerActionResult =
+  | { ok: true; signedOut?: boolean }
+  | { ok: false; message: string };
 
 function revalidateServerPaths() {
   revalidatePath('/login');
@@ -18,9 +23,24 @@ function revalidateServerPaths() {
 
 export async function selectServerAction(serverId: string): Promise<ServerActionResult> {
   try {
+    const catalog = await getServerCatalog();
+    const switchingServer = catalog.activeServerId !== serverId;
+    let signedOut = false;
+
+    if (switchingServer) {
+      const session = await getServerSession();
+      if (session) {
+        await clearSessionCookie();
+        signedOut = true;
+      }
+    }
+
     await selectFineractServer(serverId);
     revalidateServerPaths();
-    return { ok: true };
+    if (signedOut) {
+      revalidatePath('/', 'layout');
+    }
+    return { ok: true, signedOut };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'Failed to select server' };
   }

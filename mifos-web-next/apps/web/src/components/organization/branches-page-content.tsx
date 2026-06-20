@@ -28,7 +28,7 @@ export function BranchesPageContent({ offices }: { offices: FineractOfficeListIt
   return (
     <ListPage
       title="Branches"
-      description="Your institution's branch hierarchy — where clients, employees, and accounts are assigned."
+      description="Your institution's branch hierarchy — where customers, employees, and accounts are assigned."
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <ToggleGroup

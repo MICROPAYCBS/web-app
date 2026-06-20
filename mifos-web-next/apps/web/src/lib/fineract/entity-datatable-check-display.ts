@@ -12,7 +12,7 @@ import type { SelectOption } from '@/components/composites/select-field';
 import { formatApplicationTableLabel } from '@/lib/fineract/system-datatables-display';
 
 export const ENTITY_CHECK_ENTITY_OPTIONS: SelectOption[] = [
-  { value: 'm_client', label: 'Client' },
+  { value: 'm_client', label: 'Customer' },
   { value: 'm_loan', label: 'Loan account' },
   { value: 'm_group', label: 'Group' },
   { value: 'm_savings_account', label: 'Savings account' }

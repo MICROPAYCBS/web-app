@@ -8,7 +8,6 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { CentersPageContent } from '@/components/centers/centers-page-content';
 import { fetchCentersList } from '@/lib/fineract/centers-list';
 import { parseCentersListQuery } from '@/lib/fineract/centers-list-query';
@@ -28,9 +27,5 @@ export default async function CentersPage({
   const query = parseCentersListQuery(params);
   const initialPage = await fetchCentersList(query);
 
-  return (
-    <Suspense fallback={<p className="text-muted-foreground">Loading centers…</p>}>
-      <CentersPageContent initialPage={initialPage} initialQuery={query} />
-    </Suspense>
-  );
+  return <CentersPageContent initialPage={initialPage} initialQuery={query} />;
 }

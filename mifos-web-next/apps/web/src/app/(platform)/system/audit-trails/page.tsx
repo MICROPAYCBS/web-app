@@ -8,7 +8,6 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { AuditTrailsPageContent } from '@/components/system/audit-trails-page-content';
 import { parseAuditTrailListQuery } from '@/lib/fineract/audit-trail-query';
 import { getAuditTrailSearchTemplate, listAuditTrails } from '@/lib/fineract/audit-trails';
@@ -32,9 +31,5 @@ export default async function AuditTrailsPage({
   });
   const page = await listAuditTrails(query);
 
-  return (
-    <Suspense fallback={<p className="text-muted-foreground">Loading audit trails…</p>}>
-      <AuditTrailsPageContent page={page} query={query} template={template} />
-    </Suspense>
-  );
+  return <AuditTrailsPageContent page={page} query={query} template={template} />;
 }

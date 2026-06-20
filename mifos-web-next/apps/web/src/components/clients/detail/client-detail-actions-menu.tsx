@@ -239,7 +239,7 @@ export function ClientDetailActionsMenu({
           toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
           return;
         }
-        toast.success('Client deleted.');
+        toast.success('Customer deleted.');
         router.push('/clients');
       }
     });
@@ -259,7 +259,7 @@ export function ClientDetailActionsMenu({
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button type="button" variant="outline" disabled={pending} aria-label="Client actions">
+            <Button type="button" variant="outline" disabled={pending} aria-label="Customer actions">
               <Menu className="size-4" aria-hidden />
               Actions
             </Button>
@@ -289,7 +289,7 @@ export function ClientDetailActionsMenu({
           }
         }}
         onSuccess={() => {
-          toast.success('Client updated.');
+          toast.success('Customer updated.');
           refreshClient();
         }}
       />

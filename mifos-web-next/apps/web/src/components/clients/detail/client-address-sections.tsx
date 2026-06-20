@@ -17,6 +17,10 @@ import { SwitchField } from '@/components/composites/switch-field';
 import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
 import { Badge } from '@/components/ui/badge';
 import {
+  formatLocationAddressSummary
+} from '@/lib/locations/address-location-map';
+import { shouldUseLocationCascade } from '@/lib/locations/location-cascade-config';
+import {
   Card,
   CardAction,
   CardContent,
@@ -68,7 +72,13 @@ export function formatClientAddressSummary(address: FineractClientAddress): stri
   return formatAddressSummary(address);
 }
 
-export function formatClientAddressEntrySummary(entry: ClientAddressEntry): string {
+export function formatClientAddressEntrySummary(
+  entry: ClientAddressEntry,
+  options?: { fieldConfig?: FineractAddressFieldConfig[]; stateProvinceOptions?: FineractEnumOption[] }
+): string {
+  if (options?.fieldConfig && shouldUseLocationCascade(options.fieldConfig)) {
+    return formatLocationAddressSummary(entry, options.stateProvinceOptions);
+  }
   return formatAddressSummary(entry);
 }
 
@@ -240,12 +250,12 @@ export function ClientAddressSections({
         </DetailField>
       ) : null}
       {isFieldEnabled(fieldConfig, 'addressLine1') ? (
-        <DetailField label="Address line 1">
+        <DetailField label={shouldUseLocationCascade(fieldConfig) ? 'Sub-county' : 'Address line 1'}>
           <TextValue value={address.addressLine1} />
         </DetailField>
       ) : null}
       {isFieldEnabled(fieldConfig, 'addressLine2') ? (
-        <DetailField label="Address line 2">
+        <DetailField label={shouldUseLocationCascade(fieldConfig) ? 'Parish' : 'Address line 2'}>
           <TextValue value={address.addressLine2} />
         </DetailField>
       ) : null}
@@ -255,17 +265,17 @@ export function ClientAddressSections({
         </DetailField>
       ) : null}
       {isFieldEnabled(fieldConfig, 'townVillage') ? (
-        <DetailField label="Town / village">
+        <DetailField label={shouldUseLocationCascade(fieldConfig) ? 'Village' : 'Town / village'}>
           <TextValue value={address.townVillage} />
         </DetailField>
       ) : null}
       {isFieldEnabled(fieldConfig, 'city') ? (
-        <DetailField label="City">
+        <DetailField label={shouldUseLocationCascade(fieldConfig) ? 'District' : 'City'}>
           <TextValue value={address.city} />
         </DetailField>
       ) : null}
       {isFieldEnabled(fieldConfig, 'stateProvinceId') ? (
-        <DetailField label="State / province">
+        <DetailField label={shouldUseLocationCascade(fieldConfig) ? 'Region' : 'State / province'}>
           <TextValue
             value={optionLabel(template.stateProvinceIdOptions, address.stateProvinceId)}
           />
@@ -282,7 +292,7 @@ export function ClientAddressSections({
         </DetailField>
       ) : null}
       {isFieldEnabled(fieldConfig, 'countyDistrict') ? (
-        <DetailField label="County district">
+        <DetailField label={shouldUseLocationCascade(fieldConfig) ? 'County' : 'County district'}>
           <TextValue value={address.countyDistrict} />
         </DetailField>
       ) : null}

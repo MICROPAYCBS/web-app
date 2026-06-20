@@ -322,7 +322,7 @@ export function ClientsTable({
             aria-hidden
           />
           <Input
-            placeholder="Search clients…"
+            placeholder="Search customers…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -331,7 +331,7 @@ export function ClientsTable({
               }
             }}
             className="pl-9"
-            aria-label="Search clients"
+            aria-label="Search customers"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -341,22 +341,22 @@ export function ClientsTable({
             onCheckedChange={(checked) => setIncludeClosed(checked === true)}
           />
           <Label htmlFor="clients-show-closed" className="cursor-pointer text-sm font-normal">
-            Show closed clients
+            Show closed customers
           </Label>
         </div>
       </div>
       <p className={cn('text-xs text-muted-foreground', pending && 'opacity-70')}>
         {debouncedQuery.trim()
-          ? 'Searching all clients on the server.'
+          ? 'Searching all customers on the server.'
           : includeClosed
-            ? 'Showing all client statuses.'
-            : 'Hiding closed, rejected, and withdrawn clients.'}
+            ? 'Showing all customer statuses.'
+            : 'Hiding closed, rejected, and withdrawn customers.'}
       </p>
       <DataTable
         table={table}
         isLoading={pending}
-        emptyMessage="No clients found"
-        emptyDescription="Try a different search or include closed clients."
+        emptyMessage="No customers found"
+        emptyDescription="Try a different search or include closed customers."
       />
       <DataTablePagination table={table} totalRecords={data.totalFilteredRecords} />
     </div>

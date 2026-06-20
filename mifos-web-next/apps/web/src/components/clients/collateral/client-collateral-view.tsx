@@ -330,7 +330,7 @@ export function ClientCollateralView({
 
       <ClientDetailResourceView
 
-        description="Collateral registered against this client."
+        description="Collateral registered against this customer."
 
         toolbar={createButton}
 
@@ -342,7 +342,7 @@ export function ClientCollateralView({
 
         emptyTitle="No collateral on file"
 
-        emptyDescription="Add collateral products linked to this client."
+        emptyDescription="Add collateral products linked to this customer."
 
         emptyAction={createButton}
 
@@ -364,7 +364,7 @@ export function ClientCollateralView({
 
             <DialogDescription>
 
-              This removes {deleteTarget?.name ?? 'this collateral item'} from the client. This
+              This removes {deleteTarget?.name ?? 'this collateral item'} from the customer. This
 
               cannot be undone.
 

@@ -24,6 +24,8 @@ import {
   ClientAddressListItem,
   formatClientAddressSummary
 } from '@/components/clients/detail/client-address-sections';
+import { formatLocationAddressSummary } from '@/lib/locations/address-location-map';
+import { shouldUseLocationCascade } from '@/lib/locations/location-cascade-config';
 import {
   createClientAddressAction,
   toggleClientAddressActiveAction,
@@ -137,7 +139,9 @@ export function ClientAddressView({
 
   function renderAddress(address: FineractClientAddress) {
     const title = address.addressType ?? 'Address';
-    const summary = formatClientAddressSummary(address);
+    const summary = shouldUseLocationCascade(fieldConfig)
+      ? formatLocationAddressSummary(address, addressTemplate.stateProvinceIdOptions)
+      : formatClientAddressSummary(address);
     const common = {
       title,
       subtitle: address.relationship,
@@ -163,7 +167,7 @@ export function ClientAddressView({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Client addresses. Fields shown depend on your institution&apos;s address configuration.
+          Customer addresses. Fields shown depend on your institution&apos;s address configuration.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {initialAddresses.length > 0 ? (
@@ -196,7 +200,7 @@ export function ClientAddressView({
         <EmptyState
           icon={MapPin}
           title="No addresses on file"
-          description="Add a mailing or location address for this client."
+          description="Add a mailing or location address for this customer."
           action={
             canUpdate ? (
               <Button

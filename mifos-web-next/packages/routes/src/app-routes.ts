@@ -94,7 +94,7 @@ const CORE_APP_ROUTES = {
     id: 'clients',
     path: '/clients',
     kind: 'page',
-    label: 'Clients',
+    label: 'Customers',
     domain: 'clients',
     nav: true,
     navOrder: 10,
@@ -127,7 +127,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'clients.list',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', webAppRef: 'groups' }
+    parity: { status: 'done', webAppRef: 'groups' }
   },
   centers: {
     id: 'centers',

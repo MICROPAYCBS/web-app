@@ -9,11 +9,13 @@
  */
 
 import type { FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER } from '@mifos/validation';
 import { DateField } from '@/components/composites/date-field';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
+import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
 import { toFineractDate } from '@/lib/fineract/dates';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
@@ -67,11 +69,7 @@ export function GeneralStep({
 
   return (
     <div className="space-y-6">
-      {errors._form ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {errors._form}
-        </p>
-      ) : null}
+      {errors._form ? <FormErrorAlert>{errors._form}</FormErrorAlert> : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
@@ -288,7 +286,7 @@ export function GeneralStep({
             label="Is staff"
             optional
             checked={g.isStaff ?? false}
-            description="Mark if this client is also an employee of the institution."
+            description="Mark if this customer is also an employee of the institution."
             onCheckedChange={(checked) => onDraftChange({ isStaff: checked })}
           />
         ) : null}
@@ -297,9 +295,24 @@ export function GeneralStep({
           id="mobileNo"
           label="Phone number"
           required
+          type="tel"
+          autoComplete="tel"
+          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
           value={g.mobileNo ?? ''}
           onChange={(v) => onDraftChange({ mobileNo: v })}
           error={errors.mobileNo}
+        />
+
+        <TextField
+          id="alternativeMobileNo"
+          label="Alternative phone number"
+          optional
+          type="tel"
+          autoComplete="tel"
+          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
+          value={g.alternativeMobileNo ?? ''}
+          onChange={(v) => onDraftChange({ alternativeMobileNo: v })}
+          error={errors.alternativeMobileNo}
         />
 
         <TextField
@@ -312,20 +325,46 @@ export function GeneralStep({
           error={errors.emailAddress}
         />
 
+        <TextField
+          id="alternativeEmailAddress"
+          label="Alternative email"
+          optional
+          type="email"
+          value={g.alternativeEmailAddress ?? ''}
+          onChange={(v) => onDraftChange({ alternativeEmailAddress: v })}
+          error={errors.alternativeEmailAddress}
+        />
+
+        <TextField
+          id="taxIdentificationNumber"
+          label="Tax identification number (TIN)"
+          optional
+          value={g.taxIdentificationNumber ?? ''}
+          onChange={(v) => onDraftChange({ taxIdentificationNumber: v })}
+          error={errors.taxIdentificationNumber}
+          hint="Optional. Minors and others may not have a TIN."
+        />
+
+        <SectorCascadeSelect
+          subIndustryId={g.subIndustryId}
+          onSubIndustryIdChange={(subIndustryId) => onDraftChange({ subIndustryId })}
+          error={errors.subIndustryId}
+        />
+
         <SelectField
           id="clientTypeId"
-          label="Client type"
+          label="Customer type"
           required
           value={g.clientTypeId ? String(g.clientTypeId) : undefined}
           onValueChange={(v) => onDraftChange({ clientTypeId: v ? Number(v) : undefined })}
           options={toSelectOptions(template.clientTypeOptions)}
-          placeholder="Select client type"
+          placeholder="Select customer type"
           error={errors.clientTypeId}
         />
 
         <SelectField
           id="clientClassificationId"
-          label="Client classification"
+          label="Customer classification"
           optional
           value={g.clientClassificationId ? String(g.clientClassificationId) : undefined}
           onValueChange={(v) =>
@@ -349,7 +388,7 @@ export function GeneralStep({
           label="Active"
           optional
           checked={active}
-          description="Activate the client immediately. Requires an activation date."
+          description="Activate the customer immediately. Requires an activation date."
           onCheckedChange={(isActive) => {
             onDraftChange({
               active: isActive,
@@ -378,7 +417,7 @@ export function GeneralStep({
           disabled={!active}
           description={
             active
-              ? 'Create a savings account when this client is submitted.'
+              ? 'Create a savings account when this customer is submitted.'
               : 'Turn on Active first to open a savings account on creation.'
           }
           error={errors.addSavings}

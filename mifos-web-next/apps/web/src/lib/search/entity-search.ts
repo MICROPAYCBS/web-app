@@ -13,7 +13,7 @@ export const SEARCH_RESOURCE_ALL = 'clients,clientIdentifiers,groups,savings,sha
 
 export const SEARCH_RESOURCE_OPTIONS = [
   { label: 'All', value: SEARCH_RESOURCE_ALL },
-  { label: 'Clients', value: 'clients,clientIdentifiers' },
+  { label: 'Customers', value: 'clients,clientIdentifiers' },
   { label: 'Groups', value: 'groups' },
   { label: 'Savings', value: 'savings' },
   { label: 'Shares', value: 'shares' },
@@ -64,9 +64,9 @@ function clientAccountHrefFromSearch(entity: FineractSearchResult): string | nul
 export function formatSearchEntityType(entityType: string): string {
   switch (entityType) {
     case 'CLIENT':
-      return 'Client';
+      return 'Customer';
     case 'CLIENTIDENTIFIER':
-      return 'Client identifier';
+      return 'Customer identifier';
     case 'GROUP':
       return 'Group';
     case 'CENTER':
@@ -86,7 +86,7 @@ export function formatSearchParentType(entity: FineractSearchResult): string {
   if (['CLIENT', 'GROUP', 'CENTER'].includes(entity.entityType)) {
     return 'Office';
   }
-  return 'Client';
+  return 'Customer';
 }
 
 /** Best-effort link to a list or detail route (may not be a full entity detail page). */

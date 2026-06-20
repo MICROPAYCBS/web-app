@@ -25,4 +25,6 @@ export interface FineractClientConfig {
   tenantId: string;
   /** Basic auth or bearer token — set by session layer in apps/web */
   getAuthHeader: () => Promise<string | null>;
+  /** Optional fetch override (e.g. dev self-signed TLS in apps/web). */
+  fetch?: typeof fetch;
 }

@@ -11,6 +11,7 @@ import type {
   FineractReportDetail,
   FineractReportParameter
 } from '@mifos/api-client';
+import { reportEngineParameterName } from '@mifos/domain';
 import { REPORT_CATEGORIES, type UpsertReportFormInput } from '@mifos/validation';
 
 export { REPORT_CATEGORIES };
@@ -71,6 +72,9 @@ export function formatReportCategory(value: string | undefined): string {
   if (!value || value === '(NULL)') {
     return '—';
   }
+  if (value === 'Client') {
+    return 'Customer';
+  }
   return value;
 }
 
@@ -94,6 +98,18 @@ export function allowedParameterLabel(
     allowedParameters.find((parameter) => parameter.id === parameterId)?.parameterName ??
     String(parameterId)
   );
+}
+
+export function resolveReportParameterEngineName(
+  parameter: Pick<FineractReportParameter, 'parameterId' | 'parameterName' | 'reportParameterName'>,
+  allowedParameters: FineractReportAllowedParameter[] = []
+): string | undefined {
+  const parameterName =
+    parameter.parameterName ?? allowedParameterLabel(allowedParameters, parameter.parameterId);
+  if (parameterName === String(parameter.parameterId)) {
+    return parameter.reportParameterName?.trim() || undefined;
+  }
+  return reportEngineParameterName(parameterName, parameter.reportParameterName);
 }
 
 export function toReportParameterRows(

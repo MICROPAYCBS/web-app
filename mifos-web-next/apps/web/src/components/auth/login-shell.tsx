@@ -8,12 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { ServerCatalog } from '@mifos/servers';
 import { LoginForm } from '@/components/auth/login-form';
 import { ServerManagerSheet } from '@/components/servers/server-manager-sheet';
-import { useServerHealth } from '@/components/servers/use-server-health';
 
 export function LoginShell({
   catalog,
@@ -34,8 +33,6 @@ export function LoginShell({
   const searchParams = useSearchParams();
   const [serversOpen, setServersOpen] = useState(initialServersOpen);
   const active = catalog.servers.find((s) => s.id === catalog.activeServerId);
-  const activeList = useMemo(() => (active ? [active] : []), [active]);
-  const { getHealth } = useServerHealth(activeList, Boolean(active));
 
   function stripServersQueryParam() {
     if (searchParams.get('servers') !== '1') {
@@ -63,7 +60,6 @@ export function LoginShell({
         canSignIn={Boolean(active)}
         activeServer={active}
         onManageServers={() => setServersOpen(true)}
-        serverHealth={active ? getHealth(active.id) : undefined}
       />
       <ServerManagerSheet
         catalog={catalog}

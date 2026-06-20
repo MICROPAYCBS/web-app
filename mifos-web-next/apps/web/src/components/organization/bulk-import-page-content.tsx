@@ -10,7 +10,7 @@
 
 import { Can } from '@mifos/auth';
 import Link from 'next/link';
-import type { BulkImportDefinition } from '@/lib/fineract/bulk-import-config';
+import { bulkImportDisplayName, type BulkImportDefinition } from '@/lib/fineract/bulk-import-config';
 import { bulkImportDetailPath } from '@/lib/fineract/bulk-import-paths';
 import { ListPage } from '@/components/composites/list-page';
 
@@ -21,7 +21,7 @@ function BulkImportOption({ option }: { option: BulkImportDefinition }) {
         href={bulkImportDetailPath(option.name)}
         className="block rounded-lg border border-border p-4 transition-colors hover:bg-muted/40"
       >
-        <div className="font-medium text-primary">{option.name}</div>
+        <div className="font-medium text-primary">{bulkImportDisplayName(option.name)}</div>
         <p className="mt-1 text-sm text-muted-foreground">{option.description}</p>
       </Link>
     </Can>

@@ -175,7 +175,7 @@ export function CreateClientCollateralSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Add collateral"
-      description="Link a collateral product to this client with a quantity."
+      description="Link a collateral product to this customer with a quantity."
       formId={CREATE_CLIENT_COLLATERAL_FORM_ID}
       submitLabel="Add"
       submitLoading={pending}

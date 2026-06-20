@@ -15,7 +15,8 @@ export default async function ServerSettingsPage() {
         </AppLink>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight">Servers</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Manage named backends and tenants. Sign out to switch servers before logging in again.
+          Manage named backends and tenants. Switching servers signs you out so you can sign in with
+          the right credentials.
         </p>
       </div>
 

@@ -63,7 +63,7 @@ export async function deleteClientAction(
 ): Promise<ClientCommandActionResult> {
   const denied = await requirePermission(
     'DELETE_CLIENT',
-    'You do not have permission to delete clients.'
+    'You do not have permission to delete customers.'
   );
   if (denied) {
     return denied;
@@ -74,6 +74,6 @@ export async function deleteClientAction(
     revalidatePath('/clients');
     return { ok: true };
   } catch (err) {
-    return toFineractActionError(err, 'Could not delete client.');
+    return toFineractActionError(err, 'Could not delete customer.');
   }
 }

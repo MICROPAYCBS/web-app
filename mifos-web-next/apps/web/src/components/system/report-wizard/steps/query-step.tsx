@@ -18,8 +18,8 @@ export function ReportQueryStep({ draft, errors, disabled, onFormChange }: Repor
       <CardHeader>
         <CardTitle>Query configuration</CardTitle>
         <CardDescription>
-          SQL executed when the report runs. Reference parameters with{' '}
-          <code className="text-xs">${'{parameterName}'}</code>.
+          SQL executed when the report runs. Reference parameters with their catalog placeholder,
+          for example <code className="text-xs">${'{officeId}'}</code>.
         </CardDescription>
       </CardHeader>
       <CardContent>

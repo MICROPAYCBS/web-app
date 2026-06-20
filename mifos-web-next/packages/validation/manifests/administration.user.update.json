@@ -7,8 +7,12 @@
     "username": { "required": true },
     "firstname": { "required": true },
     "lastname": { "required": true },
-    "email": { "required": true },
+    "email": { "required": false },
     "officeId": { "required": true },
-    "roles": { "required": true }
+    "roles": { "required": true },
+    "staffId": { "required": false },
+    "passwordNeverExpires": { "required": false },
+    "isLoginRetriesEnabled": { "required": false },
+    "isPasswordResetAllowed": { "required": false }
   }
 }

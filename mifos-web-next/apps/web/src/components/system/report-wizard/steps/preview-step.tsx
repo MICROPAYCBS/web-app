@@ -16,6 +16,7 @@ import {
 import {
   formatReportCategory,
   isSqlDisabledForReportType,
+  resolveReportParameterEngineName,
   yesNoLabel
 } from '@/lib/fineract/report-display';
 import type { ReportStepProps } from '../types';
@@ -62,21 +63,13 @@ export function ReportPreviewStep({
         </DetailFieldGrid>
       </DetailSection>
 
-      {showSql ? (
-        <DetailSection title="Query">
-          <pre className="max-h-64 overflow-auto rounded-md border border-border bg-muted/40 p-4 font-mono text-xs whitespace-pre-wrap">
-            {form.reportSql?.trim() || '—'}
-          </pre>
-        </DetailSection>
-      ) : null}
-
       {!coreReport ? (
         <DetailSection title="Parameters">
           {configuredParameters.length ? (
             <div className="overflow-hidden rounded-md border border-border">
               <div className="grid grid-cols-2 gap-2 border-b border-border bg-muted/40 px-4 py-2 text-sm font-medium">
                 <span>Parameter</span>
-                <span>Name passed to report engine</span>
+                <span>Passed to report engine</span>
               </div>
               {configuredParameters.map((parameter, index) => (
                 <div
@@ -84,8 +77,8 @@ export function ReportPreviewStep({
                   className="grid grid-cols-2 gap-2 border-b border-border px-4 py-3 text-sm last:border-b-0"
                 >
                   <span>{parameter.parameterName}</span>
-                  <span className="text-muted-foreground">
-                    {parameter.reportParameterName?.trim() || '—'}
+                  <span className="font-mono text-muted-foreground">
+                    {resolveReportParameterEngineName(parameter) ?? '—'}
                   </span>
                 </div>
               ))}
@@ -93,6 +86,14 @@ export function ReportPreviewStep({
           ) : (
             <p className="text-sm text-muted-foreground">No parameters configured.</p>
           )}
+        </DetailSection>
+      ) : null}
+
+      {showSql ? (
+        <DetailSection title="Query">
+          <pre className="max-h-64 overflow-auto rounded-md border border-border bg-muted/40 p-4 font-mono text-xs whitespace-pre-wrap">
+            {form.reportSql?.trim() || '—'}
+          </pre>
         </DetailSection>
       ) : null}
     </div>

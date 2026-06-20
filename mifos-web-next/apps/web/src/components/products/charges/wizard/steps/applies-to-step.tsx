@@ -32,7 +32,7 @@ const APPLIES_TO_META: Record<number, { description: string; icon: LucideIcon }>
     icon: PiggyBank
   },
   [CHARGE_APPLIES_TO.CLIENT]: {
-    description: 'Fees charged directly to a client.',
+    description: 'Fees charged directly to a customer.',
     icon: User
   },
   [CHARGE_APPLIES_TO.SHARES]: {

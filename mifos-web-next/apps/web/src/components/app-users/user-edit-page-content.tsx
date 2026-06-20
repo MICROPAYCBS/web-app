@@ -8,23 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractUserDetail, FineractUserTemplate } from '@mifos/api-client';
+import type { FineractUserEditContext } from '@mifos/api-client';
 import { userWizardDraftFromUser } from '@/components/app-users/wizard/draft';
 import { UserWizard } from '@/components/app-users/wizard/user-wizard';
 
-export function UserEditPageContent({
-  user,
-  template
-}: {
-  user: FineractUserDetail;
-  template: FineractUserTemplate;
-}) {
+export function UserEditPageContent({ editContext }: { editContext: FineractUserEditContext }) {
   return (
     <UserWizard
       mode="edit"
-      template={template}
-      initialDraft={userWizardDraftFromUser(user)}
-      userId={user.id}
+      template={editContext.template}
+      initialDraft={userWizardDraftFromUser(editContext.user)}
+      userId={editContext.user.id}
     />
   );
 }

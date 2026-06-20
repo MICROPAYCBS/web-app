@@ -39,13 +39,13 @@ export default async function ClientSavingsPage({
     <>
       <ClientAccountsSection
         title="Savings accounts"
-        description="Standard savings accounts for this client."
+        description="Standard savings accounts for this customer."
         openRows={openRows}
         closedRows={closedRows}
         openEmptyMessage="No open savings accounts"
-        openEmptyDescription="This client has no open savings accounts."
+        openEmptyDescription="This customer has no open savings accounts."
         closedEmptyMessage="No closed savings accounts"
-        closedEmptyDescription="This client has no closed savings accounts."
+        closedEmptyDescription="This customer has no closed savings accounts."
         createAction={clientAccountCreateAction(clientId, 'savings', client)}
         accountKind="savings"
       />

@@ -365,7 +365,7 @@ export function ClientActionSheet({
         <div className="flex flex-col gap-4">
           {officeOptions.length === 0 && !loading && !error ? (
             <p className="text-sm text-muted-foreground">
-              No other branches are available to transfer this client to.
+              No other branches are available to transfer this customer to.
             </p>
           ) : null}
           <SelectField
@@ -436,7 +436,7 @@ export function ClientActionSheet({
         <>
           {savingsOptions.length === 0 && !loading && !error ? (
             <p className="text-sm text-muted-foreground">
-              No open savings accounts are available for this client. Create a savings account
+              No open savings accounts are available for this customer. Create a savings account
               first, then try again.
             </p>
           ) : null}

@@ -11,35 +11,31 @@
 import { ChevronRightIcon } from 'lucide-react';
 import { getFineractApiHost, isDeprecatedDemoFineractHost } from '@mifos/servers';
 import type { FineractServerProfile } from '@mifos/servers';
-import type { ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
 import { ServerDetailsTooltip } from '@/components/servers/server-details-tooltip';
 import { cn } from '@/lib/utils';
-import { ServerHealthBadge } from '@/components/servers/server-health-badge';
 
 export function LoginActiveServer({
   server,
-  health,
   onManageServers,
   className
 }: {
   server: FineractServerProfile;
-  health?: ServerHealthSnapshot;
   onManageServers: () => void;
   className?: string;
 }) {
   return (
     <ServerDetailsTooltip
       server={server}
-      health={health}
       side="top"
       onClick={onManageServers}
       className={cn(
-        'flex cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted/70',
+        'flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/60',
         className
       )}
     >
       <span className="min-w-0">
-        <span className="block truncate font-medium">{server.name}</span>
+        <span className="block truncate text-xs font-medium uppercase tracking-wide">Server</span>
+        <span className="block truncate text-sm font-medium text-foreground">{server.name}</span>
         <span
           className={cn(
             'block truncate text-xs text-muted-foreground',
@@ -49,10 +45,7 @@ export function LoginActiveServer({
           {getFineractApiHost(server.baseUrl)}
         </span>
       </span>
-      <span className="flex shrink-0 items-center gap-1.5">
-        <ServerHealthBadge health={health} />
-        <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
-      </span>
+      <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </ServerDetailsTooltip>
   );
 }

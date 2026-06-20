@@ -17,6 +17,8 @@ export type UserWizardDraft = {
   lastname: string;
   sendPasswordToEmail: boolean;
   passwordNeverExpires: boolean;
+  isLoginRetriesEnabled: boolean;
+  isPasswordResetAllowed: boolean;
   password: string;
   repeatPassword: string;
   officeId: string;

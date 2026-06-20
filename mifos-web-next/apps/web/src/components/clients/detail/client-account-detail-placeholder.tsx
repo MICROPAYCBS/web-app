@@ -36,7 +36,7 @@ export function ClientAccountDetailPlaceholder({
         <p className="text-sm text-muted-foreground tabular-nums">Account ID {accountId}</p>
         <p className="max-w-prose text-muted-foreground">
           Full account details, transactions, and actions will be available when this product area
-          is implemented. You can return to the client account list using the link above.
+          is implemented. You can return to the customer account list using the link above.
         </p>
       </div>
     </div>

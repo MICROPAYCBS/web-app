@@ -9,7 +9,7 @@
     "firstname": { "required": true, "maxLength": 50 },
     "lastname": { "required": true, "maxLength": 50 },
     "isLoanOfficer": { "required": false, "type": "boolean" },
-    "mobileNo": { "required": false, "maxLength": 25 },
+    "mobileNo": { "required": false, "maxLength": 13, "format": "ugandaInternationalMobile" },
     "joiningDate": { "required": true, "type": "date" }
   }
 }

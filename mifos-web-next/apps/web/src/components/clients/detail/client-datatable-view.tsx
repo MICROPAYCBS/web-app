@@ -102,7 +102,7 @@ export function ClientDatatableView({
       <DetailSection
         title={title}
         titleAccessory={<DatatableRowKindBadge multiRow={false} />}
-        description="One record per client for this table."
+        description="One record per customer for this table."
         actions={
           canEdit ? (
             <div className="flex flex-wrap gap-2">
@@ -145,7 +145,7 @@ export function ClientDatatableView({
           <EmptyState
             icon={Table2}
             title="No data yet"
-            description={`Add a ${title.toLowerCase()} record for this client.`}
+            description={`Add a ${title.toLowerCase()} record for this customer.`}
             action={
               canCreate ? (
                 <Button type="button" size="sm" onClick={() => setSheetOpen(true)}>
@@ -186,7 +186,7 @@ export function ClientDatatableView({
           <DialogHeader>
             <DialogTitle>Delete {title}?</DialogTitle>
             <DialogDescription>
-              This removes all custom field values for this table on the client. This action cannot be undone.
+              This removes all custom field values for this table on the customer. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

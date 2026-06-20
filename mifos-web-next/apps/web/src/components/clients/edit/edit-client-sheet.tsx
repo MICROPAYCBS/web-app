@@ -15,6 +15,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { loadClientForEditAction } from '@/actions/client-edit-load';
 import { updateClientAction } from '@/actions/client-update';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { EditClientFormFields } from '@/components/clients/edit/edit-client-form-fields';
 import { mapClientToEditFormInput } from '@/lib/fineract/client-edit-map';
@@ -117,7 +118,7 @@ export function EditClientSheet({
         }
         return;
       }
-      toast.success('Client updated.');
+      toast.success('Customer updated.');
       onOpenChange(false);
       router.refresh();
     });
@@ -127,26 +128,23 @@ export function EditClientSheet({
     <FormSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Edit client"
+      title="Edit customer"
       description="Update names, contact details, classification, and dates."
       formId={EDIT_CLIENT_FORM_ID}
       submitLabel="Save changes"
       submitLoading={pending}
       submitDisabled={loading || !form}
       className={EDIT_PANEL_CLASS}
+      error={
+        submitError ? (
+          <FormErrorAlert>{submitError}</FormErrorAlert>
+        ) : loadError ? (
+          <FormErrorAlert>{loadError}</FormErrorAlert>
+        ) : null
+      }
     >
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading client details…</p>
-      ) : null}
-      {loadError ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {loadError}
-        </p>
-      ) : null}
-      {submitError ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {submitError}
-        </p>
+        <p className="text-sm text-muted-foreground">Loading customer details…</p>
       ) : null}
       {initial && form ? (
         <form id={EDIT_CLIENT_FORM_ID} onSubmit={handleSubmit}>

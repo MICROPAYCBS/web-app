@@ -49,6 +49,7 @@ function revalidateClientDatatableViews(clientId: string, registeredTableName: s
 function toColumnRules(columns: FineractDatatableColumnHeader[]): DatatableColumnRule[] {
   return filterSystemColumns(columns).map((column) => ({
     columnName: column.columnName,
+    columnDisplayType: column.columnDisplayType,
     controlName: getDatatableControlName(column),
     label: toDatatableDisplayLabel(column.columnName),
     isColumnNullable: column.isColumnNullable
@@ -87,7 +88,7 @@ async function requireClientDatatableAccess(
     clientLegalFormId(client)
   );
   if (!applies) {
-    return { ok: false, message: 'This data table does not apply to this client.' };
+    return { ok: false, message: 'This data table does not apply to this customer.' };
   }
 
   return null;

@@ -182,26 +182,3 @@ export async function uploadBulkImportTemplate(
   }
 }
 
-export function resolveClientLegalFormTypeFromFilename(fileName: string): string | undefined {
-  const lower = fileName.toLowerCase();
-  if (lower.includes('entity')) {
-    return 'CLIENTS_ENTITY';
-  }
-  if (lower.includes('person')) {
-    return 'CLIENTS_PERSON';
-  }
-  return undefined;
-}
-
-export function resolveClientLegalFormTypeFromSelection(
-  legalForm: string | undefined
-): string | undefined {
-  switch (legalForm) {
-    case 'Person':
-      return 'CLIENTS_PERSON';
-    case 'Entity':
-      return 'CLIENTS_ENTITY';
-    default:
-      return undefined;
-  }
-}

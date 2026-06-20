@@ -321,7 +321,7 @@ export function TemplateForm({
       <div className="space-y-4">
         <h3 className="text-sm font-medium">Insert parameters</h3>
         {form.entity === CLIENT_ENTITY_ID ? (
-          <ParameterGroup title="Client parameters" labels={clientParameterLabels} onInsert={insertParameter} />
+          <ParameterGroup title="Customer parameters" labels={clientParameterLabels} onInsert={insertParameter} />
         ) : null}
         {form.entity === LOAN_ENTITY_ID ? (
           <>

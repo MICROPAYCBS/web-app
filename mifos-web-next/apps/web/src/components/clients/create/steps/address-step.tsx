@@ -63,7 +63,7 @@ export function AddressStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Add one or more addresses for this client. At least one address is required on this step.
+        Add one or more addresses for this customer. At least one address is required on this step.
       </p>
       {errors.address ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -111,7 +111,10 @@ export function AddressStep({
           renderItems={(mode) =>
             addresses.map((addr, index) => {
               const title = addressTypeLabel(template, addr.addressTypeId ?? 0);
-              const summary = formatClientAddressEntrySummary(addr);
+              const summary = formatClientAddressEntrySummary(addr, {
+                fieldConfig,
+                stateProvinceOptions: template.address?.[0]?.stateProvinceIdOptions
+              });
               const onEdit = () => openEdit(index);
               const onDelete = () => remove(index);
 

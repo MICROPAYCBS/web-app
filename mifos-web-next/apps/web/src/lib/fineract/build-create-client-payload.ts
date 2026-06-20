@@ -35,6 +35,18 @@ export function buildCreateClientPayload(input: CreateClientPayload): Record<str
     delete base.emailAddress;
   }
 
+  if (input.taxIdentificationNumber === '') {
+    delete base.taxIdentificationNumber;
+  }
+
+  if (input.alternativeMobileNo === '') {
+    delete base.alternativeMobileNo;
+  }
+
+  if (input.alternativeEmailAddress === '') {
+    delete base.alternativeEmailAddress;
+  }
+
   if (input.familyMembers?.length) {
     base.familyMembers = input.familyMembers.map((member) =>
       stripEmpty({ ...member, dateFormat, locale })

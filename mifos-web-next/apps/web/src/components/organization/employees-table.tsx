@@ -124,7 +124,7 @@ export function EmployeesTable({ staff }: { staff: FineractStaffListItem[] }) {
       <DataTable
         table={table}
         emptyMessage="No employees found"
-        emptyDescription="Create an employee to assign as a relationship officer on clients."
+        emptyDescription="Create an employee to assign as a relationship officer on customers."
       />
       <DataTablePagination table={table} totalRecords={filteredRows.length} />
     </div>

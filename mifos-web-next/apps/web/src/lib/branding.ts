@@ -14,4 +14,7 @@ export const APP_LOGO_ABBREV = 'MP';
 
 /** Default document description for SEO and link previews. */
 export const APP_DESCRIPTION =
-  'Branch banking for clients, accounts, loans, and savings.';
+  'Branch banking for customers, accounts, loans, and savings.';
+
+/** Sign-in marketing headline (split login panel). */
+export const LOGIN_HEADLINE = 'Branch banking built for teams who deliver.';

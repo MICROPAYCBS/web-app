@@ -7,6 +7,16 @@
  */
 
 export {
+  catalogReportParameterVariable,
+  reportEngineParameterName,
+  STRETCHY_PARAMETER_VARIABLES,
+  type StretchyParameterName
+} from './report-parameters';
+export {
+  isMissingReportReadPermissionMessage,
+  reportReadPermissionCode
+} from './report-permissions';
+export {
   AMOUNT_MAX_DECIMAL_PLACES,
   AMOUNT_MAX_INTEGER_DIGITS,
   areJournalEntryTotalsBalanced,

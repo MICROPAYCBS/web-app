@@ -32,7 +32,7 @@ export function EntityDatatableChecksPageContent({
     <>
       <ListPage
         title="Entity data table checks"
-        description="Require custom data tables when clients, loans, groups, or savings accounts reach a given status."
+        description="Require custom data tables when customers, loans, groups, or savings accounts reach a given status."
         actions={
           template ? (
             <Can permission="CREATE_ENTITY_DATATABLE_CHECK">

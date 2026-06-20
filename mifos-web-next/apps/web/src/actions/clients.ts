@@ -29,7 +29,7 @@ export async function createClientAction(
   try {
     assertCan(session, resolvePermission('clients.create'));
   } catch {
-    return { ok: false, message: 'You do not have permission to create clients.' };
+    return { ok: false, message: 'You do not have permission to create customers.' };
   }
 
   const parsed = createClientSchema.safeParse(raw);
@@ -51,6 +51,6 @@ export async function createClientAction(
     revalidatePath(`/clients/${clientId}`);
     return { ok: true, clientId };
   } catch (err) {
-    return toFineractActionError(err, 'Failed to create client.');
+    return toFineractActionError(err, 'Failed to create customer.');
   }
 }

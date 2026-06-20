@@ -5,6 +5,7 @@ import {
   actuatorInfoUrl,
   getFineractProviderRoot
 } from '@/lib/fineract/actuator-url';
+import { fineractFetch } from '@/lib/fineract/fineract-fetch';
 
 const PROBE_TIMEOUT_MS = 10_000;
 
@@ -38,7 +39,7 @@ export async function probeFineractServer(apiBaseUrl: string): Promise<FineractP
   const root = getFineractProviderRoot(apiBaseUrl);
 
   try {
-    const healthRes = await fetch(actuatorHealthUrl(root), {
+    const healthRes = await fineractFetch(actuatorHealthUrl(root), {
       method: 'GET',
       cache: 'no-store',
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS)
@@ -61,7 +62,7 @@ export async function probeFineractServer(apiBaseUrl: string): Promise<FineractP
       };
     }
 
-    const infoRes = await fetch(actuatorInfoUrl(root), {
+    const infoRes = await fineractFetch(actuatorInfoUrl(root), {
       method: 'GET',
       cache: 'no-store',
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS)

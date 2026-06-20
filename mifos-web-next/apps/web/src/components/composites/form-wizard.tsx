@@ -87,7 +87,7 @@ export function FormWizard({
   return (
     <div className={cn('flex min-h-0 w-full flex-1 flex-col', className)}>
       <PageHeader>
-        <div className="space-y-1 pt-1">
+        <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {description ? (
             <p className="text-sm text-muted-foreground">{description}</p>

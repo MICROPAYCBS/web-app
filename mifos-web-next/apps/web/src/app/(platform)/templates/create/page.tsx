@@ -27,7 +27,7 @@ export default async function CreateTemplatePage() {
     <ListPage
       backLink={<DetailBackLink href="/templates" label="Back to templates" />}
       title="Create template"
-      description="Define a document or SMS template with mustache placeholders for client or loan data."
+      description="Define a document or SMS template with mustache placeholders for customer or loan data."
     >
       <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <TemplateForm

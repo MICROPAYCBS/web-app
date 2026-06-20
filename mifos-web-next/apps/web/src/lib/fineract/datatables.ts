@@ -7,6 +7,7 @@
  */
 
 import type { FineractDatatableColumnHeader } from '@mifos/api-client';
+import { validateDatatableColumnValue as validateDatatableColumnValueCore } from '@mifos/validation';
 
 const SYSTEM_FIELDS = ['id', 'created_at', 'updated_at'];
 const ENTITY_ID_FIELDS = [
@@ -81,6 +82,43 @@ export function isNumericColumn(type: string): boolean {
 
 export function isDateColumn(type: string): boolean {
   return type === 'DATE' || type === 'DATETIME';
+}
+
+export function isStringDatatableColumn(type: string): boolean {
+  return type === 'STRING' || type === 'TEXT';
+}
+
+export function datatableColumnMaxLength(column: FineractDatatableColumnHeader): number | undefined {
+  if (column.columnLength == null || column.columnLength === '') {
+    return undefined;
+  }
+  const parsed = Number(column.columnLength);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+export function datatableColumnPlaceholder(column: FineractDatatableColumnHeader): string | undefined {
+  const example = column.validationExample?.trim();
+  return example || undefined;
+}
+
+/** Returns a user-facing validation error, or undefined when the value is valid. */
+export function validateDatatableColumnValue(
+  column: FineractDatatableColumnHeader,
+  raw: unknown
+): string | undefined {
+  return validateDatatableColumnValueCore(
+    {
+      columnName: column.columnName,
+      columnDisplayType: column.columnDisplayType,
+      isColumnNullable: column.isColumnNullable,
+      columnLength: column.columnLength,
+      validationRegex: column.validationRegex,
+      validationExample: column.validationExample,
+      validationMessage: column.validationMessage,
+      label: toDatatableDisplayLabel(column.columnName)
+    },
+    raw
+  );
 }
 
 export function buildDatatableDataPayload(

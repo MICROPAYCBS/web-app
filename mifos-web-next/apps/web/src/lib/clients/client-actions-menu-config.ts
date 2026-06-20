@@ -142,7 +142,7 @@ export function buildClientActionsMenuItems(
   ];
 
   if (!underTransfer) {
-    lifecycle.push(sheetAction('transfer', 'Transfer client', ArrowRightLeft));
+    lifecycle.push(sheetAction('transfer', 'Transfer customer', ArrowRightLeft));
   }
 
   if (status === 'pending') {
@@ -157,9 +157,9 @@ export function buildClientActionsMenuItems(
         icon: Trash2,
         command: 'deleteClient',
         permission: 'DELETE_CLIENT',
-        confirmTitle: 'Delete client?',
+        confirmTitle: 'Delete customer?',
         confirmDescription:
-          'This permanently removes the client. This cannot be undone.',
+          'This permanently removes the customer. This cannot be undone.',
         confirmLabel: 'Delete',
         destructive: true
       }
@@ -204,7 +204,7 @@ export function buildClientActionsMenuItems(
       permission: 'UNASSIGNSTAFF_CLIENT',
       confirmTitle: 'Unassign relationship officer?',
       confirmDescription:
-        'The client will no longer be assigned to their current relationship officer.',
+        'The customer will no longer be assigned to their current relationship officer.',
       confirmLabel: 'Unassign',
       destructive: false
     });
@@ -233,12 +233,12 @@ export function buildClientActionsMenuItems(
 
 export const CLIENT_ACTION_SHEET_TITLES: Record<ClientActionSheetId, string> = {
   'assign-staff': 'Assign relationship officer',
-  close: 'Close client',
-  transfer: 'Transfer client',
-  activate: 'Activate client',
-  withdraw: 'Withdraw client',
-  reject: 'Reject client',
-  reactivate: 'Reactivate client',
+  close: 'Close customer',
+  transfer: 'Transfer customer',
+  activate: 'Activate customer',
+  withdraw: 'Withdraw customer',
+  reject: 'Reject customer',
+  reactivate: 'Reactivate customer',
   'undo-rejection': 'Undo rejection',
   'undo-transfer': 'Undo transfer',
   'accept-transfer': 'Accept transfer',

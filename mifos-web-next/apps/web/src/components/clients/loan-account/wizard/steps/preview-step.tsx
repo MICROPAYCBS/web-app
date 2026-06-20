@@ -68,7 +68,7 @@ function namedOptionLabel(
 
 const GUARANTOR_TYPE_LABELS: Record<number, string> = {
 
-  1: 'Existing client',
+  1: 'Existing customer',
 
   3: 'Staff',
 

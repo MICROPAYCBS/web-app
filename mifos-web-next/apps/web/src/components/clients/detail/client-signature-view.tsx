@@ -125,7 +125,7 @@ function ClientSignatureViewDialog({
         <DialogHeader>
           <DialogTitle>View signature</DialogTitle>
           {hasSignature ? (
-            <DialogDescription>Signature on file for this client.</DialogDescription>
+            <DialogDescription>Signature on file for this customer.</DialogDescription>
           ) : (
             <DialogDescription>No signature has been saved yet.</DialogDescription>
           )}
@@ -143,14 +143,14 @@ function ClientSignatureViewDialog({
               // eslint-disable-next-line @next/next/no-img-element -- blob URL from BFF attachment
               <img
                 src={imageSrc}
-                alt="Client signature"
+                alt="Customer signature"
                 className="max-h-48 w-full max-w-sm object-contain"
               />
             ) : null}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            No signature on file for this client.
+            No signature on file for this customer.
           </p>
         )}
 

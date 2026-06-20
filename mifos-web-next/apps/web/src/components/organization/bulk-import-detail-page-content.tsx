@@ -26,9 +26,9 @@ import { ListPage } from '@/components/composites/list-page';
 import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { BulkImportDefinition } from '@/lib/fineract/bulk-import-config';
+import { bulkImportDisplayName, type BulkImportDefinition } from '@/lib/fineract/bulk-import-config';
 import { BULK_IMPORT_LIST_PATH, bulkImportTemplateApiPath } from '@/lib/fineract/bulk-import-paths';
-import { resolveClientLegalFormTypeFromSelection } from '@/lib/fineract/bulk-import';
+import { resolveClientLegalFormTypeFromSelection } from '@/lib/fineract/bulk-import-display';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 type BulkImportFormState = {
@@ -67,6 +67,7 @@ export function BulkImportDetailPageContent({
 
   const officeOptions = useMemo(() => toSelectOptions(offices), [offices]);
   const staffSelectOptions = useMemo(() => toSelectOptions(staffOptions), [staffOptions]);
+  const importLabel = bulkImportDisplayName(definition.name);
 
   const showOffice = definition.formFields >= 1;
   const showStaff = definition.formFields >= 2;
@@ -144,14 +145,14 @@ export function BulkImportDetailPageContent({
 
   return (
     <ListPage
-      title={definition.name}
+      title={importLabel}
       description="Download a template, fill it in Excel, then upload the completed file."
       backLink={<DetailBackLink href={BULK_IMPORT_LIST_PATH} label="Back to bulk import" />}
     >
       <div className="space-y-6">
         <div className="grid gap-4 lg:grid-cols-2">
           <section className="space-y-4 rounded-lg border border-border p-4">
-            <h2 className="text-base font-medium">{definition.name} template</h2>
+            <h2 className="text-base font-medium">{importLabel} template</h2>
             <div className="space-y-4">
               {showOffice ? (
                 <SelectField
@@ -208,7 +209,7 @@ export function BulkImportDetailPageContent({
           </section>
 
           <section className="space-y-4 rounded-lg border border-border p-4">
-            <h2 className="text-base font-medium">{definition.name}</h2>
+            <h2 className="text-base font-medium">{importLabel}</h2>
             <div className="space-y-2">
               <label htmlFor="bulk-import-file" className="text-sm font-medium">
                 Select Excel file

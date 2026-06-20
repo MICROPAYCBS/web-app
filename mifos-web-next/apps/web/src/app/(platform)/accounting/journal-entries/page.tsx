@@ -8,7 +8,6 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { JournalEntriesPageContent } from '@/components/accounting/journal-entries/journal-entries-page-content';
 import { parseJournalEntryListQuery } from '@/lib/fineract/journal-entry-query';
 import { listJournalEntryGlAccounts, listJournalEntries } from '@/lib/fineract/journal-entries';
@@ -34,8 +33,6 @@ export default async function JournalEntriesPage({
   ]);
 
   return (
-    <Suspense fallback={<p className="text-muted-foreground">Loading journal entries…</p>}>
-      <JournalEntriesPageContent page={page} query={query} offices={offices} glAccounts={glAccounts} />
-    </Suspense>
+    <JournalEntriesPageContent page={page} query={query} offices={offices} glAccounts={glAccounts} />
   );
 }

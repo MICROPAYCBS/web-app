@@ -64,13 +64,16 @@ export function SystemDatatableCreateForm({
     setFieldErrors({});
 
     startTransition(async () => {
-      const result = await createSystemDatatableAction({
-        datatableName: datatableName.trim(),
-        apptableName: apptableName ?? '',
-        multiRow,
-        entitySubType,
-        columns: columns.map((column) => draftToColumnInput(column))
-      });
+      const result = await createSystemDatatableAction(
+        {
+          datatableName: datatableName.trim(),
+          apptableName: apptableName ?? '',
+          multiRow,
+          entitySubType,
+          columns: columns.map((column) => draftToColumnInput(column))
+        },
+        columns
+      );
 
       if (!result.ok) {
         setSubmitError(result.message);
@@ -197,7 +200,10 @@ export function SystemDatatableEditForm({
     );
 
     startTransition(async () => {
-      const result = await updateSystemDatatableAction(registeredTableName, payload);
+      const result = await updateSystemDatatableAction(registeredTableName, payload, {
+        columnDrafts: columns,
+        initialColumnDrafts: initialColumns
+      });
       if (!result.ok) {
         setSubmitError(result.message);
         if (result.fieldErrors) {

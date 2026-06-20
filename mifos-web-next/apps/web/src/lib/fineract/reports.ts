@@ -17,6 +17,13 @@ import type {
 import type { UpsertReportFormInput } from '@mifos/validation';
 import { buildCreateReportPayload, buildUpdateReportPayload } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { reportToFormValues } from '@/lib/fineract/report-display';
+import {
+  formatReportDeletePermissionError,
+  hasReportReadPermission,
+  isMissingReportReadPermissionError,
+  listApplicationPermissionCodes
+} from '@/lib/fineract/report-permissions';
 
 const REPORTS_PATH = '/reports';
 
@@ -156,7 +163,74 @@ export async function updateReport(
   await fineract.put(`${REPORTS_PATH}/${reportId}`, payload);
 }
 
-export async function deleteReport(reportId: number): Promise<void> {
+export async function deleteReport(reportId: number, reportName: string): Promise<void> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${REPORTS_PATH}/${reportId}`);
+  const permissionCodes = await listApplicationPermissionCodes();
+
+  if (hasReportReadPermission(permissionCodes, reportName)) {
+    await fineract.delete(`${REPORTS_PATH}/${reportId}`);
+    return;
+  }
+
+  const report = await getReport(reportId);
+  if (!report) {
+    throw new Error('Report not found.');
+  }
+
+  await deleteReportWithMissingReadPermission(fineract, report);
+}
+
+/**
+ * Fineract delete requires a `READ_{reportName}` row in `m_permission`. Legacy or imported
+ * reports may lack it. Seed the permission via create/delete of a placeholder, then remove
+ * the renamed original (or hide the orphan if its permission row is still missing).
+ */
+async function deleteReportWithMissingReadPermission(
+  fineract: Awaited<ReturnType<typeof createFineractClient>>,
+  report: FineractReportDetail
+): Promise<void> {
+  const reportId = report.id;
+  const reportName = report.reportName;
+  const tempName = `__delete_repair_${reportId}_${Date.now()}__`;
+  const form = reportToFormValues(report);
+
+  await fineract.put(
+    `${REPORTS_PATH}/${reportId}`,
+    buildUpdateReportPayload({ ...form, reportName: tempName }, { coreReport: false })
+  );
+
+  const placeholder = await fineract.post<FineractReportMutationResponse>(REPORTS_PATH, {
+    reportName,
+    reportType: report.reportType,
+    reportSubType: form.reportSubType || undefined,
+    reportCategory: form.reportCategory || undefined,
+    useReport: false,
+    description: report.description || undefined,
+    reportSql: form.reportSql?.trim() || 'select 1 as repair_placeholder'
+  });
+
+  await fineract.delete(`${REPORTS_PATH}/${Number(placeholder.resourceId)}`);
+
+  try {
+    await fineract.delete(`${REPORTS_PATH}/${reportId}`);
+    return;
+  } catch (error) {
+    if (!isMissingReportReadPermissionError(error, tempName)) {
+      throw error;
+    }
+  }
+
+  await fineract.put(
+    `${REPORTS_PATH}/${reportId}`,
+    buildUpdateReportPayload(
+      {
+        ...form,
+        reportName: tempName,
+        useReport: false,
+        reportSql: 'select 1 as repair_orphan',
+        description: 'Orphaned configuration row left after report delete repair.'
+      },
+      { coreReport: false }
+    )
+  );
 }

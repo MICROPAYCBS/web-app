@@ -54,8 +54,7 @@ export function AccountStep({
         </div>
         <TextField
           label="Email"
-          required={mode === 'edit'}
-          optional={mode === 'create'}
+          optional
           type="email"
           value={draft.email}
           onChange={(value) => {
@@ -71,9 +70,9 @@ export function AccountStep({
           hint={
             mode === 'create'
               ? 'Required if you want the initial password emailed on the Sign-in step.'
-              : undefined
+              : 'Optional on save. Leave blank to keep the current address.'
           }
-          hintAriaLabel="About email for new users"
+          hintAriaLabel={mode === 'create' ? 'About email for new users' : 'About email when editing users'}
           autoComplete="email"
         />
       </div>

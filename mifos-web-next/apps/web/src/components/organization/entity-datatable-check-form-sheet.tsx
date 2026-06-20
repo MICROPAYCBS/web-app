@@ -14,6 +14,7 @@ import type { EntityDatatableCheckEntity } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, useTransition } from 'react';
 import { createEntityDatatableCheckAction } from '@/actions/entity-datatable-check';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import {
@@ -125,12 +126,12 @@ export function EntityDatatableCheckFormSheet({
       submitDisabled={!canSubmit}
       submitLoading={pending}
       submitLabel="Create"
+      error={
+        submitError ? (
+          <FormErrorAlert>{formatActionErrorMessage(submitError, fieldErrors)}</FormErrorAlert>
+        ) : null
+      }
     >
-      {submitError ? (
-        <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {formatActionErrorMessage(submitError, fieldErrors)}
-        </p>
-      ) : null}
       <form id={formId} onSubmit={handleSubmit} className="space-y-4">
         <SelectField
           label="Entity"

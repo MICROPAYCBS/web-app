@@ -20,7 +20,7 @@ function badgeLabel(health: ServerHealthSnapshot): string {
     case 'probing':
       return 'Checking…';
     case 'healthy':
-      return health.version ?? 'Healthy';
+      return health.version ? `API v${health.version}` : 'Connected';
     case 'unhealthy':
       return 'Unreachable';
     default:

@@ -21,7 +21,7 @@ export function TemplatesPageContent({ templates }: { templates: FineractTemplat
   return (
     <ListPage
       title="Templates"
-      description="Manage document and SMS templates used for client and loan communications."
+      description="Manage document and SMS templates used for customer and loan communications."
       actions={
         <Can permission="CREATE_TEMPLATE">
           <Link href="/templates/create" className={cn(buttonVariants())}>

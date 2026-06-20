@@ -20,10 +20,16 @@ import { revalidatePath } from 'next/cache';
 import {
   createSystemDatatable,
   deleteSystemDatatable,
+  syncDatatableColumnValidations,
   updateSystemDatatable
 } from '@/lib/fineract/system-datatables';
 import { isSystemColumn } from '@/lib/fineract/datatables';
-import { sanitizeUpdatePayload } from '@/lib/fineract/system-datatable-form';
+import {
+  buildColumnValidationDeleteNames,
+  columnValidationsFromDrafts,
+  sanitizeUpdatePayload,
+  type SystemDatatableColumnDraft
+} from '@/lib/fineract/system-datatable-form';
 import { getServerSession } from '@/lib/session/server';
 
 export type SystemDatatableActionResult =
@@ -54,7 +60,8 @@ function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, st
 }
 
 export async function createSystemDatatableAction(
-  input: CreateSystemDatatableInput
+  input: CreateSystemDatatableInput,
+  columnDrafts?: SystemDatatableColumnDraft[]
 ): Promise<SystemDatatableActionResult> {
   const session = await getServerSession();
   assertCan(session, 'CREATE_DATATABLE');
@@ -76,6 +83,19 @@ export async function createSystemDatatableAction(
     const response = await createSystemDatatable(payload);
     const registeredTableName =
       response.resourceIdentifier ?? parsed.data.datatableName;
+
+    if (columnDrafts?.length) {
+      const validationsToSync = columnValidationsFromDrafts(columnDrafts).filter(
+        (column) =>
+          column.validationRegex || column.validationExample || column.validationMessage
+      );
+      if (validationsToSync.length) {
+        await syncDatatableColumnValidations(registeredTableName, {
+          columnValidations: validationsToSync
+        });
+      }
+    }
+
     revalidatePath(listPath());
     revalidatePath(detailPath(registeredTableName));
     return { ok: true, registeredTableName };
@@ -86,7 +106,11 @@ export async function createSystemDatatableAction(
 
 export async function updateSystemDatatableAction(
   registeredTableName: string,
-  input: UpdateSystemDatatableInput
+  input: UpdateSystemDatatableInput,
+  options?: {
+    columnDrafts?: SystemDatatableColumnDraft[];
+    initialColumnDrafts?: SystemDatatableColumnDraft[];
+  }
 ): Promise<SystemDatatableActionResult> {
   const session = await getServerSession();
   assertCan(session, 'UPDATE_DATATABLE');
@@ -102,6 +126,34 @@ export async function updateSystemDatatableAction(
 
   try {
     await updateSystemDatatable(registeredTableName, sanitizeUpdatePayload(parsed.data));
+
+    if (options?.columnDrafts) {
+      const columnValidations = columnValidationsFromDrafts(options.columnDrafts);
+      const deleteColumnNames = buildColumnValidationDeleteNames(
+        options.initialColumnDrafts ?? [],
+        options.columnDrafts
+      );
+      const emptyValidationDeletes = columnValidations
+        .filter(
+          (column) =>
+            !column.validationRegex &&
+            !column.validationExample &&
+            !column.validationMessage
+        )
+        .map((column) => column.columnName);
+      const validationsToSync = columnValidations.filter(
+        (column) =>
+          column.validationRegex || column.validationExample || column.validationMessage
+      );
+      const mergedDeletes = [...new Set([...deleteColumnNames, ...emptyValidationDeletes])];
+      if (validationsToSync.length || mergedDeletes.length) {
+        await syncDatatableColumnValidations(registeredTableName, {
+          columnValidations: validationsToSync,
+          deleteColumnNames: mergedDeletes.length ? mergedDeletes : undefined
+        });
+      }
+    }
+
     revalidatePath(listPath());
     revalidatePath(detailPath(registeredTableName));
     revalidatePath(editPath(registeredTableName));

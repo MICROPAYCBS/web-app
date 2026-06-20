@@ -8,7 +8,6 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import {
   ManageJobsPageContent,
   type ManageJobsTab
@@ -56,18 +55,16 @@ export default async function ManageJobsPage({
   }
 
   return (
-    <Suspense fallback={<p className="text-muted-foreground">Loading manage jobs…</p>}>
-      <ManageJobsPageContent
-        tab={tab}
-        jobs={jobs}
-        scheduler={scheduler}
-        workflowJobNames={workflowJobNames}
-        isCatchUpRunning={isCatchUpRunning}
-        lockedLoans={lockedLoans}
-        canUpdate={can(session, 'UPDATE_SCHEDULER')}
-        canExecute={can(session, 'EXECUTEJOB_SCHEDULER')}
-        canExecuteInline={can(session, 'EXECUTE_INLINE_JOB')}
-      />
-    </Suspense>
+    <ManageJobsPageContent
+      tab={tab}
+      jobs={jobs}
+      scheduler={scheduler}
+      workflowJobNames={workflowJobNames}
+      isCatchUpRunning={isCatchUpRunning}
+      lockedLoans={lockedLoans}
+      canUpdate={can(session, 'UPDATE_SCHEDULER')}
+      canExecute={can(session, 'EXECUTEJOB_SCHEDULER')}
+      canExecuteInline={can(session, 'EXECUTE_INLINE_JOB')}
+    />
   );
 }

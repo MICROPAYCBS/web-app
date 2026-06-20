@@ -18,10 +18,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/field';
 import { Label } from '@/components/ui/label';
 import {
+  datatableColumnPlaceholder,
   filterSystemColumns,
   getDatatableControlName,
   isDateColumn,
   isNumericColumn,
+  isStringDatatableColumn,
   toDatatableDisplayLabel
 } from '@/lib/fineract/datatables';
 
@@ -49,6 +51,7 @@ export function DatatableFields({
         const label = toDatatableDisplayLabel(column.columnName);
         const required = !column.isColumnNullable;
         const error = errors?.[controlName];
+        const placeholder = datatableColumnPlaceholder(column);
 
         if (column.columnDisplayType === 'BOOLEAN') {
           return (
@@ -114,6 +117,7 @@ export function DatatableFields({
               required={required}
               optional={!required}
               multiline
+              placeholder={placeholder}
               value={String(values[controlName] ?? '')}
               onChange={(value) => setValue(controlName, value)}
               error={error}
@@ -154,6 +158,7 @@ export function DatatableFields({
             label={label}
             required={required}
             optional={!required}
+            placeholder={isStringDatatableColumn(column.columnDisplayType) ? placeholder : undefined}
             value={String(values[controlName] ?? '')}
             onChange={(value) => setValue(controlName, value)}
             error={error}

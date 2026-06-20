@@ -9,18 +9,13 @@
  */
 
 import type { FineractReportAllowedParameter } from '@mifos/api-client';
+import { reportEngineParameterName } from '@mifos/domain';
 import { Plus, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 
 export type ReportParameterRow = {
   id?: string | number;
@@ -82,8 +77,9 @@ export function ReportParametersEditor({
         <div>
           <h3 className="text-sm font-medium">Parameters</h3>
           <p className="text-sm text-muted-foreground">
-            Values users enter when running this report. Use placeholders like{' '}
-            <code className="text-xs">${'{parameterName}'}</code> in SQL.
+            Values users enter when running this report. The name passed to the report engine is
+            shown from the parameter catalog when known. Reference it in SQL as{' '}
+            <code className="text-xs">${'{officeId}'}</code>.
           </p>
         </div>
         {!disabled ? (
@@ -96,15 +92,26 @@ export function ReportParametersEditor({
 
       {parameters.length ? (
         <div className="space-y-3">
-          {parameters.map((parameter, index) => (
+          {parameters.map((parameter, index) => {
+            const engineName =
+              parameter.parameterId > 0
+                ? reportEngineParameterName(
+                    parameter.parameterName,
+                    parameter.reportParameterName
+                  )
+                : undefined;
+
+            return (
             <div
               key={`${parameter.parameterId}-${index}`}
               className="grid gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
             >
               <div className="space-y-2">
-                <Label className="text-xs">Parameter</Label>
-                <Select
-                  value={parameter.parameterId > 0 ? String(parameter.parameterId) : ''}
+                <SelectField
+                  id={`report-parameter-${index}`}
+                  label="Parameter"
+                  required
+                  value={parameter.parameterId > 0 ? String(parameter.parameterId) : undefined}
                   onValueChange={(value) => {
                     if (!value) {
                       return;
@@ -115,35 +122,54 @@ export function ReportParametersEditor({
                       parameterId: id,
                       parameterName: match?.parameterName ?? String(id),
                       reportParameterName:
-                        parameter.reportParameterName?.trim() ||
-                        match?.parameterName ||
-                        ''
+                        id === parameter.parameterId ? (parameter.reportParameterName ?? '') : ''
                     });
                   }}
+                  options={optionsForRow(index).map((item) => ({
+                    value: String(item.id),
+                    label: item.parameterName,
+                    keywords: [item.parameterName, String(item.id)]
+                  }))}
+                  placeholder="Search parameters…"
+                  emptyMessage="No parameters found."
                   disabled={disabled}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select parameter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {optionsForRow(index).map((item) => (
-                      <SelectItem key={item.id} value={String(item.id)}>
-                        {item.parameterName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  className="[&_label]:text-xs"
+                />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs">Name passed to report engine</Label>
-                <Input
-                  value={parameter.reportParameterName ?? ''}
-                  onChange={(event) =>
-                    updateRow(index, { reportParameterName: event.target.value })
-                  }
-                  placeholder="Optional override"
-                  disabled={disabled}
-                />
+                <Label className="text-xs">Passed to report engine</Label>
+                {engineName ? (
+                  <div className="rounded-md border border-border bg-background px-3 py-2">
+                    <p className="font-mono text-sm">{engineName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      SQL placeholder:{' '}
+                      <code>{`\${${engineName}}`}</code>
+                    </p>
+                  </div>
+                ) : parameter.parameterId > 0 ? (
+                  <p className="rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                    Unknown — set a custom override below
+                  </p>
+                ) : (
+                  <p className="rounded-md border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                    Select a parameter
+                  </p>
+                )}
+                {!disabled ? (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">
+                      Custom override (optional)
+                    </Label>
+                    <Input
+                      value={parameter.reportParameterName ?? ''}
+                      onChange={(event) =>
+                        updateRow(index, { reportParameterName: event.target.value })
+                      }
+                      placeholder="Only when this report uses a different name"
+                      disabled={disabled}
+                    />
+                  </div>
+                ) : null}
               </div>
               {!disabled ? (
                 <div className="flex items-end">
@@ -159,7 +185,8 @@ export function ReportParametersEditor({
                 </div>
               ) : null}
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">

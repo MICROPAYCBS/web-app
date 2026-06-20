@@ -7,7 +7,6 @@
  */
 
 import { redirect } from 'next/navigation';
-import { Suspense } from 'react';
 import { ClientsPageContent } from '@/components/clients/clients-page-content';
 import { fetchClientsList } from '@/lib/fineract/clients-list';
 import {
@@ -46,15 +45,13 @@ export default async function ClientsPage({
   });
 
   return (
-    <Suspense fallback={<p className="text-muted-foreground">Loading clients…</p>}>
-      <ClientsPageContent
-        initialPage={initialPage}
-        initialPageSize={limit}
-        initialQuery={query}
-        initialIncludeClosed={includeClosed}
-        initialSortColumn={sortColumn}
-        initialSortOrder={sortOrder}
-      />
-    </Suspense>
+    <ClientsPageContent
+      initialPage={initialPage}
+      initialPageSize={limit}
+      initialQuery={query}
+      initialIncludeClosed={includeClosed}
+      initialSortColumn={sortColumn}
+      initialSortOrder={sortOrder}
+    />
   );
 }

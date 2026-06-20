@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { getFineractApiHost } from '@mifos/servers';
 import type { FineractServerProfile } from '@mifos/servers';
@@ -16,8 +17,10 @@ import {
   type ServerHealthSnapshot
 } from '@/components/servers/server-health-indicator';
 import { ServerListRowActions } from '@/components/servers/server-list-row-actions';
+import { ServerHealthBadge } from '@/components/servers/server-health-badge';
 import { ServerRowDetailsTooltip } from '@/components/servers/server-row-details-tooltip';
 import { cn } from '@/lib/utils';
+import { finishServerSelection } from '@/lib/servers/finish-server-selection';
 import { deleteServerAction, selectServerAction } from '@/actions/servers';
 
 export function ServerManagerRow({
@@ -33,6 +36,7 @@ export function ServerManagerRow({
   onEdit: (server: FineractServerProfile) => void;
   onChanged: () => void;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -51,6 +55,7 @@ export function ServerManagerRow({
               <span className="block truncate text-xs text-muted-foreground">
                 {getFineractApiHost(server.baseUrl)}
               </span>
+              <ServerHealthBadge health={health} className="mt-1.5" />
             </span>
           </span>
         </ServerRowDetailsTooltip>
@@ -60,9 +65,7 @@ export function ServerManagerRow({
           onUse={() =>
             startTransition(async () => {
               const result = await selectServerAction(server.id);
-              if (result.ok) {
-                onChanged();
-              }
+              finishServerSelection(result, router, onChanged);
             })
           }
           onEdit={() => onEdit(server)}

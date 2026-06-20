@@ -16,11 +16,18 @@ export function LoginNoServerEmpty({ onManageServers }: { onManageServers: () =>
     <button
       type="button"
       onClick={onManageServers}
-      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-10 text-sm font-medium transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex w-full items-center justify-between gap-3 rounded-lg border border-dashed border-border px-4 py-4 text-left text-sm transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <ServerIcon className="size-5 text-muted-foreground" aria-hidden />
-      Choose a server
-      <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
+      <span className="flex min-w-0 items-center gap-3">
+        <ServerIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+        <span>
+          <span className="block font-medium text-foreground">Connect to a server</span>
+          <span className="block text-xs text-muted-foreground">
+            Choose your environment before signing in.
+          </span>
+        </span>
+      </span>
+      <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
   );
 }

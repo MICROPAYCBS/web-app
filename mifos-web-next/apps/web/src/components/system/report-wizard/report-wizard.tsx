@@ -43,8 +43,8 @@ const CORE_WIZARD_STEPS: FormWizardStep[] = [
 function buildCustomWizardSteps(showQueryStep: boolean): FormWizardStep[] {
   return [
     { id: 'details', label: 'Basic details' },
-    ...(showQueryStep ? [{ id: 'query', label: 'Query' } as FormWizardStep] : []),
     { id: 'parameters', label: 'Parameters' },
+    ...(showQueryStep ? [{ id: 'query', label: 'Query' } as FormWizardStep] : []),
     { id: 'review', label: 'Review' }
   ];
 }
@@ -229,8 +229,8 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
   const description = coreReport
     ? 'Core reports only allow updating the user menu flag and description.'
     : mode === 'create'
-      ? 'Define a custom report query, parameters, and menu visibility.'
-      : 'Update report query, parameters, and visibility.';
+      ? 'Define report parameters, query, and menu visibility.'
+      : 'Update report parameters, query, and visibility.';
 
   const stepProps = {
     draft,
@@ -278,8 +278,8 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
         ) : null}
 
         {!coreReport && stepId === 'details' ? <ReportDetailsStep {...stepProps} /> : null}
-        {!coreReport && stepId === 'query' && showQueryStep ? <ReportQueryStep {...stepProps} /> : null}
         {!coreReport && stepId === 'parameters' ? <ReportParametersStep {...stepProps} /> : null}
+        {!coreReport && stepId === 'query' && showQueryStep ? <ReportQueryStep {...stepProps} /> : null}
 
         {isReview ? (
           <ReportPreviewStep

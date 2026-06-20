@@ -72,7 +72,7 @@ export function clientDetailNavGroups(
       items: [
         {
           id: 'address',
-          label: 'Client addresses',
+          label: 'Customer addresses',
           href: `${base}/address`,
           icon: MapPin
         },
@@ -135,7 +135,7 @@ export function ClientDetailNav({
         className="inline-flex items-center gap-1 px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ChevronLeft className="size-4 shrink-0" aria-hidden />
-        Back to clients
+        Back to customers
       </Link>
       <DetailNavSidebar groups={clientDetailNavGroups(clientId, datatableNavItems)} />
     </div>

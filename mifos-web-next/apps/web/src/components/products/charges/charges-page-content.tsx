@@ -27,7 +27,7 @@ export function ChargesPageContent({
   return (
     <ListPage
       title="Charges"
-      description="Fees and penalties applied to loans, savings, deposits, shares, and clients."
+      description="Fees and penalties applied to loans, savings, deposits, shares, and customers."
       actions={
         <Can permission="CREATE_CHARGE">
           <Link href={chargeCreatePath()} className={cn(buttonVariants())}>

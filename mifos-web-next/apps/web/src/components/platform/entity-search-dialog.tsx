@@ -141,7 +141,7 @@ export function EntitySearchDialog({
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
         <DialogHeader className="sr-only">
           <DialogTitle>Search</DialogTitle>
-          <DialogDescription>Search clients, loans, savings, and other records.</DialogDescription>
+          <DialogDescription>Search customers, loans, savings, and other records.</DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center gap-2 border-b px-3 py-3">
@@ -150,7 +150,7 @@ export function EntitySearchDialog({
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search clients, accounts, groups…"
+            placeholder="Search customers, accounts, groups…"
             className="h-10 border-0 bg-transparent px-1.5 shadow-none focus-visible:ring-0"
             autoComplete="off"
             spellCheck={false}

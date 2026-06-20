@@ -47,13 +47,13 @@ export default async function ClientRecurringDepositsPage({
     <>
       <ClientAccountsSection
         title="Recurring deposit accounts"
-        description="Recurring deposit accounts for this client."
+        description="Recurring deposit accounts for this customer."
         openRows={openRows}
         closedRows={closedRows}
         openEmptyMessage="No open recurring deposit accounts"
-        openEmptyDescription="This client has no open recurring deposit accounts."
+        openEmptyDescription="This customer has no open recurring deposit accounts."
         closedEmptyMessage="No closed recurring deposit accounts"
-        closedEmptyDescription="This client has no closed recurring deposit accounts."
+        closedEmptyDescription="This customer has no closed recurring deposit accounts."
         createAction={clientAccountCreateAction(clientId, 'recurringDeposit', client)}
         accountKind="recurring-deposit"
       />

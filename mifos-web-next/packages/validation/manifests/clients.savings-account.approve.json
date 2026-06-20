@@ -1,0 +1,10 @@
+{
+  "schemaId": "clients.savings-account.approve",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.SavingsAccountsApiResource"
+  ],
+  "fields": {
+    "approvedOnDate": { "required": true, "type": "date" },
+    "note": { "required": false, "type": "string" }
+  }
+}

@@ -7,6 +7,7 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
+import { SectorDisplayValue } from '@/components/clients/shared/sector-display-value';
 import { ClientFinancialSummarySection } from '@/components/clients/detail/client-financial-summary';
 import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
 import {
@@ -30,7 +31,7 @@ function ClientInformationSection({ client }: { client: FineractClientDetail }) 
     apiDisplayName !== constructedName;
 
   return (
-    <DetailSection title="Client information">
+    <DetailSection title="Customer information">
       <DetailFieldGrid>
         {showDisplayName ? (
           <DetailField label="Display name">
@@ -96,10 +97,24 @@ function ClientInformationSection({ client }: { client: FineractClientDetail }) 
         <DetailField label="Mobile number">
           <TextValue value={client.mobileNo} />
         </DetailField>
+        <DetailField label="Alternative mobile number">
+          <TextValue value={client.alternativeMobileNo} />
+        </DetailField>
         <DetailField label="Email">
           <TextValue value={client.emailAddress} />
         </DetailField>
-        <DetailField label="Client type">
+        <DetailField label="Alternative email">
+          <TextValue value={client.alternativeEmailAddress} />
+        </DetailField>
+        <DetailField label="Tax identification number (TIN)">
+          <TextValue value={client.taxIdentificationNumber} />
+        </DetailField>
+        {client.subIndustryId != null ? (
+          <DetailField label="Sector / industry / sub-industry">
+            <SectorDisplayValue subIndustryId={client.subIndustryId} />
+          </DetailField>
+        ) : null}
+        <DetailField label="Customer type">
           <TextValue value={enumOptionLabel(client.clientType)} />
         </DetailField>
         <DetailField label="Classification">

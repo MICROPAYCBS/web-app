@@ -2,6 +2,7 @@ import 'server-only';
 
 import { FineractHttpError } from '@mifos/api-client';
 import { getFineractServerConfig } from '@/lib/fineract/server-config';
+import { fineractFetch } from '@/lib/fineract/fineract-fetch';
 import {
   deprecatedDemoFineractHint,
   getFineractApiHost,
@@ -80,7 +81,7 @@ export async function authenticateFineract(params: AuthenticateParams): Promise<
 
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fineractFetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

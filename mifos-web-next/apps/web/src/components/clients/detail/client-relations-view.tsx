@@ -34,7 +34,7 @@ export function ClientRelationsView({
       <EmptyState
         icon={Link2}
         title="No related tables"
-        description="No multi-row custom data tables are registered for this client type, or you do not have permission to view them."
+        description="No multi-row custom data tables are registered for this customer type, or you do not have permission to view them."
       />
     );
   }

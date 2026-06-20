@@ -41,7 +41,7 @@ export function ReportDetailsStep({
     { value: '', label: 'None' },
     ...REPORT_CATEGORIES.map((category) => ({
       value: category,
-      label: category
+      label: category === 'Client' ? 'Customer' : category
     }))
   ];
 

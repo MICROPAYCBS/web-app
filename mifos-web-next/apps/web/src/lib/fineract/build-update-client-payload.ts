@@ -49,6 +49,18 @@ export function buildUpdateClientPayload(
     delete base.emailAddress;
   }
 
+  if (input.taxIdentificationNumber === '') {
+    delete base.taxIdentificationNumber;
+  }
+
+  if (input.alternativeMobileNo === '') {
+    delete base.alternativeMobileNo;
+  }
+
+  if (input.alternativeEmailAddress === '') {
+    delete base.alternativeEmailAddress;
+  }
+
   const submitted = normalizeFineractDateField(input.submittedOnDate, dateCtx);
   if (submitted) {
     base.submittedOnDate = submitted;

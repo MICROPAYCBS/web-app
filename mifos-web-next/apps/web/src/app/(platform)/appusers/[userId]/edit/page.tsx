@@ -9,7 +9,7 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { UserEditPageContent } from '@/components/app-users/user-edit-page-content';
-import { getUser, getUserTemplate } from '@/lib/fineract/app-users';
+import { getUserForEdit } from '@/lib/fineract/app-users';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function EditAppUserPage({
@@ -28,10 +28,10 @@ export default async function EditAppUserPage({
     notFound();
   }
 
-  const [user, template] = await Promise.all([getUser(id), getUserTemplate()]);
-  if (!user) {
+  const editContext = await getUserForEdit(id);
+  if (!editContext) {
     notFound();
   }
 
-  return <UserEditPageContent user={user} template={template} />;
+  return <UserEditPageContent editContext={editContext} />;
 }

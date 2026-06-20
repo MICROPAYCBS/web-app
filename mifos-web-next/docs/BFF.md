@@ -42,6 +42,8 @@ Client Components use **TanStack Query** (or `fetch`) against **`/api/...`** or 
 ```bash
 FINERACT_API_URL=https://localhost:8443/fineract-provider/api/v1
 FINERACT_TENANT_ID=default
+# Dev only: self-signed TLS is allowed when NODE_ENV=development (sets NODE_TLS_REJECT_UNAUTHORIZED).
+# FINERACT_STRICT_TLS=1   # require valid certificates even in dev
 ```
 
 Do **not** use `NEXT_PUBLIC_FINERACT_*`.

@@ -7,7 +7,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { platformInsetX } from '@/lib/platform-layout';
+import { pageHeaderPadding, platformInsetX } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 /**
@@ -26,7 +26,7 @@ export function PageHeader({
       className={cn(
         'z-20 shrink-0 border-b border-border bg-background',
         platformInsetX,
-        'pb-4 pt-4',
+        pageHeaderPadding,
         className
       )}
     >

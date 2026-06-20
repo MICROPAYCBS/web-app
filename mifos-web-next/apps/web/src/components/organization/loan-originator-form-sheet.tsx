@@ -17,6 +17,7 @@ import {
   createLoanOriginatorAction,
   updateLoanOriginatorAction
 } from '@/actions/loan-originators';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
@@ -167,13 +168,11 @@ export function LoanOriginatorFormSheet({
       submitDisabled={!canSubmit}
       submitLoading={pending}
       className="data-[side=right]:sm:max-w-lg"
+      error={
+        submitError ? <FormErrorAlert>{submitError}</FormErrorAlert> : null
+      }
     >
       <form id={formId} className="grid gap-4" onSubmit={handleSubmit}>
-        {submitError ? (
-          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {submitError}
-          </p>
-        ) : null}
         <TextField
           id={`${formId}-name`}
           label="Name"

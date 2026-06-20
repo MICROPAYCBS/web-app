@@ -41,7 +41,7 @@ export function MifosSiteHeader() {
             <Search className="size-4" aria-hidden />
           </TooltipTrigger>
           <TooltipContent side="bottom" className="flex items-center gap-1.5">
-            Search clients, accounts, groups…
+            Search customers, accounts, groups…
             <span className="inline-flex items-center gap-0.5">
               <Kbd>⌘</Kbd>
               <Kbd>K</Kbd>

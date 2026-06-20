@@ -115,7 +115,7 @@ export function ClientDocumentsView({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">Files attached to this client record.</p>
+        <p className="text-sm text-muted-foreground">Files attached to this customer record.</p>
         <div className="flex flex-wrap items-center gap-2">
           {documents.length > 0 ? (
             <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
@@ -139,7 +139,7 @@ export function ClientDocumentsView({
         <EmptyState
           icon={FileText}
           title="No documents on file"
-          description="Upload contracts, forms, or other files for this client."
+          description="Upload contracts, forms, or other files for this customer."
           action={
             canCreate ? (
               <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>

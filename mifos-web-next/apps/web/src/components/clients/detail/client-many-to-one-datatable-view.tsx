@@ -185,7 +185,7 @@ export function ClientManyToOneDatatableView({
       <DetailSection
         title={title}
         titleAccessory={<DatatableRowKindBadge multiRow />}
-        description="Multiple rows can be linked to this client."
+        description="Multiple rows can be linked to this customer."
         actions={
           <div className="flex flex-wrap gap-2">
             {canCreate ? (

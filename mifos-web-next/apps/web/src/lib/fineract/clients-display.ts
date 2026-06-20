@@ -19,7 +19,7 @@ export function clientDisplayName(client: {
   if (client.fullname?.trim()) {
     return client.fullname.trim();
   }
-  return [client.firstname, client.lastname].filter(Boolean).join(' ').trim() || 'Client';
+  return [client.firstname, client.lastname].filter(Boolean).join(' ').trim() || 'Customer';
 }
 
 export function clientInitials(client: {

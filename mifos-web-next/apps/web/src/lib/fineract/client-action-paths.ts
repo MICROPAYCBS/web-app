@@ -18,7 +18,7 @@ export function clientActionSlug(actionName: string): string {
 
 const ACTION_SLUG_TITLES: Record<string, string> = {
   close: 'Close',
-  'transfer-client': 'Transfer client',
+  'transfer-client': 'Transfer customer',
   activate: 'Activate',
   withdraw: 'Withdraw',
   reject: 'Reject',
@@ -53,6 +53,10 @@ export function clientActionPath(
   actionName: string
 ): string {
   return `/clients/${clientId}/actions/${clientActionSlug(actionName)}`;
+}
+
+export function clientGeneralPath(clientId: string | number): string {
+  return `/clients/${clientId}/general`;
 }
 
 export function clientEditPath(clientId: string | number): string {

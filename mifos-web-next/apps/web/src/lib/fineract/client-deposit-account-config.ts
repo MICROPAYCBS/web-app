@@ -30,7 +30,7 @@ export const CLIENT_DEPOSIT_ACCOUNT_CONFIG: Record<
     apiPath: 'savingsaccounts',
     permission: 'CREATE_SAVINGSACCOUNT',
     sheetTitle: 'New savings account',
-    sheetDescription: 'Submit a savings account application for this client.',
+    sheetDescription: 'Submit a savings account application for this customer.',
     submitLabel: 'Submit'
   },
   fixedDeposit: {
@@ -39,7 +39,7 @@ export const CLIENT_DEPOSIT_ACCOUNT_CONFIG: Record<
     apiPath: 'fixeddepositaccounts',
     permission: 'CREATE_FIXEDDEPOSITACCOUNT',
     sheetTitle: 'New fixed deposit account',
-    sheetDescription: 'Submit a fixed deposit application for this client.',
+    sheetDescription: 'Submit a fixed deposit application for this customer.',
     submitLabel: 'Submit'
   },
   recurringDeposit: {
@@ -48,7 +48,7 @@ export const CLIENT_DEPOSIT_ACCOUNT_CONFIG: Record<
     apiPath: 'recurringdepositaccounts',
     permission: 'CREATE_RECURRINGDEPOSITACCOUNT',
     sheetTitle: 'New recurring deposit account',
-    sheetDescription: 'Submit a recurring deposit application for this client.',
+    sheetDescription: 'Submit a recurring deposit application for this customer.',
     submitLabel: 'Submit'
   }
 };

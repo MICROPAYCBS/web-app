@@ -13,7 +13,8 @@ import type {
   FineractReportRunParameter,
   FineractReportRunResult
 } from '@mifos/api-client';
-import { Filter, RefreshCw } from 'lucide-react';
+import { Filter, Pencil, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { fetchReportParameterMetadataAction, runReportAction } from '@/actions/report-run';
@@ -21,13 +22,20 @@ import { DetailBackLink } from '@/components/composites';
 import { ListPage } from '@/components/composites/list-page';
 import { ReportParameterSheet } from '@/components/reports/report-parameter-sheet';
 import { ReportResultTable } from '@/components/reports/report-result-table';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   isTabularReportType,
   mergeReportRunParameters
 } from '@/lib/fineract/report-run-display';
+import { cn } from '@/lib/utils';
 
-export function ReportRunPageContent({ report }: { report: FineractReportDetail }) {
+export function ReportRunPageContent({
+  report,
+  canEdit = false
+}: {
+  report: FineractReportDetail;
+  canEdit?: boolean;
+}) {
   const [parameters, setParameters] = useState<FineractReportRunParameter[]>(() =>
     mergeReportRunParameters([], report)
   );
@@ -98,6 +106,15 @@ export function ReportRunPageContent({ report }: { report: FineractReportDetail 
       titleHintAriaLabel="About this report"
       actions={
         <div className="flex flex-wrap gap-2">
+          {canEdit ? (
+            <Link
+              href={`/system/reports/${report.id}/edit`}
+              className={cn(buttonVariants({ variant: 'outline' }))}
+            >
+              <Pencil className="mr-2 size-4" />
+              Edit report
+            </Link>
+          ) : null}
           <Button
             type="button"
             variant="outline"

@@ -74,7 +74,7 @@ export function ClientSignatureUploadDialog({
         <DialogHeader>
           <DialogTitle>Upload signature</DialogTitle>
           <DialogDescription>
-            Attach a signature image for this client. It is stored as a client document.
+            Attach a signature image for this customer. It is stored as a customer document.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
@@ -155,7 +155,7 @@ export function ClientSignatureDeleteDialog({
         <DialogHeader>
           <DialogTitle>Delete signature?</DialogTitle>
           <DialogDescription>
-            This removes the client signature document. You can upload a new signature later.
+            This removes the customer signature document. You can upload a new signature later.
           </DialogDescription>
         </DialogHeader>
         {error ? (

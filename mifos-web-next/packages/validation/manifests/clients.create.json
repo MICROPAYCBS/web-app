@@ -7,7 +7,11 @@
   "fields": {
     "officeId": { "required": true },
     "staffId": { "required": true },
-    "mobileNo": { "required": true, "maxLength": 50 },
+    "mobileNo": { "required": true, "maxLength": 13, "format": "ugandaInternationalMobile" },
+    "taxIdentificationNumber": { "required": false, "maxLength": 50 },
+    "alternativeMobileNo": { "required": false, "maxLength": 13, "format": "ugandaInternationalMobile" },
+    "alternativeEmailAddress": { "required": false, "maxLength": 50 },
+    "subIndustryId": { "required": false },
     "dateOfBirth": { "required": true },
     "genderId": { "requiredWhen": "legalFormId=1" },
     "clientTypeId": { "required": true },

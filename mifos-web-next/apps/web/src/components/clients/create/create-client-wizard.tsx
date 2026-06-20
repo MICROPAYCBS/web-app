@@ -302,7 +302,7 @@ export function CreateClientWizard({
           if (!rowResult.ok) {
             setSubmitError(
               formatActionErrorMessage(
-                `Client was created, but a row for ${formatDatatableTableTitle(dt.registeredTableName)} could not be saved: ${rowResult.message}`,
+                `Customer was created, but a row for ${formatDatatableTableTitle(dt.registeredTableName)} could not be saved: ${rowResult.message}`,
                 rowResult.fieldErrors
               )
             );
@@ -346,8 +346,8 @@ export function CreateClientWizard({
       <FormWizard
       steps={steps}
       currentStepId={resolvedStepId}
-      title="Create client"
-      description="Complete each step to register a new client."
+      title="Create customer"
+      description="Complete each step to register a new customer."
       onStepClick={goToStep}
       invalidStepIds={invalidStepIdsForRail}
       footer={
@@ -356,7 +356,7 @@ export function CreateClientWizard({
           showBack={currentIndex > 0}
           onBack={goBack}
           backDisabled={pending}
-          primaryLabel={isPreview ? 'Create client' : 'Next'}
+          primaryLabel={isPreview ? 'Create customer' : 'Next'}
           onPrimary={isPreview ? handleSubmit : tryNext}
           primaryLoading={isPreview && pending}
           primaryLoadingLabel="Creating…"

@@ -20,7 +20,7 @@ import { toSelectOptions } from '@/lib/form/select-options';
 import type { LoanAccountStepErrors } from '../validation';
 
 const GUARANTOR_TYPE_OPTIONS = [
-  { value: '1', label: 'Existing client', keywords: ['client'] },
+  { value: '1', label: 'Existing customer', keywords: ['customer', 'client'] },
   { value: '3', label: 'Staff', keywords: ['staff'] },
   { value: '4', label: 'External entity', keywords: ['external'] }
 ];
@@ -207,7 +207,7 @@ export function LoanAccountSecurityStep({
                   {needsEntityId ? (
                     <NumericField
                       id={`guarantor-entity-${index}`}
-                      label={row.guarantorTypeId === 3 ? 'Staff ID' : 'Client ID'}
+                      label={row.guarantorTypeId === 3 ? 'Staff ID' : 'Customer ID'}
                       required
                       integer
                       value={row.entityId ? String(row.entityId) : ''}

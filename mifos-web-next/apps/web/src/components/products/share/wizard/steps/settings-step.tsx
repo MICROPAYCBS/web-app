@@ -104,7 +104,7 @@ export function SettingsStep({
           />
           <SwitchField
             id="settings.allowDividendCalculationForInactiveClients"
-            label="Allow dividend calculation for inactive clients"
+            label="Allow dividend calculation for inactive customers"
             checked={settings.allowDividendCalculationForInactiveClients ?? false}
             onCheckedChange={(allowDividendCalculationForInactiveClients) =>
               onChange({ allowDividendCalculationForInactiveClients })

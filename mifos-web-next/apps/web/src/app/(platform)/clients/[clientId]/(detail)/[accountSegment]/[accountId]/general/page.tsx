@@ -38,6 +38,12 @@ export default async function ClientAccountGeneralPage({
   }
 
   const kind = productKindFromAccountSegment(accountSegment);
+
+  // Savings accounts use a dedicated route tree outside the client detail shell.
+  if (kind === 'savings') {
+    notFound();
+  }
+
   const copy = ACCOUNT_TITLES[kind];
 
   return (

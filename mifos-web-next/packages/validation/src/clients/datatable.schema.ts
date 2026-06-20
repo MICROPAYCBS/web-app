@@ -8,15 +8,69 @@
 
 import { z } from 'zod';
 
+export interface DatatableColumnValidationContext {
+  columnName: string;
+  columnDisplayType: string;
+  isColumnNullable?: boolean;
+  columnLength?: number | string;
+  validationRegex?: string;
+  validationExample?: string;
+  validationMessage?: string;
+  label?: string;
+}
+
 export const clientDatatableValuesSchema = z.record(z.unknown());
 
 export type ClientDatatableValuesInput = z.infer<typeof clientDatatableValuesSchema>;
 
-export interface DatatableColumnRule {
-  columnName: string;
+export interface DatatableColumnRule extends DatatableColumnValidationContext {
   controlName: string;
   label: string;
-  isColumnNullable?: boolean;
+}
+
+function isStringDatatableColumn(type: string): boolean {
+  return type === 'STRING' || type === 'TEXT';
+}
+
+function datatableColumnMaxLength(column: DatatableColumnValidationContext): number | undefined {
+  if (column.columnLength == null || column.columnLength === '') {
+    return undefined;
+  }
+  const parsed = Number(column.columnLength);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+export function validateDatatableColumnValue(
+  column: DatatableColumnValidationContext,
+  raw: unknown
+): string | undefined {
+  const label = column.label ?? column.columnName;
+  const value = raw === null || raw === undefined ? '' : String(raw).trim();
+
+  if (!column.isColumnNullable && value === '') {
+    return `${label} is required`;
+  }
+  if (value === '') {
+    return undefined;
+  }
+
+  const maxLength = datatableColumnMaxLength(column);
+  if (maxLength != null && value.length > maxLength) {
+    return `${label} must be at most ${maxLength} characters`;
+  }
+
+  if (isStringDatatableColumn(column.columnDisplayType) && column.validationRegex?.trim()) {
+    try {
+      const regex = new RegExp(column.validationRegex);
+      if (!regex.test(value)) {
+        return column.validationMessage?.trim() || `${label} format is invalid`;
+      }
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
 }
 
 export function validateClientDatatableValues(
@@ -26,12 +80,9 @@ export function validateClientDatatableValues(
   const fieldErrors: Record<string, string> = {};
 
   for (const column of columns) {
-    if (column.isColumnNullable) {
-      continue;
-    }
-    const raw = values[column.controlName];
-    if (raw === '' || raw === undefined || raw === null) {
-      fieldErrors[column.controlName] = `${column.label} is required`;
+    const validationError = validateDatatableColumnValue(column, values[column.controlName]);
+    if (validationError) {
+      fieldErrors[column.controlName] = validationError;
     }
   }
 

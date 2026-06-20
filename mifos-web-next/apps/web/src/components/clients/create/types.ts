@@ -33,6 +33,10 @@ export interface ClientGeneralFormState {
   isStaff?: boolean;
   mobileNo?: string;
   emailAddress?: string;
+  taxIdentificationNumber?: string;
+  alternativeMobileNo?: string;
+  alternativeEmailAddress?: string;
+  subIndustryId?: number;
   dateOfBirth?: string;
   clientTypeId?: number;
   clientClassificationId?: number;

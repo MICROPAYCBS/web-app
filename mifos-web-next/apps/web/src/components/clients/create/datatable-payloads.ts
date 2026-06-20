@@ -86,5 +86,5 @@ export function buildCreateClientDatatablePayloads(
 }
 
 export function mandatoryDatatableError(tableName: string): string {
-  return `${formatDatatableTableTitle(tableName)} is required before you can create this client. Add at least one complete record on that step.`;
+  return `${formatDatatableTableTitle(tableName)} is required before you can create this customer. Add at least one complete record on that step.`;
 }

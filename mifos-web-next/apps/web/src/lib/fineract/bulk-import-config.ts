@@ -110,7 +110,7 @@ export const BULK_IMPORT_DEFINITIONS: BulkImportDefinition[] = [
     formFields: 3,
     listPermission: 'READ_CLIENT',
     downloadPermission: 'READ_CLIENT',
-    description: 'Download clients template and upload client Excel files'
+    description: 'Download customers template and upload customer Excel files'
   },
   {
     name: 'Centers',
@@ -180,4 +180,9 @@ export const BULK_IMPORT_DEFINITIONS: BulkImportDefinition[] = [
 export function getBulkImportDefinition(name: string): BulkImportDefinition | undefined {
   const decoded = decodeURIComponent(name);
   return BULK_IMPORT_DEFINITIONS.find((entry) => entry.name === decoded);
+}
+
+/** User-facing label for bulk import types (API keys such as `Clients` stay unchanged). */
+export function bulkImportDisplayName(name: string): string {
+  return name === 'Clients' ? 'Customers' : name;
 }

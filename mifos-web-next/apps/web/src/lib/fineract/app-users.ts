@@ -11,6 +11,7 @@ import 'server-only';
 import type {
   EntityMappingOption,
   FineractUserDetail,
+  FineractUserEditContext,
   FineractUserListItem,
   FineractUserMutationResponse,
   FineractUserRoleRef,
@@ -80,14 +81,42 @@ function normalizeRoleRef(raw: unknown): FineractUserRoleRef | null {
   return { id, name };
 }
 
-function normalizeUserRoles(row: Record<string, unknown>): FineractUserRoleRef[] {
-  const source = row.selectedRoles ?? row.roles;
-  if (!Array.isArray(source)) {
+function normalizeRoleList(raw: unknown): FineractUserRoleRef[] {
+  if (!Array.isArray(raw)) {
     return [];
   }
-  return source
+  return raw
     .map((item) => normalizeRoleRef(item))
     .filter((item): item is FineractUserRoleRef => item !== null);
+}
+
+function normalizeUserRoles(row: Record<string, unknown>): FineractUserRoleRef[] {
+  const source = row.selectedRoles ?? row.roles;
+  return normalizeRoleList(source);
+}
+
+function mergeRoleOptions(
+  ...groups: FineractUserRoleRef[][]
+): FineractUserRoleRef[] {
+  const byId = new Map<number, FineractUserRoleRef>();
+  for (const group of groups) {
+    for (const role of group) {
+      byId.set(role.id, role);
+    }
+  }
+  return [...byId.values()].sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function mergeOfficeOptions(
+  offices: FineractUserTemplate['allowedOffices'],
+  current?: { id: number; name: string }
+): FineractUserTemplate['allowedOffices'] {
+  if (!current || offices.some((office) => office.id === current.id)) {
+    return offices;
+  }
+  return [...offices, { id: current.id, name: current.name }].sort((left, right) =>
+    left.name.localeCompare(right.name)
+  );
 }
 
 function normalizeStaffRef(raw: unknown): FineractUserStaffRef | null {
@@ -136,6 +165,8 @@ function normalizeUserDetail(raw: unknown): FineractUserDetail | null {
     officeName: typeof row.officeName === 'string' ? row.officeName.trim() : '',
     isSelfServiceUser: row.isSelfServiceUser === true,
     passwordNeverExpires: row.passwordNeverExpires === true,
+    isLoginRetriesEnabled: row.isLoginRetriesEnabled === true,
+    isPasswordResetAllowed: row.isPasswordResetAllowed === true,
     selectedRoles,
     staff
   };
@@ -215,11 +246,7 @@ function normalizeUserTemplate(raw: unknown): FineractUserTemplate {
         .filter((item): item is FineractUserTemplate['allowedOffices'][number] => item !== null)
     : [];
 
-  const availableRoles = Array.isArray(row.availableRoles)
-    ? row.availableRoles
-        .map((item) => normalizeRoleRef(item))
-        .filter((item): item is FineractUserRoleRef => item !== null)
-    : [];
+  const availableRoles = normalizeRoleList(row.availableRoles);
 
   return { allowedOffices, availableRoles };
 }
@@ -232,7 +259,8 @@ function buildCreatePayload(input: CreateUserInput): Record<string, unknown> {
     officeId: input.officeId,
     roles: input.roles,
     sendPasswordToEmail: input.sendPasswordToEmail,
-    passwordNeverExpires: input.passwordNeverExpires ?? false
+    passwordNeverExpires: input.passwordNeverExpires ?? false,
+    isLoginRetriesEnabled: input.isLoginRetriesEnabled ?? false
   };
 
   if (input.email?.trim()) {
@@ -254,14 +282,17 @@ function buildUpdatePayload(input: UpdateUserInput): Record<string, unknown> {
     username: input.username,
     firstname: input.firstname,
     lastname: input.lastname,
-    email: input.email,
     officeId: input.officeId,
+    staffId: input.staffId ?? null,
     roles: input.roles,
-    passwordNeverExpires: input.passwordNeverExpires ?? false
+    passwordNeverExpires: input.passwordNeverExpires ?? false,
+    isLoginRetriesEnabled: input.isLoginRetriesEnabled ?? false,
+    isPasswordResetAllowed: input.isPasswordResetAllowed ?? false
   };
 
-  if (input.staffId != null) {
-    payload.staffId = input.staffId;
+  const email = input.email?.trim();
+  if (email) {
+    payload.email = email;
   }
 
   return payload;
@@ -283,6 +314,33 @@ export async function getUser(userId: number): Promise<FineractUserDetail | null
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(`${USERS_PATH}/${userId}`);
   return normalizeUserDetail(raw);
+}
+
+export async function getUserForEdit(userId: number): Promise<FineractUserEditContext | null> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`${USERS_PATH}/${userId}`, { template: 'true' });
+  const user = normalizeUserDetail(raw);
+  if (!user) {
+    return null;
+  }
+
+  const row = raw as Record<string, unknown>;
+  const template = normalizeUserTemplate(raw);
+
+  return {
+    user,
+    template: {
+      allowedOffices: mergeOfficeOptions(template.allowedOffices, {
+        id: user.officeId,
+        name: user.officeName || `Office ${user.officeId}`
+      }),
+      availableRoles: mergeRoleOptions(
+        template.availableRoles,
+        normalizeRoleList(row.availableRoles),
+        user.selectedRoles
+      )
+    }
+  };
 }
 
 export async function listStaffByOffice(officeId: number): Promise<EntityMappingOption[]> {

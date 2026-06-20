@@ -53,13 +53,9 @@ function validateAccountStep(mode: UserWizardMode, draft: UserWizardDraft): Step
     errors.lastname = 'Last name must start with a letter.';
   }
 
-  if (mode === 'edit') {
-    const email = draft.email.trim();
-    if (!email) {
-      errors.email = 'Email is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Enter a valid email address.';
-    }
+  const email = draft.email.trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = 'Enter a valid email address.';
   }
 
   return errors;
@@ -69,7 +65,7 @@ function validateAccessStep(draft: UserWizardDraft): StepErrors {
   const errors: StepErrors = {};
   const officeId = Number(draft.officeId);
   if (!draft.officeId || !Number.isFinite(officeId) || officeId <= 0) {
-    errors.officeId = 'Office is required.';
+    errors.officeId = 'Branch is required.';
   }
   if (!draft.roles.length) {
     errors.roles = 'Select at least one role.';
@@ -149,6 +145,7 @@ export function draftToCreatePayload(draft: UserWizardDraft): CreateUserInput {
     roles: draft.roles,
     sendPasswordToEmail: canSendPasswordToEmail(draft),
     passwordNeverExpires: draft.passwordNeverExpires,
+    isLoginRetriesEnabled: draft.isLoginRetriesEnabled,
     password: draft.password,
     repeatPassword: draft.repeatPassword
   };
@@ -161,9 +158,11 @@ export function draftToUpdatePayload(draft: UserWizardDraft): UpdateUserInput {
     lastname: draft.lastname.trim(),
     email: draft.email.trim(),
     officeId: Number(draft.officeId),
-    staffId: draft.staffId ? Number(draft.staffId) : undefined,
+    staffId: draft.staffId ? Number(draft.staffId) : null,
     roles: draft.roles,
-    passwordNeverExpires: draft.passwordNeverExpires
+    passwordNeverExpires: draft.passwordNeverExpires,
+    isLoginRetriesEnabled: draft.isLoginRetriesEnabled,
+    isPasswordResetAllowed: draft.isPasswordResetAllowed
   };
 }
 

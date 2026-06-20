@@ -95,7 +95,7 @@ export function FamilyMemberFormSheet({
       open={open}
       onOpenChange={handleOpenChange}
       title={member ? 'Edit next of kin' : 'Add next of kin'}
-      description="Optional household or emergency contact details for this client."
+      description="Optional household or emergency contact details for this customer."
       formId={formId}
       submitLabel="Save"
       onSubmit={handleSave}
@@ -184,7 +184,7 @@ export function FamilyMemberFormSheet({
           label="Dependent"
           optional
           checked={form.isDependent ?? false}
-          description="Mark if this next of kin contact is financially dependent on the client."
+          description="Mark if this next of kin contact is financially dependent on the customer."
           onCheckedChange={(checked) => setForm({ ...form, isDependent: checked })}
         />
       </form>

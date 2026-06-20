@@ -8,6 +8,7 @@
 
 import { z } from 'zod';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
+import { ugandaMobileInternationalSchema, optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 
 const namePattern = /^[A-Za-z].*/;
 const fineractDate = z.string().trim().min(1);
@@ -64,8 +65,12 @@ const clientBaseSchema = z.object({
   staffId: z.coerce.number().int().positive().optional(),
   legalFormId: z.coerce.number().int(),
   externalId: z.string().trim().max(100).optional(),
-  mobileNo: z.string().trim().max(50).optional(),
+  mobileNo: ugandaMobileInternationalSchema,
   emailAddress: z.string().trim().email().optional().or(z.literal('')),
+  taxIdentificationNumber: z.string().trim().max(50).optional().or(z.literal('')),
+  alternativeMobileNo: optionalUgandaMobileInternationalSchema,
+  alternativeEmailAddress: z.string().trim().email().optional().or(z.literal('')),
+  subIndustryId: z.coerce.number().int().positive().optional(),
   dateOfBirth: optionalFineractDate,
   genderId: z.coerce.number().int().positive().optional(),
   isStaff: z.boolean().optional(),
@@ -121,17 +126,10 @@ export const createClientSchema = z
         path: ['staffId']
       });
     }
-    if (!data.mobileNo?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Phone number is required',
-        path: ['mobileNo']
-      });
-    }
     if (!data.clientTypeId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Client type is required',
+        message: 'Customer type is required',
         path: ['clientTypeId']
       });
     }
@@ -145,14 +143,14 @@ export const createClientSchema = z
     if (data.active && !data.activationDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Activation date is required when client is active',
+        message: 'Activation date is required when the customer is active',
         path: ['activationDate']
       });
     }
     if (data.savingsProductId && !data.active) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Client must be active to open a savings account on creation',
+        message: 'Customer must be active to open a savings account on creation',
         path: ['savingsProductId']
       });
     }
@@ -181,7 +179,7 @@ export const createClientSheetSchema = z
     if (data.active && !data.activationDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Activation date is required when client is active',
+        message: 'Activation date is required when the customer is active',
         path: ['activationDate']
       });
     }

@@ -30,7 +30,7 @@ async function requireUpdatePermission(): Promise<ClientFamilyActionResult | nul
   try {
     assertCan(session, resolvePermission('clients.update'));
   } catch {
-    return { ok: false, message: 'You do not have permission to update clients.' };
+    return { ok: false, message: 'You do not have permission to update customers.' };
   }
   return null;
 }

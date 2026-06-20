@@ -35,7 +35,7 @@ export async function updateClientAction(
   try {
     assertCan(session, resolvePermission('clients.update'));
   } catch {
-    return { ok: false, message: 'You do not have permission to update clients.' };
+    return { ok: false, message: 'You do not have permission to update customers.' };
   }
 
   const parsed = updateClientSchema.safeParse(raw);
@@ -67,6 +67,6 @@ export async function updateClientAction(
     revalidatePath(`/clients/${clientId}/edit`);
     return { ok: true };
   } catch (err) {
-    return toFineractActionError(err, 'Could not update client.');
+    return toFineractActionError(err, 'Could not update customer.');
   }
 }

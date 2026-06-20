@@ -57,3 +57,21 @@ export async function deleteSystemDatatable(registeredTableName: string): Promis
   const fineract = await createFineractClient();
   await fineract.delete(`/datatables/${encodeURIComponent(registeredTableName)}`);
 }
+
+export interface SyncDatatableColumnValidationsInput {
+  columnValidations: {
+    columnName: string;
+    validationRegex?: string;
+    validationExample?: string;
+    validationMessage?: string;
+  }[];
+  deleteColumnNames?: string[];
+}
+
+export async function syncDatatableColumnValidations(
+  registeredTableName: string,
+  body: SyncDatatableColumnValidationsInput
+): Promise<void> {
+  const fineract = await createFineractClient();
+  await fineract.put(`/datatables/${encodeURIComponent(registeredTableName)}/columnvalidations`, body);
+}

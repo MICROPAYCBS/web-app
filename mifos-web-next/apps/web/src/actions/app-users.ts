@@ -69,14 +69,14 @@ export async function fetchStaffByOfficeAction(
   }
 
   if (!Number.isFinite(officeId)) {
-    return { ok: false, message: 'Invalid office id.' };
+    return { ok: false, message: 'Invalid branch id.' };
   }
 
   try {
     const data = await listStaffByOffice(officeId);
     return { ok: true, data };
   } catch (error) {
-    return toFineractActionError(error, 'Failed to load staff for the selected office.');
+    return toFineractActionError(error, 'Failed to load staff for the selected branch.');
   }
 }
 

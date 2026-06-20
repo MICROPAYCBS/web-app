@@ -49,6 +49,9 @@ export interface FineractDatatableColumnHeader {
   isColumnUnique?: boolean;
   isColumnIndexed?: boolean;
   columnValues?: { id: number; value: string }[];
+  validationRegex?: string;
+  validationExample?: string;
+  validationMessage?: string;
 }
 
 export interface FineractClientDatatableTemplate {
@@ -175,6 +178,10 @@ export interface FineractClientDetail extends FineractClientSummary {
   fullname?: string;
   mobileNo?: string;
   emailAddress?: string;
+  taxIdentificationNumber?: string;
+  alternativeMobileNo?: string;
+  alternativeEmailAddress?: string;
+  subIndustryId?: number;
   dateOfBirth?: number[] | string;
   isStaff?: boolean;
   legalForm?: FineractEnumOption;

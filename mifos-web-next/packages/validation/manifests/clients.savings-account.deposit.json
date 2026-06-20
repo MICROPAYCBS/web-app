@@ -1,0 +1,11 @@
+{
+  "schemaId": "clients.savings-account.deposit",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.SavingsAccountTransactionsApiResource"
+  ],
+  "fields": {
+    "transactionDate": { "required": true, "type": "date" },
+    "transactionAmount": { "required": true, "type": "money" },
+    "paymentTypeId": { "required": true, "type": "id" }
+  }
+}

@@ -62,7 +62,7 @@ export function UploadClientImageDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload client photo</DialogTitle>
+          <DialogTitle>Upload customer photo</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <Input

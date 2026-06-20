@@ -19,7 +19,7 @@ function transferStatusDescription(clientStatus: ClientTransferContext['clientSt
   if (clientStatus === 'transferOnHold') {
     return 'The transfer is accepted but waiting for blockers to clear (for example held savings balances or a future transfer date). Release holds below; the move to the destination branch completes automatically when ready.';
   }
-  return 'This client is proposed for transfer. The destination branch can accept or reject; the source branch can undo the proposal before it is accepted.';
+  return 'This customer is proposed for transfer. The destination branch can accept or reject; the source branch can undo the proposal before it is accepted.';
 }
 
 export function ClientTransferStatusPanel({
@@ -49,7 +49,7 @@ export function ClientTransferStatusPanel({
           <dd className="font-medium">{context.transferDateLabel ?? '—'}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Client status</dt>
+          <dt className="text-muted-foreground">Customer status</dt>
           <dd className="font-medium capitalize">
             {context.clientStatus === 'transferOnHold' ? 'On hold' : 'In progress'}
           </dd>

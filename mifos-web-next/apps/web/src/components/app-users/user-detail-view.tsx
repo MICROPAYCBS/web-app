@@ -131,6 +131,8 @@ export function UserDetailView({
             <DetailField label="Staff">{user.staff?.displayName || '—'}</DetailField>
             <DetailField label="Self service user">{yesNoLabel(user.isSelfServiceUser)}</DetailField>
             <DetailField label="Password never expires">{yesNoLabel(user.passwordNeverExpires)}</DetailField>
+            <DetailField label="Login retry limit">{yesNoLabel(user.isLoginRetriesEnabled)}</DetailField>
+            <DetailField label="Allow password reset">{yesNoLabel(user.isPasswordResetAllowed)}</DetailField>
           </DetailFieldGrid>
         }
       >

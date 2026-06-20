@@ -36,8 +36,15 @@ export interface FineractUserDetail {
   officeName: string;
   isSelfServiceUser: boolean;
   passwordNeverExpires: boolean;
+  isLoginRetriesEnabled: boolean;
+  isPasswordResetAllowed: boolean;
   selectedRoles: FineractUserRoleRef[];
   staff?: FineractUserStaffRef | null;
+}
+
+export interface FineractUserEditContext {
+  user: FineractUserDetail;
+  template: FineractUserTemplate;
 }
 
 export interface FineractUserTemplate {

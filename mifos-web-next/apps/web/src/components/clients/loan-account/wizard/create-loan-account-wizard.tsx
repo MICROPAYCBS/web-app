@@ -446,7 +446,7 @@ export function CreateLoanAccountWizard({
 
             ? `Complete each step to submit a loan application for ${clientDisplayName}.`
 
-            : 'Complete each step to submit a loan application for this client.'
+            : 'Complete each step to submit a loan application for this customer.'
 
         }
 

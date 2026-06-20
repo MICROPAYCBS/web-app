@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { createPaymentTypeAction, updatePaymentTypeAction } from '@/actions/payment-type';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { NumericField } from '@/components/composites/numeric-field';
 import { TextField } from '@/components/composites/text-field';
@@ -169,13 +170,11 @@ export function PaymentTypeFormSheet({
       submitDisabled={!canSubmit}
       submitLoading={pending}
       className="data-[side=right]:sm:max-w-lg"
+      error={
+        submitError ? <FormErrorAlert>{submitError}</FormErrorAlert> : null
+      }
     >
       <form id={formId} className="grid gap-4" onSubmit={handleSubmit}>
-        {submitError ? (
-          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {submitError}
-          </p>
-        ) : null}
         <TextField
           id={`${formId}-name`}
           label="Payment type"

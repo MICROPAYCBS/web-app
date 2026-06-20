@@ -1,0 +1,7 @@
+{
+  "command": "groups.update",
+  "fineract": {
+    "method": "PUT",
+    "path": "/groups/{groupId}"
+  }
+}

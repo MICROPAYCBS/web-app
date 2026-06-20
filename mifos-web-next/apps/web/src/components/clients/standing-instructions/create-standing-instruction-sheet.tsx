@@ -268,7 +268,7 @@ export function CreateStandingInstructionSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="New standing instruction"
-      description="Configure an automated transfer from this client's account."
+      description="Configure an automated transfer from this customer's account."
       formId={CREATE_STANDING_INSTRUCTION_FORM_ID}
       submitLabel="Create"
       submitLoading={pending}
@@ -421,7 +421,7 @@ export function CreateStandingInstructionSheet({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">Own account</SelectItem>
-                <SelectItem value="2">Other client</SelectItem>
+                <SelectItem value="2">Other customer</SelectItem>
               </SelectContent>
             </Select>
             <FieldError message={fieldErrors.destination} />
@@ -458,7 +458,7 @@ export function CreateStandingInstructionSheet({
               disabled={formDisabled || lockBeneficiary}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select client" />
+                <SelectValue placeholder="Select customer" />
               </SelectTrigger>
               <SelectContent>
                 {(template.toClientOptions ?? []).map((client) => (

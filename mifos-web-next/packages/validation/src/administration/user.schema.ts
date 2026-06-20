@@ -16,6 +16,12 @@ const roleIdsSchema = z
   .array(z.number().int().positive())
   .min(1, 'Select at least one role.');
 
+const userSignInPolicyFields = {
+  passwordNeverExpires: z.boolean().optional(),
+  isLoginRetriesEnabled: z.boolean().optional(),
+  isPasswordResetAllowed: z.boolean().optional()
+};
+
 const userIdentityFields = {
   username: z.string().trim().min(1, 'Login name is required.'),
   firstname: z
@@ -28,15 +34,15 @@ const userIdentityFields = {
     .trim()
     .min(1, 'Last name is required.')
     .regex(personNamePattern, 'Last name must start with a letter.'),
-  officeId: z.number().int().positive('Office is required.'),
-  staffId: z.number().int().positive().optional(),
+  officeId: z.number().int().positive('Branch is required.'),
   roles: roleIdsSchema,
-  passwordNeverExpires: z.boolean().optional()
+  ...userSignInPolicyFields
 };
 
 export const createUserSchema = z
   .object({
     ...userIdentityFields,
+    staffId: z.number().int().positive().optional(),
     email: z.string().trim().email('Enter a valid email address.').optional().or(z.literal('')),
     sendPasswordToEmail: z.boolean().default(false),
     password: z.string().optional(),
@@ -84,10 +90,22 @@ export const createUserSchema = z
     }
   });
 
-export const updateUserSchema = z.object({
-  ...userIdentityFields,
-  email: z.string().trim().min(1, 'Email is required.').email('Enter a valid email address.')
-});
+export const updateUserSchema = z
+  .object({
+    ...userIdentityFields,
+    staffId: z.number().int().positive().nullable().optional(),
+    email: z.string().trim().optional().or(z.literal(''))
+  })
+  .superRefine((value, ctx) => {
+    const email = value.email?.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Enter a valid email address.',
+        path: ['email']
+      });
+    }
+  });
 
 export const changeUserPasswordSchema = z
   .object({

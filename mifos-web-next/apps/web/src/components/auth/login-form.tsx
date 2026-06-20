@@ -8,14 +8,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import Image from 'next/image';
+import { ShieldCheckIcon } from 'lucide-react';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
+import { LoginMarketingPanel } from '@/components/auth/login-marketing-panel';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
 import { LoginActiveServer } from '@/components/auth/login-active-server';
-import type { ServerHealthSnapshot } from '@/components/servers/server-health-indicator';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import type { FineractServerProfile } from '@mifos/servers';
@@ -29,7 +28,6 @@ export interface LoginFormProps {
   loginError?: string | null;
   canSignIn?: boolean;
   onManageServers: () => void;
-  serverHealth?: ServerHealthSnapshot;
   className?: string;
 }
 
@@ -40,32 +38,41 @@ export function LoginForm({
   loginError = null,
   canSignIn = true,
   onManageServers,
-  serverHealth,
   className
 }: LoginFormProps) {
   return (
-    <div className={cn('flex flex-col gap-6', className)}>
-      <Card className="overflow-hidden p-0">
-        <CardContent className="grid p-0 md:grid-cols-2">
-          <div className="relative flex flex-col p-6 md:p-8">
-            <ThemeToggle variant="icon" className="absolute top-4 right-4" />
-            <FieldGroup>
-              <div className="pr-10 text-center">
-                <p className="text-sm font-medium text-muted-foreground">{APP_NAME}</p>
-                <h1 className="text-2xl font-bold">Sign in</h1>
-              </div>
+    <div className={cn('grid min-h-svh lg:grid-cols-2', className)}>
+      <LoginMarketingPanel className="min-h-48 lg:min-h-svh" />
 
+      <div className="relative flex flex-col bg-background">
+        <div className="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
+          <ThemeToggle variant="icon" />
+        </div>
+
+        <div className="flex flex-1 flex-col justify-center px-6 py-10 sm:px-10 lg:px-16">
+          <div className="mx-auto w-full max-w-sm space-y-8">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                Sign in to {APP_NAME}
+              </h1>
+              <p className="text-sm text-muted-foreground">Enter your institution credentials.</p>
+            </div>
+
+            <FieldGroup className="gap-0">
               {canSignIn && activeServer ? (
                 <LoginActiveServer
                   server={activeServer}
-                  health={serverHealth}
                   onManageServers={onManageServers}
-                  className="mt-6"
+                  className="mb-1"
                 />
               ) : null}
 
               {canSignIn ? (
-                <form method="post" action="/api/auth/login" className="mt-4 space-y-4">
+                <form
+                  method="post"
+                  action="/api/auth/login"
+                  className={cn('space-y-4', activeServer ? 'mt-5' : 'mt-0')}
+                >
                   <input type="hidden" name="redirectTo" value={redirectTo} />
 
                   <Field>
@@ -75,6 +82,7 @@ export function LoginForm({
                       name="username"
                       type="text"
                       autoComplete="username"
+                      className="h-10 bg-background"
                       required
                     />
                   </Field>
@@ -85,25 +93,33 @@ export function LoginForm({
                       name="password"
                       type="password"
                       autoComplete="current-password"
+                      className="h-10 bg-background"
                       required
                     />
                   </Field>
 
                   {loginError ? (
-                    <p className="text-sm text-destructive" role="alert">
+                    <div
+                      className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                      role="alert"
+                    >
                       {loginError}
-                    </p>
+                    </div>
                   ) : null}
 
-                  <Field>
-                    <Button type="submit" className="w-full">
+                  <Field className="pt-2">
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="h-11 w-full text-base font-semibold shadow-sm"
+                    >
                       Sign in
                     </Button>
                   </Field>
 
                   {demoEnabled ? (
                     <>
-                      <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card" />
+                      <FieldSeparator />
                       <Field>
                         <DemoLoginButton className="w-full" />
                       </Field>
@@ -111,25 +127,19 @@ export function LoginForm({
                   ) : null}
                 </form>
               ) : (
-                <div className="mt-6">
-                  <LoginNoServerEmpty onManageServers={onManageServers} />
-                </div>
+                <LoginNoServerEmpty onManageServers={onManageServers} />
               )}
             </FieldGroup>
           </div>
+        </div>
 
-          <div className="relative hidden min-h-[min(100%,32rem)] md:block">
-            <Image
-              src="/images/login-hero-professionals-branded.png"
-              alt="MicroPay Banking professionals collaborating"
-              fill
-              className="object-cover"
-              sizes="(min-width: 768px) 50vw, 0vw"
-              priority
-            />
-          </div>
-        </CardContent>
-      </Card>
+        <div className="border-t border-border/80 bg-muted/30 px-6 py-4 sm:px-10 lg:px-16">
+          <p className="mx-auto flex max-w-sm items-center gap-2 text-xs text-muted-foreground">
+            <ShieldCheckIcon className="size-4 shrink-0 text-primary" aria-hidden />
+            Authorized personnel only. Activity is logged for security and compliance.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

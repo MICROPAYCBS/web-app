@@ -33,5 +33,8 @@ export default async function ReportRunPage({
     notFound();
   }
 
-  return <ReportRunPageContent report={report} />;
+  const canEdit =
+    can(session, resolvePermission('system.reports')) && can(session, 'UPDATE_REPORT');
+
+  return <ReportRunPageContent report={report} canEdit={canEdit} />;
 }

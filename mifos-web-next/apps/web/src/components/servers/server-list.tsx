@@ -6,6 +6,7 @@ import { useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
 import { selectServerAction } from '@/actions/servers';
 import { EmptyState } from '@/components/composites';
+import { finishServerSelection } from '@/lib/servers/finish-server-selection';
 import { cn } from '@/lib/utils';
 
 export function ServerList({
@@ -47,10 +48,7 @@ export function ServerList({
               onClick={() =>
                 startTransition(async () => {
                   const result = await selectServerAction(server.id);
-                  if (result.ok) {
-                    router.refresh();
-                    onSelected?.();
-                  }
+                  finishServerSelection(result, router, onSelected);
                 })
               }
             >

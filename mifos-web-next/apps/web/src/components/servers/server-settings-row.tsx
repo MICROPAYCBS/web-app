@@ -12,6 +12,7 @@ import {
   selectServerAction,
   updateServerAction
 } from '@/actions/servers';
+import { finishServerSelection } from '@/lib/servers/finish-server-selection';
 
 export function ServerSettingsRow({
   server,
@@ -32,7 +33,11 @@ export function ServerSettingsRow({
     tenantId: server.tenantId
   };
 
-  function afterSuccess() {
+  function afterSuccess(signedOut?: boolean) {
+    if (signedOut) {
+      window.location.assign('/login');
+      return;
+    }
     router.refresh();
     onChanged?.();
   }
@@ -56,7 +61,7 @@ export function ServerSettingsRow({
               startTransition(async () => {
                 const result = await selectServerAction(server.id);
                 if (result.ok) {
-                  afterSuccess();
+                  afterSuccess(result.signedOut);
                 }
               })
             }

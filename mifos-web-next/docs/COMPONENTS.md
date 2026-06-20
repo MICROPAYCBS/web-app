@@ -115,6 +115,7 @@ Client detail, loan account, savings account, and similar screens are **mostly r
 | Composite | Use |
 |-----------|-----|
 | `DetailPage` | Page shell: header slot, optional tabs, content area |
+| `PageHeader` | Fixed title region; use `pageHeaderPadding` / `pageHeaderContentSpacing` from `@/lib/platform-layout` — do not hand-roll `pt-*` on detail/list/wizard headers |
 | `DetailHeader` | Entity name, `StatusBadge`, ids, office/product sublines, actions `DropdownMenu` |
 | `DetailSummary` | Optional 2–4 KPI cards (e.g. outstanding balance, arrears) |
 | `DetailTabs` | shadcn `Tabs`; sync `?tab=` when deep links matter |

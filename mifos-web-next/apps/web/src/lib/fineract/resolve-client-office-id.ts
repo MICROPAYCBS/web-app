@@ -44,5 +44,5 @@ export async function resolveClientOfficeId(
     return fromEdit;
   }
 
-  throw new Error('Could not determine the client office for standing instructions.');
+  throw new Error('Could not determine the customer office for standing instructions.');
 }

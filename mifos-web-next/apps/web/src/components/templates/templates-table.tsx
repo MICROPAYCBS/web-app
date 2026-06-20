@@ -100,7 +100,7 @@ export function TemplatesTable({ templates }: { templates: FineractTemplateListI
         table={table}
         stickyHeader={false}
         emptyMessage="No templates found"
-        emptyDescription="Create a template to generate documents or SMS messages from client and loan data."
+        emptyDescription="Create a template to generate documents or SMS messages from customer and loan data."
       />
       <DataTablePagination table={table} totalRecords={table.getFilteredRowModel().rows.length} />
     </div>

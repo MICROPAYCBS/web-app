@@ -17,6 +17,7 @@ import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import {
   COLUMN_TYPE_OPTIONS,
+  isStringLikeColumnType,
   type SystemDatatableColumnDraft,
   type SystemDatatableColumnKind
 } from '@/lib/fineract/system-datatable-form';
@@ -41,6 +42,9 @@ export function SystemDatatableColumnSheet({
   const [type, setType] = useState<SystemDatatableColumnType>('String');
   const [length, setLength] = useState('');
   const [code, setCode] = useState<string | undefined>();
+  const [validationRegex, setValidationRegex] = useState('');
+  const [validationExample, setValidationExample] = useState('');
+  const [validationMessage, setValidationMessage] = useState('');
   const [mandatory, setMandatory] = useState(false);
   const [unique, setUnique] = useState(false);
   const [indexed, setIndexed] = useState(false);
@@ -54,6 +58,9 @@ export function SystemDatatableColumnSheet({
     setType(column?.columnDisplayType ?? 'String');
     setLength(column?.columnLength != null ? String(column.columnLength) : '');
     setCode(column?.columnCode?.trim() || undefined);
+    setValidationRegex(column?.validationRegex ?? '');
+    setValidationExample(column?.validationExample ?? '');
+    setValidationMessage(column?.validationMessage ?? '');
     setMandatory(column ? column.isColumnNullable === false : false);
     setUnique(column?.isColumnUnique ?? false);
     setIndexed(column?.isColumnIndexed ?? false);
@@ -64,6 +71,7 @@ export function SystemDatatableColumnSheet({
   const lengthDisabled = type !== 'String' || (mode === 'edit' && isExisting);
   const codeDisabled = type !== 'Dropdown' || (mode === 'edit' && isExisting);
   const flagsDisabled = mode === 'edit' && isExisting;
+  const showValidationFields = isStringLikeColumnType(type);
 
   const canSubmit = useMemo(() => {
     if (!name.trim()) {
@@ -89,6 +97,14 @@ export function SystemDatatableColumnSheet({
     if (type === 'Dropdown' && !codeDisabled && !code) {
       nextErrors.code = 'Code is required for dropdown columns';
     }
+    if (validationRegex.trim()) {
+      try {
+        // eslint-disable-next-line no-new -- validate admin-entered regex
+        new RegExp(validationRegex.trim());
+      } catch {
+        nextErrors.validationRegex = 'Validation regex is invalid';
+      }
+    }
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
       return;
@@ -104,6 +120,9 @@ export function SystemDatatableColumnSheet({
       isColumnIndexed: indexed,
       columnLength: type === 'String' ? Number(length) : undefined,
       columnCode: type === 'Dropdown' ? code : undefined,
+      validationRegex: showValidationFields ? validationRegex.trim() || undefined : undefined,
+      validationExample: showValidationFields ? validationExample.trim() || undefined : undefined,
+      validationMessage: showValidationFields ? validationMessage.trim() || undefined : undefined,
       kind,
       originalColumnName:
         mode === 'edit' && column?.originalColumnName
@@ -122,7 +141,7 @@ export function SystemDatatableColumnSheet({
       title={mode === 'add' ? 'Add column' : 'Edit column'}
       description={
         isExisting
-          ? 'Existing columns can only be renamed or have their dropdown code updated.'
+          ? 'Existing columns can be renamed or have validation rules updated. Type and length are fixed after creation.'
           : 'Define the column type and validation flags.'
       }
       submitLabel="Save column"
@@ -171,6 +190,41 @@ export function SystemDatatableColumnSheet({
             error={fieldErrors.code}
             emptyMessage="No codes found"
           />
+        ) : null}
+
+        {showValidationFields ? (
+          <div className="space-y-4 rounded-lg border border-border/60 p-4">
+            <div>
+              <p className="text-sm font-medium">String validation</p>
+              <p className="text-xs text-muted-foreground">
+                Optional rules applied when users enter data in this column.
+              </p>
+            </div>
+            <TextField
+              label="Validation regex"
+              optional
+              value={validationRegex}
+              onChange={setValidationRegex}
+              error={fieldErrors.validationRegex}
+              placeholder="^\\+256[0-9]{9}$"
+            />
+            <TextField
+              label="Example"
+              optional
+              value={validationExample}
+              onChange={setValidationExample}
+              error={fieldErrors.validationExample}
+              hint="Shown as the input placeholder when entering data."
+            />
+            <TextField
+              label="Validation message"
+              optional
+              value={validationMessage}
+              onChange={setValidationMessage}
+              error={fieldErrors.validationMessage}
+              hint="Shown when the value does not match the regex."
+            />
+          </div>
         ) : null}
 
         <SwitchField

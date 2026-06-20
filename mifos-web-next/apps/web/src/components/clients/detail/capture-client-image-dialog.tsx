@@ -126,7 +126,7 @@ export function CaptureClientImageDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Capture client photo</DialogTitle>
+          <DialogTitle>Capture customer photo</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           {cameraError ? (

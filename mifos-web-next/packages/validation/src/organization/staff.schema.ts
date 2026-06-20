@@ -7,9 +7,9 @@
  */
 
 import { z } from 'zod';
+import { optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 
 const staffNamePattern = /^[A-Za-z].*/;
-const mobilePattern = /^\+?[0-9. ()-]{0,25}$/;
 const fineractDate = z.string().trim().min(1);
 
 const staffBaseSchema = z.object({
@@ -31,13 +31,7 @@ const staffBaseSchema = z.object({
       message: 'Last name cannot begin with a number or special character'
     }),
   isLoanOfficer: z.boolean().default(false),
-  mobileNo: z
-    .string()
-    .trim()
-    .max(25)
-    .regex(mobilePattern, { message: 'Enter a valid phone number' })
-    .optional()
-    .or(z.literal('')),
+  mobileNo: optionalUgandaMobileInternationalSchema.optional(),
   joiningDate: fineractDate,
   dateFormat: z.string().optional(),
   locale: z.string().optional()

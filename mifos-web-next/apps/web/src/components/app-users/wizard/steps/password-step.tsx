@@ -91,12 +91,6 @@ export function PasswordStep({
             )}
           </div>
         ) : null}
-
-        <SwitchField
-          label="Password never expires"
-          checked={draft.passwordNeverExpires}
-          onCheckedChange={(checked) => onChange({ passwordNeverExpires: checked })}
-        />
       </div>
     </div>
   );

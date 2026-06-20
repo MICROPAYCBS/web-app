@@ -57,7 +57,7 @@ export function LoanAccountPayoutStep({
         <SwitchField
           id="disburse-to-savings"
           label="Disburse to savings"
-          description="Move funds directly to the client's linked savings account upon disbursal."
+          description="Move funds directly to the customer's linked savings account upon disbursal."
           checked={draft.disburseToSavings ?? false}
           onCheckedChange={(disburseToSavings) => onChange({ disburseToSavings })}
           error={errors.disburseToSavings}

@@ -24,7 +24,7 @@ export function SystemDataTablesPageContent({
   return (
     <ListPage
       title="Data tables"
-      description="Custom field definitions attached to clients, accounts, and other records."
+      description="Custom field definitions attached to customers, accounts, and other records."
       actions={
         <Can permission="CREATE_DATATABLE">
           <Link href="/system/data-tables/create" className={cn(buttonVariants())}>

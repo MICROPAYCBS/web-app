@@ -9,7 +9,7 @@
 import type { ReactNode } from 'react';
 import { TitleWithHint } from '@/components/composites/field-hint-tooltip';
 import { PageHeader } from '@/components/composites/page-header';
-import { platformInset, platformInsetX } from '@/lib/platform-layout';
+import { pageHeaderContentSpacing, platformInset } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export function ListPage({
@@ -41,9 +41,9 @@ export function ListPage({
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col', className)}>
       <PageHeader>
-        <div className="space-y-4">
+        <div className={pageHeaderContentSpacing}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1 pt-1">
+            <div className="space-y-1">
               {backLink ? <div>{backLink}</div> : null}
               <h1 className="text-2xl font-semibold tracking-tight">
                 <TitleWithHint hint={titleHint} hintAriaLabel={titleHintAriaLabel}>

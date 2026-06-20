@@ -8,6 +8,21 @@
 
 export { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './clients/legal-form';
 export {
+  UGANDA_MOBILE_INTERNATIONAL_MESSAGE,
+  UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER,
+  UGANDA_MOBILE_INTERNATIONAL_REGEX,
+  isValidUgandaMobileInternational,
+  optionalUgandaMobileInternationalSchema,
+  ugandaMobileInternationalSchema
+} from './uganda-mobile';
+export {
+  UGANDA_NIN_MESSAGE,
+  UGANDA_NIN_PATTERN,
+  UGANDA_NIN_PLACEHOLDER,
+  isValidUgandaNin,
+  normalizeUgandaNin
+} from './uganda-nin';
+export {
   clientAddressEntrySchema,
   clientNonPersonDetailsSchema,
   createClientSchema,
@@ -27,8 +42,10 @@ export {
 export {
   clientDatatableValuesSchema,
   validateClientDatatableValues,
+  validateDatatableColumnValue,
   type ClientDatatableValuesInput,
-  type DatatableColumnRule
+  type DatatableColumnRule,
+  type DatatableColumnValidationContext
 } from './clients/datatable.schema';
 export {
   clientDocumentMetadataSchema,
@@ -69,6 +86,24 @@ export {
   type ClientUpdateSavingsCommandInput,
   type ClientWithdrawCommandInput
 } from './clients/client-command.schema';
+export {
+  savingsAccountActivateCommandSchema,
+  savingsAccountApproveCommandSchema,
+  savingsAccountBlockCommandSchema,
+  savingsAccountCloseCommandSchema,
+  savingsAccountRejectCommandSchema,
+  savingsAccountTransactionCommandSchema,
+  savingsAccountUndoApprovalCommandSchema,
+  savingsAccountWithdrawnByApplicantCommandSchema,
+  type SavingsAccountActivateCommandInput,
+  type SavingsAccountApproveCommandInput,
+  type SavingsAccountBlockCommandInput,
+  type SavingsAccountCloseCommandInput,
+  type SavingsAccountRejectCommandInput,
+  type SavingsAccountTransactionCommandInput,
+  type SavingsAccountUndoApprovalCommandInput,
+  type SavingsAccountWithdrawnByApplicantCommandInput
+} from './clients/savings-account-command.schema';
 export {
   createSystemDatatableSchema,
   updateSystemDatatableSchema,
@@ -616,6 +651,16 @@ export {
   type UpdateCenterInput,
   type UpdateCenterPayload
 } from './centers/center.schema';
+export {
+  createGroupSchema,
+  updateGroupSchema,
+  validateCreateGroup,
+  validateUpdateGroup,
+  type CreateGroupInput,
+  type CreateGroupPayload,
+  type UpdateGroupInput,
+  type UpdateGroupPayload
+} from './groups/group.schema';
 export {
   bulkLoanReassignmentSchema,
   validateBulkLoanReassignment,

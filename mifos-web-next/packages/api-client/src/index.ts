@@ -49,6 +49,15 @@ export type {
 } from './clients/accounts-types';
 
 export type {
+  FineractSavingsAccountCharge,
+  FineractSavingsAccountDetail,
+  FineractSavingsAccountSubStatus,
+  FineractSavingsAccountSummary,
+  FineractSavingsAccountTimeline,
+  FineractSavingsAccountTransaction
+} from './clients/savings-account-types';
+
+export type {
   FineractSavingsOnHoldTransaction,
   FineractSavingsOnHoldTransactionsPage
 } from './clients/transfer-types';
@@ -258,6 +267,7 @@ export type {
 
 export type {
   FineractUserDetail,
+  FineractUserEditContext,
   FineractUserListItem,
   FineractUserMutationResponse,
   FineractUserRoleRef,
@@ -358,6 +368,21 @@ export type {
   CenterTimeline,
   CentersPage
 } from './centers/types';
+
+export type {
+  GroupAccounts,
+  GroupClientMember,
+  GroupClientOption,
+  GroupCreateTemplate,
+  GroupDetail,
+  GroupEditTemplate,
+  GroupListItem,
+  GroupLoanAccount,
+  GroupMutationResponse,
+  GroupSavingsAccount,
+  GroupSummary,
+  GroupsPage
+} from './groups/types';
 
 export type {
   FineractReportAllowedParameter,

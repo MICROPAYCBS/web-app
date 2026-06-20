@@ -8,7 +8,7 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
-import { platformInset, platformInsetX } from '@/lib/platform-layout';
+import { pageHeaderContentSpacing, platformInset } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 /** Fills the platform main area; only the detail body scrolls (sidebar + header stay put). */
@@ -22,7 +22,8 @@ export function DetailPage({
   /** Vertical secondary navigation (left rail) */
   sidebar,
   children,
-  className
+  className,
+  headerClassName
 }: {
   header: ReactNode;
   summary?: ReactNode;
@@ -30,8 +31,11 @@ export function DetailPage({
   sidebar?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Optional extra classes on the fixed header region. */
+  headerClassName?: string;
 }) {
   const hasSidebar = Boolean(sidebar);
+  const headerContentClassName = cn(pageHeaderContentSpacing, headerClassName);
 
   if (hasSidebar) {
     return (
@@ -45,7 +49,7 @@ export function DetailPage({
           <div className={cn(platformInset, 'lg:py-6')}>{sidebar}</div>
         </aside>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <PageHeader className="space-y-4 pt-1">
+          <PageHeader className={headerContentClassName}>
             {header}
             {summary}
           </PageHeader>
@@ -60,7 +64,7 @@ export function DetailPage({
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col', className)}>
       <PageHeader>
-        <div className="space-y-4 pt-1">
+        <div className={headerContentClassName}>
           {header}
           {summary}
           {tabs}

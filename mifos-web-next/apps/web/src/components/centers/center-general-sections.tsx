@@ -115,19 +115,19 @@ export function CenterGeneralSections({
 
       <DetailSection title="Summary details">
         <DetailFieldGrid columns={2}>
-          <DetailField label="Active clients">{summary.activeClients ?? '—'}</DetailField>
+          <DetailField label="Active customers">{summary.activeClients ?? '—'}</DetailField>
           <DetailField label="Active group loans">{summary.activeGroupLoans ?? '—'}</DetailField>
-          <DetailField label="Active client loans">{summary.activeClientLoans ?? '—'}</DetailField>
+          <DetailField label="Active customer loans">{summary.activeClientLoans ?? '—'}</DetailField>
           <DetailField label="Active overdue group loans">
             {summary.overdueGroupLoans ?? '—'}
           </DetailField>
           <DetailField label="Active group borrowers">
             {summary.activeGroupBorrowers ?? '—'}
           </DetailField>
-          <DetailField label="Active client borrowers">
+          <DetailField label="Active customer borrowers">
             {summary.activeClientBorrowers ?? '—'}
           </DetailField>
-          <DetailField label="Active overdue client loans">
+          <DetailField label="Active overdue customer loans">
             {summary.overdueClientLoans ?? '—'}
           </DetailField>
         </DetailFieldGrid>

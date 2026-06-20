@@ -25,7 +25,7 @@ export function CollateralProductsPageContent({
   return (
     <ListPage
       title="Collateral products"
-      description="Collateral types and valuation rules used when registering client collateral and loan security."
+      description="Collateral types and valuation rules used when registering customer collateral and loan security."
       actions={
         <Can permission="CREATE_COLLATERAL">
           <Link href={collateralProductCreatePath()} className={cn(buttonVariants())}>

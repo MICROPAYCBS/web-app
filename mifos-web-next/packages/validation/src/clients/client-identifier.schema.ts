@@ -7,15 +7,20 @@
  */
 
 import { z } from 'zod';
+import {
+  isValidUgandaNin,
+  normalizeUgandaNin,
+  UGANDA_NIN_MESSAGE,
+  UGANDA_NIN_PLACEHOLDER
+} from '../uganda-nin';
 
-/** First allowed identifier type (e.g. national ID) document number format. */
-export const FIRST_IDENTIFIER_DOCUMENT_KEY_PATTERN = /^[CAca][A-Za-z]\d{11}[A-Za-z0-9]$/;
+/** @deprecated Use {@link UGANDA_NIN_PATTERN} via {@link isValidUgandaNin}. */
+export const FIRST_IDENTIFIER_DOCUMENT_KEY_PATTERN = /^[A-Z0-9]{14}$/;
 
-export const FIRST_IDENTIFIER_DOCUMENT_KEY_MESSAGE =
-  'Enter a valid document number for this ID type.';
+export const FIRST_IDENTIFIER_DOCUMENT_KEY_MESSAGE = UGANDA_NIN_MESSAGE;
 
 /** Example format shown when the first identifier type is selected. */
-export const FIRST_IDENTIFIER_DOCUMENT_KEY_PLACEHOLDER = 'C M 9 5 0 1 2 3 4 5 6 7 8 A';
+export const FIRST_IDENTIFIER_DOCUMENT_KEY_PLACEHOLDER = UGANDA_NIN_PLACEHOLDER;
 
 export const clientIdentifierSchema = z.object({
   documentTypeId: z.number().int().positive(),
@@ -39,7 +44,7 @@ export function isFirstIdentifierDocumentType(
 }
 
 export function validateFirstIdentifierDocumentKey(documentKey: string): boolean {
-  return FIRST_IDENTIFIER_DOCUMENT_KEY_PATTERN.test(documentKey.trim());
+  return isValidUgandaNin(documentKey);
 }
 
 export function validateClientIdentifier(
@@ -68,5 +73,15 @@ export function validateClientIdentifier(
     };
   }
 
-  return parsed;
+  const normalizedKey = isFirstIdentifierDocumentType(documentTypeId, context.firstDocumentTypeId)
+    ? normalizeUgandaNin(documentKey)
+    : documentKey.trim();
+
+  return {
+    success: true as const,
+    data: {
+      ...parsed.data,
+      documentKey: normalizedKey
+    }
+  };
 }

@@ -31,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { formatReportCategory, yesNoLabel } from '@/lib/fineract/report-display';
+import { formatReportCategory, resolveReportParameterEngineName, yesNoLabel } from '@/lib/fineract/report-display';
 import { cn } from '@/lib/utils';
 
 export function ReportDetailView({
@@ -124,7 +124,7 @@ export function ReportDetailView({
             <div className="overflow-hidden rounded-md border border-border">
               <div className="grid grid-cols-2 gap-2 border-b border-border bg-muted/40 px-4 py-2 text-sm font-medium">
                 <span>Parameter</span>
-                <span>Name passed to report engine</span>
+                <span>Passed to report engine</span>
               </div>
               {report.reportParameters.map((parameter, index) => (
                 <div
@@ -132,8 +132,8 @@ export function ReportDetailView({
                   className="grid grid-cols-2 gap-2 border-b border-border px-4 py-3 text-sm last:border-b-0"
                 >
                   <span>{parameter.parameterName ?? parameter.parameterId}</span>
-                  <span className="text-muted-foreground">
-                    {parameter.reportParameterName || '—'}
+                  <span className="font-mono text-muted-foreground">
+                    {resolveReportParameterEngineName(parameter, report.allowedParameters) ?? '—'}
                   </span>
                 </div>
               ))}

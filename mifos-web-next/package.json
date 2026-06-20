@@ -11,6 +11,7 @@
     "start": "pnpm --filter web start",
     "lint": "pnpm --filter web lint",
     "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm --filter web clean",
     "format": "prettier --write .",
     "routes:parity": "pnpm exec tsx tooling/routes-inventory/generate-parity.ts",
     "vercel-build": "pnpm --filter web build"

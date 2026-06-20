@@ -84,6 +84,16 @@ export function SystemDatatableColumnsEditor({
         cell: ({ row }) => row.original.columnCode?.trim() || '—'
       },
       {
+        id: 'validation',
+        header: 'Validation',
+        cell: ({ row }) =>
+          row.original.validationRegex?.trim() ? (
+            <span className="text-xs text-muted-foreground">Regex</span>
+          ) : (
+            '—'
+          )
+      },
+      {
         id: 'mandatory',
         header: 'Mandatory',
         cell: ({ row }) => <BoolCell value={row.original.isColumnNullable === false} />

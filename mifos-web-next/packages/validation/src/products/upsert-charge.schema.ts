@@ -50,7 +50,7 @@ export const upsertChargeSchema = z
     if (data.chargeAppliesTo === 3 && !data.incomeAccountId) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Income account is required for client charges.',
+        message: 'Income account is required for customer charges.',
         path: ['incomeAccountId']
       });
     }

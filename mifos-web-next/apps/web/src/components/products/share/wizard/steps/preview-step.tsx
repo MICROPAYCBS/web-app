@@ -127,7 +127,7 @@ export function PreviewStep({
               )
             ) ?? '—'}
           </DetailField>
-          <DetailField label="Allow dividends for inactive clients">
+          <DetailField label="Allow dividends for inactive customers">
             {formatYesNo(settings.allowDividendCalculationForInactiveClients)}
           </DetailField>
           {settings.enableLockinPeriod ? (
