@@ -34,6 +34,7 @@ export interface ClientWithTemplateData {
   staffOptions: FineractStaffOption[];
   savingAccountOptions: CodeValueOption[];
   savingsAccountId?: number;
+  savingsProductName?: string;
 }
 
 /** Fineract client template returns accountNo, not name (legacy web-app). */
@@ -138,10 +139,16 @@ export async function getClientWithTemplate(
     savingAccountOptions = await savingAccountOptionsFromAccounts(clientId);
   }
 
+  const savingsProductName =
+    data.savingsAccountId != null
+      ? savingAccountOptions.find((option) => option.id === data.savingsAccountId)?.name
+      : undefined;
+
   return {
     staffOptions: data.staffOptions ?? [],
     savingAccountOptions,
-    savingsAccountId: data.savingsAccountId
+    savingsAccountId: data.savingsAccountId,
+    savingsProductName
   };
 }
 

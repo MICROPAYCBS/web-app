@@ -74,5 +74,5 @@ export function formatIncomeSourceDates(source: FineractClientIncomeSource): str
   if (start && end) {
     return `${start} – ${end}`;
   }
-  return start ?? end;
+  return start ?? end ?? undefined;
 }

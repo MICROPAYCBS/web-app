@@ -42,8 +42,8 @@ export function formatFamilyMemberInputSummary(
 ): string {
   return formatFamilyMemberSummary({
     relationship: relationshipLabel,
-    mobileNumber: member.mobileNumber,
-    emailAddress: member.emailAddress,
+    mobileNumber: member.mobileNumber ?? undefined,
+    emailAddress: member.emailAddress ?? undefined,
     isDependent: member.isDependent
   });
 }
