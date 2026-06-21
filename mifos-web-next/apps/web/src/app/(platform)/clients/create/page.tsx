@@ -9,6 +9,8 @@
 import { assertCan, resolvePermission } from '@mifos/auth';
 import { redirect } from 'next/navigation';
 import { CreateClientWizard } from '@/components/clients/create/create-client-wizard';
+import { getClientIncomeSourceTemplate } from '@/lib/fineract/client-income-source';
+import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { getAddressFieldConfiguration, getClientTemplate } from '@/lib/fineract/clients';
 import { listEntityDatatableChecks } from '@/lib/fineract/entity-datatable-checks';
 import { getServerSession } from '@/lib/session/server';
@@ -25,19 +27,33 @@ export default async function CreateClientPage() {
     redirect('/forbidden');
   }
 
-  const [template, addressFieldConfig, entityDatatableChecks] = await Promise.all([
-    getClientTemplate(),
+  const defaultOfficeId = session.officeId > 0 ? session.officeId : undefined;
+
+  const [template, addressFieldConfig, entityDatatableChecks, incomeSourceOptions, identifierTemplate] =
+    await Promise.all([
+    getClientTemplate(defaultOfficeId),
     getAddressFieldConfiguration().catch(() => [] as Awaited<ReturnType<typeof getAddressFieldConfiguration>>),
     listEntityDatatableChecks()
       .then((page) => page.pageItems ?? [])
-      .catch(() => [])
+      .catch(() => []),
+    getClientIncomeSourceTemplate(1).catch(() => ({})),
+    getClientIdentifierTemplate(1).catch(() => ({ allowedDocumentTypes: [] }))
   ]);
+
+  const identifierDocumentTypes =
+    identifierTemplate.allowedDocumentTypes?.map((type) => ({
+      id: type.id,
+      name: type.name
+    })) ?? [];
 
   return (
     <CreateClientWizard
       initialTemplate={template}
+      defaultOfficeId={defaultOfficeId}
       addressFieldConfig={addressFieldConfig}
       entityDatatableChecks={entityDatatableChecks}
+      incomeSourceOptions={incomeSourceOptions}
+      identifierDocumentTypes={identifierDocumentTypes}
     />
   );
 }

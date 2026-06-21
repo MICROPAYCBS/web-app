@@ -8,9 +8,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_PERSON } from '@mifos/validation';
+import type { FineractClientTemplate, FineractIncomeSourceOptions } from '@mifos/api-client';
+import { isComplianceProfileEmpty, LEGAL_FORM_PERSON } from '@mifos/validation';
 import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
+import { incomeSourceInputDisplayName } from '@/components/clients/detail/client-income-source-sections';
 import { SectorDisplayValue } from '@/components/clients/shared/sector-display-value';
 import type { CreateClientDraft } from '../types';
 import { Separator } from '@/components/ui/separator';
@@ -30,25 +31,53 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 export function PreviewStep({
   template,
   draft,
-  submitError
+  submitError,
+  validationIssues = [],
+  incomeSourceOptions,
+  identifierDocumentTypes = []
 }: {
   template: FineractClientTemplate;
   draft: CreateClientDraft;
   submitError: string | null;
+  validationIssues?: string[];
+  incomeSourceOptions?: FineractIncomeSourceOptions;
+  identifierDocumentTypes?: { id: number; name: string }[];
 }) {
   const g = draft.general;
   const office = template.officeOptions.find((o) => o.id === g.officeId);
   const legalForm = template.clientLegalFormOptions?.find((o) => o.id === g.legalFormId);
   const gender = template.genderOptions?.find((o) => o.id === g.genderId);
+  const title = template.titleOptions?.find((o) => o.id === g.titleId);
+  const nationality = template.nationalityOptions?.find((o) => o.id === g.nationalityCountryId);
+  const riskProfile = template.customerRiskProfileOptions?.find(
+    (o) => o.id === g.customerRiskProfileId
+  );
   const staff = template.staffOptions?.find((o) => o.id === g.staffId);
   const clientType = template.clientTypeOptions?.find((o) => o.id === g.clientTypeId);
+  const clientClassification = template.clientClassificationOptions?.find(
+    (o) => o.id === g.clientClassificationId
+  );
   const isPerson = (g.legalFormId ?? LEGAL_FORM_PERSON) === LEGAL_FORM_PERSON;
+
+  function incomeSourceTypeLabel(incomeSourceTypeId: number): string | undefined {
+    return incomeSourceOptions?.incomeSourceTypeOptions?.find((o) => o.id === incomeSourceTypeId)?.name;
+  }
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         Review the information below before creating the customer.
       </p>
+      {validationIssues.length > 0 ? (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p className="font-medium">Still required before you can create this customer:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {validationIssues.map((issue) => (
+              <li key={issue}>{issue}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {submitError ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {submitError}
@@ -58,7 +87,36 @@ export function PreviewStep({
       <section className="space-y-2">
         <h2 className="text-sm font-medium">General</h2>
         <Field label="Branch" value={office?.nameDecorated ?? office?.name} />
-        <Field label="Legal form" value={legalForm?.value ?? legalForm?.name} />
+        <Field label="Profile type" value={legalForm?.value ?? legalForm?.name} />
+        <Field
+          label="Relationship officer"
+          value={
+            staff?.displayName ??
+            (staff ? `${staff.firstname ?? ''} ${staff.lastname ?? ''}`.trim() : undefined)
+          }
+        />
+        <Field label="External ID" value={g.externalId} />
+        {isPerson && g.isStaff ? <Field label="Is staff" value="Yes" /> : null}
+        <Field label="Submitted on" value={g.submittedOnDate} />
+        <Field label="Status" value="Pending" />
+        {g.savingsProductId ? (
+          <Field
+            label="Savings product on activation"
+            value={
+              template.savingProductOptions?.find((p) => p.id === g.savingsProductId)?.name ??
+              String(g.savingsProductId)
+            }
+          />
+        ) : null}
+      </section>
+
+      <Separator />
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-medium">Biodata</h2>
+        {isPerson ? (
+          <Field label="Title" value={title?.name ?? title?.value} />
+        ) : null}
         {isPerson ? (
           <Field
             label="Name"
@@ -72,21 +130,32 @@ export function PreviewStep({
           value={g.dateOfBirth}
         />
         {isPerson ? (
-          <Field label="Gender" value={gender?.name ?? gender?.value} />
+          <>
+            <Field label="Nationality" value={nationality?.name ?? nationality?.value} />
+            <Field label="Gender" value={gender?.name ?? gender?.value} />
+          </>
         ) : null}
-        <Field
-          label="Relationship officer"
-          value={
-            staff?.displayName ??
-            (staff ? `${staff.firstname ?? ''} ${staff.lastname ?? ''}`.trim() : undefined)
-          }
-        />
-        <Field label="External ID" value={g.externalId} />
+      </section>
+
+      <Separator />
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-medium">Contact</h2>
         <Field label="Phone number" value={g.mobileNo} />
         <Field label="Alternative phone number" value={g.alternativeMobileNo} />
-        <Field label="Customer type" value={clientType?.name ?? clientType?.value} />
         <Field label="Email" value={g.emailAddress} />
         <Field label="Alternative email" value={g.alternativeEmailAddress} />
+      </section>
+
+      <Separator />
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-medium">Customer profiling</h2>
+        <Field label="Customer type" value={clientType?.name ?? clientType?.value} />
+        <Field
+          label="Customer classification"
+          value={clientClassification?.name ?? clientClassification?.value}
+        />
         <Field label="Tax identification number (TIN)" value={g.taxIdentificationNumber} />
         {g.subIndustryId != null ? (
           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -94,13 +163,34 @@ export function PreviewStep({
             <SectorDisplayValue subIndustryId={g.subIndustryId} />
           </div>
         ) : null}
-        <Field label="Submitted on" value={g.submittedOnDate} />
-        <Field label="Active" value={g.active ? 'Yes' : 'No'} />
-        {g.active ? <Field label="Activation date" value={g.activationDate} /> : null}
-        {g.savingsProductId ? (
-          <Field label="Savings product ID" value={String(g.savingsProductId)} />
-        ) : null}
+        <Field
+          label="Customer risk profile"
+          value={riskProfile?.name ?? riskProfile?.value}
+        />
       </section>
+
+      {draft.clientIdentifiers.length > 0 ? (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium">
+              Identification ({draft.clientIdentifiers.length})
+            </h2>
+            <ul className="list-disc pl-5 text-sm">
+              {draft.clientIdentifiers.map((identifier, i) => {
+                const typeName =
+                  identifierDocumentTypes.find((type) => type.id === identifier.documentTypeId)
+                    ?.name ?? 'Identifier';
+                return (
+                  <li key={i}>
+                    {typeName}: {identifier.documentKey}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </>
+      ) : null}
 
       {draft.familyMembers.length > 0 ? (
         <>
@@ -110,10 +200,75 @@ export function PreviewStep({
             <ul className="list-disc pl-5 text-sm">
               {draft.familyMembers.map((m, i) => (
                 <li key={i}>
-                  {m.firstName} {m.lastName}
+                  {[m.firstName, m.middleName, m.lastName].filter(Boolean).join(' ')}
+                  {m.mobileNumber ? ` · ${m.mobileNumber}` : ''}
+                  {m.emailAddress ? ` · ${m.emailAddress}` : ''}
+                  {m.address ? ` · ${m.address}` : ''}
                 </li>
               ))}
             </ul>
+          </section>
+        </>
+      ) : null}
+
+      {draft.incomeSources.length > 0 ? (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium">Income sources ({draft.incomeSources.length})</h2>
+            <ul className="list-disc pl-5 text-sm">
+              {draft.incomeSources.map((source, i) => (
+                <li key={i}>
+                  {incomeSourceInputDisplayName(
+                    source,
+                    incomeSourceTypeLabel(source.incomeSourceTypeId)
+                  )}
+                  {source.employerAddress ? ` · ${source.employerAddress}` : ''}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      ) : null}
+
+      {!isComplianceProfileEmpty(draft.complianceProfile) ? (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium">Compliance</h2>
+            <ul className="list-disc pl-5 text-sm">
+              {draft.complianceProfile.hasOtherBankAccounts ? (
+                <li>
+                  Other bank accounts:{' '}
+                  {draft.complianceProfile.otherBankAccounts
+                    ?.map((account) => account.bankName)
+                    .filter(Boolean)
+                    .join(', ') || 'Yes'}
+                </li>
+              ) : null}
+              {draft.complianceProfile.isPep ? (
+                <li>PEP: {draft.complianceProfile.pepPosition || 'Yes'}</li>
+              ) : null}
+              {draft.complianceProfile.usCitizenOrResident ? <li>US citizen or resident</li> : null}
+              {draft.complianceProfile.fatcaRegistered ? (
+                <li>FATCA registered: {draft.complianceProfile.fatcaRegistrationNo}</li>
+              ) : null}
+              {draft.complianceProfile.dpfAlternativeBankName ? (
+                <li>DPF bank: {draft.complianceProfile.dpfAlternativeBankName}</li>
+              ) : null}
+            </ul>
+          </section>
+        </>
+      ) : null}
+
+      {template.isAddressEnabled && draft.addresses.length === 0 ? (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium text-destructive">Address</h2>
+            <p className="text-sm text-muted-foreground">
+              No address added yet. Go back to the Address step and add at least one address.
+            </p>
           </section>
         </>
       ) : null}

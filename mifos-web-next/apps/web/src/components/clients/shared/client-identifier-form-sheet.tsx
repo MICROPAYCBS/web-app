@@ -27,12 +27,12 @@ const STATUS_OPTIONS = [
   { value: 'Inactive', label: 'Inactive' }
 ];
 
-function defaultForm(): ClientIdentifierInput {
+function defaultForm(identifier?: ClientIdentifierInput): ClientIdentifierInput {
   return {
-    documentTypeId: 0,
-    status: 'Active',
-    documentKey: '',
-    description: ''
+    documentTypeId: identifier?.documentTypeId ?? 0,
+    status: identifier?.status ?? 'Active',
+    documentKey: identifier?.documentKey ?? '',
+    description: identifier?.description ?? ''
   };
 }
 
@@ -40,12 +40,14 @@ export function ClientIdentifierFormSheet({
   open,
   onOpenChange,
   documentTypes,
+  identifier,
   onSave,
   submitLoading = false
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentTypes: { id: number; name: string }[];
+  identifier?: ClientIdentifierInput;
   onSave: (
     input: ClientIdentifierInput,
     file: File | null,
@@ -76,7 +78,7 @@ export function ClientIdentifierFormSheet({
       return;
     }
     if (next) {
-      setForm(defaultForm());
+      setForm(defaultForm(identifier));
       setFile(null);
       setFileName('');
       setError(null);
@@ -135,7 +137,7 @@ export function ClientIdentifierFormSheet({
     <FormSheet
       open={open}
       onOpenChange={handleOpenChange}
-      title="Add identifier"
+      title={identifier ? 'Edit identifier' : 'Add identifier'}
       description="Record an official ID type, key, and optional supporting document."
       formId={formId}
       onSubmit={handleSubmit}

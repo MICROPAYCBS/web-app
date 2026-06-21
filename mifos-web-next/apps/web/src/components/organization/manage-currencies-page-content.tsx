@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { updateOrganizationCurrenciesAction } from '@/actions/organization-currency';
 import { DetailBackLink } from '@/components/composites';
+import { ContextHelpFieldHint, ContextHelpShell } from '@/components/composites/context-help';
 import { ListPage } from '@/components/composites/list-page';
 import { SelectField } from '@/components/composites/select-field';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -26,12 +27,9 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import {
-  filterOrganizationCurrencyOptions,
-  organizationCurrencyLabel
-} from '@/lib/fineract/organization-currency-display';
+import { organizationCurrencyLabel } from '@/lib/fineract/organization-currency-display';
 import { ORGANIZATION_CURRENCIES_PATH } from '@/lib/fineract/organization-currency-paths';
+import { organizationManageCurrenciesHelp } from '@/lib/context-help/pages/organization-manage-currencies';
 import { cn } from '@/lib/utils';
 
 export function ManageCurrenciesPageContent({
@@ -44,7 +42,6 @@ export function ManageCurrenciesPageContent({
   const [selectedCurrencies, setSelectedCurrencies] = useState(initialSelectedCurrencies);
   const [pending, startTransition] = useTransition();
   const [pickerValue, setPickerValue] = useState<string | undefined>();
-  const [pickerFilter, setPickerFilter] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FineractCurrencyOption | null>(null);
 
@@ -62,13 +59,15 @@ export function ManageCurrenciesPageContent({
     [currencyOptions, selectedCodes]
   );
 
-  const filteredPickerOptions = useMemo(() => {
-    return filterOrganizationCurrencyOptions(availableOptions, pickerFilter).map((currency) => ({
-      value: currency.code!,
-      label: organizationCurrencyLabel(currency),
-      keywords: [currency.name, currency.code].filter(Boolean) as string[]
-    }));
-  }, [availableOptions, pickerFilter]);
+  const pickerOptions = useMemo(
+    () =>
+      availableOptions.map((currency) => ({
+        value: currency.code!,
+        label: organizationCurrencyLabel(currency),
+        keywords: [currency.name, currency.code].filter(Boolean) as string[]
+      })),
+    [availableOptions]
+  );
 
   function persistCurrencyCodes(nextCodes: string[], onSuccess: () => void) {
     setActionError(null);
@@ -96,7 +95,6 @@ export function ManageCurrenciesPageContent({
     persistCurrencyCodes(nextCodes, () => {
       setSelectedCurrencies((current) => [...current, currency]);
       setPickerValue(undefined);
-      setPickerFilter('');
     });
   }
 
@@ -118,82 +116,94 @@ export function ManageCurrenciesPageContent({
 
   return (
     <>
-      <ListPage
-        title="Manage currencies"
-        description="Choose which currencies are available across your organization."
-        backLink={
-          <DetailBackLink href={ORGANIZATION_CURRENCIES_PATH} label="Back to currencies" />
-        }
-      >
-        <div className="mx-auto max-w-3xl space-y-8">
-          {actionError ? (
-            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {actionError}
-            </p>
-          ) : null}
-
-          <form className="space-y-4 rounded-lg border border-border p-4" onSubmit={handleAddCurrency}>
-            <h3 className="text-sm font-medium">Add currency</h3>
-            <Input
-              placeholder="Search currencies…"
-              value={pickerFilter}
-              onChange={(event) => setPickerFilter(event.target.value)}
-              aria-label="Search currencies"
-            />
-            <SelectField
-              id="currency-picker"
-              label="Currency"
-              required
-              value={pickerValue}
-              onValueChange={setPickerValue}
-              options={filteredPickerOptions}
-              placeholder="Select currency"
-              disabled={pending || filteredPickerOptions.length === 0}
-            />
-            <Button type="submit" disabled={!pickerValue || pending}>
-              <Plus className="mr-2 size-4" />
-              Add currency
-            </Button>
-          </form>
-
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Selected currencies</h3>
-            {selectedCurrencies.length ? (
-              <ul className="divide-y divide-border rounded-lg border border-border">
-                {selectedCurrencies.map((currency) => (
-                  <li
-                    key={currency.code}
-                    className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
-                  >
-                    <div>
-                      <p className="font-medium">{currency.name ?? currency.code}</p>
-                      <p className="text-muted-foreground">{currency.code}</p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={pending}
-                      onClick={() => setDeleteTarget(currency)}
-                    >
-                      <Trash2 className="mr-1 size-4" />
-                      Remove
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-                No currencies selected yet.
+      <ContextHelpShell content={organizationManageCurrenciesHelp}>
+        <ListPage
+          title="Manage currencies"
+          description="Choose which currencies are available across your organization."
+          backLink={
+            <DetailBackLink href={ORGANIZATION_CURRENCIES_PATH} label="Back to currencies" />
+          }
+        >
+          <div className="mx-auto max-w-3xl space-y-8">
+            {actionError ? (
+              <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {actionError}
               </p>
-            )}
-          </div>
+            ) : null}
 
-          <Link href={ORGANIZATION_CURRENCIES_PATH} className={cn(buttonVariants({ variant: 'outline' }))}>
-            Done
-          </Link>
-        </div>
-      </ListPage>
+            <form className="space-y-4 rounded-lg border border-border p-4" onSubmit={handleAddCurrency}>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-sm font-medium">Add currency</h3>
+                <ContextHelpFieldHint
+                  sectionId="add-currency"
+                  ariaLabel="Help for add currency"
+                />
+              </div>
+              <SelectField
+                id="currency-picker"
+                label="Currency"
+                required
+                value={pickerValue}
+                onValueChange={setPickerValue}
+                options={pickerOptions}
+                placeholder="Select currency"
+                disabled={pending || pickerOptions.length === 0}
+                contextHelpSectionId="currency-picker"
+              />
+              <Button type="submit" disabled={!pickerValue || pending}>
+                <Plus className="mr-2 size-4" />
+                Add currency
+              </Button>
+            </form>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-sm font-medium">Selected currencies</h3>
+                <ContextHelpFieldHint
+                  sectionId="selected-currencies"
+                  ariaLabel="Help for selected currencies"
+                />
+              </div>
+              {selectedCurrencies.length ? (
+                <ul className="divide-y divide-border rounded-lg border border-border">
+                  {selectedCurrencies.map((currency) => (
+                    <li
+                      key={currency.code}
+                      className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+                    >
+                      <div>
+                        <p className="font-medium">{currency.name ?? currency.code}</p>
+                        <p className="text-muted-foreground">{currency.code}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={pending}
+                        onClick={() => setDeleteTarget(currency)}
+                      >
+                        <Trash2 className="mr-1 size-4" />
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+                  No currencies selected yet.
+                </p>
+              )}
+            </div>
+
+            <Link
+              href={ORGANIZATION_CURRENCIES_PATH}
+              className={cn(buttonVariants({ variant: 'outline' }))}
+            >
+              Done
+            </Link>
+          </div>
+        </ListPage>
+      </ContextHelpShell>
 
       <Dialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>

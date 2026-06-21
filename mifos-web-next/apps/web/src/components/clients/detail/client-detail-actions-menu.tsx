@@ -187,11 +187,13 @@ function MenuEntry({
 export function ClientDetailActionsMenu({
   client,
   hasSignature = false,
-  signatureDocumentId
+  signatureDocumentId,
+  hasProfileImage = false
 }: {
   client: Pick<FineractClientDetail, 'id' | 'status' | 'staffId'>;
   hasSignature?: boolean;
   signatureDocumentId?: number;
+  hasProfileImage?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -292,6 +294,7 @@ export function ClientDetailActionsMenu({
           toast.success('Customer updated.');
           refreshClient();
         }}
+        hasProfileImage={hasProfileImage}
       />
 
       <ClientSignatureUploadDialog

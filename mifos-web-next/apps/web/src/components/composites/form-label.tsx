@@ -7,6 +7,7 @@
  */
 
 import type { ReactNode } from 'react';
+import { ContextHelpFieldHint } from '@/components/composites/context-help/context-help-field-hint';
 import { FieldHintTooltip } from '@/components/composites/field-hint-tooltip';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,8 @@ export interface FormLabelProps {
   /** Shown in an info tooltip beside the label. */
   hint?: string;
   hintAriaLabel?: string;
+  /** Opens context help sidebar focused on this section (when a provider is mounted). */
+  contextHelpSectionId?: string;
   className?: string;
 }
 
@@ -30,6 +33,7 @@ export function FormLabel({
   optional = !required,
   hint,
   hintAriaLabel,
+  contextHelpSectionId,
   className
 }: FormLabelProps) {
   return (
@@ -46,7 +50,15 @@ export function FormLabel({
           <span className="font-normal text-muted-foreground"> (optional)</span>
         ) : null}
       </Label>
-      {hint ? <FieldHintTooltip content={hint} ariaLabel={hintAriaLabel} /> : null}
+      {contextHelpSectionId ? (
+        <ContextHelpFieldHint
+          sectionId={contextHelpSectionId}
+          fallbackHint={hint}
+          ariaLabel={hintAriaLabel ?? 'Field help'}
+        />
+      ) : hint ? (
+        <FieldHintTooltip content={hint} ariaLabel={hintAriaLabel} />
+      ) : null}
     </div>
   );
 }

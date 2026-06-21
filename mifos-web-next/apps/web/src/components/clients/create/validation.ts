@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, isValidUgandaMobileInternational } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, complianceProfileSchema, incomeSourceSchema, isValidUgandaMobileInternational, validateClientIdentifier } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
@@ -29,35 +29,27 @@ export type StepErrors = Record<string, string>;
 export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
   const errors: StepErrors = {};
   const g = draft.general;
-  const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
 
   if (!g.officeId) {
     errors.officeId = 'Branch is required';
   }
   if (!g.legalFormId) {
-    errors.legalFormId = 'Legal form is required';
+    errors.legalFormId = 'Profile type is required';
   }
   if (!g.submittedOnDate?.trim()) {
     errors.submittedOnDate = 'Submitted on is required';
   }
-  if (g.active && !g.activationDate?.trim()) {
-    errors.activationDate = 'Activation date is required when the customer is active';
+  if (!g.staffId) {
+    errors.staffId = 'Relationship officer is required';
   }
-  if (g.addSavings && !g.savingsProductId) {
-    errors.savingsProductId = 'Savings product is required when opening an account';
-  }
-  if (g.emailAddress?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.emailAddress.trim())) {
-    errors.emailAddress = 'Enter a valid email address';
-  }
-  if (g.alternativeEmailAddress?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.alternativeEmailAddress.trim())) {
-    errors.alternativeEmailAddress = 'Enter a valid email address';
-  }
-  if (g.alternativeMobileNo?.trim() && !isValidUgandaMobileInternational(g.alternativeMobileNo.trim())) {
-    errors.alternativeMobileNo = UGANDA_MOBILE_INTERNATIONAL_MESSAGE;
-  }
-  if (g.taxIdentificationNumber && g.taxIdentificationNumber.trim().length > 50) {
-    errors.taxIdentificationNumber = 'TIN must be at most 50 characters';
-  }
+
+  return errors;
+}
+
+export function validateBiodataStep(draft: CreateClientDraft): StepErrors {
+  const errors: StepErrors = {};
+  const g = draft.general;
+  const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
 
   if (legalFormId === LEGAL_FORM_PERSON) {
     if (!g.firstname?.trim()) {
@@ -84,18 +76,54 @@ export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
     }
   }
 
-  if (!g.staffId) {
-    errors.staffId = 'Relationship officer is required';
-  }
+  return errors;
+}
+
+export function validateContactStep(draft: CreateClientDraft): StepErrors {
+  const errors: StepErrors = {};
+  const g = draft.general;
+
   if (!g.mobileNo?.trim()) {
     errors.mobileNo = 'Phone number is required';
   } else if (!isValidUgandaMobileInternational(g.mobileNo)) {
     errors.mobileNo = UGANDA_MOBILE_INTERNATIONAL_MESSAGE;
   }
+  if (g.alternativeMobileNo?.trim() && !isValidUgandaMobileInternational(g.alternativeMobileNo.trim())) {
+    errors.alternativeMobileNo = UGANDA_MOBILE_INTERNATIONAL_MESSAGE;
+  }
+  if (g.emailAddress?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.emailAddress.trim())) {
+    errors.emailAddress = 'Enter a valid email address';
+  }
+  if (g.alternativeEmailAddress?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.alternativeEmailAddress.trim())) {
+    errors.alternativeEmailAddress = 'Enter a valid email address';
+  }
+
+  return errors;
+}
+
+export function validateCustomerProfilingStep(draft: CreateClientDraft): StepErrors {
+  const errors: StepErrors = {};
+  const g = draft.general;
+
   if (!g.clientTypeId) {
     errors.clientTypeId = 'Customer type is required';
   }
+  if (g.taxIdentificationNumber && g.taxIdentificationNumber.trim().length > 50) {
+    errors.taxIdentificationNumber = 'TIN must be at most 50 characters';
+  }
 
+  return errors;
+}
+
+export function validateIncomeSourcesStep(draft: CreateClientDraft): StepErrors {
+  const errors: StepErrors = {};
+  draft.incomeSources.forEach((source, index) => {
+    const parsed = incomeSourceSchema.safeParse(source);
+    if (!parsed.success) {
+      const message = parsed.error.issues[0]?.message ?? 'Invalid income source';
+      errors[`incomeSources.${index}`] = message;
+    }
+  });
   return errors;
 }
 
@@ -152,7 +180,25 @@ export type CreateClientValidationContext = {
   mandatoryDatatableNames?: Set<string>;
   dateFormat?: string;
   locale?: string;
+  firstDocumentTypeId?: number;
 };
+
+export function validateIdentifiersStep(
+  draft: CreateClientDraft,
+  context: CreateClientValidationContext = {}
+): StepErrors {
+  const errors: StepErrors = {};
+  draft.clientIdentifiers.forEach((identifier, index) => {
+    const parsed = validateClientIdentifier(identifier, {
+      firstDocumentTypeId: context.firstDocumentTypeId
+    });
+    if (!parsed.success) {
+      const message = parsed.error.issues[0]?.message ?? 'Invalid identifier';
+      errors[`clientIdentifiers.${index}`] = message;
+    }
+  });
+  return errors;
+}
 
 function validateSingleRowDatatableStep(
   datatable: FineractClientDatatableTemplate,
@@ -179,6 +225,19 @@ function validateSingleRowDatatableStep(
   return {};
 }
 
+export function validateComplianceStep(draft: CreateClientDraft): StepErrors {
+  const parsed = complianceProfileSchema.safeParse(draft.complianceProfile);
+  if (parsed.success) {
+    return {};
+  }
+  const errors: StepErrors = {};
+  for (const issue of parsed.error.issues) {
+    const key = issue.path.join('.');
+    errors[key || '_form'] = issue.message;
+  }
+  return errors;
+}
+
 export function validateStep(
   stepId: string,
   draft: CreateClientDraft,
@@ -191,8 +250,26 @@ export function validateStep(
   if (stepId === 'general') {
     return validateGeneralStep(draft);
   }
+  if (stepId === 'biodata') {
+    return validateBiodataStep(draft);
+  }
+  if (stepId === 'contact') {
+    return validateContactStep(draft);
+  }
+  if (stepId === 'identifiers') {
+    return validateIdentifiersStep(draft, context);
+  }
   if (stepId === 'family') {
     return validateFamilyStep();
+  }
+  if (stepId === 'income-sources') {
+    return validateIncomeSourcesStep(draft);
+  }
+  if (stepId === 'compliance') {
+    return validateComplianceStep(draft);
+  }
+  if (stepId === 'customer-profiling') {
+    return validateCustomerProfilingStep(draft);
   }
   if (stepId === 'address') {
     return validateAddressStep(draft);

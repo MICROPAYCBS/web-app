@@ -50,6 +50,15 @@ export { ListPage } from './list-page';
 export { DateField, type DateFieldProps } from './date-field';
 export { FormLabel, type FormLabelProps } from './form-label';
 export { FieldHintTooltip, TitleWithHint } from './field-hint-tooltip';
+export {
+  ContextHelpShell,
+  ContextHelpFieldHint,
+  ContextHelpPanel,
+  ContextHelpProvider,
+  ContextHelpTrigger,
+  useContextHelp,
+  useOptionalContextHelp
+} from './context-help';
 export { SelectField, type SelectFieldProps, type SelectOption } from './select-field';
 export { TextField, type TextFieldProps } from './text-field';
 export { MoneyField, sanitizeMoneyInput, formatMoneyInputDisplay, type MoneyFieldProps } from './money-field';

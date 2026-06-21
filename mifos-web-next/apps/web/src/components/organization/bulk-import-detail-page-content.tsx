@@ -183,7 +183,7 @@ export function BulkImportDetailPageContent({
               {showLegalForm ? (
                 <SelectField
                   id="bulk-import-legal-form"
-                  label="Legal form"
+                  label="Profile type"
                   required
                   value={form.legalForm || undefined}
                   onValueChange={(value) =>

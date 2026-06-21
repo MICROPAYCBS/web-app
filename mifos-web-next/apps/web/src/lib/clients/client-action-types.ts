@@ -36,4 +36,8 @@ export type ClientActionSheetData =
       sheetId: 'accept-transfer' | 'reject-transfer' | 'undo-transfer';
       transferDate: string | null;
     }
-  | { sheetId: 'activate' | 'reactivate' | 'undo-rejection' };
+  | {
+      sheetId: 'activate';
+      savingsProductName?: string;
+    }
+  | { sheetId: 'reactivate' | 'undo-rejection' };

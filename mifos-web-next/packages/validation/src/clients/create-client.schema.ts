@@ -8,6 +8,9 @@
 
 import { z } from 'zod';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
+import { incomeSourceSchema } from './income-source.schema';
+import { clientIdentifierSchema } from './client-identifier.schema';
+import { complianceProfileSchema } from './compliance-profile.schema';
 import { ugandaMobileInternationalSchema, optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 
 const namePattern = /^[A-Za-z].*/;
@@ -35,6 +38,9 @@ export const familyMemberSchema = z.object({
   genderId: z.coerce.number().int().positive(),
   professionId: z.coerce.number().int().positive().optional(),
   maritalStatusId: z.coerce.number().int().positive().optional(),
+  mobileNumber: optionalUgandaMobileInternationalSchema,
+  emailAddress: z.string().trim().email().max(50).optional().or(z.literal('')),
+  address: z.string().trim().max(500).optional().or(z.literal('')),
   dateOfBirth: optionalFineractDate,
   dateFormat: z.string().optional(),
   locale: z.string().optional()
@@ -71,18 +77,22 @@ const clientBaseSchema = z.object({
   alternativeMobileNo: optionalUgandaMobileInternationalSchema,
   alternativeEmailAddress: z.string().trim().email().optional().or(z.literal('')),
   subIndustryId: z.coerce.number().int().positive().optional(),
+  titleId: z.coerce.number().int().positive().optional(),
+  nationalityCountryId: z.coerce.number().int().positive().optional(),
+  customerRiskProfileId: z.coerce.number().int().positive().optional(),
   dateOfBirth: optionalFineractDate,
   genderId: z.coerce.number().int().positive().optional(),
   isStaff: z.boolean().optional(),
   clientTypeId: z.coerce.number().int().positive().optional(),
   clientClassificationId: z.coerce.number().int().positive().optional(),
   submittedOnDate: fineractDate,
-  active: z.boolean().default(false),
-  activationDate: optionalFineractDate,
   savingsProductId: z.coerce.number().int().positive().optional(),
   dateFormat: z.string().optional(),
   locale: z.string().optional(),
   familyMembers: z.array(familyMemberSchema).optional(),
+  incomeSources: z.array(incomeSourceSchema).optional(),
+  clientIdentifiers: z.array(clientIdentifierSchema).optional(),
+  complianceProfile: complianceProfileSchema.optional(),
   address: z.array(clientAddressEntrySchema).optional(),
   datatables: z.array(datatablePayloadSchema).optional()
 });
@@ -138,20 +148,6 @@ export const createClientSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Gender is required',
         path: ['genderId']
-      });
-    }
-    if (data.active && !data.activationDate) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Activation date is required when the customer is active',
-        path: ['activationDate']
-      });
-    }
-    if (data.savingsProductId && !data.active) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Customer must be active to open a savings account on creation',
-        path: ['savingsProductId']
       });
     }
   });

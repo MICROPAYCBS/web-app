@@ -16,17 +16,3 @@ export function organizationCurrencyLabel(currency: FineractCurrencyOption): str
   }
   return name || code || '—';
 }
-
-export function filterOrganizationCurrencyOptions(
-  options: FineractCurrencyOption[],
-  query: string
-): FineractCurrencyOption[] {
-  const q = query.trim().toLowerCase();
-  if (!q) {
-    return options;
-  }
-  return options.filter((currency) => {
-    const haystack = [currency.name, currency.code].filter(Boolean).join(' ').toLowerCase();
-    return haystack.includes(q);
-  });
-}

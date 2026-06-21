@@ -73,6 +73,13 @@ export interface FineractFamilyMemberOptions {
   professionIdOptions?: FineractEnumOption[];
 }
 
+export interface FineractIncomeSourceOptions {
+  incomeSourceTypeOptions?: FineractEnumOption[];
+  sourceOfFundsOptions?: FineractEnumOption[];
+  incomeFrequencyOptions?: FineractEnumOption[];
+  verificationStatusOptions?: FineractEnumOption[];
+}
+
 export interface FineractClientTemplate {
   officeOptions: FineractOfficeOption[];
   staffOptions?: FineractStaffOption[];
@@ -80,6 +87,9 @@ export interface FineractClientTemplate {
   clientTypeOptions?: FineractEnumOption[];
   clientClassificationOptions?: FineractEnumOption[];
   genderOptions?: FineractEnumOption[];
+  titleOptions?: FineractEnumOption[];
+  nationalityOptions?: FineractEnumOption[];
+  customerRiskProfileOptions?: FineractEnumOption[];
   savingProductOptions?: FineractSavingProductOption[];
   clientNonPersonConstitutionOptions?: FineractEnumOption[];
   clientNonPersonMainBusinessLineOptions?: FineractEnumOption[];
@@ -116,6 +126,62 @@ export interface FineractClientAddress {
 
 export interface FineractClientAddressTemplate extends FineractAddressTemplateOptions {}
 
+/** Income source returned by GET /clients/{id}/incomesources */
+export interface FineractClientIncomeSource {
+  id: number;
+  clientId?: number;
+  incomeSourceTypeId?: number;
+  incomeSourceType?: string;
+  sourceOfFundsId?: number;
+  sourceOfFunds?: string;
+  employerBusinessName?: string;
+  employerAddress?: string;
+  occupation?: string;
+  subIndustryId?: number;
+  subIndustryName?: string;
+  monthlyIncome?: number;
+  incomeCurrencyCode?: string;
+  incomeFrequencyId?: number;
+  incomeFrequency?: string;
+  startDate?: number[] | string;
+  endDate?: number[] | string;
+  isPrimarySource?: boolean;
+  verificationStatusId?: number;
+  verificationStatus?: string;
+  verifiedBy?: number;
+  verifiedByUsername?: string;
+  verifiedOnUtc?: string;
+  supportingDocument?: string;
+  remarks?: string;
+  status?: string;
+}
+
+/** Other bank account on client compliance profile */
+export interface FineractClientOtherBankAccount {
+  id?: number;
+  clientId?: number;
+  bankName: string;
+  branchName?: string;
+  accountNumber: string;
+  displayOrder?: number;
+}
+
+/** GET /clients/{id}/complianceprofile */
+export interface FineractClientComplianceProfile {
+  id?: number;
+  clientId?: number;
+  hasOtherBankAccounts?: boolean;
+  isPep?: boolean;
+  pepPosition?: string;
+  pepRelativeName?: string;
+  usCitizenOrResident?: boolean;
+  fatcaRegistered?: boolean;
+  fatcaRegistrationNo?: string;
+  dpfAlternativeBankName?: string;
+  dpfAlternativeAccountNumber?: string;
+  otherBankAccounts?: FineractClientOtherBankAccount[];
+}
+
 /** Family member returned by GET /clients/{id}/familymembers */
 export interface FineractClientFamilyMember {
   id: number;
@@ -125,6 +191,8 @@ export interface FineractClientFamilyMember {
   lastName: string;
   qualification?: string;
   mobileNumber?: string;
+  emailAddress?: string;
+  address?: string;
   age?: number;
   isDependent?: boolean;
   relationshipId?: number;
@@ -182,6 +250,9 @@ export interface FineractClientDetail extends FineractClientSummary {
   alternativeMobileNo?: string;
   alternativeEmailAddress?: string;
   subIndustryId?: number;
+  title?: FineractEnumOption;
+  nationality?: FineractEnumOption;
+  customerRiskProfile?: FineractEnumOption;
   dateOfBirth?: number[] | string;
   isStaff?: boolean;
   legalForm?: FineractEnumOption;

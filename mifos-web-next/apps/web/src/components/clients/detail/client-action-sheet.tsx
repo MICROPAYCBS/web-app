@@ -65,13 +65,15 @@ export function ClientActionSheet({
   sheetId,
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
+  hasProfileImage = true
 }: {
   clientId: string;
   sheetId: ClientActionSheetId | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  hasProfileImage?: boolean;
 }) {
   const formId = useId();
   const [pending, startTransition] = useTransition();
@@ -174,6 +176,10 @@ export function ClientActionSheet({
     if (!sheetId || loading) {
       return;
     }
+    if (sheetId === 'activate' && !hasProfileImage) {
+      setError('Upload a customer photo before activating this customer.');
+      return;
+    }
     setError(null);
     setFieldErrors({});
     startTransition(async () => {
@@ -260,14 +266,28 @@ export function ClientActionSheet({
         }}
       >
       {sheetId === 'activate' ? (
-        <DateField
-          id={`${formId}-activationDate`}
-          label="Activation date"
-          required
-          value={form.activationDate}
-          onChange={(d) => patchForm({ activationDate: d })}
-          error={fieldErrors.activationDate}
-        />
+        <>
+          {!hasProfileImage ? (
+            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              A customer photo is required before activation. Upload a photo from the profile
+              avatar, then try again.
+            </p>
+          ) : null}
+          <DateField
+            id={`${formId}-activationDate`}
+            label="Activation date"
+            required
+            value={form.activationDate}
+            onChange={(d) => patchForm({ activationDate: d })}
+            error={fieldErrors.activationDate}
+          />
+          {sheetData?.sheetId === 'activate' && sheetData.savingsProductName ? (
+            <p className="text-sm text-muted-foreground">
+              Savings product on activation:{' '}
+              <span className="text-foreground">{sheetData.savingsProductName}</span>
+            </p>
+          ) : null}
+        </>
       ) : null}
 
       {sheetId === 'close' ? (

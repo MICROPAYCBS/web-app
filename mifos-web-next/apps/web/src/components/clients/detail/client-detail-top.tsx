@@ -261,6 +261,7 @@ export function ClientDetailTop({
                 client={client}
                 hasSignature={hasSignature}
                 signatureDocumentId={signatureDocumentId}
+                hasProfileImage={initialImageSrc != null}
               />
             }
           />

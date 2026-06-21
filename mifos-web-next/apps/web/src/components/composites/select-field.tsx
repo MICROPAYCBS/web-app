@@ -45,6 +45,7 @@ export interface SelectFieldProps {
   emptyMessage?: string;
   hint?: string;
   hintAriaLabel?: string;
+  contextHelpSectionId?: string;
 }
 
 const triggerClassName = cn(
@@ -72,7 +73,8 @@ export function SelectField({
   className,
   emptyMessage = 'No results found.',
   hint,
-  hintAriaLabel
+  hintAriaLabel,
+  contextHelpSectionId
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false);
 
@@ -91,6 +93,7 @@ export function SelectField({
         optional={optional ?? !required}
         hint={hint}
         hintAriaLabel={hintAriaLabel}
+        contextHelpSectionId={contextHelpSectionId}
       >
         {label}
       </FormLabel>

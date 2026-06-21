@@ -9,14 +9,12 @@
  */
 
 import type { FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
 import { DateField } from '@/components/composites/date-field';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
-import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
-import { toFineractDate } from '@/lib/fineract/dates';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
@@ -38,8 +36,6 @@ export function GeneralStep({
 }: GeneralStepProps) {
   const g = draft.general;
   const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
-  const active = g.active ?? false;
-  const addSavings = g.addSavings ?? false;
   const nonPerson = g.clientNonPersonDetails ?? {};
 
   async function reloadTemplateForBranch(officeId: number) {
@@ -71,6 +67,10 @@ export function GeneralStep({
     <div className="space-y-6">
       {errors._form ? <FormErrorAlert>{errors._form}</FormErrorAlert> : null}
 
+      <p className="text-sm text-muted-foreground">
+        Branch assignment, profile type, and account opening details for this customer.
+      </p>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
           id="officeId"
@@ -89,7 +89,7 @@ export function GeneralStep({
 
         <SelectField
           id="legalFormId"
-          label="Legal form"
+          label="Profile type"
           required
           value={String(legalFormId)}
           onValueChange={(v) => {
@@ -109,6 +109,7 @@ export function GeneralStep({
                 middlename: undefined,
                 lastname: undefined,
                 fullname: g.fullname ?? '',
+                isStaff: false,
                 clientNonPersonDetails: { constitutionId: nonPerson.constitutionId }
               });
             }
@@ -116,151 +117,6 @@ export function GeneralStep({
           options={legalFormOptions}
           error={errors.legalFormId}
         />
-
-        <TextField
-          id="externalId"
-          className="sm:col-span-2"
-          label="External ID"
-          optional
-          value={g.externalId ?? ''}
-          onChange={(v) => onDraftChange({ externalId: v })}
-        />
-
-        {legalFormId === LEGAL_FORM_ENTITY ? (
-          <TextField
-            id="fullname"
-            className="sm:col-span-2"
-            label="Entity name"
-            required
-            value={g.fullname ?? ''}
-            onChange={(v) => onDraftChange({ fullname: v })}
-            error={errors.fullname}
-          />
-        ) : (
-          <>
-            <TextField
-              id="firstname"
-              label="First name"
-              required
-              value={g.firstname ?? ''}
-              onChange={(v) => onDraftChange({ firstname: v })}
-              autoComplete="given-name"
-              error={errors.firstname}
-            />
-            <TextField
-              id="middlename"
-              label="Middle name"
-              optional
-              value={g.middlename ?? ''}
-              onChange={(v) => onDraftChange({ middlename: v })}
-              autoComplete="additional-name"
-            />
-            <TextField
-              id="lastname"
-              label="Last name"
-              required
-              value={g.lastname ?? ''}
-              onChange={(v) => onDraftChange({ lastname: v })}
-              autoComplete="family-name"
-              error={errors.lastname}
-            />
-          </>
-        )}
-
-        <DateField
-          id="dateOfBirth"
-          label={legalFormId === LEGAL_FORM_PERSON ? 'Date of birth' : 'Incorporation date'}
-          required
-          value={g.dateOfBirth}
-          onChange={(v) => onDraftChange({ dateOfBirth: v })}
-          error={errors.dateOfBirth}
-        />
-
-        {legalFormId === LEGAL_FORM_PERSON ? (
-          <SelectField
-            id="genderId"
-            label="Gender"
-            required
-            value={g.genderId ? String(g.genderId) : undefined}
-            onValueChange={(v) => onDraftChange({ genderId: v ? Number(v) : undefined })}
-            options={toSelectOptions(template.genderOptions)}
-            placeholder="Select gender"
-            error={errors.genderId}
-          />
-        ) : null}
-
-        {legalFormId === LEGAL_FORM_ENTITY ? (
-          <>
-            <SelectField
-              id="constitutionId"
-              label="Constitution"
-              required
-              value={nonPerson.constitutionId ? String(nonPerson.constitutionId) : undefined}
-              onValueChange={(v) =>
-                onDraftChange({
-                  clientNonPersonDetails: { ...nonPerson, constitutionId: Number(v) }
-                })
-              }
-              options={toSelectOptions(template.clientNonPersonConstitutionOptions)}
-              placeholder="Select constitution"
-              error={errors.constitutionId}
-            />
-            <SelectField
-              id="mainBusinessLineId"
-              label="Main business line"
-              optional
-              value={
-                nonPerson.mainBusinessLineId ? String(nonPerson.mainBusinessLineId) : undefined
-              }
-              onValueChange={(v) =>
-                onDraftChange({
-                  clientNonPersonDetails: {
-                    ...nonPerson,
-                    mainBusinessLineId: v ? Number(v) : undefined
-                  }
-                })
-              }
-              options={toSelectOptions(template.clientNonPersonMainBusinessLineOptions)}
-              placeholder="Select business line"
-            />
-            <DateField
-              id="incorpValidityTillDate"
-              label="Incorporation validity till"
-              optional
-              allowFuture
-              value={nonPerson.incorpValidityTillDate}
-              onChange={(v) =>
-                onDraftChange({
-                  clientNonPersonDetails: { ...nonPerson, incorpValidityTillDate: v }
-                })
-              }
-            />
-            <TextField
-              id="incorpNumber"
-              label="Incorporation number"
-              optional
-              value={nonPerson.incorpNumber ?? ''}
-              onChange={(v) =>
-                onDraftChange({
-                  clientNonPersonDetails: { ...nonPerson, incorpNumber: v }
-                })
-              }
-            />
-            <TextField
-              id="remarks"
-              className="sm:col-span-2"
-              label="Remarks"
-              optional
-              multiline
-              value={nonPerson.remarks ?? ''}
-              onChange={(v) =>
-                onDraftChange({
-                  clientNonPersonDetails: { ...nonPerson, remarks: v }
-                })
-              }
-            />
-          </>
-        ) : null}
 
         <SelectField
           id="staffId"
@@ -292,86 +148,11 @@ export function GeneralStep({
         ) : null}
 
         <TextField
-          id="mobileNo"
-          label="Phone number"
-          required
-          type="tel"
-          autoComplete="tel"
-          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
-          value={g.mobileNo ?? ''}
-          onChange={(v) => onDraftChange({ mobileNo: v })}
-          error={errors.mobileNo}
-        />
-
-        <TextField
-          id="alternativeMobileNo"
-          label="Alternative phone number"
+          id="externalId"
+          label="External ID"
           optional
-          type="tel"
-          autoComplete="tel"
-          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
-          value={g.alternativeMobileNo ?? ''}
-          onChange={(v) => onDraftChange({ alternativeMobileNo: v })}
-          error={errors.alternativeMobileNo}
-        />
-
-        <TextField
-          id="emailAddress"
-          label="Email"
-          optional
-          type="email"
-          value={g.emailAddress ?? ''}
-          onChange={(v) => onDraftChange({ emailAddress: v })}
-          error={errors.emailAddress}
-        />
-
-        <TextField
-          id="alternativeEmailAddress"
-          label="Alternative email"
-          optional
-          type="email"
-          value={g.alternativeEmailAddress ?? ''}
-          onChange={(v) => onDraftChange({ alternativeEmailAddress: v })}
-          error={errors.alternativeEmailAddress}
-        />
-
-        <TextField
-          id="taxIdentificationNumber"
-          label="Tax identification number (TIN)"
-          optional
-          value={g.taxIdentificationNumber ?? ''}
-          onChange={(v) => onDraftChange({ taxIdentificationNumber: v })}
-          error={errors.taxIdentificationNumber}
-          hint="Optional. Minors and others may not have a TIN."
-        />
-
-        <SectorCascadeSelect
-          subIndustryId={g.subIndustryId}
-          onSubIndustryIdChange={(subIndustryId) => onDraftChange({ subIndustryId })}
-          error={errors.subIndustryId}
-        />
-
-        <SelectField
-          id="clientTypeId"
-          label="Customer type"
-          required
-          value={g.clientTypeId ? String(g.clientTypeId) : undefined}
-          onValueChange={(v) => onDraftChange({ clientTypeId: v ? Number(v) : undefined })}
-          options={toSelectOptions(template.clientTypeOptions)}
-          placeholder="Select customer type"
-          error={errors.clientTypeId}
-        />
-
-        <SelectField
-          id="clientClassificationId"
-          label="Customer classification"
-          optional
-          value={g.clientClassificationId ? String(g.clientClassificationId) : undefined}
-          onValueChange={(v) =>
-            onDraftChange({ clientClassificationId: v ? Number(v) : undefined })
-          }
-          options={toSelectOptions(template.clientClassificationOptions)}
-          placeholder="Select classification"
+          value={g.externalId ?? ''}
+          onChange={(v) => onDraftChange({ externalId: v })}
         />
 
         <DateField
@@ -383,68 +164,23 @@ export function GeneralStep({
           error={errors.submittedOnDate}
         />
 
-        <SwitchField
-          id="active"
-          label="Active"
+        <SelectField
+          id="savingsProductId"
+          className="sm:col-span-2"
+          label="Savings product on activation"
           optional
-          checked={active}
-          description="Activate the customer immediately. Requires an activation date."
-          onCheckedChange={(isActive) => {
-            onDraftChange({
-              active: isActive,
-              activationDate: isActive && !g.activationDate ? toFineractDate() : g.activationDate,
-              ...(isActive ? {} : { addSavings: false, savingsProductId: undefined })
-            });
-          }}
-        />
-
-        {active ? (
-          <DateField
-            id="activationDate"
-            label="Activation date"
-            required
-            value={g.activationDate}
-            onChange={(v) => onDraftChange({ activationDate: v })}
-            error={errors.activationDate}
-          />
-        ) : null}
-
-        <SwitchField
-          id="addSavings"
-          label="Open savings account"
-          optional
-          checked={addSavings}
-          disabled={!active}
-          description={
-            active
-              ? 'Create a savings account when this customer is submitted.'
-              : 'Turn on Active first to open a savings account on creation.'
+          value={g.savingsProductId ? String(g.savingsProductId) : undefined}
+          onValueChange={(v) =>
+            onDraftChange({ savingsProductId: v ? Number(v) : undefined })
           }
-          error={errors.addSavings}
-          onCheckedChange={(open) => {
-            onDraftChange({
-              addSavings: open,
-              savingsProductId: open ? g.savingsProductId : undefined
-            });
-          }}
+          options={toSelectOptions(
+            template.savingProductOptions?.map((p) => ({ id: p.id, name: p.name }))
+          )}
+          placeholder="Select savings product"
+          hint="Optional. When this customer is activated, a savings account is opened for the selected product."
+          error={errors.savingsProductId}
         />
-
-        {addSavings ? (
-          <SelectField
-            id="savingsProductId"
-            label="Savings product"
-            required
-            value={g.savingsProductId ? String(g.savingsProductId) : undefined}
-            onValueChange={(v) => onDraftChange({ savingsProductId: Number(v) })}
-            options={toSelectOptions(
-              template.savingProductOptions?.map((p) => ({ id: p.id, name: p.name }))
-            )}
-            placeholder="Select savings product"
-            error={errors.savingsProductId}
-          />
-        ) : null}
       </div>
-
     </div>
   );
 }

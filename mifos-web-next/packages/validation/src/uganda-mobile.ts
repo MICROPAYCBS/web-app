@@ -27,10 +27,13 @@ export const ugandaMobileInternationalSchema = z
     message: UGANDA_MOBILE_INTERNATIONAL_MESSAGE
   });
 
-/** Empty string is allowed; any other value must match {@link ugandaMobileInternationalSchema}. */
-export const optionalUgandaMobileInternationalSchema = z
-  .string()
-  .trim()
-  .refine((value) => value === '' || isValidUgandaMobileInternational(value), {
-    message: UGANDA_MOBILE_INTERNATIONAL_MESSAGE
-  });
+/** Empty, omitted, or null values are allowed; any other value must match {@link ugandaMobileInternationalSchema}. */
+export const optionalUgandaMobileInternationalSchema = z.preprocess(
+  (value) => (value == null ? '' : value),
+  z
+    .string()
+    .trim()
+    .refine((value) => value === '' || isValidUgandaMobileInternational(value), {
+      message: UGANDA_MOBILE_INTERNATIONAL_MESSAGE
+    })
+);

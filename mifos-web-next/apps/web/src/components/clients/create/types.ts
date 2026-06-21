@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAddressFieldConfig, FineractClientTemplate, FineractEntityDatatableCheck } from '@mifos/api-client';
-import type { ClientAddressEntry, FamilyMemberInput } from '@mifos/validation';
+import type { FineractAddressFieldConfig, FineractClientTemplate, FineractEntityDatatableCheck, FineractIncomeSourceOptions } from '@mifos/api-client';
+import type { ClientAddressEntry, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
 
 export type DatatableFormValues = Record<string, Record<string, unknown>>;
 export type MultiRowDatatableDraft = Record<string, Record<string, unknown>[]>;
@@ -37,21 +37,24 @@ export interface ClientGeneralFormState {
   alternativeMobileNo?: string;
   alternativeEmailAddress?: string;
   subIndustryId?: number;
+  titleId?: number;
+  nationalityCountryId?: number;
+  customerRiskProfileId?: number;
   dateOfBirth?: string;
   clientTypeId?: number;
   clientClassificationId?: number;
   submittedOnDate?: string;
-  active?: boolean;
-  activationDate?: string;
   savingsProductId?: number;
-  addSavings?: boolean;
   dateFormat?: string;
   locale?: string;
 }
 
 export interface CreateClientDraft {
   general: ClientGeneralFormState;
+  clientIdentifiers: ClientIdentifierInput[];
   familyMembers: FamilyMemberInput[];
+  incomeSources: IncomeSourceInput[];
+  complianceProfile: ComplianceProfileInput;
   addresses: ClientAddressEntry[];
   datatables: DatatableFormValues;
   multiRowDatatables: MultiRowDatatableDraft;
@@ -59,6 +62,10 @@ export interface CreateClientDraft {
 
 export interface CreateClientWizardProps {
   initialTemplate: FineractClientTemplate;
+  /** Pre-select branch on the general step (typically the signed-in user's office). */
+  defaultOfficeId?: number;
   addressFieldConfig: FineractAddressFieldConfig[];
   entityDatatableChecks?: FineractEntityDatatableCheck[];
+  incomeSourceOptions?: FineractIncomeSourceOptions;
+  identifierDocumentTypes?: { id: number; name: string }[];
 }

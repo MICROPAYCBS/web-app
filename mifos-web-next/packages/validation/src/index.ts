@@ -23,7 +23,23 @@ export {
   normalizeUgandaNin
 } from './uganda-nin';
 export {
-  clientAddressEntrySchema,
+  complianceProfileSchema,
+  otherBankAccountSchema,
+  isComplianceProfileEmpty,
+  sanitizeComplianceProfileForSubmit,
+  type ComplianceProfileInput,
+  type OtherBankAccountInput
+} from './clients/compliance-profile.schema';
+export {
+  formatZodIssuesForDisplay,
+  formatZodIssuesMessage
+} from './format-zod-issues';
+export {
+  incomeSourceSchema,
+  type IncomeSourceInput,
+  type IncomeSourcePayload
+} from './clients/income-source.schema';
+export {
   clientNonPersonDetailsSchema,
   createClientSchema,
   createClientSheetSchema,

@@ -10,6 +10,7 @@
 
 import type { FineractFamilyMemberOptions } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
+import { UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER } from '@mifos/validation';
 import { useId, useState } from 'react';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { DateField } from '@/components/composites/date-field';
@@ -26,6 +27,9 @@ function defaultFamilyMemberForm(m?: FamilyMemberInput): FamilyMemberInput {
     middleName: m?.middleName ?? '',
     lastName: m?.lastName ?? '',
     qualification: m?.qualification ?? '',
+    mobileNumber: m?.mobileNumber ?? '',
+    emailAddress: m?.emailAddress ?? '',
+    address: m?.address ?? '',
     relationshipId: m?.relationshipId ?? 0,
     genderId: m?.genderId ?? 0,
     professionId: m?.professionId,
@@ -131,6 +135,32 @@ export function FamilyMemberFormSheet({
           required
           value={form.lastName}
           onChange={(v) => setForm({ ...form, lastName: v })}
+        />
+        <TextField
+          id="familyMobileNumber"
+          label="Telephone"
+          optional
+          placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
+          value={form.mobileNumber ?? ''}
+          onChange={(v) => setForm({ ...form, mobileNumber: v })}
+        />
+        <TextField
+          id="familyEmailAddress"
+          className="sm:col-span-2"
+          label="Email"
+          optional
+          type="email"
+          value={form.emailAddress ?? ''}
+          onChange={(v) => setForm({ ...form, emailAddress: v })}
+        />
+        <TextField
+          id="familyAddress"
+          className="sm:col-span-2"
+          label="Address"
+          optional
+          value={form.address ?? ''}
+          onChange={(v) => setForm({ ...form, address: v })}
+          hint="Physical or postal address for this next of kin contact."
         />
         <TextField
           id="familyQualification"

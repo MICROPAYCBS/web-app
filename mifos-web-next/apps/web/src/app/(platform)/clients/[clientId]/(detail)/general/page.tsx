@@ -11,6 +11,8 @@ import { notFound } from 'next/navigation';
 import { ClientGeneralSections } from '@/components/clients/detail/client-general-sections';
 import { ClientTransferStatusPanel } from '@/components/clients/detail/client-transfer-status-panel';
 import { buildClientFinancialSummary } from '@/lib/fineract/client-financial-summary';
+import { getClientComplianceProfile } from '@/lib/fineract/client-compliance-profile';
+import { getClientIncomeSources } from '@/lib/fineract/client-income-source';
 import { getClientAccounts } from '@/lib/fineract/client-accounts';
 import { getClientTransferContext } from '@/lib/fineract/client-transfer';
 import { getClient } from '@/lib/fineract/clients';
@@ -32,9 +34,11 @@ export default async function ClientGeneralPage({
     throw err;
   }
 
-  const [accounts, transferContext] = await Promise.all([
+  const [accounts, transferContext, incomeSources, complianceProfile] = await Promise.all([
     getClientAccounts(clientId),
-    getClientTransferContext(clientId)
+    getClientTransferContext(clientId),
+    getClientIncomeSources(clientId).catch(() => []),
+    getClientComplianceProfile(clientId).catch(() => null)
   ]);
   const financialSummary = buildClientFinancialSummary(accounts);
 
@@ -43,7 +47,12 @@ export default async function ClientGeneralPage({
       {transferContext ? (
         <ClientTransferStatusPanel clientId={clientId} context={transferContext} />
       ) : null}
-      <ClientGeneralSections client={client} financialSummary={financialSummary} />
+      <ClientGeneralSections
+        client={client}
+        financialSummary={financialSummary}
+        incomeSources={incomeSources}
+        complianceProfile={complianceProfile}
+      />
     </div>
   );
 }

@@ -26,9 +26,10 @@ export function formatFamilyMemberSummary(member: {
   relationship?: string;
   gender?: string;
   mobileNumber?: string;
+  emailAddress?: string;
   isDependent?: boolean;
 }): string {
-  const parts = [member.relationship, member.gender, member.mobileNumber].filter(Boolean);
+  const parts = [member.relationship, member.gender, member.mobileNumber, member.emailAddress].filter(Boolean);
   if (member.isDependent) {
     parts.push('Dependent');
   }
@@ -41,6 +42,8 @@ export function formatFamilyMemberInputSummary(
 ): string {
   return formatFamilyMemberSummary({
     relationship: relationshipLabel,
+    mobileNumber: member.mobileNumber,
+    emailAddress: member.emailAddress,
     isDependent: member.isDependent
   });
 }
@@ -189,8 +192,18 @@ export function ClientFamilySections({ member }: { member: FineractClientFamilyM
         </DetailField>
       ) : null}
       {member.mobileNumber ? (
-        <DetailField label="Mobile">
+        <DetailField label="Telephone">
           <TextValue value={member.mobileNumber} />
+        </DetailField>
+      ) : null}
+      {member.emailAddress ? (
+        <DetailField label="Email">
+          <TextValue value={member.emailAddress} />
+        </DetailField>
+      ) : null}
+      {member.address ? (
+        <DetailField label="Address" className="sm:col-span-2">
+          <TextValue value={member.address} />
         </DetailField>
       ) : null}
       {member.age != null ? (

@@ -100,7 +100,16 @@ export async function loadClientActionSheetDataAction(
             : null;
         return { ok: true, data: { sheetId, transferDate } };
       }
-      case 'activate':
+      case 'activate': {
+        const template = await getClientWithTemplate(clientId);
+        return {
+          ok: true,
+          data: {
+            sheetId,
+            savingsProductName: template.savingsProductName
+          }
+        };
+      }
       case 'reactivate':
       case 'undo-rejection':
         return { ok: true, data: { sheetId } };

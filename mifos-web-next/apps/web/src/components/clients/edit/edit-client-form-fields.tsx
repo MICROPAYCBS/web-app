@@ -71,6 +71,15 @@ export function EditClientFormFields({
           />
         ) : (
           <>
+            <SelectField
+              id="titleId"
+              label="Title"
+              optional
+              value={form.titleId ? String(form.titleId) : undefined}
+              onValueChange={(v) => onPatch({ titleId: v ? Number(v) : undefined })}
+              options={toSelectOptions(initial.titleOptions)}
+              placeholder="Select title"
+            />
             <TextField
               id="firstname"
               label="First name"
@@ -96,6 +105,20 @@ export function EditClientFormFields({
             />
           </>
         )}
+
+        {legalFormId === LEGAL_FORM_PERSON ? (
+          <SelectField
+            id="nationalityCountryId"
+            label="Nationality"
+            optional
+            value={form.nationalityCountryId ? String(form.nationalityCountryId) : undefined}
+            onValueChange={(v) =>
+              onPatch({ nationalityCountryId: v ? Number(v) : undefined })
+            }
+            options={toSelectOptions(initial.nationalityOptions)}
+            placeholder="Select nationality"
+          />
+        ) : null}
 
         <DateField
           id="dateOfBirth"
@@ -280,6 +303,22 @@ export function EditClientFormFields({
           }
           options={toSelectOptions(initial.clientClassificationOptions)}
           placeholder="Select classification"
+        />
+
+        <SelectField
+          id="customerRiskProfileId"
+          className="sm:col-span-2"
+          label="Customer risk profile"
+          optional
+          value={
+            form.customerRiskProfileId ? String(form.customerRiskProfileId) : undefined
+          }
+          onValueChange={(v) =>
+            onPatch({ customerRiskProfileId: v ? Number(v) : undefined })
+          }
+          options={toSelectOptions(initial.customerRiskProfileOptions)}
+          placeholder="Select risk profile"
+          hint="Internal bank-use field for AML risk tiering."
         />
 
         <DateField

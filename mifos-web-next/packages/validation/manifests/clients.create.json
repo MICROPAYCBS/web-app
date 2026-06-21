@@ -12,6 +12,7 @@
     "alternativeMobileNo": { "required": false, "maxLength": 13, "format": "ugandaInternationalMobile" },
     "alternativeEmailAddress": { "required": false, "maxLength": 50 },
     "subIndustryId": { "required": false },
+    "incomeSources": { "required": false },
     "dateOfBirth": { "required": true },
     "genderId": { "requiredWhen": "legalFormId=1" },
     "clientTypeId": { "required": true },

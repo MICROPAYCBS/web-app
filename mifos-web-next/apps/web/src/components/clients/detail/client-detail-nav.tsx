@@ -11,6 +11,7 @@
 import {
   ArrowLeftRight,
   Banknote,
+  Briefcase,
   ChartPie,
   ChevronLeft,
   FileText,
@@ -81,6 +82,18 @@ export function clientDetailNavGroups(
           label: 'Next of kin',
           href: `${base}/family-members`,
           icon: Users
+        },
+        {
+          id: 'income-sources',
+          label: 'Income sources',
+          href: `${base}/income-sources`,
+          icon: Briefcase
+        },
+        {
+          id: 'compliance-profile',
+          label: 'Compliance',
+          href: `${base}/compliance-profile`,
+          icon: Shield
         },
         {
           id: 'identities',

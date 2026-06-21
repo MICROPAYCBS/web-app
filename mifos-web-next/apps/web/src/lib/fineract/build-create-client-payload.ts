@@ -55,6 +55,37 @@ export function buildCreateClientPayload(input: CreateClientPayload): Record<str
     delete base.familyMembers;
   }
 
+  if (input.incomeSources?.length) {
+    base.incomeSources = input.incomeSources.map((source) =>
+      stripEmpty({ ...source, dateFormat, locale })
+    );
+  } else {
+    delete base.incomeSources;
+  }
+
+  if (input.clientIdentifiers?.length) {
+    base.clientIdentifiers = input.clientIdentifiers.map((identifier) => stripEmpty(identifier));
+  } else {
+    delete base.clientIdentifiers;
+  }
+
+  if (input.complianceProfile) {
+    const accounts = input.complianceProfile.otherBankAccounts
+      ?.filter((account) => account.bankName?.trim() && account.accountNumber?.trim())
+      .map((account, index) =>
+        stripEmpty({
+          ...account,
+          displayOrder: index + 1
+        })
+      );
+    base.complianceProfile = stripEmpty({
+      ...input.complianceProfile,
+      otherBankAccounts: accounts?.length ? accounts : undefined
+    });
+  } else {
+    delete base.complianceProfile;
+  }
+
   if (input.address?.length) {
     base.address = input.address.map((entry) => stripEmpty({ ...entry }));
   } else {

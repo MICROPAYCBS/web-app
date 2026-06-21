@@ -9,8 +9,9 @@
  */
 
 import {
-  createClientSchema,
   formatActionErrorMessage,
+  formatZodIssuesForDisplay,
+  formatZodIssuesMessage,
   LEGAL_FORM_PERSON,
   type CreateClientPayload
 } from '@mifos/validation';
@@ -26,15 +27,24 @@ import { mandatoryClientDatatableNames } from '@/lib/fineract/mandatory-client-d
 import { AddressStep } from './steps/address-step';
 import { DatatableStep } from './steps/datatable-step';
 import { FamilyStep } from './steps/family-step';
+import { IdentifiersStep } from './steps/identifiers-step';
+import { IncomeSourceStep } from './steps/income-source-step';
+import { BiodataStep } from './steps/biodata-step';
+import { ContactStep } from './steps/contact-step';
+import { CustomerProfilingStep } from './steps/customer-profiling-step';
+import {
+  ComplianceProfileStep,
+  emptyComplianceProfile
+} from './steps/compliance-profile-step';
 import { GeneralStep } from './steps/general-step';
 import { MultiRowDatatableStep } from './steps/multi-row-datatable-step';
 import { PreviewStep } from './steps/preview-step';
 import {
-  buildCreateClientDatatablePayloads,
   datatablesForLegalForm,
   multiRowDatatablesForLegalForm,
   singleRowDatatablesForLegalForm
 } from './datatable-payloads';
+import { createClientIssueStepId, parseCreateClientPayload } from './build-create-client-raw';
 import type { CreateClientDraft, CreateClientWizardProps } from './types';
 import {
   findFirstInvalidCreateClientStep,
@@ -49,7 +59,13 @@ function buildSteps(
 ): FormWizardStep[] {
   const steps: FormWizardStep[] = [
     { id: 'general', label: 'General' },
-    { id: 'family', label: 'Next of kin' }
+    { id: 'biodata', label: 'Biodata' },
+    { id: 'contact', label: 'Contact' },
+    { id: 'identifiers', label: 'Identification' },
+    { id: 'customer-profiling', label: 'Customer profiling' },
+    { id: 'family', label: 'Next of kin' },
+    { id: 'income-sources', label: 'Income sources' },
+    { id: 'compliance', label: 'Compliance' }
   ];
   if (template.isAddressEnabled) {
     steps.push({ id: 'address', label: 'Address' });
@@ -70,17 +86,19 @@ function buildSteps(
   return steps;
 }
 
-function emptyDraft(): CreateClientDraft {
+function emptyDraft(defaultOfficeId?: number): CreateClientDraft {
   return {
     general: {
+      officeId: defaultOfficeId,
       legalFormId: LEGAL_FORM_PERSON,
       submittedOnDate: toFineractDate(),
-      active: false,
-      addSavings: false,
       dateFormat: FINERACT_DATE_FORMAT,
       locale: FINERACT_LOCALE
     },
     familyMembers: [],
+    clientIdentifiers: [],
+    incomeSources: [],
+    complianceProfile: emptyComplianceProfile(),
     addresses: [],
     datatables: {},
     multiRowDatatables: {}
@@ -89,12 +107,15 @@ function emptyDraft(): CreateClientDraft {
 
 export function CreateClientWizard({
   initialTemplate,
+  defaultOfficeId,
   addressFieldConfig,
-  entityDatatableChecks = []
+  entityDatatableChecks = [],
+  incomeSourceOptions,
+  identifierDocumentTypes = []
 }: CreateClientWizardProps) {
   const router = useRouter();
   const [template, setTemplate] = useState(initialTemplate);
-  const [draft, setDraft] = useState<CreateClientDraft>(emptyDraft);
+  const [draft, setDraft] = useState<CreateClientDraft>(() => emptyDraft(defaultOfficeId));
   const [stepId, setStepId] = useState('general');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
     () => new Set()
@@ -110,17 +131,18 @@ export function CreateClientWizard({
   const mandatoryDatatableNames = useMemo(
     () =>
       mandatoryClientDatatableNames(entityDatatableChecks, {
-        active: draft.general.active ?? false,
+        active: false,
         savingsProductId: draft.general.savingsProductId
       }),
-    [entityDatatableChecks, draft.general.active, draft.general.savingsProductId]
+    [entityDatatableChecks, draft.general.savingsProductId]
   );
 
   const validationContext = useMemo(
     (): CreateClientValidationContext => ({
-      mandatoryDatatableNames
+      mandatoryDatatableNames,
+      firstDocumentTypeId: identifierDocumentTypes[0]?.id
     }),
-    [mandatoryDatatableNames]
+    [mandatoryDatatableNames, identifierDocumentTypes]
   );
 
   const markValidationAttempted = useCallback((id: string) => {
@@ -234,33 +256,18 @@ export function CreateClientWizard({
   }
 
   function buildPayload(): CreateClientPayload | null {
-    const { general, familyMembers, addresses, datatables, multiRowDatatables } = draft;
-    const { addSavings, ...generalFields } = general;
-    void addSavings;
-
-    const dateFormat = generalFields.dateFormat ?? FINERACT_DATE_FORMAT;
-    const locale = generalFields.locale ?? FINERACT_LOCALE;
-    const datatablePayloads = buildCreateClientDatatablePayloads(
-      template,
-      legalFormId,
-      datatables,
-      multiRowDatatables,
-      dateFormat,
-      locale
-    );
-
-    const raw = {
-      ...generalFields,
-      legalFormId,
-      familyMembers: familyMembers.length ? familyMembers : undefined,
-      address: template.isAddressEnabled && addresses.length ? addresses : undefined,
-      datatables: datatablePayloads.length ? datatablePayloads : undefined
-    };
-
-    const parsed = createClientSchema.safeParse(raw);
-    if (!parsed.success) {
-      const message = parsed.error.issues.map((i) => i.message).join('; ');
-      setSubmitError(message || 'Validation failed. Go back and fix the form.');
+    const parsed = parseCreateClientPayload(draft, template, legalFormId);
+    if (!parsed.ok) {
+      const message = formatZodIssuesMessage(parsed.issues);
+      setSubmitError(message);
+      const firstIssue = parsed.issues[0];
+      if (firstIssue) {
+        const targetStep = createClientIssueStepId(firstIssue.path);
+        if (steps.some((step) => step.id === targetStep)) {
+          markValidationAttempted(targetStep);
+          setStepId(targetStep);
+        }
+      }
       return null;
     }
     return parsed.data;
@@ -276,6 +283,8 @@ export function CreateClientWizard({
     );
     if (invalidStep) {
       markValidationAttempted(invalidStep.stepId);
+      const summary = Object.values(invalidStep.errors).join(' ');
+      setSubmitError(summary || 'Complete the highlighted step before creating this customer.');
       setStepId(invalidStep.stepId);
       return;
     }
@@ -339,6 +348,23 @@ export function CreateClientWizard({
     }
   }, [resolvedStepId, activeDatatable, activeMultiRowDatatable]);
 
+  const previewValidationIssues = useMemo((): string[] => {
+    const invalidStep = findFirstInvalidCreateClientStep(
+      steps,
+      draft,
+      template,
+      validationContext
+    );
+    if (invalidStep) {
+      return Object.values(invalidStep.errors);
+    }
+    const parsed = parseCreateClientPayload(draft, template, legalFormId);
+    if (!parsed.ok) {
+      return formatZodIssuesForDisplay(parsed.issues);
+    }
+    return [];
+  }, [steps, draft, template, validationContext, legalFormId]);
+
   const isPreview = resolvedStepId === 'preview';
 
   return (
@@ -373,11 +399,61 @@ export function CreateClientWizard({
         />
       ) : null}
 
+      {resolvedStepId === 'biodata' ? (
+        <BiodataStep
+          template={template}
+          draft={draft}
+          errors={stepErrors}
+          onDraftChange={patchGeneral}
+        />
+      ) : null}
+
+      {resolvedStepId === 'contact' ? (
+        <ContactStep draft={draft} errors={stepErrors} onDraftChange={patchGeneral} />
+      ) : null}
+
+      {resolvedStepId === 'identifiers' ? (
+        <IdentifiersStep
+          documentTypes={identifierDocumentTypes}
+          draft={draft}
+          onIdentifiersChange={(clientIdentifiers) =>
+            setDraft((d) => ({ ...d, clientIdentifiers }))
+          }
+        />
+      ) : null}
+
+      {resolvedStepId === 'customer-profiling' ? (
+        <CustomerProfilingStep
+          template={template}
+          draft={draft}
+          errors={stepErrors}
+          onDraftChange={patchGeneral}
+        />
+      ) : null}
+
       {resolvedStepId === 'family' ? (
         <FamilyStep
           template={template}
           draft={draft}
           onFamilyChange={(familyMembers) => setDraft((d) => ({ ...d, familyMembers }))}
+        />
+      ) : null}
+
+      {resolvedStepId === 'income-sources' ? (
+        <IncomeSourceStep
+          incomeSourceOptions={incomeSourceOptions}
+          draft={draft}
+          onIncomeSourcesChange={(incomeSources) => setDraft((d) => ({ ...d, incomeSources }))}
+        />
+      ) : null}
+
+      {resolvedStepId === 'compliance' ? (
+        <ComplianceProfileStep
+          draft={draft}
+          errors={stepErrors}
+          onComplianceChange={(complianceProfile) =>
+            setDraft((d) => ({ ...d, complianceProfile }))
+          }
         />
       ) : null}
 
@@ -427,7 +503,14 @@ export function CreateClientWizard({
       ) : null}
 
       {isPreview ? (
-        <PreviewStep template={template} draft={draft} submitError={submitError} />
+        <PreviewStep
+          template={template}
+          draft={draft}
+          submitError={submitError}
+          validationIssues={previewValidationIssues}
+          incomeSourceOptions={incomeSourceOptions}
+          identifierDocumentTypes={identifierDocumentTypes}
+        />
       ) : null}
     </FormWizard>
     </div>
