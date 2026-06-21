@@ -51,6 +51,9 @@ pnpm run dev
 pnpm run build
 pnpm run lint
 pnpm run typecheck
+pnpm run check      # typecheck — runs automatically on commit when mifos-web-next files change
+pnpm run check:lint # eslint (not yet in the commit hook; many legacy findings)
+pnpm run check:ci   # typecheck + production build — same gate as GitHub Actions / Vercel
 ```
 
 ## UI

@@ -40,6 +40,7 @@ export {
   type IncomeSourcePayload
 } from './clients/income-source.schema';
 export {
+  clientAddressEntrySchema,
   clientNonPersonDetailsSchema,
   createClientSchema,
   createClientSheetSchema,
