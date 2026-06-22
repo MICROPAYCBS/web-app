@@ -19,6 +19,7 @@ import {
   buildAuditTrailSearchParams,
   type AuditTrailListQuery
 } from '@/lib/fineract/audit-trail-query';
+import { coerceFineractDateTime, FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 const AUDITS_PATH = '/audits';
@@ -35,20 +36,17 @@ function normalizeAuditTrailListItem(raw: unknown): FineractAuditTrailListItem |
   return {
     id,
     resourceId: Number.isFinite(Number(row.resourceId)) ? Number(row.resourceId) : undefined,
+    subresourceId: Number.isFinite(Number(row.subresourceId))
+      ? Number(row.subresourceId)
+      : undefined,
     processingResult: typeof row.processingResult === 'string' ? row.processingResult : undefined,
     maker: typeof row.maker === 'string' ? row.maker : undefined,
     actionName: typeof row.actionName === 'string' ? row.actionName : undefined,
     entityName: typeof row.entityName === 'string' ? row.entityName : undefined,
     officeName: typeof row.officeName === 'string' ? row.officeName : undefined,
-    madeOnDate:
-      typeof row.madeOnDate === 'string' || Array.isArray(row.madeOnDate)
-        ? (row.madeOnDate as string | number[])
-        : undefined,
+    madeOnDate: coerceFineractDateTime(row.madeOnDate),
     checker: typeof row.checker === 'string' ? row.checker : undefined,
-    checkedOnDate:
-      typeof row.checkedOnDate === 'string' || Array.isArray(row.checkedOnDate)
-        ? (row.checkedOnDate as string | number[])
-        : undefined,
+    checkedOnDate: coerceFineractDateTime(row.checkedOnDate),
     ip: typeof row.ip === 'string' ? row.ip : undefined,
     clientName: typeof row.clientName === 'string' ? row.clientName : undefined
   };
@@ -164,4 +162,43 @@ export async function getAuditTrail(auditId: number): Promise<FineractAuditTrail
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(`${AUDITS_PATH}/${auditId}`);
   return normalizeAuditTrailDetail(raw);
+}
+
+/** Fineract audit entity for savings account commands (including transactions). */
+export const SAVINGS_ACCOUNT_AUDIT_ENTITY = 'SAVINGSACCOUNT';
+
+/** @deprecated Use {@link SAVINGS_ACCOUNT_AUDIT_ENTITY}. */
+export const SAVINGS_ACCOUNT_TRANSACTION_AUDIT_ENTITY = SAVINGS_ACCOUNT_AUDIT_ENTITY;
+
+export function filterAuditTrailsForSavingsTransaction(
+  audits: FineractAuditTrailListItem[],
+  transactionId: string | number
+): FineractAuditTrailListItem[] {
+  const txId = Number(transactionId);
+  if (!Number.isFinite(txId)) {
+    return [];
+  }
+  return audits.filter((audit) => audit.subresourceId === txId || audit.resourceId === txId);
+}
+
+export async function listAuditTrailsForSavingsTransaction(
+  accountId: string | number,
+  transactionId: string | number,
+  options?: { limit?: number }
+): Promise<FineractAuditTrailsPage> {
+  const page = await listAuditTrails({
+    offset: 0,
+    limit: options?.limit ?? 200,
+    orderBy: 'id',
+    sortOrder: 'desc',
+    entityName: SAVINGS_ACCOUNT_AUDIT_ENTITY,
+    savingsAccountId: String(accountId),
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  });
+  const pageItems = filterAuditTrailsForSavingsTransaction(page.pageItems, transactionId);
+  return {
+    pageItems,
+    totalFilteredRecords: pageItems.length
+  };
 }

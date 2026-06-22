@@ -19,6 +19,7 @@ import {
   clientGeneralPath
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
+import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
@@ -38,7 +39,19 @@ function savingsAccountPermissions(session: Awaited<ReturnType<typeof getServerS
     blockCredit: can(session, 'BLOCKCREDIT_SAVINGSACCOUNT'),
     unblockCredit: can(session, 'UNBLOCKCREDIT_SAVINGSACCOUNT'),
     blockDebit: can(session, 'BLOCKDEBIT_SAVINGSACCOUNT'),
-    unblockDebit: can(session, 'UNBLOCKDEBIT_SAVINGSACCOUNT')
+    unblockDebit: can(session, 'UNBLOCKDEBIT_SAVINGSACCOUNT'),
+    calculateInterest: can(session, 'CALCULATEINTEREST_SAVINGSACCOUNT'),
+    postInterest: can(session, 'POSTINTEREST_SAVINGSACCOUNT'),
+    postInterestAsOn: can(session, 'POSTINTEREST_SAVINGSACCOUNT'),
+    addCharge: can(session, 'CREATE_SAVINGSACCOUNTCHARGE'),
+    applyAnnualFees: can(session, 'APPLYANNUALFEE_SAVINGSACCOUNT'),
+    holdAmount: can(session, 'HOLDAMOUNT_SAVINGSACCOUNT'),
+    transferFunds: can(session, 'CREATE_ACCOUNTTRANSFER'),
+    assignStaff: can(session, 'UPDATESAVINGSOFFICER_SAVINGSACCOUNT'),
+    unassignStaff: can(session, 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT'),
+    enableWithholdTax: can(session, 'UPDATEWITHHOLDTAX_SAVINGSACCOUNT'),
+    disableWithholdTax: can(session, 'UPDATEWITHHOLDTAX_SAVINGSACCOUNT'),
+    deleteAccount: can(session, 'DELETE_SAVINGSACCOUNT')
   };
 }
 
@@ -91,6 +104,7 @@ export default async function SavingsAccountGeneralPage({
         account={result.data}
         clientId={clientId}
         permissions={savingsAccountPermissions(session)}
+        transactionActionPermissions={savingsTransactionActionPermissions(session)}
       />
     </Suspense>
   );

@@ -9,8 +9,16 @@
  */
 
 import type { FineractSavingsAccountDetail } from '@mifos/api-client';
-import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import {
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  type ColumnDef,
+  type PaginationState,
+  type VisibilityState
+} from '@tanstack/react-table';
+import Link from 'next/link';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   DetailField,
   DetailFieldGrid,
@@ -18,21 +26,31 @@ import {
   DetailSummary,
   MoneyValue
 } from '@/components/composites';
+import { SavingsTransactionActionsMenu } from '@/components/clients/savings/actions/savings-transaction-actions-menu';
 import { DataTable } from '@/components/composites/data-table/data-table';
+import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
+import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
+import { savingsAccountTransactionPath } from '@/lib/fineract/client-account-links';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import {
   formatSavingsAccountDate,
   formatSavingsAccountMoney,
   formatSavingsChargeStatus,
-  formatSavingsTransactionPaymentDetail,
   formatSavingsTransactionType,
-  isSavingsTransactionCredit,
+  isSavingsTransactionAccrual,
+  isSavingsTransactionDebit,
   savingsAccountCurrencyCode,
   savingsAccountProductName,
   savingsAccountTimelineName,
+  savingsTransactionDate,
+  savingsTransactionRowClassName,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
+import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
 import { cn } from '@/lib/utils';
 
 function SavingsAccountSummarySection({ account }: { account: FineractSavingsAccountDetail }) {
@@ -204,59 +222,119 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
 
 type TransactionRow = NonNullable<FineractSavingsAccountDetail['transactions']>[number];
 
+const DEFAULT_TRANSACTION_COLUMN_VISIBILITY: VisibilityState = {
+  externalId: false
+};
+
+function SavingsTransactionAmountDisplay({ transaction }: { transaction: TransactionRow }) {
+  const debit = isSavingsTransactionDebit(transaction);
+  const formatted = formatAccountMoney(transaction.amount);
+  if (formatted === '—') {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  return (
+    <span
+      className={cn('tabular-nums', debit ? 'text-destructive' : 'text-success')}
+    >
+      {debit ? `-${formatted}` : `+${formatted}`}
+    </span>
+  );
+}
+
+function TransactionCell({
+  transaction,
+  children
+}: {
+  transaction: TransactionRow;
+  children: ReactNode;
+}) {
+  return <span className={cn(savingsTransactionRowClassName(transaction))}>{children}</span>;
+}
+
 function buildTransactionColumns(
-  account: FineractSavingsAccountDetail
+  account: FineractSavingsAccountDetail,
+  clientId: string,
+  transactionActionPermissions: SavingsTransactionActionPermissions
 ): ColumnDef<TransactionRow>[] {
   const currency = savingsAccountCurrencyCode(account);
 
   return [
     {
+      id: 'row',
+      header: '#',
+      cell: ({ row, table }) => {
+        const { pageIndex, pageSize } = table.getState().pagination;
+        const index = pageIndex * pageSize + row.index + 1;
+        return (
+          <TransactionCell transaction={row.original}>
+            <span className="tabular-nums text-muted-foreground">{index}</span>
+          </TransactionCell>
+        );
+      }
+    },
+    {
       accessorKey: 'id',
       header: 'Id',
       cell: ({ row }) => (
-        <span className="tabular-nums text-muted-foreground">{row.original.id}</span>
+        <TransactionCell transaction={row.original}>
+          <Link
+            href={savingsAccountTransactionPath(clientId, account.id, row.original.id)}
+            className="tabular-nums text-primary underline-offset-4 hover:underline"
+          >
+            {row.original.id}
+          </Link>
+        </TransactionCell>
       )
     },
     {
       id: 'date',
-      header: 'Date',
-      cell: ({ row }) => formatSavingsAccountDate(row.original.submittedOnDate)
+      header: 'Transaction date',
+      cell: ({ row }) => (
+        <TransactionCell transaction={row.original}>
+          {formatSavingsAccountDate(savingsTransactionDate(row.original))}
+        </TransactionCell>
+      )
+    },
+    {
+      id: 'externalId',
+      header: 'External ID',
+      meta: { label: 'External ID' },
+      cell: ({ row }) => (
+        <TransactionCell transaction={row.original}>
+          {row.original.externalId?.trim() || '—'}
+        </TransactionCell>
+      )
     },
     {
       id: 'type',
       header: 'Type',
-      cell: ({ row }) => formatSavingsTransactionType(row.original)
+      cell: ({ row }) => (
+        <TransactionCell transaction={row.original}>
+          {formatSavingsTransactionType(row.original)}
+        </TransactionCell>
+      )
     },
     {
       id: 'amount',
       header: () => <span className="block w-full text-right">Amount</span>,
-      cell: ({ row }) => {
-        const credit = isSavingsTransactionCredit(row.original);
-        return (
-          <span
-            className={cn(
-              'block w-full text-right tabular-nums',
-              credit ? 'text-foreground' : 'text-muted-foreground'
-            )}
-          >
-            <MoneyValue amount={row.original.amount} currencyCode={currency} />
+      cell: ({ row }) => (
+        <TransactionCell transaction={row.original}>
+          <span className="block w-full text-right">
+            <SavingsTransactionAmountDisplay transaction={row.original} />
           </span>
-        );
-      }
+        </TransactionCell>
+      )
     },
     {
       id: 'balance',
       header: () => <span className="block w-full text-right">Balance</span>,
       cell: ({ row }) => (
-        <span className="block w-full text-right tabular-nums">
-          <MoneyValue amount={row.original.runningBalance} currencyCode={currency} />
-        </span>
+        <TransactionCell transaction={row.original}>
+          <span className="block w-full text-right tabular-nums">
+            {formatAccountMoney(row.original.runningBalance)}
+          </span>
+        </TransactionCell>
       )
-    },
-    {
-      id: 'payment',
-      header: 'Payment detail',
-      cell: ({ row }) => formatSavingsTransactionPaymentDetail(row.original)
     },
     {
       id: 'status',
@@ -264,38 +342,139 @@ function buildTransactionColumns(
       cell: ({ row }) =>
         row.original.reversed ? (
           <Badge variant="outline">Reversed</Badge>
+        ) : row.original.transfer ? (
+          <Badge variant="secondary">Transfer</Badge>
+        ) : isSavingsTransactionAccrual(row.original) ? (
+          <Badge variant="outline">Accrual</Badge>
         ) : (
           <Badge variant="secondary">Posted</Badge>
         )
+    },
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">Actions</span>,
+      enableHiding: false,
+      meta: { sticky: 'right' },
+      cell: ({ row }) => (
+        <SavingsTransactionActionsMenu
+          clientId={clientId}
+          accountId={account.id}
+          transaction={row.original}
+          currencyCode={currency}
+          permissions={transactionActionPermissions}
+          showViewTransaction
+        />
+      )
     }
   ];
 }
 
+function filterSavingsTransactions(
+  transactions: TransactionRow[],
+  hideReversed: boolean,
+  hideAccruals: boolean
+): TransactionRow[] {
+  return transactions.filter((transaction) => {
+    if (hideReversed && transaction.reversed) {
+      return false;
+    }
+    if (hideAccruals && isSavingsTransactionAccrual(transaction)) {
+      return false;
+    }
+    return true;
+  });
+}
+
 function SavingsAccountTransactionsSection({
-  account
+  account,
+  clientId,
+  transactionActionPermissions
 }: {
   account: FineractSavingsAccountDetail;
+  clientId: string;
+  transactionActionPermissions: SavingsTransactionActionPermissions;
 }) {
-  const rows = useMemo(() => {
+  const [hideReversed, setHideReversed] = useState(false);
+  const [hideAccruals, setHideAccruals] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    DEFAULT_TRANSACTION_COLUMN_VISIBILITY
+  );
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 50
+  });
+
+  const allRows = useMemo(() => {
     const transactions = account.transactions ?? [];
     return [...transactions].sort((a, b) => b.id - a.id);
   }, [account.transactions]);
 
-  const columns = useMemo(() => buildTransactionColumns(account), [account]);
+  const rows = useMemo(
+    () => filterSavingsTransactions(allRows, hideReversed, hideAccruals),
+    [allRows, hideAccruals, hideReversed]
+  );
+
+  useEffect(() => {
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }, [hideAccruals, hideReversed]);
+
+  const columns = useMemo(
+    () => buildTransactionColumns(account, clientId, transactionActionPermissions),
+    [account, clientId, transactionActionPermissions]
+  );
   const table = useReactTable({
     data: rows,
     columns,
-    getCoreRowModel: getCoreRowModel()
+    state: { pagination, columnVisibility },
+    onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel()
   });
+
+  const showFilters = allRows.length > 0;
 
   return (
     <DetailSection title="Transactions">
+      {showFilters ? (
+        <div className="mb-4 flex flex-wrap items-center justify-end gap-4">
+          <DataTableColumnVisibility
+            table={table}
+            onReset={() => setColumnVisibility(DEFAULT_TRANSACTION_COLUMN_VISIBILITY)}
+          />
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="savings-hide-reversed"
+              checked={hideReversed}
+              onCheckedChange={(checked) => setHideReversed(checked === true)}
+            />
+            <Label htmlFor="savings-hide-reversed" className="cursor-pointer text-sm font-normal">
+              Hide reversed
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="savings-hide-accruals"
+              checked={hideAccruals}
+              onCheckedChange={(checked) => setHideAccruals(checked === true)}
+            />
+            <Label htmlFor="savings-hide-accruals" className="cursor-pointer text-sm font-normal">
+              Hide accruals
+            </Label>
+          </div>
+        </div>
+      ) : null}
       <DataTable
         table={table}
         stickyHeader={false}
         emptyMessage="No transactions yet."
         emptyDescription="Deposits, withdrawals, and interest postings will appear here."
       />
+      {rows.length > 0 ? (
+        <div className="mt-4">
+          <DataTablePagination table={table} totalRecords={rows.length} />
+        </div>
+      ) : null}
     </DetailSection>
   );
 }
@@ -380,16 +559,31 @@ function SavingsAccountChargesSection({ account }: { account: FineractSavingsAcc
 
 export function SavingsAccountSectionPanel({
   section,
-  account
+  account,
+  clientId,
+  transactionActionPermissions = {
+    undoTransaction: false,
+    undoTransfer: false,
+    modifyTransaction: false,
+    viewJournal: false
+  }
 }: {
   section: SavingsAccountSectionId;
   account: FineractSavingsAccountDetail;
+  clientId: string;
+  transactionActionPermissions?: SavingsTransactionActionPermissions;
 }) {
   switch (section) {
     case 'summary':
       return <SavingsAccountSummarySection account={account} />;
     case 'transactions':
-      return <SavingsAccountTransactionsSection account={account} />;
+      return (
+        <SavingsAccountTransactionsSection
+          account={account}
+          clientId={clientId}
+          transactionActionPermissions={transactionActionPermissions}
+        />
+      );
     case 'charges':
       return <SavingsAccountChargesSection account={account} />;
     default: {

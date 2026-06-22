@@ -124,8 +124,33 @@ export function normalizeClientDepositAccountTemplate(raw: unknown): ClientDepos
     termFrequencyTypeOptions: asEnumOptions(row.termFrequencyTypeOptions),
     periodFrequencyTypeOptions,
     recurringFrequencyTypeOptions: periodFrequencyTypeOptions,
+    interestCompoundingPeriodTypeOptions: asEnumOptions(row.interestCompoundingPeriodTypeOptions),
+    interestPostingPeriodTypeOptions: asEnumOptions(row.interestPostingPeriodTypeOptions),
+    interestCalculationTypeOptions: asEnumOptions(row.interestCalculationTypeOptions),
+    interestCalculationDaysInYearTypeOptions: asEnumOptions(
+      row.interestCalculationDaysInYearTypeOptions
+    ),
+    lockinPeriodFrequencyTypeOptions: asEnumOptions(row.lockinPeriodFrequencyTypeOptions),
     currency,
     nominalAnnualInterestRate: toNumber(row.nominalAnnualInterestRate),
+    interestCompoundingPeriodType: asEnumOption(row.interestCompoundingPeriodType),
+    interestPostingPeriodType: asEnumOption(row.interestPostingPeriodType),
+    interestCalculationType: asEnumOption(row.interestCalculationType),
+    interestCalculationDaysInYearType: asEnumOption(row.interestCalculationDaysInYearType),
+    minRequiredOpeningBalance: toNumber(row.minRequiredOpeningBalance),
+    withdrawalFeeForTransfers:
+      typeof row.withdrawalFeeForTransfers === 'boolean'
+        ? row.withdrawalFeeForTransfers
+        : undefined,
+    lockinPeriodFrequency: toNumber(row.lockinPeriodFrequency),
+    lockinPeriodFrequencyType: asEnumOption(row.lockinPeriodFrequencyType),
+    allowOverdraft: typeof row.allowOverdraft === 'boolean' ? row.allowOverdraft : undefined,
+    overdraftLimit: toNumber(row.overdraftLimit),
+    minOverdraftForInterestCalculation: toNumber(row.minOverdraftForInterestCalculation),
+    nominalAnnualInterestRateOverdraft: toNumber(row.nominalAnnualInterestRateOverdraft),
+    enforceMinRequiredBalance:
+      typeof row.enforceMinRequiredBalance === 'boolean' ? row.enforceMinRequiredBalance : undefined,
+    minRequiredBalance: toNumber(row.minRequiredBalance),
     minDepositTerm: toNumber(row.minDepositTerm),
     maxDepositTerm: toNumber(row.maxDepositTerm),
     minDepositTermType: asEnumOption(row.minDepositTermType),

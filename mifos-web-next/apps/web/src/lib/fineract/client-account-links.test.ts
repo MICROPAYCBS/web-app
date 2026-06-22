@@ -11,7 +11,9 @@ import { describe, it } from 'node:test';
 import {
   clientAccountGeneralPath,
   clientAccountListPath,
-  isClientAccountSegment
+  isClientAccountSegment,
+  savingsAccountSectionPath,
+  savingsAccountTransactionPath
 } from './client-account-links';
 
 describe('clientAccountGeneralPath', () => {
@@ -41,5 +43,23 @@ describe('isClientAccountSegment', () => {
 describe('clientAccountListPath', () => {
   it('maps product kind to client list tab', () => {
     assert.equal(clientAccountListPath(1, 'fixedDeposit'), '/clients/1/fixed-deposits');
+  });
+});
+
+describe('savingsAccountTransactionPath', () => {
+  it('builds transaction detail URL', () => {
+    assert.equal(
+      savingsAccountTransactionPath('c1', 5, 99),
+      '/clients/c1/savings-accounts/5/transactions/99'
+    );
+  });
+});
+
+describe('savingsAccountSectionPath', () => {
+  it('opens account on transactions section', () => {
+    assert.equal(
+      savingsAccountSectionPath('c1', 1, 'transactions'),
+      '/clients/c1/savings-accounts/1/general?section=transactions'
+    );
   });
 });

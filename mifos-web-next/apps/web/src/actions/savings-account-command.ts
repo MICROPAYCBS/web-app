@@ -11,13 +11,20 @@
 import { assertCan } from '@mifos/auth';
 import {
   savingsAccountActivateCommandSchema,
+  savingsAccountAddChargeSchema,
   savingsAccountApproveCommandSchema,
+  savingsAccountAssignStaffSchema,
   savingsAccountBlockCommandSchema,
   savingsAccountCloseCommandSchema,
+  savingsAccountHoldAmountSchema,
+  savingsAccountPayChargeSchema,
+  savingsAccountPostInterestAsOnSchema,
   savingsAccountRejectCommandSchema,
   savingsAccountTransactionCommandSchema,
   savingsAccountUndoApprovalCommandSchema,
+  savingsAccountUnassignStaffSchema,
   savingsAccountWithdrawnByApplicantCommandSchema,
+  savingsAccountWithholdTaxSchema,
   toFineractActionError
 } from '@mifos/validation';
 import type { z } from 'zod';
@@ -25,14 +32,25 @@ import { revalidatePath } from 'next/cache';
 import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
 import type { SavingsAccountActionResult } from '@/lib/fineract/savings-account-action-result';
 import {
+  createSavingsAccountCharge,
+  deleteSavingsAccount,
+  executeSavingsAccountChargeCommand,
   executeSavingsAccountCommand,
   executeSavingsAccountTransaction,
+  getSavingsAccountChargeDetailTemplate,
+  getSavingsAccountChargeTemplate,
   getSavingsAccountTransactionTemplate,
-  SAVINGS_ACCOUNT_BLOCK_REASON_CODE_ID,
+  SAVINGS_ACCOUNT_BLOCK_REASON_CODE_NAMES,
+  SAVINGS_ACCOUNT_HOLD_REASON_CODE_NAME,
+  type SavingsAccountBlockReasonKind,
+  updateSavingsAccountWithholdTax,
   type SavingsAccountLifecycleCommand,
   type SavingsAccountTransactionCommand
 } from '@/lib/fineract/savings-account-commands';
-import { listCodeValues } from '@/lib/fineract/system-codes';
+import { getClientWithTemplate } from '@/lib/fineract/client-action-data';
+import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
+import { savingsAccountAnnualFeeCharge } from '@/lib/fineract/savings-account-display';
+import { listCodeValuesByName } from '@/lib/fineract/system-codes';
 import { getServerSession } from '@/lib/session/server';
 
 const LIFECYCLE_PERMISSIONS: Record<SavingsAccountLifecycleCommand, string> = {
@@ -47,13 +65,22 @@ const LIFECYCLE_PERMISSIONS: Record<SavingsAccountLifecycleCommand, string> = {
   blockCredit: 'BLOCKCREDIT_SAVINGSACCOUNT',
   unblockCredit: 'UNBLOCKCREDIT_SAVINGSACCOUNT',
   blockDebit: 'BLOCKDEBIT_SAVINGSACCOUNT',
-  unblockDebit: 'UNBLOCKDEBIT_SAVINGSACCOUNT'
+  unblockDebit: 'UNBLOCKDEBIT_SAVINGSACCOUNT',
+  calculateInterest: 'CALCULATEINTEREST_SAVINGSACCOUNT',
+  postInterest: 'POSTINTEREST_SAVINGSACCOUNT',
+  assignSavingsOfficer: 'UPDATESAVINGSOFFICER_SAVINGSACCOUNT',
+  unassignSavingsOfficer: 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT'
 };
 
-const TRANSACTION_PERMISSIONS: Record<SavingsAccountTransactionCommand, string> = {
+const DEPOSIT_WITHDRAW_COMMANDS = {
   deposit: 'DEPOSIT_SAVINGSACCOUNT',
   withdrawal: 'WITHDRAWAL_SAVINGSACCOUNT'
-};
+} as const;
+
+const EXTENDED_TRANSACTION_PERMISSIONS = {
+  postInterestAsOn: 'POSTINTEREST_SAVINGSACCOUNT',
+  holdAmount: 'HOLDAMOUNT_SAVINGSACCOUNT'
+} as const;
 
 function fieldErrorsFromZod(
   issues: { path: (string | number)[]; message: string }[]
@@ -77,7 +104,7 @@ function parseOrError<T>(schema: z.ZodType<T>, raw: unknown): ParsedResult<T> {
       success: false,
       result: {
         ok: false,
-        message: 'Please fix the highlighted fields.',
+        message: 'Fix the highlighted fields.',
         fieldErrors: fieldErrorsFromZod(parsed.error.issues)
       }
     };
@@ -123,7 +150,7 @@ function omitEmptyStrings(fields: Record<string, unknown>) {
 
 export async function loadSavingsAccountTransactionSheetDataAction(
   accountId: string,
-  command: SavingsAccountTransactionCommand
+  command: 'deposit' | 'withdrawal'
 ): Promise<
   | {
       ok: true;
@@ -131,7 +158,7 @@ export async function loadSavingsAccountTransactionSheetDataAction(
     }
   | { ok: false; message: string }
 > {
-  const permission = TRANSACTION_PERMISSIONS[command];
+  const permission = DEPOSIT_WITHDRAW_COMMANDS[command];
   const denied = await requirePermission(
     permission,
     'You do not have permission to perform this transaction.'
@@ -151,8 +178,10 @@ export async function loadSavingsAccountTransactionSheetDataAction(
   }
 }
 
-export async function loadSavingsAccountBlockReasonsAction(): Promise<
-  | { ok: true; reasons: { id: number; name: string }[] }
+export async function loadSavingsAccountBlockReasonsAction(
+  kind: SavingsAccountBlockReasonKind
+): Promise<
+  | { ok: true; reasons: { id: number; name: string }[]; codeName: string }
   | { ok: false; message: string }
 > {
   const denied = await requirePermission(
@@ -163,12 +192,14 @@ export async function loadSavingsAccountBlockReasonsAction(): Promise<
     return { ok: false, message: denied.message };
   }
 
+  const codeName = SAVINGS_ACCOUNT_BLOCK_REASON_CODE_NAMES[kind];
+
   try {
-    const rows = await listCodeValues(SAVINGS_ACCOUNT_BLOCK_REASON_CODE_ID);
+    const rows = await listCodeValuesByName(codeName);
     const reasons = rows
       .filter((row) => row.active !== false && row.isActive !== false)
       .map((row) => ({ id: row.id, name: row.name }));
-    return { ok: true, reasons };
+    return { ok: true, reasons, codeName };
   } catch (error) {
     return toFineractActionError(error, 'Could not load block reasons.');
   }
@@ -304,6 +335,38 @@ export async function executeSavingsAccountLifecycleCommandAction(
         await executeSavingsAccountCommand(accountId, command, buildFineractCommandBody({}));
         break;
       }
+      case 'calculateInterest':
+      case 'postInterest': {
+        await executeSavingsAccountCommand(accountId, command, buildFineractCommandBody({}));
+        break;
+      }
+      case 'assignSavingsOfficer': {
+        const parsed = parseOrError(savingsAccountAssignStaffSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        await executeSavingsAccountCommand(
+          accountId,
+          command,
+          buildFineractCommandBody({
+            toSavingsOfficerId: parsed.data.toSavingsOfficerId,
+            assignmentDate: parsed.data.assignmentDate
+          })
+        );
+        break;
+      }
+      case 'unassignSavingsOfficer': {
+        const parsed = parseOrError(savingsAccountUnassignStaffSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        await executeSavingsAccountCommand(
+          accountId,
+          command,
+          buildFineractCommandBody({ unassignedDate: parsed.data.unassignedDate })
+        );
+        break;
+      }
       default: {
         const _exhaustive: never = command;
         return _exhaustive;
@@ -320,10 +383,10 @@ export async function executeSavingsAccountLifecycleCommandAction(
 export async function executeSavingsAccountTransactionCommandAction(
   clientId: string,
   accountId: string,
-  command: SavingsAccountTransactionCommand,
+  command: 'deposit' | 'withdrawal',
   raw: unknown
 ): Promise<SavingsAccountActionResult> {
-  const permission = TRANSACTION_PERMISSIONS[command];
+  const permission = DEPOSIT_WITHDRAW_COMMANDS[command];
   const denied = await requirePermission(
     permission,
     'You do not have permission to perform this transaction.'
@@ -359,5 +422,313 @@ export async function executeSavingsAccountTransactionCommandAction(
     return { ok: true };
   } catch (error) {
     return toFineractActionError(error, 'Could not complete transaction.');
+  }
+}
+
+export async function loadSavingsAccountAssignStaffSheetDataAction(
+  clientId: string
+): Promise<
+  | { ok: true; staffOptions: { id: number; name: string }[] }
+  | { ok: false; message: string }
+> {
+  const denied = await requirePermission(
+    'UPDATESAVINGSOFFICER_SAVINGSACCOUNT',
+    'You do not have permission to assign field officers.'
+  );
+  if (denied) {
+    return { ok: false, message: denied.message };
+  }
+
+  try {
+    const client = await getClientWithTemplate(clientId);
+    const staffOptions = client.staffOptions.map((row) => ({
+      id: row.id,
+      name: row.displayName ?? row.firstname ?? `Staff #${row.id}`
+    }));
+    return { ok: true, staffOptions };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load field officers.');
+  }
+}
+
+export async function loadSavingsAccountHoldReasonsAction(): Promise<
+  | { ok: true; reasons: { id: number; name: string }[]; codeName: string }
+  | { ok: false; message: string }
+> {
+  const denied = await requirePermission(
+    'HOLDAMOUNT_SAVINGSACCOUNT',
+    'You do not have permission to hold amounts on savings accounts.'
+  );
+  if (denied) {
+    return { ok: false, message: denied.message };
+  }
+
+  try {
+    const rows = await listCodeValuesByName(SAVINGS_ACCOUNT_HOLD_REASON_CODE_NAME);
+    const reasons = rows
+      .filter((row) => row.active !== false && row.isActive !== false)
+      .map((row) => ({ id: row.id, name: row.name }));
+    return { ok: true, reasons, codeName: SAVINGS_ACCOUNT_HOLD_REASON_CODE_NAME };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load hold reasons.');
+  }
+}
+
+export async function loadSavingsAccountAddChargeSheetDataAction(accountId: string): Promise<
+  | { ok: true; chargeOptions: { id: number; name: string }[] }
+  | { ok: false; message: string }
+> {
+  const denied = await requirePermission(
+    'CREATE_SAVINGSACCOUNTCHARGE',
+    'You do not have permission to add charges.'
+  );
+  if (denied) {
+    return { ok: false, message: denied.message };
+  }
+
+  try {
+    const template = await getSavingsAccountChargeTemplate(accountId);
+    return { ok: true, chargeOptions: template.chargeOptions };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load charge options.');
+  }
+}
+
+export async function loadSavingsAccountChargeDetailAction(chargeId: string): Promise<
+  | {
+      ok: true;
+      detail: {
+        id: number;
+        name?: string;
+        amount?: number;
+        feeInterval?: number;
+        currencyCode?: string;
+        chargeTimeType?: { id: number; value?: string; code?: string };
+        chargeCalculationType?: { id: number; value?: string; code?: string };
+      };
+    }
+  | { ok: false; message: string }
+> {
+  const denied = await requirePermission(
+    'CREATE_SAVINGSACCOUNTCHARGE',
+    'You do not have permission to add charges.'
+  );
+  if (denied) {
+    return { ok: false, message: denied.message };
+  }
+
+  try {
+    const detail = await getSavingsAccountChargeDetailTemplate(chargeId);
+    if (!detail) {
+      return { ok: false, message: 'Charge not found.' };
+    }
+    return { ok: true, detail };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load charge details.');
+  }
+}
+
+export async function loadSavingsAccountAnnualFeeSheetDataAction(accountId: string): Promise<
+  | { ok: true; chargeId: number; chargeName: string; amount?: number }
+  | { ok: false; message: string }
+> {
+  const denied = await requirePermission(
+    'APPLYANNUALFEE_SAVINGSACCOUNT',
+    'You do not have permission to apply annual fees.'
+  );
+  if (denied) {
+    return { ok: false, message: denied.message };
+  }
+
+  try {
+    const account = await getSavingsAccount(accountId);
+    if (!account) {
+      return { ok: false, message: 'Savings account not found.' };
+    }
+    const charge = savingsAccountAnnualFeeCharge(account);
+    if (!charge) {
+      return { ok: false, message: 'No annual fee charge is configured on this account.' };
+    }
+    return {
+      ok: true,
+      chargeId: charge.id,
+      chargeName: charge.name,
+      amount: charge.amount
+    };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load annual fee details.');
+  }
+}
+
+export async function executeSavingsAccountExtendedTransactionCommandAction(
+  clientId: string,
+  accountId: string,
+  command: keyof typeof EXTENDED_TRANSACTION_PERMISSIONS,
+  raw: unknown
+): Promise<SavingsAccountActionResult> {
+  const permission = EXTENDED_TRANSACTION_PERMISSIONS[command];
+  const denied = await requirePermission(permission, 'You do not have permission for this action.');
+  if (denied) {
+    return denied;
+  }
+
+  try {
+    if (command === 'postInterestAsOn') {
+      const parsed = parseOrError(savingsAccountPostInterestAsOnSchema, raw);
+      if (!parsed.success) {
+        return parsed.result;
+      }
+      await executeSavingsAccountTransaction(
+        accountId,
+        command,
+        buildFineractCommandBody({
+          transactionDate: parsed.data.transactionDate,
+          IsPostInterestAsOn: true
+        })
+      );
+    } else {
+      const parsed = parseOrError(savingsAccountHoldAmountSchema, raw);
+      if (!parsed.success) {
+        return parsed.result;
+      }
+      await executeSavingsAccountTransaction(
+        accountId,
+        command,
+        buildFineractCommandBody({
+          reasonForBlock: parsed.data.reasonForBlock,
+          transactionDate: parsed.data.transactionDate,
+          transactionAmount: parsed.data.transactionAmount
+        })
+      );
+    }
+
+    revalidateSavingsAccountPaths(clientId, accountId);
+    return { ok: true };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not complete savings account action.');
+  }
+}
+
+export async function executeSavingsAccountAddChargeAction(
+  clientId: string,
+  accountId: string,
+  raw: unknown
+): Promise<SavingsAccountActionResult> {
+  const denied = await requirePermission(
+    'CREATE_SAVINGSACCOUNTCHARGE',
+    'You do not have permission to add charges.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = parseOrError(savingsAccountAddChargeSchema, raw);
+  if (!parsed.success) {
+    return parsed.result;
+  }
+
+  try {
+    await createSavingsAccountCharge(
+      accountId,
+      buildFineractCommandBody(
+        omitEmptyStrings({
+          chargeId: parsed.data.chargeId,
+          amount: parsed.data.amount,
+          dueDate: parsed.data.dueDate,
+          feeOnMonthDay: parsed.data.feeOnMonthDay,
+          feeInterval: parsed.data.feeInterval
+        })
+      )
+    );
+    revalidateSavingsAccountPaths(clientId, accountId);
+    return { ok: true };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not add charge.');
+  }
+}
+
+export async function executeSavingsAccountPayChargeAction(
+  clientId: string,
+  accountId: string,
+  raw: unknown
+): Promise<SavingsAccountActionResult> {
+  const denied = await requirePermission(
+    'APPLYANNUALFEE_SAVINGSACCOUNT',
+    'You do not have permission to apply annual fees.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = parseOrError(savingsAccountPayChargeSchema, raw);
+  if (!parsed.success) {
+    return parsed.result;
+  }
+
+  try {
+    await executeSavingsAccountChargeCommand(
+      accountId,
+      parsed.data.chargeId,
+      'paycharge',
+      buildFineractCommandBody(
+        omitEmptyStrings({
+          dueDate: parsed.data.dueDate,
+          amount: parsed.data.amount
+        })
+      )
+    );
+    revalidateSavingsAccountPaths(clientId, accountId);
+    return { ok: true };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not apply annual fee.');
+  }
+}
+
+export async function executeSavingsAccountDeleteAction(
+  clientId: string,
+  accountId: string
+): Promise<SavingsAccountActionResult> {
+  const denied = await requirePermission(
+    'DELETE_SAVINGSACCOUNT',
+    'You do not have permission to delete savings accounts.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  try {
+    await deleteSavingsAccount(accountId);
+    revalidatePath(`/clients/${clientId}/savings`);
+    revalidatePath(`/clients/${clientId}/savings-accounts/${accountId}/general`);
+    return { ok: true };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not delete savings account.');
+  }
+}
+
+export async function executeSavingsAccountWithholdTaxAction(
+  clientId: string,
+  accountId: string,
+  raw: unknown
+): Promise<SavingsAccountActionResult> {
+  const denied = await requirePermission(
+    'UPDATEWITHHOLDTAX_SAVINGSACCOUNT',
+    'You do not have permission to update withhold tax.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = parseOrError(savingsAccountWithholdTaxSchema, raw);
+  if (!parsed.success) {
+    return parsed.result;
+  }
+
+  try {
+    await updateSavingsAccountWithholdTax(accountId, parsed.data.withHoldTax);
+    revalidateSavingsAccountPaths(clientId, accountId);
+    return { ok: true };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not update withhold tax.');
   }
 }

@@ -41,6 +41,10 @@ export function parseCheckerInboxSearchFilters(
   };
 }
 
+export function countActiveCheckerInboxFilters(filters: CheckerInboxSearchFilters): number {
+  return Object.values(filters).filter(Boolean).length;
+}
+
 export function buildCheckerInboxListUrl(filters: CheckerInboxSearchFilters): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(filters)) {

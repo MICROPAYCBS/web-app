@@ -26,7 +26,6 @@ import {
   Building2,
   CircleDollarSign,
   Landmark,
-  ListFilter,
   Pencil,
   PiggyBank,
   Shield,
@@ -43,6 +42,7 @@ import {
 import { DetailHeader, DetailPage, DetailSectionNav } from '@/components/composites';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
+import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { EntityToEntityMappingFilterSheet } from '@/components/system/entity-to-entity-mapping-filter-sheet';
 import { EntityToEntityMappingFormSheet } from '@/components/system/entity-to-entity-mapping-form-sheet';
 import { EntityToEntityMappingGuidance } from '@/components/system/entity-to-entity-mapping-guidance';
@@ -376,15 +376,12 @@ export function EntityToEntityMappingView({
                 ) : null}
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
+                <ListFilterTrigger
+                  activeCount={hasActiveFilter ? 1 : 0}
                   onClick={() => setFilterOpen(true)}
                   disabled={optionsPending || !filterOptions}
-                >
-                  <ListFilter className="mr-2 size-4" />
-                  Filter
-                </Button>
+                  label="Filter"
+                />
                 {canCreate && filterOptions ? (
                   <Can permission="CREATE_ENTITYMAPPING">
                     <Button type="button" onClick={openCreateForm}>

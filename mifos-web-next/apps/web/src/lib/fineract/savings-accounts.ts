@@ -131,9 +131,25 @@ function normalizeTransaction(raw: unknown): FineractSavingsAccountTransaction |
   if (!Number.isFinite(id) || !Number.isFinite(amount)) {
     return null;
   }
+  const transferRaw = row.transfer;
+  const transfer =
+    transferRaw && typeof transferRaw === 'object'
+      ? {
+          id: Number.isFinite(Number((transferRaw as Record<string, unknown>).id))
+            ? Number((transferRaw as Record<string, unknown>).id)
+            : undefined,
+          reversed: (transferRaw as Record<string, unknown>).reversed === true,
+          transferDescription:
+            typeof (transferRaw as Record<string, unknown>).transferDescription === 'string'
+              ? ((transferRaw as Record<string, unknown>).transferDescription as string)
+              : undefined
+        }
+      : undefined;
+
   return {
     id,
     amount,
+    externalId: typeof row.externalId === 'string' ? row.externalId : undefined,
     runningBalance:
       typeof row.runningBalance === 'number'
         ? row.runningBalance
@@ -142,9 +158,29 @@ function normalizeTransaction(raw: unknown): FineractSavingsAccountTransaction |
           : undefined,
     transactionType: row.transactionType as FineractSavingsAccountTransaction['transactionType'],
     entryType: row.entryType as FineractSavingsAccountTransaction['entryType'],
+    date: row.date as FineractSavingsAccountTransaction['date'],
     submittedOnDate: row.submittedOnDate as FineractSavingsAccountTransaction['submittedOnDate'],
     createdDate: row.createdDate as FineractSavingsAccountTransaction['createdDate'],
     reversed: row.reversed === true,
+    note: typeof row.note === 'string' ? row.note : undefined,
+    currency:
+      row.currency && typeof row.currency === 'object'
+        ? {
+            code:
+              typeof (row.currency as Record<string, unknown>).code === 'string'
+                ? ((row.currency as Record<string, unknown>).code as string)
+                : undefined,
+            name:
+              typeof (row.currency as Record<string, unknown>).name === 'string'
+                ? ((row.currency as Record<string, unknown>).name as string)
+                : undefined,
+            decimalPlaces:
+              typeof (row.currency as Record<string, unknown>).decimalPlaces === 'number'
+                ? ((row.currency as Record<string, unknown>).decimalPlaces as number)
+                : undefined
+          }
+        : undefined,
+    transfer,
     paymentDetailData:
       row.paymentDetailData as FineractSavingsAccountTransaction['paymentDetailData'],
     submittedByUsername:
@@ -267,9 +303,26 @@ function normalizeSavingsAccountDetail(raw: unknown): FineractSavingsAccountDeta
           .map((item) => normalizeCharge(item))
           .filter((item): item is FineractSavingsAccountCharge => item !== null)
       : undefined,
+    fieldOfficerId: Number.isFinite(Number(row.fieldOfficerId))
+      ? Number(row.fieldOfficerId)
+      : undefined,
     fieldOfficerName:
       typeof row.fieldOfficerName === 'string' ? row.fieldOfficerName : undefined,
-    officeName: typeof row.officeName === 'string' ? row.officeName : undefined
+    officeId: Number.isFinite(Number(row.officeId)) ? Number(row.officeId) : undefined,
+    officeName: typeof row.officeName === 'string' ? row.officeName : undefined,
+    taxGroup:
+      row.taxGroup && typeof row.taxGroup === 'object'
+        ? {
+            id: Number.isFinite(Number((row.taxGroup as Record<string, unknown>).id))
+              ? Number((row.taxGroup as Record<string, unknown>).id)
+              : undefined,
+            name:
+              typeof (row.taxGroup as Record<string, unknown>).name === 'string'
+                ? ((row.taxGroup as Record<string, unknown>).name as string)
+                : undefined
+          }
+        : undefined,
+    withHoldTax: typeof row.withHoldTax === 'boolean' ? row.withHoldTax : undefined
   };
 }
 
@@ -281,4 +334,15 @@ export async function getSavingsAccount(
     associations: 'all'
   });
   return normalizeSavingsAccountDetail(raw);
+}
+
+export async function getSavingsAccountTransaction(
+  accountId: string | number,
+  transactionId: string | number
+): Promise<FineractSavingsAccountTransaction | null> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(
+    `${SAVINGS_ACCOUNTS_PATH}/${accountId}/transactions/${transactionId}`
+  );
+  return normalizeTransaction(raw);
 }

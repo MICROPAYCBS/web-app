@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
@@ -77,7 +78,8 @@ export function AuditTrailsTable({
   sortOrder,
   onSort,
   onPaginationChange,
-  pending = false
+  pending = false,
+  toolbar
 }: {
   page: FineractAuditTrailsPage;
   pageSize: number;
@@ -87,6 +89,7 @@ export function AuditTrailsTable({
   onSort: (column: AuditTrailSortColumn) => void;
   onPaginationChange: (pagination: PaginationState) => void;
   pending?: boolean;
+  toolbar?: ReactNode;
 }) {
   const pagination: PaginationState = {
     pageIndex,
@@ -265,6 +268,9 @@ export function AuditTrailsTable({
 
   return (
     <div className="space-y-4">
+      {toolbar ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">{toolbar}</div>
+      ) : null}
       <DataTable
         table={table}
         stickyHeader={false}

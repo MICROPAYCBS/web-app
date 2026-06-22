@@ -12,6 +12,7 @@ export const AUDIT_TRAILS_DEFAULT_LIMIT = 25;
 
 export type AuditTrailSearchFilters = {
   resourceId?: string;
+  savingsAccountId?: string;
   processingResult?: string;
   makerId?: string;
   actionName?: string;
@@ -58,6 +59,7 @@ export function parseAuditTrailListQuery(
     orderBy,
     sortOrder,
     resourceId: readParam(params, 'resourceId'),
+    savingsAccountId: readParam(params, 'savingsAccountId'),
     processingResult: readParam(params, 'processingResult'),
     makerId: readParam(params, 'makerId'),
     actionName: readParam(params, 'actionName'),
@@ -93,6 +95,9 @@ export function buildAuditTrailSearchParams(query: AuditTrailListQuery): Record<
   if (query.resourceId) {
     params.resourceId = query.resourceId;
   }
+  if (query.savingsAccountId) {
+    params.savingsAccountId = query.savingsAccountId;
+  }
   if (query.processingResult) {
     params.processingResult = query.processingResult;
   }
@@ -124,9 +129,48 @@ export function buildAuditTrailSearchParams(query: AuditTrailListQuery): Record<
   return params;
 }
 
+export function countActiveAuditTrailFilters(filters: AuditTrailSearchFilters): number {
+  let count = 0;
+  if (filters.resourceId?.trim()) {
+    count += 1;
+  }
+  if (filters.savingsAccountId?.trim()) {
+    count += 1;
+  }
+  if (filters.processingResult) {
+    count += 1;
+  }
+  if (filters.makerId) {
+    count += 1;
+  }
+  if (filters.actionName) {
+    count += 1;
+  }
+  if (filters.entityName) {
+    count += 1;
+  }
+  if (filters.checkerId) {
+    count += 1;
+  }
+  if (filters.makerDateTimeFrom) {
+    count += 1;
+  }
+  if (filters.makerDateTimeTo) {
+    count += 1;
+  }
+  if (filters.checkerDateTimeFrom) {
+    count += 1;
+  }
+  if (filters.checkerDateTimeTo) {
+    count += 1;
+  }
+  return count;
+}
+
 export function auditTrailFiltersFromQuery(query: AuditTrailListQuery): AuditTrailSearchFilters {
   return {
     resourceId: query.resourceId,
+    savingsAccountId: query.savingsAccountId,
     processingResult: query.processingResult,
     makerId: query.makerId,
     actionName: query.actionName,

@@ -47,6 +47,9 @@ export interface DateFieldProps {
   allowFuture?: boolean;
   /** Fineract tenant date format (from template); defaults to `dd MMMM yyyy`. */
   dateFormat?: string;
+  hint?: string;
+  hintAriaLabel?: string;
+  contextHelpSectionId?: string;
 }
 
 function addYears(date: Date, years: number): Date {
@@ -96,7 +99,10 @@ export function DateField({
   fromDate,
   toDate,
   allowFuture = false,
-  dateFormat
+  dateFormat,
+  hint,
+  hintAriaLabel,
+  contextHelpSectionId
 }: DateFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = useMemo(() => fineractDateToDate(value, dateFormat), [value, dateFormat]);
@@ -123,7 +129,14 @@ export function DateField({
 
   return (
     <Field className={className} data-invalid={!!error}>
-      <FormLabel htmlFor={id} required={required} optional={optional ?? !required}>
+      <FormLabel
+        htmlFor={id}
+        required={required}
+        optional={optional ?? !required}
+        hint={hint}
+        hintAriaLabel={hintAriaLabel}
+        contextHelpSectionId={contextHelpSectionId}
+      >
         {label}
       </FormLabel>
       <FieldContent>

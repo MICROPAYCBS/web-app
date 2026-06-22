@@ -17,6 +17,14 @@ import {
   createClientDepositAccountAction,
   fetchClientDepositAccountTemplateAction
 } from '@/actions/client-deposit-account';
+import {
+  applyDepositTemplateDefaults,
+  buildSavingsFormPayload,
+  clearSavingsAdvancedFields,
+  emptyDepositForm,
+  type DepositFormState
+} from '@/components/clients/accounts/create-client-deposit-account-form-state';
+import { CreateClientSavingsAccountAdvancedFields } from '@/components/clients/accounts/create-client-savings-account-advanced-fields';
 import { DateField } from '@/components/composites/date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
@@ -24,79 +32,13 @@ import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
-import {
-  isClientDepositAccountTemplate
-} from '@/lib/fineract/client-account-action-result';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { isClientDepositAccountTemplate } from '@/lib/fineract/client-account-action-result';
 import { CLIENT_DEPOSIT_ACCOUNT_CONFIG } from '@/lib/fineract/client-deposit-account-config';
 import { FINERACT_DATE_FORMAT, toFineractDate } from '@/lib/fineract/dates';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 export const CREATE_CLIENT_DEPOSIT_ACCOUNT_FORM_ID = 'create-client-deposit-account-form';
-
-type DepositFormState = {
-  productId: string;
-  submittedOnDate: string;
-  externalId: string;
-  fieldOfficerId: string;
-  depositAmount: string;
-  depositPeriod: string;
-  depositPeriodFrequencyId: string;
-  recurringFrequency: string;
-  recurringFrequencyType: string;
-  mandatoryRecommendedDepositAmount: string;
-  isCalendarInherited: boolean;
-};
-
-function emptyForm(): DepositFormState {
-  return {
-    productId: '',
-    submittedOnDate: toFineractDate(),
-    externalId: '',
-    fieldOfficerId: '',
-    depositAmount: '',
-    depositPeriod: '',
-    depositPeriodFrequencyId: '',
-    recurringFrequency: '',
-    recurringFrequencyType: '',
-    mandatoryRecommendedDepositAmount: '',
-    isCalendarInherited: false
-  };
-}
-
-function applyTemplateDefaults(
-  template: ClientDepositAccountTemplate,
-  kind: ClientDepositAccountKind
-): Partial<DepositFormState> {
-  const patch: Partial<DepositFormState> = {};
-  if (template.depositAmount != null) {
-    patch.depositAmount = String(template.depositAmount);
-  }
-  if (template.mandatoryRecommendedDepositAmount != null) {
-    patch.mandatoryRecommendedDepositAmount = String(template.mandatoryRecommendedDepositAmount);
-  }
-  if (template.recurringFrequency != null) {
-    patch.recurringFrequency = String(template.recurringFrequency);
-  }
-  if (template.recurringFrequencyType?.id != null) {
-    patch.recurringFrequencyType = String(template.recurringFrequencyType.id);
-  } else if (template.recurringFrequencyTypeOptions?.[0]?.id != null) {
-    patch.recurringFrequencyType = String(template.recurringFrequencyTypeOptions[0].id);
-  }
-  if (kind !== 'savings') {
-    if (template.minDepositTermType?.id != null) {
-      patch.depositPeriodFrequencyId = String(template.minDepositTermType.id);
-    } else {
-      const periodType = template.periodFrequencyTypeOptions?.[0]?.id;
-      if (periodType != null) {
-        patch.depositPeriodFrequencyId = String(periodType);
-      }
-    }
-    if (template.minDepositTerm != null) {
-      patch.depositPeriod = String(template.minDepositTerm);
-    }
-  }
-  return patch;
-}
 
 export function CreateClientDepositAccountSheet({
   clientId,
@@ -116,7 +58,11 @@ export function CreateClientDepositAccountSheet({
   const router = useRouter();
   const config = CLIENT_DEPOSIT_ACCOUNT_CONFIG[kind];
   const [template, setTemplate] = useState(initialTemplate);
-  const [form, setForm] = useState<DepositFormState>(emptyForm);
+  const [form, setForm] = useState<DepositFormState>(() => ({
+    ...emptyDepositForm(),
+    submittedOnDate: toFineractDate()
+  }));
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -126,6 +72,7 @@ export function CreateClientDepositAccountSheet({
   const currencyCode = productSelected ? template.currency?.code : undefined;
   const wideSheet = kind === 'recurringDeposit';
   const showDepositTerms = kind !== 'savings' && productSelected && Boolean(currencyCode);
+  const useTabs = kind === 'savings';
 
   const productOptions = useMemo(
     () => toSelectOptions(template.productOptions),
@@ -161,7 +108,7 @@ export function CreateClientDepositAccountSheet({
         setTemplate(result);
         setForm((current) => ({
           ...current,
-          ...applyTemplateDefaults(result, kind)
+          ...applyDepositTemplateDefaults(result, kind)
         }));
       });
     },
@@ -173,7 +120,8 @@ export function CreateClientDepositAccountSheet({
       return;
     }
     setTemplate(initialTemplate);
-    setForm(emptyForm());
+    setForm({ ...emptyDepositForm(), submittedOnDate: toFineractDate() });
+    setActiveTab('basic');
     setFieldErrors({});
     setSubmitError(null);
     startTransition(async () => {
@@ -196,7 +144,8 @@ export function CreateClientDepositAccountSheet({
       depositPeriodFrequencyId: '',
       recurringFrequency: '',
       recurringFrequencyType: '',
-      mandatoryRecommendedDepositAmount: ''
+      mandatoryRecommendedDepositAmount: '',
+      ...(kind === 'savings' ? clearSavingsAdvancedFields() : {})
     });
     if (value) {
       loadTemplate(value);
@@ -210,12 +159,7 @@ export function CreateClientDepositAccountSheet({
     startTransition(async () => {
       const payload =
         kind === 'savings'
-          ? {
-              productId: form.productId,
-              submittedOnDate: form.submittedOnDate,
-              externalId: form.externalId,
-              fieldOfficerId: form.fieldOfficerId
-            }
+          ? buildSavingsFormPayload(form)
           : kind === 'fixedDeposit'
             ? {
                 productId: form.productId,
@@ -257,6 +201,160 @@ export function CreateClientDepositAccountSheet({
 
   const disabled = pending || loadingTemplate;
 
+  const basicFields = (
+    <div className="space-y-4">
+      <SelectField
+        label="Product"
+        required
+        value={form.productId || undefined}
+        onValueChange={(value) => handleProductChange(value ?? '')}
+        options={productOptions}
+        placeholder="Select product"
+        disabled={disabled}
+        error={fieldErrors.productId}
+        emptyMessage="No products available."
+      />
+
+      <DateField
+        id="deposit-submitted-on"
+        label="Submitted on"
+        required
+        dateFormat={FINERACT_DATE_FORMAT}
+        value={form.submittedOnDate}
+        onChange={(submittedOnDate) => patchForm({ submittedOnDate: submittedOnDate ?? '' })}
+        disabled={disabled}
+        error={fieldErrors.submittedOnDate}
+      />
+
+      {kind !== 'savings' && !productSelected ? (
+        <p className="text-sm text-muted-foreground">
+          Select a product first — amount fields use the product currency.
+        </p>
+      ) : null}
+
+      {kind !== 'savings' && productSelected && !currencyCode && !loadingTemplate ? (
+        <p className="text-sm text-muted-foreground">Loading product details…</p>
+      ) : null}
+
+      {showDepositTerms ? (
+        <>
+          <MoneyField
+            id="deposit-amount"
+            label="Deposit amount"
+            required
+            currencyCode={currencyCode!}
+            value={form.depositAmount}
+            onChange={(depositAmount) => patchForm({ depositAmount })}
+            disabled={disabled}
+            error={fieldErrors.depositAmount}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <NumericField
+              id="deposit-period"
+              label="Deposit period"
+              required
+              integer
+              value={form.depositPeriod}
+              onChange={(depositPeriod) => patchForm({ depositPeriod })}
+              disabled={disabled}
+              error={fieldErrors.depositPeriod}
+            />
+            <SelectField
+              label="Period frequency"
+              required
+              value={form.depositPeriodFrequencyId || undefined}
+              onValueChange={(value) => patchForm({ depositPeriodFrequencyId: value ?? '' })}
+              options={periodFrequencyOptions}
+              placeholder="Select frequency"
+              disabled={disabled}
+              error={fieldErrors.depositPeriodFrequencyId}
+            />
+          </div>
+        </>
+      ) : null}
+
+      {kind === 'recurringDeposit' && showDepositTerms ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <NumericField
+              id="recurring-frequency"
+              label="Recurring frequency"
+              required
+              integer
+              value={form.recurringFrequency}
+              onChange={(recurringFrequency) => patchForm({ recurringFrequency })}
+              disabled={disabled}
+              error={fieldErrors.recurringFrequency}
+            />
+            <SelectField
+              label="Recurring frequency type"
+              required
+              value={form.recurringFrequencyType || undefined}
+              onValueChange={(value) => patchForm({ recurringFrequencyType: value ?? '' })}
+              options={recurringFrequencyTypeOptions}
+              placeholder="Select type"
+              disabled={disabled}
+              error={fieldErrors.recurringFrequencyType}
+            />
+          </div>
+          <MoneyField
+            id="mandatory-recommended-deposit"
+            label="Recommended deposit amount"
+            required
+            currencyCode={currencyCode!}
+            value={form.mandatoryRecommendedDepositAmount}
+            onChange={(mandatoryRecommendedDepositAmount) =>
+              patchForm({ mandatoryRecommendedDepositAmount })
+            }
+            disabled={disabled}
+            error={fieldErrors.mandatoryRecommendedDepositAmount}
+          />
+          <SwitchField
+            id="is-calendar-inherited"
+            label="Inherit calendar from product"
+            checked={form.isCalendarInherited}
+            onCheckedChange={(isCalendarInherited) => patchForm({ isCalendarInherited })}
+            disabled={disabled}
+          />
+        </>
+      ) : null}
+    </div>
+  );
+
+  const advancedFields =
+    kind === 'savings' ? (
+      <CreateClientSavingsAccountAdvancedFields
+        form={form}
+        template={template}
+        productSelected={productSelected}
+        disabled={disabled}
+        fieldErrors={fieldErrors}
+        onPatch={patchForm}
+      />
+    ) : (
+      <div className="space-y-4">
+        <SelectField
+          label="Field officer"
+          optional
+          value={form.fieldOfficerId || undefined}
+          onValueChange={(value) => patchForm({ fieldOfficerId: value ?? '' })}
+          options={officerOptions}
+          placeholder="Optional"
+          disabled={disabled}
+          error={fieldErrors.fieldOfficerId}
+        />
+        <TextField
+          id="deposit-external-id"
+          label="External ID"
+          optional
+          value={form.externalId}
+          onChange={(externalId) => patchForm({ externalId })}
+          disabled={disabled}
+          error={fieldErrors.externalId}
+        />
+      </div>
+    );
+
   return (
     <FormSheet
       open={open}
@@ -282,160 +380,32 @@ export function CreateClientDepositAccountSheet({
         </p>
       ) : null}
       <form id={CREATE_CLIENT_DEPOSIT_ACCOUNT_FORM_ID} onSubmit={handleSubmit}>
-        <div className="space-y-4">
-          <SelectField
-            label="Product"
-            required
-            value={form.productId || undefined}
-            onValueChange={(value) => handleProductChange(value ?? '')}
-            options={productOptions}
-            placeholder="Select product"
-            disabled={disabled}
-            error={fieldErrors.productId}
-            emptyMessage="No products available."
-          />
-
-          <DateField
-            id="deposit-submitted-on"
-            label="Submitted on"
-            required
-            dateFormat={FINERACT_DATE_FORMAT}
-            value={form.submittedOnDate}
-            onChange={(submittedOnDate) =>
-              patchForm({ submittedOnDate: submittedOnDate ?? '' })
-            }
-            disabled={disabled}
-            error={fieldErrors.submittedOnDate}
-          />
-
-          {kind !== 'savings' && !productSelected ? (
-            <p className="text-sm text-muted-foreground">
-              Select a product first — amount fields use the product currency.
-            </p>
-          ) : null}
-
-          {kind !== 'savings' && productSelected && !currencyCode && !loadingTemplate ? (
-            <p className="text-sm text-muted-foreground">
-              Loading product details…
-            </p>
-          ) : null}
-
-          {showDepositTerms ? (
-            <>
-              <MoneyField
-                id="deposit-amount"
-                label="Deposit amount"
-                required
-                currencyCode={currencyCode!}
-                value={form.depositAmount}
-                onChange={(depositAmount) => patchForm({ depositAmount })}
-                disabled={disabled}
-                error={fieldErrors.depositAmount}
-              />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <NumericField
-                  id="deposit-period"
-                  label="Deposit period"
-                  required
-                  integer
-                  value={form.depositPeriod}
-                  onChange={(depositPeriod) => patchForm({ depositPeriod })}
-                  disabled={disabled}
-                  error={fieldErrors.depositPeriod}
-                />
-                <SelectField
-                  label="Period frequency"
-                  required
-                  value={form.depositPeriodFrequencyId || undefined}
-                  onValueChange={(value) =>
-                    patchForm({ depositPeriodFrequencyId: value ?? '' })
-                  }
-                  options={periodFrequencyOptions}
-                  placeholder="Select frequency"
-                  disabled={disabled}
-                  error={fieldErrors.depositPeriodFrequencyId}
-                />
-              </div>
-            </>
-          ) : null}
-
-          {kind === 'recurringDeposit' && showDepositTerms ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <NumericField
-                  id="recurring-frequency"
-                  label="Recurring frequency"
-                  required
-                  integer
-                  value={form.recurringFrequency}
-                  onChange={(recurringFrequency) => patchForm({ recurringFrequency })}
-                  disabled={disabled}
-                  error={fieldErrors.recurringFrequency}
-                />
-                <SelectField
-                  label="Recurring frequency type"
-                  required
-                  value={form.recurringFrequencyType || undefined}
-                  onValueChange={(value) =>
-                    patchForm({ recurringFrequencyType: value ?? '' })
-                  }
-                  options={recurringFrequencyTypeOptions}
-                  placeholder="Select type"
-                  disabled={disabled}
-                  error={fieldErrors.recurringFrequencyType}
-                />
-              </div>
-              <MoneyField
-                id="mandatory-recommended-deposit"
-                label="Recommended deposit amount"
-                required
-                currencyCode={currencyCode!}
-                value={form.mandatoryRecommendedDepositAmount}
-                onChange={(mandatoryRecommendedDepositAmount) =>
-                  patchForm({ mandatoryRecommendedDepositAmount })
-                }
-                disabled={disabled}
-                error={fieldErrors.mandatoryRecommendedDepositAmount}
-              />
-              <SwitchField
-                id="is-calendar-inherited"
-                label="Inherit calendar from product"
-                checked={form.isCalendarInherited}
-                onCheckedChange={(isCalendarInherited) =>
-                  patchForm({ isCalendarInherited })
-                }
-                disabled={disabled}
-              />
-            </>
-          ) : null}
-
-          <SelectField
-            label="Field officer"
-            optional
-            value={form.fieldOfficerId || undefined}
-            onValueChange={(value) => patchForm({ fieldOfficerId: value ?? '' })}
-            options={officerOptions}
-            placeholder="Optional"
-            disabled={disabled}
-            error={fieldErrors.fieldOfficerId}
-          />
-
-          <TextField
-            id="deposit-external-id"
-            label="External ID"
-            optional
-            value={form.externalId}
-            onChange={(externalId) => patchForm({ externalId })}
-            disabled={disabled}
-            error={fieldErrors.externalId}
-          />
-
-          {template.nominalAnnualInterestRate != null ? (
-            <p className="text-sm text-muted-foreground">
-              Nominal annual interest rate: {template.nominalAnnualInterestRate}%
-            </p>
-          ) : null}
-        </div>
+        {useTabs ? (
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'basic' | 'advanced')}>
+            <TabsList className="mb-4 w-full">
+              <TabsTrigger value="basic" className="flex-1">
+                Basic
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="flex-1">
+                Advanced
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="basic" className="mt-0">
+              {basicFields}
+            </TabsContent>
+            <TabsContent value="advanced" className="mt-0">
+              {advancedFields}
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="space-y-6">
+            {basicFields}
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Advanced</p>
+              {advancedFields}
+            </div>
+          </div>
+        )}
       </form>
     </FormSheet>
   );

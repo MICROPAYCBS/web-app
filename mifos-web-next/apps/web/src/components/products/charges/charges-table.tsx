@@ -17,10 +17,10 @@ import {
   type PaginationState
 } from '@tanstack/react-table';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
-import { SelectField } from '@/components/composites/select-field';
 import { Input } from '@/components/ui/input';
 import {
   chargeAppliesToLabel,
@@ -30,8 +30,8 @@ import {
   formatChargeAmountDisplay
 } from '@/lib/fineract/charge-display';
 import { chargeDetailPath } from '@/lib/fineract/charge-paths';
+import { filterChargeListItems, type ChargeListFilters } from '@/lib/fineract/charge-list-query';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
-import { fineractOptionLabel } from '@/lib/form/select-options';
 
 function buildColumns(): ColumnDef<ChargeListItem>[] {
   return [
@@ -91,40 +91,27 @@ function buildColumns(): ColumnDef<ChargeListItem>[] {
 
 export function ChargesTable({
   charges,
-  appliesToOptions
+  appliedFilters,
+  filterTrigger
 }: {
   charges: ChargeListItem[];
-  appliesToOptions: { id: number; value?: string; name?: string }[];
+  appliedFilters: ChargeListFilters;
+  filterTrigger?: ReactNode;
 }) {
-  const [filter, setFilter] = useState('');
-  const [appliesToFilter, setAppliesToFilter] = useState<string | undefined>();
+  const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 25
   });
 
-  const filteredRows = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    return charges.filter((row) => {
-      if (appliesToFilter && appliesToFilter !== 'all' && String(row.chargeAppliesTo?.id) !== appliesToFilter) {
-        return false;
-      }
-      if (!q) {
-        return true;
-      }
-      const haystack = [
-        row.name,
-        chargeAppliesToLabel(row),
-        chargeTimeTypeLabel(row),
-        chargeCalculationTypeLabel(row),
-        chargeCurrencyCode(row),
-        String(row.amount ?? '')
-      ]
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [appliesToFilter, charges, filter]);
+  const filteredRows = useMemo(
+    () => filterChargeListItems(charges, search, appliedFilters),
+    [appliedFilters, charges, search]
+  );
+
+  useEffect(() => {
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }, [appliedFilters, search]);
 
   const table = useReactTable({
     data: filteredRows,
@@ -135,37 +122,20 @@ export function ChargesTable({
     getPaginationRowModel: getPaginationRowModel()
   });
 
-  const appliesToSelectOptions = appliesToOptions.map((option) => ({
-    value: String(option.id),
-    label: fineractOptionLabel(option)
-  }));
-
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <Input
           placeholder="Filter charges…"
-          value={filter}
-          onChange={(event) => {
-            setFilter(event.target.value);
-            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-          }}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
           className="max-w-sm"
         />
-        <SelectField
-          id="charges-applies-to-filter"
-          label="Applies to"
-          optional
-          value={appliesToFilter ?? 'all'}
-          onValueChange={(value) => {
-            setAppliesToFilter(value === 'all' ? undefined : value);
-            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-          }}
-          options={[{ value: 'all', label: 'All' }, ...appliesToSelectOptions]}
-          className="max-w-xs"
-        />
+        {filterTrigger ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">{filterTrigger}</div>
+        ) : null}
       </div>
-      <DataTable table={table} stickyHeader={false} emptyMessage="No charges match your filter." />
+      <DataTable table={table} stickyHeader={false} emptyMessage="No charges match your search or filters." />
       <DataTablePagination table={table} totalRecords={filteredRows.length} />
     </div>
   );

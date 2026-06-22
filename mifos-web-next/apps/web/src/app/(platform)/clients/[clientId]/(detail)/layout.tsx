@@ -9,22 +9,22 @@
 import { can } from '@mifos/auth';
 import { FineractHttpError } from '@mifos/api-client';
 import { notFound } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { ClientDetailShell } from '@/components/clients/detail/client-detail-shell';
+import { ClientDetailShellSkeleton } from '@/components/clients/detail/client-detail-skeleton';
 import { getClientProfileImage } from '@/lib/fineract/client-image';
 import { getClientSignatureInfo } from '@/lib/fineract/client-signature';
 import { buildClientDatatableNavItems } from '@/lib/fineract/client-datatable-nav';
 import { getClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 
-export default async function ClientDetailLayout({
+async function ClientDetailLayoutBody({
   children,
-  params
+  clientId
 }: {
   children: ReactNode;
-  params: Promise<{ clientId: string }>;
+  clientId: string;
 }) {
-  const { clientId } = await params;
   const session = await getServerSession();
 
   let client;
@@ -50,18 +50,34 @@ export default async function ClientDetailLayout({
   const canDeleteImage = can(session, 'DELETE_CLIENTIMAGE');
 
   return (
+    <ClientDetailShell
+      client={client}
+      initialImageSrc={profileImageSrc}
+      canCreateImage={canCreateImage}
+      canDeleteImage={canDeleteImage}
+      hasSignature={signatureInfo.hasSignature}
+      signatureDocumentId={signatureInfo.documentId}
+      datatableNavItems={datatableNavItems}
+    >
+      {children}
+    </ClientDetailShell>
+  );
+}
+
+export default async function ClientDetailLayout({
+  children,
+  params
+}: {
+  children: ReactNode;
+  params: Promise<{ clientId: string }>;
+}) {
+  const { clientId } = await params;
+
+  return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <ClientDetailShell
-        client={client}
-        initialImageSrc={profileImageSrc}
-        canCreateImage={canCreateImage}
-        canDeleteImage={canDeleteImage}
-        hasSignature={signatureInfo.hasSignature}
-        signatureDocumentId={signatureInfo.documentId}
-        datatableNavItems={datatableNavItems}
-      >
-        {children}
-      </ClientDetailShell>
+      <Suspense fallback={<ClientDetailShellSkeleton />}>
+        <ClientDetailLayoutBody clientId={clientId}>{children}</ClientDetailLayoutBody>
+      </Suspense>
     </div>
   );
 }

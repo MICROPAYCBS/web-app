@@ -37,6 +37,7 @@ import {
   savingsAccountStatusVariant,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
+import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
 
 const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
   summary: PiggyBank,
@@ -47,11 +48,18 @@ const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
 export function SavingsAccountDetailView({
   account,
   clientId,
-  permissions
+  permissions,
+  transactionActionPermissions = {
+    undoTransaction: false,
+    undoTransfer: false,
+    modifyTransaction: false,
+    viewJournal: false
+  }
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
   permissions: SavingsAccountActionPermissions;
+  transactionActionPermissions?: SavingsTransactionActionPermissions;
 }) {
   const sectionIds = SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id);
   const navItems = SAVINGS_ACCOUNT_SECTIONS.map((section) => ({
@@ -154,6 +162,8 @@ export function SavingsAccountDetailView({
       <SavingsAccountSectionPanel
         section={activeSection as SavingsAccountSectionId}
         account={account}
+        clientId={clientId}
+        transactionActionPermissions={transactionActionPermissions}
       />
     </DetailPage>
   );

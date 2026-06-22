@@ -51,6 +51,11 @@ const formSheetSideMaxWidth: Record<NonNullable<FormSheetProps['side']>, string>
   left: 'data-[side=left]:w-full data-[side=left]:sm:max-w-md'
 };
 
+/** Full-height docked panel layout shared by FormSheet and ListFilterSheet. */
+export const DOCKED_SHEET_LAYOUT_CLASSNAME = 'flex flex-col gap-0 p-0';
+
+export const dockedSheetSideMaxWidth = formSheetSideMaxWidth;
+
 /**
  * Standard side panel for simple forms (1–7 logical fields).
  * Footer: Cancel (outline) + Submit (primary), sticky at bottom.
@@ -94,7 +99,7 @@ export function FormSheet({
         side={side}
         showCloseButton
         className={cn(
-          'flex flex-col gap-0 p-0',
+          DOCKED_SHEET_LAYOUT_CLASSNAME,
           formSheetSideMaxWidth[side],
           className
         )}

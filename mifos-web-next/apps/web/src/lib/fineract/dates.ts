@@ -12,6 +12,9 @@ export const FINERACT_DATE_FORMAT = 'dd MMMM yyyy';
 export const FINERACT_DATETIME_FORMAT = 'dd MMMM yyyy HH:mm:ss';
 export const FINERACT_LOCALE = 'en';
 
+/** Fineract API datetime shapes (arrays, ISO strings, epoch millis). */
+export type FineractDateTimeValue = string | number[] | number;
+
 const FINERACT_PARSE_FORMATS = ['dd MMMM yyyy', 'd MMMM yyyy'] as const;
 
 /** Calendar day in local time (strips time-of-day). */
@@ -39,6 +42,58 @@ export function parseFineractDateString(value: string): Date | null {
   }
 
   return null;
+}
+
+/** Parse Fineract datetime strings (`01 March 2026 14:30:00`, ISO, date-only). */
+export function parseFineractDateTimeString(value: string): Date | null {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const withTime = parse(trimmed, FINERACT_DATETIME_FORMAT, new Date());
+  if (isValid(withTime)) {
+    return withTime;
+  }
+
+  const iso = new Date(trimmed);
+  if (!Number.isNaN(iso.getTime()) && /^\d{4}-\d{2}/.test(trimmed)) {
+    return iso;
+  }
+
+  return parseFineractDateString(trimmed);
+}
+
+/**
+ * Normalize Fineract datetime payloads from GET responses.
+ * ZonedDateTime is serialized as epoch millis; LocalDateTime as `[y, m, d, h, m, s]`.
+ */
+export function coerceFineractDateTime(value: unknown): FineractDateTimeValue | undefined {
+  if (value == null || value === '') {
+    return undefined;
+  }
+  if (typeof value === 'string' || Array.isArray(value)) {
+    return value as string | number[];
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'object') {
+    const row = value as Record<string, unknown>;
+    const year = Number(row.year);
+    const month = Number(row.monthValue ?? row.month);
+    const day = Number(row.dayOfMonth ?? row.day);
+    if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
+      const hour = Number(row.hour ?? 0);
+      const minute = Number(row.minute ?? 0);
+      const second = Number(row.second ?? 0);
+      if (row.hour != null || row.minute != null || row.second != null) {
+        return [year, month, day, hour, minute, second];
+      }
+      return [year, month, day];
+    }
+  }
+  return undefined;
 }
 
 /** Format a Date for Fineract command bodies (e.g. `01 March 2026`). */
@@ -95,4 +150,40 @@ export function formatFineractDateArray(
     return null;
   }
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
+}
+
+/** Fineract datetime arrays: `[yyyy, mm, dd, hh?, mm?, ss?]` (month 1–12). */
+export function fromFineractDateTimeArray(value: number[] | undefined): Date | null {
+  if (!value || value.length < 3) {
+    return null;
+  }
+  const [year, month, day, hour = 0, minute = 0, second = 0] = value;
+  return new Date(year, month - 1, day, hour, minute, second);
+}
+
+export function formatFineractDateTimeArray(
+  value: number[] | string | undefined,
+  locale = FINERACT_LOCALE
+): string | null {
+  if (value == null || value === '') {
+    return null;
+  }
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+    return new Intl.DateTimeFormat(locale, {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(parsed);
+  }
+  const dateTime = fromFineractDateTimeArray(value);
+  if (dateTime && value.length > 3) {
+    return new Intl.DateTimeFormat(locale, {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(dateTime);
+  }
+  return formatFineractDateArray(value, locale);
 }

@@ -15,7 +15,7 @@ import {
   executeSavingsAccountLifecycleCommandAction,
   loadSavingsAccountBlockReasonsAction
 } from '@/actions/savings-account-command';
-import { SelectField } from '@/components/composites/select-field';
+import { CodeValueSelectField } from '@/components/composites/code-value-select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +26,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import type { SavingsAccountLifecycleCommand } from '@/lib/fineract/savings-account-commands';
+import type { SavingsAccountLifecycleCommand } from '@/lib/fineract/savings-account-command-meta';
+import { SAVINGS_ACCOUNT_BLOCK_REASON_CODE_NAMES } from '@/lib/fineract/savings-account-command-meta';
 
 export type SavingsAccountBlockDialogKind = Extract<
   SavingsAccountLifecycleCommand,
@@ -72,6 +73,9 @@ export function SavingsAccountBlockDialog({
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [reasons, setReasons] = useState<{ id: number; name: string }[]>([]);
+  const [reasonCodeName, setReasonCodeName] = useState<string>(
+    SAVINGS_ACCOUNT_BLOCK_REASON_CODE_NAMES.block
+  );
   const [reasonId, setReasonId] = useState('');
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +91,7 @@ export function SavingsAccountBlockDialog({
     setFieldErrors({});
     setReasonId('');
     setRemarks('');
-    void loadSavingsAccountBlockReasonsAction().then((result) => {
+    void loadSavingsAccountBlockReasonsAction(kind).then((result) => {
       if (cancelled) {
         return;
       }
@@ -95,9 +99,11 @@ export function SavingsAccountBlockDialog({
       if (!result.ok) {
         setError(result.message);
         setReasons([]);
+        setReasonCodeName(SAVINGS_ACCOUNT_BLOCK_REASON_CODE_NAMES[kind]);
         return;
       }
       setReasons(result.reasons);
+      setReasonCodeName(result.codeName);
     });
     return () => {
       cancelled = true;
@@ -156,9 +162,10 @@ export function SavingsAccountBlockDialog({
           <p className="text-sm text-muted-foreground">Loading block reasons…</p>
         ) : (
           <form id={formId} onSubmit={handleSubmit} className="space-y-4">
-            <SelectField
+            <CodeValueSelectField
               id={`${formId}-reason`}
               label="Reason"
+              codeName={reasonCodeName}
               value={reasonId}
               onValueChange={(value) => setReasonId(value ?? '')}
               options={reasons.map((row) => ({ value: String(row.id), label: row.name }))}

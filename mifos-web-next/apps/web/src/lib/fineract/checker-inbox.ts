@@ -16,6 +16,7 @@ import type {
 import type { FineractAuditTrailDetail } from '@mifos/api-client';
 import type { CheckerInboxSearchFilters } from '@/lib/fineract/checker-inbox-query';
 import { getAuditTrail } from '@/lib/fineract/audit-trails';
+import { coerceFineractDateTime } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { buildCheckerInboxSearchParams } from '@/lib/fineract/checker-inbox-query';
 
@@ -38,10 +39,7 @@ function normalizeCheckerInboxListItem(raw: unknown): CheckerInboxListItem | nul
     actionName: typeof row.actionName === 'string' ? row.actionName : undefined,
     entityName: typeof row.entityName === 'string' ? row.entityName : undefined,
     officeName: typeof row.officeName === 'string' ? row.officeName : undefined,
-    madeOnDate:
-      typeof row.madeOnDate === 'string' || Array.isArray(row.madeOnDate)
-        ? (row.madeOnDate as string | number[])
-        : undefined
+    madeOnDate: coerceFineractDateTime(row.madeOnDate)
   };
 }
 

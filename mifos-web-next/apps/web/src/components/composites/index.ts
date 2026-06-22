@@ -6,7 +6,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export { FormSheet, FORM_SHEET_MAX_FIELDS, type FormSheetProps } from './form-sheet';
+export {
+  FormSheet,
+  FORM_SHEET_MAX_FIELDS,
+  DOCKED_SHEET_LAYOUT_CLASSNAME,
+  dockedSheetSideMaxWidth,
+  type FormSheetProps
+} from './form-sheet';
+export {
+  ListFilterSheet,
+  ListFilterSection,
+  ListFilterTrigger,
+  listFilterSheetContentClassName,
+  type ListFilterSheetProps
+} from './list-filter-sheet';
 export { FormErrorAlert, type FormErrorAlertProps } from './form-error-alert';
 export { FormWizard, type FormWizardProps, type FormWizardStep } from './form-wizard';
 export { FormWizardSkeleton, type FormWizardSkeletonProps } from './form-wizard-skeleton';
@@ -31,9 +44,11 @@ export {
   EmptyValue,
   DetailNavTabs,
   DetailSectionNav,
+  DetailSectionTabs,
   DetailNavSidebar,
   type DetailNavTab,
   type DetailSectionNavItem,
+  type DetailSectionTabItem,
   type DetailNavGroup,
   type DetailNavItem,
   type DetailSummaryItem
@@ -60,6 +75,10 @@ export {
   useOptionalContextHelp
 } from './context-help';
 export { SelectField, type SelectFieldProps, type SelectOption } from './select-field';
+export {
+  CodeValueSelectField,
+  type CodeValueSelectFieldProps
+} from './code-value-select-field';
 export { TextField, type TextFieldProps } from './text-field';
 export { MoneyField, sanitizeMoneyInput, formatMoneyInputDisplay, type MoneyFieldProps } from './money-field';
 export {
@@ -69,6 +88,11 @@ export {
   type SanitizeNumericInputOptions
 } from './numeric-field';
 export { SwitchField, type SwitchFieldProps } from './switch-field';
+export {
+  PaymentDetailFields,
+  emptyPaymentDetailFields,
+  type PaymentDetailFieldValues
+} from './payment-detail-fields';
 export {
   type CollectionViewMode,
   CollectionViewToggle,

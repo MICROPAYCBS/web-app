@@ -26,6 +26,41 @@ export function clientAccountGeneralPath(
   return `/clients/${clientId}/${segment}/${accountId}/general`;
 }
 
+export function savingsAccountSectionPath(
+  clientId: string | number,
+  accountId: string | number,
+  section: 'summary' | 'transactions' | 'charges' = 'summary'
+): string {
+  const base = clientAccountGeneralPath(clientId, 'savings', accountId);
+  return section === 'summary' ? base : `${base}?section=${section}`;
+}
+
+export function savingsAccountTransactionPath(
+  clientId: string | number,
+  accountId: string | number,
+  transactionId: string | number
+): string {
+  return `/clients/${clientId}/${CLIENT_ACCOUNT_SEGMENTS.savings}/${accountId}/transactions/${transactionId}`;
+}
+
+export function savingsAccountTransactionSectionPath(
+  clientId: string | number,
+  accountId: string | number,
+  transactionId: string | number,
+  section: 'details' | 'journal' | 'audit'
+): string {
+  const base = savingsAccountTransactionPath(clientId, accountId, transactionId);
+  return section === 'details' ? base : `${base}?section=${section}`;
+}
+
+export function savingsAccountTransactionReceiptPath(
+  clientId: string,
+  accountId: string | number,
+  transactionId: string | number
+): string {
+  return `/api/clients/${clientId}/savings-accounts/${accountId}/transactions/${transactionId}/receipt`;
+}
+
 export function clientAccountListPath(
   clientId: string | number,
   kind: ClientAccountProductKind

@@ -6,24 +6,57 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatFineractDateArray } from '@/lib/fineract/dates';
+import {
+  coerceFineractDateTime,
+  formatFineractDateTimeArray,
+  parseFineractDateTimeString,
+  type FineractDateTimeValue
+} from '@/lib/fineract/dates';
 
-export function formatAuditTrailDateTime(value: string | number[] | undefined): string {
-  if (value == null || value === '') {
-    return '—';
-  }
-  if (Array.isArray(value)) {
-    const date = formatFineractDateArray(value);
-    return date ?? '—';
-  }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
+function formatResolvedDateTime(date: Date): string {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short'
-  }).format(parsed);
+  }).format(date);
+}
+
+export function formatAuditTrailDateTime(value: FineractDateTimeValue | undefined): string {
+  const coerced = coerceFineractDateTime(value);
+  if (coerced == null) {
+    return '—';
+  }
+  if (typeof coerced === 'number') {
+    const ms = coerced < 1e12 ? coerced * 1000 : coerced;
+    const parsed = new Date(ms);
+    if (Number.isNaN(parsed.getTime())) {
+      return '—';
+    }
+    return formatResolvedDateTime(parsed);
+  }
+  if (typeof coerced === 'string') {
+    const parsed = parseFineractDateTimeString(coerced);
+    if (!parsed) {
+      return coerced;
+    }
+    return formatResolvedDateTime(parsed);
+  }
+  return formatFineractDateTimeArray(coerced) ?? '—';
+}
+
+export function formatAuditTrailFilterLabel(value: string): string {
+  if (!value.trim()) {
+    return value;
+  }
+  const withSpaces = value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .trim();
+  if (withSpaces === withSpaces.toUpperCase()) {
+    return withSpaces
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+  return withSpaces;
 }
 
 export function parseAuditTrailCommands(commandAsJson: string | undefined): Array<{

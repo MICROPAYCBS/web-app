@@ -20,6 +20,7 @@ export { DetailBackLink } from './detail-back-link';
 export { DetailPage } from './detail-page';
 export { DetailNavTabs, type DetailNavTab } from './detail-nav-tabs';
 export { DetailSectionNav, type DetailSectionNavItem } from './detail-section-nav';
+export { DetailSectionTabs, type DetailSectionTabItem } from './detail-section-tabs';
 
 export {
   DetailNavSidebar,

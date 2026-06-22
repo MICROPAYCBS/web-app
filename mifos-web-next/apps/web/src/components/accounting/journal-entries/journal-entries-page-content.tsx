@@ -14,7 +14,7 @@ import type {
   FineractOfficeOption
 } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { ListFilter, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
@@ -25,8 +25,8 @@ import {
   type JournalEntrySortColumn
 } from '@/components/accounting/journal-entries/journal-entries-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
+import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
-import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   buildJournalEntriesUrl,
@@ -139,21 +139,11 @@ export function JournalEntriesPageContent({
           pending={pending}
           toolbar={
             <>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
+              <ListFilterTrigger
+                activeCount={activeFilterCount}
                 onClick={() => setFilterOpen(true)}
                 disabled={pending}
-              >
-                <ListFilter className="mr-2 size-4" />
-                Filters
-                {activeFilterCount > 0 ? (
-                  <Badge variant="secondary" className="ml-2">
-                    {activeFilterCount}
-                  </Badge>
-                ) : null}
-              </Button>
+              />
               <DataTableColumnVisibility
                 table={table}
                 disabled={pending}

@@ -9,8 +9,8 @@
  */
 
 import type { EntityMappingFilterOptions } from '@mifos/api-client';
-import { useEffect, useId, useState } from 'react';
-import { FormSheet } from '@/components/composites/form-sheet';
+import { useEffect, useState } from 'react';
+import { ListFilterSheet } from '@/components/composites/list-filter-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 
@@ -42,7 +42,6 @@ export function EntityToEntityMappingFilterSheet({
   pending?: boolean;
   disabled?: boolean;
 }) {
-  const formId = useId();
   const [draftFromId, setDraftFromId] = useState(fromId);
   const [draftToId, setDraftToId] = useState(toId);
 
@@ -55,7 +54,6 @@ export function EntityToEntityMappingFilterSheet({
 
   function handleApply() {
     onApply(draftFromId, draftToId);
-    onOpenChange(false);
   }
 
   function handleReset() {
@@ -64,26 +62,17 @@ export function EntityToEntityMappingFilterSheet({
   }
 
   return (
-    <FormSheet
+    <ListFilterSheet
       open={open}
       onOpenChange={onOpenChange}
       title="Filter mappings"
       description={`Narrow ${filterOptions.fromLabel.toLowerCase()} to ${filterOptions.toLabel.toLowerCase()} access rules.`}
-      formId={formId}
-      submitLabel={pending ? 'Applying…' : 'Apply filters'}
-      submitLoading={pending}
-      submitDisabled={disabled}
-      onSubmit={handleApply}
+      applyLabel={pending ? 'Applying…' : 'Apply filters'}
+      onApply={handleApply}
+      pending={pending}
+      disabled={disabled}
     >
-      <form
-        id={formId}
-        className="space-y-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleApply();
-        }}
-      >
-        <SelectField
+      <SelectField
           label={filterOptions.fromLabel}
           required
           value={draftFromId}
@@ -107,9 +96,8 @@ export function EntityToEntityMappingFilterSheet({
           onClick={handleReset}
           disabled={disabled || pending}
         >
-          Reset to all
-        </Button>
-      </form>
-    </FormSheet>
+        Reset to all
+      </Button>
+    </ListFilterSheet>
   );
 }

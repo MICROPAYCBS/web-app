@@ -18,10 +18,16 @@ import {
 import { DateField } from '@/components/composites/date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
+import {
+  emptyPaymentDetailFields,
+  PaymentDetailFields
+} from '@/components/composites/payment-detail-fields';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import type { SavingsAccountTransactionCommand } from '@/lib/fineract/savings-account-commands';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { dateToFineract } from '@/lib/fineract/date-input';
+
+type DepositWithdrawCommand = 'deposit' | 'withdrawal';
 
 export function SavingsAccountTransactionSheet({
   clientId,
@@ -33,7 +39,7 @@ export function SavingsAccountTransactionSheet({
 }: {
   clientId: string;
   accountId: number;
-  command: SavingsAccountTransactionCommand | null;
+  command: DepositWithdrawCommand | null;
   currencyCode: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,11 +48,13 @@ export function SavingsAccountTransactionSheet({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [paymentTypes, setPaymentTypes] = useState<{ id: number; name: string }[]>([]);
   const [transactionDate, setTransactionDate] = useState(() => dateToFineract(new Date()));
   const [amount, setAmount] = useState('');
   const [paymentTypeId, setPaymentTypeId] = useState('');
   const [note, setNote] = useState('');
+  const [paymentDetails, setPaymentDetails] = useState(emptyPaymentDetailFields);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -64,10 +72,12 @@ export function SavingsAccountTransactionSheet({
     setLoading(true);
     setError(null);
     setFieldErrors({});
+    setActiveTab('basic');
     setTransactionDate(dateToFineract(new Date()));
     setAmount('');
     setPaymentTypeId('');
     setNote('');
+    setPaymentDetails(emptyPaymentDetailFields());
     void loadSavingsAccountTransactionSheetDataAction(String(accountId), command).then((result) => {
       if (cancelled) {
         return;
@@ -105,12 +115,17 @@ export function SavingsAccountTransactionSheet({
       const result = await executeSavingsAccountTransactionCommandAction(
         clientId,
         String(accountId),
-        command as SavingsAccountTransactionCommand,
+        command as DepositWithdrawCommand,
         {
           transactionDate,
           transactionAmount: amount,
           paymentTypeId,
-          note: note.trim() || undefined
+          note: note.trim() || undefined,
+          accountNumber: paymentDetails.accountNumber.trim() || undefined,
+          checkNumber: paymentDetails.checkNumber.trim() || undefined,
+          routingCode: paymentDetails.routingCode.trim() || undefined,
+          receiptNumber: paymentDetails.receiptNumber.trim() || undefined,
+          bankNumber: paymentDetails.bankNumber.trim() || undefined
         }
       );
 
@@ -124,6 +139,68 @@ export function SavingsAccountTransactionSheet({
       router.refresh();
     });
   }
+
+  const disabled = pending || loading;
+
+  const basicFields = (
+    <div className="space-y-4">
+      <DateField
+        id={`${formId}-date`}
+        label="Transaction date"
+        value={transactionDate}
+        onChange={setTransactionDate}
+        error={fieldErrors.transactionDate}
+        required
+        disabled={disabled}
+      />
+      <MoneyField
+        id={`${formId}-amount`}
+        label="Amount"
+        value={amount}
+        onChange={setAmount}
+        currencyCode={currencyCode}
+        error={fieldErrors.transactionAmount}
+        required
+        disabled={disabled}
+      />
+      <SelectField
+        id={`${formId}-payment-type`}
+        label="Payment type"
+        value={paymentTypeId}
+        onValueChange={(value) => setPaymentTypeId(value ?? '')}
+        options={paymentTypes.map((row) => ({ value: String(row.id), label: row.name }))}
+        placeholder="Select payment type"
+        error={fieldErrors.paymentTypeId}
+        required
+        disabled={disabled}
+      />
+      <TextField
+        id={`${formId}-note`}
+        label="Note"
+        value={note}
+        onChange={setNote}
+        error={fieldErrors.note}
+        multiline
+        optional
+        disabled={disabled}
+      />
+    </div>
+  );
+
+  const advancedFields = (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Optional payment reference details for cheque, bank transfer, or receipt tracking.
+      </p>
+      <PaymentDetailFields
+        idPrefix={formId}
+        values={paymentDetails}
+        onChange={(patch) => setPaymentDetails((current) => ({ ...current, ...patch }))}
+        fieldErrors={fieldErrors}
+        disabled={disabled}
+      />
+    </div>
+  );
 
   return (
     <FormSheet
@@ -141,41 +218,21 @@ export function SavingsAccountTransactionSheet({
         <p className="text-sm text-muted-foreground">Loading payment types…</p>
       ) : (
         <form id={formId} onSubmit={handleSubmit} className="space-y-4">
-          <DateField
-            id={`${formId}-date`}
-            label="Transaction date"
-            value={transactionDate}
-            onChange={setTransactionDate}
-            error={fieldErrors.transactionDate}
-            required
-          />
-          <MoneyField
-            id={`${formId}-amount`}
-            label="Amount"
-            value={amount}
-            onChange={setAmount}
-            currencyCode={currencyCode}
-            error={fieldErrors.transactionAmount}
-            required
-          />
-          <SelectField
-            id={`${formId}-payment-type`}
-            label="Payment type"
-            value={paymentTypeId}
-            onValueChange={(value) => setPaymentTypeId(value ?? '')}
-            options={paymentTypes.map((row) => ({ value: String(row.id), label: row.name }))}
-            placeholder="Select payment type"
-            error={fieldErrors.paymentTypeId}
-            required
-          />
-          <TextField
-            id={`${formId}-note`}
-            label="Note"
-            value={note}
-            onChange={setNote}
-            error={fieldErrors.note}
-            multiline
-          />
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as 'basic' | 'advanced')}
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">Basic</TabsTrigger>
+              <TabsTrigger value="advanced">Payment details</TabsTrigger>
+            </TabsList>
+            <TabsContent value="basic" className="mt-4">
+              {basicFields}
+            </TabsContent>
+            <TabsContent value="advanced" className="mt-4">
+              {advancedFields}
+            </TabsContent>
+          </Tabs>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </form>
       )}

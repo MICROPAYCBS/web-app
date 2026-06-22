@@ -112,6 +112,7 @@ export interface MoneyFieldProps {
   placeholder?: string;
   hint?: string;
   hintAriaLabel?: string;
+  contextHelpSectionId?: string;
   onBlur?: () => void;
 }
 
@@ -130,6 +131,7 @@ export function MoneyField({
   placeholder,
   hint,
   hintAriaLabel,
+  contextHelpSectionId,
   onBlur
 }: MoneyFieldProps) {
   const autoId = useId();
@@ -174,6 +176,7 @@ export function MoneyField({
         optional={optional ?? !required}
         hint={hint}
         hintAriaLabel={hintAriaLabel}
+        contextHelpSectionId={contextHelpSectionId}
       >
         {label}
       </FormLabel>

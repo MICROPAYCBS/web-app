@@ -100,3 +100,12 @@ export async function deleteCodeValue(
   const fineract = await createFineractClient();
   await fineract.delete(`/codes/${codeId}/codevalues/${codeValueId}`);
 }
+
+export async function listCodeValuesByName(codeName: string): Promise<FineractCodeValue[]> {
+  const codes = await listCodes();
+  const match = codes.find((code) => code.name === codeName);
+  if (!match) {
+    return [];
+  }
+  return listCodeValues(match.id);
+}

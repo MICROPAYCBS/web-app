@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import type { SavingsAccountLifecycleCommand } from '@/lib/fineract/savings-account-commands';
+import type { SavingsAccountLifecycleCommand } from '@/lib/fineract/savings-account-command-meta';
 import { dateToFineract } from '@/lib/fineract/date-input';
 
 export type SavingsAccountLifecycleDialogKind = Extract<

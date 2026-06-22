@@ -14,11 +14,12 @@ import type {
 } from '@mifos/api-client';
 import { Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useTransition } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { exportAuditTrailsCsvAction } from '@/actions/audit-trails';
+import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
-import { AuditTrailsFilters } from '@/components/system/audit-trails-filters';
+import { AuditTrailsFilterSheet } from '@/components/system/audit-trails-filter-sheet';
 import {
   AuditTrailsTable,
   type AuditTrailSortColumn
@@ -26,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import {
   auditTrailFiltersFromQuery,
+  countActiveAuditTrailFilters,
   type AuditTrailListQuery,
   type AuditTrailSearchFilters
 } from '@/lib/fineract/audit-trail-query';
@@ -71,7 +73,9 @@ export function AuditTrailsPageContent({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [filterOpen, setFilterOpen] = useState(false);
   const filters = auditTrailFiltersFromQuery(query);
+  const activeFilterCount = countActiveAuditTrailFilters(filters);
 
   const navigate = useCallback(
     (next: AuditTrailListQuery) => {
@@ -143,24 +147,17 @@ export function AuditTrailsPageContent({
   const pageIndex = Math.floor(query.offset / query.limit);
 
   return (
-    <ListPage
-      title="Audit trails"
-      description="Search and review platform activity, including maker-checker events."
-      actions={
-        <Button type="button" onClick={handleExportCsv} disabled={pending}>
-          <Download className="mr-2 size-4" />
-          Download CSV
-        </Button>
-      }
-    >
-      <div className="space-y-6">
-        <AuditTrailsFilters
-          template={template}
-          filters={filters}
-          onApply={handleApplyFilters}
-          onClear={handleClearFilters}
-          disabled={pending}
-        />
+    <>
+      <ListPage
+        title="Audit trails"
+        description="Search and review platform activity, including maker-checker events."
+        actions={
+          <Button type="button" onClick={handleExportCsv} disabled={pending}>
+            <Download className="mr-2 size-4" />
+            Download CSV
+          </Button>
+        }
+      >
         <AuditTrailsTable
           page={page}
           pageSize={query.limit}
@@ -170,8 +167,26 @@ export function AuditTrailsPageContent({
           onSort={handleSort}
           onPaginationChange={handlePaginationChange}
           pending={pending}
+          toolbar={
+            <ListFilterTrigger
+              activeCount={activeFilterCount}
+              onClick={() => setFilterOpen(true)}
+              disabled={pending}
+            />
+          }
         />
-      </div>
-    </ListPage>
+      </ListPage>
+
+      <AuditTrailsFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        template={template}
+        filters={filters}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+        disabled={pending}
+        pending={pending}
+      />
+    </>
   );
 }

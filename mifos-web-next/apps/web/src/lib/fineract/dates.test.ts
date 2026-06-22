@@ -9,10 +9,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  coerceFineractDateTime,
   fineractApiDateToFormString,
+  formatFineractDateTimeArray,
   fromFineractDateArray,
   normalizeFineractDateField,
   parseFineractDateString,
+  parseFineractDateTimeString,
   toFineractDate
 } from './dates';
 
@@ -33,5 +36,25 @@ describe('fineract date serialization', () => {
 
   it('formats local calendar dates with zero-padded day', () => {
     assert.equal(toFineractDate(fromFineractDateArray([2026, 3, 1])!), '01 March 2026');
+  });
+
+  it('formats Fineract datetime arrays with time', () => {
+    const formatted = formatFineractDateTimeArray([2026, 3, 1, 14, 30, 0], 'en');
+    assert.ok(formatted?.includes('Mar'));
+    assert.ok(formatted?.includes('1'));
+    assert.ok(formatted?.includes('2:30') || formatted?.includes('14:30'));
+  });
+
+  it('coerces epoch millis from Fineract ZonedDateTime serialization', () => {
+    assert.equal(coerceFineractDateTime(1_718_000_000_000), 1_718_000_000_000);
+  });
+
+  it('parses Fineract datetime strings', () => {
+    const parsed = parseFineractDateTimeString('22 June 2026 12:46:47');
+    assert.equal(parsed?.getFullYear(), 2026);
+    assert.equal(parsed?.getMonth(), 5);
+    assert.equal(parsed?.getDate(), 22);
+    assert.equal(parsed?.getHours(), 12);
+    assert.equal(parsed?.getMinutes(), 46);
   });
 });

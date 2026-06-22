@@ -29,6 +29,7 @@ export interface TextFieldProps {
   placeholder?: string;
   hint?: string;
   hintAriaLabel?: string;
+  contextHelpSectionId?: string;
   disabled?: boolean;
 }
 
@@ -48,6 +49,7 @@ export function TextField({
   placeholder,
   hint,
   hintAriaLabel,
+  contextHelpSectionId,
   disabled = false
 }: TextFieldProps) {
   return (
@@ -58,6 +60,7 @@ export function TextField({
         optional={optional ?? !required}
         hint={hint}
         hintAriaLabel={hintAriaLabel}
+        contextHelpSectionId={contextHelpSectionId}
       >
         {label}
       </FormLabel>

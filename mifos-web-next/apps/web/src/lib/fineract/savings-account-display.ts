@@ -37,6 +37,11 @@ export function savingsAccountCurrencyCode(account: FineractSavingsAccountDetail
   return account.currency.code ?? 'USD';
 }
 
+/** Available balance for withdrawals and transfers (matches account detail header). */
+export function savingsAccountAvailableBalance(account: FineractSavingsAccountDetail): number {
+  return account.summary?.availableBalance ?? account.summary?.accountBalance ?? 0;
+}
+
 export function formatSavingsAccountMoney(
   account: FineractSavingsAccountDetail,
   amount: number | undefined
@@ -84,6 +89,80 @@ export function savingsAccountBlockedMessage(account: FineractSavingsAccountDeta
 
 export function formatSavingsTransactionType(transaction: FineractSavingsAccountTransaction) {
   return transaction.transactionType?.value ?? 'Transaction';
+}
+
+/** Business date when present; otherwise submitted date. */
+export function savingsTransactionDate(
+  transaction: FineractSavingsAccountTransaction
+): number[] | string | undefined {
+  return transaction.date ?? transaction.submittedOnDate;
+}
+
+/** Debit column — matches Fineract `transactionType.isDebit()` and legacy `isDebit`. */
+export function isSavingsTransactionDebit(transaction: FineractSavingsAccountTransaction) {
+  const type = transaction.transactionType;
+  if (type) {
+    if (type.debit === true) {
+      return true;
+    }
+    if (type.credit === true) {
+      return false;
+    }
+    if (
+      type.withdrawal === true ||
+      type.feeDeduction === true ||
+      type.overdraftInterest === true ||
+      type.withholdTax === true
+    ) {
+      return true;
+    }
+    if (type.deposit === true || type.interestPosting === true) {
+      return false;
+    }
+    const code = type.code?.toLowerCase() ?? '';
+    const value = type.value?.toLowerCase() ?? '';
+    if (code.includes('release') || value.includes('release')) {
+      return false;
+    }
+    if (code.includes('hold') || value.includes('hold')) {
+      return true;
+    }
+  }
+  const entryCode = transaction.entryType?.code?.toUpperCase();
+  return entryCode === 'DEBIT';
+}
+
+export function isSavingsTransactionAccrual(transaction: FineractSavingsAccountTransaction) {
+  const type = transaction.transactionType;
+  if (!type) {
+    return false;
+  }
+  if (type.accrual === true) {
+    return true;
+  }
+  return type.code?.toLowerCase().includes('accrual') === true;
+}
+
+export function savingsTransactionRowClassName(
+  transaction: FineractSavingsAccountTransaction
+): string | undefined {
+  if (transaction.reversed) {
+    return 'line-through opacity-60';
+  }
+  if (transaction.transfer) {
+    return 'text-primary';
+  }
+  if (isSavingsTransactionAccrual(transaction)) {
+    return 'text-muted-foreground italic';
+  }
+  return undefined;
+}
+
+export function savingsTransactionCurrencyCode(
+  transaction: FineractSavingsAccountTransaction,
+  account?: FineractSavingsAccountDetail
+): string {
+  return transaction.currency?.code ?? (account ? savingsAccountCurrencyCode(account) : 'USD');
 }
 
 export function formatSavingsTransactionPaymentDetail(
@@ -144,6 +223,28 @@ export interface SavingsAccountActionVisibility {
   unblockCredit: boolean;
   blockDebit: boolean;
   unblockDebit: boolean;
+  calculateInterest: boolean;
+  postInterest: boolean;
+  postInterestAsOn: boolean;
+  addCharge: boolean;
+  applyAnnualFees: boolean;
+  holdAmount: boolean;
+  transferFunds: boolean;
+  assignStaff: boolean;
+  unassignStaff: boolean;
+  enableWithholdTax: boolean;
+  disableWithholdTax: boolean;
+  deleteAccount: boolean;
+}
+
+export function savingsAccountAnnualFeeCharge(
+  account: FineractSavingsAccountDetail
+): FineractSavingsAccountCharge | undefined {
+  return account.charges?.find((charge) => {
+    const code = charge.chargeTimeType?.code?.toLowerCase() ?? '';
+    const value = charge.chargeTimeType?.value?.toLowerCase() ?? '';
+    return code.includes('annual') || value.includes('annual');
+  });
 }
 
 export function savingsAccountActionVisibility(
@@ -157,6 +258,9 @@ export function savingsAccountActionVisibility(
   const blockAll = sub?.block === true;
   const blockCredit = sub?.blockCredit === true;
   const blockDebit = sub?.blockDebit === true;
+  const canTransact = active && !blockAll;
+  const hasFieldOfficer = Boolean(account.fieldOfficerId || account.fieldOfficerName?.trim());
+  const annualFeeCharge = savingsAccountAnnualFeeCharge(account);
 
   return {
     approve: pending,
@@ -164,15 +268,27 @@ export function savingsAccountActionVisibility(
     reject: pending,
     withdrawnByApplicant: pending,
     undoApproval: approved,
-    deposit: active && !blockAll && !blockCredit,
-    withdraw: active && !blockAll && !blockDebit,
+    deposit: canTransact && !blockCredit,
+    withdraw: canTransact && !blockDebit,
     close: active,
     block: active && !blockAll,
     unblock: active && blockAll,
     blockCredit: active && !blockAll && !blockCredit,
     unblockCredit: active && blockCredit,
     blockDebit: active && !blockAll && !blockDebit,
-    unblockDebit: active && blockDebit
+    unblockDebit: active && blockDebit,
+    calculateInterest: canTransact,
+    postInterest: canTransact,
+    postInterestAsOn: canTransact,
+    addCharge: pending || approved || active,
+    applyAnnualFees: active && Boolean(annualFeeCharge),
+    holdAmount: canTransact,
+    transferFunds: canTransact && !blockDebit && Boolean(account.clientId),
+    assignStaff: (pending || approved || active) && !hasFieldOfficer,
+    unassignStaff: hasFieldOfficer,
+    enableWithholdTax: active && Boolean(account.taxGroup?.id) && account.withHoldTax !== true,
+    disableWithholdTax: active && Boolean(account.taxGroup?.id) && account.withHoldTax === true,
+    deleteAccount: pending
   };
 }
 

@@ -9,7 +9,7 @@
  */
 
 import type { CheckerInboxListItem, CheckerInboxSearchTemplate } from '@mifos/api-client';
-import { Check, ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
+import { Check, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -17,9 +17,10 @@ import {
   bulkDeleteCheckerInboxItemsAction,
   bulkExecuteCheckerInboxActionAction
 } from '@/actions/checker-inbox';
+import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { TextField } from '@/components/composites/text-field';
 import { CheckerInboxAndTasksLayout } from '@/components/tasks/checker-inbox-and-tasks-layout';
-import { CheckerInboxFilters } from '@/components/tasks/checker-inbox-filters';
+import { CheckerInboxFilterSheet } from '@/components/tasks/checker-inbox-filter-sheet';
 import { CheckerInboxTable } from '@/components/tasks/checker-inbox-table';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,8 +31,11 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import type { CheckerInboxSearchFilters } from '@/lib/fineract/checker-inbox-query';
-import { buildCheckerInboxListUrl } from '@/lib/fineract/checker-inbox-query';
+import {
+  buildCheckerInboxListUrl,
+  countActiveCheckerInboxFilters,
+  type CheckerInboxSearchFilters
+} from '@/lib/fineract/checker-inbox-query';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
 
@@ -48,10 +52,11 @@ export function CheckerInboxPageContent({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [filterOpen, setFilterOpen] = useState(false);
   const [userFilter, setUserFilter] = useState('');
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(hasActiveSearch);
   const [selectedItems, setSelectedItems] = useState<CheckerInboxListItem[]>([]);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const activeFilterCount = countActiveCheckerInboxFilters(filters);
 
   const navigate = useCallback(
     (nextFilters: CheckerInboxSearchFilters) => {
@@ -61,6 +66,10 @@ export function CheckerInboxPageContent({
     },
     [router]
   );
+
+  function handleClearFilters() {
+    navigate({});
+  }
 
   function runBulkAction(action: ConfirmAction) {
     const ids = selectedItems.map((item) => item.id);
@@ -102,20 +111,11 @@ export function CheckerInboxPageContent({
               disabled={pending}
             />
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={showAdvancedSearch ? 'Hide advanced search' : 'Show advanced search'}
-            aria-expanded={showAdvancedSearch}
-            onClick={() => setShowAdvancedSearch((current) => !current)}
-          >
-            {showAdvancedSearch ? (
-              <ChevronUp className="size-4" />
-            ) : (
-              <ChevronDown className="size-4" />
-            )}
-          </Button>
+          <ListFilterTrigger
+            activeCount={activeFilterCount}
+            onClick={() => setFilterOpen(true)}
+            disabled={pending}
+          />
           <Button
             type="button"
             disabled={pending || selectedItems.length === 0}
@@ -144,15 +144,6 @@ export function CheckerInboxPageContent({
           </Button>
         </div>
 
-        {showAdvancedSearch ? (
-          <CheckerInboxFilters
-            template={template}
-            filters={filters}
-            onApply={navigate}
-            disabled={pending}
-          />
-        ) : null}
-
         {showEmptySearch ? (
           <p className="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
             No checker inbox data available for this search.
@@ -172,6 +163,17 @@ export function CheckerInboxPageContent({
             onSelectedItemsChange={setSelectedItems}
           />
         ) : null}
+
+        <CheckerInboxFilterSheet
+          open={filterOpen}
+          onOpenChange={setFilterOpen}
+          template={template}
+          filters={filters}
+          onApply={navigate}
+          onClear={handleClearFilters}
+          disabled={pending}
+          pending={pending}
+        />
 
         <Dialog
           open={confirmAction != null}

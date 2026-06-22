@@ -72,6 +72,68 @@ function activeClientsSqlSearch(): string {
   return `c.status_enum not in (${CLOSED_CLIENT_STATUS_ENUMS.join(',')})`;
 }
 
+function normalizeClientsListResponse(raw: unknown): FineractClientsPage {
+  if (Array.isArray(raw)) {
+    return {
+      pageItems: raw as FineractClientSummary[],
+      totalFilteredRecords: raw.length
+    };
+  }
+  if (raw && typeof raw === 'object') {
+    const page = raw as FineractClientsPage;
+    if (Array.isArray(page.pageItems)) {
+      return {
+        pageItems: page.pageItems,
+        totalFilteredRecords: page.totalFilteredRecords ?? page.pageItems.length
+      };
+    }
+  }
+  return { pageItems: [], totalFilteredRecords: 0 };
+}
+
+function filterClosedClients(
+  pageItems: FineractClientSummary[],
+  includeClosed: boolean | undefined
+): FineractClientSummary[] {
+  if (includeClosed) {
+    return pageItems;
+  }
+  return pageItems.filter((client) => !isClosedClient(client));
+}
+
+/** GET /clients?displayName=… — supported on all Fineract deployments (legacy autocomplete). */
+export async function searchClientsByDisplayName(
+  params: FetchClientsListParams
+): Promise<FineractClientsPage> {
+  const query = params.query?.trim() ?? '';
+  if (!query) {
+    return listClientsPaged(params);
+  }
+
+  const fineract = await createFineractClient();
+  const searchParams: Record<string, string> = {
+    displayName: query,
+    orderBy: params.orderBy ?? 'displayName',
+    sortOrder: params.sortOrder ?? 'ASC',
+    offset: String(params.offset),
+    limit: String(params.limit),
+    orphansOnly: 'false'
+  };
+
+  if (!params.includeClosed) {
+    searchParams.sqlSearch = activeClientsSqlSearch();
+  }
+
+  const raw = await fineract.get<unknown>('/clients', searchParams);
+  const page = normalizeClientsListResponse(raw);
+  const pageItems = filterClosedClients(page.pageItems, params.includeClosed);
+
+  return {
+    pageItems,
+    totalFilteredRecords: page.totalFilteredRecords ?? pageItems.length
+  };
+}
+
 async function searchClientsV2(params: FetchClientsListParams): Promise<FineractClientsPage> {
   const fineract = await createFineractClient();
   const page = Math.floor(params.offset / params.limit);
@@ -87,9 +149,7 @@ async function searchClientsV2(params: FetchClientsListParams): Promise<Fineract
 
   const raw = await fineract.post<FineractV2ClientSearchPage>('/v2/clients/search', body);
   let pageItems = (raw.content ?? []).map(mapV2Client);
-  if (!params.includeClosed) {
-    pageItems = pageItems.filter((client) => !isClosedClient(client));
-  }
+  pageItems = filterClosedClients(pageItems, params.includeClosed);
 
   return {
     totalFilteredRecords: raw.totalElements ?? pageItems.length,
@@ -121,7 +181,11 @@ async function listClientsPaged(params: FetchClientsListParams): Promise<Finerac
 export async function fetchClientsList(params: FetchClientsListParams): Promise<FineractClientsPage> {
   const query = params.query?.trim();
   if (query) {
-    return searchClientsV2(params);
+    try {
+      return await searchClientsV2(params);
+    } catch {
+      return searchClientsByDisplayName(params);
+    }
   }
   return listClientsPaged(params);
 }
