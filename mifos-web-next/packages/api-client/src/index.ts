@@ -103,6 +103,11 @@ export type {
 export type { FineractSearchEntityStatus, FineractSearchResult } from './clients/search-types';
 
 export type {
+  AccountTransferTemplate,
+  CreateAccountTransferResponse
+} from './account-transfers/types';
+
+export type {
   CreateStandingInstructionResponse,
   StandingInstructionAccountRef,
   StandingInstructionClientRef,

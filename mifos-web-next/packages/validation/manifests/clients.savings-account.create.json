@@ -6,6 +6,23 @@
   ],
   "fields": {
     "productId": { "required": true },
-    "submittedOnDate": { "required": true }
+    "submittedOnDate": { "required": true },
+    "fieldOfficerId": { "required": false },
+    "externalId": { "required": false },
+    "nominalAnnualInterestRate": { "required": false },
+    "interestCompoundingPeriodType": { "required": false },
+    "interestPostingPeriodType": { "required": false },
+    "interestCalculationType": { "required": false },
+    "interestCalculationDaysInYearType": { "required": false },
+    "minRequiredOpeningBalance": { "required": false },
+    "withdrawalFeeForTransfers": { "required": false },
+    "lockinPeriodFrequency": { "required": false },
+    "lockinPeriodFrequencyType": { "required": false },
+    "allowOverdraft": { "required": false },
+    "overdraftLimit": { "required": false },
+    "minOverdraftForInterestCalculation": { "required": false },
+    "nominalAnnualInterestRateOverdraft": { "required": false },
+    "enforceMinRequiredBalance": { "required": false },
+    "minRequiredBalance": { "required": false }
   }
 }

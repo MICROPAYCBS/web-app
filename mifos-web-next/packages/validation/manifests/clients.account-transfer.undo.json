@@ -1,0 +1,7 @@
+{
+  "schemaId": "clients.account-transfer.undo",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.account.api.AccountTransfersApiResource"
+  ],
+  "fields": {}
+}

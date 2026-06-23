@@ -1,5 +1,5 @@
 {
-  "schemaId": "clients.savings-account.deposit",
+  "schemaId": "clients.savings-account.withdrawal",
   "fineractSources": [
     "org.apache.fineract.portfolio.savings.api.SavingsAccountTransactionsApiResource",
     "org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDataValidator"

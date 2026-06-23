@@ -112,6 +112,16 @@ export {
   savingsAccountTransactionCommandSchema,
   savingsAccountUndoApprovalCommandSchema,
   savingsAccountWithdrawnByApplicantCommandSchema,
+  savingsAccountPostInterestAsOnSchema,
+  savingsAccountHoldAmountSchema,
+  savingsAccountAssignStaffSchema,
+  savingsAccountUnassignStaffSchema,
+  savingsAccountAddChargeSchema,
+  savingsAccountPayChargeSchema,
+  savingsAccountWithholdTaxSchema,
+  savingsAccountUndoTransactionSchema,
+  savingsAccountModifyTransactionSchema,
+  undoAccountTransferCommandSchema,
   type SavingsAccountActivateCommandInput,
   type SavingsAccountApproveCommandInput,
   type SavingsAccountBlockCommandInput,
@@ -119,7 +129,17 @@ export {
   type SavingsAccountRejectCommandInput,
   type SavingsAccountTransactionCommandInput,
   type SavingsAccountUndoApprovalCommandInput,
-  type SavingsAccountWithdrawnByApplicantCommandInput
+  type SavingsAccountWithdrawnByApplicantCommandInput,
+  type SavingsAccountPostInterestAsOnInput,
+  type SavingsAccountHoldAmountInput,
+  type SavingsAccountAssignStaffInput,
+  type SavingsAccountUnassignStaffInput,
+  type SavingsAccountAddChargeInput,
+  type SavingsAccountPayChargeInput,
+  type SavingsAccountWithholdTaxInput,
+  type SavingsAccountUndoTransactionInput,
+  type SavingsAccountModifyTransactionInput,
+  type UndoAccountTransferCommandInput
 } from './clients/savings-account-command.schema';
 export {
   createSystemDatatableSchema,
@@ -136,6 +156,10 @@ export {
   createStandingInstructionSchema,
   type CreateStandingInstructionInput
 } from './clients/create-standing-instruction.schema';
+export {
+  createAccountTransferSchema,
+  type CreateAccountTransferInput
+} from './clients/create-account-transfer.schema';
 export {
   createClientCollateralSchema,
   type CreateClientCollateralInput

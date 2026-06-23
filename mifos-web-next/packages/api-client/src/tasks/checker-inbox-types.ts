@@ -14,7 +14,7 @@ export interface CheckerInboxListItem {
   actionName?: string;
   entityName?: string;
   officeName?: string;
-  madeOnDate?: string | number[];
+  madeOnDate?: string | number[] | number;
 }
 
 export interface CheckerInboxSearchTemplate {

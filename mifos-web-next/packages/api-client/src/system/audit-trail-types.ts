@@ -21,14 +21,15 @@ export interface FineractAuditTrailProcessingResultOption {
 export interface FineractAuditTrailListItem {
   id: number;
   resourceId?: number;
+  subresourceId?: number;
   processingResult?: string;
   maker?: string;
   actionName?: string;
   entityName?: string;
   officeName?: string;
-  madeOnDate?: string | number[];
+  madeOnDate?: string | number[] | number;
   checker?: string;
-  checkedOnDate?: string | number[];
+  checkedOnDate?: string | number[] | number;
   ip?: string;
   clientName?: string;
 }

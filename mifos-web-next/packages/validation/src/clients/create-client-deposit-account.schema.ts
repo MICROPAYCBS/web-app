@@ -18,11 +18,34 @@ const optionalId = z.coerce
 
 const submittedOnDate = z.string().trim().min(1, 'Submitted date is required.');
 
+const optionalNonNegativeNumber = z
+  .union([z.coerce.number().min(0), z.literal('')])
+  .optional()
+  .transform((value) => (value === '' || value === undefined ? undefined : value));
+
 export const createClientSavingsAccountSchema = z.object({
   productId: z.coerce.number().int().positive('Select a product.'),
   submittedOnDate,
   externalId: z.string().trim().max(100).optional().or(z.literal('')),
-  fieldOfficerId: optionalId
+  fieldOfficerId: optionalId,
+  nominalAnnualInterestRate: optionalNonNegativeNumber,
+  interestCompoundingPeriodType: optionalId,
+  interestPostingPeriodType: optionalId,
+  interestCalculationType: optionalId,
+  interestCalculationDaysInYearType: optionalId,
+  minRequiredOpeningBalance: optionalNonNegativeNumber,
+  withdrawalFeeForTransfers: z.boolean().optional(),
+  lockinPeriodFrequency: z
+    .union([z.coerce.number().int().min(0), z.literal('')])
+    .optional()
+    .transform((value) => (value === '' || value === undefined ? undefined : value)),
+  lockinPeriodFrequencyType: optionalId,
+  allowOverdraft: z.boolean().optional(),
+  overdraftLimit: optionalNonNegativeNumber,
+  minOverdraftForInterestCalculation: optionalNonNegativeNumber,
+  nominalAnnualInterestRateOverdraft: optionalNonNegativeNumber,
+  enforceMinRequiredBalance: z.boolean().optional(),
+  minRequiredBalance: optionalNonNegativeNumber
 });
 
 export const createClientFixedDepositAccountSchema = z.object({

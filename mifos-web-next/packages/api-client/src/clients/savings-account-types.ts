@@ -44,20 +44,35 @@ export interface FineractSavingsAccountSubStatus {
 
 export interface FineractSavingsAccountTransaction {
   id: number;
+  externalId?: string;
   transactionType?: FineractEnumOption & {
     deposit?: boolean;
     withdrawal?: boolean;
+    debit?: boolean;
+    credit?: boolean;
     interestPosting?: boolean;
     feeDeduction?: boolean;
+    accrual?: boolean;
+    overdraftInterest?: boolean;
+    withholdTax?: boolean;
   };
   entryType?: { id?: number; code?: string; value?: string };
   amount: number;
   runningBalance?: number;
+  /** Business transaction date (preferred for display). */
+  date?: number[] | string;
   submittedOnDate?: number[] | string;
   createdDate?: number[] | string;
   reversed?: boolean;
+  note?: string;
+  currency?: FineractCurrencyOption;
+  transfer?: {
+    id?: number;
+    reversed?: boolean;
+    transferDescription?: string;
+  };
   paymentDetailData?: {
-    paymentType?: { name?: string };
+    paymentType?: { id?: number; name?: string };
     accountNumber?: string;
     checkNumber?: string;
     routingCode?: string;
@@ -110,6 +125,10 @@ export interface FineractSavingsAccountDetail {
   timeline?: FineractSavingsAccountTimeline;
   transactions?: FineractSavingsAccountTransaction[];
   charges?: FineractSavingsAccountCharge[];
+  fieldOfficerId?: number;
   fieldOfficerName?: string;
+  officeId?: number;
   officeName?: string;
+  taxGroup?: { id?: number; name?: string };
+  withHoldTax?: boolean;
 }

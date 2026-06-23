@@ -1,0 +1,16 @@
+{
+  "command": "clients.account-transfer.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.account.api.AccountTransfersApiResource",
+    "org.apache.fineract.portfolio.account.service.AccountTransfersWritePlatformService"
+  ],
+  "fields": {
+    "toOfficeId": { "required": true },
+    "toClientId": { "required": true },
+    "toAccountType": { "required": true },
+    "toAccountId": { "required": true },
+    "transferDate": { "required": true },
+    "transferAmount": { "required": true },
+    "transferDescription": { "required": true }
+  }
+}
