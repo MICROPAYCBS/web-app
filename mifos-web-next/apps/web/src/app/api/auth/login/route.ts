@@ -2,6 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { performLogin, safeLoginRedirectPath } from '@/lib/auth/login-request';
+import { loginRedirectWithError } from '@/lib/auth/login-error-flash';
 import { sessionCookieAttributes } from '@/lib/session/cookie-options';
 
 export const dynamic = 'force-dynamic';
@@ -27,8 +28,10 @@ export async function POST(request: NextRequest) {
   const result = await performLogin(formData);
 
   if (!result.ok) {
-    return NextResponse.redirect(
-      loginPageUrl(request, { from: redirectTo, error: result.message })
+    return loginRedirectWithError(
+      request,
+      loginPageUrl(request, { from: redirectTo }),
+      result.message
     );
   }
 

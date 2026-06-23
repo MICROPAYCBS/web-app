@@ -100,7 +100,7 @@ export function LoginForm({
 
                   {loginError ? (
                     <div
-                      className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                      className="max-h-64 overflow-auto rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm whitespace-pre-wrap text-destructive"
                       role="alert"
                     >
                       {loginError}

@@ -1,6 +1,8 @@
 import 'server-only';
 
 import { FineractHttpError } from '@mifos/api-client';
+import { AuthenticationError } from '@/lib/fineract/authentication-error';
+import { readFineractJsonBody } from '@/lib/fineract/fineract-response';
 import { getFineractServerConfig } from '@/lib/fineract/server-config';
 import { fineractFetch } from '@/lib/fineract/fineract-fetch';
 import {
@@ -31,15 +33,7 @@ export interface AuthenticateParams {
   remember?: boolean;
 }
 
-export class AuthenticationError extends Error {
-  constructor(
-    message: string,
-    public readonly code?: 'INVALID_CREDENTIALS' | 'TWO_FACTOR' | 'PASSWORD_EXPIRED' | 'SERVER'
-  ) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
+export { AuthenticationError } from '@/lib/fineract/authentication-error';
 
 export function mapAuthenticationToSession(data: FineractAuthenticationResponse): ServerSession {
   return {
@@ -101,11 +95,19 @@ export async function authenticateFineract(params: AuthenticateParams): Promise<
     );
   }
 
+  const responseContext = {
+    requestUrl: url,
+    operation: 'POST /authentication'
+  };
+
   if (!res.ok) {
     let body: { defaultUserMessage?: string } | null = null;
     try {
-      body = (await res.json()) as { defaultUserMessage?: string };
-    } catch {
+      body = await readFineractJsonBody<{ defaultUserMessage?: string }>(res, responseContext);
+    } catch (error) {
+      if (error instanceof AuthenticationError) {
+        throw error;
+      }
       body = null;
     }
     if (res.status === 401 || res.status === 403) {
@@ -126,7 +128,7 @@ export async function authenticateFineract(params: AuthenticateParams): Promise<
     );
   }
 
-  const data = (await res.json()) as FineractAuthenticationResponse;
+  const data = await readFineractJsonBody<FineractAuthenticationResponse>(res, responseContext);
 
   if (data.isTwoFactorAuthenticationRequired) {
     throw new AuthenticationError(

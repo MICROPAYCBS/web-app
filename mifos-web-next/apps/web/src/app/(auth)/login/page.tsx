@@ -7,6 +7,11 @@
  */
 
 import { LoginShell } from '@/components/auth/login-shell';
+import {
+  clearLoginErrorFlash,
+  mergeLoginErrors,
+  readLoginErrorFlash
+} from '@/lib/auth/login-error-flash';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 import { getServerSession } from '@/lib/session/server';
@@ -23,11 +28,7 @@ function safeRedirectPath(value: string | undefined): string {
   return value;
 }
 
-function buildLoginQuery(params: {
-  from?: string;
-  servers?: string;
-  error?: string;
-}): string {
+function buildLoginQuery(params: { from?: string; servers?: string; error?: string }): string {
   const q = new URLSearchParams();
   if (params.from) {
     q.set('from', params.from);
@@ -50,7 +51,11 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const redirectTo = safeRedirectPath(params.from);
-  const loginError = params.error?.trim() || null;
+  const flashError = await readLoginErrorFlash();
+  const loginError = mergeLoginErrors(params.error?.trim() || null, flashError);
+  if (flashError) {
+    await clearLoginErrorFlash();
+  }
   const session = await getServerSession();
 
   if (session) {
