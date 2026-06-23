@@ -597,6 +597,13 @@ export {
   type UpdateSystemPaymentTypePayload
 } from './organization/payment-type.schema';
 export {
+  buildUpsertCustomerClassPayload,
+  upsertCustomerClassSchema,
+  validateUpsertCustomerClass,
+  type UpsertCustomerClassInput,
+  type UpsertCustomerClassPayload
+} from './organization/customer-class.schema';
+export {
   createSmsCampaignSchema,
   smsCampaignActivateCommandSchema,
   smsCampaignCloseCommandSchema,

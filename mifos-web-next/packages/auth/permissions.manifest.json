@@ -287,6 +287,26 @@
       "DELETE_PAYMENTTYPE"
     ]
   },
+  "organization.customerClasses": {
+    "any": [
+      "READ_CUSTOMERCLASS"
+    ]
+  },
+  "organization.customerClasses.create": {
+    "any": [
+      "CREATE_CUSTOMERCLASS"
+    ]
+  },
+  "organization.customerClasses.update": {
+    "any": [
+      "UPDATE_CUSTOMERCLASS"
+    ]
+  },
+  "organization.customerClasses.delete": {
+    "any": [
+      "DELETE_CUSTOMERCLASS"
+    ]
+  },
   "organization.passwordPreferences": {
     "any": [
       "READ_CONFIGURATION"

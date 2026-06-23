@@ -144,6 +144,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'orgCustomerClasses',
+    path: '/organization/customer-classes',
+    label: 'Customer classes',
+    navGroup: 'organization',
+    webAppRef: 'organization/customer-classes',
+    permissionKey: 'organization.customerClasses',
+    navOrder: 115,
+    navIcon: 'users-round',
+    keywords: ['customer class', 'kyc', 'segment'],
+    parityStatus: 'done'
+  },
+  {
     id: 'orgPasswordPreferences',
     path: '/organization/password-preferences',
     label: 'Password preferences',

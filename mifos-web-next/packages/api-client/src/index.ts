@@ -468,6 +468,12 @@ export type {
   OrganizationPaymentTypeMutationResponse
 } from './organization/payment-type-types';
 export type {
+  CustomerClass,
+  CustomerClassMutationResponse,
+  CustomerClassRestrictionOption,
+  CustomerClassTemplate
+} from './organization/customer-class-types';
+export type {
   PasswordPreferencesMutationResponse,
   PasswordPreferenceTemplateItem
 } from './organization/password-preferences-types';
