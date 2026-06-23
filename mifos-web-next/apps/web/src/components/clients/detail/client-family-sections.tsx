@@ -173,18 +173,37 @@ export function ClientFamilyGridCard({
   );
 }
 
-function formatDateOfBirth(value: FineractClientFamilyMember['dateOfBirth']): string | null {
+function formatDateOfBirth(value: FineractClientFamilyMember['dateOfBirth']): string | undefined {
   if (!value) {
-    return null;
+    return undefined;
   }
   if (Array.isArray(value)) {
-    return formatFineractDateArray(value);
+    return formatFineractDateArray(value) ?? undefined;
   }
-  return value;
+  return value.trim() === '' ? undefined : value;
+}
+
+function hasFamilyMemberDateOfBirth(
+  value: FineractClientFamilyMember['dateOfBirth']
+): boolean {
+  return formatDateOfBirth(value) != null;
+}
+
+function formatFamilyMemberAge(
+  member: Pick<FineractClientFamilyMember, 'age' | 'dateOfBirth'>
+): string | undefined {
+  if (!hasFamilyMemberDateOfBirth(member.dateOfBirth)) {
+    return undefined;
+  }
+  if (member.age == null) {
+    return undefined;
+  }
+  return String(member.age);
 }
 
 export function ClientFamilySections({ member }: { member: FineractClientFamilyMember }) {
   const dobLabel = formatDateOfBirth(member.dateOfBirth);
+  const ageLabel = formatFamilyMemberAge(member);
 
   return (
     <DetailFieldGrid>
@@ -235,16 +254,12 @@ export function ClientFamilySections({ member }: { member: FineractClientFamilyM
           <TextValue value={member.address} />
         </DetailField>
       ) : null}
-      {member.age != null ? (
-        <DetailField label="Age">
-          <TextValue value={String(member.age)} />
-        </DetailField>
-      ) : null}
-      {dobLabel ? (
-        <DetailField label="Date of birth">
-          <TextValue value={dobLabel} />
-        </DetailField>
-      ) : null}
+      <DetailField label="Age">
+        <TextValue value={ageLabel} />
+      </DetailField>
+      <DetailField label="Date of birth">
+        <TextValue value={dobLabel} />
+      </DetailField>
       <DetailField label="Dependent">
         <TextValue value={member.isDependent ? 'Yes' : 'No'} />
       </DetailField>
