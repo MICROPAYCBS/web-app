@@ -7,11 +7,7 @@
  */
 
 import { LoginShell } from '@/components/auth/login-shell';
-import {
-  clearLoginErrorFlash,
-  mergeLoginErrors,
-  readLoginErrorFlash
-} from '@/lib/auth/login-error-flash';
+import { mergeLoginErrors, readLoginErrorFlash } from '@/lib/auth/login-error-flash';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 import { getServerSession } from '@/lib/session/server';
@@ -53,9 +49,7 @@ export default async function LoginPage({
   const redirectTo = safeRedirectPath(params.from);
   const flashError = await readLoginErrorFlash();
   const loginError = mergeLoginErrors(params.error?.trim() || null, flashError);
-  if (flashError) {
-    await clearLoginErrorFlash();
-  }
+  const hadFlashError = Boolean(flashError);
   const session = await getServerSession();
 
   if (session) {
@@ -82,6 +76,7 @@ export default async function LoginPage({
       catalog={catalog}
       redirectTo={redirectTo}
       loginError={loginError}
+      hadFlashError={hadFlashError}
       demoEnabled={isDemoSessionEnabled()}
       initialServersOpen={openServers}
     />

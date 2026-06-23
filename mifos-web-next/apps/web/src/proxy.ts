@@ -10,6 +10,7 @@ const CONNECT_PATH = '/connect';
 const LOGIN_PATH = '/login';
 const LOGOUT_PATH = '/api/auth/logout';
 const LOGIN_API_PATH = '/api/auth/login';
+const LOGIN_ERROR_FLASH_PATH = '/api/auth/login-error-flash';
 const SERVER_HEALTH_PATH = '/api/servers/health';
 
 function readCatalog(request: NextRequest): ServerCatalog | null {
@@ -59,15 +60,14 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/forbidden') ||
     pathname === LOGOUT_PATH ||
     pathname === LOGIN_API_PATH ||
+    pathname === LOGIN_ERROR_FLASH_PATH ||
     pathname === SERVER_HEALTH_PATH
   ) {
     return NextResponse.next();
   }
 
   if (pathname === CONNECT_PATH) {
-    return NextResponse.redirect(
-      loginUrl(request, { servers: !hasActiveServer(request) })
-    );
+    return NextResponse.redirect(loginUrl(request, { servers: !hasActiveServer(request) }));
   }
 
   if (isPublicPath(pathname) || pathname === LOGIN_PATH) {
@@ -75,9 +75,7 @@ export function proxy(request: NextRequest) {
   }
 
   if (!hasActiveServer(request)) {
-    return NextResponse.redirect(
-      loginUrl(request, { from: pathname, servers: true })
-    );
+    return NextResponse.redirect(loginUrl(request, { from: pathname, servers: true }));
   }
 
   const session = readSession(request);

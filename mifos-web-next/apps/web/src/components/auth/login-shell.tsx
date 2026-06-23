@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { ServerCatalog } from '@mifos/servers';
 import { LoginForm } from '@/components/auth/login-form';
@@ -19,12 +19,15 @@ export function LoginShell({
   redirectTo,
   demoEnabled,
   loginError = null,
+  hadFlashError = false,
   initialServersOpen = false
 }: {
   catalog: ServerCatalog;
   redirectTo: string;
   demoEnabled: boolean;
   loginError?: string | null;
+  /** True when loginError body was loaded from the one-time flash cookie. */
+  hadFlashError?: boolean;
   /** Only true when URL has ?servers=1 and no active server (see login page). */
   initialServersOpen?: boolean;
 }) {
@@ -33,6 +36,13 @@ export function LoginShell({
   const searchParams = useSearchParams();
   const [serversOpen, setServersOpen] = useState(initialServersOpen);
   const active = catalog.servers.find((s) => s.id === catalog.activeServerId);
+
+  useEffect(() => {
+    if (!hadFlashError) {
+      return;
+    }
+    void fetch('/api/auth/login-error-flash', { method: 'POST' });
+  }, [hadFlashError]);
 
   function stripServersQueryParam() {
     if (searchParams.get('servers') !== '1') {
