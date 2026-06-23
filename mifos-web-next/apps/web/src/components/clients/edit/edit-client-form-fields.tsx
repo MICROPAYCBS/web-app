@@ -16,7 +16,7 @@ import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
 import { fineractDateToDate } from '@/lib/fineract/date-input';
-import { toSelectOptions } from '@/lib/form/select-options';
+import { toSelectOptions, customerClassToSelectOptions } from '@/lib/form/select-options';
 
 function fieldError(errors: Record<string, string>, key: string): string | undefined {
   return errors[key];
@@ -319,6 +319,19 @@ export function EditClientFormFields({
           options={toSelectOptions(initial.customerRiskProfileOptions)}
           placeholder="Select risk profile"
           hint="Internal bank-use field for AML risk tiering."
+        />
+
+        <SelectField
+          id="customerClassId"
+          className="sm:col-span-2"
+          label="Customer class"
+          optional
+          value={form.customerClassId ? String(form.customerClassId) : undefined}
+          onValueChange={(v) => onPatch({ customerClassId: v ? Number(v) : undefined })}
+          options={customerClassToSelectOptions(initial.customerClassOptions)}
+          placeholder="Select customer class"
+          hint="Determines product eligibility, KYC requirements, and account restrictions."
+          error={fieldError(fieldErrors, 'customerClassId')}
         />
 
         <DateField

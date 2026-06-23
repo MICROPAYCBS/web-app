@@ -12,7 +12,7 @@ import type { FineractClientTemplate } from '@mifos/api-client';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
-import { toSelectOptions } from '@/lib/form/select-options';
+import { toSelectOptions, customerClassToSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
 
@@ -90,6 +90,19 @@ export function CustomerProfilingStep({
           placeholder="Select risk profile"
           hint="Very High, High, Medium, Low, or Very Low."
           error={errors.customerRiskProfileId}
+        />
+
+        <SelectField
+          id="customerClassId"
+          className="sm:col-span-2"
+          label="Customer class"
+          optional
+          value={g.customerClassId ? String(g.customerClassId) : undefined}
+          onValueChange={(v) => onDraftChange({ customerClassId: v ? Number(v) : undefined })}
+          options={customerClassToSelectOptions(template.customerClassOptions)}
+          placeholder="Select customer class"
+          hint="Determines product eligibility, KYC requirements, and account restrictions."
+          error={errors.customerClassId}
         />
       </div>
     </div>

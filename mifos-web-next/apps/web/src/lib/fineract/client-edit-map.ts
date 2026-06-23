@@ -35,6 +35,7 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
     alternativeMobileNo: data.alternativeMobileNo ?? '',
     alternativeEmailAddress: data.alternativeEmailAddress ?? '',
     subIndustryId: data.subIndustryId,
+    customerClassId: data.customerClassId ?? data.customerClass?.id,
     titleId: data.title?.id,
     nationalityCountryId: data.nationality?.id,
     customerRiskProfileId: data.customerRiskProfile?.id,

@@ -322,9 +322,16 @@ function ClientComplianceSummarySection({
 }
 
 function ClientBankUseSection({ client }: { client: FineractClientDetail }) {
+  const customerClassLabel = client.customerClass
+    ? `${client.customerClass.classCode} — ${client.customerClass.className}`
+    : undefined;
+
   return (
     <DetailSection title="Bank use">
       <DetailFieldGrid>
+        <DetailField label="Customer class">
+          <TextValue value={customerClassLabel ?? 'Not assigned'} />
+        </DetailField>
         <DetailField label="Customer risk profile">
           <TextValue value={enumOptionLabel(client.customerRiskProfile) ?? 'Not assigned'} />
         </DetailField>

@@ -54,6 +54,7 @@ export function buildCreateClientRaw(
     alternativeMobileNo: general.alternativeMobileNo,
     alternativeEmailAddress: general.alternativeEmailAddress,
     subIndustryId: general.subIndustryId,
+    customerClassId: general.customerClassId,
     titleId: general.titleId,
     nationalityCountryId: general.nationalityCountryId,
     customerRiskProfileId: general.customerRiskProfileId,
@@ -110,6 +111,7 @@ export function createClientIssueStepId(path: (string | number)[]): string {
     'clientTypeId',
     'clientClassificationId',
     'subIndustryId',
+    'customerClassId',
     'taxIdentificationNumber',
     'customerRiskProfileId'
   ]);

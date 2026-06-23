@@ -37,6 +37,7 @@ export interface ClientGeneralFormState {
   alternativeMobileNo?: string;
   alternativeEmailAddress?: string;
   subIndustryId?: number;
+  customerClassId?: number;
   titleId?: number;
   nationalityCountryId?: number;
   customerRiskProfileId?: number;

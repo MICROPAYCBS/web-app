@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { CustomerClass } from '../organization/customer-class-types';
+
 export interface FineractEnumOption {
   id: number;
   name?: string;
@@ -90,6 +92,7 @@ export interface FineractClientTemplate {
   titleOptions?: FineractEnumOption[];
   nationalityOptions?: FineractEnumOption[];
   customerRiskProfileOptions?: FineractEnumOption[];
+  customerClassOptions?: CustomerClass[];
   savingProductOptions?: FineractSavingProductOption[];
   clientNonPersonConstitutionOptions?: FineractEnumOption[];
   clientNonPersonMainBusinessLineOptions?: FineractEnumOption[];
@@ -254,6 +257,8 @@ export interface FineractClientDetail extends FineractClientSummary {
   alternativeMobileNo?: string;
   alternativeEmailAddress?: string;
   subIndustryId?: number;
+  customerClassId?: number;
+  customerClass?: CustomerClass;
   title?: FineractEnumOption;
   nationality?: FineractEnumOption;
   customerRiskProfile?: FineractEnumOption;

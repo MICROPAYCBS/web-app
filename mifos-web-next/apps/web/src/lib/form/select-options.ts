@@ -45,3 +45,28 @@ export function toSelectOptions(
     };
   });
 }
+
+type CustomerClassOptionLike = {
+  id: number;
+  classCode?: string;
+  className?: string;
+};
+
+export function customerClassToSelectOptions(
+  items: CustomerClassOptionLike[] | undefined
+): SelectOption[] {
+  if (!items?.length) {
+    return [];
+  }
+  return items.map((item) => {
+    const label =
+      item.className && item.classCode
+        ? `${item.classCode} — ${item.className}`
+        : (item.className ?? item.classCode ?? `Class ${item.id}`);
+    return {
+      value: String(item.id),
+      label,
+      keywords: [label, item.classCode, item.className, String(item.id)].filter(Boolean) as string[]
+    };
+  });
+}

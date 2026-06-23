@@ -52,6 +52,7 @@ export function PreviewStep({
   const riskProfile = template.customerRiskProfileOptions?.find(
     (o) => o.id === g.customerRiskProfileId
   );
+  const customerClass = template.customerClassOptions?.find((c) => c.id === g.customerClassId);
   const staff = template.staffOptions?.find((o) => o.id === g.staffId);
   const clientType = template.clientTypeOptions?.find((o) => o.id === g.clientTypeId);
   const clientClassification = template.clientClassificationOptions?.find(
@@ -166,6 +167,14 @@ export function PreviewStep({
         <Field
           label="Customer risk profile"
           value={riskProfile?.name ?? riskProfile?.value}
+        />
+        <Field
+          label="Customer class"
+          value={
+            customerClass
+              ? `${customerClass.classCode} — ${customerClass.className}`
+              : undefined
+          }
         />
       </section>
 

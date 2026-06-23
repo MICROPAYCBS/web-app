@@ -78,6 +78,7 @@ const clientBaseSchema = z.object({
   alternativeMobileNo: optionalUgandaMobileInternationalSchema,
   alternativeEmailAddress: z.string().trim().email().optional().or(z.literal('')),
   subIndustryId: z.coerce.number().int().positive().optional(),
+  customerClassId: z.coerce.number().int().positive().optional(),
   titleId: z.coerce.number().int().positive().optional(),
   nationalityCountryId: z.coerce.number().int().positive().optional(),
   customerRiskProfileId: z.coerce.number().int().positive().optional(),
