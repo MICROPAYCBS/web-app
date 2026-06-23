@@ -228,7 +228,7 @@ export function ClientDetailTop({
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <span>
-                    Account {client.accountNo}
+                    Customer Number {client.accountNo}
                     {client.officeName ? ` · ${client.officeName}` : ''}
                     {legalFormLabel ? ` · ${legalFormLabel}` : ''}
                   </span>
