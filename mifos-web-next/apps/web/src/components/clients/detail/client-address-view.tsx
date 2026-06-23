@@ -17,7 +17,7 @@ import type {
 import { formatActionErrorMessage, type ClientAddressEntry } from '@mifos/validation';
 import { MapPin, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { AddressFormSheet } from '@/components/clients/shared/address-form-sheet';
 import {
   ClientAddressGridCard,
@@ -30,7 +30,9 @@ import { shouldUseLocationCascade } from '@/lib/locations/location-cascade-confi
 import {
   createClientAddressAction,
   toggleClientAddressActiveAction,
-  updateClientAddressAction
+  toggleClientAddressPrimaryAction,
+  updateClientAddressAction,
+  type ClientAddressActionResult
 } from '@/actions/client-address';
 import {
   CollectionViewLayout,
@@ -64,7 +66,8 @@ function toAddressEntry(address: FineractClientAddress): ClientAddressEntry {
     countryId: address.countryId,
     countyDistrict: address.countyDistrict,
     postalCode: address.postalCode,
-    isActive: address.isActive ?? false
+    isActive: address.isActive ?? true,
+    isPrimary: address.isPrimary ?? false
   };
 }
 
@@ -86,6 +89,7 @@ export function ClientAddressView({
   canUpdate: boolean;
 }) {
   const router = useRouter();
+  const [addresses, setAddresses] = useState(initialAddresses);
   const [pending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editAddress, setEditAddress] = useState<FineractClientAddress | null>(null);
@@ -99,9 +103,22 @@ export function ClientAddressView({
   const wizardTemplate = toWizardTemplate(addressTemplate);
   const showActiveBadge = isFieldEnabled(fieldConfig, 'isActive');
   const showActiveToggle = canUpdate && showActiveBadge;
+  const showPrimaryBadge = true;
+  const showPrimaryToggle = canUpdate;
+
+  useEffect(() => {
+    setAddresses(initialAddresses);
+  }, [initialAddresses]);
 
   function refresh() {
     router.refresh();
+  }
+
+  function applyActionResult(result: ClientAddressActionResult) {
+    if (result.ok) {
+      setAddresses(result.addresses);
+      refresh();
+    }
   }
 
   function handleSave(entry: ClientAddressEntry) {
@@ -111,7 +128,7 @@ export function ClientAddressView({
             clientId,
             editAddress.addressTypeId,
             editAddress.addressId,
-            { ...entry, isActive: editAddress.isActive ?? false }
+            entry
           )
         : await createClientAddressAction(clientId, entry);
 
@@ -122,7 +139,7 @@ export function ClientAddressView({
         };
       }
       setEditAddress(null);
-      refresh();
+      applyActionResult(result);
       return { ok: true as const };
     })();
   }
@@ -140,7 +157,27 @@ export function ClientAddressView({
         setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-      refresh();
+      applyActionResult(result);
+    });
+  }
+
+  function handleTogglePrimary(address: FineractClientAddress) {
+    if (address.isPrimary || address.isActive === false) {
+      return;
+    }
+    setActionError(null);
+    startTransition(async () => {
+      const result = await toggleClientAddressPrimaryAction(
+        clientId,
+        address.addressTypeId,
+        address.addressId,
+        true
+      );
+      if (!result.ok) {
+        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
+        return;
+      }
+      applyActionResult(result);
     });
   }
 
@@ -163,19 +200,25 @@ export function ClientAddressView({
       ),
       isActive: address.isActive,
       showActiveBadge,
+      isPrimary: address.isPrimary,
+      showPrimaryBadge,
       canUpdate,
       onEdit: () => {
         setEditAddress(address);
         setDialogOpen(true);
       },
-      onToggleActive: showActiveToggle ? (next: boolean) => handleToggle(address, next) : undefined
+      onToggleActive: showActiveToggle ? (next: boolean) => handleToggle(address, next) : undefined,
+      onTogglePrimary:
+        showPrimaryToggle && address.isActive !== false
+          ? () => handleTogglePrimary(address)
+          : undefined
     };
 
     if (mode === 'grid') {
-      return <ClientAddressGridCard key={address.addressId} {...common} />;
+      return <ClientAddressGridCard key={address.clientAddressId ?? address.addressId} {...common} />;
     }
 
-    return <ClientAddressListItem key={address.addressId} {...common} />;
+    return <ClientAddressListItem key={address.clientAddressId ?? address.addressId} {...common} />;
   }
 
   return (
@@ -185,7 +228,7 @@ export function ClientAddressView({
           Customer addresses. Fields shown depend on your institution&apos;s address configuration.
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          {initialAddresses.length > 0 ? (
+          {addresses.length > 0 ? (
             <CollectionViewToolbar
               mode={mode}
               onModeChange={setMode}
@@ -217,7 +260,7 @@ export function ClientAddressView({
         </p>
       ) : null}
 
-      {initialAddresses.length === 0 ? (
+      {addresses.length === 0 ? (
         <EmptyState
           icon={MapPin}
           title="No addresses on file"
@@ -241,7 +284,7 @@ export function ClientAddressView({
         />
       ) : (
         <CollectionViewLayout mode={mode}>
-          {initialAddresses.map((address) => renderAddress(address))}
+          {addresses.map((address) => renderAddress(address))}
         </CollectionViewLayout>
       )}
 
@@ -255,6 +298,7 @@ export function ClientAddressView({
         }}
         template={wizardTemplate}
         fieldConfig={fieldConfig}
+        existingAddressCount={editAddress ? addresses.length - 1 : addresses.length}
         address={editAddress ? toAddressEntry(editAddress) : undefined}
         onSave={handleSave}
         submitLoading={false}

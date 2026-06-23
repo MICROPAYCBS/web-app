@@ -10,6 +10,7 @@
 
 import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
+import { applyClientAddressActiveChange, mergeClientAddressEntry, setClientAddressPrimary } from '@mifos/validation';
 import { MapPin, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AddressFormSheet } from '@/components/clients/shared/address-form-sheet';
@@ -50,6 +51,8 @@ export function AddressStep({
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const addresses = draft.addresses;
+  const showActiveBadge = fieldConfig.some((f) => f.field === 'isActive' && f.isEnabled);
+  const showActiveToggle = showActiveBadge;
 
   function openEdit(index: number) {
     setEditIndex(index);
@@ -57,13 +60,20 @@ export function AddressStep({
   }
 
   function remove(index: number) {
-    onAddressesChange(addresses.filter((_, i) => i !== index));
+    let next = addresses.filter((_, i) => i !== index);
+    if (next.length > 0 && !next.some((entry) => entry.isPrimary)) {
+      const activeIndex = next.findIndex((entry) => entry.isActive !== false);
+      if (activeIndex >= 0) {
+        next = setClientAddressPrimary(next, activeIndex);
+      }
+    }
+    onAddressesChange(next);
   }
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Add one or more addresses for this customer. At least one address is required on this step.
+        Add one or more addresses for this customer. Mark one as primary; at least one address is required on this step.
       </p>
       {errors.address ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -117,6 +127,17 @@ export function AddressStep({
               });
               const onEdit = () => openEdit(index);
               const onDelete = () => remove(index);
+              const onToggleActive = showActiveToggle
+                ? (isActive: boolean) => {
+                    onAddressesChange(applyClientAddressActiveChange(addresses, index, isActive));
+                  }
+                : undefined;
+              const onTogglePrimary =
+                addr.isActive !== false
+                  ? () => {
+                      onAddressesChange(setClientAddressPrimary(addresses, index));
+                    }
+                  : undefined;
 
               if (mode === 'grid') {
                 return (
@@ -125,10 +146,14 @@ export function AddressStep({
                     title={title}
                     summary={summary}
                     isActive={addr.isActive}
-                    showActiveBadge={fieldConfig.some((f) => f.field === 'isActive' && f.isEnabled)}
+                    showActiveBadge={showActiveBadge}
+                    isPrimary={addr.isPrimary}
+                    showPrimaryBadge
                     canUpdate
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onToggleActive={onToggleActive}
+                    onTogglePrimary={onTogglePrimary}
                   />
                 );
               }
@@ -139,10 +164,14 @@ export function AddressStep({
                   title={title}
                   summary={summary}
                   isActive={addr.isActive}
-                  showActiveBadge={fieldConfig.some((f) => f.field === 'isActive' && f.isEnabled)}
+                  showActiveBadge={showActiveBadge}
+                  isPrimary={addr.isPrimary}
+                  showPrimaryBadge
                   canUpdate
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onToggleActive={onToggleActive}
+                  onTogglePrimary={onTogglePrimary}
                 />
               );
             })
@@ -155,15 +184,10 @@ export function AddressStep({
         onOpenChange={setDialogOpen}
         template={template}
         fieldConfig={fieldConfig}
+        existingAddressCount={editIndex != null ? addresses.length - 1 : addresses.length}
         address={editIndex != null ? addresses[editIndex] : undefined}
         onSave={async (entry) => {
-          if (editIndex != null) {
-            const next = [...addresses];
-            next[editIndex] = entry;
-            onAddressesChange(next);
-          } else {
-            onAddressesChange([...addresses, entry]);
-          }
+          onAddressesChange(mergeClientAddressEntry(addresses, entry, editIndex));
           return { ok: true as const };
         }}
       />

@@ -10,10 +10,11 @@
 
 import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { LocationCascadeSelect } from '@/components/clients/shared/location-cascade-select';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
+import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import type { FormSubmitResult } from '@/lib/form/submit-result';
 import { toSelectOptions } from '@/lib/form/select-options';
@@ -28,6 +29,17 @@ import {
 
 function isFieldEnabled(config: FineractAddressFieldConfig[], field: string): boolean {
   return config.find((f) => f.field === field)?.isEnabled ?? false;
+}
+
+function buildAddressFormState(
+  address: ClientAddressEntry | undefined,
+  existingAddressCount: number
+): ClientAddressEntry {
+  return {
+    ...address,
+    isActive: address?.isActive ?? true,
+    isPrimary: address?.isPrimary ?? (!address && existingAddressCount === 0)
+  };
 }
 
 function AddressLineFields({
@@ -76,6 +88,7 @@ export function AddressFormSheet({
   template,
   fieldConfig,
   address,
+  existingAddressCount = 0,
   onSave,
   submitLoading = false
 }: {
@@ -84,6 +97,7 @@ export function AddressFormSheet({
   template: FineractClientTemplate;
   fieldConfig: FineractAddressFieldConfig[];
   address?: ClientAddressEntry;
+  existingAddressCount?: number;
   onSave: (entry: ClientAddressEntry) => Promise<FormSubmitResult>;
   submitLoading?: boolean;
 }) {
@@ -92,7 +106,9 @@ export function AddressFormSheet({
   const useLocationCascade = shouldUseLocationCascade(fieldConfig);
   const stateProvinceOptions = addressTemplate?.stateProvinceIdOptions;
 
-  const [form, setForm] = useState<ClientAddressEntry>(() => address ?? { isActive: false });
+  const [form, setForm] = useState<ClientAddressEntry>(() =>
+    buildAddressFormState(address, existingAddressCount)
+  );
   const [location, setLocation] = useState<LocationSelection>(() =>
     useLocationCascade
       ? locationSelectionFromAddress(address ?? {}, stateProvinceOptions)
@@ -106,18 +122,22 @@ export function AddressFormSheet({
     [location, stateProvinceOptions]
   );
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setForm(buildAddressFormState(address, existingAddressCount));
+    setLocation(
+      useLocationCascade
+        ? locationSelectionFromAddress(address ?? {}, stateProvinceOptions)
+        : EMPTY_LOCATION_SELECTION
+    );
+    setError(null);
+  }, [open, address, existingAddressCount, useLocationCascade, stateProvinceOptions]);
+
   function handleOpenChange(next: boolean) {
     if (isSubmitting) {
       return;
-    }
-    if (next) {
-      setForm(address ?? { isActive: false });
-      setLocation(
-        useLocationCascade
-          ? locationSelectionFromAddress(address ?? {}, stateProvinceOptions)
-          : EMPTY_LOCATION_SELECTION
-      );
-      setError(null);
     }
     onOpenChange(next);
   }
@@ -148,6 +168,10 @@ export function AddressFormSheet({
       setError('Please select region, district, county, sub-county, parish, and village.');
       return;
     }
+    if ((form.isPrimary ?? false) && form.isActive === false) {
+      setError('An inactive address cannot be marked as primary.');
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
     try {
@@ -158,9 +182,10 @@ export function AddressFormSheet({
             addressLine1: form.addressLine1,
             addressLine2: form.addressLine2,
             addressLine3: form.addressLine3,
-            isActive: form.isActive ?? false
+            isActive: form.isActive ?? true,
+            isPrimary: form.isPrimary ?? false
           }
-        : { ...form, isActive: form.isActive ?? false };
+        : { ...form, isActive: form.isActive ?? true, isPrimary: form.isPrimary ?? false };
 
       const result = await onSave(entry);
       if (result.ok) {
@@ -299,6 +324,16 @@ export function AddressFormSheet({
             ) : null}
           </>
         )}
+        {form.isActive !== false ? (
+          <SwitchField
+            id={`${formId}-isPrimary`}
+            className="sm:col-span-2"
+            label="Primary address"
+            description="The customer's main contact address. Only one address can be primary."
+            checked={form.isPrimary ?? false}
+            onCheckedChange={(checked) => setForm({ ...form, isPrimary: checked })}
+          />
+        ) : null}
       </form>
     </FormSheet>
   );

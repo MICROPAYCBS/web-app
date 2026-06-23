@@ -21,6 +21,7 @@ function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
 
 /**
  * Fineract address type is passed as `?type=` on POST/PUT — not in the JSON body.
+ * PUT body `addressId` must be `m_address.id`, not `m_client_address.id`.
  * @see legacy web-app `ClientsService.createClientAddress` / `address-tab.component.ts`
  */
 export function toClientAddressRequestBody(

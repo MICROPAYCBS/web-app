@@ -128,10 +128,13 @@ export function ClientAddressListItem({
   details,
   isActive,
   showActiveBadge,
+  isPrimary,
+  showPrimaryBadge,
   canUpdate,
   onEdit,
   onDelete,
   onToggleActive,
+  onTogglePrimary,
   className
 }: {
   title: string;
@@ -141,10 +144,13 @@ export function ClientAddressListItem({
   details?: ReactNode;
   isActive?: boolean;
   showActiveBadge?: boolean;
+  isPrimary?: boolean;
+  showPrimaryBadge?: boolean;
   canUpdate: boolean;
   onEdit: () => void;
   onDelete?: () => void;
   onToggleActive?: (next: boolean) => void;
+  onTogglePrimary?: () => void;
   className?: string;
 }) {
   const body =
@@ -158,7 +164,11 @@ export function ClientAddressListItem({
 
   return (
     <div
-      className={cn('flex flex-col gap-3 bg-card px-4 py-3 sm:flex-row sm:items-start', className)}
+      className={cn(
+        'flex flex-col gap-3 bg-card px-4 py-3 sm:flex-row sm:items-start',
+        isPrimary && 'bg-primary/5 ring-1 ring-inset ring-primary/10',
+        className
+      )}
     >
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -167,6 +177,9 @@ export function ClientAddressListItem({
             <Badge variant={isActive ? 'default' : 'secondary'}>
               {isActive ? 'Active' : 'Inactive'}
             </Badge>
+          ) : null}
+          {showPrimaryBadge && isPrimary ? (
+            <Badge variant="outline">Primary</Badge>
           ) : null}
         </div>
         {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
@@ -180,6 +193,20 @@ export function ClientAddressListItem({
             />
           </div>
         ) : null}
+        {canUpdate && onTogglePrimary && !isPrimary && isActive !== false ? (
+          <div className="pt-1 sm:hidden">
+            <SwitchField
+              label="Primary address"
+              description="Use as the customer's main contact address."
+              checked={false}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  onTogglePrimary();
+                }
+              }}
+            />
+          </div>
+        ) : null}
       </div>
       <div className="flex flex-col items-stretch gap-3 sm:items-end">
         <AddressCollectionActions canUpdate={canUpdate} onEdit={onEdit} onDelete={onDelete} />
@@ -189,6 +216,20 @@ export function ClientAddressListItem({
               label="Active address"
               checked={Boolean(isActive)}
               onCheckedChange={onToggleActive}
+            />
+          </div>
+        ) : null}
+        {canUpdate && onTogglePrimary && !isPrimary && isActive !== false ? (
+          <div className="hidden sm:block">
+            <SwitchField
+              label="Primary address"
+              description="Use as the customer's main contact address."
+              checked={false}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  onTogglePrimary();
+                }
+              }}
             />
           </div>
         ) : null}
@@ -205,10 +246,13 @@ export function ClientAddressGridCard({
   details,
   isActive,
   showActiveBadge,
+  isPrimary,
+  showPrimaryBadge,
   canUpdate,
   onEdit,
   onDelete,
-  onToggleActive
+  onToggleActive,
+  onTogglePrimary
 }: {
   title: string;
   subtitle?: string;
@@ -217,10 +261,13 @@ export function ClientAddressGridCard({
   details?: ReactNode;
   isActive?: boolean;
   showActiveBadge?: boolean;
+  isPrimary?: boolean;
+  showPrimaryBadge?: boolean;
   canUpdate: boolean;
   onEdit: () => void;
   onDelete?: () => void;
   onToggleActive?: (next: boolean) => void;
+  onTogglePrimary?: () => void;
 }) {
   const body =
     detailMode && details ? (
@@ -232,7 +279,10 @@ export function ClientAddressGridCard({
     );
 
   return (
-    <Card size="sm" className="h-full">
+    <Card
+      size="sm"
+      className={cn('h-full', isPrimary && 'border-primary/20 bg-primary/5')}
+    >
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <span>{title}</span>
@@ -240,6 +290,9 @@ export function ClientAddressGridCard({
             <Badge variant={isActive ? 'default' : 'secondary'}>
               {isActive ? 'Active' : 'Inactive'}
             </Badge>
+          ) : null}
+          {showPrimaryBadge && isPrimary ? (
+            <Badge variant="outline">Primary</Badge>
           ) : null}
         </CardTitle>
         {subtitle ? <CardDescription>{subtitle}</CardDescription> : null}
@@ -254,6 +307,18 @@ export function ClientAddressGridCard({
             label="Active address"
             checked={Boolean(isActive)}
             onCheckedChange={onToggleActive}
+          />
+        ) : null}
+        {canUpdate && onTogglePrimary && !isPrimary && isActive !== false ? (
+          <SwitchField
+            label="Primary address"
+            description="Use as the customer's main contact address."
+            checked={false}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                onTogglePrimary();
+              }
+            }}
           />
         ) : null}
       </CardContent>
@@ -329,6 +394,9 @@ export function ClientAddressSections({
           <TextValue value={address.isActive ? 'Yes' : 'No'} />
         </DetailField>
       ) : null}
+      <DetailField label="Primary">
+        <TextValue value={address.isPrimary ? 'Yes' : 'No'} />
+      </DetailField>
     </DetailFieldGrid>
   );
 }

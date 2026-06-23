@@ -11,6 +11,13 @@ import 'server-only';
 import { FineractHttpError } from '@mifos/api-client';
 import { buildFineractRequestInit, fineractUrl } from './fineract-fetch';
 
+export function clientHasProfileImage(client: {
+  imageId?: number | null;
+  imagePresent?: boolean | null;
+}): boolean {
+  return client.imagePresent === true || client.imageId != null;
+}
+
 export async function getClientProfileImage(clientId: string | number): Promise<string | null> {
   const { urlBase, init } = await buildFineractRequestInit();
   const url = new URL(fineractUrl(urlBase, `/clients/${clientId}/images`));

@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
+import { validateChangeOwnPassword } from '@mifos/validation';
 import { jsonError, jsonOk } from '@/lib/bff/json-response';
 import { requireServerSession } from '@/lib/bff/require-session';
+import {
+  authenticateFineract,
+  AuthenticationError
+} from '@/lib/fineract/authenticate';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import {
   fetchActivePasswordPolicyRules,
@@ -23,26 +28,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Invalid request body' }, { status: 400 });
   }
 
-  const record = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
-  const password = String(record.password ?? '').trim();
-  const repeatPassword = String(record.repeatPassword ?? '').trim();
-
-  if (!password || !repeatPassword) {
+  const parsed = validateChangeOwnPassword(body);
+  if (!parsed.success) {
+    const firstIssue = parsed.error.issues[0];
     return NextResponse.json(
-      { message: 'Password and confirmation are required.' },
+      { message: firstIssue?.message ?? 'Fix the highlighted fields.' },
       { status: 400 }
     );
   }
 
-  if (password !== repeatPassword) {
-    return NextResponse.json({ message: 'Passwords do not match.' }, { status: 400 });
-  }
+  const { currentPassword, password, repeatPassword } = parsed.data;
 
   try {
     const policy = await fetchActivePasswordPolicyRules();
     const policyError = validatePasswordAgainstPolicy(password, policy);
     if (policyError) {
       return NextResponse.json({ message: policyError }, { status: 400 });
+    }
+
+    try {
+      await authenticateFineract({
+        username: session!.username,
+        password: currentPassword
+      });
+    } catch (authError) {
+      if (authError instanceof AuthenticationError && authError.code === 'INVALID_CREDENTIALS') {
+        return NextResponse.json(
+          { message: 'Current password is incorrect.' },
+          { status: 400 }
+        );
+      }
+      throw authError;
     }
 
     const fineract = await createFineractClient();

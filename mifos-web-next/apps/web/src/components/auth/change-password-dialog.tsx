@@ -31,19 +31,25 @@ import {
   type PasswordPolicyRules
 } from '@/lib/password-policy-validate';
 
-type PasswordField = 'password' | 'repeatPassword';
+type PasswordField = 'currentPassword' | 'password' | 'repeatPassword';
 
 type PasswordFieldErrors = Partial<Record<PasswordField, string>>;
 
 function validatePasswordFields(
+  currentPassword: string,
   password: string,
   repeatPassword: string,
   policy: PasswordPolicyRules
 ): PasswordFieldErrors {
   const errors: PasswordFieldErrors = {};
+  if (!currentPassword) {
+    errors.currentPassword = 'Current password is required.';
+  }
   const passwordError = validatePasswordAgainstPolicy(password, policy);
   if (passwordError) {
     errors.password = passwordError;
+  } else if (password && currentPassword && password === currentPassword) {
+    errors.password = 'New password must be different from your current password.';
   }
   if (!repeatPassword) {
     errors.repeatPassword = 'Please confirm your password';
@@ -60,6 +66,7 @@ export function ChangePasswordDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<PasswordFieldErrors>({});
@@ -92,6 +99,7 @@ export function ChangePasswordDialog({
   }, [open]);
 
   function resetForm() {
+    setCurrentPassword('');
     setPassword('');
     setRepeatPassword('');
     setFieldErrors({});
@@ -120,7 +128,12 @@ export function ChangePasswordDialog({
     e.preventDefault();
     setFormError(null);
 
-    const nextFieldErrors = validatePasswordFields(password, repeatPassword, policy);
+    const nextFieldErrors = validatePasswordFields(
+      currentPassword,
+      password,
+      repeatPassword,
+      policy
+    );
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors);
       return;
@@ -132,11 +145,16 @@ export function ChangePasswordDialog({
         const res = await fetch('/api/auth/change-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, repeatPassword })
+          body: JSON.stringify({ currentPassword, password, repeatPassword })
         });
         const data = (await res.json().catch(() => ({}))) as { message?: string };
         if (!res.ok) {
-          setFormError(data.message ?? 'Could not change password');
+          const message = data.message ?? 'Could not change password';
+          if (message.toLowerCase().includes('current password')) {
+            setFieldErrors({ currentPassword: message });
+          } else {
+            setFormError(message);
+          }
           return;
         }
         handleOpenChange(false);
@@ -155,6 +173,22 @@ export function ChangePasswordDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} noValidate>
           <FieldGroup className="gap-4">
+            <Field data-invalid={fieldErrors.currentPassword ? true : undefined}>
+              <FieldLabel htmlFor="current-password">Current password</FieldLabel>
+              <Input
+                id="current-password"
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => {
+                  clearFieldError('currentPassword');
+                  setCurrentPassword(e.target.value);
+                }}
+                required
+                aria-invalid={!!fieldErrors.currentPassword}
+              />
+              <FieldError>{fieldErrors.currentPassword}</FieldError>
+            </Field>
             <Field data-invalid={fieldErrors.password ? true : undefined}>
               <FieldLabel htmlFor="new-password">New password</FieldLabel>
               <Input

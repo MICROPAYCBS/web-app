@@ -10,6 +10,7 @@ import 'server-only';
 
 import type { FineractClientAddress, FineractClientAddressTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
+import { normalizeClientAddresses } from '@/lib/fineract/client-address-normalize';
 import { toClientAddressRequestBody } from '@/lib/fineract/client-address-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -19,7 +20,7 @@ export async function getClientAddresses(
 ): Promise<FineractClientAddress[]> {
   const fineract = await createFineractClient();
   const data = await fineract.get<FineractClientAddress[]>(`/client/${clientId}/addresses`);
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(data) ? normalizeClientAddresses(data) : [];
 }
 
 export async function getClientAddressTemplate(): Promise<FineractClientAddressTemplate> {

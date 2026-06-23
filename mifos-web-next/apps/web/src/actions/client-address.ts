@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractClientAddress } from '@mifos/api-client';
 import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   clientAddressEntrySchema,
@@ -15,11 +16,11 @@ import {
   type ClientAddressEntry
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
-import { createClientAddress, updateClientAddress } from '@/lib/fineract/client-address';
+import { createClientAddress, getClientAddresses, updateClientAddress } from '@/lib/fineract/client-address';
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientAddressActionResult =
-  | { ok: true }
+  | { ok: true; addresses: FineractClientAddress[] }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 async function requireUpdatePermission(): Promise<ClientAddressActionResult | null> {
@@ -58,6 +59,12 @@ function mapError(err: unknown): ClientAddressActionResult {
   return toFineractActionError(err, 'Request failed.');
 }
 
+async function reloadClientAddresses(clientId: string): Promise<FineractClientAddress[]> {
+  revalidatePath(`/clients/${clientId}/address`);
+  revalidatePath(`/clients/${clientId}/general`);
+  return getClientAddresses(clientId);
+}
+
 export async function createClientAddressAction(
   clientId: string,
   raw: unknown
@@ -78,8 +85,8 @@ export async function createClientAddressAction(
 
   try {
     await createClientAddress(clientId, parsed.addressTypeId, parsed);
-    revalidatePath(`/clients/${clientId}/address`);
-    return { ok: true };
+    const addresses = await reloadClientAddresses(clientId);
+    return { ok: true, addresses };
   } catch (err) {
     return mapError(err);
   }
@@ -105,10 +112,11 @@ export async function updateClientAddressAction(
     await updateClientAddress(clientId, addressTypeId, {
       ...parsed,
       addressId,
-      isActive: parsed.isActive ?? false
+      isActive: parsed.isActive ?? true,
+      ...(parsed.isPrimary !== undefined ? { isPrimary: parsed.isPrimary } : {})
     });
-    revalidatePath(`/clients/${clientId}/address`);
-    return { ok: true };
+    const addresses = await reloadClientAddresses(clientId);
+    return { ok: true, addresses };
   } catch (err) {
     return mapError(err);
   }
@@ -125,10 +133,47 @@ export async function toggleClientAddressActiveAction(
     return denied;
   }
 
+  if (!Number.isFinite(addressId)) {
+    return { ok: false, message: 'Invalid address id for update (expected m_address.id).' };
+  }
+
   try {
     await updateClientAddress(clientId, addressTypeId, { addressId, isActive });
-    revalidatePath(`/clients/${clientId}/address`);
-    return { ok: true };
+    const addresses = await reloadClientAddresses(clientId);
+    return { ok: true, addresses };
+  } catch (err) {
+    return mapError(err);
+  }
+}
+
+export async function toggleClientAddressPrimaryAction(
+  clientId: string,
+  addressTypeId: number,
+  addressId: number,
+  isPrimary: boolean
+): Promise<ClientAddressActionResult> {
+  const denied = await requireUpdatePermission();
+  if (denied) {
+    return denied;
+  }
+
+  if (!Number.isFinite(addressId)) {
+    return { ok: false, message: 'Invalid address id for update (expected m_address.id).' };
+  }
+
+  try {
+    const addresses = await getClientAddresses(clientId);
+    const target = addresses.find((entry) => entry.addressId === addressId);
+    if (!target) {
+      return { ok: false, message: 'Address not found.' };
+    }
+    if (target.isActive === false) {
+      return { ok: false, message: 'An inactive address cannot be marked as primary.' };
+    }
+
+    await updateClientAddress(clientId, addressTypeId, { addressId, isPrimary });
+    const reloaded = await reloadClientAddresses(clientId);
+    return { ok: true, addresses: reloaded };
   } catch (err) {
     return mapError(err);
   }

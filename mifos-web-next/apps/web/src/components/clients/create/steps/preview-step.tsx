@@ -282,6 +282,7 @@ export function PreviewStep({
               {draft.addresses.map((a, i) => (
                 <li key={i}>
                   {[a.street, a.city].filter(Boolean).join(', ') || `Address ${i + 1}`}
+                  {a.isPrimary ? ' (Primary)' : ''}
                 </li>
               ))}
             </ul>

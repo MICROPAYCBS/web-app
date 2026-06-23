@@ -12,7 +12,7 @@ import { notFound } from 'next/navigation';
 import { Suspense, type ReactNode } from 'react';
 import { ClientDetailShell } from '@/components/clients/detail/client-detail-shell';
 import { ClientDetailShellSkeleton } from '@/components/clients/detail/client-detail-skeleton';
-import { getClientProfileImage } from '@/lib/fineract/client-image';
+import { getClientProfileImage, clientHasProfileImage } from '@/lib/fineract/client-image';
 import { getClientSignatureInfo } from '@/lib/fineract/client-signature';
 import { buildClientDatatableNavItems } from '@/lib/fineract/client-datatable-nav';
 import { getClient } from '@/lib/fineract/clients';
@@ -38,7 +38,9 @@ async function ClientDetailLayoutBody({
   }
 
   const [profileImageSrc, signatureInfo, datatableNavItems] = await Promise.all([
-    getClientProfileImage(clientId).catch(() => null),
+    clientHasProfileImage(client)
+      ? getClientProfileImage(clientId).catch(() => null)
+      : Promise.resolve(null),
     getClientSignatureInfo(clientId).catch(() => ({
       hasSignature: false,
       documentId: undefined

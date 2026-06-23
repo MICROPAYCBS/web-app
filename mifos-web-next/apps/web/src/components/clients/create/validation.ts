@@ -136,6 +136,13 @@ export function validateAddressStep(draft: CreateClientDraft): StepErrors {
   if (draft.addresses.length === 0) {
     return { address: 'Add at least one address for this customer' };
   }
+  const primaryCount = draft.addresses.filter((entry) => entry.isPrimary).length;
+  if (primaryCount !== 1) {
+    return { address: 'Mark exactly one address as the primary address' };
+  }
+  if (draft.addresses.some((entry) => entry.isPrimary && entry.isActive === false)) {
+    return { address: 'Primary address must be active' };
+  }
   return {};
 }
 
