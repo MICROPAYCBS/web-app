@@ -13,8 +13,9 @@ import type {
   FineractEnumOption
 } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
-import { SwitchField } from '@/components/composites/switch-field';
-import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
+import type { ReactNode } from 'react';
+import type { CollectionDetailMode } from '@/components/composites';
+import { CollectionItemFieldDetails, DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
 import { Badge } from '@/components/ui/badge';
 import {
   formatLocationAddressSummary
@@ -29,6 +30,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { SwitchField } from '@/components/composites/switch-field';
 
 function isFieldEnabled(config: FineractAddressFieldConfig[], field: string): boolean {
   return config.find((f) => f.field === field)?.isEnabled ?? false;
@@ -122,6 +124,8 @@ export function ClientAddressListItem({
   title,
   subtitle,
   summary,
+  detailMode,
+  details,
   isActive,
   showActiveBadge,
   canUpdate,
@@ -133,6 +137,8 @@ export function ClientAddressListItem({
   title: string;
   subtitle?: string;
   summary: string;
+  detailMode?: CollectionDetailMode;
+  details?: ReactNode;
   isActive?: boolean;
   showActiveBadge?: boolean;
   canUpdate: boolean;
@@ -141,6 +147,15 @@ export function ClientAddressListItem({
   onToggleActive?: (next: boolean) => void;
   className?: string;
 }) {
+  const body =
+    detailMode && details ? (
+      <CollectionItemFieldDetails summary={summary} detailMode={detailMode}>
+        {details}
+      </CollectionItemFieldDetails>
+    ) : (
+      <p className="text-sm text-muted-foreground">{summary}</p>
+    );
+
   return (
     <div
       className={cn('flex flex-col gap-3 bg-card px-4 py-3 sm:flex-row sm:items-start', className)}
@@ -155,7 +170,7 @@ export function ClientAddressListItem({
           ) : null}
         </div>
         {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
-        <p className="text-sm text-muted-foreground">{summary}</p>
+        {body}
         {canUpdate && onToggleActive ? (
           <div className="pt-1 sm:hidden">
             <SwitchField
@@ -186,6 +201,8 @@ export function ClientAddressGridCard({
   title,
   subtitle,
   summary,
+  detailMode,
+  details,
   isActive,
   showActiveBadge,
   canUpdate,
@@ -196,6 +213,8 @@ export function ClientAddressGridCard({
   title: string;
   subtitle?: string;
   summary: string;
+  detailMode?: CollectionDetailMode;
+  details?: ReactNode;
   isActive?: boolean;
   showActiveBadge?: boolean;
   canUpdate: boolean;
@@ -203,6 +222,15 @@ export function ClientAddressGridCard({
   onDelete?: () => void;
   onToggleActive?: (next: boolean) => void;
 }) {
+  const body =
+    detailMode && details ? (
+      <CollectionItemFieldDetails summary={summary} detailMode={detailMode}>
+        {details}
+      </CollectionItemFieldDetails>
+    ) : (
+      <p className="text-sm text-muted-foreground">{summary}</p>
+    );
+
   return (
     <Card size="sm" className="h-full">
       <CardHeader>
@@ -220,7 +248,7 @@ export function ClientAddressGridCard({
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">{summary}</p>
+        {body}
         {canUpdate && onToggleActive ? (
           <SwitchField
             label="Active address"

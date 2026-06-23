@@ -20,13 +20,16 @@ import {
 } from '@/actions/client-income-source';
 import { IncomeSourceFormSheet } from '@/components/clients/shared/income-source-form-sheet';
 import {
-  formatIncomeSourceSummary,
+  ClientIncomeSourceGridCard,
+  ClientIncomeSourceListItem,
+  formatIncomeSourceExtendedSummary,
   toIncomeSourceInput
 } from '@/components/clients/detail/client-income-source-sections';
 import {
   CollectionViewLayout,
-  CollectionViewToggle,
+  CollectionViewToolbar,
   EmptyState,
+  useCollectionDetailMode,
   useCollectionViewMode
 } from '@/components/composites';
 import { Button } from '@/components/ui/button';
@@ -42,6 +45,7 @@ import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import type { FormSubmitResult } from '@/lib/form/submit-result';
 
 const VIEW_MODE_STORAGE_KEY = 'mifos.client-income-sources.view-mode';
+const DETAIL_MODE_STORAGE_KEY = 'mifos.client-income-sources.detail-mode';
 
 export function ClientIncomeSourceView({
   clientId,
@@ -61,6 +65,10 @@ export function ClientIncomeSourceView({
   const [deleteTarget, setDeleteTarget] = useState<FineractClientIncomeSource | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { mode, setMode } = useCollectionViewMode(VIEW_MODE_STORAGE_KEY, 'list');
+  const { mode: detailMode, setMode: setDetailMode } = useCollectionDetailMode(
+    DETAIL_MODE_STORAGE_KEY,
+    'summary'
+  );
 
   function refresh() {
     router.refresh();
@@ -111,7 +119,14 @@ export function ClientIncomeSourceView({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <CollectionViewToggle mode={mode} onModeChange={setMode} />
+          {initialSources.length > 0 ? (
+            <CollectionViewToolbar
+              mode={mode}
+              onModeChange={setMode}
+              detailMode={detailMode}
+              onDetailModeChange={setDetailMode}
+            />
+          ) : null}
           {canUpdate ? (
             <Button type="button" size="sm" onClick={() => { setEditSource(null); setDialogOpen(true); }}>
               <Plus className="mr-2 size-4" />
@@ -132,58 +147,24 @@ export function ClientIncomeSourceView({
       ) : (
         <CollectionViewLayout mode={mode}>
           {initialSources.map((item) => {
-            const summary = (
-              <>
-                <p className="font-medium">{formatIncomeSourceSummary(item)}</p>
-                {item.sourceOfFunds ? (
-                  <p className="text-sm text-muted-foreground">Source of funds: {item.sourceOfFunds}</p>
-                ) : null}
-                {item.employerAddress ? (
-                  <p className="text-sm text-muted-foreground">{item.employerAddress}</p>
-                ) : null}
-                {item.subIndustryName ? (
-                  <p className="text-sm text-muted-foreground">{item.subIndustryName}</p>
-                ) : null}
-              </>
-            );
-
-            const actions = canUpdate ? (
-              <div className="flex shrink-0 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditSource(item);
-                    setDialogOpen(true);
-                  }}
-                >
-                  Edit
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setDeleteTarget(item)}>
-                  Delete
-                </Button>
-              </div>
-            ) : null;
+            const summary = formatIncomeSourceExtendedSummary(item);
+            const common = {
+              source: item,
+              summary,
+              detailMode,
+              canUpdate,
+              onEdit: () => {
+                setEditSource(item);
+                setDialogOpen(true);
+              },
+              onDelete: () => setDeleteTarget(item)
+            };
 
             if (mode === 'grid') {
-              return (
-                <div key={item.id} className="rounded-lg border p-4">
-                  {summary}
-                  {canUpdate ? <div className="mt-3 flex gap-2">{actions}</div> : null}
-                </div>
-              );
+              return <ClientIncomeSourceGridCard key={item.id} {...common} />;
             }
 
-            return (
-              <div
-                key={item.id}
-                className="flex items-start justify-between gap-4 rounded-lg border p-4"
-              >
-                <div>{summary}</div>
-                {actions}
-              </div>
-            );
+            return <ClientIncomeSourceListItem key={item.id} {...common} />;
           })}
         </CollectionViewLayout>
       )}

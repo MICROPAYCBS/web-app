@@ -17,6 +17,7 @@ import { FamilyMemberFormSheet } from '@/components/clients/shared/family-member
 import {
   ClientFamilyGridCard,
   ClientFamilyListItem,
+  ClientFamilySections,
   familyMemberDisplayName,
   formatFamilyMemberSummary
 } from '@/components/clients/detail/client-family-sections';
@@ -27,8 +28,9 @@ import {
 } from '@/actions/client-family';
 import {
   CollectionViewLayout,
-  CollectionViewToggle,
+  CollectionViewToolbar,
   EmptyState,
+  useCollectionDetailMode,
   useCollectionViewMode
 } from '@/components/composites';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,7 @@ import {
 } from '@/lib/fineract/dates';
 
 const VIEW_MODE_STORAGE_KEY = 'mifos.client-family.view-mode';
+const DETAIL_MODE_STORAGE_KEY = 'mifos.client-family.detail-mode';
 
 function toFamilyMemberInput(member: FineractClientFamilyMember): FamilyMemberInput {
   let dateOfBirth: string | undefined;
@@ -96,6 +99,10 @@ export function ClientFamilyView({
   const [deleteTarget, setDeleteTarget] = useState<FineractClientFamilyMember | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { mode, setMode } = useCollectionViewMode(VIEW_MODE_STORAGE_KEY, 'list');
+  const { mode: detailMode, setMode: setDetailMode } = useCollectionDetailMode(
+    DETAIL_MODE_STORAGE_KEY,
+    'summary'
+  );
 
   function refresh() {
     router.refresh();
@@ -141,6 +148,8 @@ export function ClientFamilyView({
     const common = {
       title,
       summary,
+      detailMode,
+      details: <ClientFamilySections member={member} />,
       isDependent: member.isDependent,
       canUpdate,
       onEdit: () => {
@@ -163,7 +172,13 @@ export function ClientFamilyView({
         <p className="text-sm text-muted-foreground">Next of kin linked to this customer.</p>
         <div className="flex flex-wrap items-center gap-2">
           {initialMembers.length > 0 ? (
-            <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
+            <CollectionViewToolbar
+              mode={mode}
+              onModeChange={setMode}
+              detailMode={detailMode}
+              onDetailModeChange={setDetailMode}
+              disabled={pending}
+            />
           ) : null}
           {canUpdate ? (
             <Button

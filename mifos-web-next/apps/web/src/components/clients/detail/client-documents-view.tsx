@@ -21,8 +21,9 @@ import {
 import { ClientDocumentFormSheet } from '@/components/clients/shared/client-document-form-sheet';
 import {
   CollectionViewLayout,
-  CollectionViewToggle,
+  CollectionViewToolbar,
   EmptyState,
+  useCollectionDetailMode,
   useCollectionViewMode
 } from '@/components/composites';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ import {
 } from '@/components/ui/dialog';
 
 const VIEW_MODE_STORAGE_KEY = 'mifos.client-documents.view-mode';
+const DETAIL_MODE_STORAGE_KEY = 'mifos.client-documents.detail-mode';
 
 export function ClientDocumentsView({
   clientId,
@@ -54,6 +56,10 @@ export function ClientDocumentsView({
   const [deleteTarget, setDeleteTarget] = useState<FineractEntityDocument | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { mode, setMode } = useCollectionViewMode(VIEW_MODE_STORAGE_KEY, 'list');
+  const { mode: detailMode, setMode: setDetailMode } = useCollectionDetailMode(
+    DETAIL_MODE_STORAGE_KEY,
+    'summary'
+  );
 
   function refresh() {
     router.refresh();
@@ -101,6 +107,7 @@ export function ClientDocumentsView({
     const common = {
       clientId,
       document,
+      detailMode,
       canDelete,
       onDelete: () => setDeleteTarget(document)
     };
@@ -118,7 +125,13 @@ export function ClientDocumentsView({
         <p className="text-sm text-muted-foreground">Files attached to this customer record.</p>
         <div className="flex flex-wrap items-center gap-2">
           {documents.length > 0 ? (
-            <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
+            <CollectionViewToolbar
+              mode={mode}
+              onModeChange={setMode}
+              detailMode={detailMode}
+              onDetailModeChange={setDetailMode}
+              disabled={pending}
+            />
           ) : null}
           {canCreate ? (
             <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>

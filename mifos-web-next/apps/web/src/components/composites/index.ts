@@ -95,7 +95,12 @@ export {
 } from './payment-detail-fields';
 export {
   type CollectionViewMode,
+  type CollectionDetailMode,
   CollectionViewToggle,
+  CollectionDetailToggle,
+  CollectionViewToolbar,
+  CollectionItemFieldDetails,
   CollectionViewLayout,
-  useCollectionViewMode
+  useCollectionViewMode,
+  useCollectionDetailMode
 } from './collection-view';

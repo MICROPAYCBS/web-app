@@ -8,9 +8,11 @@
 
 import type { FineractClientFamilyMember } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
-import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
+import type { ReactNode } from 'react';
+import type { CollectionDetailMode } from '@/components/composites';
+import { CollectionItemFieldDetails, DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
@@ -85,6 +87,8 @@ function FamilyCollectionActions({
 export function ClientFamilyListItem({
   title,
   summary,
+  detailMode,
+  details,
   isDependent,
   canUpdate,
   onEdit,
@@ -93,12 +97,23 @@ export function ClientFamilyListItem({
 }: {
   title: string;
   summary: string;
+  detailMode?: CollectionDetailMode;
+  details?: ReactNode;
   isDependent?: boolean;
   canUpdate: boolean;
   onEdit: () => void;
   onDelete: () => void;
   className?: string;
 }) {
+  const body =
+    detailMode && details ? (
+      <CollectionItemFieldDetails summary={summary} detailMode={detailMode}>
+        {details}
+      </CollectionItemFieldDetails>
+    ) : (
+      <p className="text-sm text-muted-foreground">{summary}</p>
+    );
+
   return (
     <div className={cn('flex items-start justify-between gap-3 bg-card px-4 py-3', className)}>
       <div className="min-w-0 flex-1 space-y-1">
@@ -106,7 +121,7 @@ export function ClientFamilyListItem({
           <p className="font-medium">{title}</p>
           {isDependent ? <Badge variant="secondary">Dependent</Badge> : null}
         </div>
-        <p className="text-sm text-muted-foreground">{summary}</p>
+        {body}
       </div>
       <FamilyCollectionActions canUpdate={canUpdate} onEdit={onEdit} onDelete={onDelete} />
     </div>
@@ -116,6 +131,8 @@ export function ClientFamilyListItem({
 export function ClientFamilyGridCard({
   title,
   summary,
+  detailMode,
+  details,
   isDependent,
   canUpdate,
   onEdit,
@@ -123,11 +140,22 @@ export function ClientFamilyGridCard({
 }: {
   title: string;
   summary: string;
+  detailMode?: CollectionDetailMode;
+  details?: ReactNode;
   isDependent?: boolean;
   canUpdate: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const body =
+    detailMode && details ? (
+      <CollectionItemFieldDetails summary={summary} detailMode={detailMode}>
+        {details}
+      </CollectionItemFieldDetails>
+    ) : (
+      <p className="text-sm text-muted-foreground">{summary}</p>
+    );
+
   return (
     <Card size="sm" className="h-full">
       <CardHeader>
@@ -135,11 +163,12 @@ export function ClientFamilyGridCard({
           <span>{title}</span>
           {isDependent ? <Badge variant="secondary">Dependent</Badge> : null}
         </CardTitle>
-        <CardDescription>{summary}</CardDescription>
+        {!(detailMode && details) ? <CardDescription>{summary}</CardDescription> : null}
         <CardAction>
           <FamilyCollectionActions canUpdate={canUpdate} onEdit={onEdit} onDelete={onDelete} />
         </CardAction>
       </CardHeader>
+      <CardContent>{body}</CardContent>
     </Card>
   );
 }

@@ -22,6 +22,7 @@ import { AddressFormSheet } from '@/components/clients/shared/address-form-sheet
 import {
   ClientAddressGridCard,
   ClientAddressListItem,
+  ClientAddressSections,
   formatClientAddressSummary
 } from '@/components/clients/detail/client-address-sections';
 import { formatLocationAddressSummary } from '@/lib/locations/address-location-map';
@@ -33,13 +34,15 @@ import {
 } from '@/actions/client-address';
 import {
   CollectionViewLayout,
-  CollectionViewToggle,
+  CollectionViewToolbar,
   EmptyState,
+  useCollectionDetailMode,
   useCollectionViewMode
 } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 
 const VIEW_MODE_STORAGE_KEY = 'mifos.client-addresses.view-mode';
+const DETAIL_MODE_STORAGE_KEY = 'mifos.client-addresses.detail-mode';
 
 function toWizardTemplate(template: FineractClientAddressTemplate): FineractClientTemplate {
   return {
@@ -88,6 +91,10 @@ export function ClientAddressView({
   const [editAddress, setEditAddress] = useState<FineractClientAddress | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const { mode, setMode } = useCollectionViewMode(VIEW_MODE_STORAGE_KEY, 'list');
+  const { mode: detailMode, setMode: setDetailMode } = useCollectionDetailMode(
+    DETAIL_MODE_STORAGE_KEY,
+    'summary'
+  );
 
   const wizardTemplate = toWizardTemplate(addressTemplate);
   const showActiveBadge = isFieldEnabled(fieldConfig, 'isActive');
@@ -146,6 +153,14 @@ export function ClientAddressView({
       title,
       subtitle: address.relationship,
       summary,
+      detailMode,
+      details: (
+        <ClientAddressSections
+          address={address}
+          fieldConfig={fieldConfig}
+          template={addressTemplate}
+        />
+      ),
       isActive: address.isActive,
       showActiveBadge,
       canUpdate,
@@ -171,7 +186,13 @@ export function ClientAddressView({
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {initialAddresses.length > 0 ? (
-            <CollectionViewToggle mode={mode} onModeChange={setMode} disabled={pending} />
+            <CollectionViewToolbar
+              mode={mode}
+              onModeChange={setMode}
+              detailMode={detailMode}
+              onDetailModeChange={setDetailMode}
+              disabled={pending}
+            />
           ) : null}
           {canUpdate ? (
             <Button
