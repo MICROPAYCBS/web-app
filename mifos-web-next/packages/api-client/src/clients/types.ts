@@ -107,7 +107,10 @@ export interface FineractAddressFieldConfig {
 }
 
 export interface FineractClientAddress {
+  /** {@code m_address.id} — required for Fineract PUT /client/{id}/addresses updates. */
   addressId: number;
+  /** {@code m_client_address.id} — the client-to-address link row. */
+  clientAddressId?: number;
   addressType: string;
   addressTypeId: number;
   street?: string;
@@ -121,6 +124,7 @@ export interface FineractClientAddress {
   countyDistrict?: string;
   postalCode?: string;
   isActive?: boolean;
+  isPrimary?: boolean;
   relationship?: string;
 }
 
@@ -274,6 +278,8 @@ export interface FineractClientDetail extends FineractClientSummary {
   proposedTransferDate?: number[];
   savingsAccountId?: number;
   savingsProductName?: string;
+  imageId?: number;
+  imagePresent?: boolean;
   groups?: FineractClientGroupMembership[];
   clientNonPersonDetails?: FineractClientNonPersonDetails;
 }

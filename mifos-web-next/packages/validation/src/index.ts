@@ -52,6 +52,12 @@ export {
   type FamilyMemberInput
 } from './clients/create-client.schema';
 export {
+  applyClientAddressActiveChange,
+  isClientAddressActive,
+  mergeClientAddressEntry,
+  setClientAddressPrimary
+} from './clients/client-address-primary';
+export {
   updateClientSchema,
   type UpdateClientInput,
   type UpdateClientPayload
@@ -366,6 +372,11 @@ export {
   type UpdateRoleInput,
   type UpdateRolePermissionsInput
 } from './system/role.schema';
+export {
+  changeOwnPasswordSchema,
+  validateChangeOwnPassword,
+  type ChangeOwnPasswordInput
+} from './auth/change-own-password.schema';
 export {
   changeUserPasswordSchema,
   createUserSchema,

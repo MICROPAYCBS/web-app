@@ -58,7 +58,8 @@ export const clientAddressEntrySchema = z.object({
   stateProvinceId: z.coerce.number().int().positive().optional(),
   countryId: z.coerce.number().int().positive().optional(),
   countyDistrict: z.string().trim().max(100).optional(),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
+  isPrimary: z.boolean().optional()
 });
 
 export const datatablePayloadSchema = z.object({
@@ -149,6 +150,24 @@ export const createClientSchema = z
         message: 'Gender is required',
         path: ['genderId']
       });
+    }
+    if (data.address?.length) {
+      const primaryCount = data.address.filter((entry) => entry.isPrimary).length;
+      if (primaryCount !== 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Exactly one address must be marked as primary',
+          path: ['address']
+        });
+      }
+      const inactivePrimary = data.address.find((entry) => entry.isPrimary && entry.isActive === false);
+      if (inactivePrimary) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Primary address must be active',
+          path: ['address']
+        });
+      }
     }
   });
 
