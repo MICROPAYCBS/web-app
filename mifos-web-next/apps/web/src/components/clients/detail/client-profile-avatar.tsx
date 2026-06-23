@@ -13,10 +13,11 @@ import { Camera, Trash2, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CaptureClientImageDialog } from '@/components/clients/detail/capture-client-image-dialog';
+import { ClientImageZoomDialog } from '@/components/clients/detail/client-image-zoom-dialog';
 import { UploadClientImageDialog } from '@/components/clients/detail/upload-client-image-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { clientInitials } from '@/lib/fineract/clients-display';
+import { clientDisplayName, clientInitials } from '@/lib/fineract/clients-display';
 
 export function ClientProfileAvatar({
   client,
@@ -33,6 +34,7 @@ export function ClientProfileAvatar({
   const [imageSrc, setImageSrc] = useState(initialImageSrc);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [captureOpen, setCaptureOpen] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const [imageVersion, setImageVersion] = useState(0);
 
   async function reloadImage() {
@@ -87,13 +89,27 @@ export function ClientProfileAvatar({
 
   const initials = clientInitials(client);
   const showImage = Boolean(imageSrc);
+  const photoAlt = `${clientDisplayName(client)} photo`;
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <Avatar className="size-24 text-lg">
-        {showImage ? <AvatarImage key={imageVersion} src={imageSrc ?? undefined} alt="" /> : null}
-        <AvatarFallback className="text-lg font-medium">{initials}</AvatarFallback>
-      </Avatar>
+      {showImage ? (
+        <button
+          type="button"
+          className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          onClick={() => setZoomOpen(true)}
+          aria-label="View customer photo"
+        >
+          <Avatar className="size-24 cursor-zoom-in text-lg">
+            <AvatarImage key={imageVersion} src={imageSrc ?? undefined} alt="" />
+            <AvatarFallback className="text-lg font-medium">{initials}</AvatarFallback>
+          </Avatar>
+        </button>
+      ) : (
+        <Avatar className="size-24 text-lg">
+          <AvatarFallback className="text-lg font-medium">{initials}</AvatarFallback>
+        </Avatar>
+      )}
 
       {canCreateImage || (canDeleteImage && showImage) ? (
         <div className="flex items-center justify-center gap-1">
@@ -146,6 +162,14 @@ export function ClientProfileAvatar({
         onOpenChange={setCaptureOpen}
         onCapture={uploadDataUrl}
       />
+      {showImage && imageSrc ? (
+        <ClientImageZoomDialog
+          open={zoomOpen}
+          onOpenChange={setZoomOpen}
+          src={imageSrc}
+          alt={photoAlt}
+        />
+      ) : null}
     </div>
   );
 }
