@@ -43,13 +43,17 @@ function buildLoginQuery(params: { from?: string; servers?: string; error?: stri
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ from?: string; servers?: string; error?: string }>;
+  searchParams: Promise<{ from?: string; servers?: string; error?: string; passwordChanged?: string }>;
 }) {
   const params = await searchParams;
   const redirectTo = safeRedirectPath(params.from);
   const flashError = await readLoginErrorFlash();
   const loginError = mergeLoginErrors(params.error?.trim() || null, flashError);
   const hadFlashError = Boolean(flashError);
+  const loginSuccess =
+    params.passwordChanged === '1'
+      ? 'Your password was updated. Sign in again with your new password.'
+      : null;
   const session = await getServerSession();
 
   if (session) {
@@ -76,6 +80,7 @@ export default async function LoginPage({
       catalog={catalog}
       redirectTo={redirectTo}
       loginError={loginError}
+      loginSuccess={loginSuccess}
       hadFlashError={hadFlashError}
       demoEnabled={isDemoSessionEnabled()}
       initialServersOpen={openServers}

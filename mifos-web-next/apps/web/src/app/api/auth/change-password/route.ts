@@ -11,6 +11,18 @@ import {
   fetchActivePasswordPolicyRules,
   validatePasswordAgainstPolicy
 } from '@/lib/fineract/password-policy';
+import { sessionCookieAttributes } from '@/lib/session/cookie-options';
+
+function jsonOkAndClearSession<T>(data: T) {
+  const response = jsonOk(data);
+  const attrs = sessionCookieAttributes(0);
+  response.cookies.set(attrs.name, '', {
+    ...attrs,
+    maxAge: 0,
+    expires: new Date(0)
+  });
+  return response;
+}
 
 /**
  * BFF: change the signed-in user's Fineract password (PUT /users/{id}).
@@ -63,7 +75,7 @@ export async function POST(request: Request) {
 
     const fineract = await createFineractClient();
     await fineract.put(`/users/${session!.userId}`, { password, repeatPassword });
-    return jsonOk({ ok: true });
+    return jsonOkAndClearSession({ ok: true, requiresSignIn: true });
   } catch (err) {
     return jsonError(err);
   }

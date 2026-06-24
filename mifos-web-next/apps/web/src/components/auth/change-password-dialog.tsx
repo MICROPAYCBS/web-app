@@ -8,7 +8,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useTransition } from 'react';
+import { PasswordInput } from '@/components/composites/password-input';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,12 +26,13 @@ import {
   FieldGroup,
   FieldLabel
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import {
   DEFAULT_PASSWORD_POLICY,
   validatePasswordAgainstPolicy,
   type PasswordPolicyRules
 } from '@/lib/password-policy-validate';
+
+export const PASSWORD_CHANGED_LOGIN_QUERY = 'passwordChanged';
 
 type PasswordField = 'currentPassword' | 'password' | 'repeatPassword';
 
@@ -66,6 +69,7 @@ export function ChangePasswordDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const queryClient = useQueryClient();
   const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
@@ -157,7 +161,10 @@ export function ChangePasswordDialog({
           }
           return;
         }
+        queryClient.clear();
+        queryClient.cancelQueries();
         handleOpenChange(false);
+        window.location.assign(`/login?${PASSWORD_CHANGED_LOGIN_QUERY}=1`);
       } catch {
         setFormError('Could not change password');
       }
@@ -175,48 +182,48 @@ export function ChangePasswordDialog({
           <FieldGroup className="gap-4">
             <Field data-invalid={fieldErrors.currentPassword ? true : undefined}>
               <FieldLabel htmlFor="current-password">Current password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="current-password"
-                type="password"
                 autoComplete="current-password"
                 value={currentPassword}
-                onChange={(e) => {
+                onChange={(value) => {
                   clearFieldError('currentPassword');
-                  setCurrentPassword(e.target.value);
+                  setCurrentPassword(value);
                 }}
                 required
+                disabled={pending}
                 aria-invalid={!!fieldErrors.currentPassword}
               />
               <FieldError>{fieldErrors.currentPassword}</FieldError>
             </Field>
             <Field data-invalid={fieldErrors.password ? true : undefined}>
               <FieldLabel htmlFor="new-password">New password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="new-password"
-                type="password"
                 autoComplete="new-password"
                 value={password}
-                onChange={(e) => {
+                onChange={(value) => {
                   clearFieldError('password');
-                  setPassword(e.target.value);
+                  setPassword(value);
                 }}
                 required
+                disabled={pending}
                 aria-invalid={!!fieldErrors.password}
               />
               <FieldError>{fieldErrors.password}</FieldError>
             </Field>
             <Field data-invalid={fieldErrors.repeatPassword ? true : undefined}>
               <FieldLabel htmlFor="confirm-password">Confirm password</FieldLabel>
-              <Input
+              <PasswordInput
                 id="confirm-password"
-                type="password"
                 autoComplete="new-password"
                 value={repeatPassword}
-                onChange={(e) => {
+                onChange={(value) => {
                   clearFieldError('repeatPassword');
-                  setRepeatPassword(e.target.value);
+                  setRepeatPassword(value);
                 }}
                 required
+                disabled={pending}
                 aria-invalid={!!fieldErrors.repeatPassword}
               />
               <FieldError>{fieldErrors.repeatPassword}</FieldError>

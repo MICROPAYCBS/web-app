@@ -19,6 +19,7 @@ export function LoginShell({
   redirectTo,
   demoEnabled,
   loginError = null,
+  loginSuccess = null,
   hadFlashError = false,
   initialServersOpen = false
 }: {
@@ -26,6 +27,7 @@ export function LoginShell({
   redirectTo: string;
   demoEnabled: boolean;
   loginError?: string | null;
+  loginSuccess?: string | null;
   /** True when loginError body was loaded from the one-time flash cookie. */
   hadFlashError?: boolean;
   /** Only true when URL has ?servers=1 and no active server (see login page). */
@@ -67,6 +69,7 @@ export function LoginShell({
         redirectTo={redirectTo}
         demoEnabled={demoEnabled}
         loginError={loginError}
+        loginSuccess={loginSuccess}
         canSignIn={Boolean(active)}
         activeServer={active}
         onManageServers={() => setServersOpen(true)}

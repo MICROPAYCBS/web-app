@@ -26,6 +26,7 @@ export interface LoginFormProps {
   demoEnabled: boolean;
   activeServer?: FineractServerProfile;
   loginError?: string | null;
+  loginSuccess?: string | null;
   canSignIn?: boolean;
   onManageServers: () => void;
   className?: string;
@@ -36,6 +37,7 @@ export function LoginForm({
   demoEnabled,
   activeServer,
   loginError = null,
+  loginSuccess = null,
   canSignIn = true,
   onManageServers,
   className
@@ -97,6 +99,15 @@ export function LoginForm({
                       required
                     />
                   </Field>
+
+                  {loginSuccess ? (
+                    <div
+                      className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                      role="status"
+                    >
+                      {loginSuccess}
+                    </div>
+                  ) : null}
 
                   {loginError ? (
                     <div
