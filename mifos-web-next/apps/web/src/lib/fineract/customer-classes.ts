@@ -10,11 +10,20 @@ import 'server-only';
 
 import type {
   CustomerClass,
+  CustomerClassLegalFormOption,
   CustomerClassMutationResponse,
   CustomerClassRestrictionOption,
   CustomerClassTemplate
 } from '@mifos/api-client';
-import { buildUpsertCustomerClassPayload, type UpsertCustomerClassPayload } from '@mifos/validation';
+import {
+  buildUpdateCustomerClassPayload,
+  buildUpsertCustomerClassPayload,
+  LEGAL_FORM_ENTITY,
+  LEGAL_FORM_PERSON,
+  type CustomerClassUpdateClearFields,
+  type UpdateCustomerClassPayload,
+  type UpsertCustomerClassPayload
+} from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 const BASE_PATH = '/customerclasses';
@@ -43,6 +52,19 @@ function normalizeRestrictionOption(raw: unknown): CustomerClassRestrictionOptio
   return { id, restrictionCode, restrictionName };
 }
 
+function normalizeLegalFormOption(raw: unknown): CustomerClassLegalFormOption | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = Number(row.id);
+  const name = typeof row.name === 'string' ? row.name : '';
+  if (!Number.isFinite(id) || !name) {
+    return null;
+  }
+  return { id, name };
+}
+
 function normalizeCustomerClass(raw: unknown): CustomerClass | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -59,6 +81,7 @@ function normalizeCustomerClass(raw: unknown): CustomerClass | null {
     classCode,
     className,
     description: typeof row.description === 'string' ? row.description : undefined,
+    legalFormId: row.legalFormId != null ? Number(row.legalFormId) : LEGAL_FORM_PERSON,
     customerType: typeof row.customerType === 'string' ? row.customerType : undefined,
     riskLevel: typeof row.riskLevel === 'string' ? row.riskLevel : undefined,
     kycLevel: typeof row.kycLevel === 'string' ? row.kycLevel : undefined,
@@ -79,9 +102,15 @@ function normalizeCustomerClass(raw: unknown): CustomerClass | null {
   };
 }
 
+const DEFAULT_LEGAL_FORM_OPTIONS: CustomerClassLegalFormOption[] = [
+  { id: LEGAL_FORM_PERSON, name: 'Person' },
+  { id: LEGAL_FORM_ENTITY, name: 'Entity' }
+];
+
 function normalizeTemplate(raw: unknown): CustomerClassTemplate {
   if (!raw || typeof raw !== 'object') {
     return {
+      legalFormOptions: [],
       customerTypeOptions: [],
       riskLevelOptions: [],
       kycLevelOptions: [],
@@ -92,7 +121,13 @@ function normalizeTemplate(raw: unknown): CustomerClassTemplate {
   const row = raw as Record<string, unknown>;
   const asStrings = (value: unknown) =>
     Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+  const legalFormOptions = Array.isArray(row.legalFormOptions)
+    ? row.legalFormOptions
+        .map((item) => normalizeLegalFormOption(item))
+        .filter((item): item is CustomerClassLegalFormOption => item !== null)
+    : [];
   return {
+    legalFormOptions: legalFormOptions.length > 0 ? legalFormOptions : DEFAULT_LEGAL_FORM_OPTIONS,
     customerTypeOptions: asStrings(row.customerTypeOptions),
     riskLevelOptions: asStrings(row.riskLevelOptions),
     kycLevelOptions: asStrings(row.kycLevelOptions),
@@ -142,12 +177,13 @@ export async function createCustomerClass(
 
 export async function updateCustomerClass(
   customerClassId: number,
-  input: UpsertCustomerClassPayload
+  input: UpdateCustomerClassPayload,
+  clear: CustomerClassUpdateClearFields
 ): Promise<CustomerClassMutationResponse> {
   const fineract = await createFineractClient();
   const raw = await fineract.put<CustomerClassMutationResponse>(
     `${BASE_PATH}/${customerClassId}`,
-    buildUpsertCustomerClassPayload(input)
+    buildUpdateCustomerClassPayload(input, clear)
   );
   return { resourceId: Number(raw?.resourceId ?? customerClassId) };
 }

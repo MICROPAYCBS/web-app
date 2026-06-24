@@ -13,6 +13,7 @@ import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
 import { toSelectOptions, customerClassToSelectOptions } from '@/lib/form/select-options';
+import { filterEligibleCustomerClasses } from '@/lib/fineract/customer-class-eligibility';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
 
@@ -28,12 +29,18 @@ export function CustomerProfilingStep({
   onDraftChange: (patch: Partial<ClientGeneralFormState>) => void;
 }) {
   const g = draft.general;
+  const eligibleCustomerClasses = filterEligibleCustomerClasses(template.customerClassOptions, {
+    legalFormId: g.legalFormId,
+    dateOfBirth: g.dateOfBirth,
+    customerRiskProfileId: g.customerRiskProfileId,
+    customerRiskProfileOptions: template.customerRiskProfileOptions
+  });
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Customer type, sector, tax details, and internal risk categorization. Most fields are
-        optional and can be updated later.
+        Customer type, customer class, sector, tax details, and internal risk categorization. Most
+        fields are optional and can be updated later.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -46,18 +53,6 @@ export function CustomerProfilingStep({
           options={toSelectOptions(template.clientTypeOptions)}
           placeholder="Select customer type"
           error={errors.clientTypeId}
-        />
-
-        <SelectField
-          id="clientClassificationId"
-          label="Customer classification"
-          optional
-          value={g.clientClassificationId ? String(g.clientClassificationId) : undefined}
-          onValueChange={(v) =>
-            onDraftChange({ clientClassificationId: v ? Number(v) : undefined })
-          }
-          options={toSelectOptions(template.clientClassificationOptions)}
-          placeholder="Select classification"
         />
 
         <TextField
@@ -99,9 +94,9 @@ export function CustomerProfilingStep({
           optional
           value={g.customerClassId ? String(g.customerClassId) : undefined}
           onValueChange={(v) => onDraftChange({ customerClassId: v ? Number(v) : undefined })}
-          options={customerClassToSelectOptions(template.customerClassOptions)}
+          options={customerClassToSelectOptions(eligibleCustomerClasses)}
           placeholder="Select customer class"
-          hint="Determines product eligibility, KYC requirements, and account restrictions."
+          hint="Only classes matching age, legal form, and risk profile are listed. KYC and documents are checked at activation."
           error={errors.customerClassId}
         />
       </div>

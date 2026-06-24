@@ -19,6 +19,7 @@ import {
 } from '@/lib/fineract/client-detail-labels';
 import type { ClientFinancialSummary } from '@/lib/fineract/client-financial-summary';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
+import { formatCustomerClassLabel } from '@/lib/fineract/customer-class-eligibility';
 
 function ClientInformationSection({ client }: { client: FineractClientDetail }) {
   const isEntity = isClientEntity(client);
@@ -129,8 +130,8 @@ function ClientInformationSection({ client }: { client: FineractClientDetail }) 
         <DetailField label="Customer type">
           <TextValue value={enumOptionLabel(client.clientType)} />
         </DetailField>
-        <DetailField label="Classification">
-          <TextValue value={enumOptionLabel(client.clientClassification)} />
+        <DetailField label="Customer class">
+          <TextValue value={formatCustomerClassLabel(client.customerClass) ?? 'Not assigned'} />
         </DetailField>
       </DetailFieldGrid>
     </DetailSection>
@@ -322,16 +323,9 @@ function ClientComplianceSummarySection({
 }
 
 function ClientBankUseSection({ client }: { client: FineractClientDetail }) {
-  const customerClassLabel = client.customerClass
-    ? `${client.customerClass.classCode} — ${client.customerClass.className}`
-    : undefined;
-
   return (
     <DetailSection title="Bank use">
       <DetailFieldGrid>
-        <DetailField label="Customer class">
-          <TextValue value={customerClassLabel ?? 'Not assigned'} />
-        </DetailField>
         <DetailField label="Customer risk profile">
           <TextValue value={enumOptionLabel(client.customerRiskProfile) ?? 'Not assigned'} />
         </DetailField>

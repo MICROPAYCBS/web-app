@@ -43,7 +43,6 @@ export interface ClientGeneralFormState {
   customerRiskProfileId?: number;
   dateOfBirth?: string;
   clientTypeId?: number;
-  clientClassificationId?: number;
   submittedOnDate?: string;
   savingsProductId?: number;
   dateFormat?: string;

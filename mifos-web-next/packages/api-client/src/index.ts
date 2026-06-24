@@ -30,6 +30,7 @@ export type {
   FineractClientTemplate,
   FineractClientsPage,
   FineractCreateClientResponse,
+  ClientTitleOption,
   FineractDatatableColumnHeader,
   FineractEntityDocument,
   FineractEnumOption,
@@ -469,10 +470,16 @@ export type {
 } from './organization/payment-type-types';
 export type {
   CustomerClass,
+  CustomerClassLegalFormOption,
   CustomerClassMutationResponse,
   CustomerClassRestrictionOption,
   CustomerClassTemplate
 } from './organization/customer-class-types';
+export type {
+  CustomerTitle,
+  CustomerTitleMutationResponse,
+  CustomerTitleTemplate
+} from './organization/customer-title-types';
 export type {
   PasswordPreferencesMutationResponse,
   PasswordPreferenceTemplateItem

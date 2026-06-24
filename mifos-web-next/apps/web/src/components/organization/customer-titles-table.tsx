@@ -8,8 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CustomerClass } from '@mifos/api-client';
-import { formatLegalFormLabel } from '@/lib/fineract/customer-class-eligibility';
+import type { CustomerTitle, CustomerTitleTemplate } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import {
   getCoreRowModel,
@@ -22,7 +21,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { deleteCustomerClassAction } from '@/actions/customer-class';
+import { deleteCustomerTitleAction } from '@/actions/customer-title';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -35,87 +34,83 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { customerClassEditPath } from '@/lib/fineract/customer-class-paths';
+import { customerTitleEditPath } from '@/lib/fineract/customer-title-paths';
 import { cn } from '@/lib/utils';
 
-export function CustomerClassesTable({
-  customerClasses,
+function genderLabel(genderId: number | null | undefined, template: CustomerTitleTemplate): string {
+  if (genderId == null) {
+    return 'Neutral';
+  }
+  return template.genderOptions.find((option) => option.id === genderId)?.name ?? String(genderId);
+}
+
+export function CustomerTitlesTable({
+  customerTitles,
+  template,
   canEdit,
   canDelete
 }: {
-  customerClasses: CustomerClass[];
+  customerTitles: CustomerTitle[];
+  template: CustomerTitleTemplate;
   canEdit: boolean;
   canDelete: boolean;
 }) {
   const [filter, setFilter] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 });
   const router = useRouter();
-  const [deleteTarget, setDeleteTarget] = useState<CustomerClass | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CustomerTitle | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const filteredRows = useMemo(() => {
     const q = filter.trim().toLowerCase();
     if (!q) {
-      return customerClasses;
+      return customerTitles;
     }
-    return customerClasses.filter((row) =>
-      [row.classCode, row.className, row.description, formatLegalFormLabel(row.legalFormId), row.customerType, row.riskLevel, row.status]
+    return customerTitles.filter((row) =>
+      [row.titleCode, row.titleName, genderLabel(row.genderId, template), row.status]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
         .includes(q)
     );
-  }, [customerClasses, filter]);
+  }, [customerTitles, filter, template]);
 
-  const columns = useMemo<ColumnDef<CustomerClass>[]>(
+  const columns = useMemo<ColumnDef<CustomerTitle>[]>(
     () => [
       {
-        accessorKey: 'classCode',
+        accessorKey: 'titleCode',
         header: 'Code',
-        cell: ({ row }) => <span className="font-mono text-sm">{row.original.classCode}</span>
+        cell: ({ row }) => <span className="font-mono text-sm">{row.original.titleCode}</span>
       },
       {
-        accessorKey: 'className',
-        header: 'Name',
-        cell: ({ row }) => <span className="font-medium">{row.original.className}</span>
+        accessorKey: 'titleName',
+        header: 'Name'
       },
       {
-        accessorKey: 'legalFormId',
-        header: 'Legal form',
-        cell: ({ row }) => formatLegalFormLabel(row.original.legalFormId) ?? '—'
+        id: 'gender',
+        header: 'Gender',
+        cell: ({ row }) => genderLabel(row.original.genderId, template)
       },
       {
-        accessorKey: 'customerType',
-        header: 'Segment',
-        cell: ({ row }) => row.original.customerType ?? '—'
-      },
-      {
-        accessorKey: 'riskLevel',
-        header: 'Risk',
-        cell: ({ row }) => row.original.riskLevel ?? '—'
-      },
-      {
-        accessorKey: 'kycLevel',
-        header: 'KYC',
-        cell: ({ row }) => row.original.kycLevel ?? '—'
+        accessorKey: 'displayOrder',
+        header: 'Order',
+        cell: ({ row }) => row.original.displayOrder ?? '—'
       },
       {
         accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => row.original.status ?? '—'
+        header: 'Status'
       },
       {
         id: 'actions',
-        header: 'Actions',
-        meta: { sticky: 'right' },
+        header: '',
         cell: ({ row }) => (
-          <div className="flex items-center gap-1">
+          <div className="flex justify-end gap-2">
             {canEdit ? (
               <Link
-                href={customerClassEditPath(row.original.id)}
-                className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}
-                aria-label={`Edit ${row.original.className}`}
+                href={customerTitleEditPath(row.original.id)}
+                className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                aria-label={`Edit ${row.original.titleName}`}
               >
                 <Pencil className="size-4" />
               </Link>
@@ -124,9 +119,8 @@ export function CustomerClassesTable({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
-                className="text-destructive hover:text-destructive"
-                aria-label={`Delete ${row.original.className}`}
+                size="icon"
+                aria-label={`Delete ${row.original.titleName}`}
                 onClick={() => {
                   setActionError(null);
                   setDeleteTarget(row.original);
@@ -139,7 +133,7 @@ export function CustomerClassesTable({
         )
       }
     ],
-    [canDelete, canEdit]
+    [canDelete, canEdit, template]
   );
 
   const table = useReactTable({
@@ -151,15 +145,14 @@ export function CustomerClassesTable({
     getPaginationRowModel: getPaginationRowModel()
   });
 
-  function handleDelete() {
+  function confirmDelete() {
     if (!deleteTarget) {
       return;
     }
-    setActionError(null);
     startTransition(async () => {
-      const result = await deleteCustomerClassAction(deleteTarget.id);
+      const result = await deleteCustomerTitleAction(deleteTarget.id);
       if (!result.ok) {
-        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setActionError(formatActionErrorMessage(result));
         return;
       }
       setDeleteTarget(null);
@@ -169,33 +162,23 @@ export function CustomerClassesTable({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="mb-4">
         <Input
-          placeholder="Filter customer classes…"
           value={filter}
-          onChange={(event) => {
-            setFilter(event.target.value);
-            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-          }}
+          onChange={(event) => setFilter(event.target.value)}
+          placeholder="Filter customer titles…"
           className="max-w-sm"
-          aria-label="Filter customer classes"
         />
-        <DataTable
-          table={table}
-          stickyHeader={false}
-          emptyMessage="No customer classes found"
-          emptyDescription="Create a customer class to define onboarding rules and product eligibility."
-        />
-        <DataTablePagination table={table} totalRecords={filteredRows.length} />
       </div>
-
+      <DataTable table={table} />
+      <DataTablePagination table={table} />
       <Dialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete customer class</DialogTitle>
+            <DialogTitle>Delete customer title</DialogTitle>
             <DialogDescription>
-              Delete {deleteTarget?.className} ({deleteTarget?.classCode})? This action cannot be
-              undone.
+              Delete &ldquo;{deleteTarget?.titleName}&rdquo;? Customers already using this title may
+              be affected.
             </DialogDescription>
           </DialogHeader>
           {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
@@ -203,8 +186,8 @@ export function CustomerClassesTable({
             <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>
-            <Button type="button" variant="destructive" onClick={handleDelete} disabled={pending}>
-              {pending ? 'Deleting…' : 'Delete'}
+            <Button type="button" variant="destructive" disabled={pending} onClick={confirmDelete}>
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

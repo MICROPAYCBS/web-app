@@ -10,10 +10,12 @@
 
 import type { FineractClientTemplate } from '@mifos/api-client';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
+import { useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { toSelectOptions } from '@/lib/form/select-options';
+import { filterEligibleClientTitles } from '@/lib/fineract/client-title-eligibility';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
 
@@ -32,6 +34,14 @@ export function BiodataStep({
   const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
   const nonPerson = g.clientNonPersonDetails ?? {};
   const isPerson = legalFormId === LEGAL_FORM_PERSON;
+  const eligibleTitles = useMemo(
+    () =>
+      filterEligibleClientTitles(
+        template.clientTitleOptions ?? template.titleOptions,
+        g.genderId
+      ),
+    [template.clientTitleOptions, template.titleOptions, g.genderId]
+  );
 
   return (
     <div className="space-y-6">
@@ -55,13 +65,35 @@ export function BiodataStep({
         ) : (
           <>
             <SelectField
+              id="genderId"
+              label="Gender"
+              required
+              value={g.genderId ? String(g.genderId) : undefined}
+              onValueChange={(v) => {
+                const genderId = v ? Number(v) : undefined;
+                const titlesForGender = filterEligibleClientTitles(
+                  template.clientTitleOptions ?? template.titleOptions,
+                  genderId
+                );
+                const nextTitleId =
+                  g.titleId != null && titlesForGender.some((title) => title.id === g.titleId)
+                    ? g.titleId
+                    : undefined;
+                onDraftChange({ genderId, titleId: nextTitleId });
+              }}
+              options={toSelectOptions(template.genderOptions)}
+              placeholder="Select gender"
+              error={errors.genderId}
+            />
+            <SelectField
               id="titleId"
               label="Title"
               optional
+              disabled={g.genderId == null}
               value={g.titleId ? String(g.titleId) : undefined}
               onValueChange={(v) => onDraftChange({ titleId: v ? Number(v) : undefined })}
-              options={toSelectOptions(template.titleOptions)}
-              placeholder="Select title"
+              options={toSelectOptions(eligibleTitles)}
+              placeholder={g.genderId != null ? 'Select title' : 'Select gender first'}
             />
             <TextField
               id="firstname"
@@ -114,19 +146,6 @@ export function BiodataStep({
           onChange={(v) => onDraftChange({ dateOfBirth: v })}
           error={errors.dateOfBirth}
         />
-
-        {isPerson ? (
-          <SelectField
-            id="genderId"
-            label="Gender"
-            required
-            value={g.genderId ? String(g.genderId) : undefined}
-            onValueChange={(v) => onDraftChange({ genderId: v ? Number(v) : undefined })}
-            options={toSelectOptions(template.genderOptions)}
-            placeholder="Select gender"
-            error={errors.genderId}
-          />
-        ) : null}
 
         {legalFormId === LEGAL_FORM_ENTITY ? (
           <>

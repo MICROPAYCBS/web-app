@@ -43,7 +43,6 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
     genderId: data.gender?.id,
     isStaff: data.isStaff ?? false,
     clientTypeId: data.clientType?.id,
-    clientClassificationId: data.clientClassification?.id,
     submittedOnDate: submittedOnDate ?? '',
     active: data.active,
     activationDate,

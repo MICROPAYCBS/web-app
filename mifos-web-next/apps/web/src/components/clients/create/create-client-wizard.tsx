@@ -61,15 +61,17 @@ function buildSteps(
     { id: 'general', label: 'General' },
     { id: 'biodata', label: 'Biodata' },
     { id: 'contact', label: 'Contact' },
-    { id: 'identifiers', label: 'Identification' },
-    { id: 'customer-profiling', label: 'Customer profiling' },
-    { id: 'family', label: 'Next of kin' },
-    { id: 'income-sources', label: 'Income sources' },
-    { id: 'compliance', label: 'Compliance' }
+    { id: 'identifiers', label: 'Identification' }
   ];
   if (template.isAddressEnabled) {
     steps.push({ id: 'address', label: 'Address' });
   }
+  steps.push(
+    { id: 'customer-profiling', label: 'Customer profiling' },
+    { id: 'family', label: 'Next of kin' },
+    { id: 'income-sources', label: 'Income sources' },
+    { id: 'compliance', label: 'Compliance' }
+  );
   for (const dt of singleRowDatatablesForLegalForm(template, legalFormId)) {
     steps.push({
       id: `datatable:${dt.registeredTableName}`,

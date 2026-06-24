@@ -77,13 +77,49 @@ describe('getFineractErrorMessage', () => {
     );
   });
 
-  it('uses the first nested error when several are returned', () => {
+  it('joins multiple nested validation messages', () => {
     assert.equal(
       getFineractErrorMessage({
+        defaultUserMessage: 'Validation errors exist.',
+        userMessageGlobalisationCode: 'validation.msg.validation.errors.exist',
         errors: [
-          { defaultUserMessage: 'First problem' },
-          { defaultUserMessage: 'Second problem' }
+          {
+            parameterName: 'customerClassId',
+            defaultUserMessage: 'Customer class `Retail` requires a customer signature before activation.',
+            userMessageGlobalisationCode: 'validation.msg.client.customerClassId.signature.required'
+          },
+          {
+            parameterName: 'customerClassId',
+            defaultUserMessage:
+              'Customer class `Retail` requires at least one identification document before activation.',
+            userMessageGlobalisationCode: 'validation.msg.client.customerClassId.document.required'
+          }
         ]
+      }),
+      'Customer class `Retail` requires a customer signature before activation.\nCustomer class `Retail` requires at least one identification document before activation.'
+    );
+  });
+
+  it('prefers a specific nested integrity message over the generic translation', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        defaultUserMessage: 'A data integrity issue occurred.',
+        userMessageGlobalisationCode: 'error.msg.data.integrity.issue',
+        errors: [
+          {
+            defaultUserMessage: 'Unknown data integrity issue with resource: duplicate key value',
+            userMessageGlobalisationCode: 'error.msg.data.integrity.issue'
+          }
+        ]
+      }),
+      'Unknown data integrity issue with resource: duplicate key value'
+    );
+  });
+
+  it('uses the first nested error when a single nested error is returned', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        errors: [{ defaultUserMessage: 'First problem' }]
       }),
       'First problem'
     );

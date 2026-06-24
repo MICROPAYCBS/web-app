@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+export { GENDER_FEMALE, GENDER_MALE, GENDER_OPTIONS } from './clients/gender';
 export { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './clients/legal-form';
 export {
   UGANDA_MOBILE_INTERNATIONAL_MESSAGE,
@@ -597,12 +598,39 @@ export {
   type UpdateSystemPaymentTypePayload
 } from './organization/payment-type.schema';
 export {
+  buildUpdateCustomerClassPayload,
   buildUpsertCustomerClassPayload,
+  createCustomerClassSchema,
+  parseCreateCustomerTypeField,
+  parseCustomerClassKycLevelField,
+  parseCustomerClassLegalFormId,
+  parseCustomerClassRiskLevelField,
+  parseCustomerClassStatusField,
+  parseUpdateCustomerTypeField,
+  updateCustomerClassSchema,
   upsertCustomerClassSchema,
+  validateCreateCustomerClass,
+  validateUpdateCustomerClass,
   validateUpsertCustomerClass,
+  type CustomerClassUpdateClearFields,
+  type UpdateCustomerClassInput,
+  type UpdateCustomerClassPayload,
   type UpsertCustomerClassInput,
   type UpsertCustomerClassPayload
 } from './organization/customer-class.schema';
+export {
+  buildUpdateCustomerTitlePayload,
+  buildUpsertCustomerTitlePayload,
+  createCustomerTitleSchema,
+  updateCustomerTitleSchema,
+  validateCreateCustomerTitle,
+  validateUpdateCustomerTitle,
+  type CustomerTitleUpdateClearFields,
+  type UpdateCustomerTitleInput,
+  type UpdateCustomerTitlePayload,
+  type UpsertCustomerTitleInput,
+  type UpsertCustomerTitlePayload
+} from './organization/customer-title.schema';
 export {
   createSmsCampaignSchema,
   smsCampaignActivateCommandSchema,

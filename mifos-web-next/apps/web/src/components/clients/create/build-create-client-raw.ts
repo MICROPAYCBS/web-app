@@ -60,7 +60,6 @@ export function buildCreateClientRaw(
     customerRiskProfileId: general.customerRiskProfileId,
     dateOfBirth: general.dateOfBirth,
     clientTypeId: general.clientTypeId,
-    clientClassificationId: general.clientClassificationId,
     submittedOnDate: general.submittedOnDate,
     savingsProductId: general.savingsProductId,
     dateFormat,
@@ -109,7 +108,6 @@ export function createClientIssueStepId(path: (string | number)[]): string {
   ]);
   const profilingFields = new Set([
     'clientTypeId',
-    'clientClassificationId',
     'subIndustryId',
     'customerClassId',
     'taxIdentificationNumber',

@@ -252,9 +252,17 @@ export function ClientActionSheet({
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : null}
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+        <div className="text-sm text-destructive" role="alert">
+          {error.includes('\n') ? (
+            <ul className="list-disc space-y-1 pl-5">
+              {error.split('\n').map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>{error}</p>
+          )}
+        </div>
       ) : null}
 
       <form

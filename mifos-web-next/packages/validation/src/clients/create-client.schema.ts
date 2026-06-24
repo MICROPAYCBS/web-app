@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { GENDER_FEMALE, GENDER_MALE } from './gender';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 import { incomeSourceSchema } from './income-source.schema';
 import { clientIdentifierSchema } from './client-identifier.schema';
@@ -67,6 +68,8 @@ export const datatablePayloadSchema = z.object({
   data: z.record(z.unknown())
 });
 
+const clientGenderIdSchema = z.union([z.literal(GENDER_MALE), z.literal(GENDER_FEMALE)]);
+
 const clientBaseSchema = z.object({
   officeId: z.coerce.number().int().positive(),
   staffId: z.coerce.number().int().positive().optional(),
@@ -83,10 +86,9 @@ const clientBaseSchema = z.object({
   nationalityCountryId: z.coerce.number().int().positive().optional(),
   customerRiskProfileId: z.coerce.number().int().positive().optional(),
   dateOfBirth: optionalFineractDate,
-  genderId: z.coerce.number().int().positive().optional(),
+  genderId: clientGenderIdSchema.optional(),
   isStaff: z.boolean().optional(),
   clientTypeId: z.coerce.number().int().positive().optional(),
-  clientClassificationId: z.coerce.number().int().positive().optional(),
   submittedOnDate: fineractDate,
   savingsProductId: z.coerce.number().int().positive().optional(),
   dateFormat: z.string().optional(),

@@ -10,6 +10,7 @@
 
 import type { FineractClientEditData } from '@mifos/api-client';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, type UpdateClientInput, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER } from '@mifos/validation';
+import { useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
@@ -17,6 +18,8 @@ import { TextField } from '@/components/composites/text-field';
 import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
 import { fineractDateToDate } from '@/lib/fineract/date-input';
 import { toSelectOptions, customerClassToSelectOptions } from '@/lib/form/select-options';
+import { filterEligibleCustomerClasses } from '@/lib/fineract/customer-class-eligibility';
+import { filterEligibleClientTitles } from '@/lib/fineract/client-title-eligibility';
 
 function fieldError(errors: Record<string, string>, key: string): string | undefined {
   return errors[key];
@@ -47,6 +50,45 @@ export function EditClientFormFields({
   const nonPerson = isEntity ? form.clientNonPersonDetails : undefined;
   const tenantDateFormat = form.dateFormat;
   const activationMinDate = fineractDateToDate(form.submittedOnDate, tenantDateFormat);
+  const eligibleCustomerClasses = filterEligibleCustomerClasses(initial.customerClassOptions, {
+    legalFormId: form.legalFormId,
+    dateOfBirth: form.dateOfBirth,
+    customerRiskProfileId: form.customerRiskProfileId,
+    customerRiskProfileOptions: initial.customerRiskProfileOptions,
+    assignedCustomerRiskProfile: initial.customerRiskProfile,
+    groupCount: initial.groups?.length ?? 0
+  });
+  const customerClassOptionsForSelect =
+    form.customerClassId != null &&
+    !eligibleCustomerClasses.some((customerClass) => customerClass.id === form.customerClassId)
+      ? [
+          ...eligibleCustomerClasses,
+          ...(initial.customerClassOptions?.filter(
+            (customerClass) => customerClass.id === form.customerClassId
+          ) ?? [])
+        ]
+      : eligibleCustomerClasses;
+
+  const eligibleTitles = useMemo(
+    () =>
+      filterEligibleClientTitles(
+        initial.clientTitleOptions ?? initial.titleOptions,
+        form.genderId
+      ),
+    [initial.clientTitleOptions, initial.titleOptions, form.genderId]
+  );
+
+  const selectedCustomerClass = useMemo(() => {
+    if (form.customerClassId == null) {
+      return undefined;
+    }
+    return (
+      initial.customerClassOptions?.find((row) => row.id === form.customerClassId) ??
+      customerClassOptionsForSelect.find((row) => row.id === form.customerClassId)
+    );
+  }, [form.customerClassId, initial.customerClassOptions, customerClassOptionsForSelect]);
+
+  const riskProfileRequired = Boolean(selectedCustomerClass?.riskLevel?.trim());
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -72,13 +114,34 @@ export function EditClientFormFields({
         ) : (
           <>
             <SelectField
+              id="genderId"
+              label="Gender"
+              optional
+              value={form.genderId ? String(form.genderId) : undefined}
+              onValueChange={(v) => {
+                const genderId = v ? Number(v) : undefined;
+                const titlesForGender = filterEligibleClientTitles(
+                  initial.clientTitleOptions ?? initial.titleOptions,
+                  genderId
+                );
+                const nextTitleId =
+                  form.titleId != null && titlesForGender.some((title) => title.id === form.titleId)
+                    ? form.titleId
+                    : undefined;
+                onPatch({ genderId, titleId: nextTitleId });
+              }}
+              options={toSelectOptions(initial.genderOptions)}
+              placeholder="Select gender"
+            />
+            <SelectField
               id="titleId"
               label="Title"
               optional
+              disabled={form.genderId == null}
               value={form.titleId ? String(form.titleId) : undefined}
               onValueChange={(v) => onPatch({ titleId: v ? Number(v) : undefined })}
-              options={toSelectOptions(initial.titleOptions)}
-              placeholder="Select title"
+              options={toSelectOptions(eligibleTitles)}
+              placeholder={form.genderId != null ? 'Select title' : 'Select gender first'}
             />
             <TextField
               id="firstname"
@@ -128,18 +191,6 @@ export function EditClientFormFields({
           onChange={(v) => onPatch({ dateOfBirth: v })}
           dateFormat={tenantDateFormat}
         />
-
-        {legalFormId === LEGAL_FORM_PERSON ? (
-          <SelectField
-            id="genderId"
-            label="Gender"
-            optional
-            value={form.genderId ? String(form.genderId) : undefined}
-            onValueChange={(v) => onPatch({ genderId: v ? Number(v) : undefined })}
-            options={toSelectOptions(initial.genderOptions)}
-            placeholder="Select gender"
-          />
-        ) : null}
 
         {isEntity && nonPerson ? (
           <>
@@ -292,24 +343,11 @@ export function EditClientFormFields({
         />
 
         <SelectField
-          id="clientClassificationId"
-          label="Customer classification"
-          optional
-          value={
-            form.clientClassificationId ? String(form.clientClassificationId) : undefined
-          }
-          onValueChange={(v) =>
-            onPatch({ clientClassificationId: v ? Number(v) : undefined })
-          }
-          options={toSelectOptions(initial.clientClassificationOptions)}
-          placeholder="Select classification"
-        />
-
-        <SelectField
           id="customerRiskProfileId"
           className="sm:col-span-2"
           label="Customer risk profile"
-          optional
+          required={riskProfileRequired}
+          optional={!riskProfileRequired}
           value={
             form.customerRiskProfileId ? String(form.customerRiskProfileId) : undefined
           }
@@ -318,7 +356,12 @@ export function EditClientFormFields({
           }
           options={toSelectOptions(initial.customerRiskProfileOptions)}
           placeholder="Select risk profile"
-          hint="Internal bank-use field for AML risk tiering."
+          hint={
+            riskProfileRequired
+              ? `Required for class "${selectedCustomerClass?.className ?? selectedCustomerClass?.classCode}". Choose Very Low, Low, Medium, High, or Very High.`
+              : 'Internal bank-use field for AML risk tiering.'
+          }
+          error={fieldError(fieldErrors, 'customerRiskProfileId')}
         />
 
         <SelectField
@@ -328,9 +371,9 @@ export function EditClientFormFields({
           optional
           value={form.customerClassId ? String(form.customerClassId) : undefined}
           onValueChange={(v) => onPatch({ customerClassId: v ? Number(v) : undefined })}
-          options={customerClassToSelectOptions(initial.customerClassOptions)}
+          options={customerClassToSelectOptions(customerClassOptionsForSelect)}
           placeholder="Select customer class"
-          hint="Determines product eligibility, KYC requirements, and account restrictions."
+          hint="Classes are filtered by legal form, age, and risk profile when those values are known. KYC and documents are checked at activation."
           error={fieldError(fieldErrors, 'customerClassId')}
         />
 

@@ -82,14 +82,23 @@ export interface FineractIncomeSourceOptions {
   verificationStatusOptions?: FineractEnumOption[];
 }
 
+export interface ClientTitleOption {
+  id: number;
+  titleCode?: string;
+  titleName?: string;
+  genderId?: number | null;
+  displayOrder?: number;
+  status?: string;
+}
+
 export interface FineractClientTemplate {
   officeOptions: FineractOfficeOption[];
   staffOptions?: FineractStaffOption[];
   clientLegalFormOptions?: FineractEnumOption[];
   clientTypeOptions?: FineractEnumOption[];
-  clientClassificationOptions?: FineractEnumOption[];
   genderOptions?: FineractEnumOption[];
   titleOptions?: FineractEnumOption[];
+  clientTitleOptions?: ClientTitleOption[];
   nationalityOptions?: FineractEnumOption[];
   customerRiskProfileOptions?: FineractEnumOption[];
   customerClassOptions?: CustomerClass[];
@@ -273,7 +282,6 @@ export interface FineractClientDetail extends FineractClientSummary {
   /** Present on some template/detail payloads alongside timeline dates. */
   activationDate?: number[] | string;
   clientType?: FineractEnumOption;
-  clientClassification?: FineractEnumOption;
   gender?: FineractEnumOption;
   officeId?: number;
   staffId?: number;

@@ -12,11 +12,17 @@ export type CustomerClassRestrictionOption = {
   restrictionName: string;
 };
 
+export type CustomerClassLegalFormOption = {
+  id: number;
+  name: string;
+};
+
 export type CustomerClass = {
   id: number;
   classCode: string;
   className: string;
   description?: string;
+  legalFormId?: number;
   customerType?: string;
   riskLevel?: string;
   kycLevel?: string;
@@ -37,6 +43,7 @@ export type CustomerClass = {
 };
 
 export type CustomerClassTemplate = {
+  legalFormOptions: CustomerClassLegalFormOption[];
   customerTypeOptions: string[];
   riskLevelOptions: string[];
   kycLevelOptions: string[];

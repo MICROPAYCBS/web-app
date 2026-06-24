@@ -9,7 +9,7 @@
  */
 
 import type { FineractClientEditData } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, type UpdateClientInput } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, type UpdateClientInput, formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { EditClientFormFields } from '@/components/clients/edit/edit-client-form-fields';
 import { mapClientToEditFormInput } from '@/lib/fineract/client-edit-map';
+import { validateCustomerClassFormFields } from '@/lib/fineract/customer-class-eligibility';
 
 export const EDIT_CLIENT_FORM_ID = 'edit-client-form';
 
@@ -103,16 +104,32 @@ export function EditClientSheet({
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!form || !initialForm) {
+    if (!form || !initialForm || !initial) {
       return;
     }
     setSubmitError(null);
     setFieldErrors({});
 
+    const classFieldErrors = validateCustomerClassFormFields({
+      customerClassId: form.customerClassId,
+      customerClassOptions: initial.customerClassOptions,
+      customerRiskProfileId: form.customerRiskProfileId,
+      customerRiskProfileOptions: initial.customerRiskProfileOptions,
+      assignedCustomerRiskProfile: initial.customerRiskProfile,
+      dateOfBirth: form.dateOfBirth,
+      legalFormId: form.legalFormId,
+      groupCount: initial.groups?.length ?? 0
+    });
+    if (Object.keys(classFieldErrors).length > 0) {
+      setFieldErrors(classFieldErrors);
+      setSubmitError('Please fix the highlighted fields.');
+      return;
+    }
+
     startTransition(async () => {
       const result = await updateClientAction(clientId, form, initialForm);
       if (!result.ok) {
-        setSubmitError(result.message);
+        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
@@ -129,7 +146,7 @@ export function EditClientSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Edit customer"
-      description="Update names, contact details, classification, and dates."
+      description="Update names, contact details, customer class, and dates."
       formId={EDIT_CLIENT_FORM_ID}
       submitLabel="Save changes"
       submitLoading={pending}

@@ -59,5 +59,5 @@ export function formatActionErrorMessage(
   });
 
   const uniqueParts = [...new Set([message, ...fieldParts].filter(Boolean))];
-  return uniqueParts.join(' ');
+  return uniqueParts.join('\n');
 }

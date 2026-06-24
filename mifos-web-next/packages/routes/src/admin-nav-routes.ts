@@ -156,6 +156,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'orgCustomerTitles',
+    path: '/organization/customer-titles',
+    label: 'Customer titles',
+    navGroup: 'organization',
+    webAppRef: 'organization/customer-titles',
+    permissionKey: 'organization.customerTitles',
+    navOrder: 116,
+    navIcon: 'badge-check',
+    keywords: ['title', 'salutation', 'mr', 'mrs', 'gender', 'customer title'],
+    parityStatus: 'done'
+  },
+  {
     id: 'orgPasswordPreferences',
     path: '/organization/password-preferences',
     label: 'Password preferences',

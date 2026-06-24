@@ -63,10 +63,22 @@ function resolvePrimaryNestedMessage(errors: FineractErrorItem[]): string | null
 
   const code = first.userMessageGlobalisationCode;
   if (code && DATABASE_INTEGRITY_CODES.has(code)) {
+    const specific = first.defaultUserMessage ?? first.developerMessage;
+    if (specific) {
+      return normalizeFineractMessage(specific);
+    }
     return translateFineractCode(code);
   }
 
   return resolveFineractErrorItemMessage(first);
+}
+
+function collectNestedErrorMessages(errors: FineractErrorItem[]): string[] {
+  return [...new Set(
+    errors
+      .map((item) => resolveFineractErrorItemMessage(item))
+      .filter((message): message is string => Boolean(message))
+  )];
 }
 
 /**
@@ -87,17 +99,17 @@ export function getFineractErrorMessage(
   });
 
   if (body.errors?.length) {
+    const nestedMessages = collectNestedErrorMessages(body.errors);
+    if (nestedMessages.length > 1) {
+      return nestedMessages.join('\n');
+    }
+    if (nestedMessages.length === 1) {
+      return nestedMessages[0];
+    }
+
     const nestedPrimary = resolvePrimaryNestedMessage(body.errors);
     if (nestedPrimary) {
       return nestedPrimary;
-    }
-
-    const nestedMessages = body.errors
-      .map((item) => resolveFineractErrorItemMessage(item))
-      .filter((message): message is string => Boolean(message));
-
-    if (nestedMessages.length) {
-      return [...new Set(nestedMessages)].join('; ');
     }
   }
 

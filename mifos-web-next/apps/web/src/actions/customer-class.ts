@@ -11,7 +11,10 @@
 import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
-  validateUpsertCustomerClass,
+  validateCreateCustomerClass,
+  validateUpdateCustomerClass,
+  type CustomerClassUpdateClearFields,
+  type UpdateCustomerClassInput,
   type UpsertCustomerClassInput
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
@@ -60,7 +63,7 @@ export async function createCustomerClassAction(
     return { ok: false, message: 'You do not have permission to create customer classes.' };
   }
 
-  const parsed = validateUpsertCustomerClass(input);
+  const parsed = validateCreateCustomerClass(input);
   if (!parsed.success) {
     return {
       ok: false,
@@ -80,7 +83,8 @@ export async function createCustomerClassAction(
 
 export async function updateCustomerClassAction(
   customerClassId: number,
-  input: UpsertCustomerClassInput
+  input: UpdateCustomerClassInput,
+  clear: CustomerClassUpdateClearFields
 ): Promise<CustomerClassActionResult> {
   const session = await getServerSession();
   try {
@@ -89,7 +93,7 @@ export async function updateCustomerClassAction(
     return { ok: false, message: 'You do not have permission to update customer classes.' };
   }
 
-  const parsed = validateUpsertCustomerClass(input);
+  const parsed = validateUpdateCustomerClass(input);
   if (!parsed.success) {
     return {
       ok: false,
@@ -99,7 +103,7 @@ export async function updateCustomerClassAction(
   }
 
   try {
-    const response = await updateCustomerClass(customerClassId, parsed.data);
+    const response = await updateCustomerClass(customerClassId, parsed.data, clear);
     revalidateCustomerClassViews(response.resourceId);
     return { ok: true, resourceId: response.resourceId };
   } catch (error) {

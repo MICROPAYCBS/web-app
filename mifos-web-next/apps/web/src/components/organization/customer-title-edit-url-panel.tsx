@@ -8,48 +8,44 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CustomerClass, CustomerClassTemplate } from '@mifos/api-client';
+import type { CustomerTitle, CustomerTitleTemplate } from '@mifos/api-client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
-import { CustomerClassFormSheet } from '@/components/organization/customer-class-form-sheet';
+import { CustomerTitleFormSheet } from '@/components/organization/customer-title-form-sheet';
 
-function customerClassRevision(customerClass: CustomerClass): string {
+function customerTitleRevision(customerTitle: CustomerTitle): string {
   return [
-    customerClass.classCode,
-    customerClass.className,
-    customerClass.description ?? '',
-    customerClass.legalFormId ?? '',
-    customerClass.customerType ?? '',
-    customerClass.riskLevel ?? '',
-    customerClass.kycLevel ?? '',
-    customerClass.restrictionId ?? '',
-    customerClass.status ?? ''
+    customerTitle.titleCode,
+    customerTitle.titleName,
+    customerTitle.genderId ?? '',
+    customerTitle.displayOrder ?? '',
+    customerTitle.status ?? ''
   ].join('|');
 }
 
-export function CustomerClassEditUrlPanel({
-  customerClasses,
+export function CustomerTitleEditUrlPanel({
+  customerTitles,
   template
 }: {
-  customerClasses: CustomerClass[];
-  template: CustomerClassTemplate;
+  customerTitles: CustomerTitle[];
+  template: CustomerTitleTemplate;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
-  const customerClass =
-    editId != null ? customerClasses.find((row) => String(row.id) === editId) : undefined;
-  const open = customerClass != null;
+  const customerTitle =
+    editId != null ? customerTitles.find((row) => String(row.id) === editId) : undefined;
+  const open = customerTitle != null;
 
   useEffect(() => {
-    if (editId != null && editId !== '' && customerClass == null) {
+    if (editId != null && editId !== '' && customerTitle == null) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete('edit');
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     }
-  }, [editId, customerClass, pathname, router, searchParams]);
+  }, [editId, customerTitle, pathname, router, searchParams]);
 
   function handleOpenChange(next: boolean) {
     if (!next && editId != null) {
@@ -60,17 +56,17 @@ export function CustomerClassEditUrlPanel({
     }
   }
 
-  if (!customerClass) {
+  if (!customerTitle) {
     return null;
   }
 
   return (
-    <CustomerClassFormSheet
-      key={`${customerClass.id}:${customerClassRevision(customerClass)}`}
+    <CustomerTitleFormSheet
+      key={`${customerTitle.id}:${customerTitleRevision(customerTitle)}`}
       open={open}
       onOpenChange={handleOpenChange}
       mode="edit"
-      customerClass={customerClass}
+      customerTitle={customerTitle}
       template={template}
     />
   );

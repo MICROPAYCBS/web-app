@@ -9,9 +9,22 @@
  */
 
 import type { CustomerClass, CustomerClassTemplate } from '@mifos/api-client';
-import { formatActionErrorMessage } from '@mifos/validation';
+import {
+  formatActionErrorMessage,
+  LEGAL_FORM_ENTITY,
+  LEGAL_FORM_PERSON,
+  parseCreateCustomerTypeField,
+  parseCustomerClassKycLevelField,
+  parseCustomerClassLegalFormId,
+  parseCustomerClassRiskLevelField,
+  parseCustomerClassStatusField,
+  parseUpdateCustomerTypeField,
+  type CustomerClassUpdateClearFields,
+  type UpdateCustomerClassInput,
+  type UpsertCustomerClassInput
+} from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useId, useState, useTransition } from 'react';
+import { useEffect, useId, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   createCustomerClassAction,
@@ -30,6 +43,7 @@ type CustomerClassFormState = {
   classCode: string;
   className: string;
   description: string;
+  legalFormId: string;
   customerType: string;
   riskLevel: string;
   kycLevel: string;
@@ -52,6 +66,7 @@ function defaultFormState(): CustomerClassFormState {
     classCode: '',
     className: '',
     description: '',
+    legalFormId: String(LEGAL_FORM_PERSON),
     customerType: '',
     riskLevel: '',
     kycLevel: '',
@@ -75,6 +90,7 @@ function formStateFromCustomerClass(customerClass: CustomerClass): CustomerClass
     classCode: customerClass.classCode,
     className: customerClass.className,
     description: customerClass.description ?? '',
+    legalFormId: String(customerClass.legalFormId ?? LEGAL_FORM_PERSON),
     customerType: customerClass.customerType ?? '',
     riskLevel: customerClass.riskLevel ?? '',
     kycLevel: customerClass.kycLevel ?? '',
@@ -97,11 +113,103 @@ function toOptions(values: string[]) {
   return values.map((value) => ({ value, label: value.replaceAll('_', ' ') }));
 }
 
+function segmentOptions(template: CustomerClassTemplate, currentValue?: string) {
+  const values = [...template.customerTypeOptions];
+  if (currentValue && !values.includes(currentValue)) {
+    values.unshift(currentValue);
+  }
+  return toOptions(values);
+}
+
+function legalFormOptions(template: CustomerClassTemplate) {
+  return template.legalFormOptions.map((option) => ({
+    value: String(option.id),
+    label: option.name
+  }));
+}
+
+function customerClassRevision(customerClass: CustomerClass): string {
+  return [
+    customerClass.classCode,
+    customerClass.className,
+    customerClass.description ?? '',
+    customerClass.legalFormId ?? '',
+    customerClass.customerType ?? '',
+    customerClass.riskLevel ?? '',
+    customerClass.kycLevel ?? '',
+    customerClass.restrictionId ?? '',
+    customerClass.status ?? ''
+  ].join('|');
+}
+
 function restrictionOptions(template: CustomerClassTemplate) {
   return template.restrictionOptions.map((option) => ({
     value: String(option.id),
     label: `${option.restrictionCode} — ${option.restrictionName}`
   }));
+}
+
+function buildCreateSubmitInput(
+  form: CustomerClassFormState,
+  isPersonLegalForm: boolean
+): UpsertCustomerClassInput {
+  const shared = buildSharedSubmitFields(form, isPersonLegalForm);
+  return {
+    ...shared,
+    customerType: parseCreateCustomerTypeField(form.customerType)
+  };
+}
+
+function buildSubmitInput(
+  form: CustomerClassFormState,
+  isPersonLegalForm: boolean
+): UpdateCustomerClassInput {
+  const shared = buildSharedSubmitFields(form, isPersonLegalForm);
+  return {
+    ...shared,
+    customerType: parseUpdateCustomerTypeField(form.customerType)
+  };
+}
+
+function buildSharedSubmitFields(
+  form: CustomerClassFormState,
+  isPersonLegalForm: boolean
+) {
+  return {
+    classCode: form.classCode,
+    className: form.className,
+    description: form.description.trim() || undefined,
+    legalFormId: parseCustomerClassLegalFormId(form.legalFormId),
+    riskLevel: parseCustomerClassRiskLevelField(form.riskLevel),
+    kycLevel: parseCustomerClassKycLevelField(form.kycLevel),
+    loanEligible: form.loanEligible,
+    restrictionId: form.restrictionId ? Number(form.restrictionId) : undefined,
+    overdraftAllowed: form.overdraftAllowed,
+    enhancedDueDiligence: form.enhancedDueDiligence,
+    reclassificationAllowed: form.reclassificationAllowed,
+    minAge: isPersonLegalForm && form.minAge.trim() ? Number(form.minAge) : undefined,
+    maxAge: isPersonLegalForm && form.maxAge.trim() ? Number(form.maxAge) : undefined,
+    enforceCustPhoto: form.enforceCustPhoto,
+    enforceCustSignature: form.enforceCustSignature,
+    enforceCustDocument: form.enforceCustDocument,
+    autoCreateAccount: form.autoCreateAccount,
+    status: parseCustomerClassStatusField(form.status)
+  };
+}
+
+function buildUpdateClearFields(
+  form: CustomerClassFormState,
+  isPersonLegalForm: boolean
+): CustomerClassUpdateClearFields {
+  return {
+    description: !form.description.trim(),
+    customerType: !form.customerType,
+    riskLevel: !form.riskLevel,
+    kycLevel: !form.kycLevel,
+    restrictionId: !form.restrictionId,
+    minAge: !isPersonLegalForm || !form.minAge.trim(),
+    maxAge: !isPersonLegalForm || !form.maxAge.trim()
+  };
 }
 
 export function CustomerClassFormSheet({
@@ -125,6 +233,20 @@ export function CustomerClassFormSheet({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const isPersonLegalForm = form.legalFormId === String(LEGAL_FORM_PERSON);
+  const editSnapshot =
+    mode === 'edit' && customerClass != null
+      ? `${customerClass.id}:${customerClassRevision(customerClass)}`
+      : null;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setForm(customerClass ? formStateFromCustomerClass(customerClass) : defaultFormState());
+    setFieldErrors({});
+    setSubmitError(null);
+  }, [open, editSnapshot]);
 
   function handleOpenChange(next: boolean) {
     if (pending) {
@@ -147,32 +269,15 @@ export function CustomerClassFormSheet({
     setSubmitError(null);
     setFieldErrors({});
 
-    const payload = {
-      classCode: form.classCode,
-      className: form.className,
-      description: form.description.trim() || undefined,
-      customerType: form.customerType || undefined,
-      riskLevel: form.riskLevel || undefined,
-      kycLevel: form.kycLevel || undefined,
-      loanEligible: form.loanEligible,
-      restrictionId: form.restrictionId ? Number(form.restrictionId) : undefined,
-      overdraftAllowed: form.overdraftAllowed,
-      enhancedDueDiligence: form.enhancedDueDiligence,
-      reclassificationAllowed: form.reclassificationAllowed,
-      minAge: form.minAge.trim() ? Number(form.minAge) : undefined,
-      maxAge: form.maxAge.trim() ? Number(form.maxAge) : undefined,
-      enforceCustPhoto: form.enforceCustPhoto,
-      enforceCustSignature: form.enforceCustSignature,
-      enforceCustDocument: form.enforceCustDocument,
-      autoCreateAccount: form.autoCreateAccount,
-      status: form.status as 'ACTIVE' | 'INACTIVE'
-    };
-
     startTransition(async () => {
       const result =
         mode === 'create'
-          ? await createCustomerClassAction(payload)
-          : await updateCustomerClassAction(customerClass!.id, payload);
+          ? await createCustomerClassAction(buildCreateSubmitInput(form, isPersonLegalForm))
+          : await updateCustomerClassAction(
+              customerClass!.id,
+              buildSubmitInput(form, isPersonLegalForm),
+              buildUpdateClearFields(form, isPersonLegalForm)
+            );
 
       if (!result.ok) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
@@ -183,8 +288,8 @@ export function CustomerClassFormSheet({
       }
 
       toast.success(mode === 'create' ? 'Customer class created.' : 'Customer class updated.');
-      handleOpenChange(false);
       router.refresh();
+      handleOpenChange(false);
     });
   }
 
@@ -236,12 +341,18 @@ export function CustomerClassFormSheet({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField
-            label="Customer type"
-            value={form.customerType || undefined}
-            onValueChange={(value) => patchForm({ customerType: value ?? '' })}
-            options={toOptions(template.customerTypeOptions)}
-            placeholder="Select customer type"
-            error={fieldErrors.customerType}
+            label="Legal form"
+            value={form.legalFormId}
+            onValueChange={(value) =>
+              patchForm({
+                legalFormId: value ?? String(LEGAL_FORM_PERSON),
+                minAge: value === String(LEGAL_FORM_ENTITY) ? '' : form.minAge,
+                maxAge: value === String(LEGAL_FORM_ENTITY) ? '' : form.maxAge
+              })
+            }
+            options={legalFormOptions(template)}
+            error={fieldErrors.legalFormId}
+            required
             disabled={pending}
           />
           <SelectField
@@ -250,6 +361,15 @@ export function CustomerClassFormSheet({
             onValueChange={(value) => patchForm({ status: value ?? 'ACTIVE' })}
             options={toOptions(template.statusOptions)}
             error={fieldErrors.status}
+            disabled={pending}
+          />
+          <SelectField
+            label="Segment"
+            value={form.customerType || undefined}
+            onValueChange={(value) => patchForm({ customerType: value ?? '' })}
+            options={segmentOptions(template, form.customerType || undefined)}
+            placeholder="No segment"
+            error={fieldErrors.customerType}
             disabled={pending}
           />
           <SelectField
@@ -287,14 +407,14 @@ export function CustomerClassFormSheet({
             value={form.minAge}
             onChange={(value) => patchForm({ minAge: value })}
             error={fieldErrors.minAge}
-            disabled={pending}
+            disabled={pending || !isPersonLegalForm}
           />
           <NumericField
             label="Maximum age"
             value={form.maxAge}
             onChange={(value) => patchForm({ maxAge: value })}
             error={fieldErrors.maxAge}
-            disabled={pending}
+            disabled={pending || !isPersonLegalForm}
           />
         </div>
 

@@ -15,6 +15,7 @@ import { DetailHeader, EmptyValue } from '@/components/composites';
 import { Badge } from '@/components/ui/badge';
 import { ClientDetailActionsMenu } from '@/components/clients/detail/client-detail-actions-menu';
 import { enumOptionLabel, isClientEntity } from '@/lib/fineract/client-detail-labels';
+import { formatCustomerClassLabel } from '@/lib/fineract/customer-class-eligibility';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
@@ -135,14 +136,14 @@ function ClientHeaderKeyInfo({
   );
 }
 
-function ClientHeaderClassification({
+function ClientHeaderProfiling({
   clientType,
-  clientClassification
+  customerClassName
 }: {
   clientType?: string;
-  clientClassification?: string;
+  customerClassName?: string;
 }) {
-  const parts = [clientType, clientClassification].filter(Boolean);
+  const parts = [clientType, customerClassName].filter(Boolean);
   if (parts.length === 0) {
     return null;
   }
@@ -236,9 +237,9 @@ export function ClientDetailTop({
                     <Badge variant="outline">Staff customer</Badge>
                   ) : null}
                 </div>
-                <ClientHeaderClassification
+                <ClientHeaderProfiling
                   clientType={enumOptionLabel(client.clientType)}
-                  clientClassification={enumOptionLabel(client.clientClassification)}
+                  customerClassName={formatCustomerClassLabel(client.customerClass)}
                 />
                 <ClientHeaderGroups groups={groups} />
                 <ClientHeaderDates

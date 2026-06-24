@@ -47,7 +47,9 @@ export function PreviewStep({
   const office = template.officeOptions.find((o) => o.id === g.officeId);
   const legalForm = template.clientLegalFormOptions?.find((o) => o.id === g.legalFormId);
   const gender = template.genderOptions?.find((o) => o.id === g.genderId);
-  const title = template.titleOptions?.find((o) => o.id === g.titleId);
+  const titleLabel =
+    template.clientTitleOptions?.find((o) => o.id === g.titleId)?.titleName ??
+    template.titleOptions?.find((o) => o.id === g.titleId)?.name;
   const nationality = template.nationalityOptions?.find((o) => o.id === g.nationalityCountryId);
   const riskProfile = template.customerRiskProfileOptions?.find(
     (o) => o.id === g.customerRiskProfileId
@@ -55,9 +57,6 @@ export function PreviewStep({
   const customerClass = template.customerClassOptions?.find((c) => c.id === g.customerClassId);
   const staff = template.staffOptions?.find((o) => o.id === g.staffId);
   const clientType = template.clientTypeOptions?.find((o) => o.id === g.clientTypeId);
-  const clientClassification = template.clientClassificationOptions?.find(
-    (o) => o.id === g.clientClassificationId
-  );
   const isPerson = (g.legalFormId ?? LEGAL_FORM_PERSON) === LEGAL_FORM_PERSON;
 
   function incomeSourceTypeLabel(incomeSourceTypeId: number): string | undefined {
@@ -116,7 +115,7 @@ export function PreviewStep({
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Biodata</h2>
         {isPerson ? (
-          <Field label="Title" value={title?.name ?? title?.value} />
+          <Field label="Title" value={titleLabel} />
         ) : null}
         {isPerson ? (
           <Field
@@ -153,10 +152,6 @@ export function PreviewStep({
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Customer profiling</h2>
         <Field label="Customer type" value={clientType?.name ?? clientType?.value} />
-        <Field
-          label="Customer classification"
-          value={clientClassification?.name ?? clientClassification?.value}
-        />
         <Field label="Tax identification number (TIN)" value={g.taxIdentificationNumber} />
         {g.subIndustryId != null ? (
           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -196,6 +191,35 @@ export function PreviewStep({
                   </li>
                 );
               })}
+            </ul>
+          </section>
+        </>
+      ) : null}
+
+      {template.isAddressEnabled && draft.addresses.length === 0 ? (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium text-destructive">Address</h2>
+            <p className="text-sm text-muted-foreground">
+              No address added yet. Go back to the Address step and add at least one address.
+            </p>
+          </section>
+        </>
+      ) : null}
+
+      {draft.addresses.length > 0 ? (
+        <>
+          <Separator />
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium">Addresses ({draft.addresses.length})</h2>
+            <ul className="list-disc pl-5 text-sm">
+              {draft.addresses.map((a, i) => (
+                <li key={i}>
+                  {[a.street, a.city].filter(Boolean).join(', ') || `Address ${i + 1}`}
+                  {a.isPrimary ? ' (Primary)' : ''}
+                </li>
+              ))}
             </ul>
           </section>
         </>
@@ -265,35 +289,6 @@ export function PreviewStep({
               {draft.complianceProfile.dpfAlternativeBankName ? (
                 <li>DPF bank: {draft.complianceProfile.dpfAlternativeBankName}</li>
               ) : null}
-            </ul>
-          </section>
-        </>
-      ) : null}
-
-      {template.isAddressEnabled && draft.addresses.length === 0 ? (
-        <>
-          <Separator />
-          <section className="space-y-2">
-            <h2 className="text-sm font-medium text-destructive">Address</h2>
-            <p className="text-sm text-muted-foreground">
-              No address added yet. Go back to the Address step and add at least one address.
-            </p>
-          </section>
-        </>
-      ) : null}
-
-      {draft.addresses.length > 0 ? (
-        <>
-          <Separator />
-          <section className="space-y-2">
-            <h2 className="text-sm font-medium">Addresses ({draft.addresses.length})</h2>
-            <ul className="list-disc pl-5 text-sm">
-              {draft.addresses.map((a, i) => (
-                <li key={i}>
-                  {[a.street, a.city].filter(Boolean).join(', ') || `Address ${i + 1}`}
-                  {a.isPrimary ? ' (Primary)' : ''}
-                </li>
-              ))}
             </ul>
           </section>
         </>

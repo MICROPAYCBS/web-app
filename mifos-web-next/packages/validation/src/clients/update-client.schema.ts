@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { GENDER_FEMALE, GENDER_MALE } from './gender';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 import { clientNonPersonDetailsSchema } from './create-client.schema';
 import { optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
@@ -14,6 +15,7 @@ import { optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 const namePattern = /^[A-Za-z].*/;
 const fineractDate = z.string().trim().min(1);
 const optionalFineractDate = z.string().trim().optional();
+const clientGenderIdSchema = z.union([z.literal(GENDER_MALE), z.literal(GENDER_FEMALE)]);
 
 const updateClientBaseSchema = z.object({
   staffId: z.coerce.number().int().positive().optional(),
@@ -30,10 +32,9 @@ const updateClientBaseSchema = z.object({
   nationalityCountryId: z.coerce.number().int().positive().optional(),
   customerRiskProfileId: z.coerce.number().int().positive().optional(),
   dateOfBirth: optionalFineractDate,
-  genderId: z.coerce.number().int().positive().optional(),
+  genderId: clientGenderIdSchema.optional(),
   isStaff: z.boolean().optional(),
   clientTypeId: z.coerce.number().int().positive().optional(),
-  clientClassificationId: z.coerce.number().int().positive().optional(),
   submittedOnDate: fineractDate,
   active: z.boolean(),
   activationDate: optionalFineractDate,

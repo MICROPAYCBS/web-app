@@ -307,6 +307,26 @@
       "DELETE_CUSTOMERCLASS"
     ]
   },
+  "organization.customerTitles": {
+    "any": [
+      "READ_CLIENTTITLE"
+    ]
+  },
+  "organization.customerTitles.create": {
+    "any": [
+      "CREATE_CLIENTTITLE"
+    ]
+  },
+  "organization.customerTitles.update": {
+    "any": [
+      "UPDATE_CLIENTTITLE"
+    ]
+  },
+  "organization.customerTitles.delete": {
+    "any": [
+      "DELETE_CLIENTTITLE"
+    ]
+  },
   "organization.passwordPreferences": {
     "any": [
       "READ_CONFIGURATION"
