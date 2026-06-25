@@ -8,12 +8,8 @@
 
 import { redirect } from 'next/navigation';
 import { ClientsPageContent } from '@/components/clients/clients-page-content';
-import { fetchClientsList } from '@/lib/fineract/clients-list';
-import {
-  clientListSortColumnFromField,
-  type ClientListSortColumn,
-  type ClientListSortOrder
-} from '@/lib/fineract/clients-list-query';
+import { fetchClientsForTable } from '@/lib/fineract/clients-list';
+import { listOfficeOptions } from '@/lib/fineract/offices';
 
 export default async function ClientsPage({
   searchParams
@@ -25,33 +21,17 @@ export default async function ClientsPage({
     redirect('/clients/create');
   }
 
-  const pageIndex = Math.max(0, Number(params.page ?? '0') || 0);
-  const limit = Math.max(1, Number(params.limit ?? '25') || 25);
-  const query = typeof params.query === 'string' ? params.query.trim() : '';
-  const includeClosed = params.includeClosed === 'true';
-  const orderBy = typeof params.orderBy === 'string' ? params.orderBy : 'id';
-  const sortOrder: ClientListSortOrder =
-    params.sortOrder === 'ASC' || params.sortOrder === 'DESC' ? params.sortOrder : 'DESC';
-  const sortColumn: ClientListSortColumn =
-    clientListSortColumnFromField(orderBy) ?? 'id';
-
-  const initialPage = await fetchClientsList({
-    offset: pageIndex * limit,
-    limit,
-    query: query || undefined,
-    includeClosed,
-    orderBy,
-    sortOrder
-  });
+  const [{ clients, totalRecords, truncated }, offices] = await Promise.all([
+    fetchClientsForTable(),
+    listOfficeOptions()
+  ]);
 
   return (
     <ClientsPageContent
-      initialPage={initialPage}
-      initialPageSize={limit}
-      initialQuery={query}
-      initialIncludeClosed={includeClosed}
-      initialSortColumn={sortColumn}
-      initialSortOrder={sortOrder}
+      clients={clients}
+      offices={offices}
+      truncated={truncated}
+      totalRecords={totalRecords}
     />
   );
 }

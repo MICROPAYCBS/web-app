@@ -8,33 +8,30 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientSummary, FineractClientsPage } from '@mifos/api-client';
+import type { FineractClientSummary } from '@mifos/api-client';
 import {
   getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
   type ColumnDef,
-  type PaginationState
+  type PaginationState,
+  type SortingState
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  buildClientsListApiQuery,
-  CLIENTS_LIST_DEBOUNCE_MS,
-  clientListSortField,
-  type ClientListSortColumn,
-  type ClientListSortOrder
-} from '@/lib/fineract/clients-list-query';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
-import { cn } from '@/lib/utils';
+import {
+  filterClientsForTable,
+  type ClientListFilters
+} from '@/lib/fineract/clients-table-filter';
 
 function statusVariant(code?: string): 'default' | 'secondary' | 'outline' | 'destructive' {
   if (!code) {
@@ -49,25 +46,16 @@ function statusVariant(code?: string): 'default' | 'secondary' | 'outline' | 'de
   return 'outline';
 }
 
-function SortableHeader({
+function SortableColumnHeader({
   label,
-  column,
-  activeColumn,
-  sortOrder,
-  onSort
+  sorted,
+  onToggle
 }: {
   label: string;
-  column: ClientListSortColumn;
-  activeColumn?: ClientListSortColumn;
-  sortOrder?: ClientListSortOrder;
-  onSort: (column: ClientListSortColumn) => void;
+  sorted: false | 'asc' | 'desc';
+  onToggle: () => void;
 }) {
-  const isActive = activeColumn === column;
-  const Icon = isActive
-    ? sortOrder === 'ASC'
-      ? ArrowUp
-      : ArrowDown
-    : ArrowUpDown;
+  const Icon = sorted === 'asc' ? ArrowUp : sorted === 'desc' ? ArrowDown : ArrowUpDown;
 
   return (
     <Button
@@ -75,7 +63,7 @@ function SortableHeader({
       variant="ghost"
       size="sm"
       className="-ml-3 h-8 gap-1 font-medium"
-      onClick={() => onSort(column)}
+      onClick={onToggle}
     >
       {label}
       <Icon className="size-3.5 opacity-60" aria-hidden />
@@ -84,143 +72,44 @@ function SortableHeader({
 }
 
 export function ClientsTable({
-  initialPage,
-  initialPageSize = 25,
-  initialQuery = '',
-  initialIncludeClosed = false,
-  initialSortColumn = 'id',
-  initialSortOrder = 'DESC'
+  clients,
+  appliedFilters,
+  truncated = false,
+  totalRecords,
+  filterTrigger
 }: {
-  initialPage: FineractClientsPage;
-  initialPageSize?: number;
-  initialQuery?: string;
-  initialIncludeClosed?: boolean;
-  initialSortColumn?: ClientListSortColumn;
-  initialSortOrder?: ClientListSortOrder;
+  clients: FineractClientSummary[];
+  appliedFilters: ClientListFilters;
+  truncated?: boolean;
+  totalRecords?: number;
+  filterTrigger?: ReactNode;
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [data, setData] = useState(initialPage);
+  const [search, setSearch] = useState('');
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'accountNo', desc: false }]);
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: Number(searchParams.get('page') ?? '0') || 0,
-    pageSize: initialPageSize
+    pageIndex: 0,
+    pageSize: 25
   });
-  const [query, setQuery] = useState(initialQuery);
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  const [includeClosed, setIncludeClosed] = useState(initialIncludeClosed);
-  const [sortColumn, setSortColumn] = useState<ClientListSortColumn>(initialSortColumn);
-  const [sortOrder, setSortOrder] = useState<ClientListSortOrder>(initialSortOrder);
-  const [pending, startTransition] = useTransition();
-  const skipInitialFetch = useRef(true);
-  const filterKey = `${debouncedQuery}|${includeClosed}|${sortColumn}|${sortOrder}`;
-  const prevFilterKey = useRef(filterKey);
 
-  const handleSort = useCallback((column: ClientListSortColumn) => {
-    if (sortColumn === column) {
-      setSortOrder((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'));
-      return;
-    }
-    setSortColumn(column);
-    setSortOrder('ASC');
-  }, [sortColumn]);
-
-  const syncUrl = useCallback(
-    (next: {
-      query: string;
-      includeClosed: boolean;
-      sortColumn: ClientListSortColumn;
-      sortOrder: ClientListSortOrder;
-      pageIndex: number;
-      pageSize: number;
-    }) => {
-      const apiQuery = buildClientsListApiQuery({
-        offset: next.pageIndex * next.pageSize,
-        limit: next.pageSize,
-        query: next.query,
-        includeClosed: next.includeClosed,
-        orderBy: clientListSortField(next.sortColumn),
-        sortOrder: next.sortOrder
-      });
-      const params = new URLSearchParams(apiQuery);
-      if (next.pageIndex > 0) {
-        params.set('page', String(next.pageIndex));
-      }
-      const qs = params.toString();
-      router.replace(qs ? `/clients?${qs}` : '/clients', { scroll: false });
-    },
-    [router]
-  );
-
-  const fetchPage = useCallback(
-    (next: {
-      pagination: PaginationState;
-      query: string;
-      includeClosed: boolean;
-      sortColumn: ClientListSortColumn;
-      sortOrder: ClientListSortOrder;
-    }) => {
-      startTransition(async () => {
-        const offset = next.pagination.pageIndex * next.pagination.pageSize;
-        const apiQuery = buildClientsListApiQuery({
-          offset,
-          limit: next.pagination.pageSize,
-          query: next.query,
-          includeClosed: next.includeClosed,
-          orderBy: clientListSortField(next.sortColumn),
-          sortOrder: next.sortOrder
-        });
-        const res = await fetch(`/api/clients?${apiQuery}`, { credentials: 'include' });
-        if (!res.ok) {
-          return;
-        }
-        const json = (await res.json()) as FineractClientsPage;
-        setData(json);
-        syncUrl({
-          query: next.query,
-          includeClosed: next.includeClosed,
-          sortColumn: next.sortColumn,
-          sortOrder: next.sortOrder,
-          pageIndex: next.pagination.pageIndex,
-          pageSize: next.pagination.pageSize
-        });
-      });
-    },
-    [syncUrl]
+  const filteredClients = useMemo(
+    () => filterClientsForTable(clients, search, appliedFilters),
+    [clients, search, appliedFilters]
   );
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedQuery(query);
-    }, CLIENTS_LIST_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [query]);
-
-  useEffect(() => {
-    if (prevFilterKey.current !== filterKey) {
-      prevFilterKey.current = filterKey;
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    }
-  }, [filterKey]);
-
-  useEffect(() => {
-    if (skipInitialFetch.current) {
-      skipInitialFetch.current = false;
-      return;
-    }
-    fetchPage({ pagination, query: debouncedQuery, includeClosed, sortColumn, sortOrder });
-  }, [pagination, debouncedQuery, includeClosed, sortColumn, sortOrder, fetchPage]);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }, [appliedFilters, search]);
 
   const columns = useMemo<ColumnDef<FineractClientSummary>[]>(
     () => [
       {
+        id: 'accountNo',
         accessorKey: 'accountNo',
-        header: () => (
-          <SortableHeader
+        header: ({ column }) => (
+          <SortableColumnHeader
             label="Account no."
-            column="accountNo"
-            activeColumn={sortColumn}
-            sortOrder={sortOrder}
-            onSort={handleSort}
+            sorted={column.getIsSorted()}
+            onToggle={() => column.toggleSorting()}
           />
         ),
         cell: ({ row }) => (
@@ -234,13 +123,12 @@ export function ClientsTable({
       },
       {
         id: 'displayName',
-        header: () => (
-          <SortableHeader
+        accessorFn: (row) => clientDisplayName(row),
+        header: ({ column }) => (
+          <SortableColumnHeader
             label="Name"
-            column="displayName"
-            activeColumn={sortColumn}
-            sortOrder={sortOrder}
-            onSort={handleSort}
+            sorted={column.getIsSorted()}
+            onToggle={() => column.toggleSorting()}
           />
         ),
         cell: ({ row }) => (
@@ -253,29 +141,17 @@ export function ClientsTable({
         )
       },
       {
+        id: 'officeName',
         accessorKey: 'officeName',
-        header: () => (
-          <SortableHeader
-            label="Branch"
-            column="officeName"
-            activeColumn={sortColumn}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-          />
-        ),
+        enableSorting: false,
+        header: 'Branch',
         cell: ({ row }) => row.original.officeName ?? '—'
       },
       {
         id: 'status',
-        header: () => (
-          <SortableHeader
-            label="Status"
-            column="status"
-            activeColumn={sortColumn}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-          />
-        ),
+        accessorFn: (row) => row.status?.value ?? '',
+        enableSorting: false,
+        header: 'Status',
         cell: ({ row }) => (
           <Badge variant={statusVariant(row.original.status?.code)}>
             {row.original.status?.value ?? '—'}
@@ -283,82 +159,93 @@ export function ClientsTable({
         )
       },
       {
+        id: 'mobileNo',
+        accessorKey: 'mobileNo',
+        enableSorting: false,
+        header: 'Phone',
+        cell: ({ row }) => row.original.mobileNo?.trim() || '—'
+      },
+      {
+        id: 'emailAddress',
+        accessorKey: 'emailAddress',
+        enableSorting: false,
+        header: 'Email',
+        cell: ({ row }) => (
+          <span className="break-all">{row.original.emailAddress?.trim() || '—'}</span>
+        )
+      },
+      {
+        id: 'externalId',
         accessorKey: 'externalId',
-        header: () => (
-          <SortableHeader
+        header: ({ column }) => (
+          <SortableColumnHeader
             label="External ID"
-            column="externalId"
-            activeColumn={sortColumn}
-            sortOrder={sortOrder}
-            onSort={handleSort}
+            sorted={column.getIsSorted()}
+            onToggle={() => column.toggleSorting()}
           />
         ),
         cell: ({ row }) => row.original.externalId ?? '—'
       }
     ],
-    [sortColumn, sortOrder, handleSort]
+    []
   );
 
-  const pageCount = Math.max(1, Math.ceil(data.totalFilteredRecords / pagination.pageSize));
-
   const table = useReactTable({
-    data: data.pageItems,
+    data: filteredClients,
     columns,
-    pageCount,
-    state: { pagination },
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
     onPaginationChange: (updater) => {
-      setPagination((prev) => (typeof updater === 'function' ? updater(prev) : updater));
+      setPagination((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        return next;
+      });
     },
     getCoreRowModel: getCoreRowModel(),
-    manualPagination: true
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    autoResetPageIndex: true
   });
+
+  const loadedCount = clients.length;
+  const serverTotal = totalRecords ?? loadedCount;
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-        <div className="relative min-w-0 flex-1 sm:max-w-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="relative min-w-0 max-w-md flex-1">
           <Search
             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <Input
-            placeholder="Search customers…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                setDebouncedQuery(query.trim());
-              }
-            }}
+            placeholder="Search name, account no., phone, email…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             className="pl-9"
             aria-label="Search customers"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="clients-show-closed"
-            checked={includeClosed}
-            onCheckedChange={(checked) => setIncludeClosed(checked === true)}
-          />
-          <Label htmlFor="clients-show-closed" className="cursor-pointer text-sm font-normal">
-            Show closed customers
-          </Label>
-        </div>
+        {filterTrigger ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">{filterTrigger}</div>
+        ) : null}
       </div>
-      <p className={cn('text-xs text-muted-foreground', pending && 'opacity-70')}>
-        {debouncedQuery.trim()
-          ? 'Searching all customers on the server.'
-          : includeClosed
-            ? 'Showing all customer statuses.'
-            : 'Hiding closed, rejected, and withdrawn customers.'}
+
+      <p className="text-xs text-muted-foreground">
+        {truncated
+          ? `Showing the first ${loadedCount.toLocaleString()} of ${serverTotal.toLocaleString()} customers. Narrow branch or status filters to refine results.`
+          : `Searching ${loadedCount.toLocaleString()} customer${loadedCount === 1 ? '' : 's'} on this page.`}
+        {filteredClients.length !== loadedCount
+          ? ` ${filteredClients.length.toLocaleString()} match your filters.`
+          : null}
       </p>
+
       <DataTable
         table={table}
-        isLoading={pending}
         emptyMessage="No customers found"
-        emptyDescription="Try a different search or include closed customers."
+        emptyDescription="Try a different search or adjust branch and status filters."
       />
-      <DataTablePagination table={table} totalRecords={data.totalFilteredRecords} />
+      <DataTablePagination table={table} totalRecords={filteredClients.length} />
     </div>
   );
 }

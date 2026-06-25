@@ -245,8 +245,14 @@ export interface FineractClientSummary {
   displayName?: string;
   firstname?: string;
   lastname?: string;
+  fullname?: string;
+  officeId?: number;
   officeName?: string;
   staffName?: string;
+  mobileNo?: string;
+  emailAddress?: string;
+  alternativeMobileNo?: string;
+  alternativeEmailAddress?: string;
 }
 
 export interface FineractClientsPage {

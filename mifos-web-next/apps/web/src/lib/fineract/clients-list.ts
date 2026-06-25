@@ -11,6 +11,7 @@ import 'server-only';
 import type { FineractClientSummary, FineractClientsPage, FineractEnumOption } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { searchClientEntities } from '@/lib/fineract/search';
+import { CLIENTS_TABLE_FETCH_LIMIT } from '@/lib/fineract/clients-table-filter';
 
 /** Fineract `status_enum` values for closed / terminal client states. */
 const CLOSED_CLIENT_STATUS_ENUMS = [600, 700, 701] as const;
@@ -200,6 +201,28 @@ async function listClientsPaged(params: FetchClientsListParams): Promise<Finerac
 
   const raw = await fineract.get<FineractClientsPage>('/clients', searchParams);
   return raw;
+}
+
+/** Load customers for the list table (client-side filter, search, and sort). */
+export async function fetchClientsForTable(): Promise<{
+  clients: FineractClientSummary[];
+  totalRecords: number;
+  truncated: boolean;
+}> {
+  const page = await listClientsPaged({
+    offset: 0,
+    limit: CLIENTS_TABLE_FETCH_LIMIT,
+    includeClosed: true,
+    orderBy: 'id',
+    sortOrder: 'DESC'
+  });
+  const clients = page.pageItems;
+  const totalRecords = page.totalFilteredRecords ?? clients.length;
+  return {
+    clients,
+    totalRecords,
+    truncated: totalRecords > clients.length
+  };
 }
 
 /** List or search clients with server pagination (GET /clients or POST /v2/clients/search). */
