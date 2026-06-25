@@ -3,12 +3,15 @@ import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { ServerAddForm } from '@/components/servers/server-add-form';
 import { SignOutButton } from '@/components/auth/sign-out-control';
 import { ServerSettingsRow } from '@/components/servers/server-settings-row';
+import { platformInset, platformScrollRegion } from '@/lib/platform-layout';
+import { cn } from '@/lib/utils';
 
 export default async function ServerSettingsPage() {
   const catalog = await getServerCatalog();
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
+    <div className={platformScrollRegion}>
+      <div className={cn(platformInset, 'mx-auto max-w-lg space-y-8')}>
       <div>
         <AppLink route="dashboard" className="text-sm text-muted-foreground hover:text-foreground">
           ← Back
@@ -48,6 +51,7 @@ export default async function ServerSettingsPage() {
       <div className="rounded-lg border border-border p-6">
         <h3 className="mb-4 text-sm font-semibold">Add server</h3>
         <ServerAddForm />
+      </div>
       </div>
     </div>
   );

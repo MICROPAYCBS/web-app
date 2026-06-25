@@ -176,7 +176,11 @@ export function SavingsAccountTableSectionSkeleton({
 /** Full chrome while the savings account page loads. */
 export function SavingsAccountShellSkeleton() {
   return (
-    <DetailPage header={<SavingsAccountHeaderSkeleton />} sidebar={<SavingsAccountSectionNavSkeleton />}>
+    <DetailPage
+      className="min-h-0 flex-1"
+      header={<SavingsAccountHeaderSkeleton />}
+      sidebar={<SavingsAccountSectionNavSkeleton />}
+    >
       <SavingsAccountSummarySkeleton />
     </DetailPage>
   );

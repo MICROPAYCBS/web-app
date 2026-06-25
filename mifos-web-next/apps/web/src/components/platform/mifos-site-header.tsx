@@ -15,9 +15,16 @@ import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 /** dashboard-01 header — opens global entity search (⌘K / /). Sidebar Find uses F. */
-export function MifosSiteHeader({ businessDateLabel }: { businessDateLabel?: string | null }) {
+export function MifosSiteHeader({
+  businessDateLabel,
+  businessDateIsNotToday = false
+}: {
+  businessDateLabel?: string | null;
+  businessDateIsNotToday?: boolean;
+}) {
   const { openEntitySearch } = useEntitySearch();
   const showBusinessDate = Boolean(businessDateLabel?.trim());
 
@@ -33,14 +40,36 @@ export function MifosSiteHeader({ businessDateLabel }: { businessDateLabel?: str
               render={
                 <Link
                   href="/system/business-date"
-                  className="inline-flex min-w-0 max-w-[min(100%,28rem)] items-center gap-2 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className={cn(
+                    'inline-flex min-w-0 max-w-[min(100%,28rem)] items-center gap-2 rounded-md border px-2 py-1 text-sm transition-colors',
+                    businessDateIsNotToday
+                      ? 'border-warning/40 bg-warning/10 text-warning-foreground hover:bg-warning/15'
+                      : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
                 >
-                  <Calendar className="size-4 shrink-0" aria-hidden />
-                  <span className="truncate font-medium text-foreground">{businessDateLabel}</span>
+                  <Calendar
+                    className={cn(
+                      'size-4 shrink-0',
+                      businessDateIsNotToday ? 'text-warning' : 'opacity-60'
+                    )}
+                    aria-hidden
+                  />
+                  <span
+                    className={cn(
+                      'truncate font-medium',
+                      !businessDateIsNotToday && 'text-foreground'
+                    )}
+                  >
+                    {businessDateLabel}
+                  </span>
                 </Link>
               }
             />
-            <TooltipContent side="bottom">Organisation business date</TooltipContent>
+            <TooltipContent side="bottom">
+              {businessDateIsNotToday
+                ? 'Organisation business date differs from today'
+                : 'Organisation business date'}
+            </TooltipContent>
           </Tooltip>
         ) : null}
 

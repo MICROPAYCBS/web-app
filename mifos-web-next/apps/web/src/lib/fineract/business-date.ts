@@ -26,7 +26,10 @@ import {
 } from '@/lib/fineract/dates';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import type { BusinessDateContextValue } from '@/lib/fineract/business-date-context';
-import { EMPTY_BUSINESS_DATE_CONTEXT } from '@/lib/fineract/business-date-context';
+import {
+  EMPTY_BUSINESS_DATE_CONTEXT,
+  isBusinessDateNotToday
+} from '@/lib/fineract/business-date-context';
 
 export const ENABLE_BUSINESS_DATE_CONFIG_NAME = 'enable-business-date';
 
@@ -159,7 +162,8 @@ export async function getBusinessDateContext(): Promise<BusinessDateContextValue
   return {
     enabled: true,
     date: formDate,
-    displayLabel: formatBusinessDateDisplayLabel(formDate) ?? formDate
+    displayLabel: formatBusinessDateDisplayLabel(formDate) ?? formDate,
+    isNotToday: isBusinessDateNotToday(formDate)
   };
 }
 

@@ -15,7 +15,7 @@ import { useBusinessDate } from '@/components/platform/business-date-provider';
 import { DateField, type DateFieldProps } from '@/components/composites/date-field';
 import { FormLabel } from '@/components/composites/form-label';
 import { Field, FieldContent, FieldError } from '@/components/ui/field';
-import { isTransactionDateLocked } from '@/lib/fineract/business-date-context';
+import { isTransactionDateLocked, businessDateLockedHint } from '@/lib/fineract/business-date-context';
 import { fineractDateToDate } from '@/lib/fineract/date-input';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +49,7 @@ export function TransactionDateField({
 }: TransactionDateFieldProps) {
   const businessDate = useBusinessDate();
   const locked = isTransactionDateLocked(businessDate);
+  const isNotToday = businessDate.isNotToday === true;
 
   useEffect(() => {
     if (locked && businessDate.date && value !== businessDate.date) {
@@ -81,13 +82,27 @@ export function TransactionDateField({
           <div
             id={id}
             aria-invalid={!!error}
-            className={cn(readOnlyTriggerClassName, disabled && 'opacity-50')}
+            className={cn(
+              readOnlyTriggerClassName,
+              isNotToday && 'border-warning/40 bg-warning/10',
+              disabled && 'opacity-50'
+            )}
           >
-            <CalendarIcon className="size-4 shrink-0 opacity-60" aria-hidden />
-            <span className="truncate">{display ?? '—'}</span>
+            <CalendarIcon
+              className={cn('size-4 shrink-0', isNotToday ? 'text-warning' : 'opacity-60')}
+              aria-hidden
+            />
+            <span className={cn('truncate', isNotToday && 'text-warning-foreground')}>
+              {display ?? '—'}
+            </span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Uses the organisation business date.
+          <p
+            className={cn(
+              'text-xs',
+              isNotToday ? 'text-warning-foreground' : 'text-muted-foreground'
+            )}
+          >
+            {businessDateLockedHint(isNotToday)}
           </p>
           <FieldError>{error}</FieldError>
         </FieldContent>

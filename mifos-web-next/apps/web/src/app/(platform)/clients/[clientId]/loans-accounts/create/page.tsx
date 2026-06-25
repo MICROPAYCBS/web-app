@@ -32,7 +32,7 @@ import { getClient } from '@/lib/fineract/clients';
 
 import { getClientLoanAccountTemplate } from '@/lib/fineract/client-loan-accounts';
 
-import { platformInset } from '@/lib/platform-layout';
+import { platformInset, platformScrollRegion } from '@/lib/platform-layout';
 
 import { getServerSession } from '@/lib/session/server';
 
@@ -99,8 +99,8 @@ export default async function NewLoanAccountPage({
 
 
     return (
-
-      <div className={cn('space-y-4', platformInset)}>
+      <div className={platformScrollRegion}>
+        <div className={cn('space-y-4', platformInset)}>
 
         <p
 
@@ -125,9 +125,8 @@ export default async function NewLoanAccountPage({
           Back to loans
 
         </Link>
-
+        </div>
       </div>
-
     );
 
   }

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { APP_NAME } from '@/lib/branding';
-import { platformInset } from '@/lib/platform-layout';
+import { platformInset, platformScrollRegion } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 const noteSchema = z.object({
@@ -40,7 +40,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className={cn(platformInset, 'mx-auto max-w-3xl space-y-6')}>
+    <div className={platformScrollRegion}>
+      <div className={cn(platformInset, 'mx-auto max-w-3xl space-y-6')}>
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
         <p className="mt-2 text-muted-foreground">
@@ -76,6 +77,7 @@ export default function DashboardPage() {
           </div>
         </form>
       </FormSheet>
+      </div>
     </div>
   );
 }

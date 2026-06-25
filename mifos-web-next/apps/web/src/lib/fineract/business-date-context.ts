@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { parseFineractDateString, toLocalCalendarDate } from '@/lib/fineract/dates';
+
 /** Serializable business date state for client providers and server pages. */
 export type BusinessDateContextValue = {
   enabled: boolean;
@@ -13,11 +15,37 @@ export type BusinessDateContextValue = {
   date?: string;
   /** Long formatted label for read-only display. */
   displayLabel?: string;
+  /** True when {@link date} is set and differs from the local calendar day. */
+  isNotToday?: boolean;
 };
 
 export const EMPTY_BUSINESS_DATE_CONTEXT: BusinessDateContextValue = {
   enabled: false
 };
+
+/** True when a configured business date is not the local calendar day. */
+export function isBusinessDateNotToday(
+  businessDate: string | undefined,
+  referenceDate: Date = new Date()
+): boolean {
+  if (!businessDate?.trim()) {
+    return false;
+  }
+
+  const parsedBusinessDate = parseFineractDateString(businessDate);
+  if (!parsedBusinessDate) {
+    return false;
+  }
+
+  return parsedBusinessDate.getTime() !== toLocalCalendarDate(referenceDate).getTime();
+}
+
+/** Helper copy for locked transaction date fields. */
+export function businessDateLockedHint(isNotToday: boolean): string {
+  return isNotToday
+    ? 'Uses the organisation business date, which differs from today.'
+    : 'Uses the organisation business date.';
+}
 
 /** True when transaction dates must match the configured organisation business date. */
 export function isTransactionDateLocked(ctx: BusinessDateContextValue): boolean {

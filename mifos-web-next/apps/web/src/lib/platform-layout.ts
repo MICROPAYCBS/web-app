@@ -13,6 +13,13 @@ export const platformInsetX = 'px-4 md:px-6';
 export const platformInset = 'px-4 py-4 md:px-6 md:py-6';
 
 /**
+ * Scroll region for simple platform pages (dashboard, settings) that do not use
+ * ListPage, DetailPage, or FormWizard — those shells own their own overflow areas.
+ */
+export const platformScrollRegion =
+  'min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain';
+
+/**
  * Fixed page header padding — use via {@link PageHeader} only.
  * Detail, list, and wizard shells share this top spacing.
  */
