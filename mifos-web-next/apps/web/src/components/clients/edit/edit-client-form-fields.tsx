@@ -119,7 +119,7 @@ export function EditClientFormFields({
               optional
               value={form.genderId ? String(form.genderId) : undefined}
               onValueChange={(v) => {
-                const genderId = v ? Number(v) : undefined;
+                const genderId = v ? (Number(v) as 1 | 2) : undefined;
                 const titlesForGender = filterEligibleClientTitles(
                   initial.clientTitleOptions ?? initial.titleOptions,
                   genderId

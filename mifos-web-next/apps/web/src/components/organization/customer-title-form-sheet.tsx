@@ -126,7 +126,7 @@ export function CustomerTitleFormSheet({
       if (mode === 'create') {
         const result = await createCustomerTitleAction(input);
         if (!result.ok) {
-          setFormError(formatActionErrorMessage(result));
+          setFormError(formatActionErrorMessage(result.message, result.fieldErrors));
           if (result.fieldErrors) {
             setFieldErrors(result.fieldErrors);
           }
@@ -149,7 +149,7 @@ export function CustomerTitleFormSheet({
         clear
       );
       if (!result.ok) {
-        setFormError(formatActionErrorMessage(result));
+        setFormError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
@@ -191,8 +191,8 @@ export function CustomerTitleFormSheet({
         />
         <SelectField
           label="Gender"
-          value={form.genderId}
-          onChange={(value) => setForm((current) => ({ ...current, genderId: value }))}
+          value={form.genderId || undefined}
+          onValueChange={(value) => setForm((current) => ({ ...current, genderId: value ?? '' }))}
           options={genderOptions}
           error={fieldErrors.genderId}
           disabled={pending}
@@ -207,7 +207,9 @@ export function CustomerTitleFormSheet({
         <SelectField
           label="Status"
           value={form.status}
-          onChange={(value) => setForm((current) => ({ ...current, status: value }))}
+          onValueChange={(value) =>
+            setForm((current) => ({ ...current, status: value ?? 'ACTIVE' }))
+          }
           options={toOptions(
             template.statusOptions.length > 0 ? template.statusOptions : ['ACTIVE', 'INACTIVE']
           )}

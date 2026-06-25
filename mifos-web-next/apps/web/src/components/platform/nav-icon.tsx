@@ -11,6 +11,7 @@
 import {
   Activity,
   AlertTriangle,
+  BadgeCheck,
   ArrowLeftRight,
   ArrowRightLeft,
   BookOpen,
@@ -134,6 +135,7 @@ const ICONS: Record<string, LucideIcon> = {
   'refresh-cw': RefreshCw,
   lock: Lock,
   'shield-check': ShieldCheck,
+  'badge-check': BadgeCheck,
   'notebook-pen': NotebookPen,
   'repeat-2': Repeat2,
   activity: Activity,

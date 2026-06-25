@@ -10,6 +10,6 @@ import { redirect } from 'next/navigation';
 import { CUSTOMER_TITLE_LIST_PATH } from '@/lib/fineract/customer-title-paths';
 
 /** Legacy route — customer titles moved from client-titles. */
-export default function OrganizationClientTitlesRedirectPage() {
+export default function OrganizationClientTitlesRedirectPage(): never {
   redirect(CUSTOMER_TITLE_LIST_PATH);
 }

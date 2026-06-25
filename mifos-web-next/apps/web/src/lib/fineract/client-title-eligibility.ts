@@ -20,7 +20,7 @@ export function filterEligibleClientTitles(
   if (withGender.some((title) => 'genderId' in title)) {
     return withGender
       .filter((title) => title.genderId == null || title.genderId === genderId)
-      .map((title) => ({ id: title.id, name: title.titleName ?? title.name ?? '' }));
+      .map((title) => ({ id: title.id, name: title.titleName ?? '' }));
   }
 
   return titles.map((title) => ({

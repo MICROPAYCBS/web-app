@@ -13,6 +13,15 @@ import {
   resolveFineractDateContext
 } from '@/lib/fineract/fineract-date-context';
 
+type ClientGenderId = NonNullable<UpdateClientInput['genderId']>;
+
+function mapClientGenderId(id: number | undefined): ClientGenderId | undefined {
+  if (id === 1 || id === 2) {
+    return id;
+  }
+  return undefined;
+}
+
 /** Map Fineract edit template response to validated form input. */
 export function mapClientToEditFormInput(data: FineractClientEditData): UpdateClientInput {
   const dateCtx = resolveFineractDateContext(data);
@@ -40,7 +49,7 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
     nationalityCountryId: data.nationality?.id,
     customerRiskProfileId: data.customerRiskProfile?.id,
     dateOfBirth: fineractApiDateToFormString(data.dateOfBirth, dateCtx),
-    genderId: data.gender?.id,
+    genderId: mapClientGenderId(data.gender?.id),
     isStaff: data.isStaff ?? false,
     clientTypeId: data.clientType?.id,
     submittedOnDate: submittedOnDate ?? '',

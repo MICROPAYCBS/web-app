@@ -63,6 +63,7 @@ export const NAV_ICON_NAMES = [
   'refresh-cw',
   'lock',
   'shield-check',
+  'badge-check',
   'notebook-pen',
   'repeat-2',
   'activity',

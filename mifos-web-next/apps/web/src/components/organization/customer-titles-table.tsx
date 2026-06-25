@@ -152,7 +152,7 @@ export function CustomerTitlesTable({
     startTransition(async () => {
       const result = await deleteCustomerTitleAction(deleteTarget.id);
       if (!result.ok) {
-        setActionError(formatActionErrorMessage(result));
+        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
       setDeleteTarget(null);
@@ -171,7 +171,7 @@ export function CustomerTitlesTable({
         />
       </div>
       <DataTable table={table} />
-      <DataTablePagination table={table} />
+      <DataTablePagination table={table} totalRecords={filteredRows.length} />
       <Dialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
