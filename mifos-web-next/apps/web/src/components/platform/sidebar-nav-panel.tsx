@@ -90,8 +90,8 @@ function NavMenuLink({
 
 function SidebarNavSearchResults({ results }: { results: PlatformNavSearchResult[] }) {
   return (
-    <SidebarGroup className="px-0">
-      <SidebarGroupLabel className="px-2">Results</SidebarGroupLabel>
+    <SidebarGroup>
+      <SidebarGroupLabel>Results</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {results.length > 0 ? (
@@ -122,7 +122,7 @@ function SidebarNavGroupView({ group }: { group: PlatformNavGroup }) {
 
   return (
     <>
-      <SidebarGroup className="px-0">
+      <SidebarGroup>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -141,7 +141,7 @@ function SidebarNavGroupView({ group }: { group: PlatformNavGroup }) {
       {isSearching ? (
         <SidebarNavSearchResults results={searchResults} />
       ) : (
-        <SidebarGroup className="px-0">
+        <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -170,8 +170,8 @@ function SidebarNavRootView() {
   return (
     <>
       {featured.length > 0 ? (
-        <SidebarGroup className="px-0">
-          <SidebarGroupLabel className="px-2">Quick access</SidebarGroupLabel>
+        <SidebarGroup>
+          <SidebarGroupLabel>Quick access</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {featured.map((item) => (
@@ -183,8 +183,8 @@ function SidebarNavRootView() {
       ) : null}
 
       {groups.length > 0 ? (
-        <SidebarGroup className="px-0">
-          <SidebarGroupLabel className="px-2">Sections</SidebarGroupLabel>
+        <SidebarGroup>
+          <SidebarGroupLabel>Sections</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {groups.map((group) => (

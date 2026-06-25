@@ -53,7 +53,7 @@ export function MifosAppSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-0">
+      <SidebarContent>
         <SidebarNavPanel />
       </SidebarContent>
 
