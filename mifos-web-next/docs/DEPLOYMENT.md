@@ -98,6 +98,27 @@ pnpm exec vercel --prod        # production deploy
 | Stuck on Login | Enable `DEMO_SESSION_ENABLED` + `RBAC_DEV_SESSION` on Preview |
 | `/api/clients` errors | Demo API may rate-limit; check Vercel function logs |
 | Fineract SSL / timeout | Ensure `FINERACT_API_URL` is reachable from Vercel (public HTTPS) |
+| Vercel build failed after local commit | Run `cd mifos-web-next && pnpm run check:ci` before pushing. Ensure git hooks are installed (`npm install` at repo root). |
+
+## 7. Before you commit
+
+Vercel runs `pnpm run build` (typecheck + Next.js production build). Match that locally:
+
+```bash
+cd mifos-web-next
+pnpm run check:ci
+```
+
+Git **pre-commit** (repo root `.husky/pre-commit`) runs the same gate when staged files touch `mifos-web-next/apps/`, `packages/`, or lockfiles. Docs-only changes under `mifos-web-next/docs/` run typecheck only.
+
+Install hooks once from the **repository root** (not only inside `mifos-web-next`):
+
+```bash
+npm install   # runs husky via prepare
+```
+
+Emergency bypass (not for routine use): `MIFOS_WEB_NEXT_SKIP_HOOK=1 git commit …`
+
 
 ## Security
 

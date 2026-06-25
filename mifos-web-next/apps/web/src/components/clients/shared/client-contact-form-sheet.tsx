@@ -123,7 +123,7 @@ export function ClientContactFormSheet({
           label="Contact type"
           required
           value={form.contactTypeId ? String(form.contactTypeId) : ''}
-          onChange={(value) =>
+          onValueChange={(value) =>
             setForm((current) => ({
               ...current,
               contactTypeId: value ? Number(value) : 0

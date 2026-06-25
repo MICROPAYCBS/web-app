@@ -14,8 +14,10 @@
     "check": "pnpm run typecheck",
     "check:lint": "pnpm run lint",
     "check:ci": "pnpm run typecheck && pnpm run build",
+    "check:pre-commit": "node scripts/pre-commit-check.mjs",
     "clean": "pnpm --filter web clean",
     "format": "prettier --write .",
+    "prepare": "node scripts/ensure-git-hooks.mjs",
     "routes:parity": "pnpm exec tsx tooling/routes-inventory/generate-parity.ts",
     "vercel-build": "pnpm --filter web build"
   },

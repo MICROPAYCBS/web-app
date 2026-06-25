@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * Copyright since 2026 Mifos Initiative
+ * Copyright since 2026 MicroPay
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,12 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError, validateClientContact } from '@mifos/validation';
+import {
+  toFineractActionError,
+  validateClientContact,
+  type ClientContactInput,
+  type ClientContactValidationContext
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
   createClientContact,
@@ -38,11 +43,13 @@ function revalidateClientContactViews(clientId: string) {
   revalidatePath(`/clients/${clientId}/general`);
 }
 
+type ParseClientContactResult = ClientContactActionResult | ClientContactInput;
+
 async function parseClientContact(
   clientId: string,
   raw: unknown
-): Promise<ClientContactActionResult | ReturnType<typeof validateClientContact> extends { success: true; data: infer D } ? D : never> {
-  let contactTypeOptions;
+): Promise<ParseClientContactResult> {
+  let contactTypeOptions: NonNullable<ClientContactValidationContext['contactTypeOptions']> = [];
   try {
     const template = await getClientContactTemplate(clientId);
     contactTypeOptions = template.contactTypeOptions;

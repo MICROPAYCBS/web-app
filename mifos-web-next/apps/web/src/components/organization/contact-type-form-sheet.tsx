@@ -394,7 +394,7 @@ export function ContactTypeFormSheet({
 
           disabled={pending}
 
-          description="Shown as placeholder when customers enter this contact type."
+          hint="Shown as placeholder when customers enter this contact type."
 
         />
 
@@ -410,7 +410,7 @@ export function ContactTypeFormSheet({
 
           disabled={pending}
 
-          description="Optional pattern used to validate contact values."
+          hint="Optional pattern used to validate contact values."
 
         />
 
