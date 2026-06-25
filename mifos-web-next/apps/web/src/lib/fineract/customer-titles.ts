@@ -58,7 +58,10 @@ function normalizeTemplate(raw: unknown): CustomerTitleTemplate {
           }
           const option = item as Record<string, unknown>;
           const id = Number(option.id);
-          const name = typeof option.name === 'string' ? option.name : '';
+          const name =
+            (typeof option.name === 'string' && option.name) ||
+            (typeof option.value === 'string' && option.value) ||
+            '';
           return Number.isFinite(id) && name ? { id, name } : null;
         })
         .filter((item): item is { id: number; name: string } => item !== null)

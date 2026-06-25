@@ -9,7 +9,7 @@ import 'server-only';
  */
 
 import { getClient } from '@/lib/fineract/clients';
-import { searchClientsByDisplayName } from '@/lib/fineract/clients-list';
+import { searchClientEntities } from '@/lib/fineract/search';
 import type {
   TransferBeneficiaryClientResolved,
   TransferBeneficiaryClientSummary
@@ -46,18 +46,13 @@ export async function searchTransferBeneficiaryClients(
     return [];
   }
 
-  const page = await searchClientsByDisplayName({
-    query: trimmed,
-    limit: 20,
-    offset: 0,
-    includeClosed: false
-  });
+  const hits = await searchClientEntities(trimmed, { limit: 20 });
 
-  return page.pageItems.map((client) => ({
-    id: client.id,
-    displayName: clientDisplayName(client),
-    accountNo: client.accountNo,
-    officeName: client.officeName
+  return hits.map((hit) => ({
+    id: hit.id,
+    displayName: hit.displayName,
+    accountNo: hit.accountNo,
+    officeName: hit.officeName
   }));
 }
 

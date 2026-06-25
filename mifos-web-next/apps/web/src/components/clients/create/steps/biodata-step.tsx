@@ -43,15 +43,63 @@ export function BiodataStep({
     [template.clientTitleOptions, template.titleOptions, g.genderId]
   );
 
+  const legalFormOptions = toSelectOptions(
+    template.clientLegalFormOptions?.length
+      ? template.clientLegalFormOptions
+      : [
+          { id: LEGAL_FORM_PERSON, value: 'Person' },
+          { id: LEGAL_FORM_ENTITY, value: 'Entity' }
+        ]
+  );
+
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        {isPerson
-          ? 'Personal particulars for this customer.'
-          : 'Registration and constitution details for this entity.'}
+        Profile type and {isPerson ? 'personal particulars' : 'registration details'} for this
+        customer.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <SelectField
+          id="legalFormId"
+          label="Profile type"
+          required
+          value={String(legalFormId)}
+          onValueChange={(v) => {
+            const id = Number(v);
+            if (id === LEGAL_FORM_PERSON) {
+              onDraftChange({
+                legalFormId: id,
+                fullname: undefined,
+                clientNonPersonDetails: undefined,
+                firstname: g.firstname ?? '',
+                lastname: g.lastname ?? ''
+              });
+            } else {
+              onDraftChange({
+                legalFormId: id,
+                firstname: undefined,
+                middlename: undefined,
+                lastname: undefined,
+                fullname: g.fullname ?? '',
+                isStaff: false,
+                clientNonPersonDetails: { constitutionId: nonPerson.constitutionId }
+              });
+            }
+          }}
+          options={legalFormOptions}
+          error={errors.legalFormId}
+        />
+
+        <TextField
+          id="externalId"
+          label="External ID"
+          optional
+          value={g.externalId ?? ''}
+          onChange={(v) => onDraftChange({ externalId: v })}
+          error={errors.externalId}
+        />
+
         {legalFormId === LEGAL_FORM_ENTITY ? (
           <TextField
             id="fullname"

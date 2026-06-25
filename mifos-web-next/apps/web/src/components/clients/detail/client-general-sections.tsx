@@ -123,7 +123,7 @@ function ClientInformationSection({ client }: { client: FineractClientDetail }) 
           <TextValue value={client.taxIdentificationNumber} />
         </DetailField>
         {client.subIndustryId != null ? (
-          <DetailField label="Sector / industry / sub-industry">
+          <DetailField label="Sub-industry">
             <SectorDisplayValue subIndustryId={client.subIndustryId} />
           </DetailField>
         ) : null}

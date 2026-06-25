@@ -52,11 +52,7 @@ export function EditClientFormFields({
   const activationMinDate = fineractDateToDate(form.submittedOnDate, tenantDateFormat);
   const eligibleCustomerClasses = filterEligibleCustomerClasses(initial.customerClassOptions, {
     legalFormId: form.legalFormId,
-    dateOfBirth: form.dateOfBirth,
-    customerRiskProfileId: form.customerRiskProfileId,
-    customerRiskProfileOptions: initial.customerRiskProfileOptions,
-    assignedCustomerRiskProfile: initial.customerRiskProfile,
-    groupCount: initial.groups?.length ?? 0
+    dateOfBirth: form.dateOfBirth
   });
   const customerClassOptionsForSelect =
     form.customerClassId != null &&

@@ -31,16 +31,14 @@ export function CustomerProfilingStep({
   const g = draft.general;
   const eligibleCustomerClasses = filterEligibleCustomerClasses(template.customerClassOptions, {
     legalFormId: g.legalFormId,
-    dateOfBirth: g.dateOfBirth,
-    customerRiskProfileId: g.customerRiskProfileId,
-    customerRiskProfileOptions: template.customerRiskProfileOptions
+    dateOfBirth: g.dateOfBirth
   });
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Customer type, customer class, sector, tax details, and internal risk categorization. Most
-        fields are optional and can be updated later.
+        Customer type, customer class, sub-industry, tax details, and internal risk categorization.
+        Most fields are optional and can be updated later.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -145,6 +145,49 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - System-defined types: edit allows name and description only; delete is hidden.
 - Custom types: full edit and delete from the list actions column.
 
+## Customer classes
+
+| Route                                                              | Method | web-app screen              | Fineract API                         | Schema ID                               | E2E | Status |
+| ------------------------------------------------------------------ | ------ | --------------------------- | ------------------------------------ | --------------------------------------- | --- | ------ |
+| `/organization/customer-classes`                                   | GET    | CustomerClassesComponent    | `GET /customerclasses`               | —                                       | —   | done   |
+| `/organization/customer-classes?create=1`                        | POST   | CreateCustomerClassComponent | `POST /customerclasses`             | `organization.customer-class.create`    | —   | done   |
+| `/organization/customer-classes/[customerClassId]?edit=1`          | PUT    | EditCustomerClassComponent  | `PUT /customerclasses/{id}`          | `organization.customer-class.update`    | —   | done   |
+| `/organization/customer-classes`                                   | DELETE | CustomerClassesComponent    | `DELETE /customerclasses/{id}`       | —                                       | —   | done   |
+
+### Notes
+
+- Create and edit use `FormSheet` side panels (`?create=1` on list, `?edit=1` on detail). Legacy `/create` and `/[id]/edit` routes redirect.
+- Template: `GET /customerclasses/template`.
+- List columns: code, name, legal form, risk level, status, actions.
+
+## Customer titles
+
+| Route                                                    | Method | web-app screen           | Fineract API                  | Schema ID                            | E2E | Status |
+| -------------------------------------------------------- | ------ | ------------------------ | ----------------------------- | ------------------------------------ | --- | ------ |
+| `/organization/customer-titles`                          | GET    | CustomerTitlesComponent  | `GET /clienttitles`           | —                                    | —   | done   |
+| `/organization/customer-titles?create=1`                 | POST   | CreateCustomerTitleComponent | `POST /clienttitles`    | `organization.customer-title.create` | —   | done   |
+| `/organization/customer-titles/[customerTitleId]?edit=1` | PUT    | EditCustomerTitleComponent | `PUT /clienttitles/{id}`  | `organization.customer-title.update` | —   | done   |
+| `/organization/customer-titles`                          | DELETE | CustomerTitlesComponent  | `DELETE /clienttitles/{id}`   | —                                    | —   | done   |
+
+### Notes
+
+- Legacy `/organization/client-titles` redirects to this list.
+- Gender-specific or neutral titles for customer biodata.
+
+## Contact types
+
+| Route                                              | Method | web-app screen          | Fineract API               | Schema ID                          | E2E | Status |
+| -------------------------------------------------- | ------ | ----------------------- | -------------------------- | ---------------------------------- | --- | ------ |
+| `/organization/contact-types`                      | GET    | ContactTypesComponent   | `GET /contacttypes`        | —                                  | —   | done   |
+| `/organization/contact-types?create=1`             | POST   | CreateContactTypeComponent | `POST /contacttypes`  | `organization.contact-type.create` | —   | done   |
+| `/organization/contact-types?edit={contactTypeId}` | PUT    | EditContactTypeComponent | `PUT /contacttypes/{id}` | `organization.contact-type.update` | —   | done   |
+| `/organization/contact-types`                      | DELETE | ContactTypesComponent   | `DELETE /contacttypes/{id}` | —                               | —   | done   |
+
+### Notes
+
+- Create and edit use `FormSheet` side panels on the list page (`?create=1`, `?edit={id}`).
+- Defines channels such as mobile, email, and WhatsApp for customer contact points.
+
 ## Tellers
 
 | Route                                       | Method | web-app screen        | Fineract API                 | Schema ID                    | E2E | Status |

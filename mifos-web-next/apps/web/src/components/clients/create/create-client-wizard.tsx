@@ -58,7 +58,6 @@ function buildSteps(
   legalFormId: number
 ): FormWizardStep[] {
   const steps: FormWizardStep[] = [
-    { id: 'general', label: 'General' },
     { id: 'biodata', label: 'Biodata' },
     { id: 'contact', label: 'Contact' },
     { id: 'identifiers', label: 'Identification' }
@@ -84,6 +83,7 @@ function buildSteps(
       label: formatDatatableTableTitle(dt.registeredTableName)
     });
   }
+  steps.push({ id: 'general', label: 'Account opening' });
   steps.push({ id: 'preview', label: 'Preview' });
   return steps;
 }
@@ -116,9 +116,9 @@ export function CreateClientWizard({
   identifierDocumentTypes = []
 }: CreateClientWizardProps) {
   const router = useRouter();
-  const [template, setTemplate] = useState(initialTemplate);
+  const [template] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(() => emptyDraft(defaultOfficeId));
-  const [stepId, setStepId] = useState('general');
+  const [stepId, setStepId] = useState('biodata');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
     () => new Set()
   );
@@ -127,7 +127,7 @@ export function CreateClientWizard({
 
   const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
   const steps = useMemo(() => buildSteps(template, legalFormId), [template, legalFormId]);
-  const resolvedStepId = steps.some((s) => s.id === stepId) ? stepId : 'general';
+  const resolvedStepId = steps.some((s) => s.id === stepId) ? stepId : 'biodata';
   const currentIndex = steps.findIndex((s) => s.id === resolvedStepId);
 
   const mandatoryDatatableNames = useMemo(
@@ -343,10 +343,10 @@ export function CreateClientWizard({
 
   useEffect(() => {
     if (resolvedStepId.startsWith('datatable:') && !activeDatatable) {
-      setStepId('general');
+      setStepId('biodata');
     }
     if (resolvedStepId.startsWith('multi-row-datatable:') && !activeMultiRowDatatable) {
-      setStepId('general');
+      setStepId('biodata');
     }
   }, [resolvedStepId, activeDatatable, activeMultiRowDatatable]);
 
@@ -391,16 +391,6 @@ export function CreateClientWizard({
         />
       }
     >
-      {resolvedStepId === 'general' ? (
-        <GeneralStep
-          template={template}
-          draft={draft}
-          errors={stepErrors}
-          onDraftChange={patchGeneral}
-          onTemplateChange={setTemplate}
-        />
-      ) : null}
-
       {resolvedStepId === 'biodata' ? (
         <BiodataStep
           template={template}
@@ -421,6 +411,16 @@ export function CreateClientWizard({
           onIdentifiersChange={(clientIdentifiers) =>
             setDraft((d) => ({ ...d, clientIdentifiers }))
           }
+        />
+      ) : null}
+
+      {resolvedStepId === 'address' && template.isAddressEnabled ? (
+        <AddressStep
+          template={template}
+          fieldConfig={addressFieldConfig}
+          draft={draft}
+          errors={stepErrors}
+          onAddressesChange={(addresses) => setDraft((d) => ({ ...d, addresses }))}
         />
       ) : null}
 
@@ -459,16 +459,6 @@ export function CreateClientWizard({
         />
       ) : null}
 
-      {resolvedStepId === 'address' && template.isAddressEnabled ? (
-        <AddressStep
-          template={template}
-          fieldConfig={addressFieldConfig}
-          draft={draft}
-          errors={stepErrors}
-          onAddressesChange={(addresses) => setDraft((d) => ({ ...d, addresses }))}
-        />
-      ) : null}
-
       {activeDatatable ? (
         <DatatableStep
           datatable={activeDatatable}
@@ -501,6 +491,15 @@ export function CreateClientWizard({
               }
             }))
           }
+        />
+      ) : null}
+
+      {resolvedStepId === 'general' ? (
+        <GeneralStep
+          template={template}
+          draft={draft}
+          errors={stepErrors}
+          onDraftChange={patchGeneral}
         />
       ) : null}
 

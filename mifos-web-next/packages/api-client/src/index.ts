@@ -481,6 +481,14 @@ export type {
   CustomerTitleTemplate
 } from './organization/customer-title-types';
 export type {
+  ClientContact,
+  ClientContactMutationResponse,
+  ClientContactTemplate,
+  ContactType,
+  ContactTypeMutationResponse,
+  ContactTypeTemplate
+} from './organization/contact-type-types';
+export type {
   PasswordPreferencesMutationResponse,
   PasswordPreferenceTemplateItem
 } from './organization/password-preferences-types';

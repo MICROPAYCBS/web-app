@@ -31,10 +31,7 @@ export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
   const g = draft.general;
 
   if (!g.officeId) {
-    errors.officeId = 'Branch is required';
-  }
-  if (!g.legalFormId) {
-    errors.legalFormId = 'Profile type is required';
+    errors._form = 'Your account is not assigned to a branch. Contact an administrator.';
   }
   if (!g.submittedOnDate?.trim()) {
     errors.submittedOnDate = 'Submitted on is required';
@@ -50,6 +47,10 @@ export function validateBiodataStep(draft: CreateClientDraft): StepErrors {
   const errors: StepErrors = {};
   const g = draft.general;
   const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
+
+  if (!g.legalFormId) {
+    errors.legalFormId = 'Profile type is required';
+  }
 
   if (legalFormId === LEGAL_FORM_PERSON) {
     if (!g.firstname?.trim()) {

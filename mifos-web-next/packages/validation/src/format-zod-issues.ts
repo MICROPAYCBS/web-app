@@ -29,7 +29,7 @@ const FIELD_LABELS: Record<string, string> = {
   emailAddress: 'Email',
   alternativeEmailAddress: 'Alternative email',
   taxIdentificationNumber: 'Tax identification number (TIN)',
-  subIndustryId: 'Sector / industry / sub-industry',
+  subIndustryId: 'Sub-industry',
   constitutionId: 'Constitution',
   documentTypeId: 'Identifier type',
   documentKey: 'Identifier number',

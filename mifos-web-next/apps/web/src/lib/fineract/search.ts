@@ -15,7 +15,6 @@ import { getClient } from '@/lib/fineract/clients';
 export interface SearchEntitiesParams {
   query: string;
   resource?: string;
-  exactMatch?: boolean;
 }
 
 const CLIENT_CONTACT_BATCH_SIZE = 10;
@@ -77,16 +76,72 @@ async function enrichClientContacts(results: FineractSearchResult[]): Promise<Fi
   });
 }
 
+/** Fineract GET /v1/search — partial match (LIKE %query%) when exactMatch is false. */
+const SEARCH_EXACT_MATCH = 'false';
+
+export interface ClientEntitySearchHit {
+  id: number;
+  displayName: string;
+  accountNo?: string;
+  officeName?: string;
+  officeId?: number;
+}
+
+function mapClientSearchHit(result: FineractSearchResult): ClientEntitySearchHit | null {
+  if (result.entityType !== 'CLIENT') {
+    return null;
+  }
+  const displayName =
+    result.entityName?.trim() ||
+    result.entityAccountNo?.trim() ||
+    result.entityExternalId?.trim();
+  if (!displayName) {
+    return null;
+  }
+  return {
+    id: result.entityId,
+    displayName,
+    accountNo: result.entityAccountNo,
+    officeName: result.parentName,
+    officeId: result.parentId
+  };
+}
+
+/** Customer lookup via GET /v1/search (name, account no, external id, mobile). */
+export async function searchClientEntities(
+  query: string,
+  options?: { officeId?: number; limit?: number }
+): Promise<ClientEntitySearchHit[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) {
+    return [];
+  }
+
+  const results = await searchEntities({ query: trimmed, resource: 'clients' });
+  let hits = results
+    .map(mapClientSearchHit)
+    .filter((hit): hit is ClientEntitySearchHit => hit !== null);
+
+  if (options?.officeId != null) {
+    hits = hits.filter((hit) => hit.officeId === options.officeId);
+  }
+
+  if (options?.limit != null && options.limit > 0) {
+    hits = hits.slice(0, options.limit);
+  }
+
+  return hits;
+}
+
 export async function searchEntities({
   query,
-  resource = 'clients,clientIdentifiers,groups,savings,shares,loans',
-  exactMatch = false
+  resource = 'clients,clientIdentifiers,groups,savings,shares,loans'
 }: SearchEntitiesParams): Promise<FineractSearchResult[]> {
   const fineract = await createFineractClient();
   const results = await fineract.get<FineractSearchResult[]>('/search', {
     query,
     resource,
-    exactMatch: exactMatch ? 'true' : 'false'
+    exactMatch: SEARCH_EXACT_MATCH
   });
   return enrichClientContacts(results ?? []);
 }

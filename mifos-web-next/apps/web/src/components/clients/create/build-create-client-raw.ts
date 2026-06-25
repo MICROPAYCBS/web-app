@@ -89,6 +89,8 @@ export function createClientIssueStepId(path: (string | number)[]): string {
   const root = String(path[0] ?? '');
 
   const biodataFields = new Set([
+    'legalFormId',
+    'externalId',
     'firstname',
     'middlename',
     'lastname',
@@ -116,8 +118,6 @@ export function createClientIssueStepId(path: (string | number)[]): string {
   const generalFields = new Set([
     'officeId',
     'staffId',
-    'legalFormId',
-    'externalId',
     'submittedOnDate',
     'savingsProductId',
     'isStaff'

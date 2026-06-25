@@ -632,6 +632,26 @@ export {
   type UpsertCustomerTitlePayload
 } from './organization/customer-title.schema';
 export {
+  buildUpdateContactTypePayload,
+  buildUpsertContactTypePayload,
+  createContactTypeSchema,
+  updateContactTypeSchema,
+  validateCreateContactType,
+  validateUpdateContactType,
+  type ContactTypeUpdateClearFields,
+  type UpdateContactTypeInput,
+  type UpdateContactTypePayload,
+  type UpsertContactTypeInput,
+  type UpsertContactTypePayload
+} from './organization/contact-type.schema';
+export {
+  clientContactSchema,
+  validateClientContact,
+  validateContactValueAgainstRegex,
+  type ClientContactInput,
+  type ClientContactValidationContext
+} from './clients/client-contact.schema';
+export {
   createSmsCampaignSchema,
   smsCampaignActivateCommandSchema,
   smsCampaignCloseCommandSchema,

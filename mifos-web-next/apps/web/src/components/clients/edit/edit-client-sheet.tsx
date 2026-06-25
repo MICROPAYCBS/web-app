@@ -113,12 +113,8 @@ export function EditClientSheet({
     const classFieldErrors = validateCustomerClassFormFields({
       customerClassId: form.customerClassId,
       customerClassOptions: initial.customerClassOptions,
-      customerRiskProfileId: form.customerRiskProfileId,
-      customerRiskProfileOptions: initial.customerRiskProfileOptions,
-      assignedCustomerRiskProfile: initial.customerRiskProfile,
       dateOfBirth: form.dateOfBirth,
-      legalFormId: form.legalFormId,
-      groupCount: initial.groups?.length ?? 0
+      legalFormId: form.legalFormId
     });
     if (Object.keys(classFieldErrors).length > 0) {
       setFieldErrors(classFieldErrors);

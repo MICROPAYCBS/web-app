@@ -62,7 +62,7 @@ export interface CreateClientDraft {
 
 export interface CreateClientWizardProps {
   initialTemplate: FineractClientTemplate;
-  /** Pre-select branch on the general step (typically the signed-in user's office). */
+  /** Branch for the new customer — always the signed-in user's office. */
   defaultOfficeId?: number;
   addressFieldConfig: FineractAddressFieldConfig[];
   entityDatatableChecks?: FineractEntityDatatableCheck[];

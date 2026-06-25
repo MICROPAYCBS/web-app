@@ -19,6 +19,11 @@
       "READ_CLIENTIDENTIFIER"
     ]
   },
+  "clients.contacts": {
+    "any": [
+      "READ_CLIENT"
+    ]
+  },
   "clients.documents": {
     "any": [
       "READ_DOCUMENT"
@@ -325,6 +330,26 @@
   "organization.customerTitles.delete": {
     "any": [
       "DELETE_CLIENTTITLE"
+    ]
+  },
+  "organization.contactTypes": {
+    "any": [
+      "READ_CONTACTTYPE"
+    ]
+  },
+  "organization.contactTypes.create": {
+    "any": [
+      "CREATE_CONTACTTYPE"
+    ]
+  },
+  "organization.contactTypes.update": {
+    "any": [
+      "UPDATE_CONTACTTYPE"
+    ]
+  },
+  "organization.contactTypes.delete": {
+    "any": [
+      "DELETE_CONTACTTYPE"
     ]
   },
   "organization.passwordPreferences": {

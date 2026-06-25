@@ -30,6 +30,7 @@ export const NAV_ICON_NAMES = [
   'list',
   'coins',
   'message-square',
+  'phone',
   'arrow-left-right',
   'map',
   'trending-up',

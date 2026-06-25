@@ -151,8 +151,16 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     webAppRef: 'organization/customer-classes',
     permissionKey: 'organization.customerClasses',
     navOrder: 115,
-    navIcon: 'users-round',
-    keywords: ['customer class', 'kyc', 'segment'],
+    navIcon: 'layers',
+    keywords: [
+      'customer class',
+      'classification',
+      'segment',
+      'kyc',
+      'risk',
+      'minor',
+      'legal form'
+    ],
     parityStatus: 'done'
   },
   {
@@ -165,6 +173,27 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 116,
     navIcon: 'badge-check',
     keywords: ['title', 'salutation', 'mr', 'mrs', 'gender', 'customer title'],
+    parityStatus: 'done'
+  },
+  {
+    id: 'orgContactTypes',
+    path: '/organization/contact-types',
+    label: 'Contact types',
+    navGroup: 'organization',
+    webAppRef: 'organization/contact-types',
+    permissionKey: 'organization.contactTypes',
+    navOrder: 117,
+    navIcon: 'phone',
+    keywords: [
+      'contact type',
+      'contact',
+      'mobile',
+      'email',
+      'whatsapp',
+      'phone',
+      'sms',
+      'address channel'
+    ],
     parityStatus: 'done'
   },
   {

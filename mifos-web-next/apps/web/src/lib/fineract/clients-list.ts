@@ -10,6 +10,7 @@ import 'server-only';
 
 import type { FineractClientSummary, FineractClientsPage, FineractEnumOption } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { searchClientEntities } from '@/lib/fineract/search';
 
 /** Fineract `status_enum` values for closed / terminal client states. */
 const CLOSED_CLIENT_STATUS_ENUMS = [600, 700, 701] as const;
@@ -101,7 +102,31 @@ function filterClosedClients(
   return pageItems.filter((client) => !isClosedClient(client));
 }
 
-/** GET /clients?displayName=… — supported on all Fineract deployments (legacy autocomplete). */
+/** GET /v1/search?resource=clients — partial match on name, account no, external id, mobile. */
+async function searchClientsViaEntitySearch(
+  params: FetchClientsListParams
+): Promise<FineractClientsPage> {
+  const query = params.query?.trim() ?? '';
+  const hits = await searchClientEntities(query);
+  let pageItems: FineractClientSummary[] = hits.map((hit) => ({
+    id: hit.id,
+    accountNo: hit.accountNo ?? '',
+    externalId: undefined,
+    status: { id: 0, value: 'Unknown' },
+    active: true,
+    displayName: hit.displayName,
+    officeName: hit.officeName
+  }));
+  pageItems = filterClosedClients(pageItems, params.includeClosed);
+  const totalFilteredRecords = pageItems.length;
+  const slice = pageItems.slice(params.offset, params.offset + params.limit);
+  return {
+    pageItems: slice,
+    totalFilteredRecords
+  };
+}
+
+/** GET /clients?displayName=… — legacy fallback when /v1/search is unavailable. */
 export async function searchClientsByDisplayName(
   params: FetchClientsListParams
 ): Promise<FineractClientsPage> {
@@ -184,7 +209,11 @@ export async function fetchClientsList(params: FetchClientsListParams): Promise<
     try {
       return await searchClientsV2(params);
     } catch {
-      return searchClientsByDisplayName(params);
+      try {
+        return await searchClientsViaEntitySearch(params);
+      } catch {
+        return searchClientsByDisplayName(params);
+      }
     }
   }
   return listClientsPaged(params);

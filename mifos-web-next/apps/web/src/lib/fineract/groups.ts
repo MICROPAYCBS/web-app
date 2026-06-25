@@ -25,6 +25,7 @@ import type { CreateGroupPayload, UpdateGroupPayload } from '@mifos/validation';
 import { format, isValid, parseISO } from 'date-fns';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { searchClientEntities } from '@/lib/fineract/search';
 
 function normalizeStaffOptions(value: unknown): CenterStaffOption[] {
   if (!Array.isArray(value)) {
@@ -264,23 +265,17 @@ export async function searchClientsForGroup(
   officeId: string | number,
   displayName: string
 ): Promise<GroupClientOption[]> {
-  const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>('/clients', {
-    officeId: String(officeId),
-    displayName: displayName.trim(),
-    orderBy: 'displayName',
-    sortOrder: 'ASC',
-    limit: '20',
-    offset: '0'
+  const officeIdNum = Number(officeId);
+  const hits = await searchClientEntities(displayName, {
+    officeId: Number.isFinite(officeIdNum) ? officeIdNum : undefined,
+    limit: 20
   });
-  const rows = Array.isArray(raw)
-    ? raw
-    : raw && typeof raw === 'object' && Array.isArray((raw as { pageItems?: unknown[] }).pageItems)
-      ? (raw as { pageItems: unknown[] }).pageItems
-      : [];
-  return rows
-    .map((item) => normalizeClientOption(item))
-    .filter((item): item is GroupClientOption => item !== null);
+  return hits.map((hit) => ({
+    id: hit.id,
+    displayName: hit.displayName,
+    accountNo: hit.accountNo,
+    officeName: hit.officeName
+  }));
 }
 
 export async function createGroup(payload: CreateGroupPayload): Promise<GroupMutationResponse> {

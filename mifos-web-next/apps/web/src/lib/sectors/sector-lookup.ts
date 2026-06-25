@@ -94,3 +94,14 @@ export function formatSectorPath(subIndustryId: number | undefined | null): stri
   }
   return `${entry.sectorName} / ${entry.industryName} / ${entry.subIndustryName}`;
 }
+
+/** Sorted sub-industry options for a single select (parents resolved from lookup). */
+export function subIndustrySelectOptions(entries: SectorLookupEntry[]) {
+  return [...entries]
+    .sort((a, b) => a.subIndustryName.localeCompare(b.subIndustryName))
+    .map((entry) => ({
+      value: String(entry.subIndustryId),
+      label: entry.subIndustryName,
+      keywords: [entry.sectorName, entry.industryName, entry.subIndustryCode]
+    }));
+}

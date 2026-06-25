@@ -44,7 +44,6 @@ export function PreviewStep({
   identifierDocumentTypes?: { id: number; name: string }[];
 }) {
   const g = draft.general;
-  const office = template.officeOptions.find((o) => o.id === g.officeId);
   const legalForm = template.clientLegalFormOptions?.find((o) => o.id === g.legalFormId);
   const gender = template.genderOptions?.find((o) => o.id === g.genderId);
   const titleLabel =
@@ -85,35 +84,9 @@ export function PreviewStep({
       ) : null}
 
       <section className="space-y-2">
-        <h2 className="text-sm font-medium">General</h2>
-        <Field label="Branch" value={office?.nameDecorated ?? office?.name} />
-        <Field label="Profile type" value={legalForm?.value ?? legalForm?.name} />
-        <Field
-          label="Relationship officer"
-          value={
-            staff?.displayName ??
-            (staff ? `${staff.firstname ?? ''} ${staff.lastname ?? ''}`.trim() : undefined)
-          }
-        />
-        <Field label="External ID" value={g.externalId} />
-        {isPerson && g.isStaff ? <Field label="Is staff" value="Yes" /> : null}
-        <Field label="Submitted on" value={g.submittedOnDate} />
-        <Field label="Status" value="Pending" />
-        {g.savingsProductId ? (
-          <Field
-            label="Savings product on activation"
-            value={
-              template.savingProductOptions?.find((p) => p.id === g.savingsProductId)?.name ??
-              String(g.savingsProductId)
-            }
-          />
-        ) : null}
-      </section>
-
-      <Separator />
-
-      <section className="space-y-2">
         <h2 className="text-sm font-medium">Biodata</h2>
+        <Field label="Profile type" value={legalForm?.value ?? legalForm?.name} />
+        <Field label="External ID" value={g.externalId} />
         {isPerson ? (
           <Field label="Title" value={titleLabel} />
         ) : null}
@@ -149,13 +122,64 @@ export function PreviewStep({
 
       <Separator />
 
+      {draft.clientIdentifiers.length > 0 ? (
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium">
+            Identification ({draft.clientIdentifiers.length})
+          </h2>
+          <ul className="list-disc pl-5 text-sm">
+            {draft.clientIdentifiers.map((identifier, i) => {
+              const typeName =
+                identifierDocumentTypes.find((type) => type.id === identifier.documentTypeId)
+                  ?.name ?? 'Identifier';
+              return (
+                <li key={i}>
+                  {typeName}: {identifier.documentKey}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {draft.clientIdentifiers.length > 0 ? <Separator /> : null}
+
+      {template.isAddressEnabled && draft.addresses.length === 0 ? (
+        <>
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium text-destructive">Address</h2>
+            <p className="text-sm text-muted-foreground">
+              No address added yet. Go back to the Address step and add at least one address.
+            </p>
+          </section>
+          <Separator />
+        </>
+      ) : null}
+
+      {draft.addresses.length > 0 ? (
+        <>
+          <section className="space-y-2">
+            <h2 className="text-sm font-medium">Addresses ({draft.addresses.length})</h2>
+            <ul className="list-disc pl-5 text-sm">
+              {draft.addresses.map((a, i) => (
+                <li key={i}>
+                  {[a.street, a.city].filter(Boolean).join(', ') || `Address ${i + 1}`}
+                  {a.isPrimary ? ' (Primary)' : ''}
+                </li>
+              ))}
+            </ul>
+          </section>
+          <Separator />
+        </>
+      ) : null}
+
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Customer profiling</h2>
         <Field label="Customer type" value={clientType?.name ?? clientType?.value} />
         <Field label="Tax identification number (TIN)" value={g.taxIdentificationNumber} />
         {g.subIndustryId != null ? (
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-muted-foreground">Sector / industry / sub-industry</span>
+            <span className="text-muted-foreground">Sub-industry</span>
             <SectorDisplayValue subIndustryId={g.subIndustryId} />
           </div>
         ) : null}
@@ -172,58 +196,6 @@ export function PreviewStep({
           }
         />
       </section>
-
-      {draft.clientIdentifiers.length > 0 ? (
-        <>
-          <Separator />
-          <section className="space-y-2">
-            <h2 className="text-sm font-medium">
-              Identification ({draft.clientIdentifiers.length})
-            </h2>
-            <ul className="list-disc pl-5 text-sm">
-              {draft.clientIdentifiers.map((identifier, i) => {
-                const typeName =
-                  identifierDocumentTypes.find((type) => type.id === identifier.documentTypeId)
-                    ?.name ?? 'Identifier';
-                return (
-                  <li key={i}>
-                    {typeName}: {identifier.documentKey}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        </>
-      ) : null}
-
-      {template.isAddressEnabled && draft.addresses.length === 0 ? (
-        <>
-          <Separator />
-          <section className="space-y-2">
-            <h2 className="text-sm font-medium text-destructive">Address</h2>
-            <p className="text-sm text-muted-foreground">
-              No address added yet. Go back to the Address step and add at least one address.
-            </p>
-          </section>
-        </>
-      ) : null}
-
-      {draft.addresses.length > 0 ? (
-        <>
-          <Separator />
-          <section className="space-y-2">
-            <h2 className="text-sm font-medium">Addresses ({draft.addresses.length})</h2>
-            <ul className="list-disc pl-5 text-sm">
-              {draft.addresses.map((a, i) => (
-                <li key={i}>
-                  {[a.street, a.city].filter(Boolean).join(', ') || `Address ${i + 1}`}
-                  {a.isPrimary ? ' (Primary)' : ''}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      ) : null}
 
       {draft.familyMembers.length > 0 ? (
         <>
@@ -328,6 +300,31 @@ export function PreviewStep({
           </section>
         </>
       ) : null}
+
+      <Separator />
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-medium">Account opening</h2>
+        <Field
+          label="Relationship officer"
+          value={
+            staff?.displayName ??
+            (staff ? `${staff.firstname ?? ''} ${staff.lastname ?? ''}`.trim() : undefined)
+          }
+        />
+        {isPerson && g.isStaff ? <Field label="Is staff" value="Yes" /> : null}
+        <Field label="Submitted on" value={g.submittedOnDate} />
+        <Field label="Status" value="Pending" />
+        {g.savingsProductId ? (
+          <Field
+            label="Savings product on activation"
+            value={
+              template.savingProductOptions?.find((p) => p.id === g.savingsProductId)?.name ??
+              String(g.savingsProductId)
+            }
+          />
+        ) : null}
+      </section>
 
     </div>
   );

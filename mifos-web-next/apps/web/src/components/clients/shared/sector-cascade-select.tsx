@@ -11,22 +11,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SelectField } from '@/components/composites/select-field';
 import {
+  findSectorLookupById,
   loadSectorLookup,
-  resolveSubIndustryId,
-  selectionFromSubIndustryId
+  subIndustrySelectOptions,
+  type SectorLookupEntry
 } from '@/lib/sectors/sector-lookup';
-import {
-  loadSectorTree,
-  sortedSectorKeys,
-  type SectorSelection,
-  type SectorTree
-} from '@/lib/sectors/sector-tree';
 import { cn } from '@/lib/utils';
 
-function toOptions(items: string[]) {
-  return items.map((item) => ({ value: item, label: item }));
-}
-
+/** Pick a sub-industry; sector and industry are derived from its parent chain. */
 export function SectorCascadeSelect({
   subIndustryId,
   onSubIndustryIdChange,
@@ -42,25 +34,20 @@ export function SectorCascadeSelect({
   error?: string;
   className?: string;
 }) {
-  const [tree, setTree] = useState<SectorTree | null>(null);
-  const [lookupReady, setLookupReady] = useState(false);
+  const [entries, setEntries] = useState<SectorLookupEntry[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selection, setSelection] = useState<SectorSelection>(() =>
-    selectionFromSubIndustryId(subIndustryId)
-  );
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadSectorTree(), loadSectorLookup()])
-      .then(([sectorTree]) => {
+    loadSectorLookup()
+      .then((loaded) => {
         if (!cancelled) {
-          setTree(sectorTree);
-          setLookupReady(true);
+          setEntries(loaded);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setLoadError('Could not load sector data. Please refresh and try again.');
+          setLoadError('Could not load sub-industry data. Please refresh and try again.');
         }
       });
     return () => {
@@ -68,99 +55,49 @@ export function SectorCascadeSelect({
     };
   }, []);
 
-  useEffect(() => {
-    if (!lookupReady || subIndustryId == null) {
-      return;
-    }
-    setSelection(selectionFromSubIndustryId(subIndustryId));
-  }, [lookupReady, subIndustryId]);
-
-  const sectors = useMemo(() => sortedSectorKeys(tree ?? undefined), [tree]);
-  const industries = useMemo(
-    () => (selection.sector && tree ? sortedSectorKeys(tree[selection.sector]) : []),
-    [tree, selection.sector]
-  );
-  const subIndustries = useMemo(
-    () =>
-      selection.sector && selection.industry && tree?.[selection.sector]?.[selection.industry]
-        ? [...tree[selection.sector][selection.industry]].sort((a, b) => a.localeCompare(b))
-        : [],
-    [tree, selection.sector, selection.industry]
+  const options = useMemo(
+    () => (entries ? subIndustrySelectOptions(entries) : []),
+    [entries]
   );
 
-  const applySelection = (next: SectorSelection) => {
-    setSelection(next);
-    if (!lookupReady) {
-      return;
-    }
-    const id = resolveSubIndustryId(next);
-    onSubIndustryIdChange(id);
-  };
+  const selectedEntry = useMemo(
+    () => findSectorLookupById(subIndustryId),
+    [subIndustryId]
+  );
 
   if (loadError) {
     return (
-      <p className={cn('text-sm text-destructive sm:col-span-2', className)} role="alert">
+      <p className={cn('text-sm text-destructive', className)} role="alert">
         {loadError}
       </p>
     );
   }
 
-  if (!tree || !lookupReady) {
+  if (!entries) {
     return (
-      <p className={cn('text-sm text-muted-foreground sm:col-span-2', className)}>
-        Loading sectors…
-      </p>
+      <p className={cn('text-sm text-muted-foreground', className)}>Loading sub-industries…</p>
     );
   }
 
   return (
-    <div className={cn('grid gap-4 sm:col-span-2 sm:grid-cols-2', className)}>
-      <SelectField
-        label="Sector"
-        optional={optional}
-        disabled={disabled}
-        value={selection.sector || undefined}
-        onValueChange={(next) =>
-          applySelection({
-            sector: next ?? '',
-            industry: '',
-            subIndustry: ''
-          })
-        }
-        options={toOptions(sectors)}
-        placeholder="Select sector"
-        error={error}
-      />
-      <SelectField
-        label="Industry"
-        optional={optional}
-        disabled={disabled || !selection.sector}
-        value={selection.industry || undefined}
-        onValueChange={(next) =>
-          applySelection({
-            ...selection,
-            industry: next ?? '',
-            subIndustry: ''
-          })
-        }
-        options={toOptions(industries)}
-        placeholder="Select industry"
-      />
-      <SelectField
-        label="Sub-industry"
-        optional={optional}
-        disabled={disabled || !selection.industry}
-        value={selection.subIndustry || undefined}
-        onValueChange={(next) =>
-          applySelection({
-            ...selection,
-            subIndustry: next ?? ''
-          })
-        }
-        options={toOptions(subIndustries)}
-        placeholder="Select sub-industry"
-        className="sm:col-span-2"
-      />
-    </div>
+    <SelectField
+      id="subIndustryId"
+      className={className}
+      label="Sub-industry"
+      optional={optional}
+      disabled={disabled}
+      value={subIndustryId != null ? String(subIndustryId) : undefined}
+      onValueChange={(value) =>
+        onSubIndustryIdChange(value ? Number(value) : undefined)
+      }
+      options={options}
+      placeholder="Select sub-industry"
+      error={error}
+      hint={
+        selectedEntry
+          ? `Sector: ${selectedEntry.sectorName} · Industry: ${selectedEntry.industryName}`
+          : 'Sector and industry are set automatically from the sub-industry you choose.'
+      }
+    />
   );
 }

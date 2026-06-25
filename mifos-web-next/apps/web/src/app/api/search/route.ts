@@ -27,10 +27,9 @@ export async function GET(request: Request) {
   }
 
   const resource = searchParams.get('resource') ?? SEARCH_RESOURCE_ALL;
-  const exactMatch = searchParams.get('exactMatch') === 'true';
 
   try {
-    const results = await searchEntities({ query, resource, exactMatch });
+    const results = await searchEntities({ query, resource });
     return jsonOk(results);
   } catch (err) {
     return jsonError(err);

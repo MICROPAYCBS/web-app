@@ -9,12 +9,11 @@
  */
 
 import type { FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
+import { LEGAL_FORM_PERSON } from '@mifos/validation';
 import { DateField } from '@/components/composites/date-field';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
-import { TextField } from '@/components/composites/text-field';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
@@ -24,7 +23,6 @@ export interface GeneralStepProps {
   draft: CreateClientDraft;
   errors: StepErrors;
   onDraftChange: (patch: Partial<ClientGeneralFormState>) => void;
-  onTemplateChange: (template: FineractClientTemplate) => void;
 }
 
 export function GeneralStep({
@@ -32,92 +30,20 @@ export function GeneralStep({
   draft,
   errors,
   onDraftChange,
-  onTemplateChange,
 }: GeneralStepProps) {
   const g = draft.general;
   const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
-  const nonPerson = g.clientNonPersonDetails ?? {};
-
-  async function reloadTemplateForBranch(officeId: number) {
-    const res = await fetch(`/api/clients/template?officeId=${officeId}`);
-    if (!res.ok) {
-      return;
-    }
-    const data = (await res.json()) as FineractClientTemplate;
-    if (data?.staffOptions) {
-      onTemplateChange({
-        ...template,
-        ...data,
-        officeOptions: template.officeOptions,
-        datatables: data.datatables ?? template.datatables
-      });
-    }
-  }
-
-  const legalFormOptions = toSelectOptions(
-    template.clientLegalFormOptions?.length
-      ? template.clientLegalFormOptions
-      : [
-          { id: LEGAL_FORM_PERSON, value: 'Person' },
-          { id: LEGAL_FORM_ENTITY, value: 'Entity' }
-        ]
-  );
 
   return (
     <div className="space-y-6">
       {errors._form ? <FormErrorAlert>{errors._form}</FormErrorAlert> : null}
 
       <p className="text-sm text-muted-foreground">
-        Branch assignment, profile type, and account opening details for this customer.
+        Assign a relationship officer and set account opening details. The branch is taken from your
+        signed-in account.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <SelectField
-          id="officeId"
-          label="Branch"
-          required
-          value={g.officeId ? String(g.officeId) : undefined}
-          onValueChange={(v) => {
-            const id = Number(v);
-            onDraftChange({ officeId: id });
-            void reloadTemplateForBranch(id);
-          }}
-          options={toSelectOptions(template.officeOptions)}
-          placeholder="Select branch"
-          error={errors.officeId}
-        />
-
-        <SelectField
-          id="legalFormId"
-          label="Profile type"
-          required
-          value={String(legalFormId)}
-          onValueChange={(v) => {
-            const id = Number(v);
-            if (id === LEGAL_FORM_PERSON) {
-              onDraftChange({
-                legalFormId: id,
-                fullname: undefined,
-                clientNonPersonDetails: undefined,
-                firstname: g.firstname ?? '',
-                lastname: g.lastname ?? ''
-              });
-            } else {
-              onDraftChange({
-                legalFormId: id,
-                firstname: undefined,
-                middlename: undefined,
-                lastname: undefined,
-                fullname: g.fullname ?? '',
-                isStaff: false,
-                clientNonPersonDetails: { constitutionId: nonPerson.constitutionId }
-              });
-            }
-          }}
-          options={legalFormOptions}
-          error={errors.legalFormId}
-        />
-
         <SelectField
           id="staffId"
           label="Relationship officer"
@@ -146,14 +72,6 @@ export function GeneralStep({
             onCheckedChange={(checked) => onDraftChange({ isStaff: checked })}
           />
         ) : null}
-
-        <TextField
-          id="externalId"
-          label="External ID"
-          optional
-          value={g.externalId ?? ''}
-          onChange={(v) => onDraftChange({ externalId: v })}
-        />
 
         <DateField
           id="submittedOnDate"
