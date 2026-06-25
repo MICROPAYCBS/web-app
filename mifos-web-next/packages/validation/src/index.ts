@@ -544,6 +544,11 @@ export {
   type UpdateGlobalConfigurationValuesInput
 } from './system/global-configuration.schema';
 export {
+  updateBusinessDateSchema,
+  validateUpdateBusinessDate,
+  type UpdateBusinessDateInput
+} from './system/business-date.schema';
+export {
   upsertEntityMappingSchema,
   validateUpsertEntityMapping,
   type UpsertEntityMappingInput

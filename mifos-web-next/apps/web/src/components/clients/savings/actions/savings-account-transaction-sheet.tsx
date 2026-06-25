@@ -15,9 +15,10 @@ import {
   executeSavingsAccountTransactionCommandAction,
   loadSavingsAccountTransactionSheetDataAction
 } from '@/actions/savings-account-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import {
   emptyPaymentDetailFields,
   PaymentDetailFields
@@ -25,7 +26,6 @@ import {
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { dateToFineract } from '@/lib/fineract/date-input';
 
 type DepositWithdrawCommand = 'deposit' | 'withdrawal';
 
@@ -50,7 +50,8 @@ export function SavingsAccountTransactionSheet({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [paymentTypes, setPaymentTypes] = useState<{ id: number; name: string }[]>([]);
-  const [transactionDate, setTransactionDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
   const [amount, setAmount] = useState('');
   const [paymentTypeId, setPaymentTypeId] = useState('');
   const [note, setNote] = useState('');
@@ -73,7 +74,7 @@ export function SavingsAccountTransactionSheet({
     setError(null);
     setFieldErrors({});
     setActiveTab('basic');
-    setTransactionDate(dateToFineract(new Date()));
+    setTransactionDate(initialTransactionDate);
     setAmount('');
     setPaymentTypeId('');
     setNote('');
@@ -100,7 +101,7 @@ export function SavingsAccountTransactionSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, command, accountId]);
+  }, [open, command, accountId, initialTransactionDate]);
 
   if (!command) {
     return null;
@@ -144,7 +145,7 @@ export function SavingsAccountTransactionSheet({
 
   const basicFields = (
     <div className="space-y-4">
-      <DateField
+      <TransactionDateField
         id={`${formId}-date`}
         label="Transaction date"
         value={transactionDate}

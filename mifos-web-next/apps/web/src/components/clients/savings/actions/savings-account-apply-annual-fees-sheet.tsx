@@ -15,10 +15,10 @@ import {
   executeSavingsAccountPayChargeAction,
   loadSavingsAccountAnnualFeeSheetDataAction
 } from '@/actions/savings-account-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { TextField } from '@/components/composites/text-field';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 
 export function SavingsAccountApplyAnnualFeesSheet({
   clientId,
@@ -40,7 +40,8 @@ export function SavingsAccountApplyAnnualFeesSheet({
   const [chargeId, setChargeId] = useState<number | null>(null);
   const [chargeName, setChargeName] = useState('');
   const [amount, setAmount] = useState('');
-  const [dueDate, setDueDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [dueDate, setDueDate] = useState(initialTransactionDate);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -52,7 +53,7 @@ export function SavingsAccountApplyAnnualFeesSheet({
     setLoading(true);
     setError(null);
     setFieldErrors({});
-    setDueDate(dateToFineract(new Date()));
+    setDueDate(initialTransactionDate);
     void loadSavingsAccountAnnualFeeSheetDataAction(String(accountId)).then((result) => {
       if (cancelled) {
         return;
@@ -70,7 +71,7 @@ export function SavingsAccountApplyAnnualFeesSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, accountId]);
+  }, [open, accountId, initialTransactionDate]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -131,7 +132,7 @@ export function SavingsAccountApplyAnnualFeesSheet({
               disabled
             />
           ) : null}
-          <DateField
+          <TransactionDateField
             id={`${formId}-due-date`}
             label="Due date"
             value={dueDate}

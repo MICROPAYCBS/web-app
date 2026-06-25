@@ -12,9 +12,9 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { executeSavingsAccountExtendedTransactionCommandAction } from '@/actions/savings-account-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 
 export function SavingsAccountPostInterestAsOnSheet({
   clientId,
@@ -30,7 +30,8 @@ export function SavingsAccountPostInterestAsOnSheet({
   const formId = useId();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [transactionDate, setTransactionDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -38,10 +39,10 @@ export function SavingsAccountPostInterestAsOnSheet({
     if (!open) {
       return;
     }
-    setTransactionDate(dateToFineract(new Date()));
+    setTransactionDate(initialTransactionDate);
     setError(null);
     setFieldErrors({});
-  }, [open]);
+  }, [open, initialTransactionDate]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -78,7 +79,7 @@ export function SavingsAccountPostInterestAsOnSheet({
       submitLoading={pending}
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-4">
-        <DateField
+        <TransactionDateField
           id={`${formId}-date`}
           label="Interest post date"
           value={transactionDate}

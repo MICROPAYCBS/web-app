@@ -9,11 +9,13 @@
  */
 
 import type { CSSProperties, ReactNode } from 'react';
+import { BusinessDateProvider } from '@/components/platform/business-date-provider';
 import { MifosAppSidebar } from '@/components/platform/mifos-app-sidebar';
 import { EntitySearchProvider } from '@/components/platform/entity-search-provider';
 import { MifosSiteHeader } from '@/components/platform/mifos-site-header';
 import { NavigationProvider } from '@/components/platform/navigation-provider';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
+import type { BusinessDateContextValue } from '@/lib/fineract/business-date-context';
 import { ErrorBoundary } from '@/components/composites/error-boundary';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
@@ -29,19 +31,22 @@ const shellStyle = {
 export function PlatformShell({
   nav,
   serverName,
+  businessDateContext,
   children
 }: {
   nav: PlatformNavStructure;
   serverName?: string | null;
+  businessDateContext: BusinessDateContextValue;
   children: ReactNode;
 }) {
   return (
-    <NavigationProvider nav={nav}>
-      <EntitySearchProvider>
-        <SidebarProvider style={shellStyle}>
-          <MifosAppSidebar serverName={serverName} />
-          <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
-            <MifosSiteHeader />
+    <BusinessDateProvider value={businessDateContext}>
+      <NavigationProvider nav={nav}>
+        <EntitySearchProvider>
+          <SidebarProvider style={shellStyle}>
+            <MifosAppSidebar serverName={serverName} />
+            <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
+              <MifosSiteHeader businessDateLabel={businessDateContext.displayLabel} />
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <ErrorBoundary
                 title="This section failed to load"
@@ -56,5 +61,6 @@ export function PlatformShell({
         </SidebarProvider>
       </EntitySearchProvider>
     </NavigationProvider>
+    </BusinessDateProvider>
   );
 }

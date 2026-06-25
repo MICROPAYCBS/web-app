@@ -30,3 +30,7 @@ export function formatYesNo(value?: boolean): string {
   }
   return '—';
 }
+
+/** Shown on customer create/edit forms for the optional external reference field. */
+export const CLIENT_EXTERNAL_ID_HINT =
+  'Optional reference from another system (e.g. legacy customer number or CRM ID). Must be unique if provided.';

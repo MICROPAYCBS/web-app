@@ -29,7 +29,7 @@ import { toast } from 'sonner';
 import { parseAmount, areJournalEntryTotalsBalanced } from '@mifos/domain';
 import { createFrequentPostingAction } from '@/actions/frequent-postings';
 import { JournalEntryTotalsSummary } from '@/components/accounting/journal-entry-totals-summary';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { MoneyField } from '@/components/composites/money-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
@@ -338,7 +338,7 @@ export function FrequentPostingsForm({
           disabled={pending}
           error={fieldErrors.currencyCode}
         />
-        <DateField
+        <TransactionDateField
           label="Transaction date"
           required
           value={form.transactionDate}

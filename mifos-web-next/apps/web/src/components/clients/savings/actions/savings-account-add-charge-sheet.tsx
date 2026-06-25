@@ -15,13 +15,13 @@ import {
   loadSavingsAccountAddChargeSheetDataAction,
   loadSavingsAccountChargeDetailAction
 } from '@/actions/savings-account-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import {
   chargeCurrencyCodeFromLike,
   isFlatChargeCalculation
@@ -62,7 +62,8 @@ export function SavingsAccountAddChargeSheet({
   const [chargeCurrencyCode, setChargeCurrencyCode] = useState<string | undefined>();
   const [chargeTimeType, setChargeTimeType] = useState('');
   const [chargeTimeLabel, setChargeTimeLabel] = useState('');
-  const [dueDate, setDueDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [dueDate, setDueDate] = useState(initialTransactionDate);
   const [feeOnMonthDay, setFeeOnMonthDay] = useState('');
   const [feeInterval, setFeeInterval] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +85,7 @@ export function SavingsAccountAddChargeSheet({
     setChargeCurrencyCode(undefined);
     setChargeTimeType('');
     setChargeTimeLabel('');
-    setDueDate(dateToFineract(new Date()));
+    setDueDate(initialTransactionDate);
     setFeeOnMonthDay('');
     setFeeInterval('');
     void loadSavingsAccountAddChargeSheetDataAction(String(accountId)).then((result) => {
@@ -102,7 +103,7 @@ export function SavingsAccountAddChargeSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, accountId]);
+  }, [open, accountId, initialTransactionDate]);
 
   useEffect(() => {
     if (!chargeId) {
@@ -232,7 +233,7 @@ export function SavingsAccountAddChargeSheet({
                 />
               )}
               {!flags.dueDateNotRequired && !flags.annualOrMonthly ? (
-                <DateField
+                <TransactionDateField
                   id={`${formId}-due-date`}
                   label="Due date"
                   value={dueDate}

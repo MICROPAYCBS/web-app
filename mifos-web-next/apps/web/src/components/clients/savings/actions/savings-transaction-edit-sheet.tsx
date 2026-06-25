@@ -16,7 +16,7 @@ import {
   loadSavingsTransactionEditSheetDataAction,
   modifySavingsTransactionAction
 } from '@/actions/savings-transaction-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import {
@@ -137,7 +137,7 @@ export function SavingsTransactionEditSheet({
 
   const basicFields = (
     <div className="space-y-4">
-      <DateField
+      <TransactionDateField
         id={`${formId}-date`}
         label="Transaction date"
         value={transactionDate}

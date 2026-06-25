@@ -15,10 +15,10 @@ import {
   executeSavingsAccountLifecycleCommandAction,
   loadSavingsAccountAssignStaffSheetDataAction
 } from '@/actions/savings-account-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 
 export function SavingsAccountAssignStaffSheet({
   clientId,
@@ -37,7 +37,8 @@ export function SavingsAccountAssignStaffSheet({
   const [loading, setLoading] = useState(false);
   const [staffOptions, setStaffOptions] = useState<{ id: number; name: string }[]>([]);
   const [toSavingsOfficerId, setToSavingsOfficerId] = useState('');
-  const [assignmentDate, setAssignmentDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [assignmentDate, setAssignmentDate] = useState(initialTransactionDate);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -50,7 +51,7 @@ export function SavingsAccountAssignStaffSheet({
     setError(null);
     setFieldErrors({});
     setToSavingsOfficerId('');
-    setAssignmentDate(dateToFineract(new Date()));
+    setAssignmentDate(initialTransactionDate);
     void loadSavingsAccountAssignStaffSheetDataAction(clientId).then((result) => {
       if (cancelled) {
         return;
@@ -66,7 +67,7 @@ export function SavingsAccountAssignStaffSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, clientId]);
+  }, [open, clientId, initialTransactionDate]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -118,7 +119,7 @@ export function SavingsAccountAssignStaffSheet({
             required
             disabled={pending}
           />
-          <DateField
+          <TransactionDateField
             id={`${formId}-assignment-date`}
             label="Assignment date"
             value={assignmentDate}

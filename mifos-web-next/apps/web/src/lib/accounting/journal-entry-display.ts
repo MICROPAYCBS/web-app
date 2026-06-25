@@ -49,12 +49,13 @@ export function formatJournalEntryAmount(entry: FineractJournalEntryListItem, si
 
 export function defaultCreateJournalEntryFormValues(
   currencies: FineractCurrencyOption[],
-  officeId?: number
+  officeId?: number,
+  transactionDate?: string
 ): CreateJournalEntryFormInput {
   return {
     officeId: officeId ?? 0,
     currencyCode: currencies[0]?.code ?? '',
-    transactionDate: toFineractDate(new Date()),
+    transactionDate: transactionDate ?? toFineractDate(new Date()),
     debits: [{ glAccountId: 0, amount: 0 }],
     credits: [{ glAccountId: 0, amount: 0 }],
     referenceNumber: '',

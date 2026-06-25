@@ -12,8 +12,9 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { executeSavingsAccountLifecycleCommandAction } from '@/actions/savings-account-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { TextField } from '@/components/composites/text-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,7 +25,6 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import type { SavingsAccountLifecycleCommand } from '@/lib/fineract/savings-account-command-meta';
-import { dateToFineract } from '@/lib/fineract/date-input';
 
 export type SavingsAccountLifecycleDialogKind = Extract<
   SavingsAccountLifecycleCommand,
@@ -111,7 +111,8 @@ export function SavingsAccountLifecycleDialog({
   const formId = useId();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [date, setDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [date, setDate] = useState(initialTransactionDate);
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -120,11 +121,11 @@ export function SavingsAccountLifecycleDialog({
     if (!open) {
       return;
     }
-    setDate(dateToFineract(new Date()));
+    setDate(initialTransactionDate);
     setNote('');
     setError(null);
     setFieldErrors({});
-  }, [open, kind]);
+  }, [open, kind, initialTransactionDate]);
 
   if (!kind) {
     return null;
@@ -183,7 +184,7 @@ export function SavingsAccountLifecycleDialog({
         ) : (
           <form id={formId} onSubmit={handleSubmit} className="space-y-4">
             {showDate ? (
-              <DateField
+              <TransactionDateField
                 id={`${formId}-date`}
                 label="Date"
                 value={date}

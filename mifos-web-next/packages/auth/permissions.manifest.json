@@ -519,6 +519,16 @@
       "READ_CONFIGURATION"
     ]
   },
+  "system.businessDate": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.businessDate.update": {
+    "any": [
+      "UPDATE_BUSINESSDATE"
+    ]
+  },
   "system.accountNumberPrefs": {
     "any": [
       "READ_ACCOUNTNUMBERFORMAT"

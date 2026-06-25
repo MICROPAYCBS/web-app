@@ -36,6 +36,7 @@ Instructions for AI agents working in this repository.
 10. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md and `docs/SERVERS.md``).
 11. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
 12. **User-facing copy** must not mention Fineract, APIs, or backend product names unless unavoidable (e.g. a technical settings field). Prefer domain language users know: “Customer addresses”, “Family members”, “Servers”, “Sign in”. Code, comments, and docs for developers may still reference Fineract.
+13. **Business date on transaction forms** — posting and operation dates (deposits, transfers, journal entries, lifecycle commands, etc.) must use `TransactionDateField` and the shared business-date context — see `docs/COMPONENTS.md` § Business date & transaction dates. Do **not** use plain `DateField` or `new Date()` for those fields. Search/filter date ranges and profile or planning dates (DOB, expected disbursement, holidays) stay editable `DateField`s.
 
 ## Reference repos
 

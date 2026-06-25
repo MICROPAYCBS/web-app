@@ -15,13 +15,13 @@ import {
   executeSavingsAccountLifecycleCommandAction,
   loadSavingsAccountTransactionSheetDataAction
 } from '@/actions/savings-account-command';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 
 export function SavingsAccountCloseSheet({
   clientId,
@@ -39,7 +39,8 @@ export function SavingsAccountCloseSheet({
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [paymentTypes, setPaymentTypes] = useState<{ id: number; name: string }[]>([]);
-  const [closedOnDate, setClosedOnDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [closedOnDate, setClosedOnDate] = useState(initialTransactionDate);
   const [withdrawBalance, setWithdrawBalance] = useState(false);
   const [paymentTypeId, setPaymentTypeId] = useState('');
   const [note, setNote] = useState('');
@@ -54,7 +55,7 @@ export function SavingsAccountCloseSheet({
     setLoading(true);
     setError(null);
     setFieldErrors({});
-    setClosedOnDate(dateToFineract(new Date()));
+    setClosedOnDate(initialTransactionDate);
     setWithdrawBalance(false);
     setPaymentTypeId('');
     setNote('');
@@ -75,7 +76,7 @@ export function SavingsAccountCloseSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, accountId]);
+  }, [open, accountId, initialTransactionDate]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -122,7 +123,7 @@ export function SavingsAccountCloseSheet({
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
         <form id={formId} onSubmit={handleSubmit} className="space-y-4">
-          <DateField
+          <TransactionDateField
             id={`${formId}-closed-on`}
             label="Closed on"
             value={closedOnDate}

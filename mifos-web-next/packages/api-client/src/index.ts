@@ -255,6 +255,18 @@ export type {
   FineractGlobalConfigurationUpdateResponse
 } from './system/global-configuration-types';
 
+export {
+  BUSINESS_DATE_TYPE,
+  COB_DATE_TYPE
+} from './system/business-date-types';
+
+export type {
+  FineractBusinessDateEntry,
+  FineractBusinessDateType,
+  FineractBusinessDateUpdatePayload,
+  FineractBusinessDateUpdateResponse
+} from './system/business-date-types';
+
 export type {
   FineractHookConfigField,
   FineractHookDetail,

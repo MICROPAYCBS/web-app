@@ -13,6 +13,7 @@ import { DetailBackLink } from '@/components/composites';
 import { ListPage } from '@/components/composites/list-page';
 import { defaultFrequentPostingFormValues } from '@/lib/accounting/frequent-posting-display';
 import { listAccountingRulesForFrequentPostings } from '@/lib/fineract/accounting-rules';
+import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
 import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
 import { listPaymentTypes } from '@/lib/fineract/payment-types';
@@ -27,11 +28,12 @@ export default async function FrequentPostingsPage() {
     notFound();
   }
 
-  const [offices, accountingRules, currencies, paymentTypes] = await Promise.all([
+  const [offices, accountingRules, currencies, paymentTypes, transactionDate] = await Promise.all([
     listOfficeOptions(),
     listAccountingRulesForFrequentPostings(),
     getOrganizationSelectedCurrencies(),
-    listPaymentTypes()
+    listPaymentTypes(),
+    getDefaultTransactionDate()
   ]);
 
   return (
@@ -42,7 +44,11 @@ export default async function FrequentPostingsPage() {
     >
       <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <FrequentPostingsForm
-          initialValues={defaultFrequentPostingFormValues(currencies, offices[0]?.id)}
+          initialValues={defaultFrequentPostingFormValues(
+            currencies,
+            offices[0]?.id,
+            transactionDate
+          )}
           offices={offices}
           currencies={currencies}
           paymentTypes={paymentTypes}

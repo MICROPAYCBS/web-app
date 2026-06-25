@@ -224,6 +224,7 @@ Do **not** use FormSheet for:
 |-------------|-------------------|
 | One combobox (`SelectField`) | Each text input |
 | One `DateField` | Each checkbox/switch that is independent |
+| One `TransactionDateField` | Same as `DateField` (operational posting date) |
 | One `MoneyField` | Repeatable blocks (each row counts) |
 
 A checkbox group for one decision = 1 field. A dynamic list of charges = N fields → use a page.
@@ -255,12 +256,69 @@ Implementation: `FormSheet` in `apps/web/src/components/composites/form-sheet.ts
 |-----------|--------------|-------|
 | `SelectField` | Command + Popover | Default for lookups; autocomplete |
 | `DateField` | Calendar + Popover | Fineract date format via `@mifos/domain` |
+| `TransactionDateField` | `DateField` or read-only | **Operational posting dates** — business date when configured; see § Business date & transaction dates |
 | `DateTimeField` | Calendar + time | When API needs datetime |
 | `MoneyField` | Input | `decimal.js`; never float |
 | `TextField` | Input + Label | Via `FormField` wrapper |
 | `FormField` | — | Label, error, `aria-*` for RHF |
 
 Use plain shadcn `Select` only for static enums with **≤4** options (e.g. Yes/No).
+
+## Business date & transaction dates
+
+When the tenant has **business date** enabled (`enable-business-date` global configuration) and a business date is set, all **transaction and operational posting dates** must follow the organisation business day — not the browser clock.
+
+### Use `TransactionDateField` (not `DateField`)
+
+For any form field that records **when a financial transaction or command is posted**, including but not limited to:
+
+- `transactionDate`, `transferDate`, `closedOnDate`, `activatedOnDate`, `approvedOnDate`
+- Journal entry / frequent posting transaction dates
+- Savings deposits, withdrawals, holds, transfers, charges (due date when posting)
+- Customer lifecycle commands (activate, close, transfer, reject, …)
+- Loan **submitted on** (application date)
+
+```tsx
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+
+const initialTransactionDate = useInitialTransactionDate();
+const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
+
+<TransactionDateField
+  label="Transaction date"
+  required
+  value={transactionDate}
+  onChange={setTransactionDate}
+  error={fieldErrors.transactionDate}
+/>
+```
+
+### Behaviour
+
+| Business date | UI | Default value |
+|---------------|-----|----------------|
+| Enabled **and** set | **Read-only** display + hint “Uses the organisation business date.” | Organisation business date |
+| Disabled or not set | Editable `DateField` (via `TransactionDateField` fallback), capped at today | Today (`useInitialTransactionDate()`) |
+
+### Client vs server defaults
+
+| Layer | API |
+|-------|-----|
+| Client forms (sheets, dialogs) | `useInitialTransactionDate()` from `BusinessDateProvider` (wired in `PlatformShell`) |
+| Server pages (initial form props) | `getDefaultTransactionDate()` from `@/lib/fineract/business-date` |
+| Helpers | `getBusinessDateContext()`, `isTransactionDateLocked()`, `resolveTransactionDate()` in `business-date-context.ts` |
+
+Reset form state on open with `initialTransactionDate`, not `dateToFineract(new Date())`.
+
+### Do **not** use `TransactionDateField` for
+
+- **Search and filter** date ranges (journal entry filters, audit trails, list query `fromDate` / `toDate`)
+- **Profile and planning** dates: date of birth, incorporation, holidays, expected future disbursement (`allowFuture`)
+- **Business date administration** (`/system/business-date` — dates are edited there intentionally)
+- Customer onboarding biodata (submitted on may stay `DateField` until explicitly aligned)
+
+New transaction forms **must** follow this pattern. Prefer extending existing sheets rather than introducing new `DateField` + `new Date()` defaults.
 
 ## Anti-patterns
 
@@ -271,6 +329,7 @@ Use plain shadcn `Select` only for static enums with **≤4** options (e.g. Yes/
 - Pasting dashboard-01 `data-table.tsx` into the repo as a shared component.
 - Wiring `useReactTable` in feature pages instead of `DataTable` composite.
 - Hiding **Create client** only on the clients list with no sidebar Quick Create.
+- `DateField` or `dateToFineract(new Date())` for transaction/posting dates — use `TransactionDateField` + `useInitialTransactionDate()` / `getDefaultTransactionDate()`.
 
 ## Reference
 

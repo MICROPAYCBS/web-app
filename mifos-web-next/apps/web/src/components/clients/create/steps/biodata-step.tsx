@@ -15,6 +15,7 @@ import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { toSelectOptions } from '@/lib/form/select-options';
+import { CLIENT_EXTERNAL_ID_HINT } from '@/lib/fineract/client-detail-labels';
 import { filterEligibleClientTitles } from '@/lib/fineract/client-title-eligibility';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
@@ -93,11 +94,13 @@ export function BiodataStep({
 
         <TextField
           id="externalId"
+          className="sm:col-span-2"
           label="External ID"
           optional
           value={g.externalId ?? ''}
           onChange={(v) => onDraftChange({ externalId: v })}
           error={errors.externalId}
+          hint={CLIENT_EXTERNAL_ID_HINT}
         />
 
         {legalFormId === LEGAL_FORM_ENTITY ? (

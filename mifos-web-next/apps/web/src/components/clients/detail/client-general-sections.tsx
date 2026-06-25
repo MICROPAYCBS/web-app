@@ -79,7 +79,7 @@ function ClientInformationSection({ client }: { client: FineractClientDetail }) 
             <TextValue value={enumOptionLabel(client.gender)} />
           </DetailField>
         ) : null}
-        <DetailField label="Account number">
+        <DetailField label="Customer number">
           <TextValue value={client.accountNo} />
         </DetailField>
         <DetailField label="External ID">

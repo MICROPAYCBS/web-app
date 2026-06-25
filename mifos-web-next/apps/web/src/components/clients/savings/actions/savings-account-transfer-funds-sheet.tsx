@@ -26,12 +26,12 @@ import {
   ContextHelpPanel,
   ContextHelpProvider
 } from '@/components/composites/context-help';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { SAVINGS_PORTFOLIO_ACCOUNT_TYPE } from '@/lib/fineract/portfolio-account-types';
 import {
   formatSavingsAccountMoney,
@@ -114,9 +114,8 @@ export function SavingsAccountTransferFundsSheet({
     Array<{ value: string; label: string; keywords?: string[] }>
   >([]);
   const [clientPickerId, setClientPickerId] = useState<string | undefined>();
-  const [transferDate, setTransferDate] = useState<string | undefined>(() =>
-    dateToFineract(new Date())
-  );
+  const initialTransactionDate = useInitialTransactionDate();
+  const [transferDate, setTransferDate] = useState(initialTransactionDate);
   const [transferAmount, setTransferAmount] = useState('');
   const [transferDescription, setTransferDescription] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -173,6 +172,7 @@ export function SavingsAccountTransferFundsSheet({
     setDebouncedClientSearch('');
     setClientOptions([]);
     setClientPickerId(undefined);
+    setTransferDate(initialTransactionDate);
     setTransferAmount('');
     setTransferDescription('');
     setFieldErrors({});
@@ -198,14 +198,13 @@ export function SavingsAccountTransferFundsSheet({
         return;
       }
       setTemplate(result.template);
-      const defaultDate = dateToFineract(new Date(), result.template.dateFormat);
-      setTransferDate(defaultDate);
+      setTransferDate(initialTransactionDate);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [open, account.id]);
+  }, [open, account.id, initialTransactionDate]);
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -528,7 +527,7 @@ export function SavingsAccountTransferFundsSheet({
           <section className="space-y-4">
             <h3 className="text-sm font-medium">Transfer details</h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <DateField
+              <TransactionDateField
                 id="transfer-date"
                 label="Transfer date"
                 required

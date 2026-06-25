@@ -107,7 +107,7 @@ export function ClientsTable({
         accessorKey: 'accountNo',
         header: ({ column }) => (
           <SortableColumnHeader
-            label="Account no."
+            label="Customer number"
             sorted={column.getIsSorted()}
             onToggle={() => column.toggleSorting()}
           />
@@ -219,7 +219,7 @@ export function ClientsTable({
             aria-hidden
           />
           <Input
-            placeholder="Search name, account no., phone, email…"
+            placeholder="Search name, customer number, phone, email…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="pl-9"

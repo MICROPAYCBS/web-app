@@ -80,6 +80,7 @@ export async function updateGlobalConfigurationEnabledAction(
   try {
     const data = await updateGlobalConfigurationEnabled(parsed.data);
     revalidatePath(LIST_PATH);
+    revalidatePath('/', 'layout');
     return { ok: true, data };
   } catch (error) {
     return toFineractActionError(error, 'Failed to update configuration status.');

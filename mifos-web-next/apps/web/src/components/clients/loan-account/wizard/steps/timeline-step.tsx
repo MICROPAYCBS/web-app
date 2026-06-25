@@ -12,6 +12,7 @@ import type { ClientLoanAccountTemplate } from '@mifos/api-client';
 import type { LoanAccountTimelineStepInput } from '@mifos/validation';
 import { DetailSection } from '@/components/composites';
 import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
@@ -58,13 +59,13 @@ export function LoanAccountTimelineStep({
       </DetailSection>
       <DetailSection title="Application dates">
         <div className="grid gap-4 sm:grid-cols-2">
-          <DateField
+          <TransactionDateField
             id="loan-submitted-on"
             label="Submitted on"
             required
             dateFormat={FINERACT_DATE_FORMAT}
             value={draft.submittedOnDate}
-            onChange={(submittedOnDate) => onChange({ submittedOnDate: submittedOnDate ?? '' })}
+            onChange={(submittedOnDate) => onChange({ submittedOnDate })}
             error={errors.submittedOnDate}
           />
           <DateField
@@ -72,6 +73,7 @@ export function LoanAccountTimelineStep({
             label="Expected disbursement"
             required
             dateFormat={FINERACT_DATE_FORMAT}
+            allowFuture
             value={draft.expectedDisbursementDate}
             onChange={(expectedDisbursementDate) =>
               onChange({ expectedDisbursementDate: expectedDisbursementDate ?? '' })

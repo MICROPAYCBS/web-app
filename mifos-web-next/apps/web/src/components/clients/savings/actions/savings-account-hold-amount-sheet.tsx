@@ -16,10 +16,10 @@ import {
   loadSavingsAccountHoldReasonsAction
 } from '@/actions/savings-account-command';
 import { CodeValueSelectField } from '@/components/composites/code-value-select-field';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { SAVINGS_ACCOUNT_HOLD_REASON_CODE_NAME } from '@/lib/fineract/savings-account-command-meta';
 
 export function SavingsAccountHoldAmountSheet({
@@ -42,7 +42,8 @@ export function SavingsAccountHoldAmountSheet({
   const [reasons, setReasons] = useState<{ id: number; name: string }[]>([]);
   const [reasonCodeName, setReasonCodeName] = useState(SAVINGS_ACCOUNT_HOLD_REASON_CODE_NAME);
   const [reasonForBlock, setReasonForBlock] = useState('');
-  const [transactionDate, setTransactionDate] = useState(() => dateToFineract(new Date()));
+  const initialTransactionDate = useInitialTransactionDate();
+  const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -56,7 +57,7 @@ export function SavingsAccountHoldAmountSheet({
     setError(null);
     setFieldErrors({});
     setReasonForBlock('');
-    setTransactionDate(dateToFineract(new Date()));
+    setTransactionDate(initialTransactionDate);
     setAmount('');
     void loadSavingsAccountHoldReasonsAction().then((result) => {
       if (cancelled) {
@@ -74,7 +75,7 @@ export function SavingsAccountHoldAmountSheet({
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, initialTransactionDate]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -131,7 +132,7 @@ export function SavingsAccountHoldAmountSheet({
             required
             disabled={pending}
           />
-          <DateField
+          <TransactionDateField
             id={`${formId}-date`}
             label="Transaction date"
             value={transactionDate}

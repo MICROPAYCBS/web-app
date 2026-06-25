@@ -64,8 +64,9 @@ export function filterNavGroups(
 }
 
 const QUICK_ACCESS_SECTION = 'Quick access';
+const ALL_PAGES_SECTION = 'All pages';
 
-/** Global Find results across featured links and every nav group. */
+/** Global Find results across featured links, nav groups, and the full Quick Find index. */
 export function searchNavLinks(
   nav: PlatformNavStructure,
   query: string
@@ -91,6 +92,7 @@ export function searchNavLinks(
   nav.groups.forEach((group) =>
     group.items.forEach((item) => add(item, group.label))
   );
+  nav.quickFind.forEach((item) => add(item, ALL_PAGES_SECTION));
   return results.sort((a, b) => {
     const byLabel = a.link.label.localeCompare(b.link.label);
     if (byLabel !== 0) {

@@ -33,10 +33,11 @@ import {
   fetchOpeningBalanceTemplateAction,
   type OpeningBalanceFetchResult
 } from '@/actions/opening-balances';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { ListPage } from '@/components/composites/list-page';
 import { MoneyField } from '@/components/composites/money-field';
 import { SelectField } from '@/components/composites/select-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { cn } from '@/lib/utils';
@@ -124,9 +125,10 @@ export function MigrateOpeningBalancesForm({
 }) {
   const router = useRouter();
   const formId = useId();
+  const initialTransactionDate = useInitialTransactionDate();
   const [officeId, setOfficeId] = useState<string | undefined>();
   const [currencyCode, setCurrencyCode] = useState<string | undefined>();
-  const [transactionDate, setTransactionDate] = useState('');
+  const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
   const [template, setTemplate] = useState<FineractOpeningBalanceTemplate | null>(null);
   const [entries, setEntries] = useState<Record<number, GlAccountEntryState>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -325,7 +327,7 @@ export function MigrateOpeningBalancesForm({
                   required
                   disabled={submitPending || !canDefine}
                 />
-                <DateField
+                <TransactionDateField
                   id={`${formId}-transaction-date`}
                   label="Opening balances date"
                   value={transactionDate}

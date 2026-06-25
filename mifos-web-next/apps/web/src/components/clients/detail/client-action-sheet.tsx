@@ -12,13 +12,13 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { executeClientActionCommand } from '@/actions/client-lifecycle-command';
 import { loadClientActionSheetDataAction } from '@/actions/client-action-sheet-data';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import type { ClientActionSheetData, ClientActionSheetId } from '@/lib/clients/client-action-types';
 import { CLIENT_ACTION_SHEET_TITLES } from '@/lib/clients/client-actions-menu-config';
-import { dateToFineract } from '@/lib/fineract/date-input';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 type FormState = {
@@ -40,17 +40,17 @@ type FormState = {
 
 function defaultFormState(
   sheetId: ClientActionSheetId,
-  data: ClientActionSheetData | null
+  data: ClientActionSheetData | null,
+  transactionDate: string
 ): FormState {
-  const today = dateToFineract(new Date());
   const base: FormState = {
-    activationDate: today,
-    closureDate: today,
-    withdrawalDate: today,
-    rejectionDate: today,
-    reactivationDate: today,
-    reopenedDate: today,
-    transferDate: today
+    activationDate: transactionDate,
+    closureDate: transactionDate,
+    withdrawalDate: transactionDate,
+    rejectionDate: transactionDate,
+    reactivationDate: transactionDate,
+    reopenedDate: transactionDate,
+    transferDate: transactionDate
   };
 
   if (data?.sheetId === 'update-default-savings' && data.currentAccountId) {
@@ -76,6 +76,7 @@ export function ClientActionSheet({
   hasProfileImage?: boolean;
 }) {
   const formId = useId();
+  const initialTransactionDate = useInitialTransactionDate();
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [sheetData, setSheetData] = useState<ClientActionSheetData | null>(null);
@@ -102,12 +103,12 @@ export function ClientActionSheet({
         return;
       }
       setSheetData(result.data);
-      setForm(defaultFormState(sheetId, result.data));
+      setForm(defaultFormState(sheetId, result.data, initialTransactionDate));
     });
     return () => {
       cancelled = true;
     };
-  }, [open, sheetId, clientId]);
+  }, [open, sheetId, clientId, initialTransactionDate]);
 
   function patchForm(patch: Partial<FormState>) {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -281,7 +282,7 @@ export function ClientActionSheet({
               avatar, then try again.
             </p>
           ) : null}
-          <DateField
+          <TransactionDateField
             id={`${formId}-activationDate`}
             label="Activation date"
             required
@@ -300,7 +301,7 @@ export function ClientActionSheet({
 
       {sheetId === 'close' ? (
         <div className="flex flex-col gap-4">
-          <DateField
+          <TransactionDateField
             id={`${formId}-closureDate`}
             label="Closure date"
             required
@@ -323,7 +324,7 @@ export function ClientActionSheet({
 
       {sheetId === 'withdraw' ? (
         <div className="flex flex-col gap-4">
-          <DateField
+          <TransactionDateField
             id={`${formId}-withdrawalDate`}
             label="Withdrawal date"
             required
@@ -346,7 +347,7 @@ export function ClientActionSheet({
 
       {sheetId === 'reject' ? (
         <div className="flex flex-col gap-4">
-          <DateField
+          <TransactionDateField
             id={`${formId}-rejectionDate`}
             label="Rejection date"
             required
@@ -368,7 +369,7 @@ export function ClientActionSheet({
       ) : null}
 
       {sheetId === 'reactivate' ? (
-        <DateField
+        <TransactionDateField
           id={`${formId}-reactivationDate`}
           label="Reactivation date"
           required
@@ -379,7 +380,7 @@ export function ClientActionSheet({
       ) : null}
 
       {sheetId === 'undo-rejection' ? (
-        <DateField
+        <TransactionDateField
           id={`${formId}-reopenedDate`}
           label="Reopened date"
           required
@@ -407,7 +408,7 @@ export function ClientActionSheet({
             error={fieldErrors.destinationOfficeId}
             disabled={officeOptions.length === 0}
           />
-          <DateField
+          <TransactionDateField
             id={`${formId}-transferDate`}
             label="Transfer date"
             required

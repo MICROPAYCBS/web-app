@@ -1,12 +1,12 @@
-import 'server-only';
-
 /**
- * Copyright since 2026 Mifos Initiative
+ * Copyright since 2026 MicroPay
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
+import 'server-only';
 
 import type {
   FineractGlobalConfiguration,
@@ -70,6 +70,20 @@ export async function listGlobalConfigurations(): Promise<FineractGlobalConfigur
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(CONFIGURATIONS_PATH);
   return normalizeGlobalConfigurationList(raw);
+}
+
+export async function getGlobalConfigurationByName(
+  name: string
+): Promise<FineractGlobalConfiguration | null> {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(
+    `${CONFIGURATIONS_PATH}/name/${encodeURIComponent(trimmed)}`
+  );
+  return normalizeGlobalConfiguration(raw);
 }
 
 export async function getGlobalConfiguration(

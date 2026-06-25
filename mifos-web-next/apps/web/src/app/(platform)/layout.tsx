@@ -10,6 +10,8 @@ import { filterNavStructure } from '@mifos/auth';
 import { buildNavStructure } from '@mifos/routes/server';
 import { PlatformShell } from '@/components/platform/platform-shell';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
+import { getBusinessDateContext } from '@/lib/fineract/business-date';
+import { EMPTY_BUSINESS_DATE_CONTEXT } from '@/lib/fineract/business-date-context';
 import { enrichSessionUser } from '@/lib/fineract/fetch-user-profile';
 import { getPublicSession } from '@/lib/session/server';
 import { getActiveFineractServer } from '@/lib/servers/catalog-store';
@@ -44,9 +46,17 @@ export default async function PlatformLayout({ children }: { children: React.Rea
   const activeServer = await getActiveFineractServer();
   const nav = toPlatformNav(filterNavStructure(user, buildNavStructure()));
 
+  const businessDateContext = sessionUser
+    ? await getBusinessDateContext().catch(() => EMPTY_BUSINESS_DATE_CONTEXT)
+    : EMPTY_BUSINESS_DATE_CONTEXT;
+
   return (
     <SessionProvider user={user} rbacEnabled={isRbacEnabled()}>
-      <PlatformShell nav={nav} serverName={activeServer?.name}>
+      <PlatformShell
+        nav={nav}
+        serverName={activeServer?.name}
+        businessDateContext={businessDateContext}
+      >
         {children}
       </PlatformShell>
     </SessionProvider>

@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-12T07:13:03.925Z",
+  "generatedAt": "2026-06-25T12:16:55.098Z",
   "summary": {
     "todo": 4,
-    "in_progress": 22,
-    "done": 49,
+    "in_progress": 21,
+    "done": 54,
     "n/a": 0
   },
   "routes": [
@@ -74,7 +74,7 @@
       "id": "clients",
       "path": "/clients",
       "domain": "clients",
-      "label": "Clients",
+      "label": "Customers",
       "kind": "page",
       "status": "in_progress",
       "webAppRef": "clients",
@@ -87,7 +87,7 @@
       "domain": "groups",
       "label": "Groups",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "groups"
     },
     {
@@ -334,6 +334,33 @@
       "webAppRef": "organization/payment-types"
     },
     {
+      "id": "orgCustomerClasses",
+      "path": "/organization/customer-classes",
+      "domain": "organization",
+      "label": "Customer classes",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/customer-classes"
+    },
+    {
+      "id": "orgCustomerTitles",
+      "path": "/organization/customer-titles",
+      "domain": "organization",
+      "label": "Customer titles",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/customer-titles"
+    },
+    {
+      "id": "orgContactTypes",
+      "path": "/organization/contact-types",
+      "domain": "organization",
+      "label": "Contact types",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/contact-types"
+    },
+    {
       "id": "orgPasswordPreferences",
       "path": "/organization/password-preferences",
       "domain": "organization",
@@ -503,6 +530,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "system/configurations"
+    },
+    {
+      "id": "sysBusinessDate",
+      "path": "/system/business-date",
+      "domain": "system",
+      "label": "Business date",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/configurations/business-date-tab"
     },
     {
       "id": "sysAccountNumberPrefs",

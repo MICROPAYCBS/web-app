@@ -12,6 +12,7 @@ import { DetailBackLink } from '@/components/composites';
 import { ListPage } from '@/components/composites/list-page';
 import { JournalEntryForm } from '@/components/accounting/journal-entries/journal-entry-form';
 import { defaultCreateJournalEntryFormValues } from '@/lib/accounting/journal-entry-display';
+import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
 import { listJournalEntryGlAccounts } from '@/lib/fineract/journal-entries';
 import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
@@ -27,11 +28,12 @@ export default async function CreateJournalEntryPage() {
     notFound();
   }
 
-  const [offices, currencies, paymentTypes, glAccounts] = await Promise.all([
+  const [offices, currencies, paymentTypes, glAccounts, transactionDate] = await Promise.all([
     listOfficeOptions(),
     getOrganizationSelectedCurrencies(),
     listPaymentTypes(),
-    listJournalEntryGlAccounts()
+    listJournalEntryGlAccounts(),
+    getDefaultTransactionDate()
   ]);
 
   const defaultOfficeId = offices[0]?.id;
@@ -44,7 +46,11 @@ export default async function CreateJournalEntryPage() {
     >
       <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <JournalEntryForm
-          initialValues={defaultCreateJournalEntryFormValues(currencies, defaultOfficeId)}
+          initialValues={defaultCreateJournalEntryFormValues(
+            currencies,
+            defaultOfficeId,
+            transactionDate
+          )}
           offices={offices}
           currencies={currencies}
           paymentTypes={paymentTypes}

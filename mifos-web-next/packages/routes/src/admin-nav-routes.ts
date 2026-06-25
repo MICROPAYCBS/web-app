@@ -420,7 +420,26 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'system.configurations',
     navOrder: 110,
     navIcon: 'sliders-horizontal',
-    keywords: ['configuration'],
+    keywords: ['configuration', 'business date', 'cob', 'enable-business-date'],
+    parityStatus: 'done'
+  },
+  {
+    id: 'sysBusinessDate',
+    path: '/system/business-date',
+    label: 'Business date',
+    navGroup: 'system',
+    webAppRef: 'system/configurations/business-date-tab',
+    permissionKey: 'system.businessDate',
+    navOrder: 115,
+    navIcon: 'calendar',
+    keywords: [
+      'business date',
+      'cob',
+      'cob date',
+      'close of business',
+      'tenant date',
+      'enable-business-date'
+    ],
     parityStatus: 'done'
   },
   {

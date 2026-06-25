@@ -20,13 +20,14 @@ export function formatFrequentPostingAccountLabel(account: FineractAccountingRul
 
 export function defaultFrequentPostingFormValues(
   currencies: FineractCurrencyOption[],
-  officeId?: number
+  officeId?: number,
+  transactionDate?: string
 ): CreateFrequentPostingFormInput {
   return {
     officeId: officeId ?? 0,
     accountingRule: 0,
     currencyCode: currencies[0]?.code ?? '',
-    transactionDate: toFineractDate(new Date()),
+    transactionDate: transactionDate ?? toFineractDate(new Date()),
     debits: [],
     credits: [],
     referenceNumber: '',
