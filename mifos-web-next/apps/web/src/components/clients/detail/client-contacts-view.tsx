@@ -206,6 +206,7 @@ export function ClientContactsView({
       </ClientDetailResourceView>
 
       <ClientContactFormSheet
+        key={editTarget?.id ?? 'create'}
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open);

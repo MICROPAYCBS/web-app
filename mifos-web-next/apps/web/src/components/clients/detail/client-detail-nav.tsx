@@ -18,6 +18,7 @@ import {
   Fingerprint,
   MapPin,
   NotebookPen,
+  Phone,
   PiggyBank,
   Repeat,
   Shield,
@@ -76,6 +77,12 @@ export function clientDetailNavGroups(
           label: 'Customer addresses',
           href: `${base}/address`,
           icon: MapPin
+        },
+        {
+          id: 'contacts',
+          label: 'Customer contacts',
+          href: `${base}/contacts`,
+          icon: Phone
         },
         {
           id: 'family-members',

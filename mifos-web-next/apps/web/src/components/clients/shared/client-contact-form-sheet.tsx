@@ -13,7 +13,7 @@ import {
   validateClientContact,
   type ClientContactInput
 } from '@mifos/validation';
-import { useId, useMemo, useState } from 'react';
+import { useId, useEffect, useMemo, useState } from 'react';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
@@ -55,14 +55,18 @@ export function ClientContactFormSheet({
     [contactTypeOptions, form.contactTypeId]
   );
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setForm(defaultForm(contact));
+    setError(null);
+    setFieldErrors({});
+  }, [open, contact]);
+
   function handleOpenChange(next: boolean) {
     if (isSubmitting) {
       return;
-    }
-    if (next) {
-      setForm(defaultForm(contact));
-      setError(null);
-      setFieldErrors({});
     }
     onOpenChange(next);
   }
