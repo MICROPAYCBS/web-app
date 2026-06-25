@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { formatErrorDetails, formatErrorMessage } from '@/lib/errors/format-error-details';
+import { getErrorPanelPresentation } from '@/lib/errors/format-error-details';
 import { cn } from '@/lib/utils';
 
 export interface ErrorPanelProps {
@@ -62,8 +62,8 @@ async function copyText(text: string): Promise<boolean> {
 
 export function ErrorPanel({
   error,
-  title = 'Something went wrong',
-  description = 'An unexpected error occurred. You can copy the details below when contacting support.',
+  title,
+  description,
   digest,
   componentStack,
   onReset,
@@ -74,17 +74,20 @@ export function ErrorPanel({
   className
 }: ErrorPanelProps) {
   const [copied, setCopied] = useState(false);
-  const summary = formatErrorMessage(error);
-  const details = useMemo(
-    () => formatErrorDetails(error, { digest, componentStack }),
-    [error, digest, componentStack]
+  const presentation = useMemo(
+    () => getErrorPanelPresentation(error, { digest, componentStack, title, description }),
+    [error, digest, componentStack, title, description]
   );
 
   async function handleCopy() {
-    const ok = await copyText(details);
+    const ok = await copyText(presentation.supportDetails);
     if (ok) {
       setCopied(true);
-      toast.success('Error details copied to clipboard.');
+      toast.success(
+        presentation.showTechnicalDetails
+          ? 'Error details copied to clipboard.'
+          : 'Reference copied to clipboard.'
+      );
       window.setTimeout(() => setCopied(false), 2000);
       return;
     }
@@ -103,43 +106,73 @@ export function ErrorPanel({
       role="alert"
       aria-live="assertive"
     >
-      <Card className="w-full max-w-2xl border-destructive/30">
+      <Card className="w-full max-w-lg border-border">
         <CardHeader>
           <div className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <AlertTriangle className="size-5" aria-hidden />
             </div>
-            <div className="min-w-0 space-y-1">
-              <CardTitle>{title}</CardTitle>
-              <CardDescription>{description}</CardDescription>
-              <p className="text-sm font-medium text-foreground">{summary}</p>
+            <div className="min-w-0 space-y-2">
+              <CardTitle>{presentation.title}</CardTitle>
+              <CardDescription className="text-sm leading-relaxed">
+                {presentation.description}
+              </CardDescription>
+              {presentation.summary ? (
+                <p className="text-sm font-medium text-foreground">{presentation.summary}</p>
+              ) : null}
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Error details
-            </p>
-            <Button type="button" variant="outline" size="sm" onClick={handleCopy}>
-              {copied ? (
-                <>
-                  <Check className="size-4" aria-hidden />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="size-4" aria-hidden />
-                  Copy details
-                </>
-              )}
-            </Button>
-          </div>
-          <pre className="max-h-64 overflow-auto rounded-lg border bg-muted/40 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-foreground">
-            {details}
-          </pre>
-        </CardContent>
+        {presentation.showTechnicalDetails ? (
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Error details
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={handleCopy}>
+                {copied ? (
+                  <>
+                    <Check className="size-4" aria-hidden />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-4" aria-hidden />
+                    Copy details
+                  </>
+                )}
+              </Button>
+            </div>
+            <pre className="max-h-64 overflow-auto rounded-lg border bg-muted/40 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-foreground">
+              {presentation.supportDetails}
+            </pre>
+          </CardContent>
+        ) : presentation.referenceId ? (
+          <CardContent className="pt-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+              <p className="text-xs text-muted-foreground">
+                Reference{' '}
+                <span className="font-mono text-foreground tabular-nums">
+                  {presentation.referenceId}
+                </span>
+              </p>
+              <Button type="button" variant="ghost" size="sm" className="h-8" onClick={handleCopy}>
+                {copied ? (
+                  <>
+                    <Check className="size-4" aria-hidden />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-4" aria-hidden />
+                    Copy reference
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        ) : null}
 
         <CardFooter className="flex flex-wrap justify-end gap-2">
           {onReset ? (
