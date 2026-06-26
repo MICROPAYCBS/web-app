@@ -47,6 +47,16 @@ export function businessDateLockedHint(isNotToday: boolean): string {
     : 'Uses the organisation business date.';
 }
 
+/** Short label for badges and compact UI. */
+export function businessDateNotTodayBadgeLabel(): string {
+  return 'Not today';
+}
+
+/** Longer explanation for admin surfaces and banners. */
+export function businessDateNotTodayDescription(): string {
+  return 'The organisation business date is not the current calendar day. Transaction dates use this day until it is updated.';
+}
+
 /** True when transaction dates must match the configured organisation business date. */
 export function isTransactionDateLocked(ctx: BusinessDateContextValue): boolean {
   return ctx.enabled && Boolean(ctx.date?.trim());

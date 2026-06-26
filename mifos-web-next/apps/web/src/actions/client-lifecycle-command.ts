@@ -27,6 +27,7 @@ import { revalidatePath } from 'next/cache';
 import type { ClientActionSheetId } from '@/lib/clients/client-action-types';
 import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
 import { executeClientCommand } from '@/lib/fineract/client-commands';
+import { getClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 import type { ClientCommandActionResult } from '@/actions/client-command';
 
@@ -215,6 +216,41 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
+        await executeClientCommand(clientId, 'assignStaff', {
+          staffId: parsed.data.staffId
+        });
+        break;
+      }
+      case 'reassign-staff': {
+        const session = await getServerSession();
+        try {
+          assertCan(session, { all: ['ASSIGNSTAFF_CLIENT', 'UNASSIGNSTAFF_CLIENT'] });
+        } catch {
+          return {
+            ok: false,
+            message:
+              'You need permission to assign and unassign relationship officers to reassign.'
+          };
+        }
+        const parsed = parseOrError(clientAssignStaffCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        const client = await getClient(clientId);
+        const currentStaffId = client.staffId;
+        if (typeof currentStaffId !== 'number' || currentStaffId <= 0) {
+          return { ok: false, message: 'No relationship officer is assigned.' };
+        }
+        if (parsed.data.staffId === currentStaffId) {
+          return {
+            ok: false,
+            message: 'Please fix the highlighted fields.',
+            fieldErrors: {
+              staffId: 'Select a different relationship officer.'
+            }
+          };
+        }
+        await executeClientCommand(clientId, 'unassignStaff', { staffId: currentStaffId });
         await executeClientCommand(clientId, 'assignStaff', {
           staffId: parsed.data.staffId
         });

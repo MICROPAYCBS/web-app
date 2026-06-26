@@ -287,10 +287,10 @@ Header `DropdownMenu` — **flat list with icons**; lifecycle/staff/savings open
 
 ### Staff (dialog vs route)
 
-| Action         | Behaviour                        | Permission             |
-| -------------- | -------------------------------- | ---------------------- |
-| Assign Staff   | `/actions/Assign Staff`          | No staff assigned      |
-| Unassign Staff | Dialog + `unassignStaff` command | `UNASSIGNSTAFF_CLIENT` |
+| Action            | Behaviour                        | Permission                                              |
+| ----------------- | -------------------------------- | ------------------------------------------------------- |
+| Assign Staff      | Sheet when no officer assigned   | `ASSIGNSTAFF_CLIENT`                                    |
+| Reassign Staff    | Sheet — unassign then assign     | `ASSIGNSTAFF_CLIENT` **and** `UNASSIGNSTAFF_CLIENT`     |
 
 ### Other (flat menu, after staff)
 

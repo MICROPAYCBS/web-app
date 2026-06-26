@@ -10,6 +10,7 @@
 
 import { useEffect } from 'react';
 import { ErrorPanel } from '@/components/composites/error-panel';
+import { logClientError } from '@/lib/errors/log-client-error';
 
 export default function PlatformError({
   error,
@@ -19,7 +20,7 @@ export default function PlatformError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[platform-error]', error);
+    logClientError('platform-error', error, { digest: error.digest });
   }, [error]);
 
   return (

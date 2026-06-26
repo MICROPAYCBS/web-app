@@ -198,6 +198,11 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 | `/organization/tellers/[tellerId]?edit=1`   | PUT    | EditTellerComponent   | `PUT /tellers/{id}`          | `organization.teller.update` | —   | done   |
 | `/organization/tellers/[tellerId]`          | DELETE | ViewTellerComponent   | `DELETE /tellers/{id}`       | —                            | —   | done   |
 | `/organization/tellers/[tellerId]/cashiers` | GET    | CashiersComponent     | `GET /tellers/{id}/cashiers` | —                            | —   | done   |
+| `/organization/tellers/[tellerId]/cashiers` | POST   | CashiersComponent     | `POST /tellers/{id}/cashiers` | `organization.cashier.assign` | —   | done   |
+| `/organization/tellers/[tellerId]/cashiers/[cashierId]` | GET    | ViewCashierComponent  | `GET /tellers/{id}/cashiers/{cashierId}/summaryandtransactions` | — | —   | done   |
+| `/organization/tellers/[tellerId]/cashiers/[cashierId]` | PUT    | ViewCashierComponent  | `PUT /tellers/{id}/cashiers/{cashierId}` | `organization.cashier.update` | —   | done   |
+| `/organization/tellers/[tellerId]/cashiers/[cashierId]` | DELETE | ViewCashierComponent  | `DELETE /tellers/{id}/cashiers/{cashierId}` | — | —   | done   |
+| `/organization/tellers/[tellerId]/cashiers/[cashierId]` | POST   | ViewCashierComponent  | `POST .../allocate`, `POST .../settle` | `organization.cashier.allocate`, `organization.cashier.settle` | — | done |
 
 ### Notes
 
@@ -205,7 +210,7 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - List columns: branch, teller name (links to detail), status, started on, actions (view cashiers icon, sticky right).
 - Edit locks branch assignment (legacy parity).
 - Status values: Active (300), Inactive (400).
-- Cashiers list is read-only; create/allocate/settle cashier flows are not yet implemented.
+- Cashiers: assign staff (`FormSheet`), edit/delete from list, detail view with summary and transactions. Cashier status uses the first selected organization currency by default; currency can be switched on the detail page.
 
 ## Standing instructions history
 

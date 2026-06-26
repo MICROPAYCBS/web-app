@@ -221,7 +221,7 @@ function normalizeCharge(raw: unknown): FineractSavingsAccountCharge | null {
   };
 }
 
-function normalizeSavingsAccountDetail(raw: unknown): FineractSavingsAccountDetail | null {
+export function normalizeDepositAccountDetail(raw: unknown): FineractSavingsAccountDetail | null {
   if (!raw || typeof raw !== 'object') {
     return null;
   }
@@ -333,7 +333,7 @@ export async function getSavingsAccount(
   const raw = await fineract.get<unknown>(`${SAVINGS_ACCOUNTS_PATH}/${accountId}`, {
     associations: 'all'
   });
-  return normalizeSavingsAccountDetail(raw);
+  return normalizeDepositAccountDetail(raw);
 }
 
 export async function getSavingsAccountTransaction(

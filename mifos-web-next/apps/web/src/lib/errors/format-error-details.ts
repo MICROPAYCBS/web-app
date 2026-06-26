@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { FineractHttpError } from '@mifos/api-client';
+import { findFineractHttpError } from '@/lib/errors/serialize-error-for-log';
 
 export interface FormatErrorDetailsOptions {
   digest?: string;
@@ -42,8 +42,9 @@ export function isOpaqueServerError(error: unknown, digest?: string): boolean {
 
 /** Short, user-facing error summary. */
 export function formatErrorMessage(error: unknown): string {
-  if (error instanceof FineractHttpError) {
-    return error.message;
+  const fineract = findFineractHttpError(error);
+  if (fineract) {
+    return fineract.message;
   }
   if (error instanceof Error) {
     if (error.message === 'fetch failed') {
@@ -76,11 +77,18 @@ export function formatErrorDetails(
     lines.push(`Name: ${error.name}`);
   }
 
-  if (error instanceof FineractHttpError) {
-    lines.push(`Status: ${error.status}`);
-    if (error.body) {
+  const fineract = findFineractHttpError(error);
+  if (fineract) {
+    if (fineract.request) {
+      const query = fineract.request.searchParams
+        ? `?${new URLSearchParams(fineract.request.searchParams).toString()}`
+        : '';
+      lines.push(`Request: ${fineract.request.method} ${fineract.request.path}${query}`);
+    }
+    lines.push(`Status: ${fineract.status}`);
+    if (fineract.body) {
       try {
-        lines.push(`Body: ${JSON.stringify(error.body, null, 2)}`);
+        lines.push(`Body: ${JSON.stringify(fineract.body, null, 2)}`);
       } catch {
         lines.push('Body: [unserializable]');
       }
@@ -116,8 +124,9 @@ function productionDescription(error: unknown, digest?: string): string {
   if (isOpaqueServerError(error, digest)) {
     return PRODUCTION_ERROR_DESCRIPTION;
   }
-  if (error instanceof FineractHttpError) {
-    return error.message;
+  const fineract = findFineractHttpError(error);
+  if (fineract) {
+    return fineract.message;
   }
   if (error instanceof Error) {
     if (error.message === 'fetch failed') {

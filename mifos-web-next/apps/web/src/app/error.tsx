@@ -10,6 +10,7 @@
 
 import { useEffect } from 'react';
 import { ErrorPanel } from '@/components/composites/error-panel';
+import { logClientError } from '@/lib/errors/log-client-error';
 
 export default function RootError({
   error,
@@ -19,7 +20,7 @@ export default function RootError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[root-error]', error);
+    logClientError('root-error', error, { digest: error.digest });
   }, [error]);
 
   return (

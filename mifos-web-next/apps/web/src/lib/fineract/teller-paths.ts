@@ -24,6 +24,13 @@ export function tellerCashiersPath(tellerId: string | number): string {
   return `${tellerDetailPath(tellerId)}/cashiers`;
 }
 
+export function tellerCashierDetailPath(
+  tellerId: string | number,
+  cashierId: string | number
+): string {
+  return `${tellerCashiersPath(tellerId)}/${cashierId}`;
+}
+
 /** Legacy web-app edit route — redirects to detail with edit side panel. */
 export function tellerLegacyEditPath(tellerId: string | number): string {
   return `${tellerDetailPath(tellerId)}/edit`;

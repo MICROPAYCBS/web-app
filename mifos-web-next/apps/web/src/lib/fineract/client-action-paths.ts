@@ -28,6 +28,7 @@ const ACTION_SLUG_TITLES: Record<string, string> = {
   'accept-transfer': 'Accept transfer',
   'reject-transfer': 'Reject transfer',
   'assign-staff': 'Assign relationship officer',
+  'reassign-staff': 'Reassign relationship officer',
   'create-collateral': 'Create collateral',
   'update-default-savings': 'Update default savings',
   'upload-signature': 'Upload signature',

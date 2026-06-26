@@ -197,7 +197,7 @@ async function collectOnHoldRows(
 
   await Promise.all(
     savingsIds.map(async (savingsId) => {
-      const items = await listSavingsOnHoldTransactions(savingsId);
+      const items = await listSavingsOnHoldTransactions(savingsId).catch(() => []);
       for (const item of items) {
         if (typeof item.id !== 'number') {
           continue;
@@ -229,9 +229,13 @@ export async function getClientTransferContext(
   }
 
   const [proposalDate, accounts] = await Promise.all([
-    getClientTransferProposalDate(clientId),
-    getClientAccounts(clientId)
+    getClientTransferProposalDate(clientId).catch(() => null),
+    getClientAccounts(clientId).catch(() => null)
   ]);
+
+  if (!accounts) {
+    return null;
+  }
 
   const proposedFromClient = client.proposedTransferDate
     ? fromFineractDateArray(client.proposedTransferDate)

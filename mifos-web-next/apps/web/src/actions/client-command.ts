@@ -11,10 +11,7 @@
 import { assertCan } from '@mifos/auth';
 import { toFineractActionError } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
-import {
-  deleteClientById,
-  executeClientCommand
-} from '@/lib/fineract/client-commands';
+import { deleteClientById } from '@/lib/fineract/client-commands';
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientCommandActionResult =
@@ -35,27 +32,6 @@ async function requirePermission(
     return { ok: false, message: deniedMessage };
   }
   return null;
-}
-
-export async function unassignClientStaffAction(
-  clientId: string,
-  staffId: number
-): Promise<ClientCommandActionResult> {
-  const denied = await requirePermission(
-    'UNASSIGNSTAFF_CLIENT',
-    'You do not have permission to unassign staff.'
-  );
-  if (denied) {
-    return denied;
-  }
-
-  try {
-    await executeClientCommand(clientId, 'unassignStaff', { staffId });
-    revalidatePath(`/clients/${clientId}`, 'layout');
-    return { ok: true };
-  } catch (err) {
-    return toFineractActionError(err, 'Could not unassign staff.');
-  }
 }
 
 export async function deleteClientAction(

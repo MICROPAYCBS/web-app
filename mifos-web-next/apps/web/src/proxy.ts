@@ -12,6 +12,7 @@ const LOGOUT_PATH = '/api/auth/logout';
 const LOGIN_API_PATH = '/api/auth/login';
 const LOGIN_ERROR_FLASH_PATH = '/api/auth/login-error-flash';
 const SERVER_HEALTH_PATH = '/api/servers/health';
+const SENTRY_TUNNEL_PATH = process.env.SENTRY_TUNNEL_ROUTE ?? '/monitoring';
 
 function readCatalog(request: NextRequest): ServerCatalog | null {
   const raw = request.cookies.get(SERVER_CATALOG_COOKIE)?.value;
@@ -58,6 +59,7 @@ export function proxy(request: NextRequest) {
 
   if (
     pathname.startsWith('/forbidden') ||
+    pathname === SENTRY_TUNNEL_PATH ||
     pathname === LOGOUT_PATH ||
     pathname === LOGIN_API_PATH ||
     pathname === LOGIN_ERROR_FLASH_PATH ||
@@ -98,5 +100,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|monitoring|.*\\..*).*)']
 };

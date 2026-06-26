@@ -12,6 +12,7 @@ import { SectorDisplayValue } from '@/components/clients/shared/sector-display-v
 import { formatIncomeSourceSummary } from '@/components/clients/detail/client-income-source-sections';
 import { ClientFinancialSummarySection } from '@/components/clients/detail/client-financial-summary';
 import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import {
   enumOptionLabel,
   formatYesNo,
@@ -356,11 +357,13 @@ function ClientGroupMembershipSection({ client }: { client: FineractClientDetail
 export function ClientGeneralSections({
   client,
   financialSummary,
+  accountsLoadError,
   incomeSources = [],
   complianceProfile = null
 }: {
   client: FineractClientDetail;
-  financialSummary: ClientFinancialSummary;
+  financialSummary?: ClientFinancialSummary | null;
+  accountsLoadError?: string;
   incomeSources?: FineractClientIncomeSource[];
   complianceProfile?: FineractClientComplianceProfile | null;
 }) {
@@ -375,7 +378,11 @@ export function ClientGeneralSections({
         <ClientGroupMembershipSection client={client} />
       </div>
 
-      <ClientFinancialSummarySection summary={financialSummary} />
+      {accountsLoadError ? (
+        <LoadErrorAlert title="Account summary unavailable" message={accountsLoadError} />
+      ) : financialSummary ? (
+        <ClientFinancialSummarySection summary={financialSummary} />
+      ) : null}
     </div>
   );
 }

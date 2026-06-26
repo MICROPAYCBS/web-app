@@ -10,6 +10,7 @@
 
 import { useEffect } from 'react';
 import { ErrorPanel } from '@/components/composites/error-panel';
+import { logClientError } from '@/lib/errors/log-client-error';
 import './globals.css';
 
 export default function GlobalError({
@@ -20,7 +21,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[global-error]', error);
+    logClientError('global-error', error, { digest: error.digest });
   }, [error]);
 
   return (

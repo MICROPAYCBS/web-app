@@ -20,6 +20,13 @@ export interface FineractApiError {
   }>;
 }
 
+/** Identifies which Fineract REST call failed (for logs and support). */
+export interface FineractRequestInfo {
+  method: string;
+  path: string;
+  searchParams?: Record<string, string>;
+}
+
 export interface FineractClientConfig {
   baseUrl: string;
   tenantId: string;

@@ -60,6 +60,12 @@ export async function getOrganizationSelectedCurrencies(): Promise<FineractCurre
   return configuration.selectedCurrencyOptions;
 }
 
+/** First selected organization currency — used as the default for cashier summaries. */
+export async function getDefaultOrganizationCurrencyCode(): Promise<string | undefined> {
+  const selected = await getOrganizationSelectedCurrencies();
+  return selected[0]?.code;
+}
+
 export async function updateOrganizationCurrencies(
   input: UpdateOrganizationCurrenciesPayload
 ): Promise<OrganizationCurrenciesMutationResponse> {

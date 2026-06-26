@@ -16,12 +16,17 @@ import {
   type ColumnDef,
   type PaginationState
 } from '@tanstack/react-table';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
+import { tellerCashierDetailPath } from '@/lib/fineract/teller-paths';
+import { cn } from '@/lib/utils';
 
 function formatCashierPeriod(cashier: OrganizationCashierListItem): string {
   const start = formatFineractDateArray(cashier.startDate) ?? '—';
@@ -29,7 +34,21 @@ function formatCashierPeriod(cashier: OrganizationCashierListItem): string {
   return `${start} – ${end}`;
 }
 
-export function CashiersTable({ cashiers }: { cashiers: OrganizationCashierListItem[] }) {
+export function CashiersTable({
+  tellerId,
+  cashiers,
+  canUpdate,
+  canDelete,
+  onEdit,
+  onDelete
+}: {
+  tellerId: string | number;
+  cashiers: OrganizationCashierListItem[];
+  canUpdate: boolean;
+  canDelete: boolean;
+  onEdit: (cashier: OrganizationCashierListItem) => void;
+  onDelete: (cashier: OrganizationCashierListItem) => void;
+}) {
   const [filter, setFilter] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -60,15 +79,60 @@ export function CashiersTable({ cashiers }: { cashiers: OrganizationCashierListI
       {
         accessorKey: 'staffName',
         header: 'Cashier / staff',
-        cell: ({ row }) => row.original.staffName ?? '—'
+        cell: ({ row }) => (
+          <Link
+            href={tellerCashierDetailPath(tellerId, row.original.id)}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {row.original.staffName ?? '—'}
+          </Link>
+        )
       },
       {
         id: 'isFullDay',
         header: 'Full day',
         cell: ({ row }) => formatYesNo(row.original.isFullDay)
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        meta: { sticky: 'right' },
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1">
+            <Link
+              href={tellerCashierDetailPath(tellerId, row.original.id)}
+              className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}
+              aria-label={`View ${row.original.staffName ?? 'cashier'}`}
+            >
+              <Eye className="size-4" />
+            </Link>
+            {canUpdate ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Edit ${row.original.staffName ?? 'cashier'}`}
+                onClick={() => onEdit(row.original)}
+              >
+                <Pencil className="size-4" />
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Remove ${row.original.staffName ?? 'cashier'}`}
+                onClick={() => onDelete(row.original)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            ) : null}
+          </div>
+        )
       }
     ],
-    []
+    [canDelete, canUpdate, onDelete, onEdit, tellerId]
   );
 
   const table = useReactTable({
@@ -96,7 +160,7 @@ export function CashiersTable({ cashiers }: { cashiers: OrganizationCashierListI
         table={table}
         stickyHeader={false}
         emptyMessage="No cashiers found"
-        emptyDescription="Cashier assignments for this teller will appear here."
+        emptyDescription="Assign a cashier to manage this teller window."
       />
       <DataTablePagination table={table} totalRecords={filteredRows.length} />
     </div>

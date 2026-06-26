@@ -231,7 +231,7 @@ export interface SavingsAccountActionVisibility {
   holdAmount: boolean;
   transferFunds: boolean;
   assignStaff: boolean;
-  unassignStaff: boolean;
+  reassignStaff: boolean;
   enableWithholdTax: boolean;
   disableWithholdTax: boolean;
   deleteAccount: boolean;
@@ -285,7 +285,7 @@ export function savingsAccountActionVisibility(
     holdAmount: canTransact,
     transferFunds: canTransact && !blockDebit && Boolean(account.clientId),
     assignStaff: (pending || approved || active) && !hasFieldOfficer,
-    unassignStaff: hasFieldOfficer,
+    reassignStaff: (pending || approved || active) && hasFieldOfficer,
     enableWithholdTax: active && Boolean(account.taxGroup?.id) && account.withHoldTax !== true,
     disableWithholdTax: active && Boolean(account.taxGroup?.id) && account.withHoldTax === true,
     deleteAccount: pending

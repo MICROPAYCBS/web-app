@@ -272,6 +272,31 @@
       "DELETE_TELLER"
     ]
   },
+  "organization.tellers.cashiers.assign": {
+    "any": [
+      "ALLOCATECASHIER_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.update": {
+    "any": [
+      "UPDATECASHIERALLOCATION_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.delete": {
+    "any": [
+      "DELETECASHIERALLOCATION_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.allocate": {
+    "any": [
+      "ALLOCATECASHTOCASHIER_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.settle": {
+    "any": [
+      "SETTLECASHFROMCASHIER_TELLER"
+    ]
+  },
   "organization.paymentTypes": {
     "any": [
       "READ_PAYMENTTYPE"

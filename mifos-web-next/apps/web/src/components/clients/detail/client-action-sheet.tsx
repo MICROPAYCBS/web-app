@@ -163,6 +163,7 @@ export function ClientActionSheet({
       case 'undo-transfer':
         return { note: form.note };
       case 'assign-staff':
+      case 'reassign-staff':
         return { staffId: form.staffId };
       case 'update-default-savings':
         return { savingsAccountId: form.savingsAccountId };
@@ -212,11 +213,14 @@ export function ClientActionSheet({
       : [];
 
   const staffOptions =
-    sheetData?.sheetId === 'assign-staff'
+    sheetData?.sheetId === 'assign-staff' || sheetData?.sheetId === 'reassign-staff'
       ? toSelectOptions(
           sheetData.staffOptions.map((s) => ({ id: s.id, name: s.name }))
         )
       : [];
+
+  const currentStaffName =
+    sheetData?.sheetId === 'reassign-staff' ? sheetData.currentStaffName : null;
 
   const savingsOptions =
     sheetData?.sheetId === 'update-default-savings'
@@ -245,7 +249,8 @@ export function ClientActionSheet({
         loading ||
         !sheetId ||
         (sheetId === 'update-default-savings' && savingsOptions.length === 0) ||
-        (sheetId === 'transfer' && officeOptions.length === 0)
+        (sheetId === 'transfer' && officeOptions.length === 0) ||
+        (sheetId === 'reassign-staff' && staffOptions.length === 0)
       }
       onSubmit={handleSubmit}
     >
@@ -459,6 +464,30 @@ export function ClientActionSheet({
           placeholder="Select relationship officer"
           error={fieldErrors.staffId}
         />
+      ) : null}
+
+      {sheetId === 'reassign-staff' ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            Current officer:{' '}
+            <span className="text-foreground">{currentStaffName ?? '—'}</span>
+          </p>
+          {staffOptions.length === 0 && !loading && !error ? (
+            <p className="text-sm text-muted-foreground">
+              No other relationship officers are available to reassign this customer to.
+            </p>
+          ) : null}
+          <SelectField
+            id={`${formId}-staffId`}
+            label="New relationship officer"
+            required
+            value={form.staffId}
+            onValueChange={(v) => patchForm({ staffId: v })}
+            options={staffOptions}
+            placeholder="Select relationship officer"
+            error={fieldErrors.staffId}
+          />
+        </div>
       ) : null}
 
       {sheetId === 'update-default-savings' ? (

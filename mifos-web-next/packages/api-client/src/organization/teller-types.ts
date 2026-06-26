@@ -26,17 +26,6 @@ export interface OrganizationTellerListItem {
   status?: string;
 }
 
-export interface OrganizationCashierListItem {
-  id: number;
-  staffId?: number;
-  staffName?: string;
-  tellerId?: number;
-  tellerName?: string;
-  startDate?: number[] | string;
-  endDate?: number[] | string;
-  isFullDay?: boolean;
-}
-
 export interface OrganizationTellerMutationResponse {
   resourceId?: number;
 }

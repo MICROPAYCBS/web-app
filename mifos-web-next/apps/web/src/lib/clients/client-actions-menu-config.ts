@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
-import type { PermissionInput } from '@mifos/auth';
+import type { PermissionInput, PermissionRule } from '@mifos/auth';
 import {
   ArrowRightLeft,
   Ban,
@@ -21,7 +21,6 @@ import {
   RotateCcw,
   Trash2,
   Undo2,
-  UserMinus,
   UserPlus,
   X,
   XCircle,
@@ -39,7 +38,7 @@ export type ClientActionsMenuLink = {
   label: string;
   href: string;
   icon: LucideIcon;
-  permission?: PermissionInput;
+  permission?: PermissionInput | PermissionRule;
 };
 
 /** Opens the wide edit side panel (`?edit=1` on the current client route). */
@@ -48,7 +47,7 @@ export type ClientActionsMenuEditPanel = {
   id: string;
   label: string;
   icon: LucideIcon;
-  permission?: PermissionInput;
+  permission?: PermissionInput | PermissionRule;
 };
 
 export type ClientActionsMenuSheet = {
@@ -57,7 +56,7 @@ export type ClientActionsMenuSheet = {
   label: string;
   icon: LucideIcon;
   sheetId: ClientActionSheetId;
-  permission?: PermissionInput;
+  permission?: PermissionInput | PermissionRule;
 };
 
 export type ClientActionsMenuDialog = {
@@ -66,7 +65,7 @@ export type ClientActionsMenuDialog = {
   label: string;
   icon: LucideIcon;
   dialogId: ClientActionDialogId;
-  permission?: PermissionInput;
+  permission?: PermissionInput | PermissionRule;
 };
 
 export type ClientActionsMenuCommand = {
@@ -74,8 +73,8 @@ export type ClientActionsMenuCommand = {
   id: string;
   label: string;
   icon: LucideIcon;
-  command: 'unassignStaff' | 'deleteClient';
-  permission?: PermissionInput;
+  command: 'deleteClient';
+  permission?: PermissionInput | PermissionRule;
   confirmTitle: string;
   confirmDescription: string;
   confirmLabel: string;
@@ -99,7 +98,7 @@ function sheetAction(
   id: ClientActionSheetId,
   label: string,
   icon: LucideIcon,
-  permission?: PermissionInput
+  permission?: PermissionInput | PermissionRule
 ): ClientActionsMenuSheet {
   return { kind: 'sheet', id, label, icon, sheetId: id, permission };
 }
@@ -108,7 +107,7 @@ function dialogAction(
   id: ClientActionDialogId,
   label: string,
   icon: LucideIcon,
-  permission?: PermissionInput
+  permission?: PermissionInput | PermissionRule
 ): ClientActionsMenuDialog {
   return { kind: 'dialog', id, label, icon, dialogId: id, permission };
 }
@@ -193,21 +192,15 @@ export function buildClientActionsMenuItems(
 
   items.push(separator('before-staff'));
   if (!hasStaff) {
-    items.push(sheetAction('assign-staff', 'Assign relationship officer', UserPlus));
+    items.push(
+      sheetAction('assign-staff', 'Assign relationship officer', UserPlus, 'ASSIGNSTAFF_CLIENT')
+    );
   } else {
-    items.push({
-      kind: 'command',
-      id: 'unassign-staff',
-      label: 'Unassign relationship officer',
-      icon: UserMinus,
-      command: 'unassignStaff',
-      permission: 'UNASSIGNSTAFF_CLIENT',
-      confirmTitle: 'Unassign relationship officer?',
-      confirmDescription:
-        'The customer will no longer be assigned to their current relationship officer.',
-      confirmLabel: 'Unassign',
-      destructive: false
-    });
+    items.push(
+      sheetAction('reassign-staff', 'Reassign relationship officer', ArrowRightLeft, {
+        all: ['ASSIGNSTAFF_CLIENT', 'UNASSIGNSTAFF_CLIENT']
+      })
+    );
   }
 
   items.push(
@@ -233,6 +226,7 @@ export function buildClientActionsMenuItems(
 
 export const CLIENT_ACTION_SHEET_TITLES: Record<ClientActionSheetId, string> = {
   'assign-staff': 'Assign relationship officer',
+  'reassign-staff': 'Reassign relationship officer',
   close: 'Close customer',
   transfer: 'Transfer customer',
   activate: 'Activate customer',

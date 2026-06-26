@@ -29,7 +29,6 @@ import {
   Power,
   Trash2,
   Undo2,
-  UserMinus,
   UserPlus,
   UserX,
   XCircle,
@@ -54,7 +53,7 @@ import {
 import { SavingsAccountPostInterestAsOnSheet } from '@/components/clients/savings/actions/savings-account-post-interest-as-on-sheet';
 import { SavingsAccountTransferFundsSheet } from '@/components/clients/savings/actions/savings-account-transfer-funds-sheet';
 import { SavingsAccountTransactionSheet } from '@/components/clients/savings/actions/savings-account-transaction-sheet';
-import { SavingsAccountUnassignStaffSheet } from '@/components/clients/savings/actions/savings-account-unassign-staff-sheet';
+import { SavingsAccountReassignStaffSheet } from '@/components/clients/savings/actions/savings-account-reassign-staff-sheet';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -91,7 +90,7 @@ export interface SavingsAccountActionPermissions {
   holdAmount: boolean;
   transferFunds: boolean;
   assignStaff: boolean;
-  unassignStaff: boolean;
+  reassignStaff: boolean;
   enableWithholdTax: boolean;
   disableWithholdTax: boolean;
   deleteAccount: boolean;
@@ -122,7 +121,7 @@ export function SavingsAccountActions({
   const [closeOpen, setCloseOpen] = useState(false);
   const [postInterestAsOnOpen, setPostInterestAsOnOpen] = useState(false);
   const [assignStaffOpen, setAssignStaffOpen] = useState(false);
-  const [unassignStaffOpen, setUnassignStaffOpen] = useState(false);
+  const [reassignStaffOpen, setReassignStaffOpen] = useState(false);
   const [holdAmountOpen, setHoldAmountOpen] = useState(false);
   const [addChargeOpen, setAddChargeOpen] = useState(false);
   const [applyAnnualFeesOpen, setApplyAnnualFeesOpen] = useState(false);
@@ -187,12 +186,12 @@ export function SavingsAccountActions({
       onSelect: () => setAssignStaffOpen(true)
     });
   }
-  if (visibility.unassignStaff && permissions.unassignStaff) {
+  if (visibility.reassignStaff && permissions.reassignStaff) {
     menuItems.push({
-      id: 'unassign-staff',
-      label: 'Unassign field officer',
-      icon: UserMinus,
-      onSelect: () => setUnassignStaffOpen(true)
+      id: 'reassign-staff',
+      label: 'Reassign field officer',
+      icon: ArrowRightLeft,
+      onSelect: () => setReassignStaffOpen(true)
     });
   }
   if (visibility.addCharge && permissions.addCharge) {
@@ -458,11 +457,11 @@ export function SavingsAccountActions({
         open={assignStaffOpen}
         onOpenChange={setAssignStaffOpen}
       />
-      <SavingsAccountUnassignStaffSheet
+      <SavingsAccountReassignStaffSheet
         clientId={clientId}
         accountId={account.id}
-        open={unassignStaffOpen}
-        onOpenChange={setUnassignStaffOpen}
+        open={reassignStaffOpen}
+        onOpenChange={setReassignStaffOpen}
       />
       <SavingsAccountHoldAmountSheet
         clientId={clientId}

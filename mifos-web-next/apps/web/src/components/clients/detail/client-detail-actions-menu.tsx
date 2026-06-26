@@ -17,8 +17,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
-  deleteClientAction,
-  unassignClientStaffAction
+  deleteClientAction
 } from '@/actions/client-command';
 import { ClientActionSheet } from '@/components/clients/detail/client-action-sheet';
 import {
@@ -219,22 +218,6 @@ export function ClientDetailActionsMenu({
 
   function runCommand(item: ClientActionsMenuCommand) {
     startTransition(async () => {
-      if (item.command === 'unassignStaff') {
-        const staffId = client.staffId;
-        if (typeof staffId !== 'number') {
-          toast.error('No relationship officer is assigned.');
-          return;
-        }
-        const result = await unassignClientStaffAction(clientId, staffId);
-        if (!result.ok) {
-          toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
-          return;
-        }
-        toast.success('Relationship officer unassigned.');
-        refreshClient();
-        return;
-      }
-
       if (item.command === 'deleteClient') {
         const result = await deleteClientAction(clientId);
         if (!result.ok) {

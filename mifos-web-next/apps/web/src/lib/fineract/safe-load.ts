@@ -7,7 +7,9 @@
  */
 
 import { FineractHttpError } from '@mifos/api-client';
+import { captureAppError } from '@/lib/errors/capture-sentry-error';
 import { formatErrorMessage } from '@/lib/errors/format-error-details';
+import { emitStructuredErrorLog } from '@/lib/errors/serialize-error-for-log';
 
 export type FineractLoadResult<T> =
   | { ok: true; data: T }
@@ -28,7 +30,8 @@ function logFineractLoadFailure(error: unknown) {
     }
     return;
   }
-  console.error('[fineract-load]', error);
+  emitStructuredErrorLog('fineract-load', error, { surface: 'server' });
+  captureAppError(error, { tag: 'fineract-load', surface: 'server' });
 }
 
 /**

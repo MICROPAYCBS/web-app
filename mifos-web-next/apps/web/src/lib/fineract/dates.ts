@@ -152,6 +152,42 @@ export function formatFineractDateArray(
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
 }
 
+/** Whole years between a calendar birth date and a reference day (default today). */
+export function calculateAgeYears(birthDate: Date, referenceDate: Date = new Date()): number {
+  const birth = toLocalCalendarDate(birthDate);
+  const reference = toLocalCalendarDate(referenceDate);
+  let age = reference.getFullYear() - birth.getFullYear();
+  const monthDiff = reference.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && reference.getDate() < birth.getDate())) {
+    age -= 1;
+  }
+  return age;
+}
+
+export function formatAgeYearsLabel(age: number): string {
+  return age === 1 ? '1 year' : `${age} years`;
+}
+
+/** Age in whole years from a Fineract date-of-birth payload (`[y,m,d]` or form string). */
+export function ageFromFineractDateOfBirth(
+  value: number[] | string | undefined,
+  referenceDate?: Date
+): number | undefined {
+  if (value == null || value === '') {
+    return undefined;
+  }
+
+  const parsed = Array.isArray(value)
+    ? fromFineractDateArray(value)
+    : parseFineractDateString(value);
+  if (!parsed) {
+    return undefined;
+  }
+
+  const age = calculateAgeYears(parsed, referenceDate);
+  return age >= 0 ? age : undefined;
+}
+
 /** Fineract datetime arrays: `[yyyy, mm, dd, hh?, mm?, ss?]` (month 1–12). */
 export function fromFineractDateTimeArray(value: number[] | undefined): Date | null {
   if (!value || value.length < 3) {

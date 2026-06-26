@@ -1,0 +1,12 @@
+{
+  "schemaId": "organization.cashier.settle",
+  "fineractSources": [
+    "org.apache.fineract.organisation.teller.api.TellerApiResource",
+    "org.apache.fineract.organisation.teller.data.CashierTransactionDataValidator"
+  ],
+  "fields": {
+    "currencyCode": { "required": true, "type": "string" },
+    "txnAmount": { "required": true, "type": "decimal" },
+    "txnDate": { "required": true, "type": "date" }
+  }
+}

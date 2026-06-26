@@ -8,6 +8,7 @@
 
 export type ClientActionSheetId =
   | 'assign-staff'
+  | 'reassign-staff'
   | 'close'
   | 'transfer'
   | 'activate'
@@ -29,6 +30,11 @@ export type CodeValueOption = { id: number; name: string };
 
 export type ClientActionSheetData =
   | { sheetId: 'assign-staff'; staffOptions: CodeValueOption[] }
+  | {
+      sheetId: 'reassign-staff';
+      currentStaffName: string;
+      staffOptions: CodeValueOption[];
+    }
   | { sheetId: 'update-default-savings'; accounts: CodeValueOption[]; currentAccountId?: number }
   | { sheetId: 'close' | 'reject' | 'withdraw'; reasons: CodeValueOption[] }
   | { sheetId: 'transfer'; offices: CodeValueOption[] }

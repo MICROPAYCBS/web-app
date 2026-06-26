@@ -7,7 +7,6 @@
  */
 
 import { can } from '@mifos/auth';
-import { FineractHttpError } from '@mifos/api-client';
 import { notFound } from 'next/navigation';
 import { Suspense, type ReactNode } from 'react';
 import { ClientDetailShell } from '@/components/clients/detail/client-detail-shell';
@@ -15,7 +14,9 @@ import { ClientDetailShellSkeleton } from '@/components/clients/detail/client-de
 import { getClientProfileImage, clientHasProfileImage } from '@/lib/fineract/client-image';
 import { getClientSignatureInfo } from '@/lib/fineract/client-signature';
 import { buildClientDatatableNavItems } from '@/lib/fineract/client-datatable-nav';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { getClient } from '@/lib/fineract/clients';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
 async function ClientDetailLayoutBody({
@@ -27,15 +28,23 @@ async function ClientDetailLayoutBody({
 }) {
   const session = await getServerSession();
 
-  let client;
-  try {
-    client = await getClient(clientId);
-  } catch (err) {
-    if (err instanceof FineractHttpError && err.status === 404) {
+  const clientResult = await tryFineractLoad(
+    () => getClient(clientId),
+    'Could not load this customer.'
+  );
+
+  if (!clientResult.ok) {
+    if (clientResult.status === 404) {
       notFound();
     }
-    throw err;
+    return (
+      <div className="flex min-h-0 flex-1 flex-col p-4 md:p-6">
+        <LoadErrorAlert title="Customer unavailable" message={clientResult.message} />
+      </div>
+    );
   }
+
+  const client = clientResult.data;
 
   const [profileImageSrc, signatureInfo, datatableNavItems] = await Promise.all([
     clientHasProfileImage(client)

@@ -27,6 +27,15 @@ export async function listStaff(): Promise<FineractStaffListItem[]> {
   return rows ?? [];
 }
 
+export async function listStaffByOffice(officeId: number): Promise<FineractStaffListItem[]> {
+  const fineract = await createFineractClient();
+  const rows = await fineract.get<FineractStaffListItem[]>('/staff', {
+    officeId: String(officeId),
+    status: 'all'
+  });
+  return rows ?? [];
+}
+
 export async function getStaff(staffId: string | number): Promise<FineractStaff> {
   const fineract = await createFineractClient();
   return fineract.get<FineractStaff>(`/staff/${staffId}`);

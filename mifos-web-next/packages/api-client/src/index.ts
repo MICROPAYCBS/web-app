@@ -7,7 +7,7 @@
  */
 
 export { FineractClient, FineractHttpError } from './fineract-client';
-export type { FineractApiError, FineractClientConfig } from './types';
+export type { FineractApiError, FineractClientConfig, FineractRequestInfo } from './types';
 
 export type {
   FineractAddressFieldConfig,
@@ -556,7 +556,15 @@ export type {
   WorkingDaysMutationResponse
 } from './organization/working-days-types';
 export type {
+  OrganizationCashier,
   OrganizationCashierListItem,
+  OrganizationCashierMutationResponse,
+  OrganizationCashierSummary,
+  OrganizationCashierTransaction,
+  OrganizationCashierTxnCurrency,
+  OrganizationCashierTxnType
+} from './organization/cashier-types';
+export type {
   OrganizationTeller,
   OrganizationTellerListItem,
   OrganizationTellerMutationResponse

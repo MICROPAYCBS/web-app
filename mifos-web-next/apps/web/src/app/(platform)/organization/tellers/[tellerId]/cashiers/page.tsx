@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 import { CashiersPageContent } from '@/components/organization/cashiers-page-content';
 import { listOrganizationCashiers } from '@/lib/fineract/cashiers';
 import { getOrganizationTeller } from '@/lib/fineract/tellers';
+import { listStaffByOffice } from '@/lib/fineract/staff';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationTellerCashiersPage({
@@ -25,6 +26,10 @@ export default async function OrganizationTellerCashiersPage({
     notFound();
   }
 
+  const canAssign = can(session, 'ALLOCATECASHIER_TELLER');
+  const canUpdate = can(session, 'UPDATECASHIERALLOCATION_TELLER');
+  const canDelete = can(session, 'DELETECASHIERALLOCATION_TELLER');
+
   let teller;
   try {
     teller = await getOrganizationTeller(tellerId);
@@ -32,7 +37,19 @@ export default async function OrganizationTellerCashiersPage({
     notFound();
   }
 
-  const cashiers = await listOrganizationCashiers(tellerId);
+  const [cashiers, staff] = await Promise.all([
+    listOrganizationCashiers(tellerId),
+    canAssign ? listStaffByOffice(teller.officeId) : Promise.resolve([])
+  ]);
 
-  return <CashiersPageContent teller={teller} cashiers={cashiers} />;
+  return (
+    <CashiersPageContent
+      teller={teller}
+      cashiers={cashiers}
+      staff={staff}
+      canAssign={canAssign}
+      canUpdate={canUpdate}
+      canDelete={canDelete}
+    />
+  );
 }

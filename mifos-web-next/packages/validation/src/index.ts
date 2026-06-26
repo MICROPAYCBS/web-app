@@ -149,6 +149,12 @@ export {
   type UndoAccountTransferCommandInput
 } from './clients/savings-account-command.schema';
 export {
+  loanAccountAssignOfficerSchema,
+  loanAccountUnassignOfficerSchema,
+  type LoanAccountAssignOfficerInput,
+  type LoanAccountUnassignOfficerInput
+} from './clients/loan-account-command.schema';
+export {
   createSystemDatatableSchema,
   updateSystemDatatableSchema,
   validateCreateSystemDatatable,
@@ -686,6 +692,24 @@ export {
   type UpdateTellerInput,
   type UpdateTellerPayload
 } from './organization/teller.schema';
+export {
+  allocateCashierCashSchema,
+  assignCashierSchema,
+  settleCashierCashSchema,
+  updateCashierSchema,
+  validateAllocateCashierCash,
+  validateAssignCashier,
+  validateSettleCashierCash,
+  validateUpdateCashier,
+  type AllocateCashierCashInput,
+  type AllocateCashierCashPayload,
+  type AssignCashierInput,
+  type AssignCashierPayload,
+  type SettleCashierCashInput,
+  type SettleCashierCashPayload,
+  type UpdateCashierInput,
+  type UpdateCashierPayload
+} from './organization/cashier.schema';
 export {
   standingInstructionHistorySearchSchema,
   validateStandingInstructionHistorySearch,

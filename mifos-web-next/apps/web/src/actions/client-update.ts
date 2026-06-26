@@ -60,6 +60,17 @@ export async function updateClientAction(
   const initial =
     initialParsed?.success === true ? initialParsed.data : undefined;
 
+  if (initial?.staffId && !parsed.data.staffId) {
+    return {
+      ok: false,
+      message: 'Please fix the highlighted fields.',
+      fieldErrors: {
+        staffId:
+          'A relationship officer is required. Use Reassign relationship officer to change officers.'
+      }
+    };
+  }
+
   try {
     await updateClient(clientId, parsed.data, { initial });
     revalidatePath(`/clients/${clientId}`);

@@ -48,7 +48,9 @@ function savingsAccountPermissions(session: Awaited<ReturnType<typeof getServerS
     holdAmount: can(session, 'HOLDAMOUNT_SAVINGSACCOUNT'),
     transferFunds: can(session, 'CREATE_ACCOUNTTRANSFER'),
     assignStaff: can(session, 'UPDATESAVINGSOFFICER_SAVINGSACCOUNT'),
-    unassignStaff: can(session, 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT'),
+    reassignStaff: can(session, {
+      all: ['UPDATESAVINGSOFFICER_SAVINGSACCOUNT', 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT']
+    }),
     enableWithholdTax: can(session, 'UPDATEWITHHOLDTAX_SAVINGSACCOUNT'),
     disableWithholdTax: can(session, 'UPDATEWITHHOLDTAX_SAVINGSACCOUNT'),
     deleteAccount: can(session, 'DELETE_SAVINGSACCOUNT')

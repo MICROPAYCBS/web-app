@@ -6,11 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import * as Sentry from '@sentry/nextjs';
 import {
   logRequestError,
   type RequestErrorLogContext,
   type RequestErrorLogRequest
 } from '@/lib/errors/log-request-error';
+import { isSentryEnabled } from '@/sentry.shared';
 
 type InstrumentationOnRequestError = (
   error: unknown,
@@ -18,11 +20,27 @@ type InstrumentationOnRequestError = (
   errorContext: Readonly<RequestErrorLogContext>
 ) => void | Promise<void>;
 
+export async function register() {
+  if (!isSentryEnabled()) {
+    return;
+  }
+
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    await import('./sentry.server.config');
+  }
+
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    await import('./sentry.edge.config');
+  }
+}
+
 /**
- * Next.js instrumentation hook — logs request failures on the server.
- * View output in Vercel → Project → Logs (Runtime), or `vercel logs <url>`.
- * Search by digest from the error screen, e.g. `"digest":"219758281"`.
+ * Server request failures: structured Vercel logs + Sentry issues.
+ * Search Vercel by `"digest":"…"`; search Sentry by the same digest tag.
  */
-export const onRequestError: InstrumentationOnRequestError = (error, request, context) => {
+export const onRequestError: InstrumentationOnRequestError = async (error, request, context) => {
   logRequestError(error, { path: request.path, method: request.method }, context);
+  if (isSentryEnabled()) {
+    await Sentry.captureRequestError(error, request, context);
+  }
 };

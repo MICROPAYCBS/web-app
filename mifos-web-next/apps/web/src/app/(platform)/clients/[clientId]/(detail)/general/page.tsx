@@ -6,16 +6,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { FineractHttpError } from '@mifos/api-client';
 import { notFound } from 'next/navigation';
 import { ClientGeneralSections } from '@/components/clients/detail/client-general-sections';
 import { ClientTransferStatusPanel } from '@/components/clients/detail/client-transfer-status-panel';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { buildClientFinancialSummary } from '@/lib/fineract/client-financial-summary';
 import { getClientComplianceProfile } from '@/lib/fineract/client-compliance-profile';
 import { getClientIncomeSources } from '@/lib/fineract/client-income-source';
 import { getClientAccounts } from '@/lib/fineract/client-accounts';
 import { getClientTransferContext } from '@/lib/fineract/client-transfer';
 import { getClient } from '@/lib/fineract/clients';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 
 export default async function ClientGeneralPage({
   params
@@ -24,23 +25,33 @@ export default async function ClientGeneralPage({
 }) {
   const { clientId } = await params;
 
-  let client;
-  try {
-    client = await getClient(clientId);
-  } catch (err) {
-    if (err instanceof FineractHttpError && err.status === 404) {
+  const clientResult = await tryFineractLoad(
+    () => getClient(clientId),
+    'Could not load this customer.'
+  );
+  if (!clientResult.ok) {
+    if (clientResult.status === 404) {
       notFound();
     }
-    throw err;
+    return (
+      <LoadErrorAlert title="Customer unavailable" message={clientResult.message} />
+    );
   }
+  const client = clientResult.data;
 
-  const [accounts, transferContext, incomeSources, complianceProfile] = await Promise.all([
-    getClientAccounts(clientId),
-    getClientTransferContext(clientId),
+  const [accountsResult, transferContext, incomeSources, complianceProfile] = await Promise.all([
+    tryFineractLoad(
+      () => getClientAccounts(clientId),
+      'Could not load account summary for this customer.'
+    ),
+    getClientTransferContext(clientId).catch(() => null),
     getClientIncomeSources(clientId).catch(() => []),
     getClientComplianceProfile(clientId).catch(() => null)
   ]);
-  const financialSummary = buildClientFinancialSummary(accounts);
+
+  const financialSummary = accountsResult.ok
+    ? buildClientFinancialSummary(accountsResult.data)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -50,6 +61,7 @@ export default async function ClientGeneralPage({
       <ClientGeneralSections
         client={client}
         financialSummary={financialSummary}
+        accountsLoadError={accountsResult.ok ? undefined : accountsResult.message}
         incomeSources={incomeSources}
         complianceProfile={complianceProfile}
       />

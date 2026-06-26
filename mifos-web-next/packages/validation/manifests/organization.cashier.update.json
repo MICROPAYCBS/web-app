@@ -1,0 +1,11 @@
+{
+  "schemaId": "organization.cashier.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.teller.api.TellerApiResource",
+    "org.apache.fineract.organisation.teller.data.CashierDataValidator"
+  ],
+  "fields": {
+    "startDate": { "required": true, "type": "date" },
+    "isFullDay": { "required": true, "type": "boolean" }
+  }
+}

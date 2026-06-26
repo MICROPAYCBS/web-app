@@ -85,6 +85,8 @@ export function EditClientFormFields({
   }, [form.customerClassId, initial.customerClassOptions, customerClassOptionsForSelect]);
 
   const riskProfileRequired = Boolean(selectedCustomerClass?.riskLevel?.trim());
+  const relationshipOfficerRequired =
+    typeof initial.staffId === 'number' && initial.staffId > 0;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -243,9 +245,15 @@ export function EditClientFormFields({
         <SelectField
           id="staffId"
           label="Relationship officer"
-          optional
+          optional={!relationshipOfficerRequired}
+          required={relationshipOfficerRequired}
           value={form.staffId ? String(form.staffId) : undefined}
-          onValueChange={(v) => onPatch({ staffId: v ? Number(v) : undefined })}
+          onValueChange={(v) => {
+            if (!v && relationshipOfficerRequired) {
+              return;
+            }
+            onPatch({ staffId: v ? Number(v) : undefined });
+          }}
           options={toSelectOptions(
             initial.staffOptions?.map((s) => ({
               id: s.id,

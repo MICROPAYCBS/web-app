@@ -7,7 +7,7 @@
  */
 
 import { getFineractErrorMessage } from '@mifos/i18n';
-import type { FineractApiError, FineractClientConfig } from './types';
+import type { FineractApiError, FineractClientConfig, FineractRequestInfo } from './types';
 
 function resolveNetworkErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -27,7 +27,8 @@ function resolveNetworkErrorMessage(error: unknown): string {
 export class FineractHttpError extends Error {
   constructor(
     public readonly status: number,
-    public readonly body: FineractApiError | null
+    public readonly body: FineractApiError | null,
+    public readonly request?: FineractRequestInfo
   ) {
     super(getFineractErrorMessage(body, status));
     this.name = 'FineractHttpError';
@@ -65,6 +66,11 @@ export class FineractClient {
 
     let res: Response;
     const fetchFn = this.config.fetch ?? fetch;
+    const requestInfo: FineractRequestInfo = {
+      method,
+      path,
+      searchParams: options?.searchParams
+    };
     try {
       res = await fetchFn(url, {
         method,
@@ -72,14 +78,22 @@ export class FineractClient {
         body: hasBody ? JSON.stringify(options.body) : undefined
       });
     } catch (error) {
-      throw new FineractHttpError(0, { defaultUserMessage: resolveNetworkErrorMessage(error) });
+      throw new FineractHttpError(
+        0,
+        { defaultUserMessage: resolveNetworkErrorMessage(error) },
+        requestInfo
+      );
     }
 
     let raw: string;
     try {
       raw = await res.text();
     } catch (error) {
-      throw new FineractHttpError(0, { defaultUserMessage: resolveNetworkErrorMessage(error) });
+      throw new FineractHttpError(
+        0,
+        { defaultUserMessage: resolveNetworkErrorMessage(error) },
+        requestInfo
+      );
     }
 
     if (!res.ok) {
@@ -91,7 +105,20 @@ export class FineractClient {
           body = { defaultUserMessage: raw };
         }
       }
-      throw new FineractHttpError(res.status, body);
+      if (process.env.NODE_ENV === 'development' || res.status >= 500) {
+        console.error(
+          JSON.stringify({
+            tag: 'fineract-http',
+            timestamp: new Date().toISOString(),
+            fineractStatus: res.status,
+            fineractMethod: method,
+            fineractPath: path,
+            fineractSearchParams: options?.searchParams,
+            message: body?.developerMessage ?? body?.defaultUserMessage ?? raw.slice(0, 500)
+          })
+        );
+      }
+      throw new FineractHttpError(res.status, body, requestInfo);
     }
 
     if (res.status === 204 || !raw.trim()) {

@@ -17,20 +17,23 @@ import { ClientDetailActionsMenu } from '@/components/clients/detail/client-deta
 import { enumOptionLabel, isClientEntity } from '@/lib/fineract/client-detail-labels';
 import { formatCustomerClassLabel } from '@/lib/fineract/customer-class-eligibility';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
-import { formatFineractDateArray } from '@/lib/fineract/dates';
+import { ageFromFineractDateOfBirth, formatAgeYearsLabel, formatFineractDateArray } from '@/lib/fineract/dates';
 
 function ClientHeaderDates({
   submittedOn,
   activatedOn,
   closedOn,
   birthOrIncorpLabel,
-  birthOrIncorpDate
+  birthOrIncorpDate,
+  birthOrIncorpAgeYears
 }: {
   submittedOn?: string | null;
   activatedOn?: string | null;
   closedOn?: string | null;
   birthOrIncorpLabel: string;
   birthOrIncorpDate?: string | null;
+  /** Shown beside date of birth for individual customers only. */
+  birthOrIncorpAgeYears?: number;
 }) {
   const itemClassName = 'inline-flex min-w-0 items-center gap-1.5 text-muted-foreground';
 
@@ -60,7 +63,15 @@ function ClientHeaderDates({
         <Calendar className="size-4 shrink-0" aria-hidden />
         <span>
           {birthOrIncorpLabel}{' '}
-          <span className="text-foreground">{birthOrIncorpDate ?? '—'}</span>
+          <span className="text-foreground">
+            {birthOrIncorpDate ?? '—'}
+            {birthOrIncorpDate && birthOrIncorpAgeYears != null ? (
+              <span className="text-muted-foreground">
+                {' '}
+                ({formatAgeYearsLabel(birthOrIncorpAgeYears)})
+              </span>
+            ) : null}
+          </span>
         </span>
       </span>
     </div>
@@ -196,6 +207,9 @@ export function ClientDetailTop({
   const dobLabel = formatFineractDateArray(client.dateOfBirth);
   const closedLabel = formatFineractDateArray(client.timeline?.closedOnDate);
   const isEntity = isClientEntity(client);
+  const birthOrIncorpAgeYears = isEntity
+    ? undefined
+    : ageFromFineractDateOfBirth(client.dateOfBirth);
   const legalFormLabel = enumOptionLabel(client.legalForm);
   const groups = client.groups?.filter((group) => group.name?.trim()) ?? [];
 
@@ -248,6 +262,7 @@ export function ClientDetailTop({
                   closedOn={closedLabel}
                   birthOrIncorpLabel={isEntity ? 'Incorporation date' : 'Date of birth'}
                   birthOrIncorpDate={dobLabel}
+                  birthOrIncorpAgeYears={birthOrIncorpAgeYears}
                 />
                 <ClientHeaderKeyInfo
                   mobileNo={client.mobileNo}

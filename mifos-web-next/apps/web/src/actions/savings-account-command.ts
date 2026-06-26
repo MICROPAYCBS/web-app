@@ -130,6 +130,22 @@ async function requirePermission(
   return null;
 }
 
+async function requireAllPermissions(
+  permissions: string[],
+  deniedMessage: string
+): Promise<PermissionDenied | null> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, { all: permissions });
+  } catch {
+    return { ok: false, message: deniedMessage };
+  }
+  return null;
+}
+
 function revalidateSavingsAccountPaths(clientId: string, accountId: string | number) {
   revalidatePath(`/clients/${clientId}/savings-accounts/${accountId}/general`);
   revalidatePath(`/clients/${clientId}/savings`);
@@ -448,6 +464,111 @@ export async function loadSavingsAccountAssignStaffSheetDataAction(
     return { ok: true, staffOptions };
   } catch (error) {
     return toFineractActionError(error, 'Could not load field officers.');
+  }
+}
+
+export async function loadSavingsAccountReassignStaffSheetDataAction(
+  clientId: string,
+  accountId: string
+): Promise<
+  | {
+      ok: true;
+      currentOfficerName: string;
+      staffOptions: { id: number; name: string }[];
+    }
+  | { ok: false; message: string }
+> {
+  const denied = await requireAllPermissions(
+    ['UPDATESAVINGSOFFICER_SAVINGSACCOUNT', 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT'],
+    'You need permission to assign and remove field officers to reassign.'
+  );
+  if (denied) {
+    return { ok: false, message: denied.message };
+  }
+
+  try {
+    const [client, account] = await Promise.all([
+      getClientWithTemplate(clientId),
+      getSavingsAccount(accountId)
+    ]);
+    if (!account) {
+      return { ok: false, message: 'Savings account not found.' };
+    }
+    const currentOfficerId = account.fieldOfficerId;
+    if (!currentOfficerId) {
+      return { ok: false, message: 'No field officer is assigned.' };
+    }
+    const currentStaff = client.staffOptions.find((row) => row.id === currentOfficerId);
+    const currentOfficerName =
+      account.fieldOfficerName?.trim() ||
+      currentStaff?.displayName?.trim() ||
+      currentStaff?.firstname?.trim() ||
+      `Field officer ${currentOfficerId}`;
+    const staffOptions = client.staffOptions
+      .filter((row) => row.id !== currentOfficerId)
+      .map((row) => ({
+        id: row.id,
+        name: row.displayName ?? row.firstname ?? `Staff #${row.id}`
+      }));
+    return { ok: true, currentOfficerName, staffOptions };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load field officers.');
+  }
+}
+
+export async function executeSavingsAccountReassignStaffAction(
+  clientId: string,
+  accountId: string,
+  raw: unknown
+): Promise<SavingsAccountActionResult> {
+  const denied = await requireAllPermissions(
+    ['UPDATESAVINGSOFFICER_SAVINGSACCOUNT', 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT'],
+    'You need permission to assign and remove field officers to reassign.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = parseOrError(savingsAccountAssignStaffSchema, raw);
+  if (!parsed.success) {
+    return parsed.result;
+  }
+
+  try {
+    const account = await getSavingsAccount(accountId);
+    if (!account) {
+      return { ok: false, message: 'Savings account not found.' };
+    }
+    const currentOfficerId = account.fieldOfficerId;
+    if (!currentOfficerId) {
+      return { ok: false, message: 'No field officer is assigned.' };
+    }
+    if (parsed.data.toSavingsOfficerId === currentOfficerId) {
+      return {
+        ok: false,
+        message: 'Fix the highlighted fields.',
+        fieldErrors: { toSavingsOfficerId: 'Select a different field officer.' }
+      };
+    }
+
+    const reassignmentDate = parsed.data.assignmentDate;
+    await executeSavingsAccountCommand(
+      accountId,
+      'unassignSavingsOfficer',
+      buildFineractCommandBody({ unassignedDate: reassignmentDate })
+    );
+    await executeSavingsAccountCommand(
+      accountId,
+      'assignSavingsOfficer',
+      buildFineractCommandBody({
+        toSavingsOfficerId: parsed.data.toSavingsOfficerId,
+        assignmentDate: reassignmentDate
+      })
+    );
+    revalidateSavingsAccountPaths(clientId, accountId);
+    return { ok: true };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not reassign field officer.');
   }
 }
 

@@ -299,6 +299,7 @@ const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
 | Business date | UI | Default value |
 |---------------|-----|----------------|
 | Enabled **and** set | **Read-only** display + hint “Uses the organisation business date.” | Organisation business date |
+| Enabled, set, **not today** | Warning styling (header, `TransactionDateField`, `/system/business-date`) | Organisation business date |
 | Disabled or not set | Editable `DateField` (via `TransactionDateField` fallback), capped at today | Today (`useInitialTransactionDate()`) |
 
 ### Client vs server defaults

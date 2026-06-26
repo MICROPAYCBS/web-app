@@ -48,6 +48,10 @@ Copy from [`apps/web/.env.vercel.example`](../apps/web/.env.vercel.example).
 | `DEMO_SESSION_ENABLED` | ✓ | **off** | Allow “Continue with demo session” on login |
 | `RBAC_DEV_SESSION` | ✓ | **off** | JSON session used when demo mode is on |
 | `RBAC_ENABLED` | optional | ✓ | Set `false` only while testing |
+| `NEXT_PUBLIC_SENTRY_DSN` | — | optional | **Production only** — Sentry project DSN |
+| `SENTRY_ORG` | — | optional | **Production only** — org slug for source map uploads |
+| `SENTRY_PROJECT` | — | optional | **Production only** — project slug for source map uploads |
+| `SENTRY_AUTH_TOKEN` | — | optional | **Production build** env — upload source maps |
 
 ### Suggested preview values
 
@@ -98,6 +102,8 @@ pnpm exec vercel --prod        # production deploy
 | Stuck on Login | Enable `DEMO_SESSION_ENABLED` + `RBAC_DEV_SESSION` on Preview |
 | `/api/clients` errors | Demo API may rate-limit; check Vercel function logs |
 | Fineract SSL / timeout | Ensure `FINERACT_API_URL` is reachable from Vercel (public HTTPS) |
+| Sentry events missing | Set `NEXT_PUBLIC_SENTRY_DSN` on **Production** only; check Issues in Sentry |
+| Sentry minified stacks | Add `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` to Vercel **Production** build env |
 | Vercel build failed after local commit | Run `cd mifos-web-next && pnpm run check:ci` before pushing. Ensure git hooks are installed (`npm install` at repo root). |
 
 ## 7. Before you commit

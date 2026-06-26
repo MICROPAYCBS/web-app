@@ -48,6 +48,35 @@ export async function loadClientActionSheetDataAction(
           }
         };
       }
+      case 'reassign-staff': {
+        const [template, client] = await Promise.all([
+          getClientWithTemplate(clientId),
+          getClient(clientId)
+        ]);
+        const currentStaffId = client.staffId;
+        if (typeof currentStaffId !== 'number' || currentStaffId <= 0) {
+          return { ok: false, message: 'No relationship officer is assigned.' };
+        }
+        const currentStaff = template.staffOptions.find((s) => s.id === currentStaffId);
+        const currentStaffName =
+          currentStaff?.displayName?.trim() ||
+          client.staffName?.trim() ||
+          `Relationship officer ${currentStaffId}`;
+        const staffOptions = template.staffOptions
+          .filter((s) => s.id !== currentStaffId)
+          .map((s) => ({
+            id: s.id,
+            name: s.displayName?.trim() || `Relationship officer ${s.id}`
+          }));
+        return {
+          ok: true,
+          data: {
+            sheetId,
+            currentStaffName,
+            staffOptions: toSelectOptions(staffOptions)
+          }
+        };
+      }
       case 'update-default-savings': {
         const template = await getClientWithTemplate(clientId);
         return {
