@@ -6,15 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { FormWizardSkeleton } from '@/components/composites/form-wizard-skeleton';
+import { CreateClientWizardSkeleton } from '@/components/clients/create/create-client-wizard-skeleton';
 
 export default function CreateClientLoading() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <FormWizardSkeleton
-        title="Create customer"
-        description="Complete each step to register a new customer."
-      />
+      <CreateClientWizardSkeleton />
     </div>
   );
 }

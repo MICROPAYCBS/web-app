@@ -208,17 +208,6 @@ export function BiodataStep({
           />
         ) : null}
 
-        <TextField
-          id="externalId"
-          className="sm:col-span-2"
-          label="External ID"
-          optional
-          value={g.externalId ?? ''}
-          onChange={(v) => onDraftChange({ externalId: v })}
-          error={errors.externalId}
-          hint={CLIENT_EXTERNAL_ID_HINT}
-        />
-
         <DateField
           id="dateOfBirth"
           label={isPerson ? 'Date of birth' : 'Incorporation date'}
@@ -312,6 +301,17 @@ export function BiodataStep({
             />
           </>
         ) : null}
+
+        <TextField
+          id="externalId"
+          className="sm:col-span-2"
+          label="External ID"
+          optional
+          value={g.externalId ?? ''}
+          onChange={(v) => onDraftChange({ externalId: v })}
+          error={errors.externalId}
+          hint={CLIENT_EXTERNAL_ID_HINT}
+        />
       </div>
     </div>
   );

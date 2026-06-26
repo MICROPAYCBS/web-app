@@ -106,11 +106,11 @@ export function PreviewStep({
         {isPerson ? (
           <Field label="Nationality" value={nationality?.name ?? nationality?.value} />
         ) : null}
-        <Field label="External ID" value={g.externalId} />
         <Field
           label={isPerson ? 'Date of birth' : 'Incorporation date'}
           value={g.dateOfBirth}
         />
+        <Field label="External ID" value={g.externalId} />
       </section>
 
       <Separator />

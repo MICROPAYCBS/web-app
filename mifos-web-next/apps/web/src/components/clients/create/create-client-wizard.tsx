@@ -47,6 +47,12 @@ import {
 import { createClientIssueStepId, parseCreateClientPayload } from './build-create-client-raw';
 import type { CreateClientDraft, CreateClientWizardProps } from './types';
 import {
+  CREATE_CLIENT_ADDRESS_STEP,
+  CREATE_CLIENT_WIZARD_END_STEPS,
+  CREATE_CLIENT_WIZARD_MIDDLE_STEPS,
+  CREATE_CLIENT_WIZARD_START_STEPS
+} from './create-client-wizard-steps';
+import {
   findFirstInvalidCreateClientStep,
   validateStep,
   type CreateClientValidationContext,
@@ -57,20 +63,11 @@ function buildSteps(
   template: CreateClientWizardProps['initialTemplate'],
   legalFormId: number
 ): FormWizardStep[] {
-  const steps: FormWizardStep[] = [
-    { id: 'biodata', label: 'Biodata' },
-    { id: 'contact', label: 'Contact' },
-    { id: 'identifiers', label: 'Identification' }
-  ];
+  const steps: FormWizardStep[] = [...CREATE_CLIENT_WIZARD_START_STEPS];
   if (template.isAddressEnabled) {
-    steps.push({ id: 'address', label: 'Address' });
+    steps.push(CREATE_CLIENT_ADDRESS_STEP);
   }
-  steps.push(
-    { id: 'customer-profiling', label: 'Customer profiling' },
-    { id: 'family', label: 'Next of kin' },
-    { id: 'income-sources', label: 'Income sources' },
-    { id: 'compliance', label: 'Compliance' }
-  );
+  steps.push(...CREATE_CLIENT_WIZARD_MIDDLE_STEPS);
   for (const dt of singleRowDatatablesForLegalForm(template, legalFormId)) {
     steps.push({
       id: `datatable:${dt.registeredTableName}`,
@@ -83,8 +80,7 @@ function buildSteps(
       label: formatDatatableTableTitle(dt.registeredTableName)
     });
   }
-  steps.push({ id: 'general', label: 'Account opening' });
-  steps.push({ id: 'preview', label: 'Preview' });
+  steps.push(...CREATE_CLIENT_WIZARD_END_STEPS);
   return steps;
 }
 
