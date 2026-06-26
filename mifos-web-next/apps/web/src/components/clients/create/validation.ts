@@ -22,6 +22,7 @@ import {
   multiRowDatatablesForLegalForm,
   singleRowDatatablesForLegalForm
 } from './datatable-payloads';
+import { validateCustomerClassFormFields } from '@/lib/fineract/customer-class-eligibility';
 import type { CreateClientDraft } from './types';
 
 export type StepErrors = Record<string, string>;
@@ -43,7 +44,10 @@ export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
   return errors;
 }
 
-export function validateBiodataStep(draft: CreateClientDraft): StepErrors {
+export function validateBiodataStep(
+  draft: CreateClientDraft,
+  template?: FineractClientTemplate
+): StepErrors {
   const errors: StepErrors = {};
   const g = draft.general;
   const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
@@ -52,8 +56,20 @@ export function validateBiodataStep(draft: CreateClientDraft): StepErrors {
     errors.legalFormId = 'Profile type is required';
   }
 
-  if (!g.clientTypeId) {
-    errors.clientTypeId = 'Customer type is required';
+  if (!g.customerClassId) {
+    errors.customerClassId = 'Customer class is required';
+  }
+
+  if (template) {
+    Object.assign(
+      errors,
+      validateCustomerClassFormFields({
+        customerClassId: g.customerClassId,
+        customerClassOptions: template.customerClassOptions,
+        dateOfBirth: g.dateOfBirth,
+        legalFormId: g.legalFormId
+      })
+    );
   }
 
   if (legalFormId === LEGAL_FORM_PERSON) {
@@ -260,7 +276,7 @@ export function validateStep(
     return validateGeneralStep(draft);
   }
   if (stepId === 'biodata') {
-    return validateBiodataStep(draft);
+    return validateBiodataStep(draft, template);
   }
   if (stepId === 'contact') {
     return validateContactStep(draft);

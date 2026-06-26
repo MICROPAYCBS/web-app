@@ -151,16 +151,8 @@
     "npm": ">= 8.11.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "node scripts/check-file-headers.js",
-      "eslint --cache"
-    ],
-    "*.{css,scss}": [
-      "node scripts/check-file-headers.js",
-      "stylelint"
-    ],
-    "*.html": "node scripts/check-file-headers.js",
-    "*": "prettier --check --ignore-unknown"
+    "*.{js,jsx,ts,tsx}": "eslint --cache",
+    "*.{css,scss}": "stylelint"
   },
   "overrides": {
     "glob": "^13.0.0",

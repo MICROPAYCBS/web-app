@@ -15,7 +15,7 @@
     "incomeSources": { "required": false },
     "dateOfBirth": { "required": true },
     "genderId": { "requiredWhen": "legalFormId=1" },
-    "clientTypeId": { "required": true },
+    "customerClassId": { "required": true },
     "legalFormId": { "required": true, "values": [1, 2] },
     "firstname": { "requiredWhen": "legalFormId=1" },
     "lastname": { "requiredWhen": "legalFormId=1" },

@@ -14,9 +14,10 @@ import { useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { toSelectOptions } from '@/lib/form/select-options';
+import { toSelectOptions, customerClassToSelectOptions } from '@/lib/form/select-options';
 import { CLIENT_EXTERNAL_ID_HINT } from '@/lib/fineract/client-detail-labels';
 import { filterEligibleClientTitles } from '@/lib/fineract/client-title-eligibility';
+import { filterEligibleCustomerClasses } from '@/lib/fineract/customer-class-eligibility';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
 
@@ -43,6 +44,14 @@ export function BiodataStep({
       ),
     [template.clientTitleOptions, template.titleOptions, g.genderId]
   );
+  const eligibleCustomerClasses = useMemo(
+    () =>
+      filterEligibleCustomerClasses(template.customerClassOptions, {
+        legalFormId: g.legalFormId,
+        dateOfBirth: g.dateOfBirth
+      }),
+    [template.customerClassOptions, g.legalFormId, g.dateOfBirth]
+  );
 
   const legalFormOptions = toSelectOptions(
     template.clientLegalFormOptions?.length
@@ -68,13 +77,21 @@ export function BiodataStep({
           value={String(legalFormId)}
           onValueChange={(v) => {
             const id = Number(v);
+            const nextEligibleClasses = filterEligibleCustomerClasses(template.customerClassOptions, {
+              legalFormId: id,
+              dateOfBirth: g.dateOfBirth
+            });
+            const keepCustomerClass =
+              g.customerClassId != null &&
+              nextEligibleClasses.some((customerClass) => customerClass.id === g.customerClassId);
             if (id === LEGAL_FORM_PERSON) {
               onDraftChange({
                 legalFormId: id,
                 fullname: undefined,
                 clientNonPersonDetails: undefined,
                 firstname: g.firstname ?? '',
-                lastname: g.lastname ?? ''
+                lastname: g.lastname ?? '',
+                customerClassId: keepCustomerClass ? g.customerClassId : undefined
               });
             } else {
               onDraftChange({
@@ -84,7 +101,8 @@ export function BiodataStep({
                 lastname: undefined,
                 fullname: g.fullname ?? '',
                 isStaff: false,
-                clientNonPersonDetails: { constitutionId: nonPerson.constitutionId }
+                clientNonPersonDetails: { constitutionId: nonPerson.constitutionId },
+                customerClassId: keepCustomerClass ? g.customerClassId : undefined
               });
             }
           }}
@@ -93,14 +111,15 @@ export function BiodataStep({
         />
 
         <SelectField
-          id="clientTypeId"
-          label="Customer type"
+          id="customerClassId"
+          label="Customer class"
           required
-          value={g.clientTypeId ? String(g.clientTypeId) : undefined}
-          onValueChange={(v) => onDraftChange({ clientTypeId: v ? Number(v) : undefined })}
-          options={toSelectOptions(template.clientTypeOptions)}
-          placeholder="Select customer type"
-          error={errors.clientTypeId}
+          value={g.customerClassId ? String(g.customerClassId) : undefined}
+          onValueChange={(v) => onDraftChange({ customerClassId: v ? Number(v) : undefined })}
+          options={customerClassToSelectOptions(eligibleCustomerClasses)}
+          placeholder="Select customer class"
+          hint="Only classes matching profile type and age are listed. KYC and documents are checked at activation."
+          error={errors.customerClassId}
         />
 
         {legalFormId === LEGAL_FORM_ENTITY ? (
@@ -205,7 +224,19 @@ export function BiodataStep({
           label={isPerson ? 'Date of birth' : 'Incorporation date'}
           required
           value={g.dateOfBirth}
-          onChange={(v) => onDraftChange({ dateOfBirth: v })}
+          onChange={(v) => {
+            const nextEligibleClasses = filterEligibleCustomerClasses(template.customerClassOptions, {
+              legalFormId: g.legalFormId,
+              dateOfBirth: v
+            });
+            const keepCustomerClass =
+              g.customerClassId != null &&
+              nextEligibleClasses.some((customerClass) => customerClass.id === g.customerClassId);
+            onDraftChange({
+              dateOfBirth: v,
+              customerClassId: keepCustomerClass ? g.customerClassId : undefined
+            });
+          }}
           error={errors.dateOfBirth}
         />
 

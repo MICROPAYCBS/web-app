@@ -140,11 +140,11 @@ export const createClientSchema = z
         path: ['staffId']
       });
     }
-    if (!data.clientTypeId) {
+    if (!data.customerClassId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Customer type is required',
-        path: ['clientTypeId']
+        message: 'Customer class is required',
+        path: ['customerClassId']
       });
     }
     if (data.legalFormId === LEGAL_FORM_PERSON && !data.genderId) {

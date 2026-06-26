@@ -1,1 +1,4 @@
 npx lint-staged
+
+# Block mifos-web-next commits that fail the same checks as Vercel (see mifos-web-next/scripts/pre-commit-check.mjs).
+node mifos-web-next/scripts/pre-commit-check.mjs

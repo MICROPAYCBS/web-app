@@ -55,8 +55,10 @@ export function PreviewStep({
   );
   const customerClass = template.customerClassOptions?.find((c) => c.id === g.customerClassId);
   const staff = template.staffOptions?.find((o) => o.id === g.staffId);
-  const clientType = template.clientTypeOptions?.find((o) => o.id === g.clientTypeId);
   const isPerson = (g.legalFormId ?? LEGAL_FORM_PERSON) === LEGAL_FORM_PERSON;
+  const customerClassLabel = customerClass
+    ? `${customerClass.classCode} — ${customerClass.className}`
+    : undefined;
 
   function incomeSourceTypeLabel(incomeSourceTypeId: number): string | undefined {
     return incomeSourceOptions?.incomeSourceTypeOptions?.find((o) => o.id === incomeSourceTypeId)?.name;
@@ -86,7 +88,7 @@ export function PreviewStep({
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Biodata</h2>
         <Field label="Profile type" value={legalForm?.value ?? legalForm?.name} />
-        <Field label="Customer type" value={clientType?.name ?? clientType?.value} />
+        <Field label="Customer class" value={customerClassLabel} />
         {isPerson ? (
           <Field label="Gender" value={gender?.name ?? gender?.value} />
         ) : null}
@@ -186,14 +188,6 @@ export function PreviewStep({
         <Field
           label="Customer risk profile"
           value={riskProfile?.name ?? riskProfile?.value}
-        />
-        <Field
-          label="Customer class"
-          value={
-            customerClass
-              ? `${customerClass.classCode} — ${customerClass.className}`
-              : undefined
-          }
         />
       </section>
 

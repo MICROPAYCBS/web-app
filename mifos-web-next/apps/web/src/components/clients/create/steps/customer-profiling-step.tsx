@@ -12,8 +12,7 @@ import type { FineractClientTemplate } from '@mifos/api-client';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { SectorCascadeSelect } from '@/components/clients/shared/sector-cascade-select';
-import { toSelectOptions, customerClassToSelectOptions } from '@/lib/form/select-options';
-import { filterEligibleCustomerClasses } from '@/lib/fineract/customer-class-eligibility';
+import { toSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
 
@@ -29,16 +28,12 @@ export function CustomerProfilingStep({
   onDraftChange: (patch: Partial<ClientGeneralFormState>) => void;
 }) {
   const g = draft.general;
-  const eligibleCustomerClasses = filterEligibleCustomerClasses(template.customerClassOptions, {
-    legalFormId: g.legalFormId,
-    dateOfBirth: g.dateOfBirth
-  });
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Customer class, sub-industry, tax details, and internal risk categorization. Most fields
-        are optional and can be updated later.
+        Sub-industry, tax details, and internal risk categorization. Most fields are optional and
+        can be updated later.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -72,19 +67,6 @@ export function CustomerProfilingStep({
           placeholder="Select risk profile"
           hint="Very High, High, Medium, Low, or Very Low."
           error={errors.customerRiskProfileId}
-        />
-
-        <SelectField
-          id="customerClassId"
-          className="sm:col-span-2"
-          label="Customer class"
-          optional
-          value={g.customerClassId ? String(g.customerClassId) : undefined}
-          onValueChange={(v) => onDraftChange({ customerClassId: v ? Number(v) : undefined })}
-          options={customerClassToSelectOptions(eligibleCustomerClasses)}
-          placeholder="Select customer class"
-          hint="Only classes matching age, legal form, and risk profile are listed. KYC and documents are checked at activation."
-          error={errors.customerClassId}
         />
       </div>
     </div>
