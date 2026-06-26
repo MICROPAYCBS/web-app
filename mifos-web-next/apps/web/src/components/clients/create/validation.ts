@@ -52,6 +52,10 @@ export function validateBiodataStep(draft: CreateClientDraft): StepErrors {
     errors.legalFormId = 'Profile type is required';
   }
 
+  if (!g.clientTypeId) {
+    errors.clientTypeId = 'Customer type is required';
+  }
+
   if (legalFormId === LEGAL_FORM_PERSON) {
     if (!g.firstname?.trim()) {
       errors.firstname = 'First name is required';
@@ -106,9 +110,6 @@ export function validateCustomerProfilingStep(draft: CreateClientDraft): StepErr
   const errors: StepErrors = {};
   const g = draft.general;
 
-  if (!g.clientTypeId) {
-    errors.clientTypeId = 'Customer type is required';
-  }
   if (g.taxIdentificationNumber && g.taxIdentificationNumber.trim().length > 50) {
     errors.taxIdentificationNumber = 'TIN must be at most 50 characters';
   }

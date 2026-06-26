@@ -92,15 +92,15 @@ export function BiodataStep({
           error={errors.legalFormId}
         />
 
-        <TextField
-          id="externalId"
-          className="sm:col-span-2"
-          label="External ID"
-          optional
-          value={g.externalId ?? ''}
-          onChange={(v) => onDraftChange({ externalId: v })}
-          error={errors.externalId}
-          hint={CLIENT_EXTERNAL_ID_HINT}
+        <SelectField
+          id="clientTypeId"
+          label="Customer type"
+          required
+          value={g.clientTypeId ? String(g.clientTypeId) : undefined}
+          onValueChange={(v) => onDraftChange({ clientTypeId: v ? Number(v) : undefined })}
+          options={toSelectOptions(template.clientTypeOptions)}
+          placeholder="Select customer type"
+          error={errors.clientTypeId}
         />
 
         {legalFormId === LEGAL_FORM_ENTITY ? (
@@ -188,6 +188,17 @@ export function BiodataStep({
             placeholder="Select nationality"
           />
         ) : null}
+
+        <TextField
+          id="externalId"
+          className="sm:col-span-2"
+          label="External ID"
+          optional
+          value={g.externalId ?? ''}
+          onChange={(v) => onDraftChange({ externalId: v })}
+          error={errors.externalId}
+          hint={CLIENT_EXTERNAL_ID_HINT}
+        />
 
         <DateField
           id="dateOfBirth"

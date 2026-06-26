@@ -37,22 +37,11 @@ export function CustomerProfilingStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Customer type, customer class, sub-industry, tax details, and internal risk categorization.
-        Most fields are optional and can be updated later.
+        Customer class, sub-industry, tax details, and internal risk categorization. Most fields
+        are optional and can be updated later.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <SelectField
-          id="clientTypeId"
-          label="Customer type"
-          required
-          value={g.clientTypeId ? String(g.clientTypeId) : undefined}
-          onValueChange={(v) => onDraftChange({ clientTypeId: v ? Number(v) : undefined })}
-          options={toSelectOptions(template.clientTypeOptions)}
-          placeholder="Select customer type"
-          error={errors.clientTypeId}
-        />
-
         <TextField
           id="taxIdentificationNumber"
           className="sm:col-span-2"

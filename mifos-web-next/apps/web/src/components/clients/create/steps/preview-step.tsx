@@ -86,7 +86,10 @@ export function PreviewStep({
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Biodata</h2>
         <Field label="Profile type" value={legalForm?.value ?? legalForm?.name} />
-        <Field label="External ID" value={g.externalId} />
+        <Field label="Customer type" value={clientType?.name ?? clientType?.value} />
+        {isPerson ? (
+          <Field label="Gender" value={gender?.name ?? gender?.value} />
+        ) : null}
         {isPerson ? (
           <Field label="Title" value={titleLabel} />
         ) : null}
@@ -98,16 +101,14 @@ export function PreviewStep({
         ) : (
           <Field label="Entity name" value={g.fullname} />
         )}
+        {isPerson ? (
+          <Field label="Nationality" value={nationality?.name ?? nationality?.value} />
+        ) : null}
+        <Field label="External ID" value={g.externalId} />
         <Field
           label={isPerson ? 'Date of birth' : 'Incorporation date'}
           value={g.dateOfBirth}
         />
-        {isPerson ? (
-          <>
-            <Field label="Nationality" value={nationality?.name ?? nationality?.value} />
-            <Field label="Gender" value={gender?.name ?? gender?.value} />
-          </>
-        ) : null}
       </section>
 
       <Separator />
@@ -175,7 +176,6 @@ export function PreviewStep({
 
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Customer profiling</h2>
-        <Field label="Customer type" value={clientType?.name ?? clientType?.value} />
         <Field label="Tax identification number (TIN)" value={g.taxIdentificationNumber} />
         {g.subIndustryId != null ? (
           <div className="grid grid-cols-2 gap-2 text-sm">
