@@ -15,6 +15,7 @@ import {
 } from '@/lib/fineract/organization-currencies';
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
 import { SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS } from '@/lib/fineract/share-product-accounting';
+import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import { asAccountingMappings, asCurrency, asEnumOption } from '@/lib/fineract/product-normalize';
 import { fineractApiDateToFormString } from '@/lib/fineract/dates';
 
@@ -56,8 +57,12 @@ export function shareProductDraftFromTemplate(
   template: ShareProductTemplate
 ): UpsertShareProductInput {
   const currency = template.currency ?? template.currencyOptions?.[0];
-  const accountingRuleId =
-    template.accountingRule?.id ?? template.accountingRuleOptions?.[0]?.id ?? 1;
+  const accountingRuleId = productDraftAccountingRuleId(
+    asEnumOption(template.accountingRule),
+    template.accountingRuleOptions?.length
+      ? template.accountingRuleOptions
+      : SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS
+  );
   const mappings = template.accountingMappings ?? {};
   const lockinFrequency = Number(template.lockinPeriod ?? 0);
   const hasLockin = lockinFrequency > 0;

@@ -13,8 +13,8 @@ import type { LoanProductGlAccountOption } from '@mifos/api-client';
 import { DetailSection } from '@/components/composites';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
-import { accountingRuleLabel } from '@/lib/fineract/product-display';
-import { cn } from '@/lib/utils';
+import { ProductAccountingRuleField } from '@/components/products/shared/product-accounting-rule-field';
+import { resolveSelectableAccountingRuleId } from '@/lib/fineract/product-display';
 import type { LoanProductStepProps } from '../types';
 
 function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
@@ -74,7 +74,10 @@ export function AccountingStep({
   onChange: (patch: Partial<LoanProductAccountingInput>) => void;
 }) {
   const accounting = draft.accounting;
-  const rule = accounting.accountingRule ?? 1;
+  const rule = resolveSelectableAccountingRuleId(
+    accounting.accountingRule,
+    template.accountingRuleOptions
+  );
   const accountingEnabled = rule !== 1;
   const accrualEnabled = rule === 3 || rule === 4;
   const mappingOptions = template.accountingMappingOptions ?? {};
@@ -94,42 +97,18 @@ export function AccountingStep({
       </p>
 
       <DetailSection title="Accounting rule">
-        <fieldset className="space-y-2">
-          <legend className="sr-only">Accounting rule</legend>
-          {(template.accountingRuleOptions ?? []).map((option) => {
-            const id = option.id ?? 0;
-            const selected = rule === id;
-            return (
-              <label
-                key={id}
-                htmlFor={`accounting-rule-${id}`}
-                className={cn(
-                  'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors',
-                  selected ? 'border-primary bg-primary/5' : 'border-input hover:bg-muted/40'
-                )}
-              >
-                <input
-                  id={`accounting-rule-${id}`}
-                  type="radio"
-                  name="accountingRule"
-                  className="size-4 shrink-0 accent-primary"
-                  checked={selected}
-                  onChange={() => {
-                    const patch: Partial<LoanProductAccountingInput> = { accountingRule: id };
-                    if (id !== 3 && id !== 4) {
-                      patch.enableAccrualActivityPosting = undefined;
-                    }
-                    onChange(patch);
-                  }}
-                />
-                <span>{accountingRuleLabel(option)}</span>
-              </label>
-            );
-          })}
-        </fieldset>
-        {errors['accounting.accountingRule'] ? (
-          <p className="mt-2 text-sm text-destructive">{errors['accounting.accountingRule']}</p>
-        ) : null}
+        <ProductAccountingRuleField
+          options={template.accountingRuleOptions ?? []}
+          value={accounting.accountingRule}
+          onChange={(id) => {
+            const patch: Partial<LoanProductAccountingInput> = { accountingRule: id };
+            if (id !== 3 && id !== 4) {
+              patch.enableAccrualActivityPosting = undefined;
+            }
+            onChange(patch);
+          }}
+          error={errors['accounting.accountingRule']}
+        />
       </DetailSection>
 
       {accountingEnabled ? (

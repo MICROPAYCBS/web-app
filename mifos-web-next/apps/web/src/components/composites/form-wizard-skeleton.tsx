@@ -7,6 +7,7 @@
  */
 
 import type { FormWizardStep } from '@/components/composites/form-wizard';
+import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { platformInset, platformInsetX } from '@/lib/platform-layout';
@@ -23,8 +24,12 @@ export interface FormWizardSkeletonProps {
   activeStepIndex?: number;
   /** Biodata-style intro line above the field grid */
   showIntro?: boolean;
-  /** Fields in the 2-column content grid */
+  /** Fields in the 2-column content grid (ignored when `content` is set) */
   fieldCount?: number;
+  /** When true, the last generic field spans both columns (default true) */
+  fullWidthLastField?: boolean;
+  /** Custom step body (e.g. biodata-shaped placeholder) */
+  content?: ReactNode;
   className?: string;
 }
 
@@ -68,6 +73,8 @@ export function FormWizardSkeleton({
   activeStepIndex = 0,
   showIntro = false,
   fieldCount = 8,
+  fullWidthLastField = true,
+  content,
   className
 }: FormWizardSkeletonProps) {
   const railSteps = steps?.length
@@ -122,17 +129,23 @@ export function FormWizardSkeleton({
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className={cn('min-h-0 flex-1 overflow-y-auto', platformInset)}>
-            <div className="space-y-6">
-              {showIntro ? <Skeleton className="h-4 w-full max-w-lg" /> : null}
-              <div className="grid gap-4 sm:grid-cols-2">
-                {Array.from({ length: fieldCount }).map((_, index) => (
-                  <FormFieldSkeleton
-                    key={index}
-                    className={index === fieldCount - 2 ? 'sm:col-span-2' : undefined}
-                  />
-                ))}
+            {content ?? (
+              <div className="space-y-6">
+                {showIntro ? <Skeleton className="h-4 w-full max-w-lg" /> : null}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {Array.from({ length: fieldCount }).map((_, index) => (
+                    <FormFieldSkeleton
+                      key={index}
+                      className={
+                        fullWidthLastField && index === fieldCount - 1
+                          ? 'sm:col-span-2'
+                          : undefined
+                      }
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div
@@ -144,7 +157,7 @@ export function FormWizardSkeleton({
           >
             <Skeleton className="h-8 w-16" />
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Skeleton className="h-9 w-20 rounded-md" />
+              <Skeleton className="h-9 w-[4.5rem] rounded-md" />
             </div>
           </div>
         </div>

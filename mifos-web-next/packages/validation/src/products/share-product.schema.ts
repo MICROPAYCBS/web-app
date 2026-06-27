@@ -136,7 +136,7 @@ function refineShareAccounting(
 
 export const shareProductAccountingStepSchema = z
   .object({
-    accountingRule: z.coerce.number().int().min(1).max(2),
+    accountingRule: z.coerce.number().int().min(2).max(2),
     shareReferenceId: glAccountId,
     shareSuspenseId: glAccountId,
     shareEquityId: glAccountId,

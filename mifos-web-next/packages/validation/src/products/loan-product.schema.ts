@@ -235,7 +235,7 @@ function refineAccountingCore(
 }
 
 const loanProductAccountingCoreSchema = z.object({
-  accountingRule: z.coerce.number().int().min(1).max(4),
+  accountingRule: z.coerce.number().int().min(2).max(4),
   enableAccrualActivityPosting: z.boolean().optional(),
   fundSourceAccountId: glAccountId,
   loanPortfolioAccountId: glAccountId,

@@ -12,9 +12,9 @@ import type { ShareProductAccountingInput } from '@mifos/validation';
 import type { LoanProductGlAccountOption } from '@mifos/api-client';
 import { DetailSection } from '@/components/composites';
 import { SelectField } from '@/components/composites/select-field';
+import { ProductAccountingRuleField } from '@/components/products/shared/product-accounting-rule-field';
 import { SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS } from '@/lib/fineract/share-product-accounting';
-import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
-import { cn } from '@/lib/utils';
+import { glAccountLabel, resolveSelectableAccountingRuleId } from '@/lib/fineract/product-display';
 import type { ShareProductStepProps } from '../types';
 
 function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
@@ -44,14 +44,17 @@ export function AccountingStep({
   onChange: (patch: Partial<ShareProductAccountingInput>) => void;
 }) {
   const accounting = draft.accounting;
-  const rule = accounting.accountingRule ?? 1;
-  const accountingEnabled = rule !== 1;
-  const mappingOptions = template.accountingMappingOptions ?? {};
-  const ruleOptions = (
+  const rule = resolveSelectableAccountingRuleId(
+    accounting.accountingRule,
     template.accountingRuleOptions?.length
       ? template.accountingRuleOptions
       : SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS
-  ).filter((option) => option.id === 1 || option.id === 2);
+  );
+  const accountingEnabled = rule !== 1;
+  const mappingOptions = template.accountingMappingOptions ?? {};
+  const ruleOptions = template.accountingRuleOptions?.length
+    ? template.accountingRuleOptions
+    : SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS;
 
   const hasGlAccounts = ACCOUNT_FIELDS.some(
     ({ optionKey }) => (mappingOptions[optionKey]?.length ?? 0) > 0
@@ -79,36 +82,12 @@ export function AccountingStep({
       </p>
 
       <DetailSection title="Accounting rule">
-        <fieldset className="space-y-2">
-          <legend className="sr-only">Accounting rule</legend>
-          {ruleOptions.map((option) => {
-            const id = option.id ?? 0;
-            const selected = rule === id;
-            return (
-              <label
-                key={id}
-                htmlFor={`accounting-rule-${id}`}
-                className={cn(
-                  'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors',
-                  selected ? 'border-primary bg-primary/5' : 'border-input hover:bg-muted/40'
-                )}
-              >
-                <input
-                  id={`accounting-rule-${id}`}
-                  type="radio"
-                  name="accountingRule"
-                  className="size-4 shrink-0 accent-primary"
-                  checked={selected}
-                  onChange={() => setRule(id)}
-                />
-                <span>{accountingRuleLabel(option)}</span>
-              </label>
-            );
-          })}
-        </fieldset>
-        {errors['accounting.accountingRule'] ? (
-          <p className="mt-2 text-sm text-destructive">{errors['accounting.accountingRule']}</p>
-        ) : null}
+        <ProductAccountingRuleField
+          options={ruleOptions}
+          value={accounting.accountingRule}
+          onChange={setRule}
+          error={errors['accounting.accountingRule']}
+        />
       </DetailSection>
 
       {accountingEnabled ? (

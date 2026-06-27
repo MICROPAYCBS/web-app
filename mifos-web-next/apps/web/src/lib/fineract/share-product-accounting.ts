@@ -8,8 +8,7 @@
 
 import type { FineractEnumOption } from '@mifos/api-client';
 
-/** Share products support none (1) and cash (2) only — template often omits rule options. */
+/** Share products support cash (2) only in the wizard — template often omits rule options. */
 export const SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS: FineractEnumOption[] = [
-  { id: 1, value: 'None', code: 'NONE' },
   { id: 2, value: 'Cash', code: 'CASH' }
 ];

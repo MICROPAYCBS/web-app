@@ -13,6 +13,7 @@ import {
   getOrganizationSelectedCurrencies
 } from '@/lib/fineract/organization-currencies';
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
+import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import {
   asAccountingMappings,
   asChargeIncomeMappings,
@@ -48,8 +49,10 @@ export function savingsProductDraftFromTemplate(
   template: SavingsProductTemplate
 ): UpsertSavingsProductInput {
   const currency = template.currency ?? template.currencyOptions?.[0];
-  const accountingRuleId =
-    template.accountingRule?.id ?? template.accountingRuleOptions?.[0]?.id ?? 1;
+  const accountingRuleId = productDraftAccountingRuleId(
+    asEnumOption(template.accountingRule),
+    template.accountingRuleOptions
+  );
   const mappings = template.accountingMappings ?? {};
   const lockinFrequency = Number(template.lockinPeriodFrequency ?? 0);
   const hasLockin = lockinFrequency > 0;

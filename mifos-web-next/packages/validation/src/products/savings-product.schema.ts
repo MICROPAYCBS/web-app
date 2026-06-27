@@ -188,7 +188,7 @@ function refineSavingsAccounting(
 }
 
 const savingsProductAccountingCoreSchema = z.object({
-  accountingRule: z.coerce.number().int().min(1).max(3),
+    accountingRule: z.coerce.number().int().min(2).max(3),
   savingsReferenceAccountId: glAccountId,
   overdraftPortfolioControlId: glAccountId,
   savingsControlAccountId: glAccountId,

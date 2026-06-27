@@ -33,6 +33,66 @@ export function accountingRuleLabel(rule?: FineractEnumOption): string {
   return '—';
 }
 
+/** Fineract convention: accounting rule id 1 / code NONE = no ledger posting. */
+export function isNoneAccountingRule(rule?: FineractEnumOption | number | null): boolean {
+  if (typeof rule === 'number') {
+    return rule === 1;
+  }
+  if (!rule) {
+    return false;
+  }
+  if (rule.id === 1) {
+    return true;
+  }
+  const code = rule.code?.toUpperCase() ?? '';
+  return code === 'NONE' || code === 'ACCOUNTINGTYPE.NONE';
+}
+
+/** Options shown in product create/edit wizards (excludes None). */
+export function selectableAccountingRuleOptions(
+  options: FineractEnumOption[] | undefined
+): FineractEnumOption[] {
+  return (options ?? []).filter((option) => !isNoneAccountingRule(option));
+}
+
+export function defaultSelectableAccountingRuleId(
+  options: FineractEnumOption[] | undefined
+): number {
+  return selectableAccountingRuleOptions(options)[0]?.id ?? 2;
+}
+
+export function resolveSelectableAccountingRuleId(
+  ruleId: number | undefined,
+  options: FineractEnumOption[] | undefined
+): number {
+  const selectable = selectableAccountingRuleOptions(options);
+  if (
+    ruleId != null &&
+    !isNoneAccountingRule(ruleId) &&
+    selectable.some((option) => option.id === ruleId)
+  ) {
+    return ruleId;
+  }
+  return defaultSelectableAccountingRuleId(options);
+}
+
+/** Initial accounting rule for product wizard drafts. */
+export function productDraftAccountingRuleId(
+  templateRule: FineractEnumOption | undefined,
+  options: FineractEnumOption[] | undefined
+): number {
+  const selectable = selectableAccountingRuleOptions(options);
+  const fromTemplate = templateRule?.id;
+  if (
+    fromTemplate != null &&
+    !isNoneAccountingRule(fromTemplate) &&
+    selectable.some((option) => option.id === fromTemplate)
+  ) {
+    return fromTemplate;
+  }
+  return defaultSelectableAccountingRuleId(options);
+}
+
 /** Accounting rule id 1 = None (Fineract convention). */
 export function isProductAccountingEnabled(rule?: FineractEnumOption): boolean {
   if (!rule) {
