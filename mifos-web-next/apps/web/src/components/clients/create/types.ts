@@ -7,7 +7,7 @@
  */
 
 import type { FineractAddressFieldConfig, FineractClientTemplate, FineractEntityDatatableCheck, FineractIncomeSourceOptions } from '@mifos/api-client';
-import type { ClientAddressEntry, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
+import type { ClientAddressEntry, ClientIdentifierIdentityTypeOption, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
 
 export type DatatableFormValues = Record<string, Record<string, unknown>>;
 export type MultiRowDatatableDraft = Record<string, Record<string, unknown>[]>;
@@ -68,4 +68,5 @@ export interface CreateClientWizardProps {
   entityDatatableChecks?: FineractEntityDatatableCheck[];
   incomeSourceOptions?: FineractIncomeSourceOptions;
   identifierDocumentTypes?: { id: number; name: string }[];
+  identifierIdentityTypeOptions?: ClientIdentifierIdentityTypeOption[];
 }

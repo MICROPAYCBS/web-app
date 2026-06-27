@@ -377,6 +377,26 @@
       "DELETE_CONTACTTYPE"
     ]
   },
+  "organization.identityTypes": {
+    "any": [
+      "READ_IDENTITYTYPE"
+    ]
+  },
+  "organization.identityTypes.create": {
+    "any": [
+      "CREATE_IDENTITYTYPE"
+    ]
+  },
+  "organization.identityTypes.update": {
+    "any": [
+      "UPDATE_IDENTITYTYPE"
+    ]
+  },
+  "organization.identityTypes.delete": {
+    "any": [
+      "DELETE_IDENTITYTYPE"
+    ]
+  },
   "organization.passwordPreferences": {
     "any": [
       "READ_CONFIGURATION"

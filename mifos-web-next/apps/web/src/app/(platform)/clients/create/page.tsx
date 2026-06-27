@@ -9,6 +9,7 @@
 import { assertCan, resolvePermission } from '@mifos/auth';
 import { redirect } from 'next/navigation';
 import { CreateClientWizard } from '@/components/clients/create/create-client-wizard';
+import type { FineractClientIdentifierTemplate } from '@mifos/api-client';
 import { getClientIncomeSourceTemplate } from '@/lib/fineract/client-income-source';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { getAddressFieldConfiguration, getClientTemplate } from '@/lib/fineract/clients';
@@ -37,13 +38,26 @@ export default async function CreateClientPage() {
       .then((page) => page.pageItems ?? [])
       .catch(() => []),
     getClientIncomeSourceTemplate(1).catch(() => ({})),
-    getClientIdentifierTemplate(1).catch(() => ({ allowedDocumentTypes: [] }))
+    getClientIdentifierTemplate(1).catch(
+      (): FineractClientIdentifierTemplate => ({ allowedDocumentTypes: [], identityTypeOptions: [] })
+    )
   ]);
 
   const identifierDocumentTypes =
     identifierTemplate.allowedDocumentTypes?.map((type) => ({
       id: type.id,
       name: type.name
+    })) ?? [];
+
+  const identifierIdentityTypeOptions =
+    identifierTemplate.identityTypeOptions?.map((option) => ({
+      codeValueId: option.codeValueId,
+      codeValueName: option.codeValueName,
+      example: option.example,
+      formatDescription: option.formatDescription,
+      validationMessage: option.validationMessage,
+      validationRegex: option.validationRegex,
+      status: option.status
     })) ?? [];
 
   return (
@@ -54,6 +68,7 @@ export default async function CreateClientPage() {
       entityDatatableChecks={entityDatatableChecks}
       incomeSourceOptions={incomeSourceOptions}
       identifierDocumentTypes={identifierDocumentTypes}
+      identifierIdentityTypeOptions={identifierIdentityTypeOptions}
     />
   );
 }

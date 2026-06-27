@@ -7,20 +7,6 @@
  */
 
 import { z } from 'zod';
-import {
-  isValidUgandaNin,
-  normalizeUgandaNin,
-  UGANDA_NIN_MESSAGE,
-  UGANDA_NIN_PLACEHOLDER
-} from '../uganda-nin';
-
-/** @deprecated Use {@link UGANDA_NIN_PATTERN} via {@link isValidUgandaNin}. */
-export const FIRST_IDENTIFIER_DOCUMENT_KEY_PATTERN = /^[A-Z0-9]{14}$/;
-
-export const FIRST_IDENTIFIER_DOCUMENT_KEY_MESSAGE = UGANDA_NIN_MESSAGE;
-
-/** Example format shown when the first identifier type is selected. */
-export const FIRST_IDENTIFIER_DOCUMENT_KEY_PLACEHOLDER = UGANDA_NIN_PLACEHOLDER;
 
 export const clientIdentifierSchema = z.object({
   documentTypeId: z.number().int().positive(),
@@ -31,20 +17,50 @@ export const clientIdentifierSchema = z.object({
 
 export type ClientIdentifierInput = z.infer<typeof clientIdentifierSchema>;
 
-export type ClientIdentifierValidationContext = {
-  /** `allowedDocumentTypes[0].id` from GET /clients/{id}/identifiers/template */
-  firstDocumentTypeId?: number;
+export type ClientIdentifierIdentityTypeOption = {
+  codeValueId: number;
+  codeValueName?: string;
+  example?: string;
+  formatDescription?: string;
+  validationMessage?: string;
+  validationRegex?: string;
+  status?: string;
 };
 
-export function isFirstIdentifierDocumentType(
+export type ClientIdentifierValidationContext = {
+  /** Active rules from GET /clients/{id}/identifiers/template */
+  identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
+};
+
+export function findIdentityTypeRule(
   documentTypeId: number,
-  firstDocumentTypeId: number | undefined
-): boolean {
-  return firstDocumentTypeId != null && documentTypeId === firstDocumentTypeId;
+  identityTypeOptions: ClientIdentifierIdentityTypeOption[] | undefined
+): ClientIdentifierIdentityTypeOption | undefined {
+  return identityTypeOptions?.find(
+    (option) => option.codeValueId === documentTypeId && option.status !== 'INACTIVE'
+  );
 }
 
-export function validateFirstIdentifierDocumentKey(documentKey: string): boolean {
-  return isValidUgandaNin(documentKey);
+export function validateDocumentKeyAgainstIdentityRule(
+  documentKey: string,
+  rule: ClientIdentifierIdentityTypeOption | undefined
+): string | null {
+  if (!rule?.validationRegex?.trim()) {
+    return null;
+  }
+  try {
+    if (!new RegExp(rule.validationRegex).test(documentKey.trim())) {
+      return (
+        rule.validationMessage?.trim() ||
+        rule.example?.trim() ||
+        rule.formatDescription?.trim() ||
+        `Document number does not match the required format${rule.codeValueName ? ` for ${rule.codeValueName}` : ''}.`
+      );
+    }
+    return null;
+  } catch {
+    return 'ID type validation regex is invalid.';
+  }
 }
 
 export function validateClientIdentifier(
@@ -56,32 +72,27 @@ export function validateClientIdentifier(
     return parsed;
   }
 
-  const { documentTypeId, documentKey } = parsed.data;
-  if (
-    isFirstIdentifierDocumentType(documentTypeId, context.firstDocumentTypeId) &&
-    !validateFirstIdentifierDocumentKey(documentKey)
-  ) {
+  const rule = findIdentityTypeRule(parsed.data.documentTypeId, context.identityTypeOptions);
+  const regexError = validateDocumentKeyAgainstIdentityRule(parsed.data.documentKey, rule);
+
+  if (regexError) {
     return {
       success: false as const,
       error: new z.ZodError([
         {
           code: z.ZodIssueCode.custom,
-          message: FIRST_IDENTIFIER_DOCUMENT_KEY_MESSAGE,
+          message: regexError,
           path: ['documentKey']
         }
       ])
     };
   }
 
-  const normalizedKey = isFirstIdentifierDocumentType(documentTypeId, context.firstDocumentTypeId)
-    ? normalizeUgandaNin(documentKey)
-    : documentKey.trim();
-
   return {
     success: true as const,
     data: {
       ...parsed.data,
-      documentKey: normalizedKey
+      documentKey: parsed.data.documentKey.trim()
     }
   };
 }

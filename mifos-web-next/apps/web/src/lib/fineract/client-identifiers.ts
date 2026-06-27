@@ -11,12 +11,62 @@ import 'server-only';
 import type {
   FineractClientIdentifier,
   FineractClientIdentifierTemplate,
-  FineractEntityDocument
+  FineractEntityDocument,
+  ClientIdentifierIdentityTypeOption
 } from '@mifos/api-client';
 import type { ClientIdentifierInput } from '@mifos/validation';
 import { FineractHttpError } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { buildFineractRequestInit, fineractUrl } from '@/lib/fineract/fineract-fetch';
+
+function normalizeIdentityTypeOption(raw: unknown): ClientIdentifierIdentityTypeOption | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = Number(row.id);
+  const codeValueId = Number(row.codeValueId);
+  const codeValueName = typeof row.codeValueName === 'string' ? row.codeValueName : '';
+  if (!Number.isFinite(id) || !Number.isFinite(codeValueId) || !codeValueName) {
+    return null;
+  }
+  return {
+    id,
+    codeValueId,
+    codeValueName,
+    example: typeof row.example === 'string' ? row.example : undefined,
+    formatDescription:
+      typeof row.formatDescription === 'string' ? row.formatDescription : undefined,
+    validationMessage:
+      typeof row.validationMessage === 'string' ? row.validationMessage : undefined,
+    validationRegex: typeof row.validationRegex === 'string' ? row.validationRegex : undefined,
+    status: typeof row.status === 'string' ? row.status : undefined
+  };
+}
+
+function normalizeClientIdentifierTemplate(raw: unknown): FineractClientIdentifierTemplate {
+  if (!raw || typeof raw !== 'object') {
+    return { allowedDocumentTypes: [], identityTypeOptions: [] };
+  }
+  const row = raw as Record<string, unknown>;
+  const allowedDocumentTypes = Array.isArray(row.allowedDocumentTypes)
+    ? row.allowedDocumentTypes
+        .filter(
+          (item): item is { id: number; name: string } =>
+            item != null &&
+            typeof item === 'object' &&
+            Number.isFinite(Number((item as { id?: unknown }).id)) &&
+            typeof (item as { name?: unknown }).name === 'string'
+        )
+        .map((item) => ({ id: Number(item.id), name: item.name }))
+    : [];
+  const identityTypeOptions = Array.isArray(row.identityTypeOptions)
+    ? row.identityTypeOptions
+        .map((item) => normalizeIdentityTypeOption(item))
+        .filter((item): item is ClientIdentifierIdentityTypeOption => item !== null)
+    : [];
+  return { allowedDocumentTypes, identityTypeOptions };
+}
 
 export async function getClientIdentifiers(
   clientId: string | number
@@ -46,7 +96,8 @@ export async function getClientIdentifierTemplate(
   clientId: string | number
 ): Promise<FineractClientIdentifierTemplate> {
   const fineract = await createFineractClient();
-  return fineract.get<FineractClientIdentifierTemplate>(`/clients/${clientId}/identifiers/template`);
+  const raw = await fineract.get<unknown>(`/clients/${clientId}/identifiers/template`);
+  return normalizeClientIdentifierTemplate(raw);
 }
 
 export async function createClientIdentifier(

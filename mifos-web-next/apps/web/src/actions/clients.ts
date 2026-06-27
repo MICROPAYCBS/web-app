@@ -9,8 +9,14 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { createClientSchema, toFineractActionError, type CreateClientPayload } from '@mifos/validation';
+import {
+  createClientSchema,
+  toFineractActionError,
+  validateClientIdentifier,
+  type CreateClientPayload
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
+import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { createClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 
@@ -42,6 +48,31 @@ export async function createClientAction(
       }
     }
     return { ok: false, message: 'Please fix the highlighted fields.', fieldErrors };
+  }
+
+  if (parsed.data.clientIdentifiers?.length) {
+    let identityTypeOptions;
+    try {
+      const template = await getClientIdentifierTemplate(1);
+      identityTypeOptions = template.identityTypeOptions;
+    } catch {
+      identityTypeOptions = undefined;
+    }
+    const identifierFieldErrors: Record<string, string> = {};
+    for (const [index, identifier] of parsed.data.clientIdentifiers.entries()) {
+      const result = validateClientIdentifier(identifier, { identityTypeOptions });
+      if (!result.success) {
+        const message = result.error.issues[0]?.message ?? 'Invalid identifier';
+        identifierFieldErrors[`clientIdentifiers.${index}`] = message;
+      }
+    }
+    if (Object.keys(identifierFieldErrors).length > 0) {
+      return {
+        ok: false,
+        message: 'Please fix the highlighted fields.',
+        fieldErrors: identifierFieldErrors
+      };
+    }
   }
 
   try {

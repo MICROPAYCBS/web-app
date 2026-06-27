@@ -331,6 +331,7 @@ export interface FineractClientIdentifier {
 
 export interface FineractClientIdentifierTemplate {
   allowedDocumentTypes: { id: number; name: string }[];
+  identityTypeOptions?: import('../organization/identity-type-types').ClientIdentifierIdentityTypeOption[];
 }
 
 export interface FineractClientNote {

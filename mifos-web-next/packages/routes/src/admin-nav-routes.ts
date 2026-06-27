@@ -197,6 +197,26 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'orgIdentityTypes',
+    path: '/organization/identity-types',
+    label: 'ID types',
+    navGroup: 'organization',
+    webAppRef: 'organization/identity-types',
+    permissionKey: 'organization.identityTypes',
+    navOrder: 118,
+    navIcon: 'fingerprint',
+    keywords: [
+      'identity type',
+      'id type',
+      'identifier',
+      'national id',
+      'passport',
+      'document validation',
+      'regex'
+    ],
+    parityStatus: 'done'
+  },
+  {
     id: 'orgPasswordPreferences',
     path: '/organization/password-preferences',
     label: 'Password preferences',

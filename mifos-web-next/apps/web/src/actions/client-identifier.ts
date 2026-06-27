@@ -67,15 +67,15 @@ async function parseIdentifier(
   clientId: string,
   raw: unknown
 ): Promise<ClientIdentifierActionResult | ClientIdentifierInput> {
-  let firstDocumentTypeId: number | undefined;
+  let identityTypeOptions;
   try {
     const template = await getClientIdentifierTemplate(clientId);
-    firstDocumentTypeId = template.allowedDocumentTypes?.[0]?.id;
+    identityTypeOptions = template.identityTypeOptions;
   } catch {
-    firstDocumentTypeId = undefined;
+    identityTypeOptions = undefined;
   }
 
-  const parsed = validateClientIdentifier(raw, { firstDocumentTypeId });
+  const parsed = validateClientIdentifier(raw, { identityTypeOptions });
   if (!parsed.success) {
     return {
       ok: false,

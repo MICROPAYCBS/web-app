@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, complianceProfileSchema, incomeSourceSchema, isValidUgandaMobileInternational, validateClientIdentifier } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, complianceProfileSchema, incomeSourceSchema, isValidUgandaMobileInternational, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
@@ -205,7 +205,7 @@ export type CreateClientValidationContext = {
   mandatoryDatatableNames?: Set<string>;
   dateFormat?: string;
   locale?: string;
-  firstDocumentTypeId?: number;
+  identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
 };
 
 export function validateIdentifiersStep(
@@ -215,7 +215,7 @@ export function validateIdentifiersStep(
   const errors: StepErrors = {};
   draft.clientIdentifiers.forEach((identifier, index) => {
     const parsed = validateClientIdentifier(identifier, {
-      firstDocumentTypeId: context.firstDocumentTypeId
+      identityTypeOptions: context.identityTypeOptions
     });
     if (!parsed.success) {
       const message = parsed.error.issues[0]?.message ?? 'Invalid identifier';

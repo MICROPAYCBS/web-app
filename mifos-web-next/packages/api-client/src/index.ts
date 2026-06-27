@@ -501,6 +501,13 @@ export type {
   ContactTypeTemplate
 } from './organization/contact-type-types';
 export type {
+  ClientIdentifierIdentityTypeOption,
+  IdentityType,
+  IdentityTypeCodeValueOption,
+  IdentityTypeMutationResponse,
+  IdentityTypeTemplate
+} from './organization/identity-type-types';
+export type {
   PasswordPreferencesMutationResponse,
   PasswordPreferenceTemplateItem
 } from './organization/password-preferences-types';

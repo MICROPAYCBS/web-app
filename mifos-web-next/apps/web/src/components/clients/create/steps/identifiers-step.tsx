@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ClientIdentifierInput } from '@mifos/validation';
+import type { ClientIdentifierIdentityTypeOption, ClientIdentifierInput } from '@mifos/validation';
 import { Plus, IdCard } from 'lucide-react';
 import { useState } from 'react';
 import { ClientIdentifierFormSheet } from '@/components/clients/shared/client-identifier-form-sheet';
@@ -34,10 +34,12 @@ function identifierInputSummary(identifier: ClientIdentifierInput): string {
 
 export function IdentifiersStep({
   documentTypes,
+  identityTypeOptions = [],
   draft,
   onIdentifiersChange
 }: {
   documentTypes: { id: number; name: string }[];
+  identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
   draft: CreateClientDraft;
   onIdentifiersChange: (identifiers: ClientIdentifierInput[]) => void;
 }) {
@@ -164,6 +166,7 @@ export function IdentifiersStep({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         documentTypes={documentTypes}
+        identityTypeOptions={identityTypeOptions}
         identifier={editIndex != null ? identifiers[editIndex] : undefined}
         onSave={async (input, _file, _fileName) => {
           if (editIndex != null) {

@@ -9,9 +9,9 @@
  */
 
 import {
-  FIRST_IDENTIFIER_DOCUMENT_KEY_PLACEHOLDER,
-  isFirstIdentifierDocumentType,
+  findIdentityTypeRule,
   validateClientIdentifier,
+  type ClientIdentifierIdentityTypeOption,
   type ClientIdentifierInput
 } from '@mifos/validation';
 import { useId, useMemo, useState } from 'react';
@@ -40,6 +40,7 @@ export function ClientIdentifierFormSheet({
   open,
   onOpenChange,
   documentTypes,
+  identityTypeOptions = [],
   identifier,
   onSave,
   submitLoading = false
@@ -47,6 +48,7 @@ export function ClientIdentifierFormSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentTypes: { id: number; name: string }[];
+  identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
   identifier?: ClientIdentifierInput;
   onSave: (
     input: ClientIdentifierInput,
@@ -63,14 +65,14 @@ export function ClientIdentifierFormSheet({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const firstDocumentTypeId = useMemo(() => documentTypes[0]?.id, [documentTypes]);
   const validationContext = useMemo(
-    () => ({ firstDocumentTypeId }),
-    [firstDocumentTypeId]
+    () => ({ identityTypeOptions }),
+    [identityTypeOptions]
   );
-  const isFirstIdentifierType = isFirstIdentifierDocumentType(
-    form.documentTypeId,
-    firstDocumentTypeId
+
+  const selectedRule = useMemo(
+    () => findIdentityTypeRule(form.documentTypeId, identityTypeOptions),
+    [form.documentTypeId, identityTypeOptions]
   );
 
   function handleOpenChange(next: boolean) {
@@ -133,6 +135,12 @@ export function ClientIdentifierFormSheet({
     }
   }
 
+  const documentKeyHint = selectedRule?.formatDescription
+    ? selectedRule.formatDescription
+    : selectedRule?.example
+      ? `Example: ${selectedRule.example}`
+      : undefined;
+
   return (
     <FormSheet
       open={open}
@@ -190,9 +198,8 @@ export function ClientIdentifierFormSheet({
             }
           }}
           error={fieldErrors.documentKey}
-          placeholder={
-            isFirstIdentifierType ? FIRST_IDENTIFIER_DOCUMENT_KEY_PLACEHOLDER : undefined
-          }
+          placeholder={selectedRule?.example ?? undefined}
+          hint={documentKeyHint}
         />
         <TextField
           id={`${formId}-description`}

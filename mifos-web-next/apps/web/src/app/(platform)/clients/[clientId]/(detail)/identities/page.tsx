@@ -7,6 +7,7 @@
  */
 
 import { can } from '@mifos/auth';
+import type { FineractClientIdentifierTemplate } from '@mifos/api-client';
 import { ClientIdentitiesView } from '@/components/clients/detail/client-identities-view';
 import {
   getClientIdentifierTemplate,
@@ -26,7 +27,9 @@ export default async function ClientIdentitiesPage({
 
   const [identifiers, template] = await Promise.all([
     getClientIdentifiers(clientId),
-    getClientIdentifierTemplate(clientId).catch(() => ({ allowedDocumentTypes: [] }))
+    getClientIdentifierTemplate(clientId).catch(
+      (): FineractClientIdentifierTemplate => ({ allowedDocumentTypes: [], identityTypeOptions: [] })
+    )
   ]);
 
   return (
@@ -34,6 +37,7 @@ export default async function ClientIdentitiesPage({
       clientId={clientId}
       identifiers={identifiers}
       documentTypes={template.allowedDocumentTypes ?? []}
+      identityTypeOptions={template.identityTypeOptions ?? []}
       canCreate={canCreate}
       canDelete={canDelete}
     />

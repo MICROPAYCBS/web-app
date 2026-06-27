@@ -79,12 +79,10 @@ export {
 } from './clients/client-details.schema';
 export {
   clientIdentifierSchema,
-  FIRST_IDENTIFIER_DOCUMENT_KEY_MESSAGE,
-  FIRST_IDENTIFIER_DOCUMENT_KEY_PATTERN,
-  FIRST_IDENTIFIER_DOCUMENT_KEY_PLACEHOLDER,
-  isFirstIdentifierDocumentType,
+  findIdentityTypeRule,
   validateClientIdentifier,
-  validateFirstIdentifierDocumentKey,
+  validateDocumentKeyAgainstIdentityRule,
+  type ClientIdentifierIdentityTypeOption,
   type ClientIdentifierInput,
   type ClientIdentifierValidationContext
 } from './clients/client-identifier.schema';
@@ -655,6 +653,19 @@ export {
   type UpsertContactTypeInput,
   type UpsertContactTypePayload
 } from './organization/contact-type.schema';
+export {
+  buildUpdateIdentityTypePayload,
+  buildUpsertIdentityTypePayload,
+  createIdentityTypeSchema,
+  updateIdentityTypeSchema,
+  validateCreateIdentityType,
+  validateUpdateIdentityType,
+  type IdentityTypeUpdateClearFields,
+  type UpdateIdentityTypeInput,
+  type UpdateIdentityTypePayload,
+  type UpsertIdentityTypeInput,
+  type UpsertIdentityTypePayload
+} from './organization/identity-type.schema';
 export {
   clientContactSchema,
   validateClientContact,

@@ -65,6 +65,7 @@ export const NAV_ICON_NAMES = [
   'lock',
   'shield-check',
   'badge-check',
+  'fingerprint',
   'notebook-pen',
   'repeat-2',
   'activity',

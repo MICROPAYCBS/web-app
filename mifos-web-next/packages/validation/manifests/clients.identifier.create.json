@@ -2,11 +2,13 @@
   "command": "clients.identifier.create",
   "fineractSources": [
     "org.apache.fineract.portfolio.client.api.ClientIdentifiersApiResource",
-    "org.apache.fineract.portfolio.client.domain.ClientIdentifier"
+    "org.apache.fineract.portfolio.client.domain.ClientIdentifier",
+    "org.apache.fineract.portfolio.client.api.IdentityTypeApiResource",
+    "org.apache.fineract.portfolio.client.data.IdentityTypeData"
   ],
   "fields": {
     "documentTypeId": { "required": true },
-    "documentKey": { "required": true, "format": "ugandaNin" },
+    "documentKey": { "required": true, "maxLength": 100 },
     "status": { "required": true, "values": ["Active", "Inactive"] },
     "description": { "required": false }
   }

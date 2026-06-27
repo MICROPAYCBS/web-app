@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientIdentifier } from '@mifos/api-client';
+import type { FineractClientIdentifier, ClientIdentifierIdentityTypeOption } from '@mifos/api-client';
 import { formatActionErrorMessage, type ClientIdentifierInput } from '@mifos/validation';
 import { Fingerprint, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -34,12 +34,14 @@ export function ClientIdentitiesView({
   clientId,
   identifiers,
   documentTypes,
+  identityTypeOptions = [],
   canCreate,
   canDelete
 }: {
   clientId: string;
   identifiers: FineractClientIdentifier[];
   documentTypes: { id: number; name: string }[];
+  identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
   canCreate: boolean;
   canDelete: boolean;
 }) {
@@ -149,6 +151,7 @@ export function ClientIdentitiesView({
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         documentTypes={documentTypes}
+        identityTypeOptions={identityTypeOptions}
         onSave={handleSave}
         submitLoading={false}
       />

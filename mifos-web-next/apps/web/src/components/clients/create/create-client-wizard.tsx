@@ -109,7 +109,8 @@ export function CreateClientWizard({
   addressFieldConfig,
   entityDatatableChecks = [],
   incomeSourceOptions,
-  identifierDocumentTypes = []
+  identifierDocumentTypes = [],
+  identifierIdentityTypeOptions = []
 }: CreateClientWizardProps) {
   const router = useRouter();
   const [template] = useState(initialTemplate);
@@ -138,9 +139,9 @@ export function CreateClientWizard({
   const validationContext = useMemo(
     (): CreateClientValidationContext => ({
       mandatoryDatatableNames,
-      firstDocumentTypeId: identifierDocumentTypes[0]?.id
+      identityTypeOptions: identifierIdentityTypeOptions
     }),
-    [mandatoryDatatableNames, identifierDocumentTypes]
+    [mandatoryDatatableNames, identifierIdentityTypeOptions]
   );
 
   const markValidationAttempted = useCallback((id: string) => {
@@ -403,6 +404,7 @@ export function CreateClientWizard({
       {resolvedStepId === 'identifiers' ? (
         <IdentifiersStep
           documentTypes={identifierDocumentTypes}
+          identityTypeOptions={identifierIdentityTypeOptions}
           draft={draft}
           onIdentifiersChange={(clientIdentifiers) =>
             setDraft((d) => ({ ...d, clientIdentifiers }))
