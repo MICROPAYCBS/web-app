@@ -154,6 +154,13 @@ export const createClientSchema = z
         path: ['genderId']
       });
     }
+    if (data.legalFormId === LEGAL_FORM_PERSON && !data.nationalityCountryId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Nationality is required',
+        path: ['nationalityCountryId']
+      });
+    }
     if (data.address?.length) {
       const primaryCount = data.address.filter((entry) => entry.isPrimary).length;
       if (primaryCount !== 1) {

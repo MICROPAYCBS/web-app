@@ -198,13 +198,14 @@ export function BiodataStep({
           <SelectField
             id="nationalityCountryId"
             label="Nationality"
-            optional
+            required
             value={g.nationalityCountryId ? String(g.nationalityCountryId) : undefined}
             onValueChange={(v) =>
               onDraftChange({ nationalityCountryId: v ? Number(v) : undefined })
             }
             options={toSelectOptions(template.nationalityOptions)}
             placeholder="Select nationality"
+            error={errors.nationalityCountryId}
           />
         ) : null}
 

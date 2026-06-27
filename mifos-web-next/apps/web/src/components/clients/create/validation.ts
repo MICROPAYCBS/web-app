@@ -85,6 +85,9 @@ export function validateBiodataStep(
     if (!g.genderId) {
       errors.genderId = 'Gender is required';
     }
+    if (!g.nationalityCountryId) {
+      errors.nationalityCountryId = 'Nationality is required';
+    }
   } else if (legalFormId === LEGAL_FORM_ENTITY) {
     if (!g.fullname?.trim()) {
       errors.fullname = 'Entity name is required';
