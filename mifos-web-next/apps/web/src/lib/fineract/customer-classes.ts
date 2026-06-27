@@ -58,7 +58,12 @@ function normalizeLegalFormOption(raw: unknown): CustomerClassLegalFormOption | 
   }
   const row = raw as Record<string, unknown>;
   const id = Number(row.id);
-  const name = typeof row.name === 'string' ? row.name : '';
+  const name =
+    typeof row.name === 'string'
+      ? row.name
+      : typeof row.value === 'string'
+        ? row.value
+        : '';
   if (!Number.isFinite(id) || !name) {
     return null;
   }

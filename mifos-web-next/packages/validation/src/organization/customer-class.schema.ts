@@ -14,7 +14,13 @@ const updateCustomerTypeSchema = z.enum(['INDIVIDUAL', 'CORPORATE', 'GROUP', 'JO
 const riskLevelSchema = z.enum(['LOW', 'MEDIUM', 'HIGH']);
 const kycLevelSchema = z.enum(['BASIC', 'STANDARD', 'ENHANCED']);
 const statusSchema = z.enum(['ACTIVE', 'INACTIVE']);
-const legalFormIdSchema = z.union([z.literal(LEGAL_FORM_PERSON), z.literal(LEGAL_FORM_ENTITY)]);
+const legalFormIdSchema = z.coerce
+  .number()
+  .int()
+  .refine((value) => value === LEGAL_FORM_PERSON || value === LEGAL_FORM_ENTITY, {
+    message: 'Legal form must be Person or Entity'
+  })
+  .default(LEGAL_FORM_PERSON);
 
 const sharedCustomerClassFields = {
   classCode: z.string().trim().min(1, 'Class code is required').max(20),
@@ -146,11 +152,27 @@ export function parseCustomerClassStatusField(value: string): 'ACTIVE' | 'INACTI
 
 export function buildUpsertCustomerClassPayload(
   input: UpsertCustomerClassPayload
-): UpsertCustomerClassPayload {
+): Record<string, unknown> {
   return {
-    ...input,
+    classCode: input.classCode,
+    className: input.className,
     description: input.description?.trim() || undefined,
-    restrictionId: input.restrictionId || undefined
+    legalFormId: input.legalFormId,
+    customerType: input.customerType,
+    riskLevel: input.riskLevel,
+    kycLevel: input.kycLevel,
+    loanEligible: input.loanEligible,
+    restrictionId: input.restrictionId || undefined,
+    overdraftAllowed: input.overdraftAllowed,
+    enhancedDueDiligence: input.enhancedDueDiligence,
+    reclassificationAllowed: input.reclassificationAllowed,
+    minAge: input.minAge,
+    maxAge: input.maxAge,
+    enforceCustPhoto: input.enforceCustPhoto,
+    enforceCustSignature: input.enforceCustSignature,
+    enforceCustDocument: input.enforceCustDocument,
+    autoCreateAccount: input.autoCreateAccount,
+    status: input.status
   };
 }
 
