@@ -173,7 +173,7 @@ export function IdentityTypesTable({
         <Input
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="Filter ID types…"
+          placeholder="Filter identity type guides…"
           className="max-w-sm"
         />
       </div>
@@ -182,9 +182,9 @@ export function IdentityTypesTable({
       <Dialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete ID type</DialogTitle>
+            <DialogTitle>Delete identity type guide</DialogTitle>
             <DialogDescription>
-              Delete validation rules for &ldquo;{deleteTarget?.codeValueName}&rdquo;? Customers may no
+              Delete the guide for &ldquo;{deleteTarget?.codeValueName}&rdquo;? Customers may no
               longer see format hints for this identifier type.
             </DialogDescription>
           </DialogHeader>

@@ -23,12 +23,14 @@ import { cn } from '@/lib/utils';
 export function IdentityTypesPageContent({
   identityTypes,
   template,
+  customerIdentifierCodeId,
   canCreate,
   canEdit,
   canDelete
 }: {
   identityTypes: IdentityType[];
   template: IdentityTypeTemplate;
+  customerIdentifierCodeId?: number;
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -36,12 +38,12 @@ export function IdentityTypesPageContent({
   return (
     <>
       <ListPage
-        title="ID types"
-        description="Manage validation rules for customer identifier types such as national ID or passport numbers."
+        title="Identity type guides"
+        description="Manage format hints and validation rules for customer identifier types such as national ID or passport numbers."
         actions={
           <Can permission="CREATE_IDENTITYTYPE">
             <Link href={identityTypeCreatePath()} className={cn(buttonVariants())}>
-              Create ID type
+              Create identity type guide
             </Link>
           </Can>
         }
@@ -55,7 +57,11 @@ export function IdentityTypesPageContent({
 
       {canCreate ? (
         <Suspense fallback={null}>
-          <IdentityTypeCreateUrlPanel template={template} />
+          <IdentityTypeCreateUrlPanel
+            template={template}
+            existingIdentityTypes={identityTypes}
+            customerIdentifierCodeId={customerIdentifierCodeId}
+          />
         </Suspense>
       ) : null}
       {canEdit ? (

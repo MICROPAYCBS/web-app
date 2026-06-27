@@ -16,7 +16,7 @@ import {
   type UpsertIdentityTypeInput
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useEffect, useId, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { createIdentityTypeAction, updateIdentityTypeAction } from '@/actions/identity-type';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
@@ -24,6 +24,7 @@ import { FormSheet } from '@/components/composites/form-sheet';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { CustomerIdentifierTypeSelectField } from '@/components/organization/customer-identifier-type-select-field';
 
 type IdentityTypeFormState = {
   codeValueId: string;
@@ -91,13 +92,18 @@ export function IdentityTypeFormSheet({
   onOpenChange,
   mode,
   identityType,
-  template
+  template,
+  existingIdentityTypes = [],
+  customerIdentifierCodeId
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   identityType?: IdentityType;
   template: IdentityTypeTemplate;
+  /** Listed guides — used to hide already-configured identifier types on create. */
+  existingIdentityTypes?: IdentityType[];
+  customerIdentifierCodeId?: number;
 }) {
   const router = useRouter();
   const formId = useId();
@@ -119,10 +125,23 @@ export function IdentityTypeFormSheet({
     );
   }, [open, mode, identityType]);
 
-  const codeValueOptions = template.codeValueOptions.map((option) => ({
-    value: String(option.id),
-    label: option.name
-  }));
+  const usedCodeValueIds = useMemo(
+    () => new Set(existingIdentityTypes.map((row) => row.codeValueId)),
+    [existingIdentityTypes]
+  );
+
+  const codeValueOptions = useMemo(() => {
+    const available = template.codeValueOptions.filter(
+      (option) => mode === 'edit' || !usedCodeValueIds.has(option.id)
+    );
+    return available.map((option) => ({
+      value: String(option.id),
+      label: option.name
+    }));
+  }, [mode, template.codeValueOptions, usedCodeValueIds]);
+
+  const allIdentifierTypesConfigured =
+    mode === 'create' && template.codeValueOptions.length > 0 && codeValueOptions.length === 0;
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -140,7 +159,7 @@ export function IdentityTypeFormSheet({
           }
           return;
         }
-        toast.success('ID type created.');
+        toast.success('Identity type guide created.');
         onOpenChange(false);
         router.refresh();
         return;
@@ -163,7 +182,7 @@ export function IdentityTypeFormSheet({
         }
         return;
       }
-      toast.success('ID type updated.');
+      toast.success('Identity type guide updated.');
       onOpenChange(false);
       router.refresh();
     });
@@ -173,27 +192,37 @@ export function IdentityTypeFormSheet({
     <FormSheet
       open={open}
       onOpenChange={onOpenChange}
-      title={mode === 'create' ? 'Create ID type' : 'Edit ID type'}
-      description="Define validation rules for customer identifier types. Inactive rules are skipped on customer forms."
+      title={mode === 'create' ? 'Create identity type guide' : 'Edit identity type guide'}
+      description="Define format hints and validation rules for a customer identifier type. Inactive guides are skipped on customer forms."
       formId={formId}
       submitLoading={pending}
       submitLabel={mode === 'create' ? 'Create' : 'Save changes'}
+      submitDisabled={allIdentifierTypesConfigured}
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-4">
         {formError ? <FormErrorAlert>{formError}</FormErrorAlert> : null}
         {mode === 'create' ? (
-          <SelectField
+          <CustomerIdentifierTypeSelectField
             label="Customer identifier type"
+            customerIdentifierCodeId={customerIdentifierCodeId}
             value={form.codeValueId}
             onValueChange={(value) =>
               setForm((current) => ({ ...current, codeValueId: value ?? '' }))
             }
             options={codeValueOptions}
-            placeholder="Select identifier type"
+            placeholder={
+              allIdentifierTypesConfigured
+                ? 'No identifier types available'
+                : 'Select identifier type'
+            }
             error={fieldErrors.codeValueId}
             required
-            disabled={pending}
-            hint="Each customer identifier code value can have one validation rule."
+            disabled={pending || allIdentifierTypesConfigured}
+            hintOverride={
+              allIdentifierTypesConfigured
+                ? 'Every customer identifier type already has a guide. Add a new identifier type under Administration → Codes, or edit or delete an existing guide.'
+                : undefined
+            }
           />
         ) : (
           <div className="space-y-2">
@@ -207,7 +236,7 @@ export function IdentityTypeFormSheet({
           onChange={(value) => setForm((current) => ({ ...current, example: value }))}
           error={fieldErrors.example}
           disabled={pending}
-          hint="Shown as placeholder when customers enter this ID type."
+          hint="Shown as placeholder when customers enter this identifier type."
         />
         <TextField
           label="Format description"

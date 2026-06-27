@@ -199,13 +199,15 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
   {
     id: 'orgIdentityTypes',
     path: '/organization/identity-types',
-    label: 'ID types',
+    label: 'Identity type guides',
     navGroup: 'organization',
     webAppRef: 'organization/identity-types',
     permissionKey: 'organization.identityTypes',
     navOrder: 118,
     navIcon: 'fingerprint',
     keywords: [
+      'identity type guide',
+      'identity type guides',
       'identity type',
       'id type',
       'identifier',

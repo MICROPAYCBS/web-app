@@ -59,7 +59,7 @@ export async function createIdentityTypeAction(
   try {
     assertCan(session, 'CREATE_IDENTITYTYPE');
   } catch {
-    return { ok: false, message: 'You do not have permission to create ID types.' };
+    return { ok: false, message: 'You do not have permission to create identity type guides.' };
   }
 
   const parsed = validateCreateIdentityType(input);
@@ -76,7 +76,7 @@ export async function createIdentityTypeAction(
     revalidateIdentityTypeViews(response.resourceId);
     return { ok: true, resourceId: response.resourceId };
   } catch (error) {
-    return toFineractActionError(error, 'Failed to create ID type.');
+    return toFineractActionError(error, 'Failed to create identity type guide.');
   }
 }
 
@@ -89,7 +89,7 @@ export async function updateIdentityTypeAction(
   try {
     assertCan(session, 'UPDATE_IDENTITYTYPE');
   } catch {
-    return { ok: false, message: 'You do not have permission to update ID types.' };
+    return { ok: false, message: 'You do not have permission to update identity type guides.' };
   }
 
   const parsed = validateUpdateIdentityType(input);
@@ -106,7 +106,7 @@ export async function updateIdentityTypeAction(
     revalidateIdentityTypeViews(response.resourceId);
     return { ok: true, resourceId: response.resourceId };
   } catch (error) {
-    return toFineractActionError(error, 'Failed to update ID type.');
+    return toFineractActionError(error, 'Failed to update identity type guide.');
   }
 }
 
@@ -117,7 +117,7 @@ export async function deleteIdentityTypeAction(
   try {
     assertCan(session, 'DELETE_IDENTITYTYPE');
   } catch {
-    return { ok: false, message: 'You do not have permission to delete ID types.' };
+    return { ok: false, message: 'You do not have permission to delete identity type guides.' };
   }
 
   try {
@@ -125,6 +125,6 @@ export async function deleteIdentityTypeAction(
     revalidateIdentityTypeViews();
     return { ok: true };
   } catch (error) {
-    return toFineractActionError(error, 'Failed to delete ID type.');
+    return toFineractActionError(error, 'Failed to delete identity type guide.');
   }
 }

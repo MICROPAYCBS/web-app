@@ -9,7 +9,9 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { IdentityTypesPageContent } from '@/components/organization/identity-types-page-content';
+import { CUSTOMER_IDENTIFIER_CODE_NAME } from '@/lib/fineract/customer-identifier-code';
 import { getIdentityTypeTemplate, listIdentityTypes } from '@/lib/fineract/identity-types';
+import { listCodes } from '@/lib/fineract/system-codes';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationIdentityTypesPage() {
@@ -18,15 +20,21 @@ export default async function OrganizationIdentityTypesPage() {
     notFound();
   }
 
-  const [identityTypes, template] = await Promise.all([
+  const [identityTypes, template, codes] = await Promise.all([
     listIdentityTypes(),
-    getIdentityTypeTemplate()
+    getIdentityTypeTemplate(),
+    listCodes().catch(() => [])
   ]);
+
+  const customerIdentifierCodeId = codes.find(
+    (code) => code.name === CUSTOMER_IDENTIFIER_CODE_NAME
+  )?.id;
 
   return (
     <IdentityTypesPageContent
       identityTypes={identityTypes}
       template={template}
+      customerIdentifierCodeId={customerIdentifierCodeId}
       canCreate={can(session, 'CREATE_IDENTITYTYPE')}
       canEdit={can(session, 'UPDATE_IDENTITYTYPE')}
       canDelete={can(session, 'DELETE_IDENTITYTYPE')}

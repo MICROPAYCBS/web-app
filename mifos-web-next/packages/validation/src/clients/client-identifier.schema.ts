@@ -59,7 +59,7 @@ export function validateDocumentKeyAgainstIdentityRule(
     }
     return null;
   } catch {
-    return 'ID type validation regex is invalid.';
+    return 'Identity type guide validation regex is invalid.';
   }
 }
 

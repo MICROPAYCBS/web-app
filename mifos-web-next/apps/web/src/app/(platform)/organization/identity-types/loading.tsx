@@ -11,8 +11,8 @@ import { ListPageTableSkeleton } from '@/components/composites/list-page-table-s
 export default function OrganizationIdentityTypesLoading() {
   return (
     <ListPageTableSkeleton
-      title="ID types"
-      description="Configure validation rules for customer identifier types."
+      title="Identity type guides"
+      description="Configure format hints and validation rules for customer identifier types."
       showSearch={false}
       columnCount={6}
     />

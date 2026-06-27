@@ -8,11 +8,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { IdentityTypeTemplate } from '@mifos/api-client';
+import type { IdentityType, IdentityTypeTemplate } from '@mifos/api-client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { IdentityTypeFormSheet } from '@/components/organization/identity-type-form-sheet';
 
-export function IdentityTypeCreateUrlPanel({ template }: { template: IdentityTypeTemplate }) {
+export function IdentityTypeCreateUrlPanel({
+  template,
+  existingIdentityTypes,
+  customerIdentifierCodeId
+}: {
+  template: IdentityTypeTemplate;
+  existingIdentityTypes: IdentityType[];
+  customerIdentifierCodeId?: number;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -34,6 +42,8 @@ export function IdentityTypeCreateUrlPanel({ template }: { template: IdentityTyp
       onOpenChange={handleOpenChange}
       mode="create"
       template={template}
+      existingIdentityTypes={existingIdentityTypes}
+      customerIdentifierCodeId={customerIdentifierCodeId}
     />
   );
 }
