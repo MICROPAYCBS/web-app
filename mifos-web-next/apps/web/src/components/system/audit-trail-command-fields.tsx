@@ -116,8 +116,9 @@ export function AuditTrailCommandFields({
       {hasPrevious ? (
         changedCount > 0 ? (
           <p className="text-xs text-muted-foreground">
-            {changedCount} {changedCount === 1 ? 'field differs' : 'fields differ'} from the
-            previous audit entry on this record.
+            {changedCount} {changedCount === 1 ? 'field changed' : 'fields changed'} in this
+            action compared to the previous audit entry. Omitted or empty values are treated as
+            unchanged.
           </p>
         ) : (
           <p className="text-xs text-muted-foreground">

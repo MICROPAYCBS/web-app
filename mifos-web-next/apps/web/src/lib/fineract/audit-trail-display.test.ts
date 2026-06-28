@@ -122,7 +122,6 @@ describe('audit trail field diff', () => {
     const fields = parseAuditTrailCommandFieldsWithDiff(current, previous);
     const firstName = fields.find((field) => field.key === 'firstName');
     const active = fields.find((field) => field.key === 'active');
-    const city = fields.find((field) => field.key === 'city');
 
     assert.equal(firstName?.changeType, 'changed');
     assert.equal(firstName?.previousDisplay, 'Jane');
@@ -132,19 +131,37 @@ describe('audit trail field diff', () => {
     assert.equal(active?.previousDisplay, '—');
     assert.equal(active?.display, 'Yes');
 
-    assert.equal(city?.changeType, 'unchanged');
-    assert.equal(city?.previousDisplay, undefined);
+    assert.equal(fields.some((field) => field.key === 'city'), false);
   });
 
-  it('includes removed fields from the previous payload', () => {
-    const previous = JSON.stringify({ firstName: 'Jane', nickname: 'JJ' });
-    const current = JSON.stringify({ firstName: 'Jane' });
+  it('treats null values and missing payload keys as unchanged', () => {
+    const previous = JSON.stringify({
+      firstName: 'Jane',
+      titleId: 2,
+      familyMembers: [{ firstName: 'Ann' }, { firstName: 'Bob' }]
+    });
+    const current = JSON.stringify({
+      firstName: 'Janet',
+      titleId: null,
+      familyMembers: [{ firstName: 'Ann' }]
+    });
 
     const fields = parseAuditTrailCommandFieldsWithDiff(current, previous);
-    const removed = fields.find((field) => field.key === 'nickname');
 
-    assert.equal(removed?.changeType, 'removed');
-    assert.equal(removed?.previousDisplay, 'JJ');
-    assert.equal(removed?.display, '—');
+    assert.equal(fields.some((field) => field.key.startsWith('familyMembers[1]')), false);
+    assert.equal(fields.find((field) => field.key === 'titleId'), undefined);
+    assert.equal(fields.find((field) => field.key === 'firstName')?.changeType, 'changed');
+  });
+
+  it('hides untouched top-level groups from the diff', () => {
+    const previous = JSON.stringify({ firstName: 'Jane', staffId: 1, mobileNo: '+256700' });
+    const current = JSON.stringify({ firstName: 'Jane', staffId: 1, mobileNo: '+256701' });
+
+    const fields = parseAuditTrailCommandFieldsWithDiff(current, previous);
+
+    assert.deepEqual(
+      fields.map((field) => field.key),
+      ['mobileNo']
+    );
   });
 });

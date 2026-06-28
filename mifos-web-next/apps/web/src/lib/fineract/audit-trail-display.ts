@@ -212,6 +212,43 @@ function flattenAuditTrailCommandEntries(
   }
 }
 
+function isAbsentAuditValue(value: unknown): boolean {
+  return value === null || value === undefined || value === '';
+}
+
+function auditTrailTopLevelKey(key: string): string {
+  const match = /^([^.\[]+)/.exec(key);
+  return match?.[1] ?? key;
+}
+
+function resolveAuditFieldChangeType(
+  value: unknown,
+  previousValue: unknown | undefined,
+  hasPrevious: boolean
+): AuditTrailFieldChangeType {
+  if (!hasPrevious || isAbsentAuditValue(value)) {
+    return 'unchanged';
+  }
+  if (previousValue === undefined) {
+    return 'added';
+  }
+  if (serializeAuditTrailFieldValue(previousValue) !== serializeAuditTrailFieldValue(value)) {
+    return 'changed';
+  }
+  return 'unchanged';
+}
+
+/** Drop unchanged top-level groups — partial updates omit untouched branches. */
+function filterUnchangedAuditTopLevelGroups(fields: AuditTrailCommandField[]): AuditTrailCommandField[] {
+  const topsWithChanges = new Set(
+    fields
+      .filter((field) => field.changeType !== 'unchanged')
+      .map((field) => auditTrailTopLevelKey(field.key))
+  );
+
+  return fields.filter((field) => topsWithChanges.has(auditTrailTopLevelKey(field.key)));
+}
+
 function toAuditTrailCommandField(
   key: string,
   value: unknown,
@@ -241,57 +278,34 @@ export function parseAuditTrailCommandFieldsWithDiff(
   const currentEntries = flattenAuditTrailCommandEntries(currentCommandAsJson);
   const previousEntries = flattenAuditTrailCommandEntries(previousCommandAsJson);
   const previousMap = new Map(previousEntries.map((entry) => [entry.key, entry.value]));
-  const currentKeys = new Set<string>();
   const fields: AuditTrailCommandField[] = [];
   const hasPrevious = Boolean(previousCommandAsJson?.trim());
 
   for (const { key, value } of currentEntries) {
-    currentKeys.add(key);
     const previousValue = previousMap.get(key);
-
-    let changeType: AuditTrailFieldChangeType = 'unchanged';
-    if (hasPrevious) {
-      if (previousValue === undefined) {
-        changeType = 'added';
-      } else if (
-        serializeAuditTrailFieldValue(previousValue) !== serializeAuditTrailFieldValue(value)
-      ) {
-        changeType = 'changed';
-      }
-    }
+    const changeType = resolveAuditFieldChangeType(value, previousValue, hasPrevious);
+    const displayValue =
+      isAbsentAuditValue(value) && previousValue !== undefined ? previousValue : value;
 
     fields.push(
       toAuditTrailCommandField(
         key,
-        value,
+        displayValue,
         changeType,
-        hasPrevious && changeType === 'added'
+        changeType === 'added'
           ? null
-          : hasPrevious && changeType === 'changed'
+          : changeType === 'changed'
             ? previousValue
             : undefined
       )
     );
   }
 
-  if (hasPrevious) {
-    for (const [key, previousValue] of previousMap) {
-      if (!currentKeys.has(key)) {
-        fields.push({
-          key,
-          label: formatAuditTrailFieldLabel(key),
-          display: '—',
-          kind: 'text',
-          previousDisplay: formatAuditTrailCommandValue(previousValue).display,
-          previousKind: formatAuditTrailCommandValue(previousValue).kind,
-          changeType: 'removed',
-          changed: true
-        });
-      }
-    }
+  if (!hasPrevious) {
+    return fields;
   }
 
-  return fields;
+  return filterUnchangedAuditTopLevelGroups(fields);
 }
 
 function isAuditTrailPrimitive(value: unknown): value is string | number | boolean {
