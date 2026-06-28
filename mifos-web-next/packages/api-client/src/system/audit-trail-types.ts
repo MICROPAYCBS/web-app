@@ -32,6 +32,7 @@ export interface FineractAuditTrailListItem {
   checkedOnDate?: string | number[] | number;
   ip?: string;
   clientName?: string;
+  commandAsJson?: string;
 }
 
 export interface FineractAuditTrailDetail extends FineractAuditTrailListItem {

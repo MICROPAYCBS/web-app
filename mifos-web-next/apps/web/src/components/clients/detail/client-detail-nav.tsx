@@ -21,6 +21,7 @@ import {
   Phone,
   PiggyBank,
   Repeat,
+  ScrollText,
   Shield,
   Table2,
   UserRound,
@@ -119,6 +120,12 @@ export function clientDetailNavGroups(
           label: 'Notes',
           href: `${base}/notes`,
           icon: NotebookPen
+        },
+        {
+          id: 'audit',
+          label: 'Audit trail',
+          href: `${base}/audit`,
+          icon: ScrollText
         },
         {
           id: 'collateral',

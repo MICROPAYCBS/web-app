@@ -50,10 +50,10 @@ function buildAuditTrailUrl(query: AuditTrailListQuery): string {
 
   const filters = auditTrailFiltersFromQuery(query);
   for (const [key, value] of Object.entries(filters)) {
-    if (key === 'dateFormat' || key === 'locale') {
+    if (key === 'dateFormat' || key === 'locale' || key === 'includeJson') {
       continue;
     }
-    if (value) {
+    if (typeof value === 'string' && value) {
       params.set(key, value);
     }
   }

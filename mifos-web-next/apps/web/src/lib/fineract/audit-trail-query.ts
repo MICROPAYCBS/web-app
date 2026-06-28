@@ -12,6 +12,7 @@ export const AUDIT_TRAILS_DEFAULT_LIMIT = 25;
 
 export type AuditTrailSearchFilters = {
   resourceId?: string;
+  clientId?: string;
   savingsAccountId?: string;
   processingResult?: string;
   makerId?: string;
@@ -22,6 +23,7 @@ export type AuditTrailSearchFilters = {
   makerDateTimeTo?: string;
   checkerDateTimeFrom?: string;
   checkerDateTimeTo?: string;
+  includeJson?: boolean;
   dateFormat: string;
   locale: string;
 };
@@ -59,6 +61,7 @@ export function parseAuditTrailListQuery(
     orderBy,
     sortOrder,
     resourceId: readParam(params, 'resourceId'),
+    clientId: readParam(params, 'clientId'),
     savingsAccountId: readParam(params, 'savingsAccountId'),
     processingResult: readParam(params, 'processingResult'),
     makerId: readParam(params, 'makerId'),
@@ -69,6 +72,7 @@ export function parseAuditTrailListQuery(
     makerDateTimeTo: readParam(params, 'makerDateTimeTo'),
     checkerDateTimeFrom: readParam(params, 'checkerDateTimeFrom'),
     checkerDateTimeTo: readParam(params, 'checkerDateTimeTo'),
+    includeJson: readParam(params, 'includeJson') === 'true',
     dateFormat: defaults?.dateFormat ?? FINERACT_DATE_FORMAT,
     locale: defaults?.locale ?? FINERACT_LOCALE
   };
@@ -94,6 +98,9 @@ export function buildAuditTrailSearchParams(query: AuditTrailListQuery): Record<
 
   if (query.resourceId) {
     params.resourceId = query.resourceId;
+  }
+  if (query.clientId) {
+    params.clientId = query.clientId;
   }
   if (query.savingsAccountId) {
     params.savingsAccountId = query.savingsAccountId;
@@ -125,6 +132,9 @@ export function buildAuditTrailSearchParams(query: AuditTrailListQuery): Record<
   if (query.checkerDateTimeTo) {
     params.checkerDateTimeTo = query.checkerDateTimeTo;
   }
+  if (query.includeJson) {
+    params.includeJson = 'true';
+  }
 
   return params;
 }
@@ -132,6 +142,9 @@ export function buildAuditTrailSearchParams(query: AuditTrailListQuery): Record<
 export function countActiveAuditTrailFilters(filters: AuditTrailSearchFilters): number {
   let count = 0;
   if (filters.resourceId?.trim()) {
+    count += 1;
+  }
+  if (filters.clientId?.trim()) {
     count += 1;
   }
   if (filters.savingsAccountId?.trim()) {
@@ -170,6 +183,7 @@ export function countActiveAuditTrailFilters(filters: AuditTrailSearchFilters): 
 export function auditTrailFiltersFromQuery(query: AuditTrailListQuery): AuditTrailSearchFilters {
   return {
     resourceId: query.resourceId,
+    clientId: query.clientId,
     savingsAccountId: query.savingsAccountId,
     processingResult: query.processingResult,
     makerId: query.makerId,
@@ -180,6 +194,7 @@ export function auditTrailFiltersFromQuery(query: AuditTrailListQuery): AuditTra
     makerDateTimeTo: query.makerDateTimeTo,
     checkerDateTimeFrom: query.checkerDateTimeFrom,
     checkerDateTimeTo: query.checkerDateTimeTo,
+    includeJson: query.includeJson,
     dateFormat: query.dateFormat,
     locale: query.locale
   };

@@ -10,41 +10,19 @@
 
 import type { FineractAuditTrailDetail } from '@mifos/api-client';
 import {
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef
-} from '@tanstack/react-table';
-import { useMemo } from 'react';
-import {
   DetailBackLink,
   DetailField,
   DetailFieldGrid,
   DetailHeader,
   DetailPage
 } from '@/components/composites';
-import { DataTable } from '@/components/composites/data-table/data-table';
+import { AuditTrailCommandFields } from '@/components/system/audit-trail-command-fields';
 import {
   formatAuditTrailDateTime,
-  parseAuditTrailCommands
+  formatAuditTrailFilterLabel
 } from '@/lib/fineract/audit-trail-display';
 
 export function AuditTrailDetailView({ audit }: { audit: FineractAuditTrailDetail }) {
-  const commands = useMemo(() => parseAuditTrailCommands(audit.commandAsJson), [audit.commandAsJson]);
-
-  const columns = useMemo<ColumnDef<{ command: string; commandValue: string }>[]>(
-    () => [
-      { accessorKey: 'command', header: 'Command' },
-      { accessorKey: 'commandValue', header: 'Command value' }
-    ],
-    []
-  );
-
-  const table = useReactTable({
-    data: commands,
-    columns,
-    getCoreRowModel: getCoreRowModel()
-  });
-
   return (
     <DetailPage
       header={
@@ -56,10 +34,18 @@ export function AuditTrailDetailView({ audit }: { audit: FineractAuditTrailDetai
       }
       summary={
         <DetailFieldGrid columns={2}>
-          <DetailField label="Status">{audit.processingResult ?? '—'}</DetailField>
+          <DetailField label="Status">
+            {audit.processingResult
+              ? formatAuditTrailFilterLabel(audit.processingResult)
+              : '—'}
+          </DetailField>
           <DetailField label="User">{audit.maker ?? '—'}</DetailField>
-          <DetailField label="Action">{audit.actionName ?? '—'}</DetailField>
-          <DetailField label="Entity">{audit.entityName ?? '—'}</DetailField>
+          <DetailField label="Action">
+            {audit.actionName ? formatAuditTrailFilterLabel(audit.actionName) : '—'}
+          </DetailField>
+          <DetailField label="Entity">
+            {audit.entityName ? formatAuditTrailFilterLabel(audit.entityName) : '—'}
+          </DetailField>
           <DetailField label="Resource ID">{audit.resourceId ?? '—'}</DetailField>
           <DetailField label="Made date">{formatAuditTrailDateTime(audit.madeOnDate)}</DetailField>
           {audit.officeName ? <DetailField label="Office">{audit.officeName}</DetailField> : null}
@@ -80,17 +66,8 @@ export function AuditTrailDetailView({ audit }: { audit: FineractAuditTrailDetai
       }
     >
       <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-        <h3 className="text-sm font-medium">Command payload</h3>
-        {commands.length ? (
-          <DataTable
-            table={table}
-            stickyHeader={false}
-            emptyMessage="No command fields"
-            emptyDescription="This audit entry has no parsed command payload."
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">No command payload available for this entry.</p>
-        )}
+        <h3 className="text-sm font-medium">Changed fields</h3>
+        <AuditTrailCommandFields commandAsJson={audit.commandAsJson} />
       </div>
     </DetailPage>
   );

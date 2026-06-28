@@ -48,7 +48,8 @@ function normalizeAuditTrailListItem(raw: unknown): FineractAuditTrailListItem |
     checker: typeof row.checker === 'string' ? row.checker : undefined,
     checkedOnDate: coerceFineractDateTime(row.checkedOnDate),
     ip: typeof row.ip === 'string' ? row.ip : undefined,
-    clientName: typeof row.clientName === 'string' ? row.clientName : undefined
+    clientName: typeof row.clientName === 'string' ? row.clientName : undefined,
+    commandAsJson: typeof row.commandAsJson === 'string' ? row.commandAsJson : undefined
   };
 }
 
@@ -201,4 +202,20 @@ export async function listAuditTrailsForSavingsTransaction(
     pageItems,
     totalFilteredRecords: pageItems.length
   };
+}
+
+export async function listAuditTrailsForClient(
+  clientId: string | number,
+  options?: { limit?: number; offset?: number }
+): Promise<FineractAuditTrailsPage> {
+  return listAuditTrails({
+    offset: options?.offset ?? 0,
+    limit: options?.limit ?? 100,
+    orderBy: 'id',
+    sortOrder: 'desc',
+    clientId: String(clientId),
+    includeJson: true,
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  });
 }

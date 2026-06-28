@@ -9,10 +9,9 @@
  */
 
 import type { FineractAuditTrailDetail } from '@mifos/api-client';
-import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { Check, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   deleteCheckerInboxItemAction,
@@ -25,7 +24,7 @@ import {
   DetailHeader,
   DetailPage
 } from '@/components/composites';
-import { DataTable } from '@/components/composites/data-table/data-table';
+import { AuditTrailCommandFields } from '@/components/system/audit-trail-command-fields';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -37,7 +36,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   formatAuditTrailDateTime,
-  parseAuditTrailCommands
+  formatAuditTrailFilterLabel
 } from '@/lib/fineract/audit-trail-display';
 import { CHECKER_INBOX_LIST_PATH } from '@/lib/fineract/checker-inbox-paths';
 
@@ -47,22 +46,6 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
-
-  const commands = useMemo(() => parseAuditTrailCommands(item.commandAsJson), [item.commandAsJson]);
-
-  const columns = useMemo<ColumnDef<{ command: string; commandValue: string }>[]>(
-    () => [
-      { accessorKey: 'command', header: 'Command' },
-      { accessorKey: 'commandValue', header: 'Command value' }
-    ],
-    []
-  );
-
-  const table = useReactTable({
-    data: commands,
-    columns,
-    getCoreRowModel: getCoreRowModel()
-  });
 
   function runAction(action: ConfirmAction) {
     startTransition(async () => {
@@ -129,10 +112,18 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
         summary={
           <DetailFieldGrid columns={2}>
             <DetailField label="ID">{item.id}</DetailField>
-            <DetailField label="Status">{item.processingResult ?? '—'}</DetailField>
+            <DetailField label="Status">
+              {item.processingResult
+                ? formatAuditTrailFilterLabel(item.processingResult)
+                : '—'}
+            </DetailField>
             <DetailField label="User">{item.maker ?? '—'}</DetailField>
-            <DetailField label="Action">{item.actionName ?? '—'}</DetailField>
-            <DetailField label="Entity">{item.entityName ?? '—'}</DetailField>
+            <DetailField label="Action">
+              {item.actionName ? formatAuditTrailFilterLabel(item.actionName) : '—'}
+            </DetailField>
+            <DetailField label="Entity">
+              {item.entityName ? formatAuditTrailFilterLabel(item.entityName) : '—'}
+            </DetailField>
             {item.resourceId != null ? (
               <DetailField label="Resource ID">{item.resourceId}</DetailField>
             ) : null}
@@ -148,17 +139,11 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
         }
       >
         <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h3 className="text-sm font-medium">Command</h3>
-          {commands.length ? (
-            <DataTable
-              table={table}
-              stickyHeader={false}
-              emptyMessage="No command fields"
-              emptyDescription="This checker item has no parsed command payload."
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">No command payload available.</p>
-          )}
+          <h3 className="text-sm font-medium">Changed fields</h3>
+          <AuditTrailCommandFields
+            commandAsJson={item.commandAsJson}
+            emptyMessage="No command payload available."
+          />
         </div>
       </DetailPage>
 
