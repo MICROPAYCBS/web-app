@@ -17,6 +17,7 @@ import { NavigationProvider } from '@/components/platform/navigation-provider';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
 import type { BusinessDateContextValue } from '@/lib/fineract/business-date-context';
 import { ErrorBoundary } from '@/components/composites/error-boundary';
+import { AuditTrailPanelProvider } from '@/components/audit';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 const shellStyle = {
@@ -43,27 +44,29 @@ export function PlatformShell({
     <BusinessDateProvider value={businessDateContext}>
       <NavigationProvider nav={nav}>
         <EntitySearchProvider>
-          <SidebarProvider style={shellStyle}>
-            <MifosAppSidebar serverName={serverName} />
-            <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
-              <MifosSiteHeader
-                businessDateLabel={businessDateContext.displayLabel}
-                businessDateIsNotToday={businessDateContext.isNotToday}
-              />
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <ErrorBoundary
-                title="This section failed to load"
-                description="Something went wrong while rendering this page. The sidebar and header are still available."
-              >
-                <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                  {children}
+          <AuditTrailPanelProvider>
+            <SidebarProvider style={shellStyle}>
+              <MifosAppSidebar serverName={serverName} />
+              <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
+                <MifosSiteHeader
+                  businessDateLabel={businessDateContext.displayLabel}
+                  businessDateIsNotToday={businessDateContext.isNotToday}
+                />
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  <ErrorBoundary
+                    title="This section failed to load"
+                    description="Something went wrong while rendering this page. The sidebar and header are still available."
+                  >
+                    <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                      {children}
+                    </div>
+                  </ErrorBoundary>
                 </div>
-              </ErrorBoundary>
-            </div>
-          </SidebarInset>
-        </SidebarProvider>
-      </EntitySearchProvider>
-    </NavigationProvider>
+              </SidebarInset>
+            </SidebarProvider>
+          </AuditTrailPanelProvider>
+        </EntitySearchProvider>
+      </NavigationProvider>
     </BusinessDateProvider>
   );
 }

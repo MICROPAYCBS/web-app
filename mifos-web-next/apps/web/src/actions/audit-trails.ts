@@ -9,15 +9,19 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import type { FineractAuditTrailListItem } from '@mifos/api-client';
+import type { FineractAuditTrailDetail, FineractAuditTrailListItem } from '@mifos/api-client';
 import { toFineractActionError } from '@mifos/validation';
 import { formatAuditTrailDateTime } from '@/lib/fineract/audit-trail-display';
 import type { AuditTrailListQuery } from '@/lib/fineract/audit-trail-query';
-import { listAuditTrails } from '@/lib/fineract/audit-trails';
+import { getAuditTrail, listAuditTrails } from '@/lib/fineract/audit-trails';
 import { getServerSession } from '@/lib/session/server';
 
 export type AuditTrailsExportResult =
   | { ok: true; filename: string; csv: string }
+  | { ok: false; message: string };
+
+export type GetAuditTrailResult =
+  | { ok: true; audit: FineractAuditTrailDetail }
   | { ok: false; message: string };
 
 function csvEscape(value: unknown): string {
@@ -44,6 +48,25 @@ function auditTrailToCsvRow(row: FineractAuditTrailListItem): string {
   ]
     .map(csvEscape)
     .join(',');
+}
+
+export async function getAuditTrailAction(auditId: number): Promise<GetAuditTrailResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'READ_AUDIT');
+  } catch {
+    return { ok: false, message: 'You do not have permission to view audit trails.' };
+  }
+
+  try {
+    const audit = await getAuditTrail(auditId);
+    if (!audit) {
+      return { ok: false, message: 'Audit entry not found.' };
+    }
+    return { ok: true, audit };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to load audit entry.');
+  }
 }
 
 export async function exportAuditTrailsCsvAction(

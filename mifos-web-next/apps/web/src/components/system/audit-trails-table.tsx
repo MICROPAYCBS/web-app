@@ -16,9 +16,9 @@ import {
   type PaginationState
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
+import { AuditTrailOpenButton } from '@/components/audit';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Button } from '@/components/ui/button';
@@ -110,12 +110,9 @@ export function AuditTrailsTable({
           />
         ),
         cell: ({ row }) => (
-          <Link
-            href={`/system/audit-trails/${row.original.id}`}
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
+          <AuditTrailOpenButton audit={row.original} className="font-medium">
             {row.original.id}
-          </Link>
+          </AuditTrailOpenButton>
         )
       },
       {

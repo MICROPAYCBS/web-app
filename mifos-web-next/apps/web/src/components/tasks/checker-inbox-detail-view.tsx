@@ -24,7 +24,7 @@ import {
   DetailHeader,
   DetailPage
 } from '@/components/composites';
-import { AuditTrailCommandFields } from '@/components/system/audit-trail-command-fields';
+import { AuditTrailDetailContent } from '@/components/audit/audit-trail-detail-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -139,11 +139,7 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
         }
       >
         <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h3 className="text-sm font-medium">Changed fields</h3>
-          <AuditTrailCommandFields
-            commandAsJson={item.commandAsJson}
-            emptyMessage="No command payload available."
-          />
+          <AuditTrailDetailContent audit={item} variant="fields-only" />
         </div>
       </DetailPage>
 

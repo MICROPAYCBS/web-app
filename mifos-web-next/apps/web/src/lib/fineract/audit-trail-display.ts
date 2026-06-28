@@ -43,6 +43,22 @@ export function formatAuditTrailDateTime(value: FineractDateTimeValue | undefine
   return formatFineractDateTimeArray(coerced) ?? '—';
 }
 
+export function auditTrailResultVariant(
+  result: string | undefined
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (!result) {
+    return 'outline';
+  }
+  const normalized = result.toLowerCase();
+  if (normalized.includes('success') || normalized.includes('processed')) {
+    return 'default';
+  }
+  if (normalized.includes('fail') || normalized.includes('reject')) {
+    return 'destructive';
+  }
+  return 'secondary';
+}
+
 export function formatAuditTrailFilterLabel(value: string): string {
   if (!value.trim()) {
     return value;
