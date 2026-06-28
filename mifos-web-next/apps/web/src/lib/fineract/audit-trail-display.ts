@@ -90,11 +90,17 @@ export function formatAuditTrailFieldLabel(keyPath: string): string {
     .join(' · ');
 }
 
+export type AuditTrailFieldChangeType = 'unchanged' | 'added' | 'changed' | 'removed';
+
 export type AuditTrailCommandField = {
   key: string;
   label: string;
   display: string;
   kind: 'text' | 'json';
+  previousDisplay?: string;
+  previousKind?: 'text' | 'json';
+  changeType: AuditTrailFieldChangeType;
+  /** @deprecated Use {@link AuditTrailCommandField.changeType} instead. */
   changed?: boolean;
 };
 
@@ -137,6 +143,13 @@ export function sortAuditTrailsChronologically(
   return [...audits].sort(compareAuditTrailsChronologically);
 }
 
+/** Newest-first ordering for entity audit lists. */
+export function sortAuditTrailsNewestFirst(
+  audits: FineractAuditTrailListItem[]
+): FineractAuditTrailListItem[] {
+  return [...audits].sort((a, b) => compareAuditTrailsChronologically(b, a));
+}
+
 export function resolvePreviousAuditCommandJson(
   audits: FineractAuditTrailListItem[],
   currentAuditId: number
@@ -167,47 +180,118 @@ function serializeAuditTrailFieldValue(value: unknown): string {
   return String(value);
 }
 
-function buildAuditTrailFieldValueMap(commandAsJson: string | undefined): Map<string, string> {
+export function computeChangedAuditFieldKeys(
+  currentCommandAsJson: string | undefined,
+  previousCommandAsJson: string | undefined
+): Set<string> {
+  return new Set(
+    parseAuditTrailCommandFieldsWithDiff(currentCommandAsJson, previousCommandAsJson)
+      .filter((field) => field.changeType !== 'unchanged')
+      .map((field) => field.key)
+  );
+}
+
+function flattenAuditTrailCommandEntries(
+  commandAsJson: string | undefined
+): Array<{ key: string; value: unknown }> {
   if (!commandAsJson?.trim()) {
-    return new Map();
+    return [];
   }
 
   try {
     const parsed = JSON.parse(commandAsJson) as unknown;
     if (!parsed || typeof parsed !== 'object') {
-      return new Map();
+      return [];
     }
 
     const flattened: Array<{ key: string; value: unknown }> = [];
     flattenAuditTrailValue(parsed, '', flattened);
-    return new Map(
-      flattened.map(({ key, value }) => [key, serializeAuditTrailFieldValue(value)])
-    );
+    return flattened;
   } catch {
-    return new Map();
+    return [];
   }
 }
 
-export function computeChangedAuditFieldKeys(
+function toAuditTrailCommandField(
+  key: string,
+  value: unknown,
+  changeType: AuditTrailFieldChangeType,
+  previousValue?: unknown
+): AuditTrailCommandField {
+  const formatted = formatAuditTrailCommandValue(value);
+  const previousFormatted =
+    previousValue !== undefined ? formatAuditTrailCommandValue(previousValue) : undefined;
+
+  return {
+    key,
+    label: formatAuditTrailFieldLabel(key),
+    display: formatted.display,
+    kind: formatted.kind,
+    previousDisplay: previousFormatted?.display,
+    previousKind: previousFormatted?.kind,
+    changeType,
+    changed: changeType !== 'unchanged'
+  };
+}
+
+export function parseAuditTrailCommandFieldsWithDiff(
   currentCommandAsJson: string | undefined,
-  previousCommandAsJson: string | undefined
-): Set<string> {
-  if (!previousCommandAsJson?.trim()) {
-    return new Set();
+  previousCommandAsJson?: string
+): AuditTrailCommandField[] {
+  const currentEntries = flattenAuditTrailCommandEntries(currentCommandAsJson);
+  const previousEntries = flattenAuditTrailCommandEntries(previousCommandAsJson);
+  const previousMap = new Map(previousEntries.map((entry) => [entry.key, entry.value]));
+  const currentKeys = new Set<string>();
+  const fields: AuditTrailCommandField[] = [];
+  const hasPrevious = Boolean(previousCommandAsJson?.trim());
+
+  for (const { key, value } of currentEntries) {
+    currentKeys.add(key);
+    const previousValue = previousMap.get(key);
+
+    let changeType: AuditTrailFieldChangeType = 'unchanged';
+    if (hasPrevious) {
+      if (previousValue === undefined) {
+        changeType = 'added';
+      } else if (
+        serializeAuditTrailFieldValue(previousValue) !== serializeAuditTrailFieldValue(value)
+      ) {
+        changeType = 'changed';
+      }
+    }
+
+    fields.push(
+      toAuditTrailCommandField(
+        key,
+        value,
+        changeType,
+        hasPrevious && changeType === 'added'
+          ? null
+          : hasPrevious && changeType === 'changed'
+            ? previousValue
+            : undefined
+      )
+    );
   }
 
-  const currentValues = buildAuditTrailFieldValueMap(currentCommandAsJson);
-  const previousValues = buildAuditTrailFieldValueMap(previousCommandAsJson);
-  const changed = new Set<string>();
-
-  for (const [key, value] of currentValues) {
-    const previousValue = previousValues.get(key);
-    if (previousValue === undefined || previousValue !== value) {
-      changed.add(key);
+  if (hasPrevious) {
+    for (const [key, previousValue] of previousMap) {
+      if (!currentKeys.has(key)) {
+        fields.push({
+          key,
+          label: formatAuditTrailFieldLabel(key),
+          display: '—',
+          kind: 'text',
+          previousDisplay: formatAuditTrailCommandValue(previousValue).display,
+          previousKind: formatAuditTrailCommandValue(previousValue).kind,
+          changeType: 'removed',
+          changed: true
+        });
+      }
     }
   }
 
-  return changed;
+  return fields;
 }
 
 function isAuditTrailPrimitive(value: unknown): value is string | number | boolean {
@@ -312,32 +396,18 @@ export function parseAuditTrailCommandFields(
   commandAsJson: string | undefined,
   options?: { changedFieldKeys?: ReadonlySet<string> }
 ): AuditTrailCommandField[] {
-  if (!commandAsJson?.trim()) {
-    return [];
+  const fields = parseAuditTrailCommandFieldsWithDiff(commandAsJson);
+  const changedFieldKeys = options?.changedFieldKeys;
+
+  if (!changedFieldKeys) {
+    return fields;
   }
 
-  try {
-    const parsed = JSON.parse(commandAsJson) as unknown;
-    if (!parsed || typeof parsed !== 'object') {
-      return [];
-    }
-
-    const flattened: Array<{ key: string; value: unknown }> = [];
-    flattenAuditTrailValue(parsed, '', flattened);
-
-    return flattened.map(({ key, value }) => {
-      const formatted = formatAuditTrailCommandValue(value);
-      return {
-        key,
-        label: formatAuditTrailFieldLabel(key),
-        display: formatted.display,
-        kind: formatted.kind,
-        changed: options?.changedFieldKeys?.has(key) ?? false
-      };
-    });
-  } catch {
-    return [];
-  }
+  return fields.map((field) => ({
+    ...field,
+    changeType: changedFieldKeys.has(field.key) ? field.changeType : 'unchanged',
+    changed: changedFieldKeys.has(field.key)
+  }));
 }
 
 /** @deprecated Prefer {@link parseAuditTrailCommandFields} for labelled field display. */

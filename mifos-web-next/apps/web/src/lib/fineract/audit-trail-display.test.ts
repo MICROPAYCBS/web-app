@@ -13,7 +13,9 @@ import {
   formatAuditTrailDateTime,
   formatAuditTrailFieldLabel,
   parseAuditTrailCommandFields,
-  sortAuditTrailsChronologically
+  parseAuditTrailCommandFieldsWithDiff,
+  sortAuditTrailsChronologically,
+  sortAuditTrailsNewestFirst
 } from './audit-trail-display';
 import { coerceFineractDateTime } from './dates';
 
@@ -82,6 +84,19 @@ describe('audit trail chronological ordering', () => {
       [1, 2, 3]
     );
   });
+
+  it('sorts newest-first by madeOnDate then id', () => {
+    const sorted = sortAuditTrailsNewestFirst([
+      { id: 1, madeOnDate: [2026, 6, 20, 12, 0, 0] },
+      { id: 3, madeOnDate: [2026, 6, 22, 12, 0, 0] },
+      { id: 2, madeOnDate: [2026, 6, 21, 12, 0, 0] }
+    ]);
+
+    assert.deepEqual(
+      sorted.map((audit) => audit.id),
+      [3, 2, 1]
+    );
+  });
 });
 
 describe('audit trail field diff', () => {
@@ -93,14 +108,43 @@ describe('audit trail field diff', () => {
     assert.ok(changed.has('firstName'));
     assert.ok(changed.has('active'));
     assert.equal(changed.has('city'), false);
-
-    const fields = parseAuditTrailCommandFields(current, { changedFieldKeys: changed });
-    assert.equal(fields.find((field) => field.key === 'firstName')?.changed, true);
-    assert.equal(fields.find((field) => field.key === 'city')?.changed, false);
   });
 
   it('returns no changed keys for the first entry', () => {
     const changed = computeChangedAuditFieldKeys(JSON.stringify({ firstName: 'Jane' }), undefined);
     assert.equal(changed.size, 0);
+  });
+
+  it('builds was/now values for changed and added fields', () => {
+    const previous = JSON.stringify({ firstName: 'Jane', city: 'Kampala' });
+    const current = JSON.stringify({ firstName: 'Janet', city: 'Kampala', active: true });
+
+    const fields = parseAuditTrailCommandFieldsWithDiff(current, previous);
+    const firstName = fields.find((field) => field.key === 'firstName');
+    const active = fields.find((field) => field.key === 'active');
+    const city = fields.find((field) => field.key === 'city');
+
+    assert.equal(firstName?.changeType, 'changed');
+    assert.equal(firstName?.previousDisplay, 'Jane');
+    assert.equal(firstName?.display, 'Janet');
+
+    assert.equal(active?.changeType, 'added');
+    assert.equal(active?.previousDisplay, '—');
+    assert.equal(active?.display, 'Yes');
+
+    assert.equal(city?.changeType, 'unchanged');
+    assert.equal(city?.previousDisplay, undefined);
+  });
+
+  it('includes removed fields from the previous payload', () => {
+    const previous = JSON.stringify({ firstName: 'Jane', nickname: 'JJ' });
+    const current = JSON.stringify({ firstName: 'Jane' });
+
+    const fields = parseAuditTrailCommandFieldsWithDiff(current, previous);
+    const removed = fields.find((field) => field.key === 'nickname');
+
+    assert.equal(removed?.changeType, 'removed');
+    assert.equal(removed?.previousDisplay, 'JJ');
+    assert.equal(removed?.display, '—');
   });
 });

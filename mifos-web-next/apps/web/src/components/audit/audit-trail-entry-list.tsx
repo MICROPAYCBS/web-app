@@ -17,7 +17,7 @@ import {
   auditTrailResultVariant,
   formatAuditTrailDateTime,
   formatAuditTrailFilterLabel,
-  sortAuditTrailsChronologically
+  sortAuditTrailsNewestFirst
 } from '@/lib/fineract/audit-trail-display';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +29,7 @@ export function AuditTrailEntryList({
   className?: string;
 }) {
   const { canView, openAuditTrail } = useAuditTrailPanel();
-  const sortedAudits = useMemo(() => sortAuditTrailsChronologically(audits), [audits]);
+  const sortedAudits = useMemo(() => sortAuditTrailsNewestFirst(audits), [audits]);
 
   const openEntry = (audit: FineractAuditTrailListItem) => {
     openAuditTrail({ audit, siblingAudits: sortedAudits });
