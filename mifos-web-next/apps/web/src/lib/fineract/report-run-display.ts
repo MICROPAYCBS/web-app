@@ -13,7 +13,7 @@ import type {
   FineractReportRunParameterMetadata,
   FineractReportRunResult
 } from '@mifos/api-client';
-import { reportEngineParameterName } from '@mifos/domain';
+import { inferReportParameterPresentation, reportEngineParameterName } from '@mifos/domain';
 import { parseFineractDateString } from '@/lib/fineract/dates';
 import { fineractDateToIso } from '@/lib/fineract/date-input';
 
@@ -44,13 +44,57 @@ export function sanitizeReportRunRows(result: FineractReportRunResult | null | u
   });
 }
 
+function normalizeMetadataRowKeys(row: Record<string, unknown>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    normalized[key.toLowerCase()] = value;
+  }
+  return normalized;
+}
+
 function readMetadataField(row: Record<string, unknown>, keys: string[]): unknown {
+  const normalizedRow = normalizeMetadataRowKeys(row);
   for (const key of keys) {
-    if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
-      return row[key];
+    const value = normalizedRow[key.toLowerCase()];
+    if (value !== undefined && value !== null && value !== '') {
+      return value;
     }
   }
   return undefined;
+}
+
+function parseReportBooleanFlag(value: unknown): boolean {
+  if (value === true || value === 1) {
+    return true;
+  }
+  if (value === false || value === 0 || value == null) {
+    return false;
+  }
+  const normalized = String(value).trim().toLowerCase();
+  return (
+    normalized === 'y' ||
+    normalized === 'yes' ||
+    normalized === 'true' ||
+    normalized === 't' ||
+    normalized === '1'
+  );
+}
+
+export function enrichReportParameterMetadata(
+  meta: FineractReportRunParameterMetadata
+): FineractReportRunParameterMetadata {
+  const inferred = inferReportParameterPresentation(meta.parameterName, {
+    parameterDisplayType: meta.parameterDisplayType,
+    selectOne: meta.selectOne,
+    selectAll: meta.selectAll
+  });
+
+  return {
+    ...meta,
+    parameterDisplayType: inferred.parameterDisplayType ?? meta.parameterDisplayType,
+    selectOne: inferred.selectOne ?? meta.selectOne,
+    selectAll: inferred.selectAll ?? meta.selectAll
+  };
 }
 
 export function parseReportParameterMetadata(
@@ -89,18 +133,20 @@ export function parseReportParameterMetadata(
       readMetadataField(row, ['parentParameterName', 'parentParameter']) ?? ''
     ).trim();
 
-    metadata.push({
-      parameterName,
-      parameterLabel,
-      parameterVariable,
-      parameterDisplayType: parameterDisplayType || undefined,
-      parameterFormatType: parameterFormatType || undefined,
-      parameterType: parameterType || undefined,
-      defaultVal: defaultVal || undefined,
-      selectOne: selectOneRaw === 'Y' || selectOneRaw === true,
-      selectAll: selectAllRaw === 'Y' || selectAllRaw === true,
-      parentParameterName: parentParameterName || undefined
-    });
+    metadata.push(
+      enrichReportParameterMetadata({
+        parameterName,
+        parameterLabel,
+        parameterVariable,
+        parameterDisplayType: parameterDisplayType || undefined,
+        parameterFormatType: parameterFormatType || undefined,
+        parameterType: parameterType || undefined,
+        defaultVal: defaultVal || undefined,
+        selectOne: parseReportBooleanFlag(selectOneRaw),
+        selectAll: parseReportBooleanFlag(selectAllRaw),
+        parentParameterName: parentParameterName || undefined
+      })
+    );
   }
 
   return metadata;
@@ -126,10 +172,12 @@ export function mergeReportRunParameters(
     return (definition?.reportParameters ?? []).map((parameter) => {
       const parameterName = parameter.parameterName ?? String(parameter.parameterId);
       return {
-        parameterName,
-        parameterLabel: parameterName,
-        parameterVariable:
-          reportEngineParameterName(parameterName, parameter.reportParameterName) ?? parameterName,
+        ...enrichReportParameterMetadata({
+          parameterName,
+          parameterLabel: parameterName,
+          parameterVariable:
+            reportEngineParameterName(parameterName, parameter.reportParameterName) ?? parameterName
+        }),
         id: parameter.id,
         reportParameterName: parameter.reportParameterName
       };
@@ -143,19 +191,21 @@ export function mergeReportRunParameters(
     const catalogName = reportParam?.parameterName ?? meta.parameterName;
     return {
       ...reportParam,
-      ...meta,
+      ...enrichReportParameterMetadata({
+        ...meta,
+        parameterName: meta.parameterName,
+        parameterLabel: meta.parameterLabel || reportParam?.parameterName || meta.parameterName,
+        parameterVariable:
+          meta.parameterVariable ||
+          (catalogName
+            ? reportEngineParameterName(catalogName, reportParam?.reportParameterName)
+            : undefined) ||
+          meta.parameterName,
+        selectAll: Boolean(meta.selectAll),
+        selectOne: Boolean(meta.selectOne),
+        parentParameterName: meta.parentParameterName || undefined
+      }),
       id: reportParam?.id,
-      parameterName: meta.parameterName,
-      parameterLabel: meta.parameterLabel || reportParam?.parameterName || meta.parameterName,
-      parameterVariable:
-        meta.parameterVariable ||
-        (catalogName
-          ? reportEngineParameterName(catalogName, reportParam?.reportParameterName)
-          : undefined) ||
-        meta.parameterName,
-      selectAll: Boolean(meta.selectAll),
-      selectOne: Boolean(meta.selectOne),
-      parentParameterName: meta.parentParameterName || undefined,
       reportParameterName: reportParam?.reportParameterName
     };
   });

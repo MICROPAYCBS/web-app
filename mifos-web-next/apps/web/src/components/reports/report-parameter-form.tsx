@@ -9,6 +9,7 @@
  */
 
 import type { FineractReportRunParameter } from '@mifos/api-client';
+import { isReportParameterDate, isReportParameterSelect } from '@mifos/domain';
 import { useMemo, useState } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { ReportParameterSelect } from '@/components/reports/report-parameter-select';
@@ -86,8 +87,7 @@ export function ReportParameterForm({
       const fieldName = parameter.parameterVariable || parameter.parameterName;
       const label = parameter.parameterLabel || parameter.parameterName;
       const raw = values[fieldName];
-      const isDate =
-        parameter.parameterDisplayType === 'date' || parameter.parameterType === 'date';
+      const isDate = isReportParameterDate(parameter);
       const isCheckbox = parameter.parameterType === 'checkbox';
 
       if (isCheckbox) {
@@ -132,10 +132,8 @@ export function ReportParameterForm({
       {parameters.map((parameter) => {
         const fieldName = parameter.parameterVariable || parameter.parameterName;
         const label = parameter.parameterLabel || parameter.parameterName;
-        const isSelect =
-          parameter.selectOne === true || parameter.parameterDisplayType === 'select';
-        const isDate =
-          parameter.parameterDisplayType === 'date' || parameter.parameterType === 'date';
+        const isSelect = isReportParameterSelect(parameter);
+        const isDate = isReportParameterDate(parameter);
         const isCheckbox = parameter.parameterType === 'checkbox';
         const parentFieldName = parameter.parentParameterName
           ? variableByParameterName[parameter.parentParameterName]

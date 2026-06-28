@@ -8,8 +8,12 @@
 
 export {
   catalogReportParameterVariable,
+  inferReportParameterPresentation,
+  isReportParameterDate,
+  isReportParameterSelect,
   reportEngineParameterName,
   STRETCHY_PARAMETER_VARIABLES,
+  type ReportParameterPresentationHints,
   type StretchyParameterName
 } from './report-parameters';
 export {

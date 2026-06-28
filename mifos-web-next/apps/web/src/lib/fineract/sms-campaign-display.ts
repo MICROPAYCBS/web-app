@@ -12,6 +12,7 @@ import type {
   SmsCampaignDetail,
   SmsCampaignTemplate
 } from '@mifos/api-client';
+import { isReportParameterSelect } from '@mifos/domain';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
 export const SMS_MESSAGE_STATUS_TABS = [
@@ -108,7 +109,7 @@ export function buildSmsCampaignParamValue(input: {
     if (raw == null || raw === '') {
       continue;
     }
-    if (parameter.parameterDisplayType === 'select' || parameter.selectOne) {
+    if (isReportParameterSelect(parameter)) {
       formatted[key] = raw;
       continue;
     }
