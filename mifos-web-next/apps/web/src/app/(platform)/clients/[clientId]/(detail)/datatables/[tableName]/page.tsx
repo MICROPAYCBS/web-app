@@ -72,6 +72,7 @@ export default async function ClientDatatablePage({
       clientId={clientId}
       registeredTableName={registeredTableName}
       columns={entry.definition.columnHeaderData ?? []}
+      row={row}
       values={values}
       hasEntry={hasEntry}
       canCreate={can(session, datatablePermissionPrefix(registeredTableName, 'CREATE'))}

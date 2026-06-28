@@ -27,8 +27,13 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { formatDatatableCellValue, formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
-import { filterSystemColumns, getDatatableControlName, toDatatableDisplayLabel } from '@/lib/fineract/datatables';
+import { formatDatatableCellValueForColumn, formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
+import {
+  filterSystemColumns,
+  getDatatableCellRawValue,
+  getDatatableControlName,
+  toDatatableDisplayLabel
+} from '@/lib/fineract/datatables';
 
 type DatatableSaveResult =
   | { ok: true }
@@ -38,6 +43,7 @@ export function ClientDatatableView({
   clientId,
   registeredTableName,
   columns,
+  row,
   values,
   hasEntry,
   canCreate,
@@ -46,6 +52,7 @@ export function ClientDatatableView({
   clientId: string;
   registeredTableName: string;
   columns: FineractDatatableColumnHeader[];
+  row: Record<string, unknown> | null;
   values: Record<string, unknown>;
   hasEntry: boolean;
   canCreate: boolean;
@@ -153,12 +160,11 @@ export function ClientDatatableView({
         ) : (
           <DetailFieldGrid>
             {displayColumns.map((column) => {
-              const controlName = getDatatableControlName(column);
-              const raw = values[controlName] ?? values[column.columnName];
+              const raw = row ? getDatatableCellRawValue(column, row) : values[getDatatableControlName(column)];
 
               return (
                 <DetailField key={column.columnName} label={toDatatableDisplayLabel(column.columnName)}>
-                  {formatDatatableCellValue(raw)}
+                  {formatDatatableCellValueForColumn(column, raw)}
                 </DetailField>
               );
             })}

@@ -14,12 +14,8 @@ import { useMemo, useState } from 'react';
 import { ClientDatatableFormSheet } from '@/components/clients/shared/client-datatable-form-sheet';
 import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
-import {
-  formatDatatableCellValueForColumn,
-  formatDatatableTableTitle,
-  manyToOneDisplayColumns
-} from '@/lib/fineract/client-datatable-utils';
-import { getDatatableControlName, toDatatableDisplayLabel } from '@/lib/fineract/datatables';
+import { formatDatatableCellValueForColumn, formatDatatableTableTitle, manyToOneDisplayColumns } from '@/lib/fineract/client-datatable-utils';
+import { getDatatableCellRawValue, toDatatableDisplayLabel } from '@/lib/fineract/datatables';
 import {
   Table,
   TableBody,
@@ -150,8 +146,7 @@ export function MultiRowDatatableStep({
               {rows.map((row, index) => (
                 <TableRow key={index}>
                   {displayColumns.map((column) => {
-                    const controlName = getDatatableControlName(column);
-                    const raw = row[controlName] ?? row[column.columnName];
+                    const raw = getDatatableCellRawValue(column, row);
                     return (
                       <TableCell key={column.columnName}>
                         {formatDatatableCellValueForColumn(column, raw)}

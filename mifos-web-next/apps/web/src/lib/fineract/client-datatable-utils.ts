@@ -17,6 +17,9 @@ import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
   filterSystemColumns,
+  formatDatatableCellValue,
+  formatDatatableCellValueForColumn,
+  getDatatableCellRawValue,
   getDatatableControlName
 } from '@/lib/fineract/datatables';
 import { datatableMatchesLegalForm } from '@/lib/fineract/entity-datatable-matching';
@@ -185,16 +188,7 @@ export function formatDatatableColumnLabel(columnName: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function formatDatatableCellValue(value: unknown): string {
-  if (value == null || value === '') {
-    return '—';
-  }
-  if (typeof value === 'object') {
-    const obj = value as { value?: string; name?: string };
-    return obj.value ?? obj.name ?? '—';
-  }
-  return String(value);
-}
+export { formatDatatableCellValue, formatDatatableCellValueForColumn, getDatatableCellRawValue };
 
 export function formatDatatableTableTitle(registeredTableName: string): string {
   return formatDatatableColumnLabel(registeredTableName.replace(/_/g, ' '));
@@ -216,26 +210,4 @@ export function manyToOneDisplayColumns(
   columns: FineractDatatableColumnHeader[]
 ): FineractDatatableColumnHeader[] {
   return filterSystemColumns(columns);
-}
-
-export function formatDatatableCellValueForColumn(
-  column: FineractDatatableColumnHeader,
-  value: unknown
-): string {
-  if (value == null || value === '') {
-    return '—';
-  }
-  if (column.columnDisplayType === 'CODELOOKUP' && column.columnValues?.length) {
-    const lookupId =
-      typeof value === 'object' && value != null && 'id' in value
-        ? Number((value as { id?: number }).id)
-        : Number(value);
-    if (Number.isFinite(lookupId)) {
-      const match = column.columnValues.find((option) => option.id === lookupId);
-      if (match) {
-        return match.value;
-      }
-    }
-  }
-  return formatDatatableCellValue(value);
 }

@@ -44,7 +44,7 @@ import {
   getManyToOneRowId,
   manyToOneDisplayColumns
 } from '@/lib/fineract/client-datatable-utils';
-import { getDatatableControlName, toDatatableDisplayLabel } from '@/lib/fineract/datatables';
+import { getDatatableCellRawValue, toDatatableDisplayLabel } from '@/lib/fineract/datatables';
 
 type SheetMode = { kind: 'add' } | { kind: 'edit'; rowId: number; values: Record<string, unknown> };
 
@@ -264,8 +264,7 @@ export function ClientManyToOneDatatableView({
                         </TableCell>
                       ) : null}
                       {displayColumns.map((column) => {
-                        const controlName = getDatatableControlName(column);
-                        const raw = row[column.columnName] ?? row[controlName];
+                        const raw = getDatatableCellRawValue(column, row);
                         return (
                           <TableCell key={column.columnName}>
                             {formatDatatableCellValueForColumn(column, raw)}
@@ -295,8 +294,7 @@ export function ClientManyToOneDatatableView({
                   <TableRow key={`row-${index}`}>
                     {canDelete ? <TableCell /> : null}
                     {displayColumns.map((column) => {
-                      const controlName = getDatatableControlName(column);
-                      const raw = row[column.columnName] ?? row[controlName];
+                      const raw = getDatatableCellRawValue(column, row);
                       return (
                         <TableCell key={column.columnName}>
                           {formatDatatableCellValueForColumn(column, raw)}
