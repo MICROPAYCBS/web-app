@@ -182,10 +182,11 @@ function serializeAuditTrailFieldValue(value: unknown): string {
 
 export function computeChangedAuditFieldKeys(
   currentCommandAsJson: string | undefined,
-  previousCommandAsJson: string | undefined
+  previousCommandAsJson: string | undefined,
+  options?: AuditTrailCommandDiffOptions
 ): Set<string> {
   return new Set(
-    parseAuditTrailCommandFieldsWithDiff(currentCommandAsJson, previousCommandAsJson)
+    parseAuditTrailCommandFieldsWithDiff(currentCommandAsJson, previousCommandAsJson, options)
       .filter((field) => field.changeType !== 'unchanged')
       .map((field) => field.key)
   );
@@ -212,6 +213,39 @@ function flattenAuditTrailCommandEntries(
   }
 }
 
+/** Client fields omitted at creation default to false on the server. */
+export const CLIENT_AUDIT_FALSE_DEFAULT_FIELD_KEYS = new Set(['active', 'isStaff']);
+
+export type AuditTrailCommandDiffOptions = {
+  entityName?: string;
+};
+
+function isClientAuditEntity(entityName?: string): boolean {
+  return entityName?.trim().toUpperCase() === 'CLIENT';
+}
+
+function isAuditFalseEquivalent(value: unknown): boolean {
+  return value === false || value === 'false';
+}
+
+function isClientFalseDefaultUnchanged(
+  fieldKey: string,
+  value: unknown,
+  previousValue: unknown | undefined,
+  entityName?: string
+): boolean {
+  if (!isClientAuditEntity(entityName)) {
+    return false;
+  }
+  if (!CLIENT_AUDIT_FALSE_DEFAULT_FIELD_KEYS.has(auditTrailTopLevelKey(fieldKey))) {
+    return false;
+  }
+  if (!isAuditFalseEquivalent(value)) {
+    return false;
+  }
+  return previousValue === undefined || isAbsentAuditValue(previousValue);
+}
+
 function isAbsentAuditValue(value: unknown): boolean {
   return value === null || value === undefined || value === '';
 }
@@ -222,11 +256,16 @@ function auditTrailTopLevelKey(key: string): string {
 }
 
 function resolveAuditFieldChangeType(
+  fieldKey: string,
   value: unknown,
   previousValue: unknown | undefined,
-  hasPrevious: boolean
+  hasPrevious: boolean,
+  options?: AuditTrailCommandDiffOptions
 ): AuditTrailFieldChangeType {
   if (!hasPrevious || isAbsentAuditValue(value)) {
+    return 'unchanged';
+  }
+  if (isClientFalseDefaultUnchanged(fieldKey, value, previousValue, options?.entityName)) {
     return 'unchanged';
   }
   if (previousValue === undefined) {
@@ -273,7 +312,8 @@ function toAuditTrailCommandField(
 
 export function parseAuditTrailCommandFieldsWithDiff(
   currentCommandAsJson: string | undefined,
-  previousCommandAsJson?: string
+  previousCommandAsJson?: string,
+  options?: AuditTrailCommandDiffOptions
 ): AuditTrailCommandField[] {
   const currentEntries = flattenAuditTrailCommandEntries(currentCommandAsJson);
   const previousEntries = flattenAuditTrailCommandEntries(previousCommandAsJson);
@@ -283,7 +323,13 @@ export function parseAuditTrailCommandFieldsWithDiff(
 
   for (const { key, value } of currentEntries) {
     const previousValue = previousMap.get(key);
-    const changeType = resolveAuditFieldChangeType(value, previousValue, hasPrevious);
+    const changeType = resolveAuditFieldChangeType(
+      key,
+      value,
+      previousValue,
+      hasPrevious,
+      options
+    );
     const displayValue =
       isAbsentAuditValue(value) && previousValue !== undefined ? previousValue : value;
 

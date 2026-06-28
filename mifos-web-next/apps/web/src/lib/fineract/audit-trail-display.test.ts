@@ -164,4 +164,28 @@ describe('audit trail field diff', () => {
       ['mobileNo']
     );
   });
+
+  it('treats client active and isStaff false as unchanged when absent in the previous entry', () => {
+    const previous = JSON.stringify({ firstName: 'Jane', mobileNo: '+256700' });
+    const current = JSON.stringify({
+      firstName: 'Jane',
+      mobileNo: '+256701',
+      active: false,
+      isStaff: false
+    });
+
+    const fields = parseAuditTrailCommandFieldsWithDiff(current, previous, { entityName: 'CLIENT' });
+
+    assert.equal(fields.some((field) => field.key === 'active'), false);
+    assert.equal(fields.some((field) => field.key === 'isStaff'), false);
+    assert.equal(fields.find((field) => field.key === 'mobileNo')?.changeType, 'changed');
+  });
+
+  it('still flags client active when it changes to true', () => {
+    const previous = JSON.stringify({ firstName: 'Jane' });
+    const current = JSON.stringify({ firstName: 'Jane', active: true });
+
+    const fields = parseAuditTrailCommandFieldsWithDiff(current, previous, { entityName: 'CLIENT' });
+    assert.equal(fields.find((field) => field.key === 'active')?.changeType, 'added');
+  });
 });

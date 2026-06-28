@@ -93,15 +93,17 @@ function AuditTrailCommandFieldRow({ field }: { field: AuditTrailCommandField })
 export function AuditTrailCommandFields({
   commandAsJson,
   previousCommandAsJson,
+  entityName,
   emptyMessage = 'No command payload available for this entry.'
 }: {
   commandAsJson?: string;
   previousCommandAsJson?: string;
+  entityName?: string;
   emptyMessage?: string;
 }) {
   const fields = useMemo(
-    () => parseAuditTrailCommandFieldsWithDiff(commandAsJson, previousCommandAsJson),
-    [commandAsJson, previousCommandAsJson]
+    () => parseAuditTrailCommandFieldsWithDiff(commandAsJson, previousCommandAsJson, { entityName }),
+    [commandAsJson, previousCommandAsJson, entityName]
   );
 
   const hasPrevious = Boolean(previousCommandAsJson?.trim());
@@ -117,8 +119,7 @@ export function AuditTrailCommandFields({
         changedCount > 0 ? (
           <p className="text-xs text-muted-foreground">
             {changedCount} {changedCount === 1 ? 'field changed' : 'fields changed'} in this
-            action compared to the previous audit entry. Omitted or empty values are treated as
-            unchanged.
+            action compared to the previous audit entry.
           </p>
         ) : (
           <p className="text-xs text-muted-foreground">

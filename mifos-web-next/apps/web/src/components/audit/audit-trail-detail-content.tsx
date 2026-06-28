@@ -71,6 +71,7 @@ export function AuditTrailDetailContent({
         <AuditTrailCommandFields
           commandAsJson={audit.commandAsJson}
           previousCommandAsJson={previousCommandAsJson}
+          entityName={audit.entityName}
         />
       </div>
     </div>
