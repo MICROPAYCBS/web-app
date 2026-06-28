@@ -53,6 +53,10 @@ export function ComplianceProfileStep({
     onComplianceChange({ ...profile, ...patch });
   }
 
+  function updateBankAccount(index: number, accountPatch: Partial<OtherBankAccountInput>) {
+    onComplianceChange(patchBankAccount(profile, index, accountPatch));
+  }
+
   return (
     <div className="space-y-8">
       <p className="text-sm text-muted-foreground">
@@ -89,7 +93,7 @@ export function ComplianceProfileStep({
                     label="Bank name"
                     required={index === 0}
                     value={account.bankName}
-                    onChange={(v) => patchBankAccount(profile, index, { bankName: v })}
+                    onChange={(v) => updateBankAccount(index, { bankName: v })}
                     error={index === 0 ? errors['otherBankAccounts.0.bankName'] : undefined}
                   />
                   <TextField
@@ -97,7 +101,7 @@ export function ComplianceProfileStep({
                     label="Branch"
                     optional
                     value={account.branchName ?? ''}
-                    onChange={(v) => patchBankAccount(profile, index, { branchName: v })}
+                    onChange={(v) => updateBankAccount(index, { branchName: v })}
                   />
                   <TextField
                     id={`otherBankAccount${index}`}
@@ -105,7 +109,7 @@ export function ComplianceProfileStep({
                     required={index === 0}
                     className="sm:col-span-2"
                     value={account.accountNumber}
-                    onChange={(v) => patchBankAccount(profile, index, { accountNumber: v })}
+                    onChange={(v) => updateBankAccount(index, { accountNumber: v })}
                     error={index === 0 ? errors['otherBankAccounts.0.accountNumber'] : undefined}
                   />
                 </div>
