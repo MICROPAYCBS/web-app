@@ -49,11 +49,12 @@ export function filterDatatablesByLegalForm(
   );
 }
 
-/** Multi-row datatables expose an auto-generated `id` column first. */
+/** Multi-row datatables expose an auto-generated numeric `id` column first. */
 export function isManyToOneDatatableColumns(
   columns: FineractDatatableColumnHeader[] | undefined
 ): boolean {
-  return columns?.[0]?.columnName === 'id';
+  const first = columns?.[0];
+  return first?.columnName === 'id' && first.columnDisplayType === 'INTEGER';
 }
 
 export function isManyToOneDatatable(definition: FineractDatatableDefinition): boolean {
@@ -78,11 +79,69 @@ export function asManyToOneRows(data: ClientDatatableRowData): Record<string, un
   return Array.isArray(data) ? data : [data];
 }
 
-export function asSingleRowRecord(data: ClientDatatableRowData): Record<string, unknown> | null {
-  if (!data || Array.isArray(data)) {
+const CLIENT_ENTITY_ID_KEYS = ['client_id'] as const;
+
+function isClientEntityLinkKey(key: string): boolean {
+  return CLIENT_ENTITY_ID_KEYS.includes(key as (typeof CLIENT_ENTITY_ID_KEYS)[number]);
+}
+
+/** Normalize Fineract GET responses for one-to-one (single-row) client datatables. */
+export function normalizeSingleRowDatatableRecord(
+  data: ClientDatatableRowData
+): Record<string, unknown> | null {
+  if (data == null) {
     return null;
   }
+
+  if (Array.isArray(data)) {
+    if (data.length === 0) {
+      return null;
+    }
+    return data[0] ?? null;
+  }
+
+  if (typeof data === 'object' && Object.keys(data).length === 0) {
+    return null;
+  }
+
   return data;
+}
+
+/** @deprecated Prefer {@link normalizeSingleRowDatatableRecord}. */
+export function asSingleRowRecord(data: ClientDatatableRowData): Record<string, unknown> | null {
+  return normalizeSingleRowDatatableRecord(data);
+}
+
+/**
+ * True when Fineract already has a row for this customer (PK is typically `client_id`).
+ * Do not infer from custom field values — an empty row still blocks POST.
+ */
+export function singleRowDatatableRowExists(data: ClientDatatableRowData): boolean {
+  const row = normalizeSingleRowDatatableRecord(data);
+  if (!row) {
+    return false;
+  }
+
+  if (CLIENT_ENTITY_ID_KEYS.some((key) => row[key] != null && row[key] !== '')) {
+    return true;
+  }
+
+  return Object.entries(row).some(
+    ([key, value]) => !isClientEntityLinkKey(key) && value != null && value !== ''
+  );
+}
+
+/** Prefer single-row UI when fetched data is keyed by client_id without a multi-row id. */
+export function shouldUseSingleRowClientDatatableView(
+  definition: FineractDatatableDefinition,
+  data: ClientDatatableRowData
+): boolean {
+  if (!isManyToOneDatatable(definition)) {
+    return true;
+  }
+
+  const row = normalizeSingleRowDatatableRecord(data);
+  return row != null && row.client_id != null && getManyToOneRowId(row) == null;
 }
 
 export function datatablePermissionPrefix(

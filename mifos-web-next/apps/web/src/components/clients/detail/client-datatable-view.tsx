@@ -65,12 +65,7 @@ export function ClientDatatableView({
   }
 
   async function handleSave(formValues: Record<string, unknown>): Promise<DatatableSaveResult> {
-    const result = await saveClientDatatableAction(
-      clientId,
-      registeredTableName,
-      formValues,
-      hasEntry ? 'update' : 'create'
-    );
+    const result = await saveClientDatatableAction(clientId, registeredTableName, formValues);
     if (!result.ok) {
       return {
         ok: false,

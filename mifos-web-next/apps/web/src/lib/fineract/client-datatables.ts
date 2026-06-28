@@ -14,6 +14,7 @@ import type {
   FineractDatatableDefinition,
   FineractDatatableRegistration
 } from '@mifos/api-client';
+import { FineractHttpError } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import {
   type ClientDatatableRowData,
@@ -32,7 +33,10 @@ import {
   isManyToOneClientDatatableTemplate,
   isManyToOneDatatable,
   isManyToOneDatatableColumns,
-  manyToOneDisplayColumns
+  manyToOneDisplayColumns,
+  normalizeSingleRowDatatableRecord,
+  shouldUseSingleRowClientDatatableView,
+  singleRowDatatableRowExists
 } from '@/lib/fineract/client-datatable-utils';
 import { datatableMatchesLegalForm } from '@/lib/fineract/entity-datatable-matching';
 
@@ -53,7 +57,10 @@ export {
   isManyToOneClientDatatableTemplate,
   isManyToOneDatatable,
   isManyToOneDatatableColumns,
-  manyToOneDisplayColumns
+  manyToOneDisplayColumns,
+  normalizeSingleRowDatatableRecord,
+  shouldUseSingleRowClientDatatableView,
+  singleRowDatatableRowExists
 };
 
 const GENERIC_RESULT_SET = { genericResultSet: 'true' };
@@ -84,9 +91,20 @@ export async function getClientDatatableRows(
       `/datatables/${registeredTableName}/${clientId}`
     );
     return data ?? null;
-  } catch {
-    return null;
+  } catch (err) {
+    if (err instanceof FineractHttpError && err.status === 404) {
+      return null;
+    }
+    throw err;
   }
+}
+
+export async function clientSingleRowDatatableExists(
+  clientId: string | number,
+  registeredTableName: string
+): Promise<boolean> {
+  const data = await getClientDatatableRows(clientId, registeredTableName);
+  return singleRowDatatableRowExists(data);
 }
 
 export async function createClientDatatableEntry(

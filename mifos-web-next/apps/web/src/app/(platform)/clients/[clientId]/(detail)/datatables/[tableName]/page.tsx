@@ -13,15 +13,15 @@ import { ClientManyToOneDatatableView } from '@/components/clients/detail/client
 import { findClientDatatable } from '@/lib/fineract/client-datatable-nav';
 import {
   asManyToOneRows,
-  asSingleRowRecord,
   clientLegalFormId,
   datatablePermissionPrefix,
   datatableRowToFormValues,
   getClientDatatableRows,
-  isManyToOneDatatable,
-  listClientNavDatatables
+  listClientNavDatatables,
+  normalizeSingleRowDatatableRecord,
+  shouldUseSingleRowClientDatatableView,
+  singleRowDatatableRowExists
 } from '@/lib/fineract/client-datatables';
-import { filterSystemColumns, getDatatableControlName } from '@/lib/fineract/datatables';
 import { getClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 
@@ -47,9 +47,9 @@ export default async function ClientDatatablePage({
   }
 
   const rowData = await getClientDatatableRows(clientId, registeredTableName);
-  const manyToOne = isManyToOneDatatable(entry.definition);
+  const useSingleRowView = shouldUseSingleRowClientDatatableView(entry.definition, rowData);
 
-  if (manyToOne) {
+  if (!useSingleRowView) {
     return (
       <ClientManyToOneDatatableView
         clientId={clientId}
@@ -62,16 +62,10 @@ export default async function ClientDatatablePage({
     );
   }
 
-  const row = asSingleRowRecord(rowData);
+  const row = normalizeSingleRowDatatableRecord(rowData);
   const columns = entry.definition.columnHeaderData ?? [];
   const values = row ? datatableRowToFormValues(columns, row) : {};
-  const hasEntry =
-    row != null &&
-    filterSystemColumns(columns).some((column) => {
-      const controlName = getDatatableControlName(column);
-      const raw = row[column.columnName] ?? row[controlName];
-      return raw != null && raw !== '';
-    });
+  const hasEntry = singleRowDatatableRowExists(rowData);
 
   return (
     <ClientDatatableView

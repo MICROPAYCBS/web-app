@@ -21,6 +21,7 @@ import {
   buildClientDatatablePayload,
   clientDatatableAppliesToLegalForm,
   clientLegalFormId,
+  clientSingleRowDatatableExists,
   createClientDatatableEntry,
   datatablePermissionPrefix,
   deleteClientDatatableEntry,
@@ -117,8 +118,7 @@ async function requireDatatableKind(
 export async function saveClientDatatableAction(
   clientId: string,
   registeredTableName: string,
-  raw: unknown,
-  mode: 'create' | 'update'
+  raw: unknown
 ): Promise<ClientDatatableActionResult> {
   const denied = await requireClientDatatableAccess(clientId, registeredTableName, 'CREATE');
   if (denied) {
@@ -153,10 +153,11 @@ export async function saveClientDatatableAction(
   const payload = buildClientDatatablePayload(columns, validated.data);
 
   try {
-    if (mode === 'create') {
-      await createClientDatatableEntry(clientId, registeredTableName, payload);
-    } else {
+    const rowExists = await clientSingleRowDatatableExists(clientId, registeredTableName);
+    if (rowExists) {
       await updateClientDatatableEntry(clientId, registeredTableName, payload);
+    } else {
+      await createClientDatatableEntry(clientId, registeredTableName, payload);
     }
     revalidateClientDatatableViews(clientId, registeredTableName);
     return { ok: true };
