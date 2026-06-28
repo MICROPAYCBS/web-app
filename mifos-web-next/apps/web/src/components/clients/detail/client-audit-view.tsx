@@ -49,8 +49,8 @@ export function ClientAuditView({
         {totalRecords != null && totalRecords > audits.length
           ? ` of ${totalRecords}`
           : ''}{' '}
-        audit {audits.length === 1 ? 'entry' : 'entries'}. Select an entry to review all fields
-        involved in the change.
+        audit {audits.length === 1 ? 'entry' : 'entries'} in chronological order (oldest first).
+        Select an entry to review all fields involved in the change.
       </p>
       <AuditTrailEntryList audits={audits} />
     </div>

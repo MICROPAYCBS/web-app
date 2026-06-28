@@ -9,9 +9,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  computeChangedAuditFieldKeys,
   formatAuditTrailDateTime,
   formatAuditTrailFieldLabel,
-  parseAuditTrailCommandFields
+  parseAuditTrailCommandFields,
+  sortAuditTrailsChronologically
 } from './audit-trail-display';
 import { coerceFineractDateTime } from './dates';
 
@@ -64,5 +66,41 @@ describe('audit trail command fields', () => {
     assert.equal(fields.find((field) => field.key === 'active')?.display, 'Yes');
     assert.equal(fields.find((field) => field.key === 'address.city')?.label, 'Address · City');
     assert.equal(fields.find((field) => field.key === 'address.city')?.display, 'Kampala');
+  });
+});
+
+describe('audit trail chronological ordering', () => {
+  it('sorts oldest-first by madeOnDate then id', () => {
+    const sorted = sortAuditTrailsChronologically([
+      { id: 3, madeOnDate: [2026, 6, 22, 12, 0, 0] },
+      { id: 1, madeOnDate: [2026, 6, 20, 12, 0, 0] },
+      { id: 2, madeOnDate: [2026, 6, 21, 12, 0, 0] }
+    ]);
+
+    assert.deepEqual(
+      sorted.map((audit) => audit.id),
+      [1, 2, 3]
+    );
+  });
+});
+
+describe('audit trail field diff', () => {
+  it('highlights keys that differ from the previous entry', () => {
+    const previous = JSON.stringify({ firstName: 'Jane', city: 'Kampala' });
+    const current = JSON.stringify({ firstName: 'Janet', city: 'Kampala', active: true });
+
+    const changed = computeChangedAuditFieldKeys(current, previous);
+    assert.ok(changed.has('firstName'));
+    assert.ok(changed.has('active'));
+    assert.equal(changed.has('city'), false);
+
+    const fields = parseAuditTrailCommandFields(current, { changedFieldKeys: changed });
+    assert.equal(fields.find((field) => field.key === 'firstName')?.changed, true);
+    assert.equal(fields.find((field) => field.key === 'city')?.changed, false);
+  });
+
+  it('returns no changed keys for the first entry', () => {
+    const changed = computeChangedAuditFieldKeys(JSON.stringify({ firstName: 'Jane' }), undefined);
+    assert.equal(changed.size, 0);
   });
 });

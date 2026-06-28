@@ -26,12 +26,14 @@ export function AuditTrailDetailSheet({
   open,
   onOpenChange,
   audit,
+  previousCommandAsJson,
   loading = false,
   error
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   audit: FineractAuditTrailDetail | null;
+  previousCommandAsJson?: string;
   loading?: boolean;
   error?: string | null;
 }) {
@@ -72,7 +74,10 @@ export function AuditTrailDetailSheet({
           ) : error ? (
             <p className="text-sm text-destructive">{error}</p>
           ) : audit ? (
-            <AuditTrailDetailContent audit={audit} />
+            <AuditTrailDetailContent
+              audit={audit}
+              previousCommandAsJson={previousCommandAsJson}
+            />
           ) : (
             <p className="text-sm text-muted-foreground">Select an audit entry to view details.</p>
           )}

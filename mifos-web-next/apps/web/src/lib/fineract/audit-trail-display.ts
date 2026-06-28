@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractAuditTrailListItem } from '@mifos/api-client';
 import {
   coerceFineractDateTime,
   formatFineractDateTimeArray,
@@ -94,7 +95,120 @@ export type AuditTrailCommandField = {
   label: string;
   display: string;
   kind: 'text' | 'json';
+  changed?: boolean;
 };
+
+function auditTrailMadeOnEpochMs(value: FineractDateTimeValue | undefined): number | null {
+  const coerced = coerceFineractDateTime(value);
+  if (coerced == null) {
+    return null;
+  }
+  if (typeof coerced === 'number') {
+    return coerced < 1e12 ? coerced * 1000 : coerced;
+  }
+  if (typeof coerced === 'string') {
+    const parsed = parseFineractDateTimeString(coerced);
+    return parsed ? parsed.getTime() : null;
+  }
+  const formatted = formatFineractDateTimeArray(coerced);
+  if (!formatted) {
+    return null;
+  }
+  const parsed = parseFineractDateTimeString(formatted);
+  return parsed ? parsed.getTime() : null;
+}
+
+/** Oldest-first ordering for entity audit timelines. */
+export function compareAuditTrailsChronologically(
+  a: FineractAuditTrailListItem,
+  b: FineractAuditTrailListItem
+): number {
+  const aTime = auditTrailMadeOnEpochMs(a.madeOnDate);
+  const bTime = auditTrailMadeOnEpochMs(b.madeOnDate);
+  if (aTime != null && bTime != null && aTime !== bTime) {
+    return aTime - bTime;
+  }
+  return a.id - b.id;
+}
+
+export function sortAuditTrailsChronologically(
+  audits: FineractAuditTrailListItem[]
+): FineractAuditTrailListItem[] {
+  return [...audits].sort(compareAuditTrailsChronologically);
+}
+
+export function resolvePreviousAuditCommandJson(
+  audits: FineractAuditTrailListItem[],
+  currentAuditId: number
+): string | undefined {
+  const sorted = sortAuditTrailsChronologically(audits);
+  const index = sorted.findIndex((audit) => audit.id === currentAuditId);
+  if (index <= 0) {
+    return undefined;
+  }
+  const previous = sorted[index - 1];
+  return typeof previous.commandAsJson === 'string' ? previous.commandAsJson : undefined;
+}
+
+function serializeAuditTrailFieldValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false';
+  }
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
+function buildAuditTrailFieldValueMap(commandAsJson: string | undefined): Map<string, string> {
+  if (!commandAsJson?.trim()) {
+    return new Map();
+  }
+
+  try {
+    const parsed = JSON.parse(commandAsJson) as unknown;
+    if (!parsed || typeof parsed !== 'object') {
+      return new Map();
+    }
+
+    const flattened: Array<{ key: string; value: unknown }> = [];
+    flattenAuditTrailValue(parsed, '', flattened);
+    return new Map(
+      flattened.map(({ key, value }) => [key, serializeAuditTrailFieldValue(value)])
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+export function computeChangedAuditFieldKeys(
+  currentCommandAsJson: string | undefined,
+  previousCommandAsJson: string | undefined
+): Set<string> {
+  if (!previousCommandAsJson?.trim()) {
+    return new Set();
+  }
+
+  const currentValues = buildAuditTrailFieldValueMap(currentCommandAsJson);
+  const previousValues = buildAuditTrailFieldValueMap(previousCommandAsJson);
+  const changed = new Set<string>();
+
+  for (const [key, value] of currentValues) {
+    const previousValue = previousValues.get(key);
+    if (previousValue === undefined || previousValue !== value) {
+      changed.add(key);
+    }
+  }
+
+  return changed;
+}
 
 function isAuditTrailPrimitive(value: unknown): value is string | number | boolean {
   return (
@@ -195,7 +309,8 @@ export function formatAuditTrailCommandValue(value: unknown): {
 }
 
 export function parseAuditTrailCommandFields(
-  commandAsJson: string | undefined
+  commandAsJson: string | undefined,
+  options?: { changedFieldKeys?: ReadonlySet<string> }
 ): AuditTrailCommandField[] {
   if (!commandAsJson?.trim()) {
     return [];
@@ -208,11 +323,7 @@ export function parseAuditTrailCommandFields(
     }
 
     const flattened: Array<{ key: string; value: unknown }> = [];
-    if (Array.isArray(parsed)) {
-      flattenAuditTrailValue(parsed, '', flattened);
-    } else {
-      flattenAuditTrailValue(parsed, '', flattened);
-    }
+    flattenAuditTrailValue(parsed, '', flattened);
 
     return flattened.map(({ key, value }) => {
       const formatted = formatAuditTrailCommandValue(value);
@@ -220,7 +331,8 @@ export function parseAuditTrailCommandFields(
         key,
         label: formatAuditTrailFieldLabel(key),
         display: formatted.display,
-        kind: formatted.kind
+        kind: formatted.kind,
+        changed: options?.changedFieldKeys?.has(key) ?? false
       };
     });
   } catch {

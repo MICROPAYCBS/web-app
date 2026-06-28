@@ -14,5 +14,6 @@ export {
   AuditTrailPanelProvider,
   useAuditTrailPanel,
   useOptionalAuditTrailPanel,
+  type AuditTrailOpenContext,
   type AuditTrailOpenInput
 } from './audit-trail-panel';

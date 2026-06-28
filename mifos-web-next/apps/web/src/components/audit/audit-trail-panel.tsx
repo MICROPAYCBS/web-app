@@ -20,9 +20,15 @@ import {
 } from 'react';
 import { getAuditTrailAction } from '@/actions/audit-trails';
 import { AuditTrailDetailSheet } from '@/components/audit/audit-trail-detail-sheet';
+import { resolvePreviousAuditCommandJson } from '@/lib/fineract/audit-trail-display';
 import { cn } from '@/lib/utils';
 
-export type AuditTrailOpenInput = number | FineractAuditTrailListItem;
+export type AuditTrailOpenContext = {
+  audit: FineractAuditTrailListItem;
+  siblingAudits?: FineractAuditTrailListItem[];
+};
+
+export type AuditTrailOpenInput = number | FineractAuditTrailListItem | AuditTrailOpenContext;
 
 type AuditTrailPanelContextValue = {
   canView: boolean;
@@ -36,14 +42,38 @@ function auditHasCommandPayload(audit: FineractAuditTrailListItem): audit is Fin
   return typeof audit.commandAsJson === 'string';
 }
 
-function resolveAuditId(input: AuditTrailOpenInput): number {
-  return typeof input === 'number' ? input : input.id;
+function isAuditTrailOpenContext(input: AuditTrailOpenInput): input is AuditTrailOpenContext {
+  return typeof input === 'object' && input !== null && 'audit' in input;
+}
+
+function resolveAuditOpenRequest(input: AuditTrailOpenInput): {
+  auditId: number;
+  audit: FineractAuditTrailListItem | null;
+  previousCommandAsJson: string | undefined;
+} {
+  if (typeof input === 'number') {
+    return { auditId: input, audit: null, previousCommandAsJson: undefined };
+  }
+
+  if (isAuditTrailOpenContext(input)) {
+    const previousCommandAsJson = input.siblingAudits?.length
+      ? resolvePreviousAuditCommandJson(input.siblingAudits, input.audit.id)
+      : undefined;
+    return {
+      auditId: input.audit.id,
+      audit: input.audit,
+      previousCommandAsJson
+    };
+  }
+
+  return { auditId: input.id, audit: input, previousCommandAsJson: undefined };
 }
 
 export function AuditTrailPanelProvider({ children }: { children: ReactNode }) {
   const canView = useCan(resolvePermission('system.audit'));
   const [open, setOpen] = useState(false);
   const [audit, setAudit] = useState<FineractAuditTrailDetail | null>(null);
+  const [previousCommandAsJson, setPreviousCommandAsJson] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,20 +87,21 @@ export function AuditTrailPanelProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      const request = resolveAuditOpenRequest(input);
       setOpen(true);
       setError(null);
+      setPreviousCommandAsJson(request.previousCommandAsJson);
 
-      if (typeof input !== 'number' && auditHasCommandPayload(input)) {
-        setAudit(input);
+      if (request.audit && auditHasCommandPayload(request.audit)) {
+        setAudit(request.audit);
         setLoading(false);
         return;
       }
 
-      const auditId = resolveAuditId(input);
       setAudit(null);
       setLoading(true);
 
-      void getAuditTrailAction(auditId).then((result) => {
+      void getAuditTrailAction(request.auditId).then((result) => {
         setLoading(false);
         if (!result.ok) {
           setError(result.message);
@@ -101,11 +132,13 @@ export function AuditTrailPanelProvider({ children }: { children: ReactNode }) {
             setOpen(nextOpen);
             if (!nextOpen) {
               setAudit(null);
+              setPreviousCommandAsJson(undefined);
               setError(null);
               setLoading(false);
             }
           }}
           audit={audit}
+          previousCommandAsJson={previousCommandAsJson}
           loading={loading}
           error={error}
         />
@@ -136,7 +169,13 @@ export function AuditTrailOpenButton({
   className?: string;
 }) {
   const panel = useAuditTrailPanel();
-  const label = children ?? (typeof audit === 'number' ? audit : audit.id);
+  const label =
+    children ??
+    (typeof audit === 'number'
+      ? audit
+      : isAuditTrailOpenContext(audit)
+        ? audit.audit.id
+        : audit.id);
 
   if (!panel.canView) {
     return <span className={cn('tabular-nums', className)}>{label}</span>;

@@ -10,12 +10,14 @@
 
 import type { FineractAuditTrailListItem } from '@mifos/api-client';
 import { ChevronRight } from 'lucide-react';
+import { useMemo } from 'react';
 import { useAuditTrailPanel } from '@/components/audit/audit-trail-panel';
 import { Badge } from '@/components/ui/badge';
 import {
   auditTrailResultVariant,
   formatAuditTrailDateTime,
-  formatAuditTrailFilterLabel
+  formatAuditTrailFilterLabel,
+  sortAuditTrailsChronologically
 } from '@/lib/fineract/audit-trail-display';
 import { cn } from '@/lib/utils';
 
@@ -27,10 +29,15 @@ export function AuditTrailEntryList({
   className?: string;
 }) {
   const { canView, openAuditTrail } = useAuditTrailPanel();
+  const sortedAudits = useMemo(() => sortAuditTrailsChronologically(audits), [audits]);
+
+  const openEntry = (audit: FineractAuditTrailListItem) => {
+    openAuditTrail({ audit, siblingAudits: sortedAudits });
+  };
 
   return (
     <div className={cn('divide-y divide-border rounded-lg border border-border bg-card', className)}>
-      {audits.map((audit) => {
+      {sortedAudits.map((audit, index) => {
         const actionLabel = audit.actionName
           ? formatAuditTrailFilterLabel(audit.actionName)
           : 'Change';
@@ -47,12 +54,13 @@ export function AuditTrailEntryList({
                   'flex min-w-0 flex-1 items-start gap-3 px-4 py-3 text-left',
                   'hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset'
                 )}
-                onClick={() => openAuditTrail(audit)}
+                onClick={() => openEntry(audit)}
               >
                 <AuditTrailEntrySummary
                   audit={audit}
                   actionLabel={actionLabel}
                   entityLabel={entityLabel}
+                  sequence={index + 1}
                 />
               </button>
             ) : (
@@ -61,6 +69,7 @@ export function AuditTrailEntryList({
                   audit={audit}
                   actionLabel={actionLabel}
                   entityLabel={entityLabel}
+                  sequence={index + 1}
                 />
               </div>
             )}
@@ -72,7 +81,7 @@ export function AuditTrailEntryList({
                   'inline-flex shrink-0 items-center gap-1 border-l border-border px-4 py-3 text-sm tabular-nums text-primary',
                   'hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset'
                 )}
-                onClick={() => openAuditTrail(audit)}
+                onClick={() => openEntry(audit)}
               >
                 #{audit.id}
                 <ChevronRight className="size-4 opacity-60" aria-hidden />
@@ -92,15 +101,18 @@ export function AuditTrailEntryList({
 function AuditTrailEntrySummary({
   audit,
   actionLabel,
-  entityLabel
+  entityLabel,
+  sequence
 }: {
   audit: FineractAuditTrailListItem;
   actionLabel: string;
   entityLabel: string;
+  sequence: number;
 }) {
   return (
     <div className="min-w-0 flex-1 space-y-1">
       <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs tabular-nums text-muted-foreground">#{sequence}</span>
         <p className="font-medium">
           {actionLabel} · {entityLabel}
         </p>

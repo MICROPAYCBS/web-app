@@ -18,9 +18,11 @@ import {
 
 export function AuditTrailDetailContent({
   audit,
+  previousCommandAsJson,
   variant = 'full'
 }: {
   audit: FineractAuditTrailDetail;
+  previousCommandAsJson?: string;
   variant?: 'full' | 'fields-only';
 }) {
   const actionLabel = audit.actionName
@@ -66,7 +68,10 @@ export function AuditTrailDetailContent({
 
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Changed fields</h3>
-        <AuditTrailCommandFields commandAsJson={audit.commandAsJson} />
+        <AuditTrailCommandFields
+          commandAsJson={audit.commandAsJson}
+          previousCommandAsJson={previousCommandAsJson}
+        />
       </div>
     </div>
   );
