@@ -204,6 +204,23 @@ export async function listAuditTrailsForSavingsTransaction(
   };
 }
 
+export async function listAuditTrailsForSavingsAccount(
+  accountId: string | number,
+  options?: { limit?: number; offset?: number }
+): Promise<FineractAuditTrailsPage> {
+  return listAuditTrails({
+    offset: options?.offset ?? 0,
+    limit: options?.limit ?? 100,
+    orderBy: 'id',
+    sortOrder: 'desc',
+    entityName: SAVINGS_ACCOUNT_AUDIT_ENTITY,
+    savingsAccountId: String(accountId),
+    includeJson: true,
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  });
+}
+
 export async function listAuditTrailsForClient(
   clientId: string | number,
   options?: { limit?: number; offset?: number }

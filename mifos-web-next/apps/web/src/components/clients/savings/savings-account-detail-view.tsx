@@ -8,10 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractSavingsAccountDetail } from '@mifos/api-client';
-import { AlertTriangle, ArrowRightLeft, FileText, PiggyBank, Receipt } from 'lucide-react';
+import type { FineractAuditTrailListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
+import { AlertTriangle, ArrowRightLeft, FileText, PiggyBank, Receipt, ScrollText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 import {
   DetailBackLink,
   DetailHeader,
@@ -43,13 +44,18 @@ const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
   summary: PiggyBank,
   transactions: ArrowRightLeft,
   statement: FileText,
-  charges: Receipt
+  charges: Receipt,
+  audit: ScrollText
 };
 
 export function SavingsAccountDetailView({
   account,
   clientId,
   permissions,
+  canViewAudits = false,
+  auditEntries = [],
+  auditLoadFailed = false,
+  auditTotalRecords,
   transactionActionPermissions = {
     undoTransaction: false,
     undoTransfer: false,
@@ -60,13 +66,31 @@ export function SavingsAccountDetailView({
   account: FineractSavingsAccountDetail;
   clientId: string;
   permissions: SavingsAccountActionPermissions;
+  canViewAudits?: boolean;
+  auditEntries?: FineractAuditTrailListItem[];
+  auditLoadFailed?: boolean;
+  auditTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
 }) {
-  const sectionIds = SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id);
-  const navItems = SAVINGS_ACCOUNT_SECTIONS.map((section) => ({
-    ...section,
-    icon: SECTION_ICONS[section.id]
-  }));
+  const sectionIds = useMemo(() => {
+    const ids = SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id);
+    if (!canViewAudits) {
+      return ids.filter((id) => id !== 'audit');
+    }
+    return ids;
+  }, [canViewAudits]);
+
+  const navItems = useMemo(
+    () =>
+      SAVINGS_ACCOUNT_SECTIONS.filter((section) => canViewAudits || section.id !== 'audit').map(
+        (section) => ({
+          ...section,
+          icon: SECTION_ICONS[section.id]
+        })
+      ),
+    [canViewAudits]
+  );
+
   const { activeSection, setSection } = useDetailSection(
     sectionIds,
     SAVINGS_ACCOUNT_DEFAULT_SECTION
@@ -165,6 +189,10 @@ export function SavingsAccountDetailView({
         section={activeSection as SavingsAccountSectionId}
         account={account}
         clientId={clientId}
+        canViewAudits={canViewAudits}
+        auditEntries={auditEntries}
+        auditLoadFailed={auditLoadFailed}
+        auditTotalRecords={auditTotalRecords}
         transactionActionPermissions={transactionActionPermissions}
       />
     </DetailPage>

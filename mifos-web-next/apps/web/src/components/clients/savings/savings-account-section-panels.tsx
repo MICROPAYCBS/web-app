@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -27,6 +27,7 @@ import {
   MoneyValue
 } from '@/components/composites';
 import { SavingsTransactionActionsMenu } from '@/components/clients/savings/actions/savings-transaction-actions-menu';
+import { SavingsAccountAuditView } from '@/components/clients/savings/savings-account-audit-view';
 import { SavingsStatementSection } from '@/components/clients/savings/statement';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
@@ -565,6 +566,10 @@ export function SavingsAccountSectionPanel({
   section,
   account,
   clientId,
+  canViewAudits = false,
+  auditEntries = [],
+  auditLoadFailed = false,
+  auditTotalRecords,
   transactionActionPermissions = {
     undoTransaction: false,
     undoTransfer: false,
@@ -575,6 +580,10 @@ export function SavingsAccountSectionPanel({
   section: SavingsAccountSectionId;
   account: FineractSavingsAccountDetail;
   clientId: string;
+  canViewAudits?: boolean;
+  auditEntries?: FineractAuditTrailListItem[];
+  auditLoadFailed?: boolean;
+  auditTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
 }) {
   switch (section) {
@@ -592,6 +601,14 @@ export function SavingsAccountSectionPanel({
       return <SavingsStatementSection account={account} />;
     case 'charges':
       return <SavingsAccountChargesSection account={account} />;
+    case 'audit':
+      return canViewAudits ? (
+        <SavingsAccountAuditView
+          audits={auditEntries}
+          loadFailed={auditLoadFailed}
+          totalRecords={auditTotalRecords}
+        />
+      ) : null;
     default: {
       const _exhaustive: never = section;
       return _exhaustive;

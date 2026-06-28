@@ -18,7 +18,8 @@ export const SAVINGS_ACCOUNT_SECTIONS = [
   { id: 'summary', label: 'Summary' },
   { id: 'transactions', label: 'Transactions' },
   { id: 'statement', label: 'Statement' },
-  { id: 'charges', label: 'Charges' }
+  { id: 'charges', label: 'Charges' },
+  { id: 'audit', label: 'Audit trail' }
 ] as const;
 
 export type SavingsAccountSectionId = (typeof SAVINGS_ACCOUNT_SECTIONS)[number]['id'];

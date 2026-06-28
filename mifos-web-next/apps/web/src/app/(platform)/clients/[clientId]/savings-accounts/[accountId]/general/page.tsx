@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can } from '@mifos/auth';
+import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { SavingsAccountDetailView } from '@/components/clients/savings/savings-account-detail-view';
@@ -19,6 +19,7 @@ import {
   clientGeneralPath
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
+import { listAuditTrailsForSavingsAccount } from '@/lib/fineract/audit-trails';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -64,15 +65,21 @@ export default async function SavingsAccountGeneralPage({
 }) {
   const { clientId, accountId } = await params;
   const session = await getServerSession();
+  const canViewAudits = can(session, resolvePermission('system.audit'));
 
   if (CLIENT_ACCOUNT_RESERVED_IDS.has(accountId)) {
     notFound();
   }
 
-  const result = await tryFineractLoad(
-    () => getSavingsAccount(accountId),
-    'Could not load savings account.'
-  );
+  const [result, auditResult] = await Promise.all([
+    tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
+    canViewAudits
+      ? tryFineractLoad(
+          () => listAuditTrailsForSavingsAccount(accountId),
+          'Could not load audit trail.'
+        )
+      : Promise.resolve(null)
+  ]);
 
   if (!result.ok) {
     return (
@@ -100,12 +107,21 @@ export default async function SavingsAccountGeneralPage({
     notFound();
   }
 
+  const auditEntries =
+    auditResult?.ok && auditResult.data ? auditResult.data.pageItems : [];
+  const auditTotalRecords =
+    auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
+
   return (
     <Suspense fallback={null}>
       <SavingsAccountDetailView
         account={result.data}
         clientId={clientId}
         permissions={savingsAccountPermissions(session)}
+        canViewAudits={canViewAudits}
+        auditEntries={auditEntries}
+        auditLoadFailed={auditResult != null && !auditResult.ok}
+        auditTotalRecords={auditTotalRecords}
         transactionActionPermissions={savingsTransactionActionPermissions(session)}
       />
     </Suspense>
