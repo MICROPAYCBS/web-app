@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   savingsTransactionOffersEdit,
+  savingsTransactionOffersReceipt,
   savingsTransactionOffersUndo,
   savingsTransactionOffersUndoTransfer
 } from './savings-transaction-actions';
@@ -96,6 +97,31 @@ describe('savingsTransactionOffersEdit', () => {
     assert.equal(savingsTransactionOffersEdit(transaction({ transactionType: undefined })), false);
     assert.equal(
       savingsTransactionOffersEdit(transaction({ transactionType: { deposit: false, withdrawal: false } })),
+      false
+    );
+  });
+});
+
+describe('savingsTransactionOffersReceipt', () => {
+  it('allows receipts for manual deposits and withdrawals', () => {
+    assert.equal(
+      savingsTransactionOffersReceipt(
+        transaction({ transactionType: { deposit: true, withdrawal: false } })
+      ),
+      true
+    );
+    assert.equal(
+      savingsTransactionOffersReceipt(
+        transaction({ transactionType: { deposit: false, withdrawal: true } })
+      ),
+      true
+    );
+  });
+
+  it('rejects reversed and transfer transactions', () => {
+    assert.equal(savingsTransactionOffersReceipt(transaction({ reversed: true })), false);
+    assert.equal(
+      savingsTransactionOffersReceipt(transaction({ transfer: { id: 9, reversed: false } })),
       false
     );
   });

@@ -53,14 +53,6 @@ export function savingsAccountTransactionSectionPath(
   return section === 'details' ? base : `${base}?section=${section}`;
 }
 
-export function savingsAccountTransactionReceiptPath(
-  clientId: string,
-  accountId: string | number,
-  transactionId: string | number
-): string {
-  return `/api/clients/${clientId}/savings-accounts/${accountId}/transactions/${transactionId}/receipt`;
-}
-
 export function clientAccountListPath(
   clientId: string | number,
   kind: ClientAccountProductKind

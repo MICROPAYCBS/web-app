@@ -9,7 +9,7 @@
  */
 
 import type { FineractSavingsAccountDetail } from '@mifos/api-client';
-import { AlertTriangle, ArrowRightLeft, PiggyBank, Receipt } from 'lucide-react';
+import { AlertTriangle, ArrowRightLeft, FileText, PiggyBank, Receipt } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -42,6 +42,7 @@ import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings
 const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
   summary: PiggyBank,
   transactions: ArrowRightLeft,
+  statement: FileText,
   charges: Receipt
 };
 

@@ -8,30 +8,56 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { formatMoney, parseAmount } from '@mifos/domain';
 import { formatActionErrorMessage } from '@mifos/validation';
+import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import {
   executeSavingsAccountTransactionCommandAction,
   loadSavingsAccountTransactionSheetDataAction
 } from '@/actions/savings-account-command';
+import {
+  buildSavingsReceiptFromSubmission,
+  SavingsReceiptDownloadButton,
+  type SavingsReceiptData
+} from '@/components/clients/savings/receipt';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
-import { FormSheet } from '@/components/composites/form-sheet';
+import { DOCKED_SHEET_LAYOUT_CLASSNAME } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import {
   emptyPaymentDetailFields,
-  PaymentDetailFields
+  PaymentDetailFields,
+  type PaymentDetailFieldValues
 } from '@/components/composites/payment-detail-fields';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 type DepositWithdrawCommand = 'deposit' | 'withdrawal';
+
+type TransactionSuccessState = {
+  receipt: SavingsReceiptData;
+  amountLabel: string;
+};
 
 export function SavingsAccountTransactionSheet({
   clientId,
   accountId,
+  accountNo,
+  clientName,
+  orgName,
   command,
   currencyCode,
   open,
@@ -39,6 +65,9 @@ export function SavingsAccountTransactionSheet({
 }: {
   clientId: string;
   accountId: number;
+  accountNo: string;
+  clientName?: string;
+  orgName?: string;
   command: DepositWithdrawCommand | null;
   currencyCode: string;
   open: boolean;
@@ -55,9 +84,12 @@ export function SavingsAccountTransactionSheet({
   const [amount, setAmount] = useState('');
   const [paymentTypeId, setPaymentTypeId] = useState('');
   const [note, setNote] = useState('');
-  const [paymentDetails, setPaymentDetails] = useState(emptyPaymentDetailFields);
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetailFieldValues>(
+    emptyPaymentDetailFields()
+  );
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [successState, setSuccessState] = useState<TransactionSuccessState | null>(null);
 
   const isDeposit = command === 'deposit';
   const title = isDeposit ? 'Deposit' : 'Withdraw';
@@ -73,6 +105,7 @@ export function SavingsAccountTransactionSheet({
     setLoading(true);
     setError(null);
     setFieldErrors({});
+    setSuccessState(null);
     setActiveTab('basic');
     setTransactionDate(initialTransactionDate);
     setAmount('');
@@ -107,6 +140,11 @@ export function SavingsAccountTransactionSheet({
     return null;
   }
 
+  function handleClose() {
+    onOpenChange(false);
+    setSuccessState(null);
+  }
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
@@ -136,8 +174,32 @@ export function SavingsAccountTransactionSheet({
         return;
       }
 
-      onOpenChange(false);
       router.refresh();
+
+      const paymentTypeName = paymentTypes.find((row) => String(row.id) === paymentTypeId)?.name;
+      const parsedAmount = parseAmount(amount);
+      const amountLabel =
+        (parsedAmount ? formatMoney(parsedAmount, currencyCode) : null) ??
+        `${currencyCode} ${amount}`;
+
+      if (result.resourceId != null) {
+        const receipt = buildSavingsReceiptFromSubmission({
+          transactionId: result.resourceId,
+          transactionDate,
+          transactionAmount: amount,
+          transactionTypeLabel: isDeposit ? 'Deposit' : 'Withdrawal',
+          paymentTypeName,
+          note: note.trim() || undefined,
+          paymentDetails,
+          account: { accountNo, clientName },
+          currencyCode,
+          orgName
+        });
+        setSuccessState({ receipt, amountLabel });
+        return;
+      }
+
+      handleClose();
     });
   }
 
@@ -204,39 +266,81 @@ export function SavingsAccountTransactionSheet({
   );
 
   return (
-    <FormSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={title}
-      description={description}
-      formId={formId}
-      submitLabel={title}
-      submitLoading={pending}
-      submitDisabled={loading}
-      className="data-[side=right]:sm:max-w-lg"
-    >
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Loading payment types…</p>
-      ) : (
-        <form id={formId} onSubmit={handleSubmit} className="space-y-4">
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => setActiveTab(value as 'basic' | 'advanced')}
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="basic">Basic</TabsTrigger>
-              <TabsTrigger value="advanced">Payment details</TabsTrigger>
-            </TabsList>
-            <TabsContent value="basic" className="mt-4">
-              {basicFields}
-            </TabsContent>
-            <TabsContent value="advanced" className="mt-4">
-              {advancedFields}
-            </TabsContent>
-          </Tabs>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        </form>
-      )}
-    </FormSheet>
+    <Sheet open={open} onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(true) : handleClose())}>
+      <SheetContent
+        side="right"
+        showCloseButton
+        className={cn(
+          DOCKED_SHEET_LAYOUT_CLASSNAME,
+          'data-[side=right]:w-full data-[side=right]:sm:max-w-lg'
+        )}
+      >
+        <SheetHeader className="shrink-0 border-b border-border">
+          <SheetTitle>{successState ? `${title} successful` : title}</SheetTitle>
+          <SheetDescription>
+            {successState
+              ? `Transaction of ${successState.amountLabel} has been processed.`
+              : description}
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          {successState ? (
+            <div className="flex flex-col items-center gap-6 py-4">
+              <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+                <CheckCircle2 className="size-10 text-primary" aria-hidden />
+              </div>
+              <p className="text-center text-sm text-muted-foreground">
+                You can print a receipt now or close this panel and print it later from the
+                transactions list.
+              </p>
+              <SavingsReceiptDownloadButton
+                receipt={successState.receipt}
+                className="w-full"
+                label="Print receipt"
+              />
+            </div>
+          ) : loading ? (
+            <p className="text-sm text-muted-foreground">Loading payment types…</p>
+          ) : (
+            <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as 'basic' | 'advanced')}
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="basic">Basic</TabsTrigger>
+                  <TabsTrigger value="advanced">Payment details</TabsTrigger>
+                </TabsList>
+                <TabsContent value="basic" className="mt-4">
+                  {basicFields}
+                </TabsContent>
+                <TabsContent value="advanced" className="mt-4">
+                  {advancedFields}
+                </TabsContent>
+              </Tabs>
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            </form>
+          )}
+        </div>
+
+        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background">
+          {successState ? (
+            <Button type="button" variant="outline" onClick={handleClose}>
+              Close
+            </Button>
+          ) : (
+            <>
+              <Button type="button" variant="outline" onClick={handleClose} disabled={pending}>
+                Cancel
+              </Button>
+              <Button type="submit" form={formId} disabled={disabled || pending}>
+                {pending ? 'Saving…' : title}
+              </Button>
+            </>
+          )}
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -22,7 +22,8 @@ function clearClientAuthState(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.cancelQueries();
 }
 
-function signOut(queryClient: ReturnType<typeof useQueryClient>) {
+/** Clears client caches and navigates to the logout route handler. */
+export function signOutFromClient(queryClient: ReturnType<typeof useQueryClient>) {
   clearClientAuthState(queryClient);
   window.location.assign(LOGOUT_URL);
 }
@@ -43,7 +44,7 @@ export function SignOutButton({
       type="button"
       variant={variant}
       className={className}
-      onClick={() => signOut(queryClient)}
+      onClick={() => signOutFromClient(queryClient)}
     >
       {children}
     </Button>

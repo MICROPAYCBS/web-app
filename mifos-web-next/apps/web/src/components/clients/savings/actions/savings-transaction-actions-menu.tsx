@@ -11,7 +11,7 @@
 import type { FineractSavingsAccountTransaction } from '@mifos/api-client';
 import { BookOpen, Eye, MoreHorizontal, Pencil, Receipt, Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   SavingsTransactionEditSheet
 } from '@/components/clients/savings/actions/savings-transaction-edit-sheet';
@@ -19,6 +19,10 @@ import {
   SavingsTransactionUndoDialog,
   type SavingsTransactionUndoDialogKind
 } from '@/components/clients/savings/actions/savings-transaction-undo-dialog';
+import {
+  buildSavingsReceiptFromTransaction,
+  SavingsReceiptDownloadMenuItem
+} from '@/components/clients/savings/receipt';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -29,11 +33,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   savingsAccountTransactionPath,
-  savingsAccountTransactionReceiptPath,
   savingsAccountTransactionSectionPath
 } from '@/lib/fineract/client-account-links';
 import {
   savingsTransactionOffersEdit,
+  savingsTransactionOffersReceipt,
   savingsTransactionOffersUndo,
   savingsTransactionOffersUndoTransfer,
   type SavingsTransactionActionPermissions
@@ -42,6 +46,9 @@ import {
 export function SavingsTransactionActionsMenu({
   clientId,
   accountId,
+  accountNo,
+  clientName,
+  orgName,
   transaction,
   permissions,
   currencyCode,
@@ -50,6 +57,9 @@ export function SavingsTransactionActionsMenu({
 }: {
   clientId: string;
   accountId: string | number;
+  accountNo: string;
+  clientName?: string;
+  orgName?: string;
   transaction: FineractSavingsAccountTransaction;
   permissions: SavingsTransactionActionPermissions;
   currencyCode: string;
@@ -63,12 +73,20 @@ export function SavingsTransactionActionsMenu({
   const [editOpen, setEditOpen] = useState(false);
 
   const canEdit = permissions.modifyTransaction && savingsTransactionOffersEdit(transaction);
-
-  const receiptHref = savingsAccountTransactionReceiptPath(
-    clientId,
-    accountId,
-    transaction.id
+  const canPrintReceipt = savingsTransactionOffersReceipt(transaction);
+  const receipt = useMemo(
+    () =>
+      canPrintReceipt
+        ? buildSavingsReceiptFromTransaction(
+            transaction,
+            { accountNo, clientName },
+            currencyCode,
+            orgName
+          )
+        : null,
+    [accountNo, canPrintReceipt, clientName, currencyCode, orgName, transaction]
   );
+
   const journalHref = savingsAccountTransactionSectionPath(
     clientId,
     accountId,
@@ -125,16 +143,16 @@ export function SavingsTransactionActionsMenu({
           ) : null}
           {(canEdit ||
             (permissions.undoTransaction && savingsTransactionOffersUndo(transaction)) ||
-            (permissions.undoTransfer && savingsTransactionOffersUndoTransfer(transaction))) ? (
+            (permissions.undoTransfer && savingsTransactionOffersUndoTransfer(transaction))) &&
+          canPrintReceipt ? (
             <DropdownMenuSeparator />
           ) : null}
-          <DropdownMenuItem
-            className="whitespace-nowrap"
-            onClick={() => window.open(receiptHref, '_blank', 'noopener,noreferrer')}
-          >
-            <Receipt className="size-4" aria-hidden />
-            View receipt
-          </DropdownMenuItem>
+          {canPrintReceipt && receipt ? (
+            <SavingsReceiptDownloadMenuItem receipt={receipt}>
+              <Receipt className="size-4" aria-hidden />
+              Print receipt
+            </SavingsReceiptDownloadMenuItem>
+          ) : null}
           {permissions.viewJournal ? (
             <DropdownMenuItem
               className="whitespace-nowrap"

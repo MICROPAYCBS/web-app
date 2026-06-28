@@ -17,6 +17,7 @@ import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 export const SAVINGS_ACCOUNT_SECTIONS = [
   { id: 'summary', label: 'Summary' },
   { id: 'transactions', label: 'Transactions' },
+  { id: 'statement', label: 'Statement' },
   { id: 'charges', label: 'Charges' }
 ] as const;
 

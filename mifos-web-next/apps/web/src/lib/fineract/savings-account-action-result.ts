@@ -7,5 +7,5 @@
  */
 
 export type SavingsAccountActionResult =
-  | { ok: true }
+  | { ok: true; resourceId?: number }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };

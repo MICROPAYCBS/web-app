@@ -19,8 +19,25 @@ Fineract **basic authentication** via the app BFF. The browser never calls `POST
 | Content | JSON `ServerSession` (secrets stay httpOnly) |
 | Default TTL | 8 hours |
 | Remember me | 14 days |
+| Idle sign-out | **15 minutes** of inactivity (client-side); warning **60 seconds** before sign-out |
 
 Public fields exposed to React via `getPublicSession()` / `SessionProvider` (no auth key).
+
+## Idle session timeout
+
+Authenticated pages mount `InactivityTimeout` in the platform shell. After a period without mouse, keyboard, scroll, or touch activity:
+
+1. A warning toast appears (`Stay logged in` to extend the session).
+2. If the user does not confirm, the app clears client caches and navigates to `/api/auth/logout`.
+
+While the warning is visible, further pointer or keyboard activity does **not** extend the session — the user must click **Stay logged in** (same behavior as bankayo).
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES` | `15` | Minutes until idle sign-out; set `0` to disable |
+| `NEXT_PUBLIC_SESSION_IDLE_WARNING_SECONDS` | `60` | Warning period before sign-out |
+
+This is independent of the httpOnly cookie TTL (8h / 14d): idle sign-out can end a session before the cookie expires.
 
 ## Preview / dev
 
@@ -57,6 +74,7 @@ Client-side TanStack Query caches are cleared before navigating to `/api/auth/lo
 |-------|----------|
 | Fineract login | `apps/web/src/lib/fineract/authenticate.ts` |
 | Cookie helpers | `apps/web/src/lib/session/cookie.ts` |
+| Idle timeout | `apps/web/src/components/auth/inactivity-timeout.tsx` |
 | Login Route Handler | `apps/web/src/app/api/auth/login/route.ts` |
 | Legacy server action | `apps/web/src/actions/auth.ts` |
 | Login UI | `apps/web/src/components/auth/login-form.tsx` |

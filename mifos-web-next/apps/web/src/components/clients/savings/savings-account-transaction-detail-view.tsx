@@ -159,6 +159,9 @@ export function SavingsAccountTransactionDetailView({
             <SavingsTransactionActionsMenu
               clientId={clientId}
               accountId={account.id}
+              accountNo={account.accountNo}
+              clientName={account.clientName}
+              orgName={account.officeName}
               transaction={transaction}
               currencyCode={savingsTransactionCurrencyCode(transaction) ?? savingsAccountCurrencyCode(account)}
               permissions={{

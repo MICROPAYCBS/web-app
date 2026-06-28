@@ -17,6 +17,7 @@ import { NavigationProvider } from '@/components/platform/navigation-provider';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
 import type { BusinessDateContextValue } from '@/lib/fineract/business-date-context';
 import { ErrorBoundary } from '@/components/composites/error-boundary';
+import { InactivityTimeout } from '@/components/auth/inactivity-timeout';
 import { AuditTrailPanelProvider } from '@/components/audit';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
@@ -42,6 +43,7 @@ export function PlatformShell({
 }) {
   return (
     <BusinessDateProvider value={businessDateContext}>
+      <InactivityTimeout />
       <NavigationProvider nav={nav}>
         <EntitySearchProvider>
           <AuditTrailPanelProvider>

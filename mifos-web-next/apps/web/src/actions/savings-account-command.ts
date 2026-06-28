@@ -417,7 +417,7 @@ export async function executeSavingsAccountTransactionCommandAction(
   }
 
   try {
-    await executeSavingsAccountTransaction(
+    const response = await executeSavingsAccountTransaction(
       accountId,
       command,
       buildFineractCommandBody(
@@ -435,7 +435,7 @@ export async function executeSavingsAccountTransactionCommandAction(
       )
     );
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true };
+    return { ok: true, resourceId: response.resourceId };
   } catch (error) {
     return toFineractActionError(error, 'Could not complete transaction.');
   }

@@ -27,6 +27,7 @@ import {
   MoneyValue
 } from '@/components/composites';
 import { SavingsTransactionActionsMenu } from '@/components/clients/savings/actions/savings-transaction-actions-menu';
+import { SavingsStatementSection } from '@/components/clients/savings/statement';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
@@ -359,6 +360,9 @@ function buildTransactionColumns(
         <SavingsTransactionActionsMenu
           clientId={clientId}
           accountId={account.id}
+          accountNo={account.accountNo}
+          clientName={account.clientName}
+          orgName={account.officeName}
           transaction={row.original}
           currencyCode={currency}
           permissions={transactionActionPermissions}
@@ -584,6 +588,8 @@ export function SavingsAccountSectionPanel({
           transactionActionPermissions={transactionActionPermissions}
         />
       );
+    case 'statement':
+      return <SavingsStatementSection account={account} />;
     case 'charges':
       return <SavingsAccountChargesSection account={account} />;
     default: {

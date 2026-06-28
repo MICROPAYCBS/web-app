@@ -430,6 +430,9 @@ export function SavingsAccountActions({
       <SavingsAccountTransactionSheet
         clientId={clientId}
         accountId={account.id}
+        accountNo={account.accountNo}
+        clientName={account.clientName}
+        orgName={account.officeName}
         command={transactionCommand}
         currencyCode={currencyCode}
         open={transactionCommand !== null}

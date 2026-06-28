@@ -53,3 +53,17 @@ export function savingsTransactionOffersEdit(
   }
   return type.deposit === true || type.withdrawal === true;
 }
+
+/** Printable receipt for manual deposits and withdrawals (not transfers). */
+export function savingsTransactionOffersReceipt(
+  transaction: FineractSavingsAccountTransaction
+): boolean {
+  if (transaction.reversed || transaction.transfer) {
+    return false;
+  }
+  const type = transaction.transactionType;
+  if (!type) {
+    return false;
+  }
+  return type.deposit === true || type.withdrawal === true;
+}
