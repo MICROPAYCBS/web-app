@@ -45,3 +45,17 @@ Customer edit already diffs against an `initial` snapshot before calling Finerac
 - Edit forms need `initialForm` state alongside `form`.
 - Each resource needs unit tests for diff builders.
 - See `apps/web/src/lib/fineract/build-update-client-payload.ts` and `packages/validation/src/organization/customer-class.schema.ts` as reference implementations.
+
+## Backend follow-up (Fineract)
+
+**Todo:** Update `ClientDataValidator.validateForUpdate` so Micropay extension fields count toward `atLeastOneParameterPassedForUpdate` (same as the write service already applies them). Affected parameters include at least:
+
+- `maritalStatusId`
+- `titleId`
+- `customerClassId`
+- `subIndustryId`
+- `nationalityCountryId`
+- `customerRiskProfileId`
+- `emailAddress`
+
+Until that lands, customer edit uses a frontend workaround (`attachFineractClientUpdateValidatorAnchor` in `build-update-client-payload.ts`): when the diff contains only validator-unrecognized keys, the PUT body also includes unchanged `legalFormId` and name fields so validation passes. The write service’s `isChangeIn*` checks keep those out of the audit trail. **Remove the anchor once Fineract is fixed.**

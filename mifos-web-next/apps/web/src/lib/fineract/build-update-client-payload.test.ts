@@ -50,12 +50,23 @@ describe('buildUpdateClientPayload', () => {
     const current = personBase({ maritalStatusId: 2, mobileNo: '+256700000000' });
     const payload = buildUpdateClientPayload(current, { initial });
 
-    assert.deepEqual(Object.keys(payload).sort(), ['maritalStatusId', 'mobileNo']);
+    assert.deepEqual(Object.keys(payload).sort(), ['locale', 'maritalStatusId', 'mobileNo']);
     assert.equal(payload.maritalStatusId, 2);
     assert.equal(payload.mobileNo, '+256700000000');
+    assert.equal(payload.locale, 'en');
     assert.equal(payload.activationDate, undefined);
     assert.equal(payload.active, undefined);
     assert.equal(payload.submittedOnDate, undefined);
+  });
+
+  it('always includes locale on update', () => {
+    const initial = personBase();
+    const current = personBase({ lastname: 'Mukasa' });
+    const payload = buildUpdateClientPayload(current, { initial });
+
+    assert.equal(payload.locale, 'en');
+    assert.equal(payload.lastname, 'Mukasa');
+    assert.equal('dateFormat' in payload, false);
   });
 
   it('does not send active or activationDate when only other fields change', () => {
@@ -90,6 +101,7 @@ describe('buildUpdateClientPayload', () => {
 
     assert.equal(payload.maritalStatusId, 2);
     assert.equal(payload.legalFormId, LEGAL_FORM_PERSON);
+    assert.equal(payload.locale, 'en');
     assert.equal(payload.firstname, 'William');
     assert.equal(payload.lastname, 'Lubwama');
     assert.equal(payload.middlename, '');
@@ -103,6 +115,7 @@ describe('buildUpdateClientPayload', () => {
 
     assert.equal(payload.titleId, 2);
     assert.equal(payload.legalFormId, LEGAL_FORM_PERSON);
+    assert.equal(payload.locale, 'en');
     assert.equal(payload.firstname, 'William');
     assert.equal(payload.lastname, 'Lubwama');
     assert.equal('genderId' in payload, false);

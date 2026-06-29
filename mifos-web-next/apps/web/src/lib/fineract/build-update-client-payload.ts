@@ -152,6 +152,8 @@ function payloadHasFineractValidatorParam(payload: Record<string, unknown>): boo
  * Fineract rejects PUT bodies that only contain extension fields with
  * "No parameters passed for update." Anchor with unchanged legal form + name fields
  * so validation passes; the write service skips unchanged values in the audit trail.
+ *
+ * Backend follow-up: fix `ClientDataValidator.validateForUpdate` — see ADR-014.
  */
 function attachFineractClientUpdateValidatorAnchor(
   payload: Record<string, unknown>,
@@ -291,5 +293,9 @@ export function buildUpdateClientPayload(
   }
 
   attachFineractClientUpdateValidatorAnchor(payload, input);
+
+  const dateCtx = resolveFineractDateContext(input);
+  payload.locale = dateCtx.locale;
+
   return payload;
 }
