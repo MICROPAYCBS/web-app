@@ -11,7 +11,6 @@ import 'server-only';
 import { cache } from 'react';
 
 import type {
-  FineractAddressFieldConfig,
   FineractClientDetail,
   FineractClientsPage,
   FineractClientTemplate,
@@ -21,6 +20,7 @@ import type { CreateClientPayload, UpdateClientPayload } from '@mifos/validation
 import { buildCreateClientPayload } from '@/lib/fineract/build-create-client-payload';
 import { buildUpdateClientPayload } from '@/lib/fineract/build-update-client-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
+export { getAddressFieldConfiguration } from '@/lib/fineract/field-configuration';
 
 export interface ListClientsParams {
   offset?: number;
@@ -54,11 +54,6 @@ export async function getClientTemplate(officeId?: number): Promise<FineractClie
       ? { officeId: String(officeId), staffInSelectedOfficeOnly: 'true' }
       : undefined;
   return fineract.get<FineractClientTemplate>('/clients/template', searchParams);
-}
-
-export async function getAddressFieldConfiguration(): Promise<FineractAddressFieldConfig[]> {
-  const fineract = await createFineractClient();
-  return fineract.get<FineractAddressFieldConfig[]>('/fieldconfiguration/ADDRESS');
 }
 
 export async function createClient(

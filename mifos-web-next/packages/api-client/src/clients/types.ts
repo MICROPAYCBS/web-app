@@ -114,10 +114,18 @@ export interface FineractClientTemplate {
   locale?: string;
 }
 
-export interface FineractAddressFieldConfig {
+export interface FineractFieldConfiguration {
+  fieldConfigurationId: number;
+  entity: string;
+  subentity: string;
   field: string;
   isEnabled: boolean;
+  isMandatory: boolean;
+  validationRegex: string;
 }
+
+/** Address field gates ({@code GET /fieldconfiguration/ADDRESS}). */
+export type FineractAddressFieldConfig = FineractFieldConfiguration;
 
 export interface FineractClientAddress {
   /** {@code m_address.id} — required for Fineract PUT /client/{id}/addresses updates. */

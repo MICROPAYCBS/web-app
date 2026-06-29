@@ -219,6 +219,26 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'orgAddressFieldConfiguration',
+    path: '/organization/address-field-configuration',
+    label: 'Address field configuration',
+    navGroup: 'organization',
+    webAppRef: 'organization/address-field-configuration',
+    permissionKey: 'organization.addressFieldConfiguration',
+    navOrder: 119,
+    navIcon: 'map',
+    keywords: [
+      'address field',
+      'field configuration',
+      'gps',
+      'latitude',
+      'longitude',
+      'mandatory',
+      'validation regex'
+    ],
+    parityStatus: 'done'
+  },
+  {
     id: 'orgPasswordPreferences',
     path: '/organization/password-preferences',
     label: 'Password preferences',

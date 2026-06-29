@@ -407,6 +407,11 @@
       "DELETE_IDENTITYTYPE"
     ]
   },
+  "organization.addressFieldConfiguration": {
+    "any": [
+      "READ_ADDRESS"
+    ]
+  },
   "organization.passwordPreferences": {
     "any": [
       "READ_CONFIGURATION"

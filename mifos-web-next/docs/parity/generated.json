@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-25T12:16:55.098Z",
+  "generatedAt": "2026-06-29T13:35:01.518Z",
   "summary": {
     "todo": 4,
     "in_progress": 21,
-    "done": 54,
+    "done": 56,
     "n/a": 0
   },
   "routes": [
@@ -359,6 +359,24 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "organization/contact-types"
+    },
+    {
+      "id": "orgIdentityTypes",
+      "path": "/organization/identity-types",
+      "domain": "organization",
+      "label": "Identity type guides",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/identity-types"
+    },
+    {
+      "id": "orgAddressFieldConfiguration",
+      "path": "/organization/address-field-configuration",
+      "domain": "organization",
+      "label": "Address field configuration",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/address-field-configuration"
     },
     {
       "id": "orgPasswordPreferences",
