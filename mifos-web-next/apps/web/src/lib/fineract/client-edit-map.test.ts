@@ -63,4 +63,27 @@ describe('mapClientToEditFormInput', () => {
     );
     assert.equal(form.activationDate, '20 January 2025');
   });
+
+  it('falls back activation date to submitted on when active client has no activation in API', () => {
+    const form = mapClientToEditFormInput(
+      baseClient({
+        timeline: { submittedOnDate: [2026, 6, 21] }
+      })
+    );
+    assert.equal(form.active, true);
+    assert.equal(form.submittedOnDate, '21 June 2026');
+    assert.equal(form.activationDate, '21 June 2026');
+  });
+
+  it('normalizes local mobile numbers to international format', () => {
+    const form = mapClientToEditFormInput(
+      baseClient({
+        mobileNo: '0789456123',
+        alternativeMobileNo: '0756667445',
+        timeline: { submittedOnDate: [2024, 3, 1] }
+      })
+    );
+    assert.equal(form.mobileNo, '+256789456123');
+    assert.equal(form.alternativeMobileNo, '+256756667445');
+  });
 });

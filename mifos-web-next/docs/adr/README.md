@@ -17,3 +17,4 @@ Internal notes for the solo maintainer. Not community governance.
 | [011](011-data-tables-list-screens.md) | Data tables and list screens (TanStack + composites) |
 | [012](012-quick-create-client.md) | Quick Create — prominent client creation in sidebar |
 | [013](013-read-only-detail-pages.md) | Read-only detail pages (key/value) |
+| [014](014-partial-put-updates.md) | Partial PUT updates (clean audit trail) |

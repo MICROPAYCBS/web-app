@@ -134,7 +134,7 @@ export function EditClientSheet({
     }
 
     startTransition(async () => {
-      const result = await updateClientAction(clientId, form, initialForm);
+      const result = await updateClientAction(clientId, form);
       if (!result.ok) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {

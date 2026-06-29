@@ -74,5 +74,11 @@ export const updateClientSchema = z
     }
   });
 
+/** Baseline for diffing against Fineract — no submit-time refinements (e.g. marital status). */
+export const updateClientDiffBaselineSchema = z.discriminatedUnion('legalFormId', [
+  updatePersonSchema,
+  updateEntitySchema
+]);
+
 export type UpdateClientInput = z.input<typeof updateClientSchema>;
 export type UpdateClientPayload = z.output<typeof updateClientSchema>;

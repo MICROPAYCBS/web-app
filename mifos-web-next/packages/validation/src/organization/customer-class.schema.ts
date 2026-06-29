@@ -8,6 +8,12 @@
 
 import { z } from 'zod';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '../clients/legal-form';
+import {
+  booleansEqual,
+  EmptyUpdatePayloadError,
+  optionalIdsEqual,
+  trimOptionalString
+} from '../partial-update';
 
 const createCustomerTypeSchema = z.enum(['GROUP', 'JOINT']);
 const updateCustomerTypeSchema = z.enum(['INDIVIDUAL', 'CORPORATE', 'GROUP', 'JOINT']);
@@ -176,41 +182,169 @@ export function buildUpsertCustomerClassPayload(
   };
 }
 
+function putRequiredString(
+  payload: Record<string, unknown>,
+  key: string,
+  current: string,
+  initial: string
+): void {
+  if (trimOptionalString(current) === trimOptionalString(initial)) {
+    return;
+  }
+  payload[key] = trimOptionalString(current);
+}
+
+function putOptionalStringOrNull(
+  payload: Record<string, unknown>,
+  key: string,
+  current: string | undefined,
+  initial: string | undefined
+): void {
+  const currentValue = trimOptionalString(current);
+  const initialValue = trimOptionalString(initial);
+  if (currentValue === initialValue) {
+    return;
+  }
+  payload[key] = currentValue === '' ? null : currentValue;
+}
+
+function putOptionalIdOrNull(
+  payload: Record<string, unknown>,
+  key: string,
+  current: number | undefined,
+  initial: number | undefined
+): void {
+  if (optionalIdsEqual(current, initial)) {
+    return;
+  }
+  payload[key] = current ?? null;
+}
+
+function putOptionalEnumOrNull<T extends string>(
+  payload: Record<string, unknown>,
+  key: string,
+  current: T | undefined,
+  initial: T | undefined
+): void {
+  if (current === initial) {
+    return;
+  }
+  payload[key] = current ?? null;
+}
+
+function putBooleanIfChanged(
+  payload: Record<string, unknown>,
+  key: string,
+  current: boolean | undefined,
+  initial: boolean | undefined
+): void {
+  if (booleansEqual(current, initial)) {
+    return;
+  }
+  payload[key] = current ?? false;
+}
+
+/**
+ * Fineract customer class updates are patch-style: omitted keys are left unchanged.
+ * Returns `null` when there is nothing to send.
+ */
+export function diffUpdateCustomerClassPayload(
+  input: UpdateCustomerClassPayload,
+  options: { initial: UpdateCustomerClassPayload }
+): Record<string, unknown> | null {
+  const { initial } = options;
+  const payload: Record<string, unknown> = {};
+
+  putRequiredString(payload, 'classCode', input.classCode, initial.classCode);
+  putRequiredString(payload, 'className', input.className, initial.className);
+  putOptionalStringOrNull(payload, 'description', input.description, initial.description);
+
+  if (input.legalFormId !== initial.legalFormId) {
+    payload.legalFormId = input.legalFormId;
+  }
+
+  putOptionalEnumOrNull(payload, 'customerType', input.customerType, initial.customerType);
+  putOptionalEnumOrNull(payload, 'riskLevel', input.riskLevel, initial.riskLevel);
+  putOptionalEnumOrNull(payload, 'kycLevel', input.kycLevel, initial.kycLevel);
+  putOptionalIdOrNull(payload, 'restrictionId', input.restrictionId, initial.restrictionId);
+
+  putBooleanIfChanged(payload, 'loanEligible', input.loanEligible, initial.loanEligible);
+  putBooleanIfChanged(payload, 'overdraftAllowed', input.overdraftAllowed, initial.overdraftAllowed);
+  putBooleanIfChanged(
+    payload,
+    'enhancedDueDiligence',
+    input.enhancedDueDiligence,
+    initial.enhancedDueDiligence
+  );
+  putBooleanIfChanged(
+    payload,
+    'reclassificationAllowed',
+    input.reclassificationAllowed,
+    initial.reclassificationAllowed
+  );
+  putBooleanIfChanged(payload, 'enforceCustPhoto', input.enforceCustPhoto, initial.enforceCustPhoto);
+  putBooleanIfChanged(
+    payload,
+    'enforceCustSignature',
+    input.enforceCustSignature,
+    initial.enforceCustSignature
+  );
+  putBooleanIfChanged(
+    payload,
+    'enforceCustDocument',
+    input.enforceCustDocument,
+    initial.enforceCustDocument
+  );
+  putBooleanIfChanged(payload, 'autoCreateAccount', input.autoCreateAccount, initial.autoCreateAccount);
+
+  if (input.status !== initial.status) {
+    payload.status = input.status;
+  }
+
+  const isPerson = input.legalFormId === LEGAL_FORM_PERSON;
+  const wasPerson = initial.legalFormId === LEGAL_FORM_PERSON;
+
+  if (isPerson) {
+    putOptionalIdOrNull(payload, 'minAge', input.minAge, initial.minAge);
+    putOptionalIdOrNull(payload, 'maxAge', input.maxAge, initial.maxAge);
+  } else if (wasPerson && !isPerson) {
+    if (initial.minAge != null) {
+      payload.minAge = null;
+    }
+    if (initial.maxAge != null) {
+      payload.maxAge = null;
+    }
+  }
+
+  if (Object.keys(payload).length === 0) {
+    return null;
+  }
+
+  return payload;
+}
+
+export function hasUpdateCustomerClassChanges(
+  input: UpdateCustomerClassInput,
+  options: { initial: UpdateCustomerClassInput }
+): boolean {
+  return (
+    diffUpdateCustomerClassPayload(input as UpdateCustomerClassPayload, {
+      initial: options.initial as UpdateCustomerClassPayload
+    }) !== null
+  );
+}
+
 /**
  * Fineract customer class updates are patch-style: omitted keys are left unchanged.
  * Send explicit `null` to clear optional fields the user removed.
  */
 export function buildUpdateCustomerClassPayload(
   input: UpdateCustomerClassPayload,
-  clear: CustomerClassUpdateClearFields
+  options: { initial: UpdateCustomerClassPayload }
 ): Record<string, unknown> {
-  const payload: Record<string, unknown> = {
-    ...input,
-    description: input.description?.trim() || undefined,
-    restrictionId: input.restrictionId || undefined
-  };
-
-  if (clear.description) {
-    payload.description = null;
+  const payload = diffUpdateCustomerClassPayload(input, options);
+  if (!payload) {
+    throw new EmptyUpdatePayloadError('No customer class fields were modified.');
   }
-  if (clear.customerType) {
-    payload.customerType = null;
-  }
-  if (clear.riskLevel) {
-    payload.riskLevel = null;
-  }
-  if (clear.kycLevel) {
-    payload.kycLevel = null;
-  }
-  if (clear.restrictionId) {
-    payload.restrictionId = null;
-  }
-  if (clear.minAge) {
-    payload.minAge = null;
-  }
-  if (clear.maxAge) {
-    payload.maxAge = null;
-  }
-
   return payload;
 }

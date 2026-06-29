@@ -13,6 +13,7 @@ export {
   UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER,
   UGANDA_MOBILE_INTERNATIONAL_REGEX,
   isValidUgandaMobileInternational,
+  normalizeUgandaMobileInternational,
   optionalUgandaMobileInternationalSchema,
   ugandaMobileInternationalSchema
 } from './uganda-mobile';
@@ -60,6 +61,7 @@ export {
   setClientAddressPrimary
 } from './clients/client-address-primary';
 export {
+  updateClientDiffBaselineSchema,
   updateClientSchema,
   type UpdateClientInput,
   type UpdateClientPayload
@@ -611,6 +613,8 @@ export {
   buildUpdateCustomerClassPayload,
   buildUpsertCustomerClassPayload,
   createCustomerClassSchema,
+  diffUpdateCustomerClassPayload,
+  hasUpdateCustomerClassChanges,
   parseCreateCustomerTypeField,
   parseCustomerClassKycLevelField,
   parseCustomerClassLegalFormId,
@@ -628,6 +632,13 @@ export {
   type UpsertCustomerClassInput,
   type UpsertCustomerClassPayload
 } from './organization/customer-class.schema';
+export {
+  booleansEqual,
+  EmptyUpdatePayloadError,
+  optionalIdsEqual,
+  optionalStringsEqual,
+  trimOptionalString
+} from './partial-update';
 export {
   buildUpdateCustomerTitlePayload,
   buildUpsertCustomerTitlePayload,

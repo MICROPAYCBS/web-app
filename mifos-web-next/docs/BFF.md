@@ -48,6 +48,10 @@ FINERACT_TENANT_ID=default
 
 Do **not** use `NEXT_PUBLIC_FINERACT_*`.
 
+## Partial PUT updates
+
+Fineract `PUT` bodies are patch-style: send only fields that changed (see [ADR-014](adr/014-partial-put-updates.md)). Diff builders live in `@mifos/validation` or `apps/web/src/lib/fineract/`; reference implementations: customer edit (`build-update-client-payload.ts`), customer class (`customer-class.schema.ts`).
+
 ## Adding an endpoint
 
 1. Register RBAC in `permissions.manifest.json` if needed.

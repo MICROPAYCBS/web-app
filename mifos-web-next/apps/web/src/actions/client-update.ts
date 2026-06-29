@@ -10,12 +10,14 @@
 
 import { assertCan, resolvePermission } from '@mifos/auth';
 import {
+  updateClientDiffBaselineSchema,
   updateClientSchema,
-  toFineractActionError,
-  type UpdateClientInput
+  toFineractActionError
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { EmptyUpdatePayloadError } from '@/lib/fineract/partial-update-payload';
+import { getClientForEdit } from '@/lib/fineract/client-edit';
+import { mapClientToEditFormInput } from '@/lib/fineract/client-edit-map';
 import { updateClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 
@@ -25,8 +27,7 @@ export type UpdateClientActionResult =
 
 export async function updateClientAction(
   clientId: string,
-  raw: unknown,
-  initialSnapshot: UpdateClientInput
+  raw: unknown
 ): Promise<UpdateClientActionResult> {
   const session = await getServerSession();
   if (!session) {
@@ -55,11 +56,18 @@ export async function updateClientAction(
     };
   }
 
-  const initialParsed = updateClientSchema.safeParse(initialSnapshot);
-  if (!initialParsed.success) {
-    return { ok: false, message: 'Could not verify customer changes.' };
+  let initial;
+  try {
+    const editData = await getClientForEdit(clientId);
+    const initialMapped = mapClientToEditFormInput(editData);
+    const initialParsed = updateClientDiffBaselineSchema.safeParse(initialMapped);
+    if (!initialParsed.success) {
+      return { ok: false, message: 'Could not load customer baseline for update.' };
+    }
+    initial = initialParsed.data;
+  } catch {
+    return { ok: false, message: 'Could not load customer details for update.' };
   }
-  const initial = initialParsed.data;
 
   if (initial.staffId && !parsed.data.staffId) {
     return {

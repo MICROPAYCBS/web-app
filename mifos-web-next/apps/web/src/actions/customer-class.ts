@@ -13,11 +13,11 @@ import {
   toFineractActionError,
   validateCreateCustomerClass,
   validateUpdateCustomerClass,
-  type CustomerClassUpdateClearFields,
   type UpdateCustomerClassInput,
   type UpsertCustomerClassInput
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
+import { EmptyUpdatePayloadError } from '@/lib/fineract/partial-update-payload';
 import {
   CUSTOMER_CLASS_LIST_PATH,
   customerClassEditPath,
@@ -84,7 +84,7 @@ export async function createCustomerClassAction(
 export async function updateCustomerClassAction(
   customerClassId: number,
   input: UpdateCustomerClassInput,
-  clear: CustomerClassUpdateClearFields
+  initialSnapshot: UpdateCustomerClassInput
 ): Promise<CustomerClassActionResult> {
   const session = await getServerSession();
   try {
@@ -102,11 +102,21 @@ export async function updateCustomerClassAction(
     };
   }
 
+  const initialParsed = validateUpdateCustomerClass(initialSnapshot);
+  if (!initialParsed.success) {
+    return { ok: false, message: 'Could not verify customer class changes.' };
+  }
+
   try {
-    const response = await updateCustomerClass(customerClassId, parsed.data, clear);
+    const response = await updateCustomerClass(customerClassId, parsed.data, {
+      initial: initialParsed.data
+    });
     revalidateCustomerClassViews(response.resourceId);
     return { ok: true, resourceId: response.resourceId };
   } catch (error) {
+    if (error instanceof EmptyUpdatePayloadError) {
+      return { ok: false, message: error.message };
+    }
     return toFineractActionError(error, 'Failed to update customer class.');
   }
 }

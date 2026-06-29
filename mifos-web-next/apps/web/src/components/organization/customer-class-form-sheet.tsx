@@ -13,18 +13,18 @@ import {
   formatActionErrorMessage,
   LEGAL_FORM_ENTITY,
   LEGAL_FORM_PERSON,
+  hasUpdateCustomerClassChanges,
   parseCreateCustomerTypeField,
   parseCustomerClassKycLevelField,
   parseCustomerClassLegalFormId,
   parseCustomerClassRiskLevelField,
   parseCustomerClassStatusField,
   parseUpdateCustomerTypeField,
-  type CustomerClassUpdateClearFields,
   type UpdateCustomerClassInput,
   type UpsertCustomerClassInput
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useEffect, useId, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   createCustomerClassAction,
@@ -197,21 +197,6 @@ function buildSharedSubmitFields(
   };
 }
 
-function buildUpdateClearFields(
-  form: CustomerClassFormState,
-  isPersonLegalForm: boolean
-): CustomerClassUpdateClearFields {
-  return {
-    description: !form.description.trim(),
-    customerType: !form.customerType,
-    riskLevel: !form.riskLevel,
-    kycLevel: !form.kycLevel,
-    restrictionId: !form.restrictionId,
-    minAge: !isPersonLegalForm || !form.minAge.trim(),
-    maxAge: !isPersonLegalForm || !form.maxAge.trim()
-  };
-}
-
 export function CustomerClassFormSheet({
   open,
   onOpenChange,
@@ -230,6 +215,7 @@ export function CustomerClassFormSheet({
   const [form, setForm] = useState<CustomerClassFormState>(() =>
     customerClass ? formStateFromCustomerClass(customerClass) : defaultFormState()
   );
+  const [initialForm, setInitialForm] = useState<CustomerClassFormState | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -243,22 +229,37 @@ export function CustomerClassFormSheet({
     if (!open) {
       return;
     }
-    setForm(customerClass ? formStateFromCustomerClass(customerClass) : defaultFormState());
+    const nextForm = customerClass ? formStateFromCustomerClass(customerClass) : defaultFormState();
+    setForm(nextForm);
+    setInitialForm(mode === 'edit' ? nextForm : null);
     setFieldErrors({});
     setSubmitError(null);
-  }, [open, editSnapshot]);
+  }, [open, editSnapshot, mode, customerClass]);
 
   function handleOpenChange(next: boolean) {
     if (pending) {
       return;
     }
     if (next) {
-      setForm(customerClass ? formStateFromCustomerClass(customerClass) : defaultFormState());
+      const nextForm = customerClass ? formStateFromCustomerClass(customerClass) : defaultFormState();
+      setForm(nextForm);
+      setInitialForm(mode === 'edit' ? nextForm : null);
       setFieldErrors({});
       setSubmitError(null);
     }
     onOpenChange(next);
   }
+
+  const hasChanges = useMemo(() => {
+    if (mode !== 'edit' || !initialForm) {
+      return true;
+    }
+    const currentIsPerson = form.legalFormId === String(LEGAL_FORM_PERSON);
+    const initialIsPerson = initialForm.legalFormId === String(LEGAL_FORM_PERSON);
+    return hasUpdateCustomerClassChanges(buildSubmitInput(form, currentIsPerson), {
+      initial: buildSubmitInput(initialForm, initialIsPerson)
+    });
+  }, [mode, form, initialForm]);
 
   function patchForm(patch: Partial<CustomerClassFormState>) {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -266,6 +267,9 @@ export function CustomerClassFormSheet({
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (mode === 'edit' && initialForm && !hasChanges) {
+      return;
+    }
     setSubmitError(null);
     setFieldErrors({});
 
@@ -276,7 +280,10 @@ export function CustomerClassFormSheet({
           : await updateCustomerClassAction(
               customerClass!.id,
               buildSubmitInput(form, isPersonLegalForm),
-              buildUpdateClearFields(form, isPersonLegalForm)
+              buildSubmitInput(
+                initialForm ?? form,
+                (initialForm ?? form).legalFormId === String(LEGAL_FORM_PERSON)
+              )
             );
 
       if (!result.ok) {
@@ -301,6 +308,7 @@ export function CustomerClassFormSheet({
       description="Define eligibility, KYC requirements, and product rules for a customer segment."
       formId={formId}
       submitLoading={pending}
+      submitDisabled={pending || (mode === 'edit' && !hasChanges)}
       submitLabel={mode === 'create' ? 'Create' : 'Save changes'}
       className="data-[side=right]:sm:max-w-2xl"
     >

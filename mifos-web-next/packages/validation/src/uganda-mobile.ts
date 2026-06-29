@@ -20,6 +20,21 @@ export function isValidUgandaMobileInternational(value: string): boolean {
   return UGANDA_MOBILE_INTERNATIONAL_REGEX.test(value.trim());
 }
 
+/** Normalize local `07xxxxxxxx` numbers to `+2567xxxxxxxx` for forms and diff baselines. */
+export function normalizeUgandaMobileInternational(value: string | undefined): string {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return '';
+  }
+  if (UGANDA_MOBILE_INTERNATIONAL_REGEX.test(trimmed)) {
+    return trimmed;
+  }
+  if (/^0[67]\d{8}$/.test(trimmed)) {
+    return `+256${trimmed.slice(1)}`;
+  }
+  return trimmed;
+}
+
 export const ugandaMobileInternationalSchema = z
   .string()
   .trim()

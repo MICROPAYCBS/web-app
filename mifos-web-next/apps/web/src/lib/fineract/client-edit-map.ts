@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientEditData } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, type UpdateClientInput } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, normalizeUgandaMobileInternational, type UpdateClientInput } from '@mifos/validation';
 import { clientStatusKind } from '@/lib/fineract/client-status';
 import {
   fineractApiDateToFormString,
@@ -46,18 +46,19 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
   const legalFormId = data.legalForm?.id ?? LEGAL_FORM_PERSON;
   const details = data.clientNonPersonDetails;
 
-  const submittedOnDate = fineractApiDateToFormString(data.timeline?.submittedOnDate, dateCtx);
-  const activationDate = resolveActivationDate(data, dateCtx);
+  const submittedOnDate = fineractApiDateToFormString(data.timeline?.submittedOnDate, dateCtx) ?? '';
   const active = resolveClientActive(data);
+  const activationDate =
+    resolveActivationDate(data, dateCtx) ?? (active && submittedOnDate ? submittedOnDate : undefined);
 
   const base = {
     staffId: data.staffId,
     legalFormId,
     externalId: data.externalId ?? '',
-    mobileNo: data.mobileNo ?? '',
+    mobileNo: normalizeUgandaMobileInternational(data.mobileNo),
     emailAddress: data.emailAddress ?? '',
     taxIdentificationNumber: data.taxIdentificationNumber ?? '',
-    alternativeMobileNo: data.alternativeMobileNo ?? '',
+    alternativeMobileNo: normalizeUgandaMobileInternational(data.alternativeMobileNo),
     alternativeEmailAddress: data.alternativeEmailAddress ?? '',
     subIndustryId: data.subIndustryId,
     customerClassId: data.customerClassId ?? data.customerClass?.id,
@@ -69,7 +70,7 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
     genderId: mapClientGenderId(data.gender?.id),
     isStaff: data.isStaff ?? false,
     clientTypeId: data.clientType?.id,
-    submittedOnDate: submittedOnDate ?? '',
+    submittedOnDate,
     active,
     activationDate,
     dateFormat: dateCtx.dateFormat,

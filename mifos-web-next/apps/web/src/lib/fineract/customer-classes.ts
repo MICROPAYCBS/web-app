@@ -20,7 +20,6 @@ import {
   buildUpsertCustomerClassPayload,
   LEGAL_FORM_ENTITY,
   LEGAL_FORM_PERSON,
-  type CustomerClassUpdateClearFields,
   type UpdateCustomerClassPayload,
   type UpsertCustomerClassPayload
 } from '@mifos/validation';
@@ -183,12 +182,12 @@ export async function createCustomerClass(
 export async function updateCustomerClass(
   customerClassId: number,
   input: UpdateCustomerClassPayload,
-  clear: CustomerClassUpdateClearFields
+  options: { initial: UpdateCustomerClassPayload }
 ): Promise<CustomerClassMutationResponse> {
   const fineract = await createFineractClient();
   const raw = await fineract.put<CustomerClassMutationResponse>(
     `${BASE_PATH}/${customerClassId}`,
-    buildUpdateCustomerClassPayload(input, clear)
+    buildUpdateCustomerClassPayload(input, options)
   );
   return { resourceId: Number(raw?.resourceId ?? customerClassId) };
 }
