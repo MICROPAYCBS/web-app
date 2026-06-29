@@ -65,15 +65,13 @@ export function ClientActionSheet({
   sheetId,
   open,
   onOpenChange,
-  onSuccess,
-  hasProfileImage = true
+  onSuccess
 }: {
   clientId: string;
   sheetId: ClientActionSheetId | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  hasProfileImage?: boolean;
 }) {
   const formId = useId();
   const initialTransactionDate = useInitialTransactionDate();
@@ -178,8 +176,8 @@ export function ClientActionSheet({
     if (!sheetId || loading) {
       return;
     }
-    if (sheetId === 'activate' && !hasProfileImage) {
-      setError('Upload a customer photo before activating this customer.');
+    if (sheetId === 'activate' && activationBlockers.length > 0) {
+      setError(activationBlockers.join('\n'));
       return;
     }
     setError(null);
@@ -237,6 +235,9 @@ export function ClientActionSheet({
       ? sheetData.transferDate
       : null;
 
+  const activationBlockers =
+    sheetData?.sheetId === 'activate' ? sheetData.activationBlockers : [];
+
   return (
     <FormSheet
       open={open}
@@ -248,6 +249,7 @@ export function ClientActionSheet({
       submitDisabled={
         loading ||
         !sheetId ||
+        (sheetId === 'activate' && activationBlockers.length > 0) ||
         (sheetId === 'update-default-savings' && savingsOptions.length === 0) ||
         (sheetId === 'transfer' && officeOptions.length === 0) ||
         (sheetId === 'reassign-staff' && staffOptions.length === 0)
@@ -281,11 +283,15 @@ export function ClientActionSheet({
       >
       {sheetId === 'activate' ? (
         <>
-          {!hasProfileImage ? (
-            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              A customer photo is required before activation. Upload a photo from the profile
-              avatar, then try again.
-            </p>
+          {activationBlockers.length > 0 ? (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <p className="font-medium">Complete these requirements before activation:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {activationBlockers.map((blocker) => (
+                  <li key={blocker}>{blocker}</li>
+                ))}
+              </ul>
+            </div>
           ) : null}
           <TransactionDateField
             id={`${formId}-activationDate`}

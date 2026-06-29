@@ -27,6 +27,8 @@ import { revalidatePath } from 'next/cache';
 import type { ClientActionSheetId } from '@/lib/clients/client-action-types';
 import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
 import { executeClientCommand } from '@/lib/fineract/client-commands';
+import { getCustomerClassActivationIssuesForClient } from '@/lib/fineract/customer-class-activation-context';
+import { formatCustomerClassActivationIssues } from '@/lib/fineract/customer-class-eligibility';
 import { getClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 import type { ClientCommandActionResult } from '@/actions/client-command';
@@ -90,6 +92,14 @@ export async function executeClientActionCommand(
         const parsed = parseOrError(clientActivateCommandSchema, raw);
         if (!parsed.success) {
           return parsed.result;
+        }
+        const activationIssues = await getCustomerClassActivationIssuesForClient(clientId);
+        const activationMessage = formatCustomerClassActivationIssues(activationIssues);
+        if (activationMessage) {
+          return {
+            ok: false,
+            message: activationMessage
+          };
         }
         await executeClientCommand(
           clientId,

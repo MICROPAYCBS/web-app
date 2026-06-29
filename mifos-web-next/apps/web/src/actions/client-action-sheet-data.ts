@@ -16,6 +16,7 @@ import {
   getClientWithTemplate,
   listOfficeOptions
 } from '@/lib/fineract/client-action-data';
+import { getCustomerClassActivationIssuesForClient } from '@/lib/fineract/customer-class-activation-context';
 import { getClient } from '@/lib/fineract/clients';
 export type ClientActionSheetDataResult =
   | { ok: true; data: ClientActionSheetData }
@@ -130,12 +131,16 @@ export async function loadClientActionSheetDataAction(
         return { ok: true, data: { sheetId, transferDate } };
       }
       case 'activate': {
-        const template = await getClientWithTemplate(clientId);
+        const [template, activationIssues] = await Promise.all([
+          getClientWithTemplate(clientId),
+          getCustomerClassActivationIssuesForClient(clientId)
+        ]);
         return {
           ok: true,
           data: {
             sheetId,
-            savingsProductName: template.savingsProductName
+            savingsProductName: template.savingsProductName,
+            activationBlockers: activationIssues.map((issue) => issue.message)
           }
         };
       }

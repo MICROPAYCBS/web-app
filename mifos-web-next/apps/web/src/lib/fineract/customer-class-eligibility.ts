@@ -6,8 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CustomerClass } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
+import type { CustomerClass, FineractEnumOption } from '@mifos/api-client';
+import { translateFineractCode } from '@mifos/i18n';
+import {
+  isComplianceProfileEmpty,
+  LEGAL_FORM_ENTITY,
+  LEGAL_FORM_PERSON,
+  type ComplianceProfileInput
+} from '@mifos/validation';
 
 function ageFromDateOfBirth(dateOfBirth: string | undefined, today = new Date()): number | undefined {
   if (!dateOfBirth?.trim()) {
@@ -146,4 +152,211 @@ export function formatCustomerClassLabel(
     return customerClass.className.trim();
   }
   return customerClass.classCode?.trim() || undefined;
+}
+
+export type CustomerClassActivationClientState = {
+  legalFormId?: number;
+  dateOfBirth?: string;
+  customerRiskProfile?: FineractEnumOption | null;
+  hasProfileImage?: boolean;
+  hasSignature?: boolean;
+  identifierCount?: number;
+  complianceProfile?: ComplianceProfileInput | null;
+};
+
+export type CustomerClassActivationIssue = {
+  code: string;
+  message: string;
+};
+
+function customerClassLabelForMessage(customerClass: CustomerClass): string {
+  return formatCustomerClassLabel(customerClass) ?? 'assigned customer class';
+}
+
+function customerRiskProfileLevel(profile?: FineractEnumOption | null): string | undefined {
+  const code = profile?.code?.trim();
+  if (code) {
+    return code;
+  }
+  const name = profile?.name?.trim();
+  if (name) {
+    return name;
+  }
+  return profile?.value?.trim() || undefined;
+}
+
+function riskLevelsMatch(classLevel: string, profileLevel: string): boolean {
+  const normalizedClass = classLevel.trim().toUpperCase();
+  const normalizedProfile = profileLevel.trim().toUpperCase();
+  if (normalizedClass === normalizedProfile) {
+    return true;
+  }
+  return normalizedProfile.includes(normalizedClass);
+}
+
+function activationMessage(code: string, fallback: string): string {
+  return translateFineractCode(code, fallback);
+}
+
+/** Checks aligned with Fineract customer class rules before activation. */
+export function getCustomerClassActivationIssues(
+  customerClass: CustomerClass | undefined,
+  client: CustomerClassActivationClientState
+): CustomerClassActivationIssue[] {
+  if (!customerClass) {
+    return [];
+  }
+
+  const issues: CustomerClassActivationIssue[] = [];
+  const classLabel = customerClassLabelForMessage(customerClass);
+
+  if (customerClass.enforceCustPhoto && !client.hasProfileImage) {
+    issues.push({
+      code: 'validation.msg.client.customerClassId.photo.required',
+      message: activationMessage(
+        'validation.msg.client.customerClassId.photo.required',
+        'A profile photo is required for the assigned customer class.'
+      )
+    });
+  }
+
+  if (customerClass.enforceCustSignature && !client.hasSignature) {
+    issues.push({
+      code: 'validation.msg.client.customerClassId.signature.required',
+      message: activationMessage(
+        'validation.msg.client.customerClassId.signature.required',
+        'A customer signature is required for the assigned customer class.'
+      )
+    });
+  }
+
+  if (customerClass.enforceCustDocument && (client.identifierCount ?? 0) < 1) {
+    issues.push({
+      code: 'validation.msg.client.customerClassId.document.required',
+      message: activationMessage(
+        'validation.msg.client.customerClassId.document.required',
+        'At least one identification document is required for the assigned customer class.'
+      )
+    });
+  }
+
+  if (
+    customerClass.legalFormId != null &&
+    client.legalFormId != null &&
+    customerClass.legalFormId !== client.legalFormId
+  ) {
+    issues.push({
+      code: 'validation.msg.client.customerClassId.legalForm.mismatch',
+      message: activationMessage(
+        'validation.msg.client.customerClassId.legalForm.mismatch',
+        "The customer's legal form does not match the assigned customer class."
+      )
+    });
+  }
+
+  if (
+    (customerClass.minAge != null || customerClass.maxAge != null) &&
+    customerClass.legalFormId !== LEGAL_FORM_ENTITY &&
+    !client.dateOfBirth?.trim()
+  ) {
+    issues.push({
+      code: 'validation.msg.client.customerClassId.dateOfBirth.required',
+      message: activationMessage(
+        'validation.msg.client.customerClassId.dateOfBirth.required',
+        'Date of birth is required for the assigned customer class.'
+      )
+    });
+  }
+
+  const age = ageFromDateOfBirth(client.dateOfBirth);
+  if (
+    age != null &&
+    customerClass.legalFormId !== LEGAL_FORM_ENTITY &&
+    (customerClass.minAge != null || customerClass.maxAge != null)
+  ) {
+    if (customerClass.minAge != null && age < customerClass.minAge) {
+      issues.push({
+        code: 'validation.msg.client.customerClass.requirements.not.met',
+        message: `Customer age is below the minimum (${customerClass.minAge}) for class "${classLabel}".`
+      });
+    }
+    if (customerClass.maxAge != null && age > customerClass.maxAge) {
+      issues.push({
+        code: 'validation.msg.client.customerClass.requirements.not.met',
+        message: `Customer age exceeds the maximum (${customerClass.maxAge}) for class "${classLabel}".`
+      });
+    }
+  }
+
+  const classRiskLevel = customerClass.riskLevel?.trim();
+  if (classRiskLevel) {
+    if (!client.customerRiskProfile?.id) {
+      issues.push({
+        code: 'validation.msg.client.customerClassId.riskProfile.required',
+        message: activationMessage(
+          'validation.msg.client.customerClassId.riskProfile.required',
+          'Select a customer risk profile for the assigned customer class.'
+        )
+      });
+    } else {
+      const profileLevel = customerRiskProfileLevel(client.customerRiskProfile);
+      if (profileLevel && !riskLevelsMatch(classRiskLevel, profileLevel)) {
+        issues.push({
+          code: 'validation.msg.client.customerClassId.riskLevel.mismatch',
+          message: activationMessage(
+            'validation.msg.client.customerClassId.riskLevel.mismatch',
+            "The customer's risk profile does not match the assigned customer class risk level."
+          )
+        });
+      }
+    }
+  }
+
+  if (customerClass.enhancedDueDiligence) {
+    const profile = client.complianceProfile;
+    if (isComplianceProfileEmpty(profile ?? undefined)) {
+      issues.push({
+        code: 'validation.msg.client.customerClassId.edd.profile.required',
+        message: activationMessage(
+          'validation.msg.client.customerClassId.edd.profile.required',
+          'A compliance profile is required for the assigned customer class.'
+        )
+      });
+    } else if (profile?.isPep && !profile.pepPosition?.trim()) {
+      issues.push({
+        code: 'validation.msg.client.customerClassId.edd.pep.incomplete',
+        message: activationMessage(
+          'validation.msg.client.customerClassId.edd.pep.incomplete',
+          'PEP details on the compliance profile are incomplete for the assigned customer class.'
+        )
+      });
+    } else if (profile?.usCitizenOrResident && !profile.fatcaRegistered) {
+      issues.push({
+        code: 'validation.msg.client.customerClassId.edd.fatca.required',
+        message: activationMessage(
+          'validation.msg.client.customerClassId.edd.fatca.required',
+          'FATCA registration is required on the compliance profile for the assigned customer class.'
+        )
+      });
+    } else if (profile?.fatcaRegistered && !profile.fatcaRegistrationNo?.trim()) {
+      issues.push({
+        code: 'validation.msg.client.customerClassId.edd.fatca.required',
+        message: activationMessage(
+          'validation.msg.client.customerClassId.edd.fatca.required',
+          'FATCA registration is required on the compliance profile for the assigned customer class.'
+        )
+      });
+    }
+  }
+
+  return issues;
+}
+
+export function formatCustomerClassActivationIssues(
+  issues: CustomerClassActivationIssue[]
+): string | null {
+  if (!issues.length) {
+    return null;
+  }
+  return issues.map((issue) => issue.message).join('\n');
 }

@@ -45,5 +45,6 @@ export type ClientActionSheetData =
   | {
       sheetId: 'activate';
       savingsProductName?: string;
+      activationBlockers: string[];
     }
   | { sheetId: 'reactivate' | 'undo-rejection' };
