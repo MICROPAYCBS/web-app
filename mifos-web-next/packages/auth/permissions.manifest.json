@@ -14,6 +14,16 @@
       "UPDATE_CLIENT"
     ]
   },
+  "clients.compliance-profile": {
+    "any": [
+      "READ_COMPLIANCEPROFILE"
+    ]
+  },
+  "clients.compliance-profile.update": {
+    "any": [
+      "UPDATE_COMPLIANCEPROFILE"
+    ]
+  },
   "clients.identifiers": {
     "any": [
       "READ_CLIENTIDENTIFIER"

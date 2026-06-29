@@ -110,7 +110,7 @@ export function FormSheet({
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          {error ? <div className="mb-4">{error}</div> : null}
+          {error ? <div className="mb-4 flex justify-center">{error}</div> : null}
           {children}
         </div>
 

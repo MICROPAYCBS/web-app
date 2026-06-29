@@ -33,6 +33,8 @@ export {
   type ComplianceProfileInput,
   type OtherBankAccountInput
 } from './clients/compliance-profile.schema';
+export { mapComplianceProfileFineractFieldErrors } from './clients/map-compliance-profile-fineract-errors';
+export { mapFineractErrors, type FieldError, type MappedFineractErrors } from './map-fineract-errors';
 export {
   formatZodIssuesForDisplay,
   formatZodIssuesMessage

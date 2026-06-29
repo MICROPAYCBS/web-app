@@ -9,10 +9,16 @@
 import { z } from 'zod';
 
 export const otherBankAccountSchema = z.object({
-  bankName: z.string().trim().min(1).max(200),
+  bankName: z.string().trim().max(200),
   branchName: z.string().trim().max(200).optional().or(z.literal('')),
-  accountNumber: z.string().trim().min(1).max(50)
+  accountNumber: z.string().trim().max(50)
 });
+
+function otherBankSlotHasAnyInput(account: z.infer<typeof otherBankAccountSchema>): boolean {
+  return Boolean(
+    account.bankName.trim() || account.accountNumber.trim() || account.branchName?.trim()
+  );
+}
 
 export const complianceProfileSchema = z
   .object({
@@ -29,9 +35,33 @@ export const complianceProfileSchema = z
     locale: z.string().optional()
   })
   .superRefine((data, ctx) => {
+    const accounts = data.otherBankAccounts ?? [];
+
+    for (const [index, account] of accounts.entries()) {
+      if (!otherBankSlotHasAnyInput(account)) {
+        continue;
+      }
+      if (!account.bankName.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Bank name is required for each other bank account you enter',
+          path: ['otherBankAccounts', index, 'bankName']
+        });
+      }
+      if (!account.accountNumber.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Account number is required for each other bank account you enter',
+          path: ['otherBankAccounts', index, 'accountNumber']
+        });
+      }
+    }
+
     if (data.hasOtherBankAccounts) {
-      const accounts = data.otherBankAccounts?.filter((a) => a.bankName.trim()) ?? [];
-      if (accounts.length === 0) {
+      const completeAccounts = accounts.filter(
+        (account) => account.bankName.trim() && account.accountNumber.trim()
+      );
+      if (completeAccounts.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'Add at least one other bank account when this option is selected',
@@ -74,9 +104,7 @@ export function isComplianceProfileEmpty(profile: ComplianceProfileInput | undef
     profile.dpfAlternativeBankName,
     profile.dpfAlternativeAccountNumber
   ].some((v) => Boolean(v?.trim()));
-  const hasAccounts = (profile.otherBankAccounts ?? []).some(
-    (account) => Boolean(account.bankName?.trim() || account.accountNumber?.trim())
-  );
+  const hasAccounts = (profile.otherBankAccounts ?? []).some((account) => otherBankSlotHasAnyInput(account));
   return !hasFlags && !hasText && !hasAccounts;
 }
 
@@ -100,14 +128,12 @@ export function sanitizeComplianceProfileForSubmit(
   return isComplianceProfileEmpty(normalized) ? undefined : normalized;
 }
 
-/** Drop blank other-bank rows before Zod validates the array (UI keeps two slots). */
+/** Drop completely empty bank rows before Zod validates the array (UI keeps two slots). */
 export function prepareComplianceProfileForValidation(
   profile: ComplianceProfileInput
 ): ComplianceProfileInput {
   return {
     ...profile,
-    otherBankAccounts: (profile.otherBankAccounts ?? []).filter(
-      (account) => account.bankName?.trim() && account.accountNumber?.trim()
-    )
+    otherBankAccounts: (profile.otherBankAccounts ?? []).filter((account) => otherBankSlotHasAnyInput(account))
   };
 }

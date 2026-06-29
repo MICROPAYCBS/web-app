@@ -8,26 +8,54 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   complianceProfileSchema,
+  mapComplianceProfileFineractFieldErrors,
+  mapFineractErrors,
   prepareComplianceProfileForValidation,
   toFineractActionError,
   type ComplianceProfileInput
 } from '@mifos/validation';
+import { FineractHttpError } from '@mifos/api-client';
 import { revalidatePath } from 'next/cache';
 import { updateClientComplianceProfile } from '@/lib/fineract/client-compliance-profile';
+import { getServerSession } from '@/lib/session/server';
+
+export type UpdateClientComplianceProfileActionResult =
+  | { ok: true }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export async function updateClientComplianceProfileAction(
   clientId: string,
   raw: unknown
-): Promise<{ ok: true } | { ok: false; message: string }> {
+): Promise<UpdateClientComplianceProfileActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+
+  try {
+    assertCan(session, resolvePermission('clients.compliance-profile.update'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to update compliance details.' };
+  }
+
   const parsed = complianceProfileSchema.safeParse(
     prepareComplianceProfileForValidation(raw as ComplianceProfileInput)
   );
   if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path.join('.') || '_form';
+      if (!fieldErrors[key]) {
+        fieldErrors[key] = issue.message;
+      }
+    }
     return {
       ok: false,
-      message: parsed.error.issues.map((issue) => issue.message).join('; ')
+      message: 'Please fix the highlighted fields.',
+      fieldErrors
     };
   }
 
@@ -37,7 +65,16 @@ export async function updateClientComplianceProfileAction(
     revalidatePath(`/clients/${clientId}/general`);
     return { ok: true };
   } catch (err) {
-    return toFineractActionError(err, 'Request failed.');
+    if (err instanceof FineractHttpError) {
+      const mapped = mapFineractErrors(err.body);
+      const fieldErrors = mapComplianceProfileFineractFieldErrors(mapped.fieldErrors);
+      const result = toFineractActionError(err, 'Could not update compliance details.');
+      return {
+        ...result,
+        fieldErrors: Object.keys(fieldErrors).length ? fieldErrors : result.fieldErrors
+      };
+    }
+    return toFineractActionError(err, 'Could not update compliance details.');
   }
 }
 

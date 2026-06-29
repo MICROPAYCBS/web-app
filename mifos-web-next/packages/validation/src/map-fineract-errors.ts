@@ -28,13 +28,14 @@ export function mapFineractErrors(body: FineractApiError | null): MappedFineract
   if (body?.errors?.length) {
     for (const err of body.errors) {
       const message = resolveFineractErrorItemMessage(err);
-      if (err.parameterName && message) {
-        fieldErrors.push({
-          field: err.parameterName,
-          message,
-          code: err.userMessageGlobalisationCode
-        });
+      if (!message) {
+        continue;
       }
+      fieldErrors.push({
+        field: err.parameterName?.trim() || '_form',
+        message,
+        code: err.userMessageGlobalisationCode
+      });
     }
   }
 

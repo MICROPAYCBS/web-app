@@ -100,7 +100,7 @@ export function ErrorPanel({
     <div
       className={cn(
         'flex w-full flex-col items-center justify-center p-4 md:p-6',
-        isPage ? 'min-h-[50vh]' : 'min-h-[32vh]',
+        isPage ? 'min-h-[50vh]' : 'min-h-0 flex-1',
         className
       )}
       role="alert"

@@ -18,7 +18,7 @@ export default async function ClientComplianceProfilePage({
 }) {
   const { clientId } = await params;
   const session = await getServerSession();
-  const canUpdate = can(session, resolvePermission('clients.update'));
+  const canUpdate = can(session, resolvePermission('clients.compliance-profile.update'));
   const profile = await getClientComplianceProfile(clientId).catch(() => null);
 
   return (

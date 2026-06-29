@@ -23,7 +23,7 @@ export function FormErrorAlert({ children, className }: FormErrorAlertProps) {
     <p
       role="alert"
       className={cn(
-        'col-span-full w-full rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive',
+        'col-span-full w-full rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-center text-sm whitespace-pre-line text-destructive',
         className
       )}
     >

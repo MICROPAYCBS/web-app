@@ -39,7 +39,29 @@ const ERROR_MESSAGES: Record<string, string> = {
   'validation.msg.client.customerClassId.edd.pep.incomplete':
     'PEP details on the compliance profile are incomplete for the assigned customer class.',
   'validation.msg.client.customerClassId.edd.fatca.required':
-    'FATCA registration is required on the compliance profile for the assigned customer class.'
+    'FATCA registration is required on the compliance profile for the assigned customer class.',
+  'error.msg.not.authorized': 'You do not have permission to perform this action.',
+  'validation.msg.domain.rule.violation':
+    'This change was rejected by a business rule.',
+  'validation.msg.ComplianceProfile.otherBankAccounts.cannot.exceed.max.of.two':
+    'You can add at most two other bank accounts.',
+  'validation.msg.ComplianceProfile.otherBankAccounts.required.when.has.other.bank.accounts.is.true':
+    'Add at least one complete other bank account when this option is selected.',
+  'validation.msg.ComplianceProfile.bankName.cannot.be.blank': 'Bank name is required.',
+  'validation.msg.ComplianceProfile.accountNumber.cannot.be.blank': 'Account number is required.',
+  'validation.msg.ComplianceProfile.displayOrder.cannot.be.blank': 'Account order is required.',
+  'validation.msg.ComplianceProfile.displayOrder.is.not.within.expected.range':
+    'Account order must be 1 or 2.',
+  'validation.msg.ComplianceProfile.bankName.exceeds.max.length':
+    'Bank name must be 200 characters or fewer.',
+  'validation.msg.ComplianceProfile.branchName.exceeds.max.length':
+    'Branch name must be 200 characters or fewer.',
+  'validation.msg.ComplianceProfile.accountNumber.exceeds.max.length':
+    'Account number must be 50 characters or fewer.',
+  'validation.msg.ComplianceProfile.pepPosition.cannot.be.blank':
+    'PEP position is required when the customer is a PEP.',
+  'validation.msg.ComplianceProfile.fatcaRegistrationNo.cannot.be.blank':
+    'FATCA registration number is required when FATCA registered is selected.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

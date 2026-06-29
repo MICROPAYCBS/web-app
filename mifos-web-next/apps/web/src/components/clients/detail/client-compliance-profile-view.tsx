@@ -11,6 +11,7 @@
 import type { FineractClientComplianceProfile } from '@mifos/api-client';
 import {
   complianceProfileSchema,
+  formatActionErrorMessage,
   prepareComplianceProfileForValidation,
   type ComplianceProfileInput
 } from '@mifos/validation';
@@ -92,7 +93,8 @@ export function ClientComplianceProfileView({
     startTransition(async () => {
       const result = await updateClientComplianceProfileAction(clientId, parsed.data);
       if (!result.ok) {
-        setError(result.message);
+        setFieldErrors(result.fieldErrors ?? {});
+        setError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
       setEditing(false);

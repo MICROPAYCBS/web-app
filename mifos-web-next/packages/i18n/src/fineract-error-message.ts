@@ -33,6 +33,21 @@ export function normalizeFineractMessage(message: string): string {
   return message.replace(/\\\./g, '.').trim();
 }
 
+const GENERIC_TOP_LEVEL_MESSAGES = new Set([
+  'Validation errors exist.',
+  'Please correct the validation errors.',
+  'Errors contain reason for domain rule violation.',
+  'Insufficient privileges to perform this action.',
+  'The request caused a data integrity issue to be fired by the database.',
+  'Request was understood but caused a domain rule violation.'
+]);
+
+function isGenericFineractValidationMessage(message: string): boolean {
+  return (
+    GENERIC_TOP_LEVEL_MESSAGES.has(message) || message.startsWith('Failed data validation due to: ')
+  );
+}
+
 /**
  * Resolve the best human-readable message for one Fineract error entry.
  * Prefers `defaultUserMessage`, then `developerMessage`, then a known translation for the code.
@@ -42,17 +57,53 @@ export function resolveFineractErrorItemMessage(item?: FineractErrorItem | null)
     return null;
   }
 
+  const code = item.userMessageGlobalisationCode;
   const raw = item.defaultUserMessage ?? item.developerMessage;
   if (raw) {
-    return normalizeFineractMessage(raw);
+    const normalized = normalizeFineractMessage(raw);
+    if (code) {
+      const translated = translateFineractCode(code);
+      if (translated !== code && isGenericFineractValidationMessage(normalized)) {
+        return translated;
+      }
+    }
+    return normalized;
   }
 
-  const code = item.userMessageGlobalisationCode;
   if (code) {
     return translateFineractCode(code);
   }
 
   return null;
+}
+
+function isGenericTopLevelMessage(message: string | null): boolean {
+  return message !== null && GENERIC_TOP_LEVEL_MESSAGES.has(message);
+}
+
+function getHttpStatusFallbackMessage(
+  httpStatus?: number,
+  body?: FineractErrorBody | null
+): string {
+  if (httpStatus === 401) {
+    return 'You must sign in to continue.';
+  }
+  if (httpStatus === 403) {
+    if (body?.userMessageGlobalisationCode === 'validation.msg.domain.rule.violation') {
+      return translateFineractCode('validation.msg.domain.rule.violation');
+    }
+    return translateFineractCode('error.msg.not.authorized');
+  }
+  if (httpStatus === 404) {
+    return 'The requested record was not found.';
+  }
+  if (httpStatus === 400) {
+    return 'Some fields are invalid. Check the form and try again.';
+  }
+  if (httpStatus && httpStatus >= 500) {
+    return 'The server could not complete the request. Try again later.';
+  }
+  return 'Request failed';
 }
 
 function resolvePrimaryNestedMessage(errors: FineractErrorItem[]): string | null {
@@ -89,7 +140,7 @@ export function getFineractErrorMessage(
   httpStatus?: number
 ): string {
   if (!body) {
-    return httpStatus ? `HTTP ${httpStatus}` : 'Request failed';
+    return getHttpStatusFallbackMessage(httpStatus);
   }
 
   const topLevel = resolveFineractErrorItemMessage({
@@ -113,9 +164,17 @@ export function getFineractErrorMessage(
     }
   }
 
+  if (topLevel && !isGenericTopLevelMessage(topLevel)) {
+    return topLevel;
+  }
+
+  if (body.developerMessage && !isGenericTopLevelMessage(normalizeFineractMessage(body.developerMessage))) {
+    return normalizeFineractMessage(body.developerMessage);
+  }
+
   if (topLevel) {
     return topLevel;
   }
 
-  return httpStatus ? `HTTP ${httpStatus}` : 'Request failed';
+  return getHttpStatusFallbackMessage(httpStatus, body);
 }

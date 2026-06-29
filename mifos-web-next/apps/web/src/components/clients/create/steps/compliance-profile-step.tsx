@@ -9,6 +9,7 @@
  */
 
 import type { ComplianceProfileInput, OtherBankAccountInput } from '@mifos/validation';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import type { CreateClientDraft } from '../types';
@@ -64,7 +65,7 @@ export function ComplianceProfileStep({
         details. All sections are optional unless indicated.
       </p>
 
-      {errors._form ? <p className="text-sm text-destructive">{errors._form}</p> : null}
+      {errors._form ? <FormErrorAlert>{errors._form}</FormErrorAlert> : null}
 
       <section className="space-y-4">
         <h2 className="text-sm font-medium">Other banking relationships</h2>
@@ -73,28 +74,42 @@ export function ComplianceProfileStep({
           label="Has other bank accounts"
           optional
           checked={profile.hasOtherBankAccounts ?? false}
-          description="Customer holds accounts with this bank or another institution."
+          description="Turn on when the customer holds accounts at another bank. You can record up to two accounts."
           onCheckedChange={(checked) =>
             patch({
               hasOtherBankAccounts: checked,
-              otherBankAccounts: checked ? profile.otherBankAccounts ?? [emptyBankAccount()] : []
+              otherBankAccounts: checked
+                ? profile.otherBankAccounts?.length
+                  ? profile.otherBankAccounts
+                  : [emptyBankAccount()]
+                : []
             })
           }
         />
         {profile.hasOtherBankAccounts ? (
           <div className="grid gap-6">
+            <p className="text-sm text-muted-foreground">
+              Enter the bank name and account number for each external account. Branch is optional.
+              Account numbers may be up to 50 characters.
+            </p>
             {[0, 1].map((index) => {
               const account = bankAccountAt(profile.otherBankAccounts, index);
+              const bankNameError = errors[`otherBankAccounts.${index}.bankName`];
+              const accountNumberError = errors[`otherBankAccounts.${index}.accountNumber`];
               return (
                 <div key={index} className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
-                  <p className="text-sm font-medium sm:col-span-2">Other bank {index + 1}</p>
+                  <p className="text-sm font-medium sm:col-span-2">
+                    Other bank {index + 1}
+                    {index === 0 ? ' (required when enabled)' : ' (optional)'}
+                  </p>
                   <TextField
                     id={`otherBankName${index}`}
                     label="Bank name"
                     required={index === 0}
                     value={account.bankName}
                     onChange={(v) => updateBankAccount(index, { bankName: v })}
-                    error={index === 0 ? errors['otherBankAccounts.0.bankName'] : undefined}
+                    error={bankNameError}
+                    hint={index === 0 ? undefined : 'Required if you enter an account number.'}
                   />
                   <TextField
                     id={`otherBankBranch${index}`}
@@ -102,6 +117,7 @@ export function ComplianceProfileStep({
                     optional
                     value={account.branchName ?? ''}
                     onChange={(v) => updateBankAccount(index, { branchName: v })}
+                    hint="Optional. Up to 200 characters."
                   />
                   <TextField
                     id={`otherBankAccount${index}`}
@@ -110,13 +126,14 @@ export function ComplianceProfileStep({
                     className="sm:col-span-2"
                     value={account.accountNumber}
                     onChange={(v) => updateBankAccount(index, { accountNumber: v })}
-                    error={index === 0 ? errors['otherBankAccounts.0.accountNumber'] : undefined}
+                    error={accountNumberError}
+                    hint="Up to 50 characters. Use the number as it appears on the bank statement."
                   />
                 </div>
               );
             })}
             {errors.otherBankAccounts ? (
-              <p className="text-sm text-destructive">{errors.otherBankAccounts}</p>
+              <FormErrorAlert>{errors.otherBankAccounts}</FormErrorAlert>
             ) : null}
           </div>
         ) : null}

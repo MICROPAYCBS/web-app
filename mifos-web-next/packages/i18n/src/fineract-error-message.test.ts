@@ -125,7 +125,44 @@ describe('getFineractErrorMessage', () => {
     );
   });
 
-  it('returns HTTP status when body is empty', () => {
-    assert.equal(getFineractErrorMessage(null, 403), 'HTTP 403');
+  it('returns a helpful 403 fallback when body is empty', () => {
+    assert.equal(
+      getFineractErrorMessage(null, 403),
+      'You do not have permission to perform this action.'
+    );
+  });
+
+  it('prefers translated compliance profile codes over generic Fineract text', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        defaultUserMessage: 'Validation errors exist.',
+        userMessageGlobalisationCode: 'validation.msg.validation.errors.exist',
+        errors: [
+          {
+            parameterName: 'otherBankAccounts',
+            defaultUserMessage: 'Failed data validation due to: required.when.has.other.bank.accounts.is.true.',
+            userMessageGlobalisationCode:
+              'validation.msg.ComplianceProfile.otherBankAccounts.required.when.has.other.bank.accounts.is.true'
+          }
+        ]
+      }),
+      'Add at least one complete other bank account when this option is selected.'
+    );
+  });
+
+  it('skips generic top-level text when nested errors carry specifics', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        defaultUserMessage: 'Insufficient privileges to perform this action.',
+        userMessageGlobalisationCode: 'error.msg.not.authorized',
+        errors: [
+          {
+            parameterName: 'id',
+            defaultUserMessage: 'User has no authority to: UPDATE_COMPLIANCEPROFILE'
+          }
+        ]
+      }),
+      'User has no authority to: UPDATE_COMPLIANCEPROFILE'
+    );
   });
 });

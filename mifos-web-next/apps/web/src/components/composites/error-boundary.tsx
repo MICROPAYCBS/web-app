@@ -10,6 +10,7 @@
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorPanel } from '@/components/composites/error-panel';
+import { cn } from '@/lib/utils';
 
 export interface ErrorBoundaryProps {
   children: ReactNode;
@@ -57,20 +58,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     const { error, componentStack } = this.state;
 
-    if (error) {
-      return (
-        <ErrorPanel
-          error={error}
-          componentStack={componentStack ?? undefined}
-          title={this.props.title}
-          description={this.props.description}
-          onReset={this.reset}
-          variant="inline"
-          className={this.props.className}
-        />
-      );
-    }
-
-    return this.props.children;
+    return (
+      <div className={cn('flex min-h-0 flex-1 flex-col', this.props.className)}>
+        {error ? (
+          <ErrorPanel
+            error={error}
+            componentStack={componentStack ?? undefined}
+            title={this.props.title}
+            description={this.props.description}
+            onReset={this.reset}
+            variant="inline"
+            className="flex-1"
+          />
+        ) : (
+          this.props.children
+        )}
+      </div>
+    );
   }
 }
