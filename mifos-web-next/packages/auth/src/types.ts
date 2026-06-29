@@ -16,6 +16,10 @@ export interface SessionUser {
   permissions: string[];
   roles?: unknown;
   authenticated?: boolean;
+  /** Minutes until idle sign-out (from login / userdetails). */
+  sessionIdleTimeoutMinutes?: number;
+  /** Warning period before idle sign-out, in seconds. */
+  sessionIdleWarningSeconds?: number;
 }
 
 export type PermissionInput = string | string[];

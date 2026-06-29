@@ -21,7 +21,14 @@ const INACTIVITY_TOAST_ID = 'session-inactivity-warning';
 export function InactivityTimeout() {
   const { user } = useSession();
   const queryClient = useQueryClient();
-  const config = useMemo(() => getInactivityTimeoutConfig(), []);
+  const config = useMemo(
+    () =>
+      getInactivityTimeoutConfig(process.env, {
+        sessionIdleTimeoutMinutes: user?.sessionIdleTimeoutMinutes,
+        sessionIdleWarningSeconds: user?.sessionIdleWarningSeconds
+      }),
+    [user?.sessionIdleTimeoutMinutes, user?.sessionIdleWarningSeconds]
+  );
 
   useEffect(() => {
     if (!user || !config.enabled) {

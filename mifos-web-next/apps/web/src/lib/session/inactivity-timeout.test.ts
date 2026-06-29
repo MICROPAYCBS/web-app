@@ -37,6 +37,28 @@ describe('inactivity timeout config', () => {
     assert.equal(config.warningMs, 120 * 1000);
     assert.equal(config.warningSeconds, 120);
   });
+
+  it('prefers session idle policy from login over env', () => {
+    const config = getInactivityTimeoutConfig(
+      {
+        NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES: '30',
+        NEXT_PUBLIC_SESSION_IDLE_WARNING_SECONDS: '120'
+      },
+      { sessionIdleTimeoutMinutes: 20, sessionIdleWarningSeconds: 90 }
+    );
+    assert.equal(config.enabled, true);
+    assert.equal(config.timeoutMs, 20 * 60 * 1000);
+    assert.equal(config.warningMs, 90 * 1000);
+    assert.equal(config.warningSeconds, 90);
+  });
+
+  it('disables idle sign-out when session timeout minutes is 0', () => {
+    const config = getInactivityTimeoutConfig(
+      { NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES: '15' },
+      { sessionIdleTimeoutMinutes: 0 }
+    );
+    assert.equal(config.enabled, false);
+  });
 });
 
 describe('inactivity timer controller', () => {

@@ -19,7 +19,7 @@ Fineract **basic authentication** via the app BFF. The browser never calls `POST
 | Content | JSON `ServerSession` (secrets stay httpOnly) |
 | Default TTL | 8 hours |
 | Remember me | 14 days |
-| Idle sign-out | **15 minutes** of inactivity (client-side); warning **60 seconds** before sign-out |
+| Idle sign-out | From server global config via login (`sessionIdleTimeoutMinutes`, `sessionIdleWarningSeconds`); env vars are fallback |
 
 Public fields exposed to React via `getPublicSession()` / `SessionProvider` (no auth key).
 
@@ -32,10 +32,14 @@ Authenticated pages mount `InactivityTimeout` in the platform shell. After a per
 
 While the warning is visible, further pointer or keyboard activity does **not** extend the session — the user must click **Stay logged in** (same behavior as bankayo).
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES` | `15` | Minutes until idle sign-out; set `0` to disable |
-| `NEXT_PUBLIC_SESSION_IDLE_WARNING_SECONDS` | `60` | Warning period before sign-out |
+| Source | Default | Purpose |
+|--------|---------|---------|
+| Login payload `sessionIdleTimeoutMinutes` | `15` | Minutes until idle sign-out; `0` disables |
+| Login payload `sessionIdleWarningSeconds` | `60` | Warning period before sign-out |
+| `NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES` | same as above | Fallback when login payload omits idle policy (older servers, demo session) |
+| `NEXT_PUBLIC_SESSION_IDLE_WARNING_SECONDS` | same as above | Fallback when login payload omits idle policy |
+
+Values come from Fineract global configuration (`session-idle-timeout-minutes`, `session-idle-warning-seconds`) and are stored in the `mifos-session` cookie at sign-in.
 
 This is independent of the httpOnly cookie TTL (8h / 14d): idle sign-out can end a session before the cookie expires.
 

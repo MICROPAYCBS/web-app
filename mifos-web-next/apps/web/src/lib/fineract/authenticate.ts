@@ -25,6 +25,8 @@ export interface FineractAuthenticationResponse {
   roles?: unknown;
   isTwoFactorAuthenticationRequired?: boolean;
   shouldRenewPassword?: boolean;
+  sessionIdleTimeoutMinutes?: number;
+  sessionIdleWarningSeconds?: number;
 }
 
 export interface AuthenticateParams {
@@ -45,7 +47,9 @@ export function mapAuthenticationToSession(data: FineractAuthenticationResponse)
     roles: data.roles,
     authenticated: data.authenticated ?? true,
     base64EncodedAuthenticationKey: data.base64EncodedAuthenticationKey,
-    accessToken: data.accessToken
+    accessToken: data.accessToken,
+    sessionIdleTimeoutMinutes: data.sessionIdleTimeoutMinutes,
+    sessionIdleWarningSeconds: data.sessionIdleWarningSeconds
   };
 }
 

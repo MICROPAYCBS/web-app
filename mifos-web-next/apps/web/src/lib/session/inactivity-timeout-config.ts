@@ -20,8 +20,28 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return parsed;
 }
 
+function resolvePositiveInt(
+  sessionValue: number | undefined,
+  envValue: string | undefined,
+  fallback: number
+): number {
+  if (
+    sessionValue !== undefined &&
+    Number.isFinite(sessionValue) &&
+    sessionValue >= 0
+  ) {
+    return sessionValue;
+  }
+  return parsePositiveInt(envValue, fallback);
+}
+
+export interface SessionIdlePolicy {
+  sessionIdleTimeoutMinutes?: number;
+  sessionIdleWarningSeconds?: number;
+}
+
 export interface InactivityTimeoutConfig {
-  /** When false, idle logout is disabled (`NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES=0`). */
+  /** When false, idle logout is disabled (timeout minutes is 0). */
   enabled: boolean;
   timeoutMs: number;
   warningMs: number;
@@ -30,13 +50,16 @@ export interface InactivityTimeoutConfig {
 
 /** Client-readable idle session settings (see docs/AUTH.md). */
 export function getInactivityTimeoutConfig(
-  env: NodeJS.ProcessEnv = process.env
+  env: NodeJS.ProcessEnv = process.env,
+  sessionPolicy?: SessionIdlePolicy
 ): InactivityTimeoutConfig {
-  const timeoutMinutes = parsePositiveInt(
+  const timeoutMinutes = resolvePositiveInt(
+    sessionPolicy?.sessionIdleTimeoutMinutes,
     env.NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES,
     DEFAULT_IDLE_TIMEOUT_MINUTES
   );
-  const warningSeconds = parsePositiveInt(
+  const warningSeconds = resolvePositiveInt(
+    sessionPolicy?.sessionIdleWarningSeconds,
     env.NEXT_PUBLIC_SESSION_IDLE_WARNING_SECONDS,
     DEFAULT_IDLE_WARNING_SECONDS
   );
