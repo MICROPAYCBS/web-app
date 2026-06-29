@@ -16,6 +16,7 @@
     "dateOfBirth": { "required": true },
     "genderId": { "requiredWhen": "legalFormId=1" },
     "nationalityCountryId": { "requiredWhen": "legalFormId=1" },
+    "maritalStatusId": { "requiredWhen": "legalFormId=1" },
     "customerClassId": { "required": true },
     "legalFormId": { "required": true, "values": [1, 2] },
     "firstname": { "requiredWhen": "legalFormId=1" },

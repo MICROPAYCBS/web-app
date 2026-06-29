@@ -101,6 +101,7 @@ export interface FineractClientTemplate {
   clientTitleOptions?: ClientTitleOption[];
   nationalityOptions?: FineractEnumOption[];
   customerRiskProfileOptions?: FineractEnumOption[];
+  maritalStatusOptions?: FineractEnumOption[];
   customerClassOptions?: CustomerClass[];
   savingProductOptions?: FineractSavingProductOption[];
   clientNonPersonConstitutionOptions?: FineractEnumOption[];
@@ -279,6 +280,7 @@ export interface FineractClientDetail extends FineractClientSummary {
   title?: FineractEnumOption;
   nationality?: FineractEnumOption;
   customerRiskProfile?: FineractEnumOption;
+  maritalStatus?: FineractEnumOption;
   dateOfBirth?: number[] | string;
   isStaff?: boolean;
   legalForm?: FineractEnumOption;

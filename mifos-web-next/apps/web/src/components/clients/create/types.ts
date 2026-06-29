@@ -40,6 +40,7 @@ export interface ClientGeneralFormState {
   customerClassId?: number;
   titleId?: number;
   nationalityCountryId?: number;
+  maritalStatusId?: number;
   customerRiskProfileId?: number;
   dateOfBirth?: string;
   clientTypeId?: number;

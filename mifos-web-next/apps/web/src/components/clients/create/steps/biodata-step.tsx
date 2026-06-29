@@ -99,6 +99,7 @@ export function BiodataStep({
                 firstname: undefined,
                 middlename: undefined,
                 lastname: undefined,
+                maritalStatusId: undefined,
                 fullname: g.fullname ?? '',
                 isStaff: false,
                 clientNonPersonDetails: { constitutionId: nonPerson.constitutionId },
@@ -190,6 +191,18 @@ export function BiodataStep({
               onChange={(v) => onDraftChange({ lastname: v })}
               autoComplete="family-name"
               error={errors.lastname}
+            />
+            <SelectField
+              id="maritalStatusId"
+              label="Marital status"
+              required
+              value={g.maritalStatusId ? String(g.maritalStatusId) : undefined}
+              onValueChange={(v) =>
+                onDraftChange({ maritalStatusId: v ? Number(v) : undefined })
+              }
+              options={toSelectOptions(template.maritalStatusOptions)}
+              placeholder="Select marital status"
+              error={errors.maritalStatusId}
             />
           </>
         )}

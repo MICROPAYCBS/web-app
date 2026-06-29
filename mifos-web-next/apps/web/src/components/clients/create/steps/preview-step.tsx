@@ -50,6 +50,7 @@ export function PreviewStep({
     template.clientTitleOptions?.find((o) => o.id === g.titleId)?.titleName ??
     template.titleOptions?.find((o) => o.id === g.titleId)?.name;
   const nationality = template.nationalityOptions?.find((o) => o.id === g.nationalityCountryId);
+  const maritalStatus = template.maritalStatusOptions?.find((o) => o.id === g.maritalStatusId);
   const riskProfile = template.customerRiskProfileOptions?.find(
     (o) => o.id === g.customerRiskProfileId
   );
@@ -105,6 +106,9 @@ export function PreviewStep({
         )}
         {isPerson ? (
           <Field label="Nationality" value={nationality?.name ?? nationality?.value} />
+        ) : null}
+        {isPerson ? (
+          <Field label="Marital status" value={maritalStatus?.name ?? maritalStatus?.value} />
         ) : null}
         <Field
           label={isPerson ? 'Date of birth' : 'Incorporation date'}

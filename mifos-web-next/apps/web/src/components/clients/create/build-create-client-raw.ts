@@ -57,6 +57,7 @@ export function buildCreateClientRaw(
     customerClassId: general.customerClassId,
     titleId: general.titleId,
     nationalityCountryId: general.nationalityCountryId,
+    maritalStatusId: general.maritalStatusId,
     customerRiskProfileId: general.customerRiskProfileId,
     dateOfBirth: general.dateOfBirth,
     clientTypeId: general.clientTypeId,
@@ -98,6 +99,7 @@ export function createClientIssueStepId(path: (string | number)[]): string {
     'genderId',
     'titleId',
     'nationalityCountryId',
+    'maritalStatusId',
     'dateOfBirth',
     'constitutionId',
     'clientNonPersonDetails'

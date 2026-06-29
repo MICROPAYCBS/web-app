@@ -87,6 +87,7 @@ const clientBaseSchema = z.object({
   titleId: z.coerce.number().int().positive().optional(),
   nationalityCountryId: z.coerce.number().int().positive().optional(),
   customerRiskProfileId: z.coerce.number().int().positive().optional(),
+  maritalStatusId: z.coerce.number().int().positive().optional(),
   dateOfBirth: optionalFineractDate,
   genderId: clientGenderIdSchema.optional(),
   isStaff: z.boolean().optional(),
@@ -161,6 +162,13 @@ export const createClientSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Nationality is required',
         path: ['nationalityCountryId']
+      });
+    }
+    if (data.legalFormId === LEGAL_FORM_PERSON && !data.maritalStatusId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Marital status is required',
+        path: ['maritalStatusId']
       });
     }
     if (data.address?.length) {

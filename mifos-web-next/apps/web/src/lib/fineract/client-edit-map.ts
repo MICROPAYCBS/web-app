@@ -47,6 +47,7 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
     customerClassId: data.customerClassId ?? data.customerClass?.id,
     titleId: data.title?.id,
     nationalityCountryId: data.nationality?.id,
+    maritalStatusId: data.maritalStatus?.id,
     customerRiskProfileId: data.customerRiskProfile?.id,
     dateOfBirth: fineractApiDateToFormString(data.dateOfBirth, dateCtx),
     genderId: mapClientGenderId(data.gender?.id),

@@ -181,6 +181,19 @@ export function EditClientFormFields({
           />
         ) : null}
 
+        {legalFormId === LEGAL_FORM_PERSON ? (
+          <SelectField
+            id="maritalStatusId"
+            label="Marital status"
+            required
+            value={form.maritalStatusId ? String(form.maritalStatusId) : undefined}
+            onValueChange={(v) => onPatch({ maritalStatusId: v ? Number(v) : undefined })}
+            options={toSelectOptions(initial.maritalStatusOptions)}
+            placeholder="Select marital status"
+            error={fieldError(fieldErrors, 'maritalStatusId')}
+          />
+        ) : null}
+
         <DateField
           id="dateOfBirth"
           label={legalFormId === LEGAL_FORM_PERSON ? 'Date of birth' : 'Incorporation date'}

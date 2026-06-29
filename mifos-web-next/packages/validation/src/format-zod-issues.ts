@@ -18,6 +18,7 @@ const FIELD_LABELS: Record<string, string> = {
   fullname: 'Entity name',
   dateOfBirth: 'Date of birth',
   genderId: 'Gender',
+  maritalStatusId: 'Marital status',
   nationalityCountryId: 'Nationality',
   mobileNo: 'Phone number',
   alternativeMobileNo: 'Alternative phone number',
