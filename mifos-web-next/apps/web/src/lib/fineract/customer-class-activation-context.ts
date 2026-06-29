@@ -15,6 +15,7 @@ import { clientHasProfileImage } from '@/lib/fineract/client-image';
 import { getClientIdentifiers } from '@/lib/fineract/client-identifiers';
 import { getClientSignatureInfo } from '@/lib/fineract/client-signature';
 import { getCustomerClass } from '@/lib/fineract/customer-classes';
+import { normalizeOtherBankAccounts } from '@/lib/fineract/compliance-profile-normalize';
 import {
   getCustomerClassActivationIssues,
   type CustomerClassActivationClientState,
@@ -76,7 +77,7 @@ function mapComplianceProfileToInput(
     fatcaRegistrationNo: profile.fatcaRegistrationNo,
     dpfAlternativeBankName: profile.dpfAlternativeBankName,
     dpfAlternativeAccountNumber: profile.dpfAlternativeAccountNumber,
-    otherBankAccounts: profile.otherBankAccounts?.map((account) => ({
+    otherBankAccounts: normalizeOtherBankAccounts(profile.otherBankAccounts).map((account) => ({
       bankName: account.bankName,
       branchName: account.branchName,
       accountNumber: account.accountNumber

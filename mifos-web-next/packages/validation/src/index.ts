@@ -27,6 +27,7 @@ export {
   complianceProfileSchema,
   otherBankAccountSchema,
   isComplianceProfileEmpty,
+  prepareComplianceProfileForValidation,
   sanitizeComplianceProfileForSubmit,
   type ComplianceProfileInput,
   type OtherBankAccountInput

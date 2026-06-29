@@ -9,7 +9,11 @@
  */
 
 import type { FineractClientComplianceProfile } from '@mifos/api-client';
-import type { ComplianceProfileInput } from '@mifos/validation';
+import {
+  complianceProfileSchema,
+  prepareComplianceProfileForValidation,
+  type ComplianceProfileInput
+} from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { updateClientComplianceProfileAction } from '@/actions/client-compliance-profile';
@@ -17,6 +21,8 @@ import { ComplianceProfileStep, emptyComplianceProfile } from '@/components/clie
 import { ClientComplianceProfileSections } from '@/components/clients/detail/client-compliance-profile-sections';
 import { Button } from '@/components/ui/button';
 import type { CreateClientDraft } from '@/components/clients/create/types';
+import type { StepErrors } from '@/components/clients/create/validation';
+import { normalizeOtherBankAccounts } from '@/lib/fineract/compliance-profile-normalize';
 
 function mapProfileToInput(profile: FineractClientComplianceProfile | null): ComplianceProfileInput {
   if (!profile) {
@@ -32,12 +38,11 @@ function mapProfileToInput(profile: FineractClientComplianceProfile | null): Com
     fatcaRegistrationNo: profile.fatcaRegistrationNo ?? '',
     dpfAlternativeBankName: profile.dpfAlternativeBankName ?? '',
     dpfAlternativeAccountNumber: profile.dpfAlternativeAccountNumber ?? '',
-    otherBankAccounts:
-      profile.otherBankAccounts?.map((account) => ({
-        bankName: account.bankName,
-        branchName: account.branchName ?? '',
-        accountNumber: account.accountNumber
-      })) ?? []
+    otherBankAccounts: normalizeOtherBankAccounts(profile.otherBankAccounts).map((account) => ({
+      bankName: account.bankName,
+      branchName: account.branchName ?? '',
+      accountNumber: account.accountNumber
+    }))
   };
 }
 
@@ -53,6 +58,7 @@ export function ClientComplianceProfileView({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<StepErrors>({});
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<CreateClientDraft>(() => ({
     general: {},
@@ -67,11 +73,24 @@ export function ClientComplianceProfileView({
 
   function handleSave() {
     setError(null);
+    setFieldErrors({});
+    const prepared = prepareComplianceProfileForValidation(draft.complianceProfile);
+    const parsed = complianceProfileSchema.safeParse(prepared);
+    if (!parsed.success) {
+      const nextErrors: StepErrors = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path.join('.') || '_form';
+        if (!nextErrors[key]) {
+          nextErrors[key] = issue.message;
+        }
+      }
+      setFieldErrors(nextErrors);
+      setError('Please fix the highlighted fields.');
+      return;
+    }
+
     startTransition(async () => {
-      const result = await updateClientComplianceProfileAction(
-        clientId,
-        draft.complianceProfile
-      );
+      const result = await updateClientComplianceProfileAction(clientId, parsed.data);
       if (!result.ok) {
         setError(result.message);
         return;
@@ -86,7 +105,7 @@ export function ClientComplianceProfileView({
       <div className="space-y-4">
         <ComplianceProfileStep
           draft={draft}
-          errors={error ? { _form: error } : {}}
+          errors={{ ...fieldErrors, ...(error ? { _form: error } : {}) }}
           onComplianceChange={(complianceProfile) =>
             setDraft((current) => ({ ...current, complianceProfile }))
           }
@@ -102,6 +121,7 @@ export function ClientComplianceProfileView({
             onClick={() => {
               setEditing(false);
               setError(null);
+              setFieldErrors({});
               setDraft((current) => ({
                 ...current,
                 complianceProfile: mapProfileToInput(initialProfile)

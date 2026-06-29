@@ -99,3 +99,15 @@ export function sanitizeComplianceProfileForSubmit(
 
   return isComplianceProfileEmpty(normalized) ? undefined : normalized;
 }
+
+/** Drop blank other-bank rows before Zod validates the array (UI keeps two slots). */
+export function prepareComplianceProfileForValidation(
+  profile: ComplianceProfileInput
+): ComplianceProfileInput {
+  return {
+    ...profile,
+    otherBankAccounts: (profile.otherBankAccounts ?? []).filter(
+      (account) => account.bankName?.trim() && account.accountNumber?.trim()
+    )
+  };
+}

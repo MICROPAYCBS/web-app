@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, complianceProfileSchema, incomeSourceSchema, isValidUgandaMobileInternational, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, complianceProfileSchema, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
@@ -257,7 +257,9 @@ function validateSingleRowDatatableStep(
 }
 
 export function validateComplianceStep(draft: CreateClientDraft): StepErrors {
-  const parsed = complianceProfileSchema.safeParse(draft.complianceProfile);
+  const parsed = complianceProfileSchema.safeParse(
+    prepareComplianceProfileForValidation(draft.complianceProfile)
+  );
   if (parsed.success) {
     return {};
   }

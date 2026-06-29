@@ -11,6 +11,7 @@ import 'server-only';
 import type { FineractClientComplianceProfile } from '@mifos/api-client';
 import type { ComplianceProfileInput } from '@mifos/validation';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { normalizeClientComplianceProfile } from '@/lib/fineract/compliance-profile-normalize';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
@@ -46,10 +47,8 @@ export async function getClientComplianceProfile(
 ): Promise<FineractClientComplianceProfile | null> {
   const fineract = await createFineractClient();
   try {
-    const data = await fineract.get<FineractClientComplianceProfile>(
-      `/clients/${clientId}/complianceprofile`
-    );
-    return data ?? null;
+    const data = await fineract.get<unknown>(`/clients/${clientId}/complianceprofile`);
+    return normalizeClientComplianceProfile(data);
   } catch {
     return null;
   }

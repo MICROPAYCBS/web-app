@@ -10,6 +10,7 @@
 
 import {
   complianceProfileSchema,
+  prepareComplianceProfileForValidation,
   toFineractActionError,
   type ComplianceProfileInput
 } from '@mifos/validation';
@@ -20,7 +21,9 @@ export async function updateClientComplianceProfileAction(
   clientId: string,
   raw: unknown
 ): Promise<{ ok: true } | { ok: false; message: string }> {
-  const parsed = complianceProfileSchema.safeParse(raw);
+  const parsed = complianceProfileSchema.safeParse(
+    prepareComplianceProfileForValidation(raw as ComplianceProfileInput)
+  );
   if (!parsed.success) {
     return {
       ok: false,

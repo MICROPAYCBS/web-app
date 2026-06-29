@@ -90,15 +90,6 @@ export function EditClientFormFields({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          id="externalId"
-          className="sm:col-span-2"
-          label="External ID"
-          optional
-          value={form.externalId ?? ''}
-          onChange={(v) => onPatch({ externalId: v })}
-        />
-
         {legalFormId === LEGAL_FORM_ENTITY ? (
           <TextField
             id="fullname"
@@ -257,6 +248,7 @@ export function EditClientFormFields({
 
         <SelectField
           id="staffId"
+          className={legalFormId === LEGAL_FORM_PERSON ? 'sm:col-span-2' : undefined}
           label="Relationship officer"
           optional={!relationshipOfficerRequired}
           required={relationshipOfficerRequired}
@@ -288,6 +280,14 @@ export function EditClientFormFields({
             onCheckedChange={(checked) => onPatch({ isStaff: checked })}
           />
         ) : null}
+
+        <TextField
+          id="externalId"
+          label="External ID"
+          optional
+          value={form.externalId ?? ''}
+          onChange={(v) => onPatch({ externalId: v })}
+        />
 
         <TextField
           id="mobileNo"

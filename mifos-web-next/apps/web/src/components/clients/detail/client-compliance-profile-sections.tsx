@@ -9,6 +9,7 @@
 import type { FineractClientComplianceProfile, FineractClientOtherBankAccount } from '@mifos/api-client';
 import { DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
+import { normalizeOtherBankAccounts } from '@/lib/fineract/compliance-profile-normalize';
 
 function formatOtherBankSummary(account: FineractClientOtherBankAccount): string {
   return [account.bankName, account.branchName, account.accountNumber].filter(Boolean).join(' · ');
@@ -23,7 +24,7 @@ export function ClientComplianceProfileSections({
     return null;
   }
 
-  const accounts = profile.otherBankAccounts ?? [];
+  const accounts = normalizeOtherBankAccounts(profile.otherBankAccounts);
   const hasAny =
     profile.hasOtherBankAccounts ||
     profile.isPep ||

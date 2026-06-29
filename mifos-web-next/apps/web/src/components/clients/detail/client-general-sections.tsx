@@ -21,6 +21,7 @@ import {
 import type { ClientFinancialSummary } from '@/lib/fineract/client-financial-summary';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 import { formatCustomerClassLabel } from '@/lib/fineract/customer-class-eligibility';
+import { normalizeOtherBankAccounts } from '@/lib/fineract/compliance-profile-normalize';
 
 function ClientInformationSection({ client }: { client: FineractClientDetail }) {
   const isEntity = isClientEntity(client);
@@ -272,7 +273,7 @@ function ClientComplianceSummarySection({
     return null;
   }
 
-  const accounts = profile.otherBankAccounts ?? [];
+  const accounts = normalizeOtherBankAccounts(profile.otherBankAccounts);
   const hasAny =
     profile.hasOtherBankAccounts ||
     profile.isPep ||
