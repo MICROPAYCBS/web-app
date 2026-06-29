@@ -43,6 +43,20 @@ function optionLabel(options: FineractEnumOption[] | undefined, id?: number): st
   return options.find((o) => o.id === id)?.name ?? options.find((o) => o.id === id)?.value;
 }
 
+function formatCoordinateValue(value: number | string | undefined): string | undefined {
+  if (value == null || value === '') {
+    return undefined;
+  }
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numeric)) {
+    return String(value);
+  }
+  if (numeric === 0) {
+    return '0';
+  }
+  return String(numeric);
+}
+
 type AddressSummaryParts = {
   street?: string;
   addressLine1?: string;
@@ -387,6 +401,16 @@ export function ClientAddressSections({
       {isFieldEnabled(fieldConfig, 'countyDistrict') ? (
         <DetailField label={shouldUseLocationCascade(fieldConfig) ? 'County' : 'County district'}>
           <TextValue value={address.countyDistrict} />
+        </DetailField>
+      ) : null}
+      {isFieldEnabled(fieldConfig, 'latitude') ? (
+        <DetailField label="Latitude">
+          <TextValue value={formatCoordinateValue(address.latitude)} />
+        </DetailField>
+      ) : null}
+      {isFieldEnabled(fieldConfig, 'longitude') ? (
+        <DetailField label="Longitude">
+          <TextValue value={formatCoordinateValue(address.longitude)} />
         </DetailField>
       ) : null}
       {isFieldEnabled(fieldConfig, 'isActive') ? (

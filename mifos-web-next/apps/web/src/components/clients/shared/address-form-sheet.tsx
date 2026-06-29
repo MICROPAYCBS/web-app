@@ -10,14 +10,18 @@
 
 import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
+import { LocateFixed } from 'lucide-react';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { LocationCascadeSelect } from '@/components/clients/shared/location-cascade-select';
 import { FormSheet } from '@/components/composites/form-sheet';
+import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
+import { Button } from '@/components/ui/button';
 import type { FormSubmitResult } from '@/lib/form/submit-result';
 import { toSelectOptions } from '@/lib/form/select-options';
+import { readCurrentGpsPosition } from '@/lib/geolocation/coordinates';
 import { shouldUseLocationCascade } from '@/lib/locations/location-cascade-config';
 import {
   addressFieldsFromLocationSelection,
@@ -29,6 +33,115 @@ import {
 
 function isFieldEnabled(config: FineractAddressFieldConfig[], field: string): boolean {
   return config.find((f) => f.field === field)?.isEnabled ?? false;
+}
+
+function parseCoordinateInput(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function coordinateFieldValue(value: number | undefined): string {
+  return value == null ? '' : String(value);
+}
+
+function CoordinateFields({
+  open,
+  fieldConfig,
+  form,
+  onChange,
+  disabled
+}: {
+  open: boolean;
+  fieldConfig: FineractAddressFieldConfig[];
+  form: ClientAddressEntry;
+  onChange: (entry: ClientAddressEntry) => void;
+  disabled?: boolean;
+}) {
+  const showLatitude = isFieldEnabled(fieldConfig, 'latitude');
+  const showLongitude = isFieldEnabled(fieldConfig, 'longitude');
+  const [detecting, setDetecting] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setGpsError(null);
+      setDetecting(false);
+    }
+  }, [open]);
+
+  if (!showLatitude && !showLongitude) {
+    return null;
+  }
+
+  async function handleUseCurrentLocation() {
+    if (disabled || detecting) {
+      return;
+    }
+
+    setGpsError(null);
+    setDetecting(true);
+    try {
+      const position = await readCurrentGpsPosition();
+      onChange({
+        ...form,
+        ...(showLatitude ? { latitude: position.latitude } : {}),
+        ...(showLongitude ? { longitude: position.longitude } : {})
+      });
+    } catch (err) {
+      setGpsError(err instanceof Error ? err.message : 'Could not read your location.');
+    } finally {
+      setDetecting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3 sm:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">GPS coordinates</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void handleUseCurrentLocation()}
+          disabled={disabled || detecting}
+        >
+          <LocateFixed className="mr-2 size-4" aria-hidden />
+          {detecting ? 'Detecting location…' : 'Use my location'}
+        </Button>
+      </div>
+      {gpsError ? <p className="text-sm text-destructive">{gpsError}</p> : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {showLatitude ? (
+          <NumericField
+            label="Latitude"
+            optional
+            allowNegative
+            maxDecimalPlaces={8}
+            value={coordinateFieldValue(form.latitude)}
+            onChange={(value) => onChange({ ...form, latitude: parseCoordinateInput(value) })}
+            disabled={disabled || detecting}
+            placeholder="e.g. 0.347596"
+          />
+        ) : null}
+        {showLongitude ? (
+          <NumericField
+            label="Longitude"
+            optional
+            allowNegative
+            maxDecimalPlaces={8}
+            value={coordinateFieldValue(form.longitude)}
+            onChange={(value) => onChange({ ...form, longitude: parseCoordinateInput(value) })}
+            disabled={disabled || detecting}
+            placeholder="e.g. 32.582520"
+          />
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 function buildAddressFormState(
@@ -266,6 +379,13 @@ export function AddressFormSheet({
                 onChange={(v) => setForm({ ...form, postalCode: v })}
               />
             ) : null}
+            <CoordinateFields
+              open={open}
+              fieldConfig={fieldConfig}
+              form={form}
+              onChange={setForm}
+              disabled={isSubmitting || submitLoading}
+            />
           </>
         ) : (
           <>
@@ -322,6 +442,13 @@ export function AddressFormSheet({
                 onChange={(v) => setForm({ ...form, countyDistrict: v })}
               />
             ) : null}
+            <CoordinateFields
+              open={open}
+              fieldConfig={fieldConfig}
+              form={form}
+              onChange={setForm}
+              disabled={isSubmitting || submitLoading}
+            />
           </>
         )}
         {form.isActive !== false ? (

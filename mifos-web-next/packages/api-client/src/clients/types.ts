@@ -135,6 +135,8 @@ export interface FineractClientAddress {
   countryId?: number;
   countyDistrict?: string;
   postalCode?: string;
+  latitude?: number;
+  longitude?: number;
   isActive?: boolean;
   isPrimary?: boolean;
   relationship?: string;

@@ -30,4 +30,14 @@ describe('toClientAddressRequestBody', () => {
     assert.equal(body.addressId, 42);
     assert.equal('addressTypeId' in body, false);
   });
+
+  it('passes latitude and longitude to Fineract', () => {
+    const body = toClientAddressRequestBody({
+      addressTypeId: 1,
+      latitude: 0.347596,
+      longitude: 32.58252
+    });
+    assert.equal(body.latitude, 0.347596);
+    assert.equal(body.longitude, 32.58252);
+  });
 });

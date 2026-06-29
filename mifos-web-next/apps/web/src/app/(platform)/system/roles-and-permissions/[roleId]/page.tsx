@@ -8,7 +8,10 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { RoleDetailView } from '@/components/system/role-detail-view';
+import { RoleEditUrlPanel } from '@/components/system/role-edit-url-panel';
+import { isSuperUserRole } from '@/lib/fineract/role-display';
 import { getRolePermissions } from '@/lib/fineract/system-roles';
 import { getServerSession } from '@/lib/session/server';
 
@@ -33,11 +36,23 @@ export default async function RoleDetailPage({
     notFound();
   }
 
+  const canUpdate = can(session, 'UPDATE_ROLE') && !isSuperUserRole(role.name);
+
   return (
-    <RoleDetailView
-      role={role}
-      canUpdate={can(session, 'UPDATE_ROLE')}
-      canDelete={can(session, 'DELETE_ROLE')}
-    />
+    <>
+      <RoleDetailView
+        role={role}
+        canUpdate={can(session, 'UPDATE_ROLE')}
+        canDelete={can(session, 'DELETE_ROLE')}
+      />
+      {canUpdate ? (
+        <Suspense fallback={null}>
+          <RoleEditUrlPanel
+            roleId={role.id}
+            initial={{ name: role.name, description: role.description }}
+          />
+        </Suspense>
+      ) : null}
+    </>
   );
 }

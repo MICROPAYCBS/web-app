@@ -86,7 +86,7 @@ export function RolesTable({
         cell: ({ row }) =>
           canUpdate && !isSuperUserRole(row.original.name) ? (
             <Link
-              href={`/system/roles-and-permissions/${row.original.id}/edit`}
+              href={`/system/roles-and-permissions/${row.original.id}?edit=1`}
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}
               aria-label={`Edit ${row.original.name}`}
               onClick={(event) => event.stopPropagation()}

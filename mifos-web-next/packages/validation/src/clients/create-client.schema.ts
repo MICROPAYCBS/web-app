@@ -59,6 +59,8 @@ export const clientAddressEntrySchema = z.object({
   stateProvinceId: z.coerce.number().int().positive().optional(),
   countryId: z.coerce.number().int().positive().optional(),
   countyDistrict: z.string().trim().max(100).optional(),
+  latitude: z.coerce.number().min(-90).max(90).optional(),
+  longitude: z.coerce.number().min(-180).max(180).optional(),
   isActive: z.boolean().optional(),
   isPrimary: z.boolean().optional()
 });

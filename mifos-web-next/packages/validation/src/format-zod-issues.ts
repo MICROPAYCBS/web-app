@@ -47,7 +47,9 @@ const FIELD_LABELS: Record<string, string> = {
   street: 'Street',
   city: 'City',
   townVillage: 'Town / village',
-  postalCode: 'Postal code'
+  postalCode: 'Postal code',
+  latitude: 'Latitude',
+  longitude: 'Longitude'
 };
 
 function labelForPath(path: (string | number)[]): string {

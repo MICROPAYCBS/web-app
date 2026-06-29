@@ -66,6 +66,8 @@ function toAddressEntry(address: FineractClientAddress): ClientAddressEntry {
     countryId: address.countryId,
     countyDistrict: address.countyDistrict,
     postalCode: address.postalCode,
+    latitude: address.latitude != null ? Number(address.latitude) : undefined,
+    longitude: address.longitude != null ? Number(address.longitude) : undefined,
     isActive: address.isActive ?? true,
     isPrimary: address.isPrimary ?? false
   };

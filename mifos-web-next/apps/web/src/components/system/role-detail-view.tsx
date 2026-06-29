@@ -89,7 +89,7 @@ export function RoleDetailView({
                 {canManageRole ? (
                   <>
                     <Link
-                      href={`/system/roles-and-permissions/${role.id}/edit`}
+                      href={`/system/roles-and-permissions/${role.id}?edit=1`}
                       className={cn(buttonVariants({ size: 'sm' }))}
                     >
                       <Pencil className="mr-2 size-4" />

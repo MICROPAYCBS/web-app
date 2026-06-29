@@ -9,19 +9,28 @@
  */
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { RoleFormSheet } from '@/components/system/role-form-sheet';
+import {
+  RoleFormSheet,
+  type RoleFormInitial
+} from '@/components/system/role-form-sheet';
 
-/** Opens the create role sidebar when the URL contains `?create=1`. */
-export function RoleCreateUrlPanel() {
+/** Opens the edit role sidebar when the URL contains `?edit=1`. */
+export function RoleEditUrlPanel({
+  roleId,
+  initial
+}: {
+  roleId: number;
+  initial: RoleFormInitial;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const open = searchParams.get('create') === '1';
+  const open = searchParams.get('edit') === '1';
 
   function handleOpenChange(next: boolean) {
-    if (!next && searchParams.get('create') === '1') {
+    if (!next && searchParams.get('edit') === '1') {
       const params = new URLSearchParams(searchParams.toString());
-      params.delete('create');
+      params.delete('edit');
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     }
@@ -29,10 +38,12 @@ export function RoleCreateUrlPanel() {
 
   return (
     <RoleFormSheet
-      key={open ? 'create-open' : 'create-closed'}
+      key={`${roleId}-${open ? 'open' : 'closed'}`}
       open={open}
       onOpenChange={handleOpenChange}
-      mode="create"
+      mode="edit"
+      roleId={roleId}
+      initial={initial}
     />
   );
 }

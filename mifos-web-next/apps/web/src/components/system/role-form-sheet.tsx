@@ -8,37 +8,60 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage, validateCreateRole } from '@mifos/validation';
+import {
+  formatActionErrorMessage,
+  validateCreateRole,
+  validateUpdateRole
+} from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { createRoleAction } from '@/actions/system-roles';
+import { createRoleAction, updateRoleAction } from '@/actions/system-roles';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { TextField } from '@/components/composites/text-field';
 
-export function RoleCreateFormSheet({
+export type RoleFormInitial = {
+  name: string;
+  description: string;
+};
+
+function formStateFromInitial(initial?: RoleFormInitial) {
+  return {
+    name: initial?.name ?? '',
+    description: initial?.description ?? ''
+  };
+}
+
+export function RoleFormSheet({
   open,
-  onOpenChange
+  onOpenChange,
+  mode,
+  roleId,
+  initial
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode: 'create' | 'edit';
+  roleId?: number;
+  initial?: RoleFormInitial;
 }) {
   const router = useRouter();
   const formId = useId();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState(() => formStateFromInitial(initial).name);
+  const [description, setDescription] = useState(() => formStateFromInitial(initial).description);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     if (open) {
-      setName('');
-      setDescription('');
+      const next = formStateFromInitial(initial);
+      setName(next.name);
+      setDescription(next.description);
       setFieldErrors({});
       setSubmitError(null);
     }
-  }, [open]);
+  }, [open, initial?.name, initial?.description]);
 
   function handleOpenChange(next: boolean) {
     if (pending) {
@@ -52,7 +75,46 @@ export function RoleCreateFormSheet({
       return;
     }
 
-    const parsed = validateCreateRole({ name, description });
+    if (mode === 'create') {
+      const parsed = validateCreateRole({ name, description });
+      if (!parsed.success) {
+        const nextErrors: Record<string, string> = {};
+        for (const issue of parsed.error.issues) {
+          const key = issue.path[0];
+          if (typeof key === 'string') {
+            nextErrors[key] = issue.message;
+          }
+        }
+        setFieldErrors(nextErrors);
+        setSubmitError('Fix the highlighted fields.');
+        return;
+      }
+
+      setSubmitError(null);
+      setFieldErrors({});
+
+      startTransition(async () => {
+        const result = await createRoleAction(parsed.data);
+        if (!result.ok) {
+          setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+          if (result.fieldErrors) {
+            setFieldErrors(result.fieldErrors);
+          }
+          return;
+        }
+
+        toast.success('Role created.');
+        onOpenChange(false);
+        if (result.resourceId != null) {
+          router.push(`/system/roles-and-permissions/${result.resourceId}`);
+        } else {
+          router.refresh();
+        }
+      });
+      return;
+    }
+
+    const parsed = validateUpdateRole({ description });
     if (!parsed.success) {
       const nextErrors: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -66,11 +128,15 @@ export function RoleCreateFormSheet({
       return;
     }
 
+    if (roleId == null) {
+      return;
+    }
+
     setSubmitError(null);
     setFieldErrors({});
 
     startTransition(async () => {
-      const result = await createRoleAction(parsed.data);
+      const result = await updateRoleAction(roleId, parsed.data);
       if (!result.ok) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
@@ -79,27 +145,29 @@ export function RoleCreateFormSheet({
         return;
       }
 
-      toast.success('Role created.');
-      handleOpenChange(false);
-      if (result.resourceId != null) {
-        router.push(`/system/roles-and-permissions/${result.resourceId}`);
-      } else {
-        router.refresh();
-      }
+      toast.success('Role updated.');
+      onOpenChange(false);
+      router.refresh();
     });
   }
+
+  const isCreate = mode === 'create';
+  const title = isCreate ? 'Create role' : 'Edit role';
+  const sheetDescription = isCreate
+    ? 'Add a new role, then assign permissions on the role detail page.'
+    : 'Update the role description. Role names cannot be changed after creation.';
 
   return (
     <FormSheet
       open={open}
       onOpenChange={handleOpenChange}
-      title="Create role"
-      description="Add a new role, then assign permissions on the role detail page."
+      title={title}
+      description={sheetDescription}
       formId={formId}
-      submitLabel="Create role"
+      submitLabel={isCreate ? 'Create role' : 'Save changes'}
       onSubmit={handleSubmit}
       submitLoading={pending}
-      submitDisabled={!name.trim() || !description.trim()}
+      submitDisabled={isCreate ? !name.trim() || !description.trim() : !description.trim()}
       className="data-[side=right]:sm:max-w-md"
     >
       <form
@@ -116,6 +184,9 @@ export function RoleCreateFormSheet({
           required
           value={name}
           onChange={(value) => {
+            if (!isCreate) {
+              return;
+            }
             setName(value);
             if (fieldErrors.name) {
               setFieldErrors((current) => {
@@ -125,7 +196,7 @@ export function RoleCreateFormSheet({
               });
             }
           }}
-          disabled={pending}
+          disabled={pending || !isCreate}
           error={fieldErrors.name}
           autoComplete="off"
         />
