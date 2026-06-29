@@ -10,6 +10,8 @@ import { format, isValid, parse } from 'date-fns';
 import {
   FINERACT_DATE_FORMAT,
   FINERACT_LOCALE,
+  coerceFineractDateTime,
+  fineractApiDateToFormString as fineractApiDateToFormStringCanonical,
   fromFineractDateArray,
   toLocalCalendarDate
 } from '@/lib/fineract/dates';
@@ -66,18 +68,28 @@ export function formatFineractDateWithContext(date: Date, ctx: FineractDateConte
 }
 
 export function fineractApiDateToFormString(
-  value: number[] | string | undefined,
+  value: unknown,
   ctx: FineractDateContext
 ): string | undefined {
-  if (value == null) {
+  const coerced = coerceFineractDateTime(value);
+  if (coerced == null) {
     return undefined;
   }
-  if (typeof value === 'string') {
-    const parsed = parseFineractDateWithContext(value, ctx);
+  if (typeof coerced === 'number') {
+    const parsed = new Date(coerced);
+    return Number.isNaN(parsed.getTime())
+      ? undefined
+      : formatFineractDateWithContext(parsed, ctx);
+  }
+  if (typeof coerced === 'string') {
+    const parsed = parseFineractDateWithContext(coerced, ctx);
     return parsed ? formatFineractDateWithContext(parsed, ctx) : undefined;
   }
-  const fromArray = fromFineractDateArray(value);
-  return fromArray ? formatFineractDateWithContext(fromArray, ctx) : undefined;
+  const fromArray = fromFineractDateArray(coerced);
+  if (fromArray) {
+    return formatFineractDateWithContext(fromArray, ctx);
+  }
+  return fineractApiDateToFormStringCanonical(coerced);
 }
 
 export function normalizeFineractDateField(

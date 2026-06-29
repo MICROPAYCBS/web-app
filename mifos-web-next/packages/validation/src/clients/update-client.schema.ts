@@ -65,13 +65,6 @@ const updateEntitySchema = updateClientBaseSchema.extend({
 export const updateClientSchema = z
   .discriminatedUnion('legalFormId', [updatePersonSchema, updateEntitySchema])
   .superRefine((data, ctx) => {
-    if (data.active && !data.activationDate?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Activation date is required when the customer is active',
-        path: ['activationDate']
-      });
-    }
     if (data.legalFormId === LEGAL_FORM_PERSON && !data.maritalStatusId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

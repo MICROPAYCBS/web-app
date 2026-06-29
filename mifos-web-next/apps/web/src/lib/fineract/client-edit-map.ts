@@ -8,6 +8,7 @@
 
 import type { FineractClientEditData } from '@mifos/api-client';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, type UpdateClientInput } from '@mifos/validation';
+import { clientStatusKind } from '@/lib/fineract/client-status';
 import {
   fineractApiDateToFormString,
   resolveFineractDateContext
@@ -22,6 +23,23 @@ function mapClientGenderId(id: number | undefined): ClientGenderId | undefined {
   return undefined;
 }
 
+function resolveClientActive(data: FineractClientEditData): boolean {
+  if (typeof data.active === 'boolean') {
+    return data.active;
+  }
+  return clientStatusKind(data) === 'active';
+}
+
+function resolveActivationDate(
+  data: FineractClientEditData,
+  dateCtx: ReturnType<typeof resolveFineractDateContext>
+): string | undefined {
+  return (
+    fineractApiDateToFormString(data.timeline?.activatedOnDate, dateCtx) ??
+    fineractApiDateToFormString(data.activationDate, dateCtx)
+  );
+}
+
 /** Map Fineract edit template response to validated form input. */
 export function mapClientToEditFormInput(data: FineractClientEditData): UpdateClientInput {
   const dateCtx = resolveFineractDateContext(data);
@@ -29,10 +47,8 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
   const details = data.clientNonPersonDetails;
 
   const submittedOnDate = fineractApiDateToFormString(data.timeline?.submittedOnDate, dateCtx);
-  const activationDate = fineractApiDateToFormString(
-    data.timeline?.activatedOnDate ?? data.activationDate,
-    dateCtx
-  );
+  const activationDate = resolveActivationDate(data, dateCtx);
+  const active = resolveClientActive(data);
 
   const base = {
     staffId: data.staffId,
@@ -54,7 +70,7 @@ export function mapClientToEditFormInput(data: FineractClientEditData): UpdateCl
     isStaff: data.isStaff ?? false,
     clientTypeId: data.clientType?.id,
     submittedOnDate: submittedOnDate ?? '',
-    active: data.active,
+    active,
     activationDate,
     dateFormat: dateCtx.dateFormat,
     locale: dateCtx.locale

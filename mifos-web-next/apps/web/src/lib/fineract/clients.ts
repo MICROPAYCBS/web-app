@@ -72,7 +72,7 @@ export async function createClient(
 export async function updateClient(
   clientId: string | number,
   input: UpdateClientPayload,
-  options?: { initial?: UpdateClientPayload }
+  options: { initial: UpdateClientPayload }
 ): Promise<void> {
   const fineract = await createFineractClient();
   const body = buildUpdateClientPayload(input, options);

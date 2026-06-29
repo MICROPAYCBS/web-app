@@ -11,13 +11,14 @@
 import type { FineractClientEditData } from '@mifos/api-client';
 import { LEGAL_FORM_ENTITY, type UpdateClientInput, formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { loadClientForEditAction } from '@/actions/client-edit-load';
 import { updateClientAction } from '@/actions/client-update';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { EditClientFormFields } from '@/components/clients/edit/edit-client-form-fields';
+import { hasUpdateClientChanges } from '@/lib/fineract/build-update-client-payload';
 import { mapClientToEditFormInput } from '@/lib/fineract/client-edit-map';
 import { validateCustomerClassFormFields } from '@/lib/fineract/customer-class-eligibility';
 
@@ -80,6 +81,13 @@ export function EditClientSheet({
     };
   }, [open, clientId]);
 
+  const hasChanges = useMemo(() => {
+    if (!form || !initialForm) {
+      return false;
+    }
+    return hasUpdateClientChanges(form, { initial: initialForm });
+  }, [form, initialForm]);
+
   function patch(patch: Partial<UpdateClientInput>) {
     setForm((prev) => (prev ? ({ ...prev, ...patch }) as UpdateClientInput : prev));
   }
@@ -105,6 +113,9 @@ export function EditClientSheet({
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!form || !initialForm || !initial) {
+      return;
+    }
+    if (!hasUpdateClientChanges(form, { initial: initialForm })) {
       return;
     }
     setSubmitError(null);
@@ -146,7 +157,7 @@ export function EditClientSheet({
       formId={EDIT_CLIENT_FORM_ID}
       submitLabel="Save changes"
       submitLoading={pending}
-      submitDisabled={loading || !form}
+      submitDisabled={loading || !form || !hasChanges}
       className={EDIT_PANEL_CLASS}
       error={
         submitError ? (

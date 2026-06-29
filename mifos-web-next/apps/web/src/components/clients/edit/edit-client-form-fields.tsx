@@ -404,13 +404,13 @@ export function EditClientFormFields({
           error={fieldError(fieldErrors, 'submittedOnDate')}
         />
 
-        {active && form.activationDate ? (
+        {active ? (
           <DateField
             id="activationDate"
             label="Activated on"
             required
             value={form.activationDate}
-            onChange={(v) => onPatch({ activationDate: v })}
+            onChange={(v) => onPatch({ activationDate: v ?? '' })}
             fromDate={activationMinDate}
             dateFormat={tenantDateFormat}
             error={fieldError(fieldErrors, 'activationDate')}

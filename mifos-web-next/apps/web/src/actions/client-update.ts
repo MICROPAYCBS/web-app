@@ -15,6 +15,7 @@ import {
   type UpdateClientInput
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
+import { EmptyUpdatePayloadError } from '@/lib/fineract/partial-update-payload';
 import { updateClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 
@@ -25,7 +26,7 @@ export type UpdateClientActionResult =
 export async function updateClientAction(
   clientId: string,
   raw: unknown,
-  initialSnapshot?: UpdateClientInput
+  initialSnapshot: UpdateClientInput
 ): Promise<UpdateClientActionResult> {
   const session = await getServerSession();
   if (!session) {
@@ -54,13 +55,13 @@ export async function updateClientAction(
     };
   }
 
-  const initialParsed = initialSnapshot
-    ? updateClientSchema.safeParse(initialSnapshot)
-    : null;
-  const initial =
-    initialParsed?.success === true ? initialParsed.data : undefined;
+  const initialParsed = updateClientSchema.safeParse(initialSnapshot);
+  if (!initialParsed.success) {
+    return { ok: false, message: 'Could not verify customer changes.' };
+  }
+  const initial = initialParsed.data;
 
-  if (initial?.staffId && !parsed.data.staffId) {
+  if (initial.staffId && !parsed.data.staffId) {
     return {
       ok: false,
       message: 'Please fix the highlighted fields.',
@@ -78,6 +79,9 @@ export async function updateClientAction(
     revalidatePath(`/clients/${clientId}/edit`);
     return { ok: true };
   } catch (err) {
+    if (err instanceof EmptyUpdatePayloadError) {
+      return { ok: false, message: err.message };
+    }
     return toFineractActionError(err, 'Could not update customer.');
   }
 }
