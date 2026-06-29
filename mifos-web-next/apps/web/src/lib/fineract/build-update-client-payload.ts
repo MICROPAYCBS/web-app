@@ -117,6 +117,62 @@ function buildEntityNonPersonDetailsDiff(
 }
 
 /**
+ * Fineract `ClientDataValidator.validateForUpdate` only counts these JSON keys toward
+ * `atLeastOneParameterPassedForUpdate`. Micropay extension fields (maritalStatusId,
+ * titleId, …) and `emailAddress` are applied by the write service but omitted here.
+ */
+const FINERACT_CLIENT_UPDATE_VALIDATOR_PARAM_KEYS = new Set([
+  'accountNo',
+  'firstname',
+  'middlename',
+  'lastname',
+  'fullname',
+  'externalId',
+  'mobileNo',
+  'taxIdentificationNumber',
+  'alternativeMobileNo',
+  'alternativeEmailAddress',
+  'active',
+  'staffId',
+  'savingsProductId',
+  'genderId',
+  'clientTypeId',
+  'clientClassificationId',
+  'submittedOnDate',
+  'dateOfBirth',
+  'legalFormId',
+  'clientNonPersonDetails'
+]);
+
+function payloadHasFineractValidatorParam(payload: Record<string, unknown>): boolean {
+  return Object.keys(payload).some((key) => FINERACT_CLIENT_UPDATE_VALIDATOR_PARAM_KEYS.has(key));
+}
+
+/**
+ * Fineract rejects PUT bodies that only contain extension fields with
+ * "No parameters passed for update." Anchor with unchanged legal form + name fields
+ * so validation passes; the write service skips unchanged values in the audit trail.
+ */
+function attachFineractClientUpdateValidatorAnchor(
+  payload: Record<string, unknown>,
+  input: UpdateClientPayload
+): void {
+  if (payloadHasFineractValidatorParam(payload)) {
+    return;
+  }
+
+  payload.legalFormId = input.legalFormId;
+
+  if (input.legalFormId === LEGAL_FORM_PERSON) {
+    payload.firstname = input.firstname;
+    payload.lastname = input.lastname;
+    payload.middlename = trimOptionalString(input.middlename);
+  } else {
+    payload.fullname = input.fullname;
+  }
+}
+
+/**
  * Maps validated edit form data to a Fineract patch-style PUT /clients/{id} body.
  * Only fields that differ from `initial` are included (Fineract partial update).
  * Returns `null` when there is nothing to send.
@@ -234,5 +290,6 @@ export function buildUpdateClientPayload(
     throw new EmptyUpdatePayloadError('No customer fields were modified.');
   }
 
+  attachFineractClientUpdateValidatorAnchor(payload, input);
   return payload;
 }

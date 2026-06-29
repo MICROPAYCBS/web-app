@@ -78,6 +78,34 @@ describe('buildUpdateClientPayload', () => {
     assert.equal(payload.dateFormat, 'dd MMMM yyyy');
     assert.equal(payload.locale, 'en');
     assert.equal('active' in payload, false);
+    assert.equal(payload.legalFormId, LEGAL_FORM_PERSON);
+    assert.equal(payload.firstname, 'William');
+    assert.equal(payload.lastname, 'Lubwama');
+  });
+
+  it('anchors legal form and name when only marital status changes', () => {
+    const initial = personBase({ maritalStatusId: 1 });
+    const current = personBase({ maritalStatusId: 2 });
+    const payload = buildUpdateClientPayload(current, { initial });
+
+    assert.equal(payload.maritalStatusId, 2);
+    assert.equal(payload.legalFormId, LEGAL_FORM_PERSON);
+    assert.equal(payload.firstname, 'William');
+    assert.equal(payload.lastname, 'Lubwama');
+    assert.equal(payload.middlename, '');
+    assert.equal('mobileNo' in payload, false);
+  });
+
+  it('anchors legal form and name when only title changes', () => {
+    const initial = personBase({ titleId: 1 });
+    const current = personBase({ titleId: 2 });
+    const payload = buildUpdateClientPayload(current, { initial });
+
+    assert.equal(payload.titleId, 2);
+    assert.equal(payload.legalFormId, LEGAL_FORM_PERSON);
+    assert.equal(payload.firstname, 'William');
+    assert.equal(payload.lastname, 'Lubwama');
+    assert.equal('genderId' in payload, false);
   });
 
   it('clears optional string fields when emptied', () => {

@@ -27,7 +27,8 @@ export type UpdateClientActionResult =
 
 export async function updateClientAction(
   clientId: string,
-  raw: unknown
+  raw: unknown,
+  clientInitialSnapshot?: unknown
 ): Promise<UpdateClientActionResult> {
   const session = await getServerSession();
   if (!session) {
@@ -56,17 +57,25 @@ export async function updateClientAction(
     };
   }
 
+  const clientInitialParsed = clientInitialSnapshot
+    ? updateClientDiffBaselineSchema.safeParse(clientInitialSnapshot)
+    : null;
+
   let initial;
-  try {
-    const editData = await getClientForEdit(clientId);
-    const initialMapped = mapClientToEditFormInput(editData);
-    const initialParsed = updateClientDiffBaselineSchema.safeParse(initialMapped);
-    if (!initialParsed.success) {
-      return { ok: false, message: 'Could not load customer baseline for update.' };
+  if (clientInitialParsed?.success) {
+    initial = clientInitialParsed.data;
+  } else {
+    try {
+      const editData = await getClientForEdit(clientId);
+      const initialMapped = mapClientToEditFormInput(editData);
+      const initialParsed = updateClientDiffBaselineSchema.safeParse(initialMapped);
+      if (!initialParsed.success) {
+        return { ok: false, message: 'Could not load customer baseline for update.' };
+      }
+      initial = initialParsed.data;
+    } catch {
+      return { ok: false, message: 'Could not load customer details for update.' };
     }
-    initial = initialParsed.data;
-  } catch {
-    return { ok: false, message: 'Could not load customer details for update.' };
   }
 
   if (initial.staffId && !parsed.data.staffId) {
