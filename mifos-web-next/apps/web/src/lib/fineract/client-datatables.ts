@@ -12,7 +12,8 @@ import { cache } from 'react';
 
 import type {
   FineractDatatableDefinition,
-  FineractDatatableRegistration
+  FineractDatatableRegistration,
+  FineractCommandProcessingResult
 } from '@mifos/api-client';
 import { FineractHttpError } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
@@ -111,18 +112,18 @@ export async function createClientDatatableEntry(
   clientId: string | number,
   registeredTableName: string,
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`/datatables/${registeredTableName}/${clientId}`, body, GENERIC_RESULT_SET);
+  return fineract.post<FineractCommandProcessingResult>(`/datatables/${registeredTableName}/${clientId}`, body, GENERIC_RESULT_SET);
 }
 
 export async function updateClientDatatableEntry(
   clientId: string | number,
   registeredTableName: string,
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/datatables/${registeredTableName}/${clientId}`, body, GENERIC_RESULT_SET);
+  return fineract.put<FineractCommandProcessingResult>(`/datatables/${registeredTableName}/${clientId}`, body, GENERIC_RESULT_SET);
 }
 
 export async function updateClientDatatableRow(
@@ -130,9 +131,9 @@ export async function updateClientDatatableRow(
   registeredTableName: string,
   rowId: string | number,
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(
+  return fineract.put<FineractCommandProcessingResult>(
     `/datatables/${registeredTableName}/${clientId}/${rowId}`,
     body,
     GENERIC_RESULT_SET
@@ -142,18 +143,18 @@ export async function updateClientDatatableRow(
 export async function deleteClientDatatableEntry(
   clientId: string | number,
   registeredTableName: string
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/datatables/${registeredTableName}/${clientId}`, GENERIC_RESULT_SET);
+  return fineract.delete<FineractCommandProcessingResult>(`/datatables/${registeredTableName}/${clientId}`, GENERIC_RESULT_SET);
 }
 
 export async function deleteClientDatatableRow(
   clientId: string | number,
   registeredTableName: string,
   rowId: string | number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(
+  return fineract.delete<FineractCommandProcessingResult>(
     `/datatables/${registeredTableName}/${clientId}/${rowId}`,
     GENERIC_RESULT_SET
   );

@@ -14,7 +14,8 @@ import {
   validateCreateSystemDatatable,
   validateUpdateSystemDatatable,
   type CreateSystemDatatableInput,
-  type UpdateSystemDatatableInput
+  type UpdateSystemDatatableInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -170,10 +171,10 @@ export async function deleteSystemDatatableAction(
   assertCan(session, 'DELETE_DATATABLE');
 
   try {
-    await deleteSystemDatatable(registeredTableName);
+    const response = await deleteSystemDatatable(registeredTableName);
     revalidatePath(listPath());
     revalidatePath(detailPath(registeredTableName));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete data table.');
   }

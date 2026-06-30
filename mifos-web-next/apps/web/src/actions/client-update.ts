@@ -10,9 +10,11 @@
 
 import { assertCan, resolvePermission } from '@mifos/auth';
 import {
+  actionSuccessFromFineractCommand,
   updateClientDiffBaselineSchema,
   updateClientSchema,
-  toFineractActionError
+  toFineractActionError,
+  type FineractCommandActionMeta
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { EmptyUpdatePayloadError } from '@/lib/fineract/partial-update-payload';
@@ -22,7 +24,7 @@ import { updateClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 
 export type UpdateClientActionResult =
-  | { ok: true }
+  | ({ ok: true } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export async function updateClientAction(
@@ -90,11 +92,11 @@ export async function updateClientAction(
   }
 
   try {
-    await updateClient(clientId, parsed.data, { initial });
+    const response = await updateClient(clientId, parsed.data, { initial });
     revalidatePath(`/clients/${clientId}`);
     revalidatePath(`/clients/${clientId}/general`);
     revalidatePath(`/clients/${clientId}/edit`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     if (err instanceof EmptyUpdatePayloadError) {
       return { ok: false, message: err.message };

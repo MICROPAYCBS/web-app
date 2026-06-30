@@ -20,6 +20,7 @@ import {
 } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateExternalEventConfigurationAction } from '@/actions/external-events';
 import { DataTable } from '@/components/composites/data-table/data-table';
@@ -83,10 +84,11 @@ export function ExternalEventsTable({
     startTransition(async () => {
       const result = await updateExternalEventConfigurationAction(pendingChanges);
       if (!result.ok) {
+
         setActionError(result.message);
         return;
       }
-      toast.success('External event settings updated.');
+      toastCommandOutcome(result, { completed: 'External event settings updated.', pending: 'External event settings updated sent for approval.' });
       router.refresh();
     });
   }

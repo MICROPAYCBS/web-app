@@ -8,16 +8,14 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  EntityMappingOption,
+import type { EntityMappingOption,
   FineractUserDetail,
   FineractUserEditContext,
   FineractUserListItem,
   FineractUserMutationResponse,
   FineractUserRoleRef,
   FineractUserStaffRef,
-  FineractUserTemplate
-} from '@mifos/api-client';
+  FineractUserTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import type {
   ChangeUserPasswordInput,
   CreateUserInput,
@@ -371,16 +369,16 @@ export async function updateUser(
 export async function changeUserPassword(
   userId: number,
   input: ChangeUserPasswordInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`${USERS_PATH}/${userId}`, {
+  return fineract.put<FineractCommandProcessingResult>(`${USERS_PATH}/${userId}`, {
     firstname: input.firstname,
     password: input.password,
     repeatPassword: input.repeatPassword
   });
 }
 
-export async function deleteUser(userId: number): Promise<void> {
+export async function deleteUser(userId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${USERS_PATH}/${userId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${USERS_PATH}/${userId}`);
 }

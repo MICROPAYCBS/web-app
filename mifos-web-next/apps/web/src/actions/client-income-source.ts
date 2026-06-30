@@ -9,7 +9,12 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { incomeSourceSchema, toFineractActionError, type IncomeSourceInput } from '@mifos/validation';
+import {
+  incomeSourceSchema,
+  toFineractActionError,
+  type IncomeSourceInput,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
   createClientIncomeSource,
@@ -69,9 +74,9 @@ export async function createClientIncomeSourceAction(
   }
 
   try {
-    await createClientIncomeSource(clientId, parsed);
+    const response = await createClientIncomeSource(clientId, parsed);
     revalidatePath(`/clients/${clientId}/income-sources`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -93,9 +98,9 @@ export async function updateClientIncomeSourceAction(
   }
 
   try {
-    await updateClientIncomeSource(clientId, incomeSourceId, parsed);
+    const response = await updateClientIncomeSource(clientId, incomeSourceId, parsed);
     revalidatePath(`/clients/${clientId}/income-sources`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -111,9 +116,9 @@ export async function deleteClientIncomeSourceAction(
   }
 
   try {
-    await deleteClientIncomeSource(clientId, incomeSourceId);
+    const response = await deleteClientIncomeSource(clientId, incomeSourceId);
     revalidatePath(`/clients/${clientId}/income-sources`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }

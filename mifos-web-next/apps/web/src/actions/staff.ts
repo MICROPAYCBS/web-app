@@ -14,7 +14,8 @@ import {
   validateCreateStaff,
   validateUpdateStaff,
   type CreateStaffInput,
-  type UpdateStaffInput
+  type UpdateStaffInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createStaff, updateStaff } from '@/lib/fineract/staff';
@@ -67,7 +68,7 @@ export async function createStaffAction(input: CreateStaffInput): Promise<StaffA
   try {
     const response = await createStaff(parsed.data);
     revalidatePath(LIST_PATH);
-    return { ok: true, staffId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { staffId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create employee.');
   }
@@ -96,7 +97,7 @@ export async function updateStaffAction(
   try {
     const response = await updateStaff(staffId, parsed.data);
     revalidateStaffViews(staffId);
-    return { ok: true, staffId: response.resourceId ?? Number(staffId) };
+    return actionSuccessFromFineractCommand(response, { staffId: response.resourceId ?? Number(staffId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update employee.');
   }

@@ -14,7 +14,8 @@ import {
   validateCreateGlClosure,
   validateUpdateGlClosure,
   type CreateGlClosureInput,
-  type UpdateGlClosureInput
+  type UpdateGlClosureInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -74,7 +75,7 @@ export async function createGlClosureAction(
   try {
     const response = await createGlClosure(parsed.data);
     revalidateClosureViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create accounting closure.');
   }
@@ -105,9 +106,9 @@ export async function updateGlClosureAction(
   }
 
   try {
-    await updateGlClosure(closureId, parsed.data);
+    const response = await updateGlClosure(closureId, parsed.data);
     revalidateClosureViews(closureId);
-    return { ok: true, resourceId: closureId };
+    return actionSuccessFromFineractCommand(response, { resourceId: closureId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update accounting closure.');
   }
@@ -126,9 +127,9 @@ export async function deleteGlClosureAction(closureId: number): Promise<GlClosur
   }
 
   try {
-    await deleteGlClosure(closureId);
+    const response = await deleteGlClosure(closureId);
     revalidateClosureViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete accounting closure.');
   }

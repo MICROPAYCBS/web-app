@@ -12,6 +12,7 @@ import type { GroupEditTemplate } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateGroupAction } from '@/actions/groups';
 import { DetailBackLink } from '@/components/composites';
@@ -55,12 +56,14 @@ export function EditGroupPageContent({ group }: { group: GroupEditTemplate }) {
         externalId,
         activationDate: isPendingStatus ? activationDate : undefined
       });
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, {
+        completed: 'Group updated.',
+        pending: 'Group update sent for approval.'
+      })) {
         setFieldErrors(result.fieldErrors ?? {});
         toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-      toast.success('Group updated.');
       router.push(groupGeneralPath(group.id));
       router.refresh();
     });

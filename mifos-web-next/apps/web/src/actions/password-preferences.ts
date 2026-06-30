@@ -12,7 +12,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpdatePasswordPreferences,
-  type UpdatePasswordPreferencesInput
+  type UpdatePasswordPreferencesInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { updatePasswordPreferences } from '@/lib/fineract/password-preferences';
@@ -55,9 +56,9 @@ export async function updatePasswordPreferencesAction(
   }
 
   try {
-    await updatePasswordPreferences(parsed.data);
+    const response = await updatePasswordPreferences(parsed.data);
     revalidatePath(PASSWORD_PREFERENCES_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update password preferences.');
   }

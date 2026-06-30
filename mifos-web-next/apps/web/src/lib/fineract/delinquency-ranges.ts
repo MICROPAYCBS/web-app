@@ -8,11 +8,9 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  DelinquencyMutationResponse,
+import type { DelinquencyMutationResponse,
   DelinquencyRangeDetail,
-  DelinquencyRangeListItem
-} from '@mifos/api-client';
+  DelinquencyRangeListItem, FineractCommandProcessingResult } from '@mifos/api-client';
 import type {
   CreateDelinquencyRangeInput,
   UpdateDelinquencyRangeInput
@@ -104,7 +102,7 @@ export async function updateDelinquencyRange(
   );
 }
 
-export async function deleteDelinquencyRange(rangeId: string | number): Promise<void> {
+export async function deleteDelinquencyRange(rangeId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/delinquency/ranges/${rangeId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/delinquency/ranges/${rangeId}`);
 }

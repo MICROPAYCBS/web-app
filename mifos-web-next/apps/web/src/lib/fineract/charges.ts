@@ -13,7 +13,8 @@ import type {
   ChargeListItem,
   ChargeMutationResponse,
   ChargeTemplate,
-  FineractCurrencyOption
+  FineractCurrencyOption,
+  FineractCommandProcessingResult
 } from '@mifos/api-client';
 import type { UpsertChargeInput } from '@mifos/validation';
 import { FineractHttpError } from '@mifos/api-client';
@@ -276,9 +277,9 @@ export async function updateChargeRecord(
   return fineract.put<ChargeMutationResponse>(`/charges/${chargeId}`, buildChargePayload(input));
 }
 
-export async function deleteChargeRecord(chargeId: string | number): Promise<void> {
+export async function deleteChargeRecord(chargeId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/charges/${chargeId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/charges/${chargeId}`);
 }
 
 export function chargeInputFromTemplate(template: ChargeTemplate): UpsertChargeInput {

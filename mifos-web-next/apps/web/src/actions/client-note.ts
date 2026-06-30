@@ -12,7 +12,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   clientNoteSchema,
   toFineractActionError,
-  type ClientNoteInput
+  type ClientNoteInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -73,9 +74,9 @@ export async function createClientNoteAction(
   }
 
   try {
-    await createClientNote(clientId, parsed);
+    const response = await createClientNote(clientId, parsed);
     revalidatePath(`/clients/${clientId}/notes`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -97,9 +98,9 @@ export async function updateClientNoteAction(
   }
 
   try {
-    await updateClientNote(clientId, noteId, parsed);
+    const response = await updateClientNote(clientId, noteId, parsed);
     revalidatePath(`/clients/${clientId}/notes`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -115,9 +116,9 @@ export async function deleteClientNoteAction(
   }
 
   try {
-    await deleteClientNote(clientId, noteId);
+    const response = await deleteClientNote(clientId, noteId);
     revalidatePath(`/clients/${clientId}/notes`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }

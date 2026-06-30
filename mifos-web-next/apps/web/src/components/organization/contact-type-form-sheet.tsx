@@ -36,6 +36,7 @@ import { useRouter } from 'next/navigation';
 
 import { useEffect, useId, useState, useTransition } from 'react';
 
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 
 import { createContactTypeAction, updateContactTypeAction } from '@/actions/contact-type';
@@ -268,7 +269,7 @@ export function ContactTypeFormSheet({
 
         }
 
-        toast.success('Contact type created.');
+        toastCommandOutcome(result, { completed: 'Contact type created.', pending: 'Contact type creation sent for approval.' });
 
         onOpenChange(false);
 
@@ -314,7 +315,7 @@ export function ContactTypeFormSheet({
 
       }
 
-      toast.success('Contact type updated.');
+      toastCommandOutcome(result, { completed: 'Contact type updated.', pending: 'Contact type update sent for approval.' });
 
       onOpenChange(false);
 

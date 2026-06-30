@@ -32,7 +32,7 @@ import Link from 'next/link';
 
 import { useMemo, useState, useTransition } from 'react';
 
-import { toast } from 'sonner';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 
 import { deleteClientCollateralAction } from '@/actions/client-collateral';
 
@@ -316,7 +316,10 @@ export function ClientCollateralView({
 
       );
 
-      toast.success('Collateral removed.');
+      toastCommandOutcome(result, {
+        completed: 'Collateral removed.',
+        pending: 'Collateral removal sent for approval.'
+      });
 
     });
 

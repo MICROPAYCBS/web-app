@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpsertFinancialActivityMappingForm,
-  type UpsertFinancialActivityMappingFormInput
+  type UpsertFinancialActivityMappingFormInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -73,7 +74,7 @@ export async function createFinancialActivityMappingAction(
   try {
     const response = await createFinancialActivityMapping(parsed.data);
     revalidateFinancialActivityMappingViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create financial activity mapping.');
   }
@@ -102,7 +103,7 @@ export async function updateFinancialActivityMappingAction(
   try {
     const response = await updateFinancialActivityMapping(mappingId, parsed.data);
     revalidateFinancialActivityMappingViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update financial activity mapping.');
   }
@@ -119,9 +120,9 @@ export async function deleteFinancialActivityMappingAction(
   }
 
   try {
-    await deleteFinancialActivityMapping(mappingId);
+    const response = await deleteFinancialActivityMapping(mappingId);
     revalidateFinancialActivityMappingViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete financial activity mapping.');
   }

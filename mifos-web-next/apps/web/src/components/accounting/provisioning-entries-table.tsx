@@ -22,6 +22,7 @@ import { Eye, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { recreateProvisioningEntryAction } from '@/actions/provisioning-entries';
 import { DataTable } from '@/components/composites/data-table/data-table';
@@ -48,10 +49,11 @@ export function ProvisioningEntriesTable({
       startTransition(async () => {
         const result = await recreateProvisioningEntryAction(entryId);
         if (!result.ok) {
+
           toast.error(result.message);
           return;
-        }
-        toast.success('Provisioning entry recreated.');
+      }
+      toastCommandOutcome(result, { completed: 'Provisioning entry recreated.', pending: 'Provisioning entry recreated sent for approval.' });
         if (result.resourceId != null) {
           router.push(`/accounting/provisioning-entries/${result.resourceId}`);
         } else {

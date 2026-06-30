@@ -8,13 +8,11 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractAccountNumberPreferenceDetail,
+import type { FineractAccountNumberPreferenceDetail,
   FineractAccountNumberPreferenceListItem,
   FineractAccountNumberPreferenceMutationResponse,
   FineractAccountNumberPreferenceOption,
-  FineractAccountNumberPreferenceTemplate
-} from '@mifos/api-client';
+  FineractAccountNumberPreferenceTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import {
   buildCreateAccountNumberPreferencePayload,
   buildUpdateAccountNumberPreferencePayload,
@@ -140,7 +138,7 @@ export async function updateAccountNumberPreference(
   );
 }
 
-export async function deleteAccountNumberPreference(preferenceId: number): Promise<void> {
+export async function deleteAccountNumberPreference(preferenceId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${ACCOUNT_NUMBER_FORMATS_PATH}/${preferenceId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${ACCOUNT_NUMBER_FORMATS_PATH}/${preferenceId}`);
 }

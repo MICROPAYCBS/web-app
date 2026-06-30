@@ -13,7 +13,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   validateDefineOpeningBalance,
-  type DefineOpeningBalanceInput
+  type DefineOpeningBalanceInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import {
   defineOpeningBalance,
@@ -81,7 +82,7 @@ export async function defineOpeningBalanceAction(
 
   try {
     const response = await defineOpeningBalance(parsed.data);
-    return { ok: true, transactionId: response.transactionId };
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to define opening balances.');
   }

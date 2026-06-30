@@ -8,7 +8,7 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ClientContact, ClientContactTemplate } from '@mifos/api-client';
+import type { ClientContact, ClientContactTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { ClientContactInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -102,7 +102,7 @@ export async function updateClientContact(
 export async function deleteClientContact(
   clientId: string | number,
   contactId: number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}/contacts/${contactId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}/contacts/${contactId}`);
 }

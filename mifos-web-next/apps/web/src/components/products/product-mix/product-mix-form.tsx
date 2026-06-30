@@ -11,6 +11,7 @@
 import type { ProductMixCreateTemplate, ProductMixDetail } from '@mifos/api-client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createProductMixAction,
@@ -79,6 +80,7 @@ export function ProductMixCreateSheet({
     startOptionsTransition(async () => {
       const result = await fetchProductMixFormOptionsAction(productId);
       if (!result.ok) {
+
         setSubmitError(result.message);
         setSelectableOptions([]);
         setRestrictedProducts([]);
@@ -117,8 +119,7 @@ export function ProductMixCreateSheet({
         }
         return;
       }
-
-      toast.success('Product mix created.');
+      toastCommandOutcome(result, { completed: 'Product mix created.', pending: 'Product mix created sent for approval.' });
       onOpenChange(false);
       const id = result.productId;
       router.push(id ? productMixDetailPath(id) : productMixListPath());
@@ -211,14 +212,14 @@ export function ProductMixEditSheet({
       });
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Product mix updated.');
+      toastCommandOutcome(result, { completed: 'Product mix updated.', pending: 'Product mix updated sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

@@ -8,7 +8,7 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientAccountStatus, FineractCurrencyOption } from '@mifos/api-client';
+import type { FineractClientAccountStatus, FineractCurrencyOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 export interface FineractLoanAccountDetail {
@@ -182,7 +182,7 @@ export async function executeLoanAccountCommand(
   accountId: string | number,
   command: 'assignLoanOfficer' | 'unassignLoanOfficer',
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`/loans/${accountId}`, body, { command });
+  return fineract.post<FineractCommandProcessingResult>(`/loans/${accountId}`, body, { command });
 }

@@ -13,6 +13,7 @@ import type { TaxGroupMemberInput } from '@mifos/validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createTaxGroupAction, updateTaxGroupAction } from '@/actions/tax-group';
 import { DetailBackLink } from '@/components/composites';
@@ -63,14 +64,15 @@ export function TaxGroupFormPage({
           : await updateTaxGroupAction(String(taxGroupId), payload);
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
-        }
         return;
       }
-
-      toast.success(mode === 'create' ? 'Tax group created.' : 'Tax group updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Tax group created.' : 'Tax group updated.', pending: mode === 'create' ? 'Tax group created. sent for approval.' : 'Tax group updated. sent for approval.' });
+        return;
+      }
       const id = result.resourceId ?? taxGroupId;
       router.push(id ? taxGroupDetailPath(id) : taxGroupsListPath());
       router.refresh();

@@ -8,12 +8,10 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractHookDetail,
+import type { FineractHookDetail,
   FineractHookListItem,
   FineractHookMutationResponse,
-  FineractHookTemplate
-} from '@mifos/api-client';
+  FineractHookTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import { buildHookApiPayload, type UpsertHookFormInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -117,7 +115,7 @@ export async function updateHook(
   );
 }
 
-export async function deleteHook(hookId: number): Promise<void> {
+export async function deleteHook(hookId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${HOOKS_PATH}/${hookId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${HOOKS_PATH}/${hookId}`);
 }

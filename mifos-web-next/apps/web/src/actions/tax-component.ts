@@ -14,7 +14,8 @@ import {
   toFineractActionError,
   updateTaxComponentSchema,
   type CreateTaxComponentInput,
-  type UpdateTaxComponentInput
+  type UpdateTaxComponentInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { TaxActionResult } from '@/lib/fineract/tax-action-result';
@@ -82,7 +83,7 @@ export async function createTaxComponentAction(raw: unknown): Promise<TaxActionR
     if (resourceId) {
       revalidatePath(taxComponentDetailPath(resourceId));
     }
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create tax component.');
   }
@@ -108,11 +109,11 @@ export async function updateTaxComponentAction(
   }
 
   try {
-    await updateTaxComponent(taxComponentId, parsed);
+    const response = await updateTaxComponent(taxComponentId, parsed);
     revalidatePath(taxComponentsListPath());
     revalidatePath(taxComponentDetailPath(taxComponentId));
     revalidatePath(taxComponentEditPath(taxComponentId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not update tax component.');
   }

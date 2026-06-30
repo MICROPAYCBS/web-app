@@ -39,6 +39,7 @@ import {
   formatAuditTrailFilterLabel
 } from '@/lib/fineract/audit-trail-display';
 import { CHECKER_INBOX_LIST_PATH } from '@/lib/fineract/checker-inbox-paths';
+import { notifyCheckerInboxPendingChanged } from '@/lib/checker-inbox/pending-count';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
 
@@ -65,39 +66,43 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
             : 'Checker item deleted.'
       );
       setConfirmAction(null);
+      notifyCheckerInboxPendingChanged();
       router.push(CHECKER_INBOX_LIST_PATH);
       router.refresh();
     });
   }
 
+  const headerActions = (
+    <>
+      <Button type="button" disabled={pending} onClick={() => setConfirmAction('approve')}>
+        <Check className="mr-2 size-4" />
+        Approve
+      </Button>
+      <Button
+        type="button"
+        variant="destructive"
+        disabled={pending}
+        onClick={() => setConfirmAction('delete')}
+      >
+        <Trash2 className="mr-2 size-4" />
+        Delete
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        disabled={pending}
+        onClick={() => setConfirmAction('reject')}
+      >
+        <X className="mr-2 size-4" />
+        Reject
+      </Button>
+    </>
+  );
+
   return (
     <>
-      <div className="mb-4 flex flex-wrap gap-2">
-        <Button type="button" disabled={pending} onClick={() => setConfirmAction('approve')}>
-          <Check className="mr-2 size-4" />
-          Approve
-        </Button>
-        <Button
-          type="button"
-          variant="destructive"
-          disabled={pending}
-          onClick={() => setConfirmAction('delete')}
-        >
-          <Trash2 className="mr-2 size-4" />
-          Delete
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={pending}
-          onClick={() => setConfirmAction('reject')}
-        >
-          <X className="mr-2 size-4" />
-          Reject
-        </Button>
-      </div>
-
       <DetailPage
+        className="min-h-0 flex-1"
         header={
           <DetailHeader
             backLink={
@@ -107,6 +112,7 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
             meta={
               item.actionName ? `${item.actionName} on ${item.entityName ?? 'resource'}` : undefined
             }
+            actions={headerActions}
           />
         }
         summary={
@@ -138,9 +144,7 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
           </DetailFieldGrid>
         }
       >
-        <div className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-          <AuditTrailDetailContent audit={item} variant="fields-only" />
-        </div>
+        <AuditTrailDetailContent audit={item} variant="fields-only" />
       </DetailPage>
 
       <Dialog open={confirmAction != null} onOpenChange={(open) => !open && setConfirmAction(null)}>

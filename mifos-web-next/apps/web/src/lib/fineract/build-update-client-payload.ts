@@ -150,8 +150,10 @@ function payloadHasFineractValidatorParam(payload: Record<string, unknown>): boo
 
 /**
  * Fineract rejects PUT bodies that only contain extension fields with
- * "No parameters passed for update." Anchor with unchanged legal form + name fields
- * so validation passes; the write service skips unchanged values in the audit trail.
+ * "No parameters passed for update." Anchor with unchanged name fields so
+ * validation passes; the write service skips unchanged values in the audit trail.
+ *
+ * `legalFormId` is intentionally omitted from customer updates.
  *
  * Backend follow-up: fix `ClientDataValidator.validateForUpdate` — see ADR-014.
  */
@@ -162,8 +164,6 @@ function attachFineractClientUpdateValidatorAnchor(
   if (payloadHasFineractValidatorParam(payload)) {
     return;
   }
-
-  payload.legalFormId = input.legalFormId;
 
   if (input.legalFormId === LEGAL_FORM_PERSON) {
     payload.firstname = input.firstname;
@@ -187,10 +187,6 @@ export function diffUpdateClientPayload(
   const dateCtx = resolveFineractDateContext(input);
   const payload: Record<string, unknown> = {};
   let includesTopLevelDateField = false;
-
-  if (input.legalFormId !== initial.legalFormId) {
-    payload.legalFormId = input.legalFormId;
-  }
 
   if (!booleansEqual(input.active, initial.active)) {
     payload.active = input.active;

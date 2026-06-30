@@ -25,7 +25,8 @@ import {
   savingsAccountUnassignStaffSchema,
   savingsAccountWithdrawnByApplicantCommandSchema,
   savingsAccountWithholdTaxSchema,
-  toFineractActionError
+  toFineractActionError,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
@@ -234,13 +235,14 @@ export async function executeSavingsAccountLifecycleCommandAction(
   }
 
   try {
+    let response: unknown;
     switch (command) {
       case 'approve': {
         const parsed = parseOrError(savingsAccountApproveCommandSchema, raw);
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody(
@@ -257,7 +259,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody({ activatedOnDate: parsed.data.activatedOnDate })
@@ -269,7 +271,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody(
@@ -286,7 +288,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody(
@@ -304,7 +306,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
           return parsed.result;
         }
         const body = parsed.data.note?.trim() ? { note: parsed.data.note.trim() } : {};
-        await executeSavingsAccountCommand(accountId, command, body);
+        response = await executeSavingsAccountCommand(accountId, command, body);
         break;
       }
       case 'close': {
@@ -312,7 +314,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody(
@@ -338,7 +340,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody({ reasonForBlock: parsed.data.reasonForBlock })
@@ -348,12 +350,12 @@ export async function executeSavingsAccountLifecycleCommandAction(
       case 'unblock':
       case 'unblockCredit':
       case 'unblockDebit': {
-        await executeSavingsAccountCommand(accountId, command, buildFineractCommandBody({}));
+        response = await executeSavingsAccountCommand(accountId, command, buildFineractCommandBody({}));
         break;
       }
       case 'calculateInterest':
       case 'postInterest': {
-        await executeSavingsAccountCommand(accountId, command, buildFineractCommandBody({}));
+        response = await executeSavingsAccountCommand(accountId, command, buildFineractCommandBody({}));
         break;
       }
       case 'assignSavingsOfficer': {
@@ -361,7 +363,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody({
@@ -376,7 +378,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeSavingsAccountCommand(
+        response = await executeSavingsAccountCommand(
           accountId,
           command,
           buildFineractCommandBody({ unassignedDate: parsed.data.unassignedDate })
@@ -390,7 +392,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
     }
 
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not complete savings account action.');
   }
@@ -435,7 +437,7 @@ export async function executeSavingsAccountTransactionCommandAction(
       )
     );
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Could not complete transaction.');
   }
@@ -552,7 +554,7 @@ export async function executeSavingsAccountReassignStaffAction(
     }
 
     const reassignmentDate = parsed.data.assignmentDate;
-    await executeSavingsAccountCommand(
+    const response = await executeSavingsAccountCommand(
       accountId,
       'unassignSavingsOfficer',
       buildFineractCommandBody({ unassignedDate: reassignmentDate })
@@ -566,7 +568,7 @@ export async function executeSavingsAccountReassignStaffAction(
       })
     );
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not reassign field officer.');
   }
@@ -694,12 +696,13 @@ export async function executeSavingsAccountExtendedTransactionCommandAction(
   }
 
   try {
+    let response: unknown;
     if (command === 'postInterestAsOn') {
       const parsed = parseOrError(savingsAccountPostInterestAsOnSchema, raw);
       if (!parsed.success) {
         return parsed.result;
       }
-      await executeSavingsAccountTransaction(
+      response = await executeSavingsAccountTransaction(
         accountId,
         command,
         buildFineractCommandBody({
@@ -712,7 +715,7 @@ export async function executeSavingsAccountExtendedTransactionCommandAction(
       if (!parsed.success) {
         return parsed.result;
       }
-      await executeSavingsAccountTransaction(
+      response = await executeSavingsAccountTransaction(
         accountId,
         command,
         buildFineractCommandBody({
@@ -724,7 +727,7 @@ export async function executeSavingsAccountExtendedTransactionCommandAction(
     }
 
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not complete savings account action.');
   }
@@ -749,7 +752,7 @@ export async function executeSavingsAccountAddChargeAction(
   }
 
   try {
-    await createSavingsAccountCharge(
+    const response = await createSavingsAccountCharge(
       accountId,
       buildFineractCommandBody(
         omitEmptyStrings({
@@ -762,7 +765,7 @@ export async function executeSavingsAccountAddChargeAction(
       )
     );
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not add charge.');
   }
@@ -787,7 +790,7 @@ export async function executeSavingsAccountPayChargeAction(
   }
 
   try {
-    await executeSavingsAccountChargeCommand(
+    const response = await executeSavingsAccountChargeCommand(
       accountId,
       parsed.data.chargeId,
       'paycharge',
@@ -799,7 +802,7 @@ export async function executeSavingsAccountPayChargeAction(
       )
     );
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not apply annual fee.');
   }
@@ -818,10 +821,10 @@ export async function executeSavingsAccountDeleteAction(
   }
 
   try {
-    await deleteSavingsAccount(accountId);
+    const response = await deleteSavingsAccount(accountId);
     revalidatePath(`/clients/${clientId}/savings`);
     revalidatePath(`/clients/${clientId}/savings-accounts/${accountId}/general`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not delete savings account.');
   }
@@ -846,9 +849,9 @@ export async function executeSavingsAccountWithholdTaxAction(
   }
 
   try {
-    await updateSavingsAccountWithholdTax(accountId, parsed.data.withHoldTax);
+    const response = await updateSavingsAccountWithholdTax(accountId, parsed.data.withHoldTax);
     revalidateSavingsAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not update withhold tax.');
   }

@@ -6,17 +6,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractCommandActionMeta } from '@mifos/validation';
 import type {
   ClientDepositAccountTemplate,
   ClientLoanAccountTemplate
 } from '@mifos/api-client';
 
 export type ClientDepositAccountActionResult =
-  | { ok: true; resourceId?: number }
+  | ({ ok: true; resourceId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export type ClientLoanAccountActionResult =
-  | { ok: true; resourceId?: number }
+  | ({ ok: true; resourceId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export function isClientDepositAccountActionError(

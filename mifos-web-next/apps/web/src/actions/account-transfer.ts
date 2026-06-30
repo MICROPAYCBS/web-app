@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   createAccountTransferSchema,
   toFineractActionError,
-  type CreateAccountTransferInput
+  type CreateAccountTransferInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import type { AccountTransferTemplate } from '@mifos/api-client';
 import { revalidatePath } from 'next/cache';

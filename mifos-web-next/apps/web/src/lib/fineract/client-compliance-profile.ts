@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import type { FineractClientComplianceProfile } from '@mifos/api-client';
+import type { FineractClientComplianceProfile, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { ComplianceProfileInput } from '@mifos/validation';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { normalizeClientComplianceProfile } from '@/lib/fineract/compliance-profile-normalize';
@@ -66,7 +66,7 @@ export async function getClientComplianceProfile(
 export async function updateClientComplianceProfile(
   clientId: string | number,
   input: ComplianceProfileInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/clients/${clientId}/complianceprofile`, toComplianceProfileBody(input));
+  return fineract.put<FineractCommandProcessingResult>(`/clients/${clientId}/complianceprofile`, toComplianceProfileBody(input));
 }

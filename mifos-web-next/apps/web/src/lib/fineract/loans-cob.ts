@@ -8,7 +8,7 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractCobCatchUpStatus, FineractLockedLoan, FineractLockedLoansPage } from '@mifos/api-client';
+import type { FineractCobCatchUpStatus, FineractLockedLoan, FineractLockedLoansPage, FineractCommandProcessingResult } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 const LOANS_PATH = '/loans';
@@ -43,9 +43,9 @@ export async function getCobCatchUpStatus(): Promise<FineractCobCatchUpStatus> {
   return { isCatchUpRunning: (raw as Record<string, unknown>).isCatchUpRunning === true };
 }
 
-export async function startCobCatchUp(): Promise<void> {
+export async function startCobCatchUp(): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${LOANS_PATH}/catch-up`, {});
+  return fineract.post<FineractCommandProcessingResult>(`${LOANS_PATH}/catch-up`, {});
 }
 
 export async function listLockedLoans(page = 0, limit = 5000): Promise<FineractLockedLoansPage> {

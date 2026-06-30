@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpdateMakerCheckerPermissions,
-  type UpdateMakerCheckerPermissionsInput
+  type UpdateMakerCheckerPermissionsInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { updateMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
@@ -43,9 +44,9 @@ export async function updateMakerCheckerPermissionsAction(
   }
 
   try {
-    await updateMakerCheckerPermissions(parsed.data);
+    const response = await updateMakerCheckerPermissions(parsed.data);
     revalidatePath(PAGE_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update maker-checker tasks.');
   }

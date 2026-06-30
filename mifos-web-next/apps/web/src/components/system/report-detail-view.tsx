@@ -13,6 +13,7 @@ import { Pencil, Play, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { deleteReportAction } from '@/actions/reports';
 import {
@@ -56,11 +57,12 @@ export function ReportDetailView({
     startTransition(async () => {
       const result = await deleteReportAction(report.id);
       if (!result.ok) {
+
         setActionError(result.message);
         toast.error(result.message);
         return;
       }
-      toast.success('Report deleted.');
+      toastCommandOutcome(result, { completed: 'Report deleted.', pending: 'Report deleted sent for approval.' });
       router.push('/system/reports');
       router.refresh();
     });

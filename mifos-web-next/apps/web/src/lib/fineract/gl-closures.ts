@@ -8,11 +8,9 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractGlClosureDetail,
+import type { FineractGlClosureDetail,
   FineractGlClosureListItem,
-  FineractGlClosureMutationResponse
-} from '@mifos/api-client';
+  FineractGlClosureMutationResponse, FineractCommandProcessingResult } from '@mifos/api-client';
 import {
   buildCreateGlClosurePayload,
   buildUpdateGlClosurePayload,
@@ -107,7 +105,7 @@ export async function updateGlClosure(
   );
 }
 
-export async function deleteGlClosure(closureId: number): Promise<void> {
+export async function deleteGlClosure(closureId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${GL_CLOSURES_PATH}/${closureId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${GL_CLOSURES_PATH}/${closureId}`);
 }

@@ -12,6 +12,7 @@ import type { OrganizationPaymentType } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useId, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createPaymentTypeAction, updatePaymentTypeAction } from '@/actions/payment-type';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
@@ -145,7 +146,7 @@ export function PaymentTypeFormSheet({
         return;
       }
 
-      toast.success(mode === 'create' ? 'Payment type created.' : 'Payment type updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Payment type created.' : 'Payment type updated.', pending: mode === 'create' ? 'Payment type creation sent for approval.' : 'Payment type update sent for approval.' });
       handleOpenChange(false);
       router.refresh();
     });

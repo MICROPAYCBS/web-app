@@ -10,10 +10,12 @@
 
 import { assertCan, resolvePermission } from '@mifos/auth';
 import {
+  actionSuccessFromFineractCommand,
   createClientSchema,
   toFineractActionError,
   validateClientIdentifier,
-  type CreateClientPayload
+  type CreateClientPayload,
+  type FineractCommandActionMeta
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
@@ -21,7 +23,7 @@ import { createClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientActionResult =
-  | { ok: true; clientId: number }
+  | ({ ok: true; clientId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export async function createClientAction(
@@ -79,8 +81,10 @@ export async function createClientAction(
     const result = await createClient(parsed.data as CreateClientPayload);
     const clientId = result.clientId ?? result.resourceId;
     revalidatePath('/clients');
-    revalidatePath(`/clients/${clientId}`);
-    return { ok: true, clientId };
+    if (clientId != null) {
+      revalidatePath(`/clients/${clientId}`);
+    }
+    return actionSuccessFromFineractCommand(result, { clientId });
   } catch (err) {
     return toFineractActionError(err, 'Failed to create customer.');
   }

@@ -19,6 +19,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { uploadClientSignatureFile } from '@/lib/fineract/upload-client-signature';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 
 const STROKE_WIDTH = 2;
 const STROKE_COLOR = '#000000';
@@ -172,6 +173,10 @@ export function ClientSignatureDrawDialog({
         setError(result.message);
         return;
       }
+      toastCommandOutcome(result, {
+        completed: 'Signature saved.',
+        pending: 'Signature save sent for approval.'
+      });
       handleOpenChange(false);
       onSuccess();
     });

@@ -13,7 +13,8 @@ import {
   savingsAccountModifyTransactionSchema,
   savingsAccountUndoTransactionSchema,
   toFineractActionError,
-  undoAccountTransferCommandSchema
+  undoAccountTransferCommandSchema,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { undoAccountTransfer } from '@/lib/fineract/account-transfers';
@@ -70,7 +71,7 @@ export async function undoSavingsTransactionAction(
   const { clientId, accountId, transactionId, transactionDate } = parsed.data;
 
   try {
-    await executeSavingsAccountExistingTransaction(
+    const response = await executeSavingsAccountExistingTransaction(
       accountId,
       transactionId,
       'undo',
@@ -80,7 +81,7 @@ export async function undoSavingsTransactionAction(
       })
     );
     revalidateSavingsTransactionPaths(clientId, accountId, transactionId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not undo transaction.');
   }
@@ -206,7 +207,7 @@ export async function modifySavingsTransactionAction(
   const { clientId, accountId, transactionId, ...fields } = parsed.data;
 
   try {
-    await executeSavingsAccountExistingTransaction(
+    const response = await executeSavingsAccountExistingTransaction(
       accountId,
       transactionId,
       'modify',
@@ -225,7 +226,7 @@ export async function modifySavingsTransactionAction(
       )
     );
     revalidateSavingsTransactionPaths(clientId, accountId, transactionId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not update transaction.');
   }
@@ -253,9 +254,9 @@ export async function undoAccountTransferAction(
   const { clientId, accountId, transferId } = parsed.data;
 
   try {
-    await undoAccountTransfer(transferId);
+    const response = await undoAccountTransfer(transferId);
     revalidateSavingsTransactionPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not undo transfer.');
   }

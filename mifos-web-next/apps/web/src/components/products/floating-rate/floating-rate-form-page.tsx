@@ -12,6 +12,7 @@ import type { FloatingRatePeriodInput } from '@mifos/validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createFloatingRateAction,
@@ -72,14 +73,15 @@ export function FloatingRateFormPage({
           : await updateFloatingRateAction(String(floatingRateId), payload);
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
-        }
         return;
       }
-
-      toast.success(mode === 'create' ? 'Floating rate created.' : 'Floating rate updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Floating rate created.' : 'Floating rate updated.', pending: mode === 'create' ? 'Floating rate created. sent for approval.' : 'Floating rate updated. sent for approval.' });
+        return;
+      }
       const id = result.resourceId ?? floatingRateId;
       router.push(id ? floatingRateDetailPath(id) : floatingRatesListPath());
       router.refresh();

@@ -17,7 +17,8 @@ import {
   validateUpdateUser,
   type ChangeUserPasswordInput,
   type CreateUserInput,
-  type UpdateUserInput
+  type UpdateUserInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -100,7 +101,7 @@ export async function createUserAction(input: CreateUserInput): Promise<AppUsers
   try {
     const response = await createUser(parsed.data);
     revalidateUserViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create user.');
   }
@@ -131,9 +132,9 @@ export async function updateUserAction(
   }
 
   try {
-    await updateUser(userId, parsed.data);
+    const response = await updateUser(userId, parsed.data);
     revalidateUserViews(userId);
-    return { ok: true, resourceId: userId };
+    return actionSuccessFromFineractCommand(response, { resourceId: userId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update user.');
   }
@@ -164,9 +165,9 @@ export async function changeUserPasswordAction(
   }
 
   try {
-    await changeUserPassword(userId, parsed.data);
+    const response = await changeUserPassword(userId, parsed.data);
     revalidateUserViews(userId);
-    return { ok: true, resourceId: userId };
+    return actionSuccessFromFineractCommand(response, { resourceId: userId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to change password.');
   }
@@ -185,9 +186,9 @@ export async function deleteUserAction(userId: number): Promise<AppUsersActionRe
   }
 
   try {
-    await deleteUser(userId);
+    const response = await deleteUser(userId);
     revalidateUserViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete user.');
   }

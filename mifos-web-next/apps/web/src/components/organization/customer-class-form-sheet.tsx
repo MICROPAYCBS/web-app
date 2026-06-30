@@ -25,6 +25,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createCustomerClassAction,
@@ -294,7 +295,7 @@ export function CustomerClassFormSheet({
         return;
       }
 
-      toast.success(mode === 'create' ? 'Customer class created.' : 'Customer class updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Customer class created.' : 'Customer class updated.', pending: mode === 'create' ? 'Customer class creation sent for approval.' : 'Customer class update sent for approval.' });
       router.refresh();
       handleOpenChange(false);
     });

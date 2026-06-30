@@ -14,7 +14,8 @@ import {
   validateCreateCustomerClass,
   validateUpdateCustomerClass,
   type UpdateCustomerClassInput,
-  type UpsertCustomerClassInput
+  type UpsertCustomerClassInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { EmptyUpdatePayloadError } from '@/lib/fineract/partial-update-payload';
@@ -75,7 +76,7 @@ export async function createCustomerClassAction(
   try {
     const response = await createCustomerClass(parsed.data);
     revalidateCustomerClassViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create customer class.');
   }
@@ -112,7 +113,7 @@ export async function updateCustomerClassAction(
       initial: initialParsed.data
     });
     revalidateCustomerClassViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     if (error instanceof EmptyUpdatePayloadError) {
       return { ok: false, message: error.message };
@@ -132,9 +133,9 @@ export async function deleteCustomerClassAction(
   }
 
   try {
-    await deleteCustomerClass(customerClassId);
+    const response = await deleteCustomerClass(customerClassId);
     revalidateCustomerClassViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete customer class.');
   }

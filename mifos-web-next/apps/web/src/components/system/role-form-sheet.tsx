@@ -15,6 +15,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createRoleAction, updateRoleAction } from '@/actions/system-roles';
 import { FormSheet } from '@/components/composites/form-sheet';
@@ -103,7 +104,7 @@ export function RoleFormSheet({
           return;
         }
 
-        toast.success('Role created.');
+        toastCommandOutcome(result, { completed: 'Role created.', pending: 'Role creation sent for approval.' });
         onOpenChange(false);
         if (result.resourceId != null) {
           router.push(`/system/roles-and-permissions/${result.resourceId}`);
@@ -145,7 +146,7 @@ export function RoleFormSheet({
         return;
       }
 
-      toast.success('Role updated.');
+      toastCommandOutcome(result, { completed: 'Role updated.', pending: 'Role update sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

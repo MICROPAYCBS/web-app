@@ -8,14 +8,12 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  ProductMixCreateTemplate,
+import type { ProductMixCreateTemplate,
   ProductMixDetail,
   ProductMixFormOptions,
   ProductMixListItem,
   ProductMixMutationResponse,
-  ProductMixProductOption
-} from '@mifos/api-client';
+  ProductMixProductOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { CreateProductMixInput, UpdateProductMixInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -160,7 +158,7 @@ export async function updateProductMix(
   });
 }
 
-export async function deleteProductMix(productId: string | number): Promise<void> {
+export async function deleteProductMix(productId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/loanproducts/${productId}/productmix`);
+  return fineract.delete<FineractCommandProcessingResult>(`/loanproducts/${productId}/productmix`);
 }

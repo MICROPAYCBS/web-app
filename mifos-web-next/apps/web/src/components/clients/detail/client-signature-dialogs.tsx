@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { uploadClientSignatureFile } from '@/lib/fineract/upload-client-signature';
 
 export function ClientSignatureUploadDialog({
@@ -63,6 +64,10 @@ export function ClientSignatureUploadDialog({
         setError(result.message);
         return;
       }
+      toastCommandOutcome(result, {
+        completed: 'Signature uploaded.',
+        pending: 'Signature upload sent for approval.'
+      });
       handleOpenChange(false);
       onSuccess();
     });
@@ -144,6 +149,10 @@ export function ClientSignatureDeleteDialog({
         setError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
+      toastCommandOutcome(result, {
+        completed: 'Signature deleted.',
+        pending: 'Signature deletion sent for approval.'
+      });
       handleOpenChange(false);
       onSuccess();
     });

@@ -15,7 +15,8 @@ import {
   mapFineractErrors,
   prepareComplianceProfileForValidation,
   toFineractActionError,
-  type ComplianceProfileInput
+  type ComplianceProfileInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { FineractHttpError } from '@mifos/api-client';
 import { revalidatePath } from 'next/cache';
@@ -60,10 +61,10 @@ export async function updateClientComplianceProfileAction(
   }
 
   try {
-    await updateClientComplianceProfile(clientId, parsed.data);
+    const response = await updateClientComplianceProfile(clientId, parsed.data);
     revalidatePath(`/clients/${clientId}/compliance-profile`);
     revalidatePath(`/clients/${clientId}/general`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     if (err instanceof FineractHttpError) {
       const mapped = mapFineractErrors(err.body);

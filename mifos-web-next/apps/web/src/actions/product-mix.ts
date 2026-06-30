@@ -14,7 +14,8 @@ import {
   toFineractActionError,
   updateProductMixSchema,
   type CreateProductMixInput,
-  type UpdateProductMixInput
+  type UpdateProductMixInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type {
@@ -118,7 +119,7 @@ export async function createProductMixAction(raw: unknown): Promise<ProductMixAc
     const productId = response.productId ?? parsed.productId;
     revalidatePath(productMixListPath());
     revalidatePath(productMixDetailPath(productId));
-    return { ok: true, productId };
+    return actionSuccessFromFineractCommand(response, { productId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create product mix.');
   }
@@ -144,11 +145,11 @@ export async function updateProductMixAction(
   }
 
   try {
-    await updateProductMix(productId, parsed);
+    const response = await updateProductMix(productId, parsed);
     revalidatePath(productMixListPath());
     revalidatePath(productMixDetailPath(productId));
     revalidatePath(productMixEditPath(productId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not update product mix.');
   }
@@ -166,9 +167,9 @@ export async function deleteProductMixAction(productId: string): Promise<Product
   }
 
   try {
-    await deleteProductMix(productId);
+    const response = await deleteProductMix(productId);
     revalidatePath(productMixListPath());
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete product mix.');
   }

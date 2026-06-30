@@ -68,8 +68,8 @@ export async function updateClient(
   clientId: string | number,
   input: UpdateClientPayload,
   options: { initial: UpdateClientPayload }
-): Promise<void> {
+): Promise<unknown> {
   const fineract = await createFineractClient();
   const body = buildUpdateClientPayload(input, options);
-  await fineract.put(`/clients/${clientId}`, body);
+  return fineract.put(`/clients/${clientId}`, body);
 }

@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import type { FineractClientAddress, FineractClientAddressTemplate } from '@mifos/api-client';
+import type { FineractClientAddress, FineractClientAddressTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { ClientAddressEntry } from '@mifos/validation';
 import { normalizeClientAddresses } from '@/lib/fineract/client-address-normalize';
 import { toClientAddressRequestBody } from '@/lib/fineract/client-address-payload';
@@ -44,9 +44,9 @@ export async function updateClientAddress(
   clientId: string | number,
   addressTypeId: number,
   entry: ClientAddressEntry & { addressId: number }
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(
+  return fineract.put<FineractCommandProcessingResult>(
     `/client/${clientId}/addresses?type=${addressTypeId}`,
     toClientAddressRequestBody(entry, { includeAddressId: true })
   );

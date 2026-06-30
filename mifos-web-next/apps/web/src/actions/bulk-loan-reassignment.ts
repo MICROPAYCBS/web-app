@@ -16,7 +16,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   validateBulkLoanReassignment,
-  type BulkLoanReassignmentInput
+  type BulkLoanReassignmentInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -107,9 +108,9 @@ export async function submitBulkLoanReassignmentAction(
   }
 
   try {
-    await createBulkLoanReassignment(parsed.data);
+    const response = await createBulkLoanReassignment(parsed.data);
     revalidatePath(BULK_LOAN_REASSIGNMENT_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to reassign loans.');
   }

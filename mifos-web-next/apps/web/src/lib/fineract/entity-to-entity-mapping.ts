@@ -8,13 +8,11 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  EntityMappingFilterOptions,
+import type { EntityMappingFilterOptions,
   EntityMappingOption,
   FineractEntityMappingDetail,
   FineractEntityMappingRow,
-  FineractEntityMappingType
-} from '@mifos/api-client';
+  FineractEntityMappingType, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { UpsertEntityMappingInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { listCharges } from '@/lib/fineract/charges';
@@ -282,20 +280,20 @@ export async function getEntityMappingFilterOptions(
 export async function createEntityMapping(
   relationId: number,
   input: UpsertEntityMappingInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${BASE_PATH}/${relationId}`, buildUpsertPayload(input));
+  return fineract.post<FineractCommandProcessingResult>(`${BASE_PATH}/${relationId}`, buildUpsertPayload(input));
 }
 
 export async function updateEntityMapping(
   mapId: number,
   input: UpsertEntityMappingInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`${BASE_PATH}/${mapId}`, buildUpsertPayload(input));
+  return fineract.put<FineractCommandProcessingResult>(`${BASE_PATH}/${mapId}`, buildUpsertPayload(input));
 }
 
-export async function deleteEntityMapping(mapId: number): Promise<void> {
+export async function deleteEntityMapping(mapId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${BASE_PATH}/${mapId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${BASE_PATH}/${mapId}`);
 }

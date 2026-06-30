@@ -9,7 +9,10 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError } from '@mifos/validation';
+import {
+  toFineractActionError,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { releaseSavingsOnHoldAmount } from '@/lib/fineract/client-transfer';
 import { getServerSession } from '@/lib/session/server';
@@ -35,9 +38,9 @@ export async function releaseSavingsOnHoldAction(
   }
 
   try {
-    await releaseSavingsOnHoldAmount(savingsId, transactionId);
+    const response = await releaseSavingsOnHoldAmount(savingsId, transactionId);
     revalidatePath(`/clients/${clientId}`, 'layout');
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(
       err,

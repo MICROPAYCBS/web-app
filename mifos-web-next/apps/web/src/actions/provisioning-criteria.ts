@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpsertProvisioningCriteria,
-  type UpsertProvisioningCriteriaInput
+  type UpsertProvisioningCriteriaInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -70,7 +71,7 @@ export async function createProvisioningCriteriaAction(
   try {
     const response = await createProvisioningCriteria(parsed.data);
     revalidatePath(PROVISIONING_CRITERIA_LIST_PATH);
-    return { ok: true, criteriaId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { criteriaId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create provisioning criteria.');
   }
@@ -99,7 +100,7 @@ export async function updateProvisioningCriteriaAction(
   try {
     const response = await updateProvisioningCriteria(criteriaId, parsed.data);
     revalidateProvisioningCriteriaViews(criteriaId);
-    return { ok: true, criteriaId: response.resourceId ?? Number(criteriaId) };
+    return actionSuccessFromFineractCommand(response, { criteriaId: response.resourceId ?? Number(criteriaId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update provisioning criteria.');
   }
@@ -116,9 +117,9 @@ export async function deleteProvisioningCriteriaAction(
   }
 
   try {
-    await deleteProvisioningCriteria(criteriaId);
+    const response = await deleteProvisioningCriteria(criteriaId);
     revalidatePath(PROVISIONING_CRITERIA_LIST_PATH);
-    return { ok: true, criteriaId: Number(criteriaId) };
+    return actionSuccessFromFineractCommand(response, { criteriaId: Number(criteriaId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete provisioning criteria.');
   }

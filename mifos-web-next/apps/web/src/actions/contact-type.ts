@@ -15,7 +15,8 @@ import {
   validateUpdateContactType,
   type ContactTypeUpdateClearFields,
   type UpdateContactTypeInput,
-  type UpsertContactTypeInput
+  type UpsertContactTypeInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -74,7 +75,7 @@ export async function createContactTypeAction(
   try {
     const response = await createContactType(parsed.data);
     revalidateContactTypeViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create contact type.');
   }
@@ -104,7 +105,7 @@ export async function updateContactTypeAction(
   try {
     const response = await updateContactType(contactTypeId, parsed.data, clear);
     revalidateContactTypeViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update contact type.');
   }
@@ -121,9 +122,9 @@ export async function deleteContactTypeAction(
   }
 
   try {
-    await deleteContactType(contactTypeId);
+    const response = await deleteContactType(contactTypeId);
     revalidateContactTypeViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete contact type.');
   }

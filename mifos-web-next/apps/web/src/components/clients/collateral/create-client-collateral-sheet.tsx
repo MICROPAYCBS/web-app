@@ -16,6 +16,7 @@ import type {
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createClientCollateralAction,
@@ -146,13 +147,14 @@ export function CreateClientCollateralSheet({
         quantity
       });
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-      toast.success('Collateral added.');
+      toastCommandOutcome(result, { completed: 'Collateral added.', pending: 'Collateral added sent for approval.' });
       onOpenChange(false);
       const qtyNum = Number(quantity);
       if (product && result.resourceId && Number.isFinite(qtyNum) && qtyNum > 0) {

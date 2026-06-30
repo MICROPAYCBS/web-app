@@ -5,7 +5,7 @@
     "org.apache.fineract.portfolio.client.domain.Client"
   ],
   "fields": {
-    "legalFormId": { "required": true, "values": [1, 2], "note": "Read-only in UI; sent for discriminated validation only" },
+    "legalFormId": { "required": true, "values": [1, 2], "note": "Read-only in UI; discriminated validation only — not sent on PUT" },
     "firstname": { "requiredWhen": "legalFormId=1" },
     "lastname": { "requiredWhen": "legalFormId=1" },
     "maritalStatusId": { "requiredWhen": "legalFormId=1" },

@@ -6,11 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { filterNavStructure } from '@mifos/auth';
+import { filterNavStructure, can, resolvePermission } from '@mifos/auth';
 import { buildNavStructure } from '@mifos/routes/server';
 import { PlatformShell } from '@/components/platform/platform-shell';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
 import { getBusinessDateContext } from '@/lib/fineract/business-date';
+import { getCheckerInboxPendingCount } from '@/lib/fineract/checker-inbox';
 import { EMPTY_BUSINESS_DATE_CONTEXT } from '@/lib/fineract/business-date-context';
 import { enrichSessionUser } from '@/lib/fineract/fetch-user-profile';
 import { getPublicSession } from '@/lib/session/server';
@@ -50,12 +51,18 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     ? await getBusinessDateContext().catch(() => EMPTY_BUSINESS_DATE_CONTEXT)
     : EMPTY_BUSINESS_DATE_CONTEXT;
 
+  const checkerInboxPendingCount =
+    user && can(user, resolvePermission('checkerInbox'))
+      ? await getCheckerInboxPendingCount().catch(() => null)
+      : null;
+
   return (
     <SessionProvider user={user} rbacEnabled={isRbacEnabled()}>
       <PlatformShell
         nav={nav}
         serverName={activeServer?.name}
         businessDateContext={businessDateContext}
+        checkerInboxPendingCount={checkerInboxPendingCount}
       >
         {children}
       </PlatformShell>

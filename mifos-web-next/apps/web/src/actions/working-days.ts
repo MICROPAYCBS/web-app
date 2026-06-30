@@ -12,7 +12,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpdateWorkingDays,
-  type UpdateWorkingDaysInput
+  type UpdateWorkingDaysInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { updateWorkingDaysConfiguration } from '@/lib/fineract/working-days';
@@ -55,9 +56,9 @@ export async function updateWorkingDaysAction(
   }
 
   try {
-    await updateWorkingDaysConfiguration(parsed.data);
+    const response = await updateWorkingDaysConfiguration(parsed.data);
     revalidatePath(WORKING_DAYS_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update working days.');
   }

@@ -8,11 +8,9 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  CreateStandingInstructionResponse,
+import type { CreateStandingInstructionResponse,
   StandingInstructionTemplate,
-  StandingInstructionsPage
-} from '@mifos/api-client';
+  StandingInstructionsPage, FineractCommandProcessingResult } from '@mifos/api-client';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   formatFineractDateWithContext,
@@ -101,9 +99,9 @@ export async function createStandingInstruction(
   return fineract.post<CreateStandingInstructionResponse>('/standinginstructions', body);
 }
 
-export async function deleteStandingInstruction(id: string | number): Promise<void> {
+export async function deleteStandingInstruction(id: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete('/standinginstructions/' + id, { command: 'delete' });
+  return fineract.delete<FineractCommandProcessingResult>('/standinginstructions/' + id, { command: 'delete' });
 }
 
 const MONTH_DAY_FORMAT = 'dd MMMM';

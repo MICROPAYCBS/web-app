@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import type { FineractClientNote } from '@mifos/api-client';
+import type { FineractClientNote, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { ClientNoteInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -30,15 +30,15 @@ export async function updateClientNote(
   clientId: string | number,
   noteId: number,
   input: ClientNoteInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/clients/${clientId}/notes/${noteId}`, input);
+  return fineract.put<FineractCommandProcessingResult>(`/clients/${clientId}/notes/${noteId}`, input);
 }
 
 export async function deleteClientNote(
   clientId: string | number,
   noteId: number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}/notes/${noteId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}/notes/${noteId}`);
 }

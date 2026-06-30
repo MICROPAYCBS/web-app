@@ -11,6 +11,7 @@
 import { validateCreateProvisioningEntry, type CreateProvisioningEntryInput } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createProvisioningEntryAction } from '@/actions/provisioning-entries';
 import { DateField } from '@/components/composites/date-field';
@@ -81,6 +82,7 @@ export function ProvisioningEntryFormSheet({
     startTransition(async () => {
       const result = await createProvisioningEntryAction(parsed.data);
       if (!result.ok) {
+
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
@@ -88,8 +90,7 @@ export function ProvisioningEntryFormSheet({
         toast.error(result.message);
         return;
       }
-
-      toast.success('Provisioning entry created.');
+      toastCommandOutcome(result, { completed: 'Provisioning entry created.', pending: 'Provisioning entry created sent for approval.' });
       onOpenChange(false);
       if (result.resourceId != null) {
         router.push(`/accounting/provisioning-entries/${result.resourceId}`);

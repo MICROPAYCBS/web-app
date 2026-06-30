@@ -8,16 +8,14 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  DelinquencyBucketDetail,
+import type { DelinquencyBucketDetail,
   DelinquencyBucketListItem,
   DelinquencyBucketRangeRef,
   DelinquencyBucketTemplate,
   DelinquencyMinimumPaymentRule,
   DelinquencyMutationResponse,
   DelinquencyStringEnumOption,
-  FineractEnumOption
-} from '@mifos/api-client';
+  FineractEnumOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import type {
   CreateDelinquencyBucketInput,
   UpdateDelinquencyBucketInput
@@ -263,7 +261,7 @@ export async function updateDelinquencyBucket(
   );
 }
 
-export async function deleteDelinquencyBucket(bucketId: string | number): Promise<void> {
+export async function deleteDelinquencyBucket(bucketId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/delinquency/buckets/${bucketId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/delinquency/buckets/${bucketId}`);
 }

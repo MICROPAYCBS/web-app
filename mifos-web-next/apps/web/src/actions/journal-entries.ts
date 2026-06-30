@@ -14,7 +14,8 @@ import {
   validateCreateJournalEntryForm,
   validateRevertJournalEntry,
   type CreateJournalEntryFormInput,
-  type RevertJournalEntryInput
+  type RevertJournalEntryInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -73,7 +74,7 @@ export async function createJournalEntryAction(
   try {
     const response = await createJournalEntry(parsed.data);
     revalidateJournalEntryViews(response.transactionId);
-    return { ok: true, transactionId: response.transactionId };
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create journal entry.');
   }
@@ -102,7 +103,7 @@ export async function revertJournalEntryAction(
   try {
     const response = await revertJournalEntryTransaction(transactionId, parsed.data);
     revalidateJournalEntryViews(response.transactionId);
-    return { ok: true, transactionId: response.transactionId };
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to reverse journal entry.');
   }

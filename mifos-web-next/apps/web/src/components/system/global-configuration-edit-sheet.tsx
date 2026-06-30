@@ -10,6 +10,7 @@
 
 import type { FineractGlobalConfiguration } from '@mifos/api-client';
 import { useEffect, useId, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateGlobalConfigurationValuesAction } from '@/actions/global-configurations';
 import { DateField } from '@/components/composites/date-field';
@@ -63,10 +64,11 @@ export function GlobalConfigurationEditSheet({
         dateValue
       });
       if (!result.ok) {
+
         setError(result.message);
         return;
       }
-      toast.success('Configuration updated.');
+      toastCommandOutcome(result, { completed: 'Configuration updated.', pending: 'Configuration updated sent for approval.' });
       onOpenChange(false);
       onSaved();
     });

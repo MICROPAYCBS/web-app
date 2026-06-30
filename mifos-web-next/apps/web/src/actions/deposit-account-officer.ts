@@ -10,7 +10,11 @@
 
 import { assertCan } from '@mifos/auth';
 import type { ClientDepositAccountKind } from '@mifos/api-client';
-import { savingsAccountAssignStaffSchema, toFineractActionError } from '@mifos/validation';
+import {
+  savingsAccountAssignStaffSchema,
+  toFineractActionError,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import {
@@ -200,7 +204,7 @@ export async function executeDepositAccountAssignOfficerAction(
   }
 
   try {
-    await executeDepositAccountFieldOfficerCommand(
+    const response = await executeDepositAccountFieldOfficerCommand(
       kind,
       accountId,
       'assignSavingsOfficer',
@@ -210,7 +214,7 @@ export async function executeDepositAccountAssignOfficerAction(
       })
     );
     revalidateDepositAccountPaths(clientId, kind, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, `Could not assign ${config.officerLabel.toLowerCase()}.`);
   }
@@ -256,7 +260,7 @@ export async function executeDepositAccountReassignOfficerAction(
     }
 
     const reassignmentDate = parsed.data.assignmentDate;
-    await executeDepositAccountFieldOfficerCommand(
+    const response = await executeDepositAccountFieldOfficerCommand(
       kind,
       accountId,
       'unassignSavingsOfficer',
@@ -272,7 +276,7 @@ export async function executeDepositAccountReassignOfficerAction(
       })
     );
     revalidateDepositAccountPaths(clientId, kind, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, `Could not reassign ${config.officerLabel.toLowerCase()}.`);
   }

@@ -11,6 +11,7 @@
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createChargeAction, updateChargeAction } from '@/actions/charge';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -157,11 +158,11 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
           : await updateChargeAction(chargeId ?? '', payload);
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-
-      toast.success(mode === 'create' ? 'Charge created.' : 'Charge updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Charge created.' : 'Charge updated.', pending: mode === 'create' ? 'Charge created. sent for approval.' : 'Charge updated. sent for approval.' });
       const id = result.resourceId ?? chargeId;
       router.push(id ? chargeDetailPath(id) : chargeListPath());
       router.refresh();

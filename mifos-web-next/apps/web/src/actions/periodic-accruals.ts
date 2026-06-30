@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateExecutePeriodicAccruals,
-  type ExecutePeriodicAccrualsInput
+  type ExecutePeriodicAccrualsInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { executePeriodicAccruals } from '@/lib/fineract/periodic-accruals';
 import { getServerSession } from '@/lib/session/server';
@@ -52,8 +53,8 @@ export async function executePeriodicAccrualsAction(
   }
 
   try {
-    await executePeriodicAccruals(parsed.data);
-    return { ok: true };
+    const response = await executePeriodicAccruals(parsed.data);
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to run periodic accruals.');
   }

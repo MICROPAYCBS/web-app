@@ -11,6 +11,7 @@
 import type { TaxComponentDetail, TaxComponentTemplate } from '@mifos/api-client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createTaxComponentAction,
@@ -115,14 +116,14 @@ export function TaxComponentCreateSheet({
       });
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Tax component created.');
+      toastCommandOutcome(result, { completed: 'Tax component created.', pending: 'Tax component created sent for approval.' });
       onOpenChange(false);
       const id = result.resourceId;
       router.push(id ? taxComponentDetailPath(id) : taxComponentsListPath());
@@ -265,14 +266,14 @@ export function TaxComponentEditSheet({
       });
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Tax component updated.');
+      toastCommandOutcome(result, { completed: 'Tax component updated.', pending: 'Tax component updated sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

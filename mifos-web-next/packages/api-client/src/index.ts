@@ -8,6 +8,7 @@
 
 export { FineractClient, FineractHttpError } from './fineract-client';
 export type { FineractApiError, FineractClientConfig, FineractRequestInfo } from './types';
+export type { FineractCommandProcessingResult } from './command-processing-result';
 
 export type {
   FineractAddressFieldConfig,

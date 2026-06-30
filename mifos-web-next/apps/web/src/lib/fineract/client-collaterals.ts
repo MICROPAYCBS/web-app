@@ -8,13 +8,11 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  ClientCollateralListItem,
+import type { ClientCollateralListItem,
   ClientCollateralTemplate,
   CollateralProductDetail,
   CollateralProductOption,
-  CreateClientCollateralResponse
-} from '@mifos/api-client';
+  CreateClientCollateralResponse, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { CreateClientCollateralInput } from '@mifos/validation';
 import {
   getCollateralProduct,
@@ -152,7 +150,7 @@ export async function createClientCollateral(
 export async function deleteClientCollateral(
   clientId: string | number,
   clientCollateralId: string | number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}/collaterals/${clientCollateralId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}/collaterals/${clientCollateralId}`);
 }

@@ -12,6 +12,7 @@ import type { AccountTransferTemplate, FineractSavingsAccountDetail } from '@mif
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createSavingsAccountTransferAction,
@@ -360,7 +361,10 @@ export function SavingsAccountTransferFundsSheet({
         }
         return;
       }
-      toast.success('Transfer completed.');
+      toastCommandOutcome(result, {
+        completed: 'Transfer completed.',
+        pending: 'Transfer sent for approval.'
+      });
       onOpenChange(false);
       router.refresh();
     });

@@ -12,7 +12,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   upsertCollateralProductSchema,
-  type UpsertCollateralProductInput
+  type UpsertCollateralProductInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -77,7 +78,7 @@ export async function createCollateralProductAction(
     if (resourceId) {
       revalidatePath(detailPath(resourceId));
     }
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create collateral product.');
   }
@@ -103,11 +104,11 @@ export async function updateCollateralProductAction(
   }
 
   try {
-    await updateCollateralProduct(collateralId, parsed);
+    const response = await updateCollateralProduct(collateralId, parsed);
     revalidatePath(LIST_PATH);
     revalidatePath(detailPath(collateralId));
     revalidatePath(editPath(collateralId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not update collateral product.');
   }
@@ -127,9 +128,9 @@ export async function deleteCollateralProductAction(
   }
 
   try {
-    await deleteCollateralProduct(collateralId);
+    const response = await deleteCollateralProduct(collateralId);
     revalidatePath(LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete collateral product.');
   }

@@ -11,6 +11,7 @@
 import type { InvestorTransferItem, InvestorTransferSearchPage } from '@mifos/api-client';
 import { Filter, Users } from 'lucide-react';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   cancelInvestorTransferAction,
@@ -113,7 +114,10 @@ export function InvestorsPageContent({
         toast.error(result.message);
         return;
       }
-      toast.success('Pending sale cancelled.');
+      toastCommandOutcome(result, {
+        completed: 'Pending sale cancelled.',
+        pending: 'Sale cancellation sent for approval.'
+      });
       setCancelTarget(null);
       runSearch(page, pageSize, form);
     });

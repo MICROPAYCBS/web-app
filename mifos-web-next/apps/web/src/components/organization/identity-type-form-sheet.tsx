@@ -17,6 +17,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createIdentityTypeAction, updateIdentityTypeAction } from '@/actions/identity-type';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
@@ -159,7 +160,7 @@ export function IdentityTypeFormSheet({
           }
           return;
         }
-        toast.success('Identity type guide created.');
+        toastCommandOutcome(result, { completed: 'Identity type guide created.', pending: 'Identity type guide creation sent for approval.' });
         onOpenChange(false);
         router.refresh();
         return;
@@ -182,7 +183,7 @@ export function IdentityTypeFormSheet({
         }
         return;
       }
-      toast.success('Identity type guide updated.');
+      toastCommandOutcome(result, { completed: 'Identity type guide updated.', pending: 'Identity type guide update sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

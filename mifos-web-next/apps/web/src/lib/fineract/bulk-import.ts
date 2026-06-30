@@ -8,7 +8,7 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { BulkImportHistoryItem, BulkImportStaffOption } from '@mifos/api-client';
+import type { BulkImportHistoryItem, BulkImportStaffOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import { FineractHttpError } from '@mifos/api-client';
 import type { BulkImportDefinition } from '@/lib/fineract/bulk-import-config';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
@@ -150,7 +150,7 @@ export async function uploadBulkImportTemplate(
   definition: BulkImportDefinition,
   file: File,
   legalFormType?: string
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const { urlBase, init } = await buildFineractRequestInit({ method: 'POST' });
   const formData = new FormData();
   formData.append('file', file);
@@ -179,6 +179,12 @@ export async function uploadBulkImportTemplate(
       body = null;
     }
     throw new FineractHttpError(res.status, body);
+  }
+
+  try {
+    return (await res.json()) as FineractCommandProcessingResult;
+  } catch {
+    return {};
   }
 }
 

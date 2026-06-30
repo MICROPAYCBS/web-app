@@ -16,7 +16,8 @@ import {
   validateUpdateRolePermissions,
   type CreateRoleInput,
   type UpdateRoleInput,
-  type UpdateRolePermissionsInput
+  type UpdateRolePermissionsInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -78,7 +79,7 @@ export async function createRoleAction(input: CreateRoleInput): Promise<SystemRo
   try {
     const response = await createRole(parsed.data);
     revalidateRoleViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create role.');
   }
@@ -109,9 +110,9 @@ export async function updateRoleAction(
   }
 
   try {
-    await updateRole(roleId, parsed.data);
+    const response = await updateRole(roleId, parsed.data);
     revalidateRoleViews(roleId);
-    return { ok: true, resourceId: roleId };
+    return actionSuccessFromFineractCommand(response, { resourceId: roleId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update role.');
   }
@@ -141,9 +142,9 @@ export async function updateRolePermissionsAction(
   }
 
   try {
-    await updateRolePermissions(roleId, parsed.data);
+    const response = await updateRolePermissions(roleId, parsed.data);
     revalidateRoleViews(roleId);
-    return { ok: true, resourceId: roleId };
+    return actionSuccessFromFineractCommand(response, { resourceId: roleId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update role permissions.');
   }
@@ -162,9 +163,9 @@ export async function deleteRoleAction(roleId: number): Promise<SystemRolesActio
   }
 
   try {
-    await deleteRole(roleId);
+    const response = await deleteRole(roleId);
     revalidateRoleViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, { resourceId: roleId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete role.');
   }
@@ -183,9 +184,9 @@ export async function enableRoleAction(roleId: number): Promise<SystemRolesActio
   }
 
   try {
-    await enableRole(roleId);
+    const response = await enableRole(roleId);
     revalidateRoleViews(roleId);
-    return { ok: true, resourceId: roleId };
+    return actionSuccessFromFineractCommand(response, { resourceId: roleId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to enable role.');
   }
@@ -204,9 +205,9 @@ export async function disableRoleAction(roleId: number): Promise<SystemRolesActi
   }
 
   try {
-    await disableRole(roleId);
+    const response = await disableRole(roleId);
     revalidateRoleViews(roleId);
-    return { ok: true, resourceId: roleId };
+    return actionSuccessFromFineractCommand(response, { resourceId: roleId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to disable role.');
   }

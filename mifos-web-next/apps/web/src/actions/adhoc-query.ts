@@ -12,7 +12,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpsertAdhocQuery,
-  type UpsertAdhocQueryInput
+  type UpsertAdhocQueryInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -70,7 +71,7 @@ export async function createAdhocQueryAction(
   try {
     const response = await createAdhocQuery(parsed.data);
     revalidatePath(ADHOC_QUERY_LIST_PATH);
-    return { ok: true, adhocQueryId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { adhocQueryId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create ad hoc query.');
   }
@@ -99,7 +100,7 @@ export async function updateAdhocQueryAction(
   try {
     const response = await updateAdhocQuery(adhocQueryId, parsed.data);
     revalidateAdhocQueryViews(adhocQueryId);
-    return { ok: true, adhocQueryId: response.resourceId ?? Number(adhocQueryId) };
+    return actionSuccessFromFineractCommand(response, { adhocQueryId: response.resourceId ?? Number(adhocQueryId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update ad hoc query.');
   }
@@ -116,9 +117,9 @@ export async function deleteAdhocQueryAction(
   }
 
   try {
-    await deleteAdhocQuery(adhocQueryId);
+    const response = await deleteAdhocQuery(adhocQueryId);
     revalidatePath(ADHOC_QUERY_LIST_PATH);
-    return { ok: true, adhocQueryId: Number(adhocQueryId) };
+    return actionSuccessFromFineractCommand(response, { adhocQueryId: Number(adhocQueryId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete ad hoc query.');
   }

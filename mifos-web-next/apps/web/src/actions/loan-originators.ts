@@ -14,7 +14,8 @@ import {
   validateCreateLoanOriginator,
   validateUpdateLoanOriginator,
   type CreateLoanOriginatorInput,
-  type UpdateLoanOriginatorInput
+  type UpdateLoanOriginatorInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -70,7 +71,7 @@ export async function createLoanOriginatorAction(
   try {
     const response = await createLoanOriginator(parsed.data);
     revalidatePath(LOAN_ORIGINATOR_LIST_PATH);
-    return { ok: true, loanOriginatorId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { loanOriginatorId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create loan originator.');
   }
@@ -99,7 +100,7 @@ export async function updateLoanOriginatorAction(
   try {
     const response = await updateLoanOriginator(loanOriginatorId, parsed.data);
     revalidateLoanOriginatorViews(loanOriginatorId);
-    return { ok: true, loanOriginatorId: response.resourceId ?? Number(loanOriginatorId) };
+    return actionSuccessFromFineractCommand(response, { loanOriginatorId: response.resourceId ?? Number(loanOriginatorId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update loan originator.');
   }
@@ -116,9 +117,9 @@ export async function deleteLoanOriginatorAction(
   }
 
   try {
-    await deleteLoanOriginator(loanOriginatorId);
+    const response = await deleteLoanOriginator(loanOriginatorId);
     revalidatePath(LOAN_ORIGINATOR_LIST_PATH);
-    return { ok: true, loanOriginatorId: Number(loanOriginatorId) };
+    return actionSuccessFromFineractCommand(response, { loanOriginatorId: Number(loanOriginatorId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete loan originator.');
   }

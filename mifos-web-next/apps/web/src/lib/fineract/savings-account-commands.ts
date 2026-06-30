@@ -1,3 +1,4 @@
+import type { FineractCommandProcessingResult } from '@mifos/api-client';
 import 'server-only';
 
 /**
@@ -70,9 +71,13 @@ export async function executeSavingsAccountCommand(
   accountId: string | number,
   command: SavingsAccountLifecycleCommand,
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${SAVINGS_ACCOUNTS_PATH}/${accountId}`, body, { command });
+  return fineract.post<FineractCommandProcessingResult>(
+    `${SAVINGS_ACCOUNTS_PATH}/${accountId}`,
+    body,
+    { command }
+  );
 }
 
 export async function executeSavingsAccountTransaction(
@@ -93,9 +98,9 @@ export async function executeSavingsAccountExistingTransaction(
   transactionId: string | number,
   command: SavingsAccountExistingTransactionCommand,
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(
+  return fineract.post<FineractCommandProcessingResult>(
     `${SAVINGS_ACCOUNTS_PATH}/${accountId}/transactions/${transactionId}`,
     body,
     { command }
@@ -107,9 +112,9 @@ export async function executeSavingsAccountChargeCommand(
   chargeId: string | number,
   command: SavingsAccountChargeCommand,
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${SAVINGS_ACCOUNTS_PATH}/${accountId}/charges/${chargeId}`, body, {
+  return fineract.post<FineractCommandProcessingResult>(`${SAVINGS_ACCOUNTS_PATH}/${accountId}/charges/${chargeId}`, body, {
     command
   });
 }
@@ -125,17 +130,17 @@ export async function createSavingsAccountCharge(
   );
 }
 
-export async function deleteSavingsAccount(accountId: string | number): Promise<void> {
+export async function deleteSavingsAccount(accountId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${SAVINGS_ACCOUNTS_PATH}/${accountId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${SAVINGS_ACCOUNTS_PATH}/${accountId}`);
 }
 
 export async function updateSavingsAccountWithholdTax(
   accountId: string | number,
   withHoldTax: boolean
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`${SAVINGS_ACCOUNTS_PATH}/${accountId}`, { withHoldTax }, {
+  return fineract.put<FineractCommandProcessingResult>(`${SAVINGS_ACCOUNTS_PATH}/${accountId}`, { withHoldTax }, {
     command: 'updateWithHoldTax'
   });
 }

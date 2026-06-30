@@ -24,6 +24,7 @@ import { Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { parseAmount, areJournalEntryTotalsBalanced } from '@mifos/domain';
 import { createJournalEntryAction } from '@/actions/journal-entries';
@@ -227,6 +228,7 @@ export function JournalEntryForm({
     startTransition(async () => {
       const result = await createJournalEntryAction(parsed.data);
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
@@ -234,13 +236,13 @@ export function JournalEntryForm({
         toast.error(result.message);
         return;
       }
-
-      toast.success('Journal entry created.');
       if (result.transactionId) {
         router.push(`/accounting/journal-entries/transactions/${result.transactionId}`);
       } else {
         router.push('/accounting/journal-entries');
+        return;
       }
+      toastCommandOutcome(result, { completed: 'Journal entry created.', pending: 'Journal entry created sent for approval.' });
       router.refresh();
     });
   }

@@ -12,7 +12,7 @@ import type { ClientDepositAccountKind, ClientDepositAccountTemplate } from '@mi
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
-import { toast } from 'sonner';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import {
   createClientDepositAccountAction,
   fetchClientDepositAccountTemplateAction
@@ -185,14 +185,16 @@ export function CreateClientDepositAccountSheet({
               };
 
       const result = await createClientDepositAccountAction(kind, clientId, payload);
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, {
+        completed: 'Application submitted.',
+        pending: 'Application sent for approval.'
+      })) {
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-      toast.success('Application submitted.');
       onOpenChange(false);
       onCreated?.();
       router.refresh();

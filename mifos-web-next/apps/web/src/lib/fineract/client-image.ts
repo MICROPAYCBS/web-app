@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import { FineractHttpError } from '@mifos/api-client';
+import { FineractHttpError, type FineractCommandProcessingResult } from '@mifos/api-client';
 import { buildFineractRequestInit, fineractUrl } from './fineract-fetch';
 
 export function clientHasProfileImage(client: {
@@ -43,7 +43,7 @@ export async function getClientProfileImage(clientId: string | number): Promise<
 export async function uploadClientProfileImageFile(
   clientId: string | number,
   file: File
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const { urlBase, init } = await buildFineractRequestInit({ method: 'POST' });
   const formData = new FormData();
   formData.append('file', file);
@@ -65,12 +65,18 @@ export async function uploadClientProfileImageFile(
     }
     throw new FineractHttpError(res.status, body);
   }
+
+  try {
+    return (await res.json()) as FineractCommandProcessingResult;
+  } catch {
+    return {};
+  }
 }
 
 export async function uploadClientProfileImageDataUrl(
   clientId: string | number,
   dataUrl: string
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const { urlBase, init } = await buildFineractRequestInit({
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
@@ -87,13 +93,19 @@ export async function uploadClientProfileImageDataUrl(
     }
     throw new FineractHttpError(res.status, body);
   }
+
+  try {
+    return (await res.json()) as FineractCommandProcessingResult;
+  } catch {
+    return {};
+  }
 }
 
-export async function deleteClientProfileImage(clientId: string | number): Promise<void> {
+export async function deleteClientProfileImage(clientId: string | number): Promise<FineractCommandProcessingResult> {
   const { urlBase, init } = await buildFineractRequestInit({ method: 'DELETE' });
   const res = await fetch(fineractUrl(urlBase, `/clients/${clientId}/images`), init);
   if (res.status === 404) {
-    return;
+    return {};
   }
   if (!res.ok) {
     let body = null;
@@ -103,5 +115,11 @@ export async function deleteClientProfileImage(clientId: string | number): Promi
       body = null;
     }
     throw new FineractHttpError(res.status, body);
+  }
+
+  try {
+    return (await res.json()) as FineractCommandProcessingResult;
+  } catch {
+    return {};
   }
 }

@@ -8,7 +8,7 @@
 
 import type { ReactNode } from 'react';
 
-/** Pass-through: client detail shell lives in `(detail)/layout`; loan applications use their own layout. */
+/** Client detail shell lives in `(detail)/layout`; savings/loan account routes use their own layouts. */
 export default function ClientSegmentLayout({ children }: { children: ReactNode }) {
-  return children;
+  return <div className="flex min-h-0 flex-1 flex-col">{children}</div>;
 }

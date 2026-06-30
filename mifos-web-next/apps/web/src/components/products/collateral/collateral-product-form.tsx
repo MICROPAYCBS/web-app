@@ -11,6 +11,7 @@
 import type { CollateralProductDetail, CollateralProductTemplate } from '@mifos/api-client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createCollateralProductAction,
@@ -93,14 +94,14 @@ export function CollateralProductCreateSheet({
       });
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Collateral product created.');
+      toastCommandOutcome(result, { completed: 'Collateral product created.', pending: 'Collateral product created sent for approval.' });
       onOpenChange(false);
       const id = result.resourceId;
       router.push(id ? collateralProductDetailPath(id) : collateralProductListPath());
@@ -209,14 +210,14 @@ export function CollateralProductEditSheet({
       });
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Collateral product updated.');
+      toastCommandOutcome(result, { completed: 'Collateral product updated.', pending: 'Collateral product updated sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

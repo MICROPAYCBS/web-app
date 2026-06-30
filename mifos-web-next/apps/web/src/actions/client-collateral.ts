@@ -13,7 +13,8 @@ import type { ClientCollateralListItem, CollateralProductDetail } from '@mifos/a
 import {
   createClientCollateralSchema,
   toFineractActionError,
-  type CreateClientCollateralInput
+  type CreateClientCollateralInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -118,7 +119,7 @@ export async function createClientCollateralAction(
     const response = await createClientCollateral(clientId, parsed);
     revalidatePath(clientCollateralListPath(clientId));
     revalidatePath(`/clients/${clientId}`, 'layout');
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not add collateral.');
   }
@@ -139,9 +140,9 @@ export async function deleteClientCollateralAction(
   }
 
   try {
-    await deleteClientCollateral(clientId, clientCollateralId);
+    const response = await deleteClientCollateral(clientId, clientCollateralId);
     revalidatePath(clientCollateralListPath(clientId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete collateral.');
   }

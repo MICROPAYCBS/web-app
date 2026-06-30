@@ -26,8 +26,6 @@ import { useRouter } from 'next/navigation';
 
 import { useCallback, useMemo, useState, useTransition } from 'react';
 
-import { toast } from 'sonner';
-
 import {
 
   createClientLoanAccountAction,
@@ -43,6 +41,7 @@ import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { isClientLoanAccountTemplate } from '@/lib/fineract/client-account-action-result';
 
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 
 import {
 
@@ -384,15 +383,13 @@ export function CreateLoanAccountWizard({
 
       const result = await createClientLoanAccountAction(clientId, draft);
 
-      if (!result.ok) {
-
-        setSubmitError(result.message);
-
+      if (!toastCommandOutcome(result, {
+        completed: 'Loan application submitted.',
+        pending: 'Loan application sent for approval.'
+      })) {
+        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
-
       }
-
-      toast.success('Loan application submitted.');
 
       if (result.resourceId) {
 

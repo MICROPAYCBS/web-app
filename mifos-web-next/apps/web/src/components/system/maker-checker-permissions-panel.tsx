@@ -13,6 +13,7 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateMakerCheckerPermissionsAction } from '@/actions/maker-checker-permissions';
 import { PermissionAssignmentStatus } from '@/components/system/permission-assignment-status';
@@ -84,10 +85,11 @@ export function MakerCheckerPermissionsPanel({
         permissions: permissionsToPayload(permissions)
       });
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message));
         return;
       }
-      toast.success('Maker-checker tasks updated.');
+      toastCommandOutcome(result, { completed: 'Maker-checker tasks updated.', pending: 'Maker-checker tasks updated sent for approval.' });
       setEditing(false);
       router.refresh();
     });

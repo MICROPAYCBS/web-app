@@ -355,7 +355,7 @@ export async function getGroupEditTemplate(
 export async function updateGroup(
   groupId: string | number,
   payload: UpdateGroupPayload
-): Promise<void> {
+): Promise<unknown> {
   const fineract = await createFineractClient();
   const body: Record<string, unknown> = {
     name: payload.name,
@@ -371,7 +371,7 @@ export async function updateGroup(
   if (payload.activationDate) {
     body.activationDate = formatGroupDateForApi(payload.activationDate);
   }
-  await fineract.put(`/groups/${groupId}`, body);
+  return fineract.put(`/groups/${groupId}`, body);
 }
 
 export function defaultGroupMutationMeta() {

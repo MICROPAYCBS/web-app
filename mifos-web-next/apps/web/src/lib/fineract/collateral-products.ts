@@ -8,14 +8,12 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  CollateralProductDetail,
+import type { CollateralProductDetail,
   CollateralProductListItem,
   CollateralProductMutationResponse,
   CollateralProductOption,
   CollateralProductTemplate,
-  FineractCurrencyOption
-} from '@mifos/api-client';
+  FineractCurrencyOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { UpsertCollateralProductInput } from '@mifos/validation';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
@@ -167,7 +165,7 @@ export async function updateCollateralProduct(
   );
 }
 
-export async function deleteCollateralProduct(collateralId: string | number): Promise<void> {
+export async function deleteCollateralProduct(collateralId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/collateral-management/${collateralId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/collateral-management/${collateralId}`);
 }

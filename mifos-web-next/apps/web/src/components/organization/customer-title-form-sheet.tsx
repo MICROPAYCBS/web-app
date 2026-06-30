@@ -17,6 +17,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createCustomerTitleAction, updateCustomerTitleAction } from '@/actions/customer-title';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
@@ -132,7 +133,7 @@ export function CustomerTitleFormSheet({
           }
           return;
         }
-        toast.success('Customer title created.');
+        toastCommandOutcome(result, { completed: 'Customer title created.', pending: 'Customer title creation sent for approval.' });
         onOpenChange(false);
         router.refresh();
         return;
@@ -155,7 +156,7 @@ export function CustomerTitleFormSheet({
         }
         return;
       }
-      toast.success('Customer title updated.');
+      toastCommandOutcome(result, { completed: 'Customer title updated.', pending: 'Customer title update sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

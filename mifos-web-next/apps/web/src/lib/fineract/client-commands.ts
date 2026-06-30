@@ -1,3 +1,4 @@
+import type { FineractCommandProcessingResult } from '@mifos/api-client';
 import 'server-only';
 
 /**
@@ -14,12 +15,12 @@ export async function executeClientCommand(
   clientId: string,
   command: string,
   body: Record<string, unknown> = {}
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`/clients/${clientId}`, body, { command });
+  return fineract.post<FineractCommandProcessingResult>(`/clients/${clientId}`, body, { command });
 }
 
-export async function deleteClientById(clientId: string): Promise<void> {
+export async function deleteClientById(clientId: string): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}`);
 }

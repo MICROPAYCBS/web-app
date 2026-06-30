@@ -19,6 +19,7 @@ import { Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createTemplateAction, updateTemplateAction } from '@/actions/templates';
 import { FormLabel } from '@/components/composites/form-label';
@@ -183,6 +184,7 @@ export function TemplateForm({
           : await updateTemplateAction(templateId as number, parsed.data);
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
@@ -190,15 +192,15 @@ export function TemplateForm({
         toast.error(result.message);
         return;
       }
-
-      toast.success(mode === 'create' ? 'Template created.' : 'Template updated.');
       if (mode === 'create' && result.resourceId != null) {
         router.push(`/templates/${result.resourceId}`);
       } else if (templateId != null) {
         router.push(`/templates/${templateId}`);
       } else {
         router.push('/templates');
+        return;
       }
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Template created.' : 'Template updated.', pending: mode === 'create' ? 'Template created. sent for approval.' : 'Template updated. sent for approval.' });
       router.refresh();
     });
   }

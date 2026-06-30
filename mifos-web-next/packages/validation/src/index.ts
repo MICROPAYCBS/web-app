@@ -334,6 +334,17 @@ export {
   type FineractActionError
 } from './to-fineract-action-error';
 export {
+  actionSuccessFromFineractCommand,
+  commandOutcomeMessage,
+  isFineractCommandCommitted,
+  isPendingCheckerActionResult,
+  isPendingCheckerApproval,
+  parseFineractCommandResult,
+  readFineractCommandResourceId,
+  type FineractCommandActionMeta,
+  type FineractCommandActionSuccess
+} from './fineract-command-result';
+export {
   createEntityDatatableCheckSchema,
   validateCreateEntityDatatableCheck,
   ENTITY_DATATABLE_CHECK_ENTITIES,

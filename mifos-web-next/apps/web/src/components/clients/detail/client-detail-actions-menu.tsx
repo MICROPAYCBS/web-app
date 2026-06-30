@@ -15,6 +15,7 @@ import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   deleteClientAction
@@ -222,7 +223,10 @@ export function ClientDetailActionsMenu({
           toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
           return;
         }
-        toast.success('Customer deleted.');
+        toastCommandOutcome(result, {
+          completed: 'Customer deleted.',
+          pending: 'Customer deletion sent for approval.'
+        });
         router.push('/clients');
       }
     });
@@ -271,10 +275,7 @@ export function ClientDetailActionsMenu({
             setActiveSheet(null);
           }
         }}
-        onSuccess={() => {
-          toast.success('Customer updated.');
-          refreshClient();
-        }}
+        onSuccess={refreshClient}
       />
 
       <ClientSignatureUploadDialog
@@ -285,10 +286,7 @@ export function ClientDetailActionsMenu({
             setActiveDialog(null);
           }
         }}
-        onSuccess={() => {
-          toast.success('Signature uploaded.');
-          refreshClient();
-        }}
+        onSuccess={refreshClient}
       />
 
       <ClientSignatureDrawDialog
@@ -299,10 +297,7 @@ export function ClientDetailActionsMenu({
             setActiveDialog(null);
           }
         }}
-        onSuccess={() => {
-          toast.success('Signature saved.');
-          refreshClient();
-        }}
+        onSuccess={refreshClient}
       />
 
       {signatureDocumentId !== undefined ? (
@@ -315,10 +310,7 @@ export function ClientDetailActionsMenu({
               setActiveDialog(null);
             }
           }}
-          onSuccess={() => {
-            toast.success('Signature deleted.');
-            refreshClient();
-          }}
+          onSuccess={refreshClient}
         />
       ) : null}
 

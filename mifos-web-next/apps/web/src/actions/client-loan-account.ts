@@ -9,7 +9,12 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { createLoanAccountSchema, toFineractActionError, type CreateLoanAccountInput } from '@mifos/validation';
+import {
+  createLoanAccountSchema,
+  toFineractActionError,
+  type CreateLoanAccountInput,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
   type ClientLoanAccountActionResult,
@@ -80,7 +85,7 @@ export async function createClientLoanAccountAction(
     revalidatePath(clientAccountListPath(clientId, 'loan'));
     revalidatePath(`/clients/${clientId}/loans-accounts/create`);
     revalidatePath(`/clients/${clientId}`);
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not submit the loan application.');
   }

@@ -17,7 +17,8 @@ import {
   toFineractActionError,
   type CreateClientFixedDepositAccountInput,
   type CreateClientRecurringDepositAccountInput,
-  type CreateClientSavingsAccountInput
+  type CreateClientSavingsAccountInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -108,7 +109,7 @@ export async function createClientDepositAccountAction(
     revalidatePath(clientAccountListPath(clientId, CLIENT_DEPOSIT_ACCOUNT_CONFIG[kind].listKind));
     revalidatePath(clientDepositAccountCreatePath(clientId, kind));
     revalidatePath(`/clients/${clientId}`);
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not submit the application.');
   }

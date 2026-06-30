@@ -21,6 +21,7 @@ import { addClientDatatableRowAction } from '@/actions/client-datatable';
 import { createClientAction } from '@/actions/clients';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fineract/dates';
 import { mandatoryClientDatatableNames } from '@/lib/fineract/mandatory-client-datatables';
@@ -293,8 +294,17 @@ export function CreateClientWizard({
     }
     startTransition(async () => {
       const result = await createClientAction(payload);
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, {
+        completed: 'Customer created.',
+        pending: 'Customer creation sent for approval.'
+      })) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        return;
+      }
+
+      if (result.clientId == null) {
+        router.push('/clients');
+        router.refresh();
         return;
       }
 

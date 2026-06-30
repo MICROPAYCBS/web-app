@@ -10,9 +10,11 @@
 
 import { assertCan } from '@mifos/auth';
 import {
+  actionSuccessFromFineractCommand,
   toFineractActionError,
   validateClientIdentifier,
-  type ClientIdentifierInput
+  type ClientIdentifierInput,
+  type FineractCommandActionMeta
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -23,7 +25,7 @@ import {
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientIdentifierActionResult =
-  | { ok: true; resourceId?: number }
+  | ({ ok: true; resourceId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 async function requireCreatePermission(): Promise<ClientIdentifierActionResult | null> {
@@ -103,7 +105,7 @@ export async function createClientIdentifierAction(
   try {
     const result = await createClientIdentifier(clientId, parsed);
     revalidatePath(`/clients/${clientId}/identities`);
-    return { ok: true, resourceId: result.resourceId };
+    return actionSuccessFromFineractCommand(result, { resourceId: result.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -119,9 +121,9 @@ export async function deleteClientIdentifierAction(
   }
 
   try {
-    await deleteClientIdentifier(clientId, identifierId);
+    const response = await deleteClientIdentifier(clientId, identifierId);
     revalidatePath(`/clients/${clientId}/identities`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }

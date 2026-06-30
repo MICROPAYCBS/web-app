@@ -12,6 +12,7 @@ import type { FineractStaffListItem, OrganizationCashierListItem } from '@mifos/
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useId, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { assignCashierAction, updateCashierAction } from '@/actions/cashier';
 import { DateField } from '@/components/composites/date-field';
@@ -131,14 +132,14 @@ export function CashierFormSheet({
             : { ok: false as const, message: 'Cashier not found.' };
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success(mode === 'assign' ? 'Cashier assigned.' : 'Cashier assignment updated.');
+      toastCommandOutcome(result, { completed: mode === 'assign' ? 'Cashier assigned.' : 'Cashier assignment updated.', pending: mode === 'assign' ? 'Cashier assigned. sent for approval.' : 'Cashier assignment updated. sent for approval.' });
       handleOpenChange(false);
       router.refresh();
     });

@@ -12,6 +12,7 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { buildSmsCampaignParamValue, createSmsCampaignAction } from '@/actions/sms-campaign';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -152,18 +153,19 @@ export function SmsCampaignWizard({ template }: SmsCampaignWizardProps) {
       });
 
       if (!result.ok) {
+
         const message = formatActionErrorMessage(result.message, result.fieldErrors);
         setSubmitError(message);
         toast.error(message);
         return;
       }
-
-      toast.success('SMS campaign created');
       if (result.campaignId) {
         router.push(smsCampaignDetailPath(result.campaignId));
       } else {
         router.push(SMS_CAMPAIGN_LIST_PATH);
+        return;
       }
+      toastCommandOutcome(result, { completed: 'SMS campaign created', pending: 'SMS campaign created sent for approval.' });
       router.refresh();
     });
   }, [draft, router]);

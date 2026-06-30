@@ -1,5 +1,7 @@
 'use server';
 
+import { actionSuccessFromFineractCommand } from '@mifos/validation';
+
 import { revalidatePath } from 'next/cache';
 import type { UpsertServerInput } from '@mifos/servers';
 import {
@@ -55,9 +57,9 @@ export async function addServerAction(input: UpsertServerInput): Promise<ServerA
     if (missingRequiredServerFields(input)) {
       return { ok: false, message: 'Name, server URL, and tenant are required' };
     }
-    await addFineractServer(input);
+    const response = await addFineractServer(input);
     revalidateServerPaths();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'Failed to add server' };
   }
@@ -71,9 +73,9 @@ export async function updateServerAction(
     if (missingRequiredServerFields(input)) {
       return { ok: false, message: 'Name, server URL, and tenant are required' };
     }
-    await updateFineractServer(serverId, input);
+    const response = await updateFineractServer(serverId, input);
     revalidateServerPaths();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'Failed to update server' };
   }
@@ -81,9 +83,9 @@ export async function updateServerAction(
 
 export async function deleteServerAction(serverId: string): Promise<ServerActionResult> {
   try {
-    await deleteFineractServer(serverId);
+    const response = await deleteFineractServer(serverId);
     revalidateServerPaths();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'Failed to delete server' };
   }

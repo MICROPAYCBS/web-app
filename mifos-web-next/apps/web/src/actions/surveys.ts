@@ -9,7 +9,12 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError, validateUpsertSurveyForm, type UpsertSurveyFormInput } from '@mifos/validation';
+import {
+  toFineractActionError,
+  validateUpsertSurveyForm,
+  type UpsertSurveyFormInput,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
   activateSurvey,
@@ -68,7 +73,7 @@ export async function createSurveyAction(input: UpsertSurveyFormInput): Promise<
   try {
     const response = await createSurvey(parsed.data);
     revalidateSurveyViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create survey.');
   }
@@ -99,9 +104,9 @@ export async function updateSurveyAction(
   }
 
   try {
-    await updateSurvey(surveyId, parsed.data);
+    const response = await updateSurvey(surveyId, parsed.data);
     revalidateSurveyViews(surveyId);
-    return { ok: true, resourceId: surveyId };
+    return actionSuccessFromFineractCommand(response, { resourceId: surveyId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update survey.');
   }
@@ -120,9 +125,9 @@ export async function activateSurveyAction(surveyId: number): Promise<SurveysAct
   }
 
   try {
-    await activateSurvey(surveyId);
+    const response = await activateSurvey(surveyId);
     revalidateSurveyViews(surveyId);
-    return { ok: true, resourceId: surveyId };
+    return actionSuccessFromFineractCommand(response, { resourceId: surveyId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to activate survey.');
   }
@@ -141,9 +146,9 @@ export async function deactivateSurveyAction(surveyId: number): Promise<SurveysA
   }
 
   try {
-    await deactivateSurvey(surveyId);
+    const response = await deactivateSurvey(surveyId);
     revalidateSurveyViews(surveyId);
-    return { ok: true, resourceId: surveyId };
+    return actionSuccessFromFineractCommand(response, { resourceId: surveyId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to deactivate survey.');
   }

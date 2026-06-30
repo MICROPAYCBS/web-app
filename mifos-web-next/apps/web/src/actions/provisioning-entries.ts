@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateCreateProvisioningEntry,
-  type CreateProvisioningEntryInput
+  type CreateProvisioningEntryInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -73,7 +74,7 @@ export async function createProvisioningEntryAction(
   try {
     const response = await createProvisioningEntry(parsed.data);
     revalidateProvisioningViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create provisioning entry.');
   }
@@ -96,7 +97,7 @@ export async function recreateProvisioningEntryAction(
   try {
     const response = await recreateProvisioningEntry(entryId);
     revalidateProvisioningViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to recreate provisioning entry.');
   }
@@ -119,7 +120,7 @@ export async function createProvisioningJournalEntriesAction(
   try {
     const response = await createProvisioningJournalEntries(entryId);
     revalidateProvisioningViews(entryId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create journal entries.');
   }

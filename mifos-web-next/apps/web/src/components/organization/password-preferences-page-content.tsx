@@ -11,6 +11,7 @@
 import type { PasswordPreferenceTemplateItem } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import { useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updatePasswordPreferencesAction } from '@/actions/password-preferences';
 import { ListPage } from '@/components/composites/list-page';
@@ -56,14 +57,15 @@ export function PasswordPreferencesPageContent({
       const result = await updatePasswordPreferencesAction({ validationPolicyId });
 
       if (!result.ok) {
+
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
-        }
+        return;
+      }
+      toastCommandOutcome(result, { completed: 'Password preferences updated.', pending: 'Password preferences updated sent for approval.' });
         toast.error(result.message);
         return;
       }
-
-      toast.success('Password preferences updated.');
     });
   }
 

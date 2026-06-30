@@ -12,7 +12,8 @@ import type {
   FineractClientIdentifier,
   FineractClientIdentifierTemplate,
   FineractEntityDocument,
-  ClientIdentifierIdentityTypeOption
+  ClientIdentifierIdentityTypeOption,
+  FineractCommandProcessingResult
 } from '@mifos/api-client';
 import type { ClientIdentifierInput } from '@mifos/validation';
 import { FineractHttpError } from '@mifos/api-client';
@@ -111,9 +112,9 @@ export async function createClientIdentifier(
 export async function deleteClientIdentifier(
   clientId: string | number,
   identifierId: number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}/identifiers/${identifierId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}/identifiers/${identifierId}`);
 }
 
 export async function uploadClientIdentifierDocument(

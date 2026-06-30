@@ -10,10 +10,12 @@
 
 import { assertCan } from '@mifos/auth';
 import {
+  actionSuccessFromFineractCommand,
   toFineractActionError,
   validateClientContact,
   type ClientContactInput,
-  type ClientContactValidationContext
+  type ClientContactValidationContext,
+  type FineractCommandActionMeta
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -25,7 +27,7 @@ import {
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientContactActionResult =
-  | { ok: true; resourceId?: number }
+  | ({ ok: true; resourceId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 function zodFieldErrors(error: { issues: { path: (string | number)[]; message: string }[] }) {
@@ -90,7 +92,7 @@ export async function createClientContactAction(
   try {
     const result = await createClientContact(clientId, parsed);
     revalidateClientContactViews(clientId);
-    return { ok: true, resourceId: result.resourceId };
+    return actionSuccessFromFineractCommand(result, { resourceId: result.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Failed to save customer contact.');
   }
@@ -119,7 +121,7 @@ export async function updateClientContactAction(
   try {
     const result = await updateClientContact(clientId, contactId, parsed);
     revalidateClientContactViews(clientId);
-    return { ok: true, resourceId: result.resourceId };
+    return actionSuccessFromFineractCommand(result, { resourceId: result.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Failed to update customer contact.');
   }
@@ -140,9 +142,9 @@ export async function deleteClientContactAction(
   }
 
   try {
-    await deleteClientContact(clientId, contactId);
+    const response = await deleteClientContact(clientId, contactId);
     revalidateClientContactViews(clientId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Failed to delete customer contact.');
   }

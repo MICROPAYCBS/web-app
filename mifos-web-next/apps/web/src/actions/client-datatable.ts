@@ -14,7 +14,8 @@ import {
   clientDatatableValuesSchema,
   toFineractActionError,
   validateClientDatatableValues,
-  type DatatableColumnRule
+  type DatatableColumnRule,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -153,14 +154,15 @@ export async function saveClientDatatableAction(
   const payload = buildClientDatatablePayload(columns, validated.data);
 
   try {
+    let response: unknown;
     const rowExists = await clientSingleRowDatatableExists(clientId, registeredTableName);
     if (rowExists) {
-      await updateClientDatatableEntry(clientId, registeredTableName, payload);
+      response = await updateClientDatatableEntry(clientId, registeredTableName, payload);
     } else {
-      await createClientDatatableEntry(clientId, registeredTableName, payload);
+      response = await createClientDatatableEntry(clientId, registeredTableName, payload);
     }
     revalidateClientDatatableViews(clientId, registeredTableName);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -204,9 +206,9 @@ export async function addClientDatatableRowAction(
   const payload = buildClientDatatablePayload(columns, validated.data);
 
   try {
-    await createClientDatatableEntry(clientId, registeredTableName, payload);
+    const response = await createClientDatatableEntry(clientId, registeredTableName, payload);
     revalidateClientDatatableViews(clientId, registeredTableName);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -251,9 +253,9 @@ export async function updateClientDatatableRowAction(
   const payload = buildClientDatatablePayload(columns, validated.data);
 
   try {
-    await updateClientDatatableRow(clientId, registeredTableName, rowId, payload);
+    const response = await updateClientDatatableRow(clientId, registeredTableName, rowId, payload);
     revalidateClientDatatableViews(clientId, registeredTableName);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }
@@ -280,7 +282,7 @@ export async function deleteClientDatatableRowsAction(
 
   try {
     for (const rowId of rowIds) {
-      await deleteClientDatatableRow(clientId, registeredTableName, rowId);
+      const response = await deleteClientDatatableRow(clientId, registeredTableName, rowId);
     }
     revalidateClientDatatableViews(clientId, registeredTableName);
     return { ok: true };
@@ -304,9 +306,9 @@ export async function deleteClientDatatableAction(
   }
 
   try {
-    await deleteClientDatatableEntry(clientId, registeredTableName);
+    const response = await deleteClientDatatableEntry(clientId, registeredTableName);
     revalidateClientDatatableViews(clientId, registeredTableName);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }

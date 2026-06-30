@@ -14,6 +14,7 @@ import { Can } from '@mifos/auth';
 import { Download, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   loadBulkImportStaffAction,
@@ -85,9 +86,11 @@ export function BulkImportDetailPageContent({
     startStaffTransition(async () => {
       const result = await loadBulkImportStaffAction(officeId);
       if (!result.ok) {
+
         toast.error(result.message);
         return;
       }
+      toastCommandOutcome(result, { completed: 'Import file uploaded.', pending: 'Import file uploaded sent for approval.' });
       setStaffOptions(result.data);
     });
   }
@@ -137,7 +140,6 @@ export function BulkImportDetailPageContent({
         toast.error(result.message);
         return;
       }
-      toast.success('Import file uploaded.');
       setSelectedFile(null);
       handleRefresh();
     });

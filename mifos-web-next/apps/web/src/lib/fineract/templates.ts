@@ -8,14 +8,12 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractTemplateDetail,
+import type { FineractTemplateDetail,
   FineractTemplateFormTemplate,
   FineractTemplateListItem,
   FineractTemplateMapper,
   FineractTemplateMutationResponse,
-  FineractTemplateOption
-} from '@mifos/api-client';
+  FineractTemplateOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import { buildTemplateApiPayload, type UpsertTemplateFormInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { resolveEntityId, resolveTypeId } from '@/lib/fineract/template-display';
@@ -218,13 +216,13 @@ export async function createTemplate(
 export async function updateTemplate(
   templateId: number,
   input: UpsertTemplateFormInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
   const payload = buildTemplateApiPayload(input);
-  await fineract.put(`${TEMPLATES_PATH}/${templateId}`, payload);
+  return fineract.put<FineractCommandProcessingResult>(`${TEMPLATES_PATH}/${templateId}`, payload);
 }
 
-export async function deleteTemplate(templateId: number): Promise<void> {
+export async function deleteTemplate(templateId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${TEMPLATES_PATH}/${templateId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${TEMPLATES_PATH}/${templateId}`);
 }
