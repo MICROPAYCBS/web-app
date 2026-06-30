@@ -26,6 +26,15 @@ function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
 }
 
 function toComplianceProfileBody(input: ComplianceProfileInput): Record<string, unknown> {
+  if (!input.hasOtherBankAccounts) {
+    const { otherBankAccounts: _ignored, ...rest } = input;
+    return stripEmpty({
+      ...rest,
+      hasOtherBankAccounts: false,
+      locale: input.locale ?? FINERACT_LOCALE
+    });
+  }
+
   const otherBankAccounts = input.otherBankAccounts
     ?.filter((account) => account.bankName.trim() && account.accountNumber.trim())
     .map((account, index) =>

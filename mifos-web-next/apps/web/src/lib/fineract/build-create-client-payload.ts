@@ -70,16 +70,20 @@ export function buildCreateClientPayload(input: CreateClientPayload): Record<str
   }
 
   if (input.complianceProfile) {
-    const accounts = input.complianceProfile.otherBankAccounts
-      ?.filter((account) => account.bankName?.trim() && account.accountNumber?.trim())
-      .map((account, index) =>
-        stripEmpty({
-          ...account,
-          displayOrder: index + 1
-        })
-      );
+    const profile = input.complianceProfile;
+    const accounts = profile.hasOtherBankAccounts
+      ? profile.otherBankAccounts
+          ?.filter((account) => account.bankName?.trim() && account.accountNumber?.trim())
+          .map((account, index) =>
+            stripEmpty({
+              ...account,
+              displayOrder: index + 1
+            })
+          )
+      : undefined;
     base.complianceProfile = stripEmpty({
-      ...input.complianceProfile,
+      ...profile,
+      hasOtherBankAccounts: profile.hasOtherBankAccounts ?? false,
       otherBankAccounts: accounts?.length ? accounts : undefined
     });
   } else {
