@@ -12,3 +12,7 @@ export {
   formatAmount,
   parseAmount
 } from './money';
+export {
+  resolveReportParameterDisplayLabel,
+  type ReportParameterLike
+} from './report-parameter-label';

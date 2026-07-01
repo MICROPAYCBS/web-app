@@ -7,4 +7,4 @@
  */
 
 export { FineractClient, FineractHttpError } from './fineract-client';
-export type { FineractApiError, FineractClientConfig } from './types';
+export type { FineractApiError, FineractClientConfig, FineractReportParameter } from './types';

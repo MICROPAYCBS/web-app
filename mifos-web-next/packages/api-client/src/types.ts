@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/** Fineract API error body (subset). */
 export interface FineractApiError {
   httpStatusCode?: number;
   defaultUserMessage?: string;
@@ -24,4 +23,14 @@ export interface FineractClientConfig {
   tenantId: string;
   /** Basic auth or bearer token — set by session layer in apps/web */
   getAuthHeader: () => Promise<string | null>;
+}
+
+/** Report parameter from GET /reports/{id}?fields=reportParameters */
+export interface FineractReportParameter {
+  id?: number;
+  parameterId?: number;
+  parameterName?: string;
+  reportParameterName?: string;
+  parameterLabel?: string;
+  displayLabel?: string;
 }
