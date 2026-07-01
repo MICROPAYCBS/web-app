@@ -9,11 +9,13 @@
  */
 
 import { ShieldCheckIcon } from 'lucide-react';
+import { useState } from 'react';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginMarketingPanel } from '@/components/auth/login-marketing-panel';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
 import { LoginActiveServer } from '@/components/auth/login-active-server';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { PasswordInput } from '@/components/composites/password-input';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -42,6 +44,8 @@ export function LoginForm({
   onManageServers,
   className
 }: LoginFormProps) {
+  const [password, setPassword] = useState('');
+
   return (
     <div className={cn('grid min-h-svh lg:grid-cols-2', className)}>
       <LoginMarketingPanel className="min-h-48 lg:min-h-svh" />
@@ -90,10 +94,11 @@ export function LoginForm({
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input
+                    <PasswordInput
                       id="password"
                       name="password"
-                      type="password"
+                      value={password}
+                      onChange={setPassword}
                       autoComplete="current-password"
                       className="h-10 bg-background"
                       required

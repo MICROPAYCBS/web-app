@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 
 export function PasswordInput({
   id,
+  name,
   value,
   onChange,
   autoComplete,
@@ -29,6 +30,7 @@ export function PasswordInput({
   'aria-invalid': ariaInvalid
 }: {
   id: string;
+  name?: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete?: string;
@@ -49,6 +51,7 @@ export function PasswordInput({
     <InputGroup className={cn('h-8', className)}>
       <InputGroupInput
         id={id}
+        name={name}
         type={visible ? 'text' : 'password'}
         autoComplete={autoComplete}
         value={value}
