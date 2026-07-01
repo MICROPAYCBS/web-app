@@ -10,15 +10,17 @@
 
 import type { CheckerInboxListItem } from '@mifos/api-client';
 import { Check, Trash2, X } from 'lucide-react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { toastFineractError } from '@/lib/toast-fineract-error';
 import {
   bulkDeleteCheckerInboxItemsAction,
   bulkExecuteCheckerInboxActionAction
 } from '@/actions/checker-inbox';
+import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
+import { CheckerInboxFilterSheet } from '@/components/tasks/checker-inbox-filter-sheet';
 import { CheckerInboxTable } from '@/components/tasks/checker-inbox-table';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +31,11 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import {
+  buildCheckerInboxClientFilterOptions,
+  countActiveCheckerInboxClientFilters,
+  type CheckerInboxClientFilters
+} from '@/lib/checker-inbox/client-filters';
 import { notifyCheckerInboxPendingChanged } from '@/lib/checker-inbox/pending-count';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
@@ -36,10 +43,14 @@ type ConfirmAction = 'approve' | 'reject' | 'delete';
 export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState<CheckerInboxClientFilters>({});
   const [selectedItems, setSelectedItems] = useState<CheckerInboxListItem[]>([]);
   const [selectionEpoch, setSelectionEpoch] = useState(0);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const hasSelection = selectedItems.length > 0;
+  const filterOptions = useMemo(() => buildCheckerInboxClientFilterOptions(items), [items]);
+  const activeFilterCount = countActiveCheckerInboxClientFilters(filters);
 
   function runBulkAction(action: ConfirmAction) {
     const ids = selectedItems.map((item) => item.id);
@@ -111,10 +122,28 @@ export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem
           <CheckerInboxTable
             key={selectionEpoch}
             items={items}
+            filters={filters}
             onSelectedItemsChange={setSelectedItems}
+            toolbar={
+              <ListFilterTrigger
+                activeCount={activeFilterCount}
+                onClick={() => setFilterOpen(true)}
+                disabled={pending}
+              />
+            }
           />
         )}
       </ListPage>
+
+      <CheckerInboxFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        options={filterOptions}
+        filters={filters}
+        onApply={setFilters}
+        onClear={() => setFilters({})}
+        disabled={pending}
+      />
 
       <Dialog
         open={confirmAction != null}

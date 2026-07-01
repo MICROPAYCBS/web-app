@@ -17,14 +17,12 @@ import {
   type RowSelectionState
 } from '@tanstack/react-table';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
-import { CheckerInboxTableFilters } from '@/components/tasks/checker-inbox-table-filters';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   applyCheckerInboxClientFilters,
-  buildCheckerInboxClientFilterOptions,
   countActiveCheckerInboxClientFilters,
   type CheckerInboxClientFilters
 } from '@/lib/checker-inbox/client-filters';
@@ -33,16 +31,18 @@ import { checkerInboxDetailPath } from '@/lib/fineract/checker-inbox-paths';
 
 export function CheckerInboxTable({
   items,
-  onSelectedItemsChange
+  filters,
+  onSelectedItemsChange,
+  toolbar
 }: {
   items: CheckerInboxListItem[];
+  filters: CheckerInboxClientFilters;
   onSelectedItemsChange?: (items: CheckerInboxListItem[]) => void;
+  toolbar?: ReactNode;
 }) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
-  const [filters, setFilters] = useState<CheckerInboxClientFilters>({});
 
-  const filterOptions = useMemo(() => buildCheckerInboxClientFilterOptions(items), [items]);
   const filteredItems = useMemo(
     () => applyCheckerInboxClientFilters(items, filters),
     [items, filters]
@@ -146,12 +146,9 @@ export function CheckerInboxTable({
 
   return (
     <div className="space-y-4">
-      <CheckerInboxTableFilters
-        options={filterOptions}
-        filters={filters}
-        onChange={setFilters}
-        onClear={() => setFilters({})}
-      />
+      {toolbar ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">{toolbar}</div>
+      ) : null}
       <DataTable
         table={table}
         emptyMessage={
@@ -161,7 +158,7 @@ export function CheckerInboxTable({
         }
         emptyDescription={
           activeFilterCount > 0
-            ? 'Try clearing or adjusting the filters above.'
+            ? 'Try clearing or adjusting the filters.'
             : 'There are no pending maker-checker items for this account.'
         }
       />
