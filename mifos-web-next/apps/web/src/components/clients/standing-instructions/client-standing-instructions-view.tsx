@@ -19,7 +19,7 @@ import {
 import { ArrowLeftRight, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useMemo, useState, useTransition } from 'react';
-import { toast } from 'sonner';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import {
   deleteClientStandingInstructionAction,
   fetchClientStandingInstructionsAction
@@ -130,7 +130,10 @@ export function ClientStandingInstructionsView({
         return;
       }
       setDeleteTarget(null);
-      toast.success('Standing instruction deleted.');
+      toastCommandOutcome(result, {
+        completed: 'Standing instruction deleted.',
+        pending: 'Standing instruction deletion sent for approval.'
+      });
       loadItems(filters);
     });
   }

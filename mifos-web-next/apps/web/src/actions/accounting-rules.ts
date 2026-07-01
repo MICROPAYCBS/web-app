@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpsertAccountingRuleForm,
-  type UpsertAccountingRuleFormInput
+  type UpsertAccountingRuleFormInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -73,7 +74,7 @@ export async function createAccountingRuleAction(
   try {
     const response = await createAccountingRule(parsed.data);
     revalidateAccountingRuleViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create accounting rule.');
   }
@@ -102,7 +103,7 @@ export async function updateAccountingRuleAction(
   try {
     const response = await updateAccountingRule(accountingRuleId, parsed.data);
     revalidateAccountingRuleViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update accounting rule.');
   }
@@ -119,9 +120,9 @@ export async function deleteAccountingRuleAction(
   }
 
   try {
-    await deleteAccountingRule(accountingRuleId);
+    const response = await deleteAccountingRule(accountingRuleId);
     revalidateAccountingRuleViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete accounting rule.');
   }

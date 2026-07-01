@@ -18,15 +18,11 @@ import 'server-only';
 
 
 
-import type {
-
-  ContactType,
+import type { ContactType,
 
   ContactTypeMutationResponse,
 
-  ContactTypeTemplate
-
-} from '@mifos/api-client';
+  ContactTypeTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 
 import {
 
@@ -226,11 +222,11 @@ export async function updateContactType(
 
 
 
-export async function deleteContactType(contactTypeId: number): Promise<void> {
+export async function deleteContactType(contactTypeId: number): Promise<FineractCommandProcessingResult> {
 
   const fineract = await createFineractClient();
 
-  await fineract.delete(`${BASE_PATH}/${contactTypeId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${BASE_PATH}/${contactTypeId}`);
 
 }
 

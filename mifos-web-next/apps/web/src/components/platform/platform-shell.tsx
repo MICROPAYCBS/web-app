@@ -34,11 +34,14 @@ export function PlatformShell({
   nav,
   serverName,
   businessDateContext,
+  checkerInboxPendingCount,
   children
 }: {
   nav: PlatformNavStructure;
   serverName?: string | null;
   businessDateContext: BusinessDateContextValue;
+  /** SSR seed for header badge; null when unavailable. */
+  checkerInboxPendingCount?: number | null;
   children: ReactNode;
 }) {
   return (
@@ -53,6 +56,7 @@ export function PlatformShell({
                 <MifosSiteHeader
                   businessDateLabel={businessDateContext.displayLabel}
                   businessDateIsNotToday={businessDateContext.isNotToday}
+                  checkerInboxPendingCount={checkerInboxPendingCount}
                 />
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                   <ErrorBoundary

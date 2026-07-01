@@ -10,7 +10,10 @@
 
 import type { CheckerInboxActionCommand } from '@mifos/api-client';
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { toFineractActionError } from '@mifos/validation';
+import {
+  toFineractActionError,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { deleteCheckerInboxItem, executeCheckerInboxAction } from '@/lib/fineract/checker-inbox';
 import {
@@ -41,10 +44,10 @@ export async function executeCheckerInboxActionAction(
   }
 
   try {
-    await executeCheckerInboxAction(checkerId, command);
+    const response = await executeCheckerInboxAction(checkerId, command);
     revalidatePath(CHECKER_INBOX_LIST_PATH);
     revalidatePath(checkerInboxDetailPath(checkerId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     const fallback =
       command === 'approve' ? 'Failed to approve checker item.' : 'Failed to reject checker item.';
@@ -67,9 +70,9 @@ export async function deleteCheckerInboxItemAction(
   }
 
   try {
-    await deleteCheckerInboxItem(checkerId);
+    const response = await deleteCheckerInboxItem(checkerId);
     revalidatePath(CHECKER_INBOX_LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete checker item.');
   }
@@ -93,7 +96,7 @@ export async function bulkExecuteCheckerInboxActionAction(
 
   try {
     for (const id of ids) {
-      await executeCheckerInboxAction(id, command);
+      const response = await executeCheckerInboxAction(id, command);
     }
     revalidatePath(CHECKER_INBOX_LIST_PATH);
     return { ok: true };
@@ -123,7 +126,7 @@ export async function bulkDeleteCheckerInboxItemsAction(
 
   try {
     for (const id of ids) {
-      await deleteCheckerInboxItem(id);
+      const response = await deleteCheckerInboxItem(id);
     }
     revalidatePath(CHECKER_INBOX_LIST_PATH);
     return { ok: true };

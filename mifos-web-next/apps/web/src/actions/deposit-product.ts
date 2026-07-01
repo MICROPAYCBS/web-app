@@ -10,7 +10,11 @@
 
 import type { DepositProductKind } from '@mifos/api-client';
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { toFineractActionError, upsertDepositProductSchema } from '@mifos/validation';
+import {
+  toFineractActionError,
+  upsertDepositProductSchema,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { DepositProductActionResult } from '@/lib/fineract/deposit-product-action-result';
 import {
@@ -112,7 +116,7 @@ export async function createDepositProductAction(
     if (response.resourceId) {
       revalidatePath(depositProductDetailPath(kind, response.resourceId));
     }
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (err) {
     return toFineractActionError(err, `Could not create ${config.label.toLowerCase()}.`);
   }
@@ -148,11 +152,11 @@ export async function updateDepositProductAction(
 
   try {
     const payload = buildDepositProductPayload(parsed);
-    await updateDepositProductRecord(kind, productId, payload);
+    const response = await updateDepositProductRecord(kind, productId, payload);
     revalidatePath(config.listPath);
     revalidatePath(depositProductDetailPath(kind, productId));
     revalidatePath(`${depositProductDetailPath(kind, productId)}/edit`);
-    return { ok: true, resourceId: Number(productId) };
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, `Could not update ${config.label.toLowerCase()}.`);
   }

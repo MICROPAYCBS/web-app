@@ -8,11 +8,9 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  CustomerTitle,
+import type { CustomerTitle,
   CustomerTitleMutationResponse,
-  CustomerTitleTemplate
-} from '@mifos/api-client';
+  CustomerTitleTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import {
   buildUpdateCustomerTitlePayload,
   buildUpsertCustomerTitlePayload,
@@ -126,7 +124,7 @@ export async function updateCustomerTitle(
   return { resourceId: Number(raw?.resourceId ?? customerTitleId) };
 }
 
-export async function deleteCustomerTitle(customerTitleId: number): Promise<void> {
+export async function deleteCustomerTitle(customerTitleId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${BASE_PATH}/${customerTitleId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${BASE_PATH}/${customerTitleId}`);
 }

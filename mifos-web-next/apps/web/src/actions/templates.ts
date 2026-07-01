@@ -9,7 +9,12 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError, validateUpsertTemplateForm, type UpsertTemplateFormInput } from '@mifos/validation';
+import {
+  toFineractActionError,
+  validateUpsertTemplateForm,
+  type UpsertTemplateFormInput,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createTemplate, deleteTemplate, updateTemplate } from '@/lib/fineract/templates';
 import { getServerSession } from '@/lib/session/server';
@@ -65,7 +70,7 @@ export async function createTemplateAction(
   try {
     const response = await createTemplate(parsed.data);
     revalidateTemplateViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create template.');
   }
@@ -96,9 +101,9 @@ export async function updateTemplateAction(
   }
 
   try {
-    await updateTemplate(templateId, parsed.data);
+    const response = await updateTemplate(templateId, parsed.data);
     revalidateTemplateViews(templateId);
-    return { ok: true, resourceId: templateId };
+    return actionSuccessFromFineractCommand(response, { resourceId: templateId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update template.');
   }
@@ -117,9 +122,9 @@ export async function deleteTemplateAction(templateId: number): Promise<Template
   }
 
   try {
-    await deleteTemplate(templateId);
+    const response = await deleteTemplate(templateId);
     revalidateTemplateViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete template.');
   }

@@ -16,6 +16,7 @@ import type {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createDelinquencyBucketAction,
@@ -129,14 +130,15 @@ export function DelinquencyBucketFormPage({
           : await updateDelinquencyBucketAction(String(bucketId), payload);
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
-        }
         return;
       }
-
-      toast.success(mode === 'create' ? 'Delinquency bucket created.' : 'Delinquency bucket updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Delinquency bucket created.' : 'Delinquency bucket updated.', pending: mode === 'create' ? 'Delinquency bucket created. sent for approval.' : 'Delinquency bucket updated. sent for approval.' });
+        return;
+      }
       const id = result.resourceId ?? bucketId;
       router.push(id ? delinquencyBucketDetailPath(id, bucketType) : delinquencyBucketsListPath());
       router.refresh();

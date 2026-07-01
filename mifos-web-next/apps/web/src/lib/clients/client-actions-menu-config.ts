@@ -239,3 +239,61 @@ export const CLIENT_ACTION_SHEET_TITLES: Record<ClientActionSheetId, string> = {
   'reject-transfer': 'Reject transfer',
   'update-default-savings': 'Update default savings'
 };
+
+export const CLIENT_ACTION_SHEET_OUTCOME_MESSAGES: Record<
+  ClientActionSheetId,
+  { completed: string; pending: string }
+> = {
+  activate: {
+    completed: 'Customer activated.',
+    pending: 'Customer activation sent for approval.'
+  },
+  close: {
+    completed: 'Customer closed.',
+    pending: 'Customer closure sent for approval.'
+  },
+  withdraw: {
+    completed: 'Customer withdrawn.',
+    pending: 'Customer withdrawal sent for approval.'
+  },
+  reject: {
+    completed: 'Customer rejected.',
+    pending: 'Customer rejection sent for approval.'
+  },
+  reactivate: {
+    completed: 'Customer reactivated.',
+    pending: 'Customer reactivation sent for approval.'
+  },
+  'undo-rejection': {
+    completed: 'Rejection undone.',
+    pending: 'Undo rejection sent for approval.'
+  },
+  transfer: {
+    completed: 'Transfer proposed.',
+    pending: 'Transfer proposal sent for approval.'
+  },
+  'accept-transfer': {
+    completed: 'Transfer accepted.',
+    pending: 'Transfer acceptance sent for approval.'
+  },
+  'reject-transfer': {
+    completed: 'Transfer rejected.',
+    pending: 'Transfer rejection sent for approval.'
+  },
+  'undo-transfer': {
+    completed: 'Transfer undone.',
+    pending: 'Transfer undo sent for approval.'
+  },
+  'assign-staff': {
+    completed: 'Relationship officer assigned.',
+    pending: 'Relationship officer assignment sent for approval.'
+  },
+  'reassign-staff': {
+    completed: 'Relationship officer reassigned.',
+    pending: 'Relationship officer reassignment sent for approval.'
+  },
+  'update-default-savings': {
+    completed: 'Default savings account updated.',
+    pending: 'Default savings account update sent for approval.'
+  }
+};

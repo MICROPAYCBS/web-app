@@ -15,7 +15,8 @@ import {
   validateUpdateIdentityType,
   type IdentityTypeUpdateClearFields,
   type UpdateIdentityTypeInput,
-  type UpsertIdentityTypeInput
+  type UpsertIdentityTypeInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -74,7 +75,7 @@ export async function createIdentityTypeAction(
   try {
     const response = await createIdentityType(parsed.data);
     revalidateIdentityTypeViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create identity type guide.');
   }
@@ -104,7 +105,7 @@ export async function updateIdentityTypeAction(
   try {
     const response = await updateIdentityType(identityTypeId, parsed.data, clear);
     revalidateIdentityTypeViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update identity type guide.');
   }
@@ -121,9 +122,9 @@ export async function deleteIdentityTypeAction(
   }
 
   try {
-    await deleteIdentityType(identityTypeId);
+    const response = await deleteIdentityType(identityTypeId);
     revalidateIdentityTypeViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete identity type guide.');
   }

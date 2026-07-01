@@ -12,6 +12,7 @@ import type { LoanOriginatorDetail, LoanOriginatorTemplate } from '@mifos/api-cl
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useId, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createLoanOriginatorAction,
@@ -133,16 +134,14 @@ export function LoanOriginatorFormSheet({
           : await updateLoanOriginatorAction(String(originator!.id), sharedPayload);
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success(
-        mode === 'create' ? 'Loan originator created.' : 'Loan originator updated.'
-      );
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Loan originator created.' : 'Loan originator updated.', pending: mode === 'create' ? 'Loan originator created. sent for approval.' : 'Loan originator updated. sent for approval.' });
       handleOpenChange(false);
       router.refresh();
     });

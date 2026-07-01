@@ -15,7 +15,9 @@ import {
   validateCreateCenter,
   validateUpdateCenter,
   type CreateCenterInput,
-  type UpdateCenterInput
+  type UpdateCenterInput,
+  actionSuccessFromFineractCommand,
+  type FineractCommandActionMeta
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -34,7 +36,7 @@ import {
 import { getServerSession } from '@/lib/session/server';
 
 export type CenterActionResult =
-  | { ok: true; centerId?: number }
+  | ({ ok: true; centerId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export type CenterDataResult<T> = { ok: true; data: T } | { ok: false; message: string };
@@ -119,7 +121,7 @@ export async function createCenterAction(
     if (centerId != null) {
       revalidatePath(centerDetailPath(centerId));
     }
-    return { ok: true, centerId: centerId ?? undefined };
+    return actionSuccessFromFineractCommand(response, { centerId: centerId ?? undefined });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create center.');
   }
@@ -149,11 +151,11 @@ export async function updateCenterAction(
   }
 
   try {
-    await updateCenter(centerId, parsed.data);
+    const response = await updateCenter(centerId, parsed.data);
     revalidatePath(CENTERS_LIST_PATH);
     revalidatePath(centerDetailPath(centerId));
     revalidatePath(centerGeneralPath(centerId));
-    return { ok: true, centerId: Number(centerId) };
+    return actionSuccessFromFineractCommand(response, { centerId: Number(centerId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update center.');
   }

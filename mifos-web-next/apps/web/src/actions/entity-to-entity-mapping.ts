@@ -17,7 +17,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpsertEntityMapping,
-  type UpsertEntityMappingInput
+  type UpsertEntityMappingInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -125,9 +126,9 @@ export async function createEntityMappingAction(
   }
 
   try {
-    await createEntityMapping(mappingTypeId, parsed.data);
+    const response = await createEntityMapping(mappingTypeId, parsed.data);
     revalidatePath(LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to create entity mapping.');
   }
@@ -154,9 +155,9 @@ export async function updateEntityMappingAction(
   }
 
   try {
-    await updateEntityMapping(mapId, parsed.data);
+    const response = await updateEntityMapping(mapId, parsed.data);
     revalidatePath(LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update entity mapping.');
   }
@@ -173,9 +174,9 @@ export async function deleteEntityMappingAction(
   }
 
   try {
-    await deleteEntityMapping(mapId);
+    const response = await deleteEntityMapping(mapId);
     revalidatePath(LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete entity mapping.');
   }

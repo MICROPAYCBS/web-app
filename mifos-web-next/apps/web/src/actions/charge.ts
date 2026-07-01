@@ -9,7 +9,11 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { toFineractActionError, upsertChargeSchema } from '@mifos/validation';
+import {
+  toFineractActionError,
+  upsertChargeSchema,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { ChargeActionResult } from '@/lib/fineract/charge-action-result';
 import { chargeDetailPath, chargeListPath } from '@/lib/fineract/charge-paths';
@@ -61,7 +65,7 @@ export async function createChargeAction(raw: unknown): Promise<ChargeActionResu
     if (response.resourceId) {
       revalidatePath(chargeDetailPath(response.resourceId));
     }
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create charge.');
   }
@@ -87,11 +91,11 @@ export async function updateChargeAction(
   }
 
   try {
-    await updateChargeRecord(chargeId, parsed);
+    const response = await updateChargeRecord(chargeId, parsed);
     revalidatePath(chargeListPath());
     revalidatePath(chargeDetailPath(chargeId));
     revalidatePath(`${chargeDetailPath(chargeId)}/edit`);
-    return { ok: true, resourceId: Number(chargeId) };
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(chargeId) });
   } catch (err) {
     return toFineractActionError(err, 'Could not update charge.');
   }
@@ -109,9 +113,9 @@ export async function deleteChargeAction(chargeId: string): Promise<ChargeAction
   }
 
   try {
-    await deleteChargeRecord(chargeId);
+    const response = await deleteChargeRecord(chargeId);
     revalidatePath(chargeListPath());
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete charge.');
   }

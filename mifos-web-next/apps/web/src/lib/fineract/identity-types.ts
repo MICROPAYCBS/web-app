@@ -8,12 +8,10 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  IdentityType,
+import type { IdentityType,
   IdentityTypeCodeValueOption,
   IdentityTypeMutationResponse,
-  IdentityTypeTemplate
-} from '@mifos/api-client';
+  IdentityTypeTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import {
   buildUpdateIdentityTypePayload,
   buildUpsertIdentityTypePayload,
@@ -139,7 +137,7 @@ export async function updateIdentityType(
   return { resourceId: Number(raw?.resourceId ?? identityTypeId) };
 }
 
-export async function deleteIdentityType(identityTypeId: number): Promise<void> {
+export async function deleteIdentityType(identityTypeId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${BASE_PATH}/${identityTypeId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${BASE_PATH}/${identityTypeId}`);
 }

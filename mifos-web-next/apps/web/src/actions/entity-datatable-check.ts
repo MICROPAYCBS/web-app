@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateCreateEntityDatatableCheck,
-  type CreateEntityDatatableCheckInput
+  type CreateEntityDatatableCheckInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -60,7 +61,7 @@ export async function createEntityDatatableCheckAction(
   try {
     const response = await createEntityDatatableCheck(parsed.data);
     revalidatePath(LIST_PATH);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create entity data table check.');
   }
@@ -77,9 +78,9 @@ export async function deleteEntityDatatableCheckAction(
   }
 
   try {
-    await deleteEntityDatatableCheck(id);
+    const response = await deleteEntityDatatableCheck(id);
     revalidatePath(LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete entity data table check.');
   }

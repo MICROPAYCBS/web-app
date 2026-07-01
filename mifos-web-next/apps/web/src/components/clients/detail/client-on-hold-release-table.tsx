@@ -11,6 +11,7 @@
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { releaseSavingsOnHoldAction } from '@/actions/client-transfer-hold';
 import type { ClientTransferOnHoldRow } from '@/lib/fineract/client-transfer';
@@ -34,10 +35,11 @@ export function ClientOnHoldReleaseTable({
         String(row.transactionId)
       );
       if (!result.ok) {
+
         toast.error(formatActionErrorMessage(result.message));
         return;
       }
-      toast.success('Held amount released.');
+      toastCommandOutcome(result, { completed: 'Held amount released.', pending: 'Held amount released sent for approval.' });
       router.refresh();
     });
   }

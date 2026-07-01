@@ -8,16 +8,14 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractAccountingRuleDetail,
+import type { FineractAccountingRuleDetail,
   FineractAccountingRuleFormTemplate,
   FineractAccountingRuleGlAccountRef,
   FineractAccountingRuleListItem,
   FineractAccountingRuleMutationResponse,
   FineractAccountingRuleTagRef,
   FineractAccountingRuleTemplateOption,
-  FineractOfficeOption
-} from '@mifos/api-client';
+  FineractOfficeOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import { buildUpsertAccountingRulePayload, type UpsertAccountingRuleFormInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -233,7 +231,7 @@ export async function updateAccountingRule(
   return { resourceId: Number(raw?.resourceId ?? accountingRuleId) };
 }
 
-export async function deleteAccountingRule(accountingRuleId: number): Promise<void> {
+export async function deleteAccountingRule(accountingRuleId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${ACCOUNTING_RULES_PATH}/${accountingRuleId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${ACCOUNTING_RULES_PATH}/${accountingRuleId}`);
 }

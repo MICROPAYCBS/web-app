@@ -9,7 +9,12 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError, validateUpsertHookForm, type UpsertHookFormInput } from '@mifos/validation';
+import {
+  toFineractActionError,
+  validateUpsertHookForm,
+  type UpsertHookFormInput,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createHook, deleteHook, updateHook } from '@/lib/fineract/hooks';
 import { getServerSession } from '@/lib/session/server';
@@ -63,7 +68,7 @@ export async function createHookAction(input: UpsertHookFormInput): Promise<Hook
   try {
     const response = await createHook(parsed.data);
     revalidateHookViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create hook.');
   }
@@ -94,9 +99,9 @@ export async function updateHookAction(
   }
 
   try {
-    await updateHook(hookId, parsed.data);
+    const response = await updateHook(hookId, parsed.data);
     revalidateHookViews(hookId);
-    return { ok: true, resourceId: hookId };
+    return actionSuccessFromFineractCommand(response, { resourceId: hookId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update hook.');
   }
@@ -115,9 +120,9 @@ export async function deleteHookAction(hookId: number): Promise<HooksActionResul
   }
 
   try {
-    await deleteHook(hookId);
+    const response = await deleteHook(hookId);
     revalidateHookViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete hook.');
   }

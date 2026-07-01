@@ -10,7 +10,10 @@
 
 import type { BulkImportHistoryItem, BulkImportStaffOption } from '@mifos/api-client';
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { toFineractActionError } from '@mifos/validation';
+import {
+  toFineractActionError,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { getBulkImportDefinition } from '@/lib/fineract/bulk-import-config';
 import { resolveClientLegalFormTypeFromFilename } from '@/lib/fineract/bulk-import-display';
@@ -98,9 +101,9 @@ export async function uploadBulkImportFileAction(
   }
 
   try {
-    await uploadBulkImportTemplate(definition, file, legalFormType);
+    const response = await uploadBulkImportTemplate(definition, file, legalFormType);
     revalidatePath(bulkImportDetailPath(definition.name));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to upload import file.');
   }

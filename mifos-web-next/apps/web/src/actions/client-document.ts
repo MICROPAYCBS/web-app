@@ -9,7 +9,10 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError } from '@mifos/validation';
+import {
+  toFineractActionError,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { deleteClientDocument } from '@/lib/fineract/client-documents';
 import { getServerSession } from '@/lib/session/server';
@@ -41,9 +44,9 @@ export async function deleteClientDocumentAction(
   }
 
   try {
-    await deleteClientDocument(clientId, documentId);
+    const response = await deleteClientDocument(clientId, documentId);
     revalidatePath(`/clients/${clientId}/documents`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }

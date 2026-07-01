@@ -12,7 +12,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   upsertFloatingRateSchema,
-  type UpsertFloatingRateInput
+  type UpsertFloatingRateInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { FloatingRateActionResult } from '@/lib/fineract/floating-rate-action-result';
@@ -70,7 +71,7 @@ export async function createFloatingRateAction(raw: unknown): Promise<FloatingRa
     if (resourceId) {
       revalidatePath(floatingRateDetailPath(resourceId));
     }
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create floating rate.');
   }
@@ -96,11 +97,11 @@ export async function updateFloatingRateAction(
   }
 
   try {
-    await updateFloatingRate(floatingRateId, parsed);
+    const response = await updateFloatingRate(floatingRateId, parsed);
     revalidatePath(floatingRatesListPath());
     revalidatePath(floatingRateDetailPath(floatingRateId));
     revalidatePath(floatingRateEditPath(floatingRateId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not update floating rate.');
   }

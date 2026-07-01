@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import type { FineractDatatableRegistration } from '@mifos/api-client';
+import type { FineractDatatableRegistration, FineractCommandProcessingResult } from '@mifos/api-client';
 import type {
   CreateSystemDatatableInput,
   UpdateSystemDatatableInput
@@ -44,18 +44,18 @@ export async function createSystemDatatable(
 export async function updateSystemDatatable(
   registeredTableName: string,
   body: UpdateSystemDatatableInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
   const payload = {
     ...body,
     entitySubType: body.entitySubType?.trim() || undefined
   };
-  await fineract.put(`/datatables/${encodeURIComponent(registeredTableName)}`, payload);
+  return fineract.put<FineractCommandProcessingResult>(`/datatables/${encodeURIComponent(registeredTableName)}`, payload);
 }
 
-export async function deleteSystemDatatable(registeredTableName: string): Promise<void> {
+export async function deleteSystemDatatable(registeredTableName: string): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/datatables/${encodeURIComponent(registeredTableName)}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/datatables/${encodeURIComponent(registeredTableName)}`);
 }
 
 export interface SyncDatatableColumnValidationsInput {
@@ -71,7 +71,7 @@ export interface SyncDatatableColumnValidationsInput {
 export async function syncDatatableColumnValidations(
   registeredTableName: string,
   body: SyncDatatableColumnValidationsInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/datatables/${encodeURIComponent(registeredTableName)}/columnvalidations`, body);
+  return fineract.put<FineractCommandProcessingResult>(`/datatables/${encodeURIComponent(registeredTableName)}/columnvalidations`, body);
 }

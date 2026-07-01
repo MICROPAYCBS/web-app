@@ -10,7 +10,11 @@
 
 import { assertCan, resolvePermission } from '@mifos/auth';
 import type { LoanProductKind } from '@mifos/api-client';
-import { toFineractActionError, upsertLoanProductSchema } from '@mifos/validation';
+import {
+  toFineractActionError,
+  upsertLoanProductSchema,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { buildLoanProductPayload } from '@/lib/fineract/loan-product-payload';
 import type { LoanProductActionResult } from '@/lib/fineract/loan-product-action-result';
@@ -94,7 +98,7 @@ export async function createLoanProductAction(
     if (response.resourceId) {
       revalidatePath(loanProductDetailPath(response.resourceId, kind));
     }
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create loan product.');
   }
@@ -122,11 +126,11 @@ export async function updateLoanProductAction(
 
   try {
     const payload = buildLoanProductPayload(parsed);
-    await updateLoanProductRecord(productId, kind, payload);
+    const response = await updateLoanProductRecord(productId, kind, payload);
     revalidatePath(loanProductListPath(kind));
     revalidatePath(loanProductDetailPath(productId, kind));
     revalidatePath(`${loanProductDetailPath(productId, kind)}/edit`);
-    return { ok: true, resourceId: Number(productId) };
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, 'Could not update loan product.');
   }

@@ -12,7 +12,8 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   toFineractActionError,
   upsertTaxGroupSchema,
-  type UpsertTaxGroupInput
+  type UpsertTaxGroupInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { TaxActionResult } from '@/lib/fineract/tax-action-result';
@@ -60,7 +61,7 @@ export async function createTaxGroupAction(raw: unknown): Promise<TaxActionResul
     if (resourceId) {
       revalidatePath(taxGroupDetailPath(resourceId));
     }
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create tax group.');
   }
@@ -86,11 +87,11 @@ export async function updateTaxGroupAction(
   }
 
   try {
-    await updateTaxGroup(taxGroupId, parsed);
+    const response = await updateTaxGroup(taxGroupId, parsed);
     revalidatePath(taxGroupsListPath());
     revalidatePath(taxGroupDetailPath(taxGroupId));
     revalidatePath(taxGroupEditPath(taxGroupId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not update tax group.');
   }

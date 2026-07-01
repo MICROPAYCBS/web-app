@@ -15,7 +15,8 @@ import {
   validateUpdatePaymentType,
   type CreatePaymentTypeInput,
   type UpdatePaymentTypeInput,
-  type UpdateSystemPaymentTypeInput
+  type UpdateSystemPaymentTypeInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -73,7 +74,7 @@ export async function createPaymentTypeAction(
   try {
     const response = await createOrganizationPaymentType(parsed.data);
     revalidatePath(PAYMENT_TYPE_LIST_PATH);
-    return { ok: true, paymentTypeId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { paymentTypeId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create payment type.');
   }
@@ -103,7 +104,7 @@ export async function updatePaymentTypeAction(
   try {
     const response = await updateOrganizationPaymentType(paymentTypeId, parsed.data);
     revalidatePaymentTypeViews(paymentTypeId);
-    return { ok: true, paymentTypeId: response.resourceId ?? Number(paymentTypeId) };
+    return actionSuccessFromFineractCommand(response, { paymentTypeId: response.resourceId ?? Number(paymentTypeId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update payment type.');
   }
@@ -120,9 +121,9 @@ export async function deletePaymentTypeAction(
   }
 
   try {
-    await deleteOrganizationPaymentType(paymentTypeId);
+    const response = await deleteOrganizationPaymentType(paymentTypeId);
     revalidatePath(PAYMENT_TYPE_LIST_PATH);
-    return { ok: true, paymentTypeId: Number(paymentTypeId) };
+    return actionSuccessFromFineractCommand(response, { paymentTypeId: Number(paymentTypeId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete payment type.');
   }

@@ -12,6 +12,7 @@ import type { FineractWorkflowJobStep } from '@mifos/api-client';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   fetchAvailableWorkflowStepsAction,
@@ -142,7 +143,10 @@ export function WorkflowJobsPanel({
         toast.error(result.message);
         return;
       }
-      toast.success('Workflow steps saved.');
+      toastCommandOutcome(result, {
+        completed: 'Workflow steps saved.',
+        pending: 'Workflow step changes sent for approval.'
+      });
       setBaseSteps(steps);
       setDirty(false);
       router.refresh();

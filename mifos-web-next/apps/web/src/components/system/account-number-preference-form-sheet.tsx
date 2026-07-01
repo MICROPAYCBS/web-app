@@ -19,6 +19,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createAccountNumberPreferenceAction,
@@ -140,14 +141,14 @@ export function AccountNumberPreferenceFormSheet({
       startTransition(async () => {
         const result = await createAccountNumberPreferenceAction(parsed.data);
         if (!result.ok) {
+
           setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
           if (result.fieldErrors) {
             setFieldErrors(result.fieldErrors);
           }
           return;
-        }
-
-        toast.success('Account number preference created.');
+      }
+      toastCommandOutcome(result, { completed: 'Account number preference created.', pending: 'Account number preference created sent for approval.' });
         handleOpenChange(false);
         if (result.resourceId != null) {
           router.push(`/system/account-number-preferences/${result.resourceId}`);
@@ -177,14 +178,14 @@ export function AccountNumberPreferenceFormSheet({
     startTransition(async () => {
       const result = await updateAccountNumberPreferenceAction(preference.id, parsed.data);
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Account number preference updated.');
+      toastCommandOutcome(result, { completed: 'Account number preference updated.', pending: 'Account number preference updated sent for approval.' });
       handleOpenChange(false);
       router.refresh();
     });

@@ -14,7 +14,8 @@ import {
   toFineractActionError,
   updateDelinquencyRangeSchema,
   type CreateDelinquencyRangeInput,
-  type UpdateDelinquencyRangeInput
+  type UpdateDelinquencyRangeInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { DelinquencyActionResult } from '@/lib/fineract/delinquency-action-result';
@@ -88,7 +89,7 @@ export async function createDelinquencyRangeAction(raw: unknown): Promise<Delinq
     if (resourceId) {
       revalidatePath(delinquencyRangeDetailPath(resourceId));
     }
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create delinquency range.');
   }
@@ -114,11 +115,11 @@ export async function updateDelinquencyRangeAction(
   }
 
   try {
-    await updateDelinquencyRange(rangeId, parsed);
+    const response = await updateDelinquencyRange(rangeId, parsed);
     revalidatePath(delinquencyRangesListPath());
     revalidatePath(delinquencyRangeDetailPath(rangeId));
     revalidatePath(delinquencyRangeEditPath(rangeId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not update delinquency range.');
   }
@@ -136,9 +137,9 @@ export async function deleteDelinquencyRangeAction(rangeId: string): Promise<Del
   }
 
   try {
-    await deleteDelinquencyRange(rangeId);
+    const response = await deleteDelinquencyRange(rangeId);
     revalidatePath(delinquencyRangesListPath());
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete delinquency range.');
   }

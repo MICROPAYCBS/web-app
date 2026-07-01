@@ -13,6 +13,7 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createGroupAction,
@@ -142,12 +143,14 @@ export function CreateGroupPageContent({ offices }: { offices: FineractOfficeOpt
         activationDate: form.active ? form.activationDate : undefined,
         clientMembers: clientMembers.map((client) => client.id)
       });
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, {
+        completed: 'Group created.',
+        pending: 'Group creation sent for approval.'
+      })) {
         setFieldErrors(result.fieldErrors ?? {});
         toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-      toast.success('Group created.');
       if (result.groupId != null) {
         router.push(groupGeneralPath(result.groupId));
       } else {

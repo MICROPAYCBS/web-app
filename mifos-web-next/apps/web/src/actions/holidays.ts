@@ -17,7 +17,8 @@ import {
   validateUpdatePendingHoliday,
   type CreateHolidayInput,
   type UpdateActiveHolidayInput,
-  type UpdatePendingHolidayInput
+  type UpdatePendingHolidayInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -99,7 +100,7 @@ export async function createHolidayAction(
   try {
     const response = await createHoliday(parsed.data);
     revalidatePath(HOLIDAY_LIST_PATH);
-    return { ok: true, holidayId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { holidayId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create holiday.');
   }
@@ -132,7 +133,7 @@ export async function updateHolidayAction(
   try {
     const response = await updateHoliday(holidayId, parsed.data, isActive);
     revalidateHolidayViews(holidayId);
-    return { ok: true, holidayId: response.resourceId ?? Number(holidayId) };
+    return actionSuccessFromFineractCommand(response, { holidayId: response.resourceId ?? Number(holidayId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update holiday.');
   }
@@ -149,9 +150,9 @@ export async function deleteHolidayAction(
   }
 
   try {
-    await deleteHoliday(holidayId);
+    const response = await deleteHoliday(holidayId);
     revalidatePath(HOLIDAY_LIST_PATH);
-    return { ok: true, holidayId: Number(holidayId) };
+    return actionSuccessFromFineractCommand(response, { holidayId: Number(holidayId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete holiday.');
   }
@@ -168,10 +169,10 @@ export async function activateHolidayAction(
   }
 
   try {
-    await activateHoliday(holidayId);
+    const response = await activateHoliday(holidayId);
     revalidateHolidayViews(holidayId);
     revalidatePath(HOLIDAY_LIST_PATH);
-    return { ok: true, holidayId: Number(holidayId) };
+    return actionSuccessFromFineractCommand(response, { holidayId: Number(holidayId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to activate holiday.');
   }

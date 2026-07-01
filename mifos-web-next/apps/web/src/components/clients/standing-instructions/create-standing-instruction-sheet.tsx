@@ -12,6 +12,7 @@ import type { StandingInstructionTemplate } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createClientStandingInstructionAction,
@@ -247,13 +248,14 @@ export function CreateStandingInstructionSheet({
           : undefined
       });
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-      toast.success('Standing instruction created.');
+      toastCommandOutcome(result, { completed: 'Standing instruction created.', pending: 'Standing instruction created sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

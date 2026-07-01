@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import type { FineractClientFamilyMember } from '@mifos/api-client';
+import type { FineractClientFamilyMember, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
@@ -57,15 +57,15 @@ export async function updateClientFamilyMember(
   clientId: string | number,
   familyMemberId: number,
   member: FamilyMemberInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/clients/${clientId}/familymembers/${familyMemberId}`, toFamilyBody(member));
+  return fineract.put<FineractCommandProcessingResult>(`/clients/${clientId}/familymembers/${familyMemberId}`, toFamilyBody(member));
 }
 
 export async function deleteClientFamilyMember(
   clientId: string | number,
   familyMemberId: number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}/familymembers/${familyMemberId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}/familymembers/${familyMemberId}`);
 }

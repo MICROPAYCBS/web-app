@@ -14,7 +14,8 @@ import {
   validateCreateTeller,
   validateUpdateTeller,
   type CreateTellerInput,
-  type UpdateTellerInput
+  type UpdateTellerInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -72,7 +73,7 @@ export async function createTellerAction(input: CreateTellerInput): Promise<Tell
   try {
     const response = await createOrganizationTeller(parsed.data);
     revalidatePath(TELLER_LIST_PATH);
-    return { ok: true, tellerId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { tellerId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create teller.');
   }
@@ -101,7 +102,7 @@ export async function updateTellerAction(
   try {
     const response = await updateOrganizationTeller(tellerId, parsed.data);
     revalidateTellerViews(tellerId);
-    return { ok: true, tellerId: response.resourceId ?? Number(tellerId) };
+    return actionSuccessFromFineractCommand(response, { tellerId: response.resourceId ?? Number(tellerId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update teller.');
   }
@@ -116,9 +117,9 @@ export async function deleteTellerAction(tellerId: string | number): Promise<Tel
   }
 
   try {
-    await deleteOrganizationTeller(tellerId);
+    const response = await deleteOrganizationTeller(tellerId);
     revalidatePath(TELLER_LIST_PATH);
-    return { ok: true, tellerId: Number(tellerId) };
+    return actionSuccessFromFineractCommand(response, { tellerId: Number(tellerId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete teller.');
   }

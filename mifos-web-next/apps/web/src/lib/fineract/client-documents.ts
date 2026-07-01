@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import type { FineractEntityDocument } from '@mifos/api-client';
+import type { FineractEntityDocument, FineractCommandProcessingResult } from '@mifos/api-client';
 import { FineractHttpError } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { buildFineractRequestInit, fineractUrl } from '@/lib/fineract/fineract-fetch';
@@ -26,7 +26,7 @@ export async function uploadClientDocument(
   file: File,
   name: string,
   description?: string
-): Promise<{ resourceId: number }> {
+): Promise<FineractCommandProcessingResult> {
   const { urlBase, init } = await buildFineractRequestInit({ method: 'POST' });
   const formData = new FormData();
   formData.append('name', name);
@@ -52,15 +52,15 @@ export async function uploadClientDocument(
     throw new FineractHttpError(res.status, body);
   }
 
-  return (await res.json()) as { resourceId: number };
+  return (await res.json()) as FineractCommandProcessingResult;
 }
 
 export async function deleteClientDocument(
   clientId: string | number,
   documentId: number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}/documents/${documentId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}/documents/${documentId}`);
 }
 
 export async function fetchClientDocumentAttachment(

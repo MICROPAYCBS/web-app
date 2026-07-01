@@ -9,7 +9,11 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { toFineractActionError, upsertShareProductSchema } from '@mifos/validation';
+import {
+  toFineractActionError,
+  upsertShareProductSchema,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { buildShareProductPayload } from '@/lib/fineract/share-product-payload';
 import type { ShareProductActionResult } from '@/lib/fineract/share-product-action-result';
@@ -94,7 +98,7 @@ export async function createShareProductAction(
     if (response.resourceId) {
       revalidatePath(shareProductDetailPath(response.resourceId));
     }
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create share product.');
   }
@@ -121,11 +125,11 @@ export async function updateShareProductAction(
 
   try {
     const payload = buildShareProductPayload(parsed);
-    await updateShareProductRecord(productId, payload);
+    const response = await updateShareProductRecord(productId, payload);
     revalidatePath(SHARE_PRODUCTS_LIST_PATH);
     revalidatePath(shareProductDetailPath(productId));
     revalidatePath(`${shareProductDetailPath(productId)}/edit`);
-    return { ok: true, resourceId: Number(productId) };
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, 'Could not update share product.');
   }

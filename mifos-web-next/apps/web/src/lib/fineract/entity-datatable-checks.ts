@@ -8,12 +8,10 @@
 
 import 'server-only';
 
-import type {
-  FineractCreateEntityDatatableCheckPayload,
+import type { FineractCreateEntityDatatableCheckPayload,
   FineractCreateResourceResponse,
   FineractEntityDatatableChecksPage,
-  FineractEntityDatatableCheckTemplate
-} from '@mifos/api-client';
+  FineractEntityDatatableCheckTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 export async function listEntityDatatableChecks(): Promise<FineractEntityDatatableChecksPage> {
@@ -41,7 +39,7 @@ export async function createEntityDatatableCheck(
   return fineract.post<FineractCreateResourceResponse>('/entityDatatableChecks', payload);
 }
 
-export async function deleteEntityDatatableCheck(id: number | string): Promise<void> {
+export async function deleteEntityDatatableCheck(id: number | string): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/entityDatatableChecks/${id}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/entityDatatableChecks/${id}`);
 }

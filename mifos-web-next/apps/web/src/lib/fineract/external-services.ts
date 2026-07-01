@@ -8,10 +8,8 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractExternalServiceName,
-  FineractExternalServiceProperty
-} from '@mifos/api-client';
+import type { FineractExternalServiceName,
+  FineractExternalServiceProperty, FineractCommandProcessingResult } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 function normalizeExternalServiceProperty(raw: unknown): FineractExternalServiceProperty | null {
@@ -54,9 +52,9 @@ export async function getExternalServiceConfiguration(
 export async function updateExternalServiceConfiguration(
   serviceName: FineractExternalServiceName,
   payload: Record<string, string | boolean>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/externalservice/${serviceName}`, payload);
+  return fineract.put<FineractCommandProcessingResult>(`/externalservice/${serviceName}`, payload);
 }
 
 const ALL_EXTERNAL_SERVICE_NAMES: FineractExternalServiceName[] = [

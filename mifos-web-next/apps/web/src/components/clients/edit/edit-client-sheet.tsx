@@ -12,7 +12,7 @@ import type { FineractClientEditData } from '@mifos/api-client';
 import { LEGAL_FORM_ENTITY, type UpdateClientInput, formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
-import { toast } from 'sonner';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { loadClientForEditAction } from '@/actions/client-edit-load';
 import { updateClientAction } from '@/actions/client-update';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
@@ -135,14 +135,16 @@ export function EditClientSheet({
 
     startTransition(async () => {
       const result = await updateClientAction(clientId, form, initialForm);
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, {
+        completed: 'Customer updated.',
+        pending: 'Customer update sent for approval.'
+      })) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-      toast.success('Customer updated.');
       onOpenChange(false);
       router.refresh();
     });

@@ -15,7 +15,8 @@ import {
   validateCancelInvestorTransfer,
   validateInvestorSearch,
   type CancelInvestorTransferInput,
-  type InvestorSearchInput
+  type InvestorSearchInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import {
   cancelInvestorTransfer,
@@ -95,8 +96,8 @@ export async function cancelInvestorTransferAction(
   }
 
   try {
-    await cancelInvestorTransfer(parsed.data);
-    return { ok: true };
+    const response = await cancelInvestorTransfer(parsed.data);
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not cancel the pending sale.');
   }

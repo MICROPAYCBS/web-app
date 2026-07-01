@@ -11,9 +11,10 @@ import 'server-only';
 import type {
   CheckerInboxActionCommand,
   CheckerInboxListItem,
-  CheckerInboxSearchTemplate
+  CheckerInboxSearchTemplate,
+  FineractAuditTrailDetail,
+  FineractCommandProcessingResult
 } from '@mifos/api-client';
-import type { FineractAuditTrailDetail } from '@mifos/api-client';
 import type { CheckerInboxSearchFilters } from '@/lib/fineract/checker-inbox-query';
 import { getAuditTrail } from '@/lib/fineract/audit-trails';
 import { coerceFineractDateTime } from '@/lib/fineract/dates';
@@ -78,6 +79,13 @@ export async function listCheckerInboxItems(
   return normalizeCheckerInboxList(raw);
 }
 
+/** Minimal Fineract fetch for header badge — same scope as the checker inbox list. */
+export async function getCheckerInboxPendingCount(): Promise<number> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(MAKER_CHECKERS_PATH, { fields: 'id' });
+  return normalizeCheckerInboxList(raw).length;
+}
+
 export async function getCheckerInboxSearchTemplate(): Promise<CheckerInboxSearchTemplate> {
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(`${MAKER_CHECKERS_PATH}/searchtemplate`);
@@ -93,12 +101,12 @@ export async function getCheckerInboxDetail(
 export async function executeCheckerInboxAction(
   checkerId: number,
   command: CheckerInboxActionCommand
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${MAKER_CHECKERS_PATH}/${checkerId}`, {}, { command });
+  return fineract.post<FineractCommandProcessingResult>(`${MAKER_CHECKERS_PATH}/${checkerId}`, {}, { command });
 }
 
-export async function deleteCheckerInboxItem(checkerId: number): Promise<void> {
+export async function deleteCheckerInboxItem(checkerId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${MAKER_CHECKERS_PATH}/${checkerId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${MAKER_CHECKERS_PATH}/${checkerId}`);
 }

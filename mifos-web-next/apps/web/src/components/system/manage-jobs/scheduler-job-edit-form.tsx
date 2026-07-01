@@ -12,6 +12,7 @@ import type { FineractSchedulerJob } from '@mifos/api-client';
 import { validateUpdateSchedulerJob } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useId, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateSchedulerJobAction } from '@/actions/jobs';
 import {
@@ -53,13 +54,14 @@ export function SchedulerJobEditForm({ job }: { job: FineractSchedulerJob }) {
     startTransition(async () => {
       const result = await updateSchedulerJobAction(job.jobId, parsed.data);
       if (!result.ok) {
+
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         toast.error(result.message);
         return;
       }
-      toast.success('Scheduler job updated.');
+      toastCommandOutcome(result, { completed: 'Scheduler job updated.', pending: 'Scheduler job updated sent for approval.' });
       router.push(`/system/manage-jobs/${job.jobId}`);
       router.refresh();
     });

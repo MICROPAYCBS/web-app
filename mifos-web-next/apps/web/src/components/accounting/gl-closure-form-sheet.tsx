@@ -17,6 +17,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createGlClosureAction, updateGlClosureAction } from '@/actions/gl-closures';
 import { DateField } from '@/components/composites/date-field';
@@ -124,14 +125,14 @@ export function GlClosureFormSheet({
       startTransition(async () => {
         const result = await createGlClosureAction(parsed.data);
         if (!result.ok) {
+
           setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
           if (result.fieldErrors) {
             setFieldErrors(result.fieldErrors);
           }
           return;
-        }
-
-        toast.success('Accounting closure created.');
+      }
+      toastCommandOutcome(result, { completed: 'Accounting closure created.', pending: 'Accounting closure created sent for approval.' });
         handleOpenChange(false);
         if (result.resourceId != null) {
           router.push(`/accounting/closing-entries/${result.resourceId}`);
@@ -161,14 +162,14 @@ export function GlClosureFormSheet({
     startTransition(async () => {
       const result = await updateGlClosureAction(closure.id, parsed.data);
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Accounting closure updated.');
+      toastCommandOutcome(result, { completed: 'Accounting closure updated.', pending: 'Accounting closure updated sent for approval.' });
       handleOpenChange(false);
       router.refresh();
     });

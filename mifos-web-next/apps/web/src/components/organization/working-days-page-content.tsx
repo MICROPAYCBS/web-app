@@ -12,6 +12,7 @@ import type { WorkingDaysConfiguration } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import type { WorkingWeekDayCode } from '@mifos/validation';
 import { useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateWorkingDaysAction } from '@/actions/working-days';
 import { FormLabel } from '@/components/composites/form-label';
@@ -92,14 +93,15 @@ export function WorkingDaysPageContent({
       });
 
       if (!result.ok) {
+
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
-        }
+        return;
+      }
+      toastCommandOutcome(result, { completed: 'Working days updated.', pending: 'Working days updated sent for approval.' });
         toast.error(result.message);
         return;
       }
-
-      toast.success('Working days updated.');
     });
   }
 

@@ -21,7 +21,8 @@ import {
   type SmsCampaignActivateCommandInput,
   type SmsCampaignCloseCommandInput,
   type SmsCampaignMessagesQueryInput,
-  type UpdateSmsCampaignInput
+  type UpdateSmsCampaignInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { buildReportRunQueryParams } from '@/lib/fineract/report-run-display';
@@ -159,7 +160,7 @@ export async function createSmsCampaignAction(
   try {
     const response = await createSmsCampaign(parsed.data);
     revalidatePath(SMS_CAMPAIGN_LIST_PATH);
-    return { ok: true, campaignId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { campaignId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create SMS campaign.');
   }
@@ -188,7 +189,7 @@ export async function updateSmsCampaignAction(
   try {
     const response = await updateSmsCampaign(campaignId, parsed.data);
     revalidateSmsCampaignViews(campaignId);
-    return { ok: true, campaignId: response.resourceId ?? Number(campaignId) };
+    return actionSuccessFromFineractCommand(response, { campaignId: response.resourceId ?? Number(campaignId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update SMS campaign.');
   }
@@ -205,9 +206,9 @@ export async function deleteSmsCampaignAction(
   }
 
   try {
-    await deleteSmsCampaign(campaignId);
+    const response = await deleteSmsCampaign(campaignId);
     revalidatePath(SMS_CAMPAIGN_LIST_PATH);
-    return { ok: true, campaignId: Number(campaignId) };
+    return actionSuccessFromFineractCommand(response, { campaignId: Number(campaignId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete SMS campaign.');
   }
@@ -234,9 +235,9 @@ export async function activateSmsCampaignAction(
   }
 
   try {
-    await activateSmsCampaign(campaignId, parsed.data);
+    const response = await activateSmsCampaign(campaignId, parsed.data);
     revalidateSmsCampaignViews(campaignId);
-    return { ok: true, campaignId: Number(campaignId) };
+    return actionSuccessFromFineractCommand(response, { campaignId: Number(campaignId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to activate SMS campaign.');
   }
@@ -263,9 +264,9 @@ export async function closeSmsCampaignAction(
   }
 
   try {
-    await closeSmsCampaign(campaignId, parsed.data);
+    const response = await closeSmsCampaign(campaignId, parsed.data);
     revalidateSmsCampaignViews(campaignId);
-    return { ok: true, campaignId: Number(campaignId) };
+    return actionSuccessFromFineractCommand(response, { campaignId: Number(campaignId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to close SMS campaign.');
   }
@@ -292,9 +293,9 @@ export async function reactivateSmsCampaignAction(
   }
 
   try {
-    await reactivateSmsCampaign(campaignId, parsed.data);
+    const response = await reactivateSmsCampaign(campaignId, parsed.data);
     revalidateSmsCampaignViews(campaignId);
-    return { ok: true, campaignId: Number(campaignId) };
+    return actionSuccessFromFineractCommand(response, { campaignId: Number(campaignId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to reactivate SMS campaign.');
   }

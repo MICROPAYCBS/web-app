@@ -8,14 +8,12 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractAvailableWorkflowSteps,
+import type { FineractAvailableWorkflowSteps,
   FineractSchedulerJob,
   FineractSchedulerJobHistoryPage,
   FineractSchedulerStatus,
   FineractWorkflowJobNames,
-  FineractWorkflowJobSteps
-} from '@mifos/api-client';
+  FineractWorkflowJobSteps, FineractCommandProcessingResult } from '@mifos/api-client';
 import type {
   RunJobWithParametersInput,
   UpdateSchedulerJobInput,
@@ -115,22 +113,22 @@ export async function getSchedulerJobHistory(jobId: number): Promise<FineractSch
   return { pageItems };
 }
 
-export async function updateSchedulerJob(jobId: number, input: UpdateSchedulerJobInput): Promise<void> {
+export async function updateSchedulerJob(jobId: number, input: UpdateSchedulerJobInput): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`${JOBS_PATH}/${jobId}`, input);
+  return fineract.put<FineractCommandProcessingResult>(`${JOBS_PATH}/${jobId}`, input);
 }
 
-export async function runSchedulerCommand(command: 'start' | 'stop'): Promise<void> {
+export async function runSchedulerCommand(command: 'start' | 'stop'): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${SCHEDULER_PATH}?command=${command}`, {});
+  return fineract.post<FineractCommandProcessingResult>(`${SCHEDULER_PATH}?command=${command}`, {});
 }
 
 export async function executeSchedulerJob(
   jobId: number,
   parameters?: RunJobWithParametersInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${JOBS_PATH}/${jobId}?command=executeJob`, parameters ?? {});
+  return fineract.post<FineractCommandProcessingResult>(`${JOBS_PATH}/${jobId}?command=executeJob`, parameters ?? {});
 }
 
 export async function listWorkflowJobNames(): Promise<string[]> {
@@ -176,9 +174,9 @@ export async function getWorkflowJobSteps(jobName: string): Promise<FineractWork
 export async function updateWorkflowJobSteps(
   jobName: string,
   input: UpdateWorkflowJobStepsInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`${JOBS_PATH}/${encodeURIComponent(jobName)}/steps`, input);
+  return fineract.put<FineractCommandProcessingResult>(`${JOBS_PATH}/${encodeURIComponent(jobName)}/steps`, input);
 }
 
 export async function getAvailableWorkflowSteps(jobCategory: string): Promise<FineractAvailableWorkflowSteps> {
@@ -211,7 +209,7 @@ export async function getAvailableWorkflowSteps(jobCategory: string): Promise<Fi
   return { availableBusinessSteps };
 }
 
-export async function runInlineJob(jobName: string, loanIds: number[]): Promise<void> {
+export async function runInlineJob(jobName: string, loanIds: number[]): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${JOBS_PATH}/${encodeURIComponent(jobName)}/inline`, { loanIds });
+  return fineract.post<FineractCommandProcessingResult>(`${JOBS_PATH}/${encodeURIComponent(jobName)}/inline`, { loanIds });
 }

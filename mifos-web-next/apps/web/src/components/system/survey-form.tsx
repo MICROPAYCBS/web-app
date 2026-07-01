@@ -12,6 +12,7 @@ import { formatActionErrorMessage, validateUpsertSurveyForm, type UpsertSurveyFo
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createSurveyAction, updateSurveyAction } from '@/actions/surveys';
 import { TextField } from '@/components/composites/text-field';
@@ -74,21 +75,22 @@ export function SurveyForm({
           : await updateSurveyAction(surveyId as number, parsed.data);
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success(mode === 'create' ? 'Survey created.' : 'Survey updated.');
       if (mode === 'create' && result.resourceId != null) {
         router.push(`/system/surveys/${result.resourceId}`);
       } else if (surveyId != null) {
         router.push(`/system/surveys/${surveyId}`);
       } else {
         router.push('/system/surveys');
+        return;
       }
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Survey created.' : 'Survey updated.', pending: mode === 'create' ? 'Survey created. sent for approval.' : 'Survey updated. sent for approval.' });
       router.refresh();
     });
   }

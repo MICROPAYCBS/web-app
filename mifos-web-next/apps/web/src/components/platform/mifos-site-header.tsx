@@ -11,6 +11,7 @@
 import { Calendar, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useEntitySearch } from '@/components/platform/entity-search-provider';
+import { CheckerInboxHeaderLink } from '@/components/platform/checker-inbox-header-link';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -20,10 +21,12 @@ import { cn } from '@/lib/utils';
 /** dashboard-01 header — opens global entity search (⌘K / /). Sidebar Find uses F. */
 export function MifosSiteHeader({
   businessDateLabel,
-  businessDateIsNotToday = false
+  businessDateIsNotToday = false,
+  checkerInboxPendingCount
 }: {
   businessDateLabel?: string | null;
   businessDateIsNotToday?: boolean;
+  checkerInboxPendingCount?: number | null;
 }) {
   const { openEntitySearch } = useEntitySearch();
   const showBusinessDate = Boolean(businessDateLabel?.trim());
@@ -73,29 +76,33 @@ export function MifosSiteHeader({
           </Tooltip>
         ) : null}
 
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="ml-auto shrink-0"
-                onClick={openEntitySearch}
-                aria-label="Search records"
-              />
-            }
-          >
-            <Search className="size-4" aria-hidden />
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="flex items-center gap-1.5">
-            Search customers, accounts, groups…
-            <span className="inline-flex items-center gap-0.5">
-              <Kbd>⌘</Kbd>
-              <Kbd>K</Kbd>
-            </span>
-          </TooltipContent>
-        </Tooltip>
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          <CheckerInboxHeaderLink initialCount={checkerInboxPendingCount} />
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={openEntitySearch}
+                  aria-label="Search records"
+                />
+              }
+            >
+              <Search className="size-4" aria-hidden />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="flex items-center gap-1.5">
+              Search customers, accounts, groups…
+              <span className="inline-flex items-center gap-0.5">
+                <Kbd>⌘</Kbd>
+                <Kbd>K</Kbd>
+              </span>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     </header>
   );

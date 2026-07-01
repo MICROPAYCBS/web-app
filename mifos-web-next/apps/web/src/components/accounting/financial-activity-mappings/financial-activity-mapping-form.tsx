@@ -17,6 +17,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createFinancialActivityMappingAction,
@@ -104,6 +105,7 @@ export function FinancialActivityMappingForm({
           : await updateFinancialActivityMappingAction(mappingId!, parsed.data);
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
@@ -111,12 +113,11 @@ export function FinancialActivityMappingForm({
         toast.error(result.message);
         return;
       }
-
-      toast.success(
-        mode === 'create'
+      toastCommandOutcome(result, { completed: mode === 'create'
           ? 'Financial activity mapping created.'
-          : 'Financial activity mapping updated.'
-      );
+          : 'Financial activity mapping updated.', pending: mode === 'create'
+          ? 'Financial activity mapping created.'
+          : 'Financial activity mapping updated.' });
       router.push(`/accounting/financial-activity-mappings/${result.resourceId ?? mappingId}`);
       router.refresh();
     });

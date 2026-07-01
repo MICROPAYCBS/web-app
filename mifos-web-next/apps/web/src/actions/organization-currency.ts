@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateUpdateOrganizationCurrencies,
-  type UpdateOrganizationCurrenciesInput
+  type UpdateOrganizationCurrenciesInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { updateOrganizationCurrencies } from '@/lib/fineract/organization-currencies';
@@ -62,9 +63,9 @@ export async function updateOrganizationCurrenciesAction(
   }
 
   try {
-    await updateOrganizationCurrencies(parsed.data);
+    const response = await updateOrganizationCurrencies(parsed.data);
     revalidateCurrencyViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update currencies.');
   }

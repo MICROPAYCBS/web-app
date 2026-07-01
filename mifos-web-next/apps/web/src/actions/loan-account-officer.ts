@@ -11,7 +11,8 @@
 import { assertCan } from '@mifos/auth';
 import {
   loanAccountAssignOfficerSchema,
-  toFineractActionError
+  toFineractActionError,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
@@ -168,7 +169,7 @@ export async function executeLoanAccountAssignOfficerAction(
   }
 
   try {
-    await executeLoanAccountCommand(
+    const response = await executeLoanAccountCommand(
       accountId,
       'assignLoanOfficer',
       buildFineractCommandBody({
@@ -178,7 +179,7 @@ export async function executeLoanAccountAssignOfficerAction(
       })
     );
     revalidateLoanAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not assign loan officer.');
   }
@@ -217,7 +218,7 @@ export async function executeLoanAccountReassignOfficerAction(
     }
 
     const reassignmentDate = parsed.data.assignmentDate;
-    await executeLoanAccountCommand(
+    const response = await executeLoanAccountCommand(
       accountId,
       'unassignLoanOfficer',
       buildFineractCommandBody({ unassignedDate: reassignmentDate })
@@ -232,7 +233,7 @@ export async function executeLoanAccountReassignOfficerAction(
       })
     );
     revalidateLoanAccountPaths(clientId, accountId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not reassign loan officer.');
   }

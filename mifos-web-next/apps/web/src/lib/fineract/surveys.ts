@@ -8,13 +8,11 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractSurveyDetail,
+import type { FineractSurveyDetail,
   FineractSurveyListItem,
   FineractSurveyMutationResponse,
   FineractSurveyQuestionData,
-  FineractSurveyResponseData
-} from '@mifos/api-client';
+  FineractSurveyResponseData, FineractCommandProcessingResult } from '@mifos/api-client';
 import { buildSurveyApiPayload, type UpsertSurveyFormInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -144,12 +142,12 @@ export async function updateSurvey(
   );
 }
 
-export async function activateSurvey(surveyId: number): Promise<void> {
+export async function activateSurvey(surveyId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${SURVEYS_PATH}/${surveyId}?command=activate`, null);
+  return fineract.post<FineractCommandProcessingResult>(`${SURVEYS_PATH}/${surveyId}?command=activate`, null);
 }
 
-export async function deactivateSurvey(surveyId: number): Promise<void> {
+export async function deactivateSurvey(surveyId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${SURVEYS_PATH}/${surveyId}?command=deactivate`, null);
+  return fineract.post<FineractCommandProcessingResult>(`${SURVEYS_PATH}/${surveyId}?command=deactivate`, null);
 }

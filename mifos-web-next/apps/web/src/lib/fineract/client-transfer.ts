@@ -8,13 +8,11 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractClientAccounts,
+import type { FineractClientAccounts,
   FineractClientLoanAccount,
   FineractClientSavingsAccount,
   FineractSavingsOnHoldTransaction,
-  FineractSavingsOnHoldTransactionsPage
-} from '@mifos/api-client';
+  FineractSavingsOnHoldTransactionsPage, FineractCommandProcessingResult } from '@mifos/api-client';
 import {
   accountTransferInProgress,
   accountTransferOnHold,
@@ -174,9 +172,9 @@ export async function listSavingsOnHoldTransactions(
 export async function releaseSavingsOnHoldAmount(
   savingsId: string | number,
   transactionId: string | number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(
+  return fineract.post<FineractCommandProcessingResult>(
     `/savingsaccounts/${savingsId}/transactions/${transactionId}`,
     {},
     { command: 'releaseAmount' }

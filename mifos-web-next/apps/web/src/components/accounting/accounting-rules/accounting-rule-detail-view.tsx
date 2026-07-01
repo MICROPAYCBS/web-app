@@ -14,6 +14,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { deleteAccountingRuleAction } from '@/actions/accounting-rules';
 import {
@@ -60,11 +61,12 @@ export function AccountingRuleDetailView({
     startTransition(async () => {
       const result = await deleteAccountingRuleAction(rule.id);
       if (!result.ok) {
+
         setActionError(result.message);
         toast.error(result.message);
         return;
       }
-      toast.success('Accounting rule deleted.');
+      toastCommandOutcome(result, { completed: 'Accounting rule deleted.', pending: 'Accounting rule deleted sent for approval.' });
       router.push('/accounting/accounting-rules');
       router.refresh();
     });

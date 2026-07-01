@@ -8,16 +8,14 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractFinancialActivityGlAccountOptions,
+import type { FineractFinancialActivityGlAccountOptions,
   FineractFinancialActivityGlAccountRef,
   FineractFinancialActivityMappingDetail,
   FineractFinancialActivityMappingEditData,
   FineractFinancialActivityMappingFormTemplate,
   FineractFinancialActivityMappingListItem,
   FineractFinancialActivityMappingMutationResponse,
-  FineractFinancialActivityRef
-} from '@mifos/api-client';
+  FineractFinancialActivityRef, FineractCommandProcessingResult } from '@mifos/api-client';
 import { buildUpsertFinancialActivityMappingPayload, type UpsertFinancialActivityMappingFormInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -186,7 +184,7 @@ export async function updateFinancialActivityMapping(
   return { resourceId: Number(raw?.resourceId ?? mappingId) };
 }
 
-export async function deleteFinancialActivityMapping(mappingId: number): Promise<void> {
+export async function deleteFinancialActivityMapping(mappingId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${FINANCIAL_ACTIVITY_ACCOUNTS_PATH}/${mappingId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${FINANCIAL_ACTIVITY_ACCOUNTS_PATH}/${mappingId}`);
 }

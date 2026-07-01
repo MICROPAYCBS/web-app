@@ -16,7 +16,8 @@ import {
   validateUpsertCodeValue,
   type CreateCodeInput,
   type UpdateCodeInput,
-  type UpsertCodeValueInput
+  type UpsertCodeValueInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -77,7 +78,7 @@ export async function createCodeAction(input: CreateCodeInput): Promise<SystemCo
     const response = await createCode(parsed.data);
     const resourceId = response.resourceId;
     revalidatePath(LIST_PATH);
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create code.');
   }
@@ -106,7 +107,7 @@ export async function updateCodeAction(
   try {
     const response = await updateCode(codeId, parsed.data);
     revalidateCodeViews(codeId);
-    return { ok: true, resourceId: response.resourceId ?? Number(codeId) };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId ?? Number(codeId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update code.');
   }
@@ -121,9 +122,9 @@ export async function deleteCodeAction(codeId: string | number): Promise<SystemC
   }
 
   try {
-    await deleteCode(codeId);
+    const response = await deleteCode(codeId);
     revalidatePath(LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete code.');
   }
@@ -183,9 +184,9 @@ export async function updateCodeValueAction(
   }
 
   try {
-    await updateCodeValue(codeId, codeValueId, parsed.data);
+    const response = await updateCodeValue(codeId, codeValueId, parsed.data);
     revalidateCodeViews(codeId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update code value.');
   }
@@ -203,9 +204,9 @@ export async function deleteCodeValueAction(
   }
 
   try {
-    await deleteCodeValue(codeId, codeValueId);
+    const response = await deleteCodeValue(codeId, codeValueId);
     revalidateCodeViews(codeId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete code value.');
   }

@@ -11,7 +11,8 @@
 import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
-  validateUpdateExternalEventConfiguration
+  validateUpdateExternalEventConfiguration,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { updateExternalEventConfiguration } from '@/lib/fineract/external-events';
@@ -44,9 +45,9 @@ export async function updateExternalEventConfigurationAction(
   }
 
   try {
-    await updateExternalEventConfiguration(parsed.data.externalEventConfigurations);
+    const response = await updateExternalEventConfiguration(parsed.data.externalEventConfigurations);
     revalidatePath(LIST_PATH);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to apply external event changes.');
   }

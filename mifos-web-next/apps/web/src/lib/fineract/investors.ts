@@ -8,10 +8,8 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  InvestorTransferItem,
-  InvestorTransferSearchPage
-} from '@mifos/api-client';
+import type { InvestorTransferItem,
+  InvestorTransferSearchPage, FineractCommandProcessingResult } from '@mifos/api-client';
 import type {
   CancelInvestorTransferInput,
   InvestorSearchPayload
@@ -126,9 +124,9 @@ export async function searchInvestorTransfers(
   };
 }
 
-export async function cancelInvestorTransfer(input: CancelInvestorTransferInput): Promise<void> {
+export async function cancelInvestorTransfer(input: CancelInvestorTransferInput): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`${BASE_PATH}/transfers/${input.transferId}`, {
+  return fineract.post<FineractCommandProcessingResult>(`${BASE_PATH}/transfers/${input.transferId}`, {
     transferExternalId: input.transferExternalId
   }, { command: 'cancel' });
 }

@@ -17,6 +17,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createHookAction, updateHookAction } from '@/actions/hooks';
 import { SelectField } from '@/components/composites/select-field';
@@ -133,21 +134,22 @@ export function HookForm({
           : await updateHookAction(hookId as number, parsed.data);
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success(mode === 'create' ? 'Hook created.' : 'Hook updated.');
       if (mode === 'create' && result.resourceId != null) {
         router.push(`/system/hooks/${result.resourceId}`);
       } else if (hookId != null) {
         router.push(`/system/hooks/${hookId}`);
       } else {
         router.push('/system/hooks');
+        return;
       }
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Hook created.' : 'Hook updated.', pending: mode === 'create' ? 'Hook created. sent for approval.' : 'Hook updated. sent for approval.' });
       router.refresh();
     });
   }

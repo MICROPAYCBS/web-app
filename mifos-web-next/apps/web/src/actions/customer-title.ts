@@ -15,7 +15,8 @@ import {
   validateUpdateCustomerTitle,
   type CustomerTitleUpdateClearFields,
   type UpdateCustomerTitleInput,
-  type UpsertCustomerTitleInput
+  type UpsertCustomerTitleInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -73,7 +74,7 @@ export async function createCustomerTitleAction(
   try {
     const response = await createCustomerTitle(parsed.data);
     revalidateCustomerTitleViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create customer title.');
   }
@@ -103,7 +104,7 @@ export async function updateCustomerTitleAction(
   try {
     const response = await updateCustomerTitle(customerTitleId, parsed.data, clear);
     revalidateCustomerTitleViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update customer title.');
   }
@@ -120,9 +121,9 @@ export async function deleteCustomerTitleAction(
   }
 
   try {
-    await deleteCustomerTitle(customerTitleId);
+    const response = await deleteCustomerTitle(customerTitleId);
     revalidateCustomerTitleViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete customer title.');
   }

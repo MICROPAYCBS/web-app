@@ -11,6 +11,7 @@
 import type { DelinquencyRangeDetail } from '@mifos/api-client';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createDelinquencyRangeAction,
@@ -66,14 +67,14 @@ export function DelinquencyRangeCreateSheet({
       });
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Delinquency range created.');
+      toastCommandOutcome(result, { completed: 'Delinquency range created.', pending: 'Delinquency range created sent for approval.' });
       onOpenChange(false);
       const id = result.resourceId;
       router.push(id ? delinquencyRangeDetailPath(id) : delinquencyRangesListPath());
@@ -173,14 +174,14 @@ export function DelinquencyRangeEditSheet({
       });
 
       if (!result.ok) {
+
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-
-      toast.success('Delinquency range updated.');
+      toastCommandOutcome(result, { completed: 'Delinquency range updated.', pending: 'Delinquency range updated sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

@@ -9,7 +9,11 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { toFineractActionError, upsertSavingsProductSchema } from '@mifos/validation';
+import {
+  toFineractActionError,
+  upsertSavingsProductSchema,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { buildSavingsProductPayload } from '@/lib/fineract/savings-product-payload';
 import type { SavingsProductActionResult } from '@/lib/fineract/savings-product-action-result';
@@ -94,7 +98,7 @@ export async function createSavingsProductAction(
     if (response.resourceId) {
       revalidatePath(savingsProductDetailPath(response.resourceId));
     }
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create savings product.');
   }
@@ -121,11 +125,11 @@ export async function updateSavingsProductAction(
 
   try {
     const payload = buildSavingsProductPayload(parsed);
-    await updateSavingsProductRecord(productId, payload);
+    const response = await updateSavingsProductRecord(productId, payload);
     revalidatePath(SAVINGS_PRODUCTS_LIST_PATH);
     revalidatePath(savingsProductDetailPath(productId));
     revalidatePath(`${savingsProductDetailPath(productId)}/edit`);
-    return { ok: true, resourceId: Number(productId) };
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, 'Could not update savings product.');
   }

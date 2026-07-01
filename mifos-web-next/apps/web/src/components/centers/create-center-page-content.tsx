@@ -13,6 +13,7 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createCenterAction,
@@ -123,12 +124,14 @@ export function CreateCenterPageContent({ offices }: { offices: FineractOfficeOp
         activationDate: form.active ? form.activationDate : undefined,
         groupMembers: groupMembers.map((group) => group.id)
       });
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, {
+        completed: 'Center created.',
+        pending: 'Center creation sent for approval.'
+      })) {
         setFieldErrors(result.fieldErrors ?? {});
         toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-      toast.success('Center created.');
       if (result.centerId != null) {
         router.push(centerGeneralPath(result.centerId));
       } else {

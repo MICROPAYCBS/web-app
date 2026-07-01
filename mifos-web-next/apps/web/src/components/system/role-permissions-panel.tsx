@@ -13,6 +13,7 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateRolePermissionsAction } from '@/actions/system-roles';
 import { PermissionAssignmentStatus } from '@/components/system/permission-assignment-status';
@@ -86,10 +87,11 @@ export function RolePermissionsPanel({
         permissions: permissionsToPayload(permissions)
       });
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-      toast.success('Permissions updated.');
+      toastCommandOutcome(result, { completed: 'Permissions updated.', pending: 'Permissions updated sent for approval.' });
       setEditing(false);
       router.refresh();
     });

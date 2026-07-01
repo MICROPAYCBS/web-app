@@ -11,6 +11,7 @@
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createUserAction, fetchStaffByOfficeAction, updateUserAction } from '@/actions/app-users';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -179,11 +180,11 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
           : await updateUserAction(userId!, draftToUpdatePayload(draft));
 
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
-
-      toast.success(mode === 'create' ? 'User created.' : 'User updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'User created.' : 'User updated.', pending: mode === 'create' ? 'User created. sent for approval.' : 'User updated. sent for approval.' });
       const id = result.resourceId ?? userId;
       router.push(id ? `/appusers/${id}` : '/appusers');
       router.refresh();

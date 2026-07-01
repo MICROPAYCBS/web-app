@@ -12,6 +12,7 @@ import type { FineractReportRunColumnHeader, SmsCampaignDetail } from '@mifos/ap
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   fetchSmsCampaignTemplateColumnsAction,
@@ -74,6 +75,7 @@ export function SmsCampaignEditForm({ campaign }: { campaign: SmsCampaignDetail 
         values
       });
       if (!result.ok) {
+
         setLoadError(result.message);
         return;
       }
@@ -116,8 +118,7 @@ export function SmsCampaignEditForm({ campaign }: { campaign: SmsCampaignDetail 
         toast.error(errorMessage);
         return;
       }
-
-      toast.success('SMS campaign updated');
+      toastCommandOutcome(result, { completed: 'SMS campaign updated', pending: 'SMS campaign updated sent for approval.' });
       router.push(smsCampaignDetailPath(campaign.id));
       router.refresh();
     });

@@ -12,6 +12,7 @@ import type { FineractOfficeOption, OrganizationTeller } from '@mifos/api-client
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useId, useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createTellerAction, updateTellerAction } from '@/actions/teller';
 import { DateField } from '@/components/composites/date-field';
@@ -182,7 +183,7 @@ export function TellerFormSheet({
         return;
       }
 
-      toast.success(mode === 'create' ? 'Teller created.' : 'Teller updated.');
+      toastCommandOutcome(result, { completed: mode === 'create' ? 'Teller created.' : 'Teller updated.', pending: mode === 'create' ? 'Teller creation sent for approval.' : 'Teller update sent for approval.' });
       handleOpenChange(false);
       if (mode === 'create' && result.tellerId != null) {
         router.push(`/organization/tellers/${result.tellerId}`);

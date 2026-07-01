@@ -9,7 +9,12 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError, validateUpsertReportForm, type UpsertReportFormInput } from '@mifos/validation';
+import {
+  toFineractActionError,
+  validateUpsertReportForm,
+  type UpsertReportFormInput,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createReport, deleteReport, getReport, updateReport } from '@/lib/fineract/reports';
 import {
@@ -67,7 +72,7 @@ export async function createReportAction(input: UpsertReportFormInput): Promise<
   try {
     const response = await createReport(parsed.data);
     revalidateReportViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create report.');
   }
@@ -99,9 +104,9 @@ export async function updateReportAction(
   }
 
   try {
-    await updateReport(reportId, parsed.data, { coreReport: existing.coreReport });
+    const response = await updateReport(reportId, parsed.data, { coreReport: existing.coreReport });
     revalidateReportViews(reportId);
-    return { ok: true, resourceId: reportId };
+    return actionSuccessFromFineractCommand(response, { resourceId: reportId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update report.');
   }
@@ -124,9 +129,9 @@ export async function deleteReportAction(reportId: number): Promise<ReportsActio
   }
 
   try {
-    await deleteReport(reportId, existing.reportName);
+    const response = await deleteReport(reportId, existing.reportName);
     revalidateReportViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     if (isMissingReportReadPermissionError(error, existing.reportName)) {
       return { ok: false, message: formatReportDeletePermissionError(existing.reportName) };

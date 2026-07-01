@@ -8,10 +8,8 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractExternalEventConfigurationItem,
-  FineractExternalEventConfigurationResponse
-} from '@mifos/api-client';
+import type { FineractExternalEventConfigurationItem,
+  FineractExternalEventConfigurationResponse, FineractCommandProcessingResult } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 const CONFIG_PATH = '/externalevents/configuration';
@@ -55,7 +53,7 @@ export async function listExternalEventConfiguration(): Promise<
 
 export async function updateExternalEventConfiguration(
   externalEventConfigurations: Record<string, boolean>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(CONFIG_PATH, { externalEventConfigurations });
+  return fineract.put<FineractCommandProcessingResult>(CONFIG_PATH, { externalEventConfigurations });
 }

@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   createStandingInstructionSchema,
   toFineractActionError,
-  type CreateStandingInstructionInput
+  type CreateStandingInstructionInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import type { StandingInstructionTemplate, StandingInstructionsPage } from '@mifos/api-client';
 import { revalidatePath } from 'next/cache';
@@ -110,9 +111,9 @@ export async function createClientStandingInstructionAction(
       fromClientId: clientId,
       fromOfficeId
     });
-    await createStandingInstruction(body);
+    const response = await createStandingInstruction(body);
     revalidatePath(clientStandingInstructionsListPath(clientId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not create standing instruction.');
   }
@@ -133,9 +134,9 @@ export async function deleteClientStandingInstructionAction(
   }
 
   try {
-    await deleteStandingInstruction(instructionId);
+    const response = await deleteStandingInstruction(instructionId);
     revalidatePath(clientStandingInstructionsListPath(clientId));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete standing instruction.');
   }

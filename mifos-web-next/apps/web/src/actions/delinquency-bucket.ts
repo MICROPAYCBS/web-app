@@ -14,7 +14,8 @@ import {
   toFineractActionError,
   updateDelinquencyBucketSchema,
   type CreateDelinquencyBucketInput,
-  type UpdateDelinquencyBucketInput
+  type UpdateDelinquencyBucketInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { DelinquencyActionResult } from '@/lib/fineract/delinquency-action-result';
@@ -88,7 +89,7 @@ export async function createDelinquencyBucketAction(raw: unknown): Promise<Delin
     if (resourceId) {
       revalidatePath(delinquencyBucketDetailPath(resourceId));
     }
-    return { ok: true, resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     return toFineractActionError(err, 'Could not create delinquency bucket.');
   }
@@ -114,12 +115,12 @@ export async function updateDelinquencyBucketAction(
   }
 
   try {
-    await updateDelinquencyBucket(bucketId, parsed);
+    const response = await updateDelinquencyBucket(bucketId, parsed);
     revalidatePath(delinquencyBucketsListPath());
     revalidatePath(delinquencyBucketDetailPath(bucketId));
     revalidatePath(delinquencyBucketEditPath(bucketId, 'regular'));
     revalidatePath(delinquencyBucketEditPath(bucketId, 'workingcapital'));
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not update delinquency bucket.');
   }
@@ -137,9 +138,9 @@ export async function deleteDelinquencyBucketAction(bucketId: string): Promise<D
   }
 
   try {
-    await deleteDelinquencyBucket(bucketId);
+    const response = await deleteDelinquencyBucket(bucketId);
     revalidatePath(delinquencyBucketsListPath());
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete delinquency bucket.');
   }

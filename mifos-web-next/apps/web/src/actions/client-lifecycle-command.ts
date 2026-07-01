@@ -21,7 +21,8 @@ import {
   clientUndoRejectionCommandSchema,
   clientUpdateSavingsCommandSchema,
   clientWithdrawCommandSchema,
-  toFineractActionError
+  toFineractActionError,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { ClientActionSheetId } from '@/lib/clients/client-action-types';
@@ -87,6 +88,7 @@ export async function executeClientActionCommand(
   }
 
   try {
+    let response: unknown;
     switch (sheetId) {
       case 'activate': {
         const parsed = parseOrError(clientActivateCommandSchema, raw);
@@ -101,7 +103,7 @@ export async function executeClientActionCommand(
             message: activationMessage
           };
         }
-        await executeClientCommand(
+        response = await executeClientCommand(
           clientId,
           'activate',
           buildFineractCommandBody({ activationDate: parsed.data.activationDate })
@@ -113,7 +115,7 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeClientCommand(
+        response = await executeClientCommand(
           clientId,
           'close',
           buildFineractCommandBody({
@@ -128,7 +130,7 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeClientCommand(
+        response = await executeClientCommand(
           clientId,
           'withdraw',
           buildFineractCommandBody({
@@ -143,7 +145,7 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeClientCommand(
+        response = await executeClientCommand(
           clientId,
           'reject',
           buildFineractCommandBody({
@@ -158,7 +160,7 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeClientCommand(
+        response = await executeClientCommand(
           clientId,
           'reactivate',
           buildFineractCommandBody({ reactivationDate: parsed.data.reactivationDate })
@@ -170,7 +172,7 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeClientCommand(
+        response = await executeClientCommand(
           clientId,
           'undoRejection',
           buildFineractCommandBody({ reopenedDate: parsed.data.reopenedDate })
@@ -183,7 +185,7 @@ export async function executeClientActionCommand(
           return parsed.result;
         }
         const { note, ...rest } = parsed.data;
-        await executeClientCommand(
+        response = await executeClientCommand(
           clientId,
           'proposeTransfer',
           buildFineractCommandBody({
@@ -212,7 +214,7 @@ export async function executeClientActionCommand(
             : sheetId === 'reject-transfer'
               ? 'rejectTransfer'
               : 'withdrawTransfer';
-        await executeClientCommand(clientId, command, body);
+        response = await executeClientCommand(clientId, command, body);
         break;
       }
       case 'assign-staff': {
@@ -226,7 +228,7 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeClientCommand(clientId, 'assignStaff', {
+        response = await executeClientCommand(clientId, 'assignStaff', {
           staffId: parsed.data.staffId
         });
         break;
@@ -260,8 +262,8 @@ export async function executeClientActionCommand(
             }
           };
         }
-        await executeClientCommand(clientId, 'unassignStaff', { staffId: currentStaffId });
-        await executeClientCommand(clientId, 'assignStaff', {
+        response = await executeClientCommand(clientId, 'unassignStaff', { staffId: currentStaffId });
+        response = await executeClientCommand(clientId, 'assignStaff', {
           staffId: parsed.data.staffId
         });
         break;
@@ -280,7 +282,7 @@ export async function executeClientActionCommand(
         if (!parsed.success) {
           return parsed.result;
         }
-        await executeClientCommand(clientId, 'updateSavingsAccount', {
+        response = await executeClientCommand(clientId, 'updateSavingsAccount', {
           savingsAccountId: parsed.data.savingsAccountId
         });
         break;
@@ -292,7 +294,7 @@ export async function executeClientActionCommand(
     }
 
     revalidatePath(`/clients/${clientId}`, 'layout');
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }

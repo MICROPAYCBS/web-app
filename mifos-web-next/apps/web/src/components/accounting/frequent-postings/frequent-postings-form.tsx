@@ -25,6 +25,7 @@ import { Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { parseAmount, areJournalEntryTotalsBalanced } from '@mifos/domain';
 import { createFrequentPostingAction } from '@/actions/frequent-postings';
@@ -273,6 +274,7 @@ export function FrequentPostingsForm({
     startTransition(async () => {
       const result = await createFrequentPostingAction(parsed.data);
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
@@ -280,13 +282,13 @@ export function FrequentPostingsForm({
         toast.error(result.message);
         return;
       }
-
-      toast.success('Frequent posting created.');
       if (result.transactionId) {
         router.push(`/accounting/journal-entries/transactions/${result.transactionId}`);
       } else {
         router.push('/accounting/journal-entries');
+        return;
       }
+      toastCommandOutcome(result, { completed: 'Frequent posting created.', pending: 'Frequent posting created sent for approval.' });
       router.refresh();
     });
   }

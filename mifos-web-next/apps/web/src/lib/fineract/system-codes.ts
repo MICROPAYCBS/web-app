@@ -8,12 +8,10 @@
 
 import 'server-only';
 
-import type {
-  FineractCode,
+import type { FineractCode,
   FineractCodeValue,
   FineractCreateCodeResponse,
-  FineractCreateCodeValueResponse
-} from '@mifos/api-client';
+  FineractCreateCodeValueResponse, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { CreateCodeInput, UpdateCodeInput, UpsertCodeValuePayload } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -62,9 +60,9 @@ export async function updateCode(
   return fineract.put<FineractCreateCodeResponse>(`/codes/${codeId}`, body);
 }
 
-export async function deleteCode(codeId: string | number): Promise<void> {
+export async function deleteCode(codeId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/codes/${codeId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/codes/${codeId}`);
 }
 
 export async function listCodeValues(codeId: string | number): Promise<FineractCodeValue[]> {
@@ -88,17 +86,17 @@ export async function updateCodeValue(
   codeId: string | number,
   codeValueId: string | number,
   body: UpsertCodeValuePayload
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/codes/${codeId}/codevalues/${codeValueId}`, buildCodeValuePayload(body));
+  return fineract.put<FineractCommandProcessingResult>(`/codes/${codeId}/codevalues/${codeValueId}`, buildCodeValuePayload(body));
 }
 
 export async function deleteCodeValue(
   codeId: string | number,
   codeValueId: string | number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/codes/${codeId}/codevalues/${codeValueId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/codes/${codeId}/codevalues/${codeValueId}`);
 }
 
 export async function listCodeValuesByName(codeName: string): Promise<FineractCodeValue[]> {

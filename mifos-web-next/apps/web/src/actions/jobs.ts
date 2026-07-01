@@ -21,7 +21,8 @@ import {
   validateUpdateSchedulerJob,
   validateUpdateWorkflowJobSteps,
   type JobParameterInput,
-  type UpdateSchedulerJobInput
+  type UpdateSchedulerJobInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -84,9 +85,9 @@ export async function updateSchedulerJobAction(
   }
 
   try {
-    await updateSchedulerJob(jobId, parsed.data);
+    const response = await updateSchedulerJob(jobId, parsed.data);
     revalidateManageJobs(jobId);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update scheduler job.');
   }
@@ -101,9 +102,9 @@ export async function runSchedulerCommandAction(command: 'start' | 'stop'): Prom
   }
 
   try {
-    await runSchedulerCommand(command);
+    const response = await runSchedulerCommand(command);
     revalidateManageJobs();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update scheduler status.');
   }
@@ -130,7 +131,7 @@ export async function executeSchedulerJobsAction(
             fieldErrors: zodFieldErrors(parsed.error)
           };
         }
-        await executeSchedulerJob(job.jobId, parsed.data);
+        const response = await executeSchedulerJob(job.jobId, parsed.data);
       } else {
         await executeSchedulerJob(job.jobId);
       }
@@ -206,9 +207,9 @@ export async function updateWorkflowJobStepsAction(
   }
 
   try {
-    await updateWorkflowJobSteps(jobName, parsed.data);
+    const response = await updateWorkflowJobSteps(jobName, parsed.data);
     revalidateManageJobs();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to save workflow steps.');
   }
@@ -241,9 +242,9 @@ export async function startCobCatchUpAction(): Promise<JobsActionResult> {
   }
 
   try {
-    await startCobCatchUp();
+    const response = await startCobCatchUp();
     revalidateManageJobs();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to start catch-up.');
   }
@@ -267,9 +268,9 @@ export async function runInlineCobAction(loanIds: number[]): Promise<JobsActionR
   }
 
   try {
-    await runInlineJob('LOAN_COB', parsed.data.loanIds);
+    const response = await runInlineJob('LOAN_COB', parsed.data.loanIds);
     revalidateManageJobs();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to run inline COB.');
   }

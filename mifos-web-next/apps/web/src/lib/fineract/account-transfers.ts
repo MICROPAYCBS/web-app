@@ -8,10 +8,8 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  AccountTransferTemplate,
-  CreateAccountTransferResponse
-} from '@mifos/api-client';
+import type { AccountTransferTemplate,
+  CreateAccountTransferResponse, FineractCommandProcessingResult } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import {
   normalizeFineractDateField,
@@ -122,7 +120,7 @@ export async function createAccountTransfer(
   return fineract.post<CreateAccountTransferResponse>('/accounttransfers', body);
 }
 
-export async function undoAccountTransfer(transferId: string | number): Promise<void> {
+export async function undoAccountTransfer(transferId: string | number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.post(`/accounttransfers/${transferId}`, {}, { command: 'undo' });
+  return fineract.post<FineractCommandProcessingResult>(`/accounttransfers/${transferId}`, {}, { command: 'undo' });
 }

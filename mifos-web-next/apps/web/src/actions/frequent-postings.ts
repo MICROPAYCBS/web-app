@@ -12,7 +12,8 @@ import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
   validateCreateFrequentPostingForm,
-  type CreateFrequentPostingFormInput
+  type CreateFrequentPostingFormInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createFrequentPosting } from '@/lib/fineract/journal-entries';
@@ -66,7 +67,7 @@ export async function createFrequentPostingAction(
   try {
     const response = await createFrequentPosting(parsed.data);
     revalidateFrequentPostingViews(response.transactionId);
-    return { ok: true, transactionId: response.transactionId };
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create frequent posting.');
   }

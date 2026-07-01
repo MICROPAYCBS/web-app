@@ -8,16 +8,14 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractEnumOption,
+import type { FineractEnumOption,
   FineractGlAccountDetail,
   FineractGlAccountEditData,
   FineractGlAccountFormTemplate,
   FineractGlAccountListItem,
   FineractGlAccountMutationResponse,
   FineractGlAccountRef,
-  FineractGlAccountToggleResponse
-} from '@mifos/api-client';
+  FineractGlAccountToggleResponse, FineractCommandProcessingResult } from '@mifos/api-client';
 import {
   buildGlAccountApiPayload,
   type ToggleGlAccountDisabledInput,
@@ -239,7 +237,7 @@ export async function toggleGlAccountDisabled(
   };
 }
 
-export async function deleteGlAccount(glAccountId: number): Promise<void> {
+export async function deleteGlAccount(glAccountId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${GL_ACCOUNTS_PATH}/${glAccountId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`${GL_ACCOUNTS_PATH}/${glAccountId}`);
 }

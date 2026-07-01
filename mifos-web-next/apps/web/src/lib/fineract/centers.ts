@@ -306,7 +306,7 @@ export async function getCenterEditTemplate(
 export async function updateCenter(
   centerId: string | number,
   payload: UpdateCenterPayload
-): Promise<void> {
+): Promise<unknown> {
   const fineract = await createFineractClient();
   const body: Record<string, unknown> = {
     name: payload.name,
@@ -322,7 +322,7 @@ export async function updateCenter(
   if (payload.activationDate) {
     body.activationDate = formatCenterDateForApi(payload.activationDate);
   }
-  await fineract.put(`/groups/${centerId}`, body);
+  return fineract.put(`/groups/${centerId}`, body);
 }
 
 export function defaultCenterMutationMeta() {

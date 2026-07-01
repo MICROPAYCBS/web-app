@@ -14,7 +14,8 @@ import {
   validateCreateOffice,
   validateUpdateOffice,
   type CreateOfficeInput,
-  type UpdateOfficeInput
+  type UpdateOfficeInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { createOffice, updateOffice } from '@/lib/fineract/offices';
@@ -66,7 +67,7 @@ export async function createOfficeAction(input: CreateOfficeInput): Promise<Offi
   try {
     const response = await createOffice(parsed.data);
     revalidatePath(LIST_PATH);
-    return { ok: true, officeId: response.resourceId ?? response.officeId };
+    return actionSuccessFromFineractCommand(response, { officeId: response.resourceId ?? response.officeId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create branch.');
   }
@@ -95,7 +96,7 @@ export async function updateOfficeAction(
   try {
     const response = await updateOffice(officeId, parsed.data);
     revalidateOfficeViews(officeId);
-    return { ok: true, officeId: response.resourceId ?? response.officeId ?? Number(officeId) };
+    return actionSuccessFromFineractCommand(response, { officeId: response.resourceId ?? response.officeId ?? Number(officeId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update branch.');
   }

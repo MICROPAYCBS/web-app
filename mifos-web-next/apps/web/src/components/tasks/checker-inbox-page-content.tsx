@@ -17,9 +17,9 @@ import {
   bulkDeleteCheckerInboxItemsAction,
   bulkExecuteCheckerInboxActionAction
 } from '@/actions/checker-inbox';
+import { ListPage } from '@/components/composites/list-page';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { TextField } from '@/components/composites/text-field';
-import { CheckerInboxAndTasksLayout } from '@/components/tasks/checker-inbox-and-tasks-layout';
 import { CheckerInboxFilterSheet } from '@/components/tasks/checker-inbox-filter-sheet';
 import { CheckerInboxTable } from '@/components/tasks/checker-inbox-table';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ import {
   countActiveCheckerInboxFilters,
   type CheckerInboxSearchFilters
 } from '@/lib/fineract/checker-inbox-query';
+import { notifyCheckerInboxPendingChanged } from '@/lib/checker-inbox/pending-count';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
 
@@ -55,8 +56,10 @@ export function CheckerInboxPageContent({
   const [filterOpen, setFilterOpen] = useState(false);
   const [userFilter, setUserFilter] = useState('');
   const [selectedItems, setSelectedItems] = useState<CheckerInboxListItem[]>([]);
+  const [selectionEpoch, setSelectionEpoch] = useState(0);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const activeFilterCount = countActiveCheckerInboxFilters(filters);
+  const hasSelection = selectedItems.length > 0;
 
   const navigate = useCallback(
     (nextFilters: CheckerInboxSearchFilters) => {
@@ -91,6 +94,8 @@ export function CheckerInboxPageContent({
       );
       setConfirmAction(null);
       setSelectedItems([]);
+      setSelectionEpoch((epoch) => epoch + 1);
+      notifyCheckerInboxPendingChanged();
       router.refresh();
     });
   }
@@ -99,123 +104,132 @@ export function CheckerInboxPageContent({
   const showEmptyAccount = !hasActiveSearch && items.length === 0;
 
   return (
-    <CheckerInboxAndTasksLayout>
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-[220px] flex-1">
-            <TextField
-              id="checker-inbox-user-filter"
-              label="Search by user"
-              value={userFilter}
-              onChange={(value) => setUserFilter(value)}
+    <>
+      <ListPage
+        title="Pending tasks"
+        description="Review and approve pending maker-checker requests."
+        actions={
+          <>
+            <Button
+              type="button"
+              disabled={pending || !hasSelection}
+              onClick={() => setConfirmAction('approve')}
+            >
+              <Check className="mr-2 size-4" />
+              Approve
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={pending || !hasSelection}
+              onClick={() => setConfirmAction('delete')}
+            >
+              <Trash2 className="mr-2 size-4" />
+              Delete
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending || !hasSelection}
+              onClick={() => setConfirmAction('reject')}
+            >
+              <X className="mr-2 size-4" />
+              Reject
+            </Button>
+          </>
+        }
+        toolbar={
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[220px] flex-1">
+              <TextField
+                id="checker-inbox-user-filter"
+                label="Search by user"
+                value={userFilter}
+                onChange={(value) => setUserFilter(value)}
+                disabled={pending}
+              />
+            </div>
+            <ListFilterTrigger
+              activeCount={activeFilterCount}
+              onClick={() => setFilterOpen(true)}
               disabled={pending}
             />
           </div>
-          <ListFilterTrigger
-            activeCount={activeFilterCount}
-            onClick={() => setFilterOpen(true)}
-            disabled={pending}
-          />
-          <Button
-            type="button"
-            disabled={pending || selectedItems.length === 0}
-            onClick={() => setConfirmAction('approve')}
-          >
-            <Check className="mr-2 size-4" />
-            Approve
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={pending || selectedItems.length === 0}
-            onClick={() => setConfirmAction('delete')}
-          >
-            <Trash2 className="mr-2 size-4" />
-            Delete
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={pending || selectedItems.length === 0}
-            onClick={() => setConfirmAction('reject')}
-          >
-            <X className="mr-2 size-4" />
-            Reject
-          </Button>
-        </div>
-
+        }
+      >
         {showEmptySearch ? (
-          <p className="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             No checker inbox data available for this search.
           </p>
         ) : null}
 
         {showEmptyAccount ? (
-          <p className="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             No checker inbox data available for this account.
           </p>
         ) : null}
 
         {items.length > 0 ? (
           <CheckerInboxTable
+            key={selectionEpoch}
             items={items}
             userFilter={userFilter}
             onSelectedItemsChange={setSelectedItems}
           />
         ) : null}
+      </ListPage>
 
-        <CheckerInboxFilterSheet
-          open={filterOpen}
-          onOpenChange={setFilterOpen}
-          template={template}
-          filters={filters}
-          onApply={navigate}
-          onClear={handleClearFilters}
-          disabled={pending}
-          pending={pending}
-        />
+      <CheckerInboxFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        template={template}
+        filters={filters}
+        onApply={navigate}
+        onClear={handleClearFilters}
+        disabled={pending}
+        pending={pending}
+      />
 
-        <Dialog
-          open={confirmAction != null}
-          onOpenChange={(open) => !open && setConfirmAction(null)}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {confirmAction === 'approve'
-                  ? 'Approve checker'
-                  : confirmAction === 'reject'
-                    ? 'Reject checker'
-                    : 'Delete checker'}
-              </DialogTitle>
-              <DialogDescription>
-                {confirmAction === 'approve'
-                  ? 'Are you sure you want to approve the selected checker items?'
-                  : confirmAction === 'reject'
-                    ? 'Are you sure you want to reject the selected checker items?'
-                    : 'Are you sure you want to delete the selected checker items?'}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setConfirmAction(null)}>
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant={confirmAction === 'delete' ? 'destructive' : 'default'}
-                disabled={pending}
-                onClick={() => confirmAction && runBulkAction(confirmAction)}
-              >
-                {confirmAction === 'approve'
-                  ? 'Approve'
-                  : confirmAction === 'reject'
-                    ? 'Reject'
-                    : 'Delete'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </CheckerInboxAndTasksLayout>
+      <Dialog
+        open={confirmAction != null}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmAction === 'approve'
+                ? 'Approve checker'
+                : confirmAction === 'reject'
+                  ? 'Reject checker'
+                  : 'Delete checker'}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmAction === 'approve'
+                ? 'Are you sure you want to approve the selected checker items?'
+                : confirmAction === 'reject'
+                  ? 'Are you sure you want to reject the selected checker items?'
+                  : 'Are you sure you want to delete the selected checker items?'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={confirmAction === 'delete' ? 'destructive' : 'default'}
+              disabled={pending}
+              onClick={() => confirmAction && runBulkAction(confirmAction)}
+            >
+              {confirmAction === 'approve'
+                ? 'Approve'
+                : confirmAction === 'reject'
+                  ? 'Reject'
+                  : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -9,13 +9,17 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError } from '@mifos/validation';
+import {
+  toFineractActionError,
+  actionSuccessFromFineractCommand,
+  type FineractCommandActionMeta
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { deleteClientById } from '@/lib/fineract/client-commands';
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientCommandActionResult =
-  | { ok: true }
+  | ({ ok: true } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 async function requirePermission(
@@ -46,9 +50,9 @@ export async function deleteClientAction(
   }
 
   try {
-    await deleteClientById(clientId);
+    const response = await deleteClientById(clientId);
     revalidatePath('/clients');
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete customer.');
   }

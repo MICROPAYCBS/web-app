@@ -11,6 +11,7 @@
 import type { FineractSchedulerJob } from '@mifos/api-client';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { executeSchedulerJobsAction } from '@/actions/jobs';
 import { Button } from '@/components/ui/button';
@@ -54,10 +55,11 @@ export function RunJobsDialog({
         selectedJobs.map((job) => ({ jobId: job.jobId }))
       );
       if (!result.ok) {
+
         toast.error(result.message);
         return;
       }
-      toast.success('Selected jobs started.');
+      toastCommandOutcome(result, { completed: 'Selected jobs started.', pending: 'Selected jobs started sent for approval.' });
       onOpenChange(false);
       router.refresh();
     });

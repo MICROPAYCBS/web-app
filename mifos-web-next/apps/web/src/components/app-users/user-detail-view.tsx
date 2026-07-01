@@ -14,6 +14,7 @@ import { KeyRound, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { deleteUserAction } from '@/actions/app-users';
 import { ChangePasswordDialog } from '@/components/app-users/change-password-dialog';
@@ -63,7 +64,10 @@ export function UserDetailView({
         toast.error(result.message);
         return;
       }
-      toast.success('User deleted.');
+      toastCommandOutcome(result, {
+        completed: 'User deleted.',
+        pending: 'User deletion sent for approval.'
+      });
       setDeleteOpen(false);
       router.push('/appusers');
       router.refresh();

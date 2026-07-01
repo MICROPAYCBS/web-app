@@ -14,7 +14,8 @@ import {
   validateCreateAccountNumberPreference,
   validateUpdateAccountNumberPreference,
   type CreateAccountNumberPreferenceInput,
-  type UpdateAccountNumberPreferenceInput
+  type UpdateAccountNumberPreferenceInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -74,7 +75,7 @@ export async function createAccountNumberPreferenceAction(
   try {
     const response = await createAccountNumberPreference(parsed.data);
     revalidatePreferenceViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create account number preference.');
   }
@@ -105,9 +106,9 @@ export async function updateAccountNumberPreferenceAction(
   }
 
   try {
-    await updateAccountNumberPreference(preferenceId, parsed.data);
+    const response = await updateAccountNumberPreference(preferenceId, parsed.data);
     revalidatePreferenceViews(preferenceId);
-    return { ok: true, resourceId: preferenceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: preferenceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update account number preference.');
   }
@@ -128,9 +129,9 @@ export async function deleteAccountNumberPreferenceAction(
   }
 
   try {
-    await deleteAccountNumberPreference(preferenceId);
+    const response = await deleteAccountNumberPreference(preferenceId);
     revalidatePreferenceViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete account number preference.');
   }

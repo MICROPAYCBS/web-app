@@ -15,7 +15,9 @@ import {
   validateCreateGroup,
   validateUpdateGroup,
   type CreateGroupInput,
-  type UpdateGroupInput
+  type UpdateGroupInput,
+  actionSuccessFromFineractCommand,
+  type FineractCommandActionMeta
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -34,7 +36,7 @@ import {
 import { getServerSession } from '@/lib/session/server';
 
 export type GroupActionResult =
-  | { ok: true; groupId?: number }
+  | ({ ok: true; groupId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export type GroupDataResult<T> = { ok: true; data: T } | { ok: false; message: string };
@@ -124,7 +126,7 @@ export async function createGroupAction(
     if (groupId != null) {
       revalidatePath(groupDetailPath(groupId));
     }
-    return { ok: true, groupId: groupId ?? undefined };
+    return actionSuccessFromFineractCommand(response, { groupId: groupId ?? undefined });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create group.');
   }
@@ -154,11 +156,11 @@ export async function updateGroupAction(
   }
 
   try {
-    await updateGroup(groupId, parsed.data);
+    const response = await updateGroup(groupId, parsed.data);
     revalidatePath(GROUPS_LIST_PATH);
     revalidatePath(groupDetailPath(groupId));
     revalidatePath(groupGeneralPath(groupId));
-    return { ok: true, groupId: Number(groupId) };
+    return actionSuccessFromFineractCommand(response, { groupId: Number(groupId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update group.');
   }

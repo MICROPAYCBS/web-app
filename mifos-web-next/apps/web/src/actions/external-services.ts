@@ -14,7 +14,8 @@ import {
   validateUpdateNotificationExternalService,
   validateUpdateS3ExternalService,
   validateUpdateSmsExternalService,
-  validateUpdateSmtpExternalService
+  validateUpdateSmtpExternalService,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -44,6 +45,7 @@ export async function updateExternalServiceAction(
   const apiName = externalServiceApiName(slug);
 
   try {
+    let response: unknown;
     switch (apiName) {
       case 'S3': {
         const parsed = validateUpdateS3ExternalService(input);
@@ -53,7 +55,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid S3 configuration.'
           };
         }
-        await updateExternalServiceConfiguration(apiName, parsed.data);
+        response = await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       case 'SMTP': {
@@ -64,7 +66,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid email configuration.'
           };
         }
-        await updateExternalServiceConfiguration(apiName, parsed.data);
+        response = await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       case 'SMS': {
@@ -75,7 +77,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid SMS configuration.'
           };
         }
-        await updateExternalServiceConfiguration(apiName, parsed.data);
+        response = await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       case 'NOTIFICATION': {
@@ -86,7 +88,7 @@ export async function updateExternalServiceAction(
             message: parsed.error.issues[0]?.message ?? 'Invalid notification configuration.'
           };
         }
-        await updateExternalServiceConfiguration(apiName, parsed.data);
+        response = await updateExternalServiceConfiguration(apiName, parsed.data);
         break;
       }
       default:
@@ -94,7 +96,7 @@ export async function updateExternalServiceAction(
     }
 
     revalidateExternalServicePaths();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update external service configuration.');
   }

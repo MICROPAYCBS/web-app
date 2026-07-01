@@ -10,6 +10,7 @@
 
 import { formatActionErrorMessage, validateChangeUserPassword } from '@mifos/validation';
 import { useEffect, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { changeUserPasswordAction } from '@/actions/app-users';
 import { PasswordPolicyChecklist } from '@/components/composites/password-policy-checklist';
@@ -94,13 +95,14 @@ export function ChangePasswordDialog({
     startTransition(async () => {
       const result = await changeUserPasswordAction(userId, parsed.data);
       if (!result.ok) {
+
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         return;
       }
-      toast.success('Password updated.');
+      toastCommandOutcome(result, { completed: 'Password updated.', pending: 'Password updated sent for approval.' });
       onOpenChange(false);
     });
   }

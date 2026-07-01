@@ -14,7 +14,8 @@ import {
   validateToggleGlAccountDisabled,
   validateUpsertGlAccountForm,
   type ToggleGlAccountDisabledInput,
-  type UpsertGlAccountFormInput
+  type UpsertGlAccountFormInput,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -76,7 +77,7 @@ export async function createGlAccountAction(
   try {
     const response = await createGlAccount(parsed.data);
     revalidateGlAccountViews(response.resourceId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to create GL account.');
   }
@@ -109,7 +110,7 @@ export async function updateGlAccountAction(
   try {
     const response = await updateGlAccount(glAccountId, parsed.data);
     revalidateGlAccountViews(glAccountId);
-    return { ok: true, resourceId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update GL account.');
   }
@@ -138,7 +139,7 @@ export async function toggleGlAccountDisabledAction(
   try {
     const response = await toggleGlAccountDisabled(glAccountId, parsed.data);
     revalidateGlAccountViews(glAccountId);
-    return { ok: true, resourceId: glAccountId, disabled: response.changes.disabled };
+    return actionSuccessFromFineractCommand(response, { resourceId: glAccountId, disabled: response.changes.disabled });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update GL account status.');
   }
@@ -157,9 +158,9 @@ export async function deleteGlAccountAction(glAccountId: number): Promise<GlAcco
   }
 
   try {
-    await deleteGlAccount(glAccountId);
+    const response = await deleteGlAccount(glAccountId);
     revalidateGlAccountViews();
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete GL account.');
   }

@@ -18,6 +18,7 @@ import type { FineractOfficeOption } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   loadBulkLoanReassignmentOfficeTemplateAction,
@@ -187,9 +188,11 @@ export function BulkLoanReassignmentPageContent({
     startOfficeTransition(async () => {
       const result = await loadBulkLoanReassignmentOfficeTemplateAction(officeId);
       if (!result.ok) {
+
         toast.error(result.message);
         return;
       }
+      toastCommandOutcome(result, { completed: 'Loans reassigned.', pending: 'Loans reassigned sent for approval.' });
       setFromLoanOfficers(result.data.loanOfficerOptions);
     });
   }
@@ -265,8 +268,6 @@ export function BulkLoanReassignmentPageContent({
         }
         return;
       }
-
-      toast.success('Loans reassigned.');
       setForm(defaultFormState());
       setFromLoanOfficers([]);
       setAccountSummary(null);

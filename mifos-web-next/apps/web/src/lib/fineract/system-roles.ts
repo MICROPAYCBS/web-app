@@ -125,22 +125,22 @@ export async function updateRole(
 export async function updateRolePermissions(
   roleId: number,
   input: UpdateRolePermissionsInput
-): Promise<void> {
+): Promise<FineractRoleMutationResponse> {
   const fineract = await createFineractClient();
-  await fineract.put(`${ROLES_PATH}/${roleId}/permissions`, input);
+  return fineract.put<FineractRoleMutationResponse>(`${ROLES_PATH}/${roleId}/permissions`, input);
 }
 
-export async function deleteRole(roleId: number): Promise<void> {
+export async function deleteRole(roleId: number): Promise<FineractRoleMutationResponse> {
   const fineract = await createFineractClient();
-  await fineract.delete(`${ROLES_PATH}/${roleId}`);
+  return fineract.delete<FineractRoleMutationResponse>(`${ROLES_PATH}/${roleId}`);
 }
 
-export async function enableRole(roleId: number): Promise<void> {
+export async function enableRole(roleId: number): Promise<FineractRoleMutationResponse> {
   const fineract = await createFineractClient();
-  await fineract.post(`${ROLES_PATH}/${roleId}?command=enable`, {});
+  return fineract.post<FineractRoleMutationResponse>(`${ROLES_PATH}/${roleId}?command=enable`, {});
 }
 
-export async function disableRole(roleId: number): Promise<void> {
+export async function disableRole(roleId: number): Promise<FineractRoleMutationResponse> {
   const fineract = await createFineractClient();
-  await fineract.post(`${ROLES_PATH}/${roleId}?command=disable`, {});
+  return fineract.post<FineractRoleMutationResponse>(`${ROLES_PATH}/${roleId}?command=disable`, {});
 }

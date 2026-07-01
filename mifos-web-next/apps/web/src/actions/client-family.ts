@@ -9,7 +9,12 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
-import { familyMemberSchema, toFineractActionError, type FamilyMemberInput } from '@mifos/validation';
+import {
+  familyMemberSchema,
+  toFineractActionError,
+  type FamilyMemberInput,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
   createClientFamilyMember,
@@ -73,9 +78,9 @@ export async function createClientFamilyMemberAction(
   }
 
   try {
-    await createClientFamilyMember(clientId, parsed);
+    const response = await createClientFamilyMember(clientId, parsed);
     revalidatePath(`/clients/${clientId}/family-members`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return mapError(err);
   }
@@ -97,9 +102,9 @@ export async function updateClientFamilyMemberAction(
   }
 
   try {
-    await updateClientFamilyMember(clientId, familyMemberId, parsed);
+    const response = await updateClientFamilyMember(clientId, familyMemberId, parsed);
     revalidatePath(`/clients/${clientId}/family-members`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return mapError(err);
   }
@@ -115,9 +120,9 @@ export async function deleteClientFamilyMemberAction(
   }
 
   try {
-    await deleteClientFamilyMember(clientId, familyMemberId);
+    const response = await deleteClientFamilyMember(clientId, familyMemberId);
     revalidatePath(`/clients/${clientId}/family-members`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return mapError(err);
   }

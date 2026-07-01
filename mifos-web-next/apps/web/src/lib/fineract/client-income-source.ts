@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import type { FineractClientIncomeSource, FineractIncomeSourceOptions } from '@mifos/api-client';
+import type { FineractClientIncomeSource, FineractIncomeSourceOptions, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { IncomeSourceInput } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
@@ -67,15 +67,15 @@ export async function updateClientIncomeSource(
   clientId: string | number,
   incomeSourceId: number,
   input: IncomeSourceInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(`/clients/${clientId}/incomesources/${incomeSourceId}`, toIncomeSourceBody(input));
+  return fineract.put<FineractCommandProcessingResult>(`/clients/${clientId}/incomesources/${incomeSourceId}`, toIncomeSourceBody(input));
 }
 
 export async function deleteClientIncomeSource(
   clientId: string | number,
   incomeSourceId: number
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.delete(`/clients/${clientId}/incomesources/${incomeSourceId}`);
+  return fineract.delete<FineractCommandProcessingResult>(`/clients/${clientId}/incomesources/${incomeSourceId}`);
 }

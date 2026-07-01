@@ -9,13 +9,17 @@
  */
 
 import { assertCan } from '@mifos/auth';
-import { toFineractActionError } from '@mifos/validation';
+import {
+  toFineractActionError,
+  actionSuccessFromFineractCommand,
+  type FineractCommandActionMeta
+} from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { deleteClientDocument } from '@/lib/fineract/client-documents';
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientSignatureActionResult =
-  | { ok: true }
+  | ({ ok: true } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export async function deleteClientSignatureAction(
@@ -33,10 +37,10 @@ export async function deleteClientSignatureAction(
   }
 
   try {
-    await deleteClientDocument(clientId, documentId);
+    const response = await deleteClientDocument(clientId, documentId);
     revalidatePath(`/clients/${clientId}`, 'layout');
     revalidatePath(`/clients/${clientId}/documents`);
-    return { ok: true };
+    return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete signature.');
   }

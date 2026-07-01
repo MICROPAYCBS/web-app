@@ -10,7 +10,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import {
   ClientSignatureDeleteDialog,
   ClientSignatureUploadDialog
@@ -237,7 +236,6 @@ export function ClientSignatureView({
           }
         }}
         onSuccess={() => {
-          toast.success('Signature uploaded.');
           refreshClient();
         }}
       />
@@ -251,7 +249,6 @@ export function ClientSignatureView({
           }
         }}
         onSuccess={() => {
-          toast.success('Signature saved.');
           refreshClient();
         }}
       />
@@ -267,7 +264,6 @@ export function ClientSignatureView({
             }
           }}
           onSuccess={() => {
-            toast.success('Signature deleted.');
             refreshClient();
           }}
         />

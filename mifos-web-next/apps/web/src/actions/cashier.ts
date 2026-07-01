@@ -15,7 +15,8 @@ import {
   validateAllocateCashierCash,
   validateAssignCashier,
   validateSettleCashierCash,
-  validateUpdateCashier
+  validateUpdateCashier,
+  actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import {
@@ -107,7 +108,7 @@ export async function assignCashierAction(
   try {
     const response = await createOrganizationCashier(tellerId, parsed.data);
     revalidateCashierViews(tellerId, response.resourceId);
-    return { ok: true, cashierId: response.resourceId };
+    return actionSuccessFromFineractCommand(response, { cashierId: response.resourceId });
   } catch (error) {
     return toFineractActionError(error, 'Failed to assign cashier.');
   }
@@ -137,7 +138,7 @@ export async function updateCashierAction(
   try {
     const response = await updateOrganizationCashier(tellerId, cashierId, parsed.data);
     revalidateCashierViews(tellerId, cashierId);
-    return { ok: true, cashierId: response.resourceId ?? Number(cashierId) };
+    return actionSuccessFromFineractCommand(response, { cashierId: response.resourceId ?? Number(cashierId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to update cashier assignment.');
   }
@@ -155,9 +156,9 @@ export async function deleteCashierAction(
   }
 
   try {
-    await deleteOrganizationCashier(tellerId, cashierId);
+    const response = await deleteOrganizationCashier(tellerId, cashierId);
     revalidateCashierViews(tellerId);
-    return { ok: true, cashierId: Number(cashierId) };
+    return actionSuccessFromFineractCommand(response, { cashierId: Number(cashierId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to remove cashier assignment.');
   }
@@ -185,9 +186,9 @@ export async function allocateCashierCashAction(
   }
 
   try {
-    await allocateCashToCashier(tellerId, cashierId, parsed.data);
+    const response = await allocateCashToCashier(tellerId, cashierId, parsed.data);
     revalidateCashierViews(tellerId, cashierId);
-    return { ok: true, cashierId: Number(cashierId) };
+    return actionSuccessFromFineractCommand(response, { cashierId: Number(cashierId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to allocate cash.');
   }
@@ -215,9 +216,9 @@ export async function settleCashierCashAction(
   }
 
   try {
-    await settleCashFromCashier(tellerId, cashierId, parsed.data);
+    const response = await settleCashFromCashier(tellerId, cashierId, parsed.data);
     revalidateCashierViews(tellerId, cashierId);
-    return { ok: true, cashierId: Number(cashierId) };
+    return actionSuccessFromFineractCommand(response, { cashierId: Number(cashierId) });
   } catch (error) {
     return toFineractActionError(error, 'Failed to settle cash.');
   }

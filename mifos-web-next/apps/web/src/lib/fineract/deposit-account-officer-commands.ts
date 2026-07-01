@@ -8,7 +8,7 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ClientDepositAccountKind, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { ClientDepositAccountKind, FineractSavingsAccountDetail, FineractCommandProcessingResult } from '@mifos/api-client';
 import { CLIENT_DEPOSIT_ACCOUNT_CONFIG } from '@/lib/fineract/client-deposit-account-config';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { normalizeDepositAccountDetail } from '@/lib/fineract/savings-accounts';
@@ -30,8 +30,8 @@ export async function executeDepositAccountFieldOfficerCommand(
   accountId: string | number,
   command: 'assignSavingsOfficer' | 'unassignSavingsOfficer',
   body: Record<string, unknown>
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
   const apiPath = CLIENT_DEPOSIT_ACCOUNT_CONFIG[kind].apiPath;
-  await fineract.post(`/${apiPath}/${accountId}`, body, { command });
+  return fineract.post<FineractCommandProcessingResult>(`/${apiPath}/${accountId}`, body, { command });
 }

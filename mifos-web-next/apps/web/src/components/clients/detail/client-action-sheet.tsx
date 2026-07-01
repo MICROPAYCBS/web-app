@@ -18,7 +18,8 @@ import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import type { ClientActionSheetData, ClientActionSheetId } from '@/lib/clients/client-action-types';
-import { CLIENT_ACTION_SHEET_TITLES } from '@/lib/clients/client-actions-menu-config';
+import { CLIENT_ACTION_SHEET_OUTCOME_MESSAGES, CLIENT_ACTION_SHEET_TITLES } from '@/lib/clients/client-actions-menu-config';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 type FormState = {
@@ -191,6 +192,8 @@ export function ClientActionSheet({
         }
         return;
       }
+      const messages = CLIENT_ACTION_SHEET_OUTCOME_MESSAGES[sheetId];
+      toastCommandOutcome(result, messages);
       handleOpenChange(false);
       onSuccess();
     });

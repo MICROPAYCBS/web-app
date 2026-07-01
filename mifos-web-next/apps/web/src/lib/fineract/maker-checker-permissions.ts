@@ -8,7 +8,7 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractRolePermissionUsage } from '@mifos/api-client';
+import type { FineractRolePermissionUsage, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { UpdateMakerCheckerPermissionsInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
@@ -64,9 +64,9 @@ export async function listMakerCheckerPermissions(): Promise<FineractRolePermiss
 
 export async function updateMakerCheckerPermissions(
   input: UpdateMakerCheckerPermissionsInput
-): Promise<void> {
+): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
-  await fineract.put(PERMISSIONS_PATH, input, {
+  return fineract.put<FineractCommandProcessingResult>(PERMISSIONS_PATH, input, {
     makerCheckerable: 'true'
   });
 }
