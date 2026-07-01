@@ -11,7 +11,6 @@
 import type { CheckerInboxListItem } from '@mifos/api-client';
 import {
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   useReactTable,
   type ColumnDef,
@@ -21,34 +20,52 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
+import { CheckerInboxTableFilters } from '@/components/tasks/checker-inbox-table-filters';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  applyCheckerInboxClientFilters,
+  buildCheckerInboxClientFilterOptions,
+  countActiveCheckerInboxClientFilters,
+  type CheckerInboxClientFilters
+} from '@/lib/checker-inbox/client-filters';
 import { formatAuditTrailDateTime } from '@/lib/fineract/audit-trail-display';
 import { checkerInboxDetailPath } from '@/lib/fineract/checker-inbox-paths';
 
 export function CheckerInboxTable({
   items,
-  userFilter,
   onSelectedItemsChange
 }: {
   items: CheckerInboxListItem[];
-  userFilter: string;
   onSelectedItemsChange?: (items: CheckerInboxListItem[]) => void;
 }) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
+  const [filters, setFilters] = useState<CheckerInboxClientFilters>({});
+
+  const filterOptions = useMemo(() => buildCheckerInboxClientFilterOptions(items), [items]);
+  const filteredItems = useMemo(
+    () => applyCheckerInboxClientFilters(items, filters),
+    [items, filters]
+  );
+  const activeFilterCount = countActiveCheckerInboxClientFilters(filters);
 
   const selectedItems = useMemo(
     () =>
       Object.entries(rowSelection)
         .filter(([, selected]) => selected)
-        .map(([id]) => items.find((item) => String(item.id) === id))
+        .map(([id]) => filteredItems.find((item) => String(item.id) === id))
         .filter((item): item is CheckerInboxListItem => item != null),
-    [items, rowSelection]
+    [filteredItems, rowSelection]
   );
 
   useEffect(() => {
     onSelectedItemsChange?.(selectedItems);
   }, [onSelectedItemsChange, selectedItems]);
+
+  useEffect(() => {
+    setRowSelection({});
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }, [filters]);
 
   const columns = useMemo<ColumnDef<CheckerInboxListItem>[]>(
     () => [
@@ -114,36 +131,41 @@ export function CheckerInboxTable({
   );
 
   const table = useReactTable({
-    data: items,
+    data: filteredItems,
     columns,
     state: {
       rowSelection,
-      pagination,
-      globalFilter: userFilter
+      pagination
     },
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
     getRowId: (row) => String(row.id),
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const needle = String(filterValue).trim().toLowerCase();
-      if (!needle) {
-        return true;
-      }
-      return (row.original.maker ?? '').toLowerCase().includes(needle);
-    }
+    getPaginationRowModel: getPaginationRowModel()
   });
 
   return (
     <div className="space-y-4">
+      <CheckerInboxTableFilters
+        options={filterOptions}
+        filters={filters}
+        onChange={setFilters}
+        onClear={() => setFilters({})}
+      />
       <DataTable
         table={table}
-        emptyMessage="No checker inbox data available"
-        emptyDescription="There are no pending maker-checker items for this account or search."
+        emptyMessage={
+          activeFilterCount > 0
+            ? 'No items match the current filters'
+            : 'No checker inbox data available'
+        }
+        emptyDescription={
+          activeFilterCount > 0
+            ? 'Try clearing or adjusting the filters above.'
+            : 'There are no pending maker-checker items for this account.'
+        }
       />
-      <DataTablePagination table={table} totalRecords={table.getFilteredRowModel().rows.length} />
+      <DataTablePagination table={table} totalRecords={filteredItems.length} />
     </div>
   );
 }

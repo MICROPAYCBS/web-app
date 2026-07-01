@@ -9,35 +9,16 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { CheckerInboxPageContent } from '@/components/tasks/checker-inbox-page-content';
-import { getCheckerInboxSearchTemplate, listCheckerInboxItems } from '@/lib/fineract/checker-inbox';
-import { parseCheckerInboxSearchFilters } from '@/lib/fineract/checker-inbox-query';
+import { listCheckerInboxItems } from '@/lib/fineract/checker-inbox';
 import { getServerSession } from '@/lib/session/server';
 
-export default async function CheckerInboxPage({
-  searchParams
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function CheckerInboxPage() {
   const session = await getServerSession();
   if (!can(session, resolvePermission('checkerInbox'))) {
     notFound();
   }
 
-  const params = await searchParams;
-  const filters = parseCheckerInboxSearchFilters(params);
-  const hasActiveSearch = Object.values(filters).some((value) => Boolean(value));
+  const items = await listCheckerInboxItems();
 
-  const [items, template] = await Promise.all([
-    listCheckerInboxItems(filters),
-    getCheckerInboxSearchTemplate()
-  ]);
-
-  return (
-    <CheckerInboxPageContent
-      items={items}
-      filters={filters}
-      template={template}
-      hasActiveSearch={hasActiveSearch}
-    />
-  );
+  return <CheckerInboxPageContent items={items} />;
 }

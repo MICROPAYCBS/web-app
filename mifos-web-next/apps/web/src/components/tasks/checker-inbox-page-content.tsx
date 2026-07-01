@@ -8,10 +8,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CheckerInboxListItem, CheckerInboxSearchTemplate } from '@mifos/api-client';
+import type { CheckerInboxListItem } from '@mifos/api-client';
 import { Check, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { toastFineractError } from '@/lib/toast-fineract-error';
 import {
@@ -19,9 +19,6 @@ import {
   bulkExecuteCheckerInboxActionAction
 } from '@/actions/checker-inbox';
 import { ListPage } from '@/components/composites/list-page';
-import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
-import { TextField } from '@/components/composites/text-field';
-import { CheckerInboxFilterSheet } from '@/components/tasks/checker-inbox-filter-sheet';
 import { CheckerInboxTable } from '@/components/tasks/checker-inbox-table';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,48 +29,17 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import {
-  buildCheckerInboxListUrl,
-  countActiveCheckerInboxFilters,
-  type CheckerInboxSearchFilters
-} from '@/lib/fineract/checker-inbox-query';
 import { notifyCheckerInboxPendingChanged } from '@/lib/checker-inbox/pending-count';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
 
-export function CheckerInboxPageContent({
-  items,
-  filters,
-  template,
-  hasActiveSearch
-}: {
-  items: CheckerInboxListItem[];
-  filters: CheckerInboxSearchFilters;
-  template: CheckerInboxSearchTemplate;
-  hasActiveSearch: boolean;
-}) {
+export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [userFilter, setUserFilter] = useState('');
   const [selectedItems, setSelectedItems] = useState<CheckerInboxListItem[]>([]);
   const [selectionEpoch, setSelectionEpoch] = useState(0);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
-  const activeFilterCount = countActiveCheckerInboxFilters(filters);
   const hasSelection = selectedItems.length > 0;
-
-  const navigate = useCallback(
-    (nextFilters: CheckerInboxSearchFilters) => {
-      startTransition(() => {
-        router.push(buildCheckerInboxListUrl(nextFilters));
-      });
-    },
-    [router]
-  );
-
-  function handleClearFilters() {
-    navigate({});
-  }
 
   function runBulkAction(action: ConfirmAction) {
     const ids = selectedItems.map((item) => item.id);
@@ -100,9 +66,6 @@ export function CheckerInboxPageContent({
       router.refresh();
     });
   }
-
-  const showEmptySearch = hasActiveSearch && items.length === 0;
-  const showEmptyAccount = !hasActiveSearch && items.length === 0;
 
   return (
     <>
@@ -139,57 +102,19 @@ export function CheckerInboxPageContent({
             </Button>
           </>
         }
-        toolbar={
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[220px] flex-1">
-              <TextField
-                id="checker-inbox-user-filter"
-                label="Search by user"
-                value={userFilter}
-                onChange={(value) => setUserFilter(value)}
-                disabled={pending}
-              />
-            </div>
-            <ListFilterTrigger
-              activeCount={activeFilterCount}
-              onClick={() => setFilterOpen(true)}
-              disabled={pending}
-            />
-          </div>
-        }
       >
-        {showEmptySearch ? (
-          <p className="text-sm text-muted-foreground">
-            No checker inbox data available for this search.
-          </p>
-        ) : null}
-
-        {showEmptyAccount ? (
+        {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No checker inbox data available for this account.
           </p>
-        ) : null}
-
-        {items.length > 0 ? (
+        ) : (
           <CheckerInboxTable
             key={selectionEpoch}
             items={items}
-            userFilter={userFilter}
             onSelectedItemsChange={setSelectedItems}
           />
-        ) : null}
+        )}
       </ListPage>
-
-      <CheckerInboxFilterSheet
-        open={filterOpen}
-        onOpenChange={setFilterOpen}
-        template={template}
-        filters={filters}
-        onApply={navigate}
-        onClear={handleClearFilters}
-        disabled={pending}
-        pending={pending}
-      />
 
       <Dialog
         open={confirmAction != null}
