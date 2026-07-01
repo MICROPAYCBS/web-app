@@ -9,6 +9,8 @@
 export interface FineractReportAllowedParameter {
   id: number;
   parameterName: string;
+  parameterLabel?: string;
+  displayLabel?: string;
 }
 
 export interface FineractReportParameter {
@@ -16,6 +18,8 @@ export interface FineractReportParameter {
   parameterId: number;
   parameterName?: string;
   reportParameterName?: string;
+  parameterLabel?: string;
+  displayLabel?: string;
 }
 
 export interface FineractReportListItem {

@@ -13,7 +13,8 @@ import {
   inferReportParameterPresentation,
   isReportParameterDate,
   isReportParameterSelect,
-  reportEngineParameterName
+  reportEngineParameterName,
+  resolveReportParameterDisplayLabel
 } from './report-parameters';
 
 describe('reportEngineParameterName', () => {
@@ -61,5 +62,71 @@ describe('isReportParameterDate', () => {
   it('detects date parameters by name', () => {
     assert.equal(isReportParameterDate({ parameterName: 'endDateSelect' }), true);
     assert.equal(isReportParameterDate({ parameterName: 'officeIdSelectOne' }), false);
+  });
+});
+
+describe('resolveReportParameterDisplayLabel', () => {
+  it('maps catalog parameter names to professional labels', () => {
+    assert.equal(resolveReportParameterDisplayLabel({ parameterName: 'endDateSelect' }), 'End Date');
+    assert.equal(resolveReportParameterDisplayLabel({ parameterName: 'OfficeIdSelectOne' }), 'Branch');
+    assert.equal(resolveReportParameterDisplayLabel({ parameterName: 'currencyIdSelectAll' }), 'Currency');
+  });
+
+  it('normalizes legacy Office label to Branch for office parameters', () => {
+    assert.equal(
+      resolveReportParameterDisplayLabel({
+        parameterName: 'OfficeIdSelectOne',
+        parameterLabel: 'Office'
+      }),
+      'Branch'
+    );
+  });
+
+  it('uses stretchy parameter label instead of report SQL variable name', () => {
+    assert.equal(
+      resolveReportParameterDisplayLabel({
+        parameterName: 'OfficeIdSelectOne',
+        reportParameterName: 'branch',
+        parameterLabel: 'Branch'
+      }),
+      'Branch'
+    );
+    assert.equal(
+      resolveReportParameterDisplayLabel({
+        parameterName: 'currencyIdSelectAll',
+        reportParameterName: 'currencyId',
+        parameterLabel: 'Currency'
+      }),
+      'Currency'
+    );
+    assert.equal(
+      resolveReportParameterDisplayLabel({
+        parameterName: 'asOnDate',
+        reportParameterName: 'date',
+        parameterLabel: 'As On Date'
+      }),
+      'As On Date'
+    );
+  });
+
+  it('ignores internal displayLabel values from legacy APIs', () => {
+    assert.equal(
+      resolveReportParameterDisplayLabel({
+        parameterName: 'OfficeIdSelectOne',
+        displayLabel: 'branch',
+        parameterLabel: 'Branch'
+      }),
+      'Branch'
+    );
+  });
+
+  it('formats camelCase fallback labels from metadata', () => {
+    assert.equal(
+      resolveReportParameterDisplayLabel({
+        parameterName: 'endDateSelect',
+        parameterLabel: 'endDate'
+      }),
+      'End Date'
+    );
   });
 });

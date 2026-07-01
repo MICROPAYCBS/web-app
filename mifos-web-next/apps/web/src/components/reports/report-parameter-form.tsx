@@ -9,7 +9,7 @@
  */
 
 import type { FineractReportRunParameter } from '@mifos/api-client';
-import { isReportParameterDate, isReportParameterSelect } from '@mifos/domain';
+import { isReportParameterDate, isReportParameterSelect, resolveReportParameterDisplayLabel } from '@mifos/domain';
 import { useMemo, useState } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { ReportParameterSelect } from '@/components/reports/report-parameter-select';
@@ -85,7 +85,7 @@ export function ReportParameterForm({
 
     for (const parameter of parameters) {
       const fieldName = parameter.parameterVariable || parameter.parameterName;
-      const label = parameter.parameterLabel || parameter.parameterName;
+      const label = resolveReportParameterDisplayLabel(parameter);
       const raw = values[fieldName];
       const isDate = isReportParameterDate(parameter);
       const isCheckbox = parameter.parameterType === 'checkbox';
@@ -131,7 +131,7 @@ export function ReportParameterForm({
     <form id={formId} className="space-y-4" onSubmit={handleSubmit}>
       {parameters.map((parameter) => {
         const fieldName = parameter.parameterVariable || parameter.parameterName;
-        const label = parameter.parameterLabel || parameter.parameterName;
+        const label = resolveReportParameterDisplayLabel(parameter);
         const isSelect = isReportParameterSelect(parameter);
         const isDate = isReportParameterDate(parameter);
         const isCheckbox = parameter.parameterType === 'checkbox';

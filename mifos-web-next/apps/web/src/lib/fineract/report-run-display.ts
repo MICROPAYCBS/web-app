@@ -13,7 +13,7 @@ import type {
   FineractReportRunParameterMetadata,
   FineractReportRunResult
 } from '@mifos/api-client';
-import { inferReportParameterPresentation, reportEngineParameterName } from '@mifos/domain';
+import { inferReportParameterPresentation, reportEngineParameterName, resolveReportParameterDisplayLabel } from '@mifos/domain';
 import { parseFineractDateString } from '@/lib/fineract/dates';
 import { fineractDateToIso } from '@/lib/fineract/date-input';
 
@@ -112,9 +112,12 @@ export function parseReportParameterMetadata(
 
     const selectOneRaw = readMetadataField(row, ['selectOne']);
     const selectAllRaw = readMetadataField(row, ['selectAll']);
-    const parameterLabel = String(
-      readMetadataField(row, ['parameter_label', 'parameterLabel', 'label']) ?? parameterName
-    );
+    const parameterLabel = resolveReportParameterDisplayLabel({
+      parameterName,
+      parameterLabel: String(
+        readMetadataField(row, ['parameter_label', 'parameterLabel', 'label']) ?? ''
+      )
+    });
     const parameterVariable = String(
       readMetadataField(row, ['parameter_variable', 'parameterVariable', 'variable']) ??
         parameterName
@@ -174,7 +177,12 @@ export function mergeReportRunParameters(
       return {
         ...enrichReportParameterMetadata({
           parameterName,
-          parameterLabel: parameterName,
+          parameterLabel: resolveReportParameterDisplayLabel({
+            parameterName,
+            parameterLabel: parameter.parameterLabel,
+            displayLabel: parameter.displayLabel,
+            reportParameterName: parameter.reportParameterName
+          }),
           parameterVariable:
             reportEngineParameterName(parameterName, parameter.reportParameterName) ?? parameterName
         }),
@@ -194,7 +202,12 @@ export function mergeReportRunParameters(
       ...enrichReportParameterMetadata({
         ...meta,
         parameterName: meta.parameterName,
-        parameterLabel: meta.parameterLabel || reportParam?.parameterName || meta.parameterName,
+        parameterLabel: resolveReportParameterDisplayLabel({
+          parameterName: meta.parameterName,
+          parameterLabel: meta.parameterLabel,
+          displayLabel: reportParam?.displayLabel,
+          reportParameterName: reportParam?.reportParameterName
+        }),
         parameterVariable:
           meta.parameterVariable ||
           (catalogName

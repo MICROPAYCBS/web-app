@@ -11,8 +11,11 @@ export {
   inferReportParameterPresentation,
   isReportParameterDate,
   isReportParameterSelect,
+  REPORT_PARAMETER_DISPLAY_LABELS,
   reportEngineParameterName,
+  resolveReportParameterDisplayLabel,
   STRETCHY_PARAMETER_VARIABLES,
+  type ReportParameterLabelInput,
   type ReportParameterPresentationHints,
   type StretchyParameterName
 } from './report-parameters';

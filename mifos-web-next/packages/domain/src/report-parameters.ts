@@ -45,8 +45,126 @@ export const STRETCHY_PARAMETER_VARIABLES = {
 
 export type StretchyParameterName = keyof typeof STRETCHY_PARAMETER_VARIABLES;
 
+/** User-facing labels for standard Fineract stretchy parameters (Micropay uses Branch, not Office). */
+export const REPORT_PARAMETER_DISPLAY_LABELS: Record<string, string> = {
+  startDateSelect: 'Start Date',
+  endDateSelect: 'End Date',
+  obligDateTypeSelect: 'Obligation Date Type',
+  OfficeIdSelectOne: 'Branch',
+  loanOfficerIdSelectAll: 'Loan Officer',
+  currencyIdSelectAll: 'Currency',
+  fundIdSelectAll: 'Fund',
+  loanProductIdSelectAll: 'Product',
+  loanPurposeIdSelectAll: 'Loan Purpose',
+  parTypeSelect: 'PAR Type',
+  selectAccount: 'Account Number',
+  savingsProductIdSelectAll: 'Savings Product',
+  transactionId: 'Transaction ID',
+  selectCenterId: 'Center',
+  SelectGLAccountNO: 'GL Account Number',
+  asOnDate: 'As On Date',
+  SavingsAccountSubStatus: 'Savings Account Status',
+  cycleXSelect: 'Cycle X Number',
+  cycleYSelect: 'Cycle Y Number',
+  fromXSelect: 'From X Number',
+  toYSelect: 'To Y Number',
+  overdueXSelect: 'Overdue X Number',
+  overdueYSelect: 'Overdue Y Number',
+  DefaultLoan: 'Loan',
+  DefaultClient: 'Client',
+  DefaultGroup: 'Group',
+  SelectLoanType: 'Loan Type',
+  DefaultSavings: 'Savings',
+  DefaultSavingsTransactionId: 'Savings Transaction'
+};
+
+export type ReportParameterLabelInput = {
+  parameterName?: string;
+  parameterLabel?: string;
+  displayLabel?: string;
+  reportParameterName?: string;
+};
+
 export function catalogReportParameterVariable(parameterName: string): string | undefined {
-  return STRETCHY_PARAMETER_VARIABLES[parameterName as StretchyParameterName];
+  const trimmed = parameterName.trim();
+  const direct = STRETCHY_PARAMETER_VARIABLES[trimmed as StretchyParameterName];
+  if (direct) {
+    return direct;
+  }
+  const match = Object.entries(STRETCHY_PARAMETER_VARIABLES).find(
+    ([name]) => name.toLowerCase() === trimmed.toLowerCase()
+  );
+  return match?.[1];
+}
+
+function looksLikeInternalLabel(label: string): boolean {
+  const trimmed = label.trim();
+  if (!trimmed) {
+    return true;
+  }
+  if (trimmed in REPORT_PARAMETER_DISPLAY_LABELS) {
+    return true;
+  }
+  if (/select(one|all)$/i.test(trimmed)) {
+    return true;
+  }
+  // Report SQL binding names (branch, date, currencyId) and stretchy catalog names.
+  if (/^[a-z][a-zA-Z0-9]*$/.test(trimmed)) {
+    return true;
+  }
+  return false;
+}
+
+function formatReportParameterName(parameterName: string): string {
+  const normalized = parameterName
+    .replace(/Select(One|All)$/i, '')
+    .replace(/Id$/i, '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .trim();
+
+  if (!normalized) {
+    return parameterName;
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function knownDisplayLabel(parameterName: string): string | undefined {
+  const trimmed = parameterName.trim();
+  const direct = REPORT_PARAMETER_DISPLAY_LABELS[trimmed];
+  if (direct) {
+    return direct;
+  }
+  const match = Object.entries(REPORT_PARAMETER_DISPLAY_LABELS).find(
+    ([name]) => name.toLowerCase() === trimmed.toLowerCase()
+  );
+  return match?.[1];
+}
+
+/** Resolves the label shown in report parameter forms and audit-friendly UIs. */
+export function resolveReportParameterDisplayLabel(parameter: ReportParameterLabelInput): string {
+  const rawDisplayLabel = parameter.displayLabel?.trim();
+  if (rawDisplayLabel && rawDisplayLabel.toLowerCase() !== 'n/a' && !looksLikeInternalLabel(rawDisplayLabel)) {
+    return rawDisplayLabel;
+  }
+
+  const rawLabel = parameter.parameterLabel?.trim();
+  if (rawLabel && rawLabel.toLowerCase() !== 'n/a' && !looksLikeInternalLabel(rawLabel)) {
+    if (
+      rawLabel.toLowerCase() === 'office' &&
+      catalogReportParameterVariable(parameter.parameterName ?? '') === 'officeId'
+    ) {
+      return 'Branch';
+    }
+    return rawLabel;
+  }
+
+  if (parameter.parameterName) {
+    return knownDisplayLabel(parameter.parameterName) ?? formatReportParameterName(parameter.parameterName);
+  }
+
+  return '';
 }
 
 export type ReportParameterPresentationHints = {

@@ -37,7 +37,12 @@ function normalizeAllowedParameter(raw: unknown) {
   if (!Number.isFinite(id) || !parameterName) {
     return null;
   }
-  return { id, parameterName };
+  return {
+    id,
+    parameterName,
+    parameterLabel: typeof row.parameterLabel === 'string' ? row.parameterLabel : undefined,
+    displayLabel: typeof row.displayLabel === 'string' ? row.displayLabel : undefined
+  };
 }
 
 function normalizeReportParameter(raw: unknown) {
@@ -54,7 +59,9 @@ function normalizeReportParameter(raw: unknown) {
     parameterId,
     parameterName: typeof row.parameterName === 'string' ? row.parameterName : undefined,
     reportParameterName:
-      typeof row.reportParameterName === 'string' ? row.reportParameterName : undefined
+      typeof row.reportParameterName === 'string' ? row.reportParameterName : undefined,
+    parameterLabel: typeof row.parameterLabel === 'string' ? row.parameterLabel : undefined,
+    displayLabel: typeof row.displayLabel === 'string' ? row.displayLabel : undefined
   };
 }
 

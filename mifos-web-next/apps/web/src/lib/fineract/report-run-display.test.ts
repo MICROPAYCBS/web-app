@@ -9,7 +9,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { FineractReportRunResult } from '@mifos/api-client';
-import { parseReportParameterMetadata } from './report-run-display';
+import { mergeReportRunParameters, parseReportParameterMetadata } from './report-run-display';
 
 function parameterListResult(rows: Record<string, unknown>[]): FineractReportRunResult {
   return {
@@ -91,5 +91,53 @@ describe('parseReportParameterMetadata', () => {
     assert.equal(metadata.find((entry) => entry.parameterName === 'endDateSelect')?.parameterDisplayType, 'date');
     assert.equal(metadata.find((entry) => entry.parameterName === 'officeIdSelectOne')?.selectOne, true);
     assert.equal(metadata.find((entry) => entry.parameterName === 'currencyIdSelectAll')?.selectAll, true);
+  });
+});
+
+describe('mergeReportRunParameters', () => {
+  it('uses professional labels when only the report definition is available', () => {
+    const parameters = mergeReportRunParameters([], {
+      id: 1,
+      reportName: 'Balance Sheet Table',
+      reportType: 'Table',
+      coreReport: true,
+      useReport: true,
+      allowedReportTypes: [],
+      allowedReportSubTypes: [],
+      allowedParameters: [],
+      reportParameters: [
+        { parameterId: 2, parameterName: 'endDateSelect' },
+        { parameterId: 5, parameterName: 'OfficeIdSelectOne' },
+        { parameterId: 10, parameterName: 'currencyIdSelectAll' }
+      ]
+    });
+
+    assert.deepEqual(
+      parameters.map((parameter) => parameter.parameterLabel),
+      ['End Date', 'Branch', 'Currency']
+    );
+  });
+
+  it('uses stretchy labels for Balance Sheet Table SQL binding names', () => {
+    const parameters = mergeReportRunParameters([], {
+      id: 1,
+      reportName: 'Balance Sheet Table',
+      reportType: 'Table',
+      coreReport: true,
+      useReport: true,
+      allowedReportTypes: [],
+      allowedReportSubTypes: [],
+      allowedParameters: [],
+      reportParameters: [
+        { parameterId: 10, parameterName: 'currencyIdSelectAll', reportParameterName: 'currencyId', parameterLabel: 'Currency' },
+        { parameterId: 1009, parameterName: 'asOnDate', reportParameterName: 'date', parameterLabel: 'As On Date' },
+        { parameterId: 5, parameterName: 'OfficeIdSelectOne', reportParameterName: 'branch', parameterLabel: 'Branch' }
+      ]
+    });
+
+    assert.deepEqual(
+      parameters.map((parameter) => parameter.parameterLabel),
+      ['Currency', 'As On Date', 'Branch']
+    );
   });
 });
