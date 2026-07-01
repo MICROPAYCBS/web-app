@@ -28,6 +28,8 @@ import { Field, FieldContent, FieldLabel } from '@/components/ui/field';
 import {
   formatGlAccountLabel,
   formatGlAccountTypeLabel,
+  GL_ACCOUNT_CODE_NUMBERING_GUIDANCE,
+  glAccountCodeHintForType,
   headerOptionsForType,
   tagOptionsForType
 } from '@/lib/accounting/gl-account-display';
@@ -133,6 +135,12 @@ export function GlAccountForm({
         handleSubmit();
       }}
     >
+      {mode === 'create' ? (
+        <p className="rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+          {GL_ACCOUNT_CODE_NUMBERING_GUIDANCE}
+        </p>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
         <SelectField
           label="Account type"
@@ -177,6 +185,7 @@ export function GlAccountForm({
           onChange={(value) => patchForm({ glCode: value })}
           disabled={pending}
           error={fieldErrors.glCode}
+          hint={glAccountCodeHintForType(form.type)}
         />
         <SelectField
           label="Parent"

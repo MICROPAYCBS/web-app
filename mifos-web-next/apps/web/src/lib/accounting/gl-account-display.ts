@@ -20,6 +20,38 @@ export const GL_ACCOUNT_TYPE_EQUITY = 3;
 export const GL_ACCOUNT_TYPE_INCOME = 4;
 export const GL_ACCOUNT_TYPE_EXPENSE = 5;
 
+const TYPE_ID_LABELS: Record<number, string> = {
+  [GL_ACCOUNT_TYPE_ASSET]: 'Asset',
+  [GL_ACCOUNT_TYPE_LIABILITY]: 'Liability',
+  [GL_ACCOUNT_TYPE_EQUITY]: 'Equity',
+  [GL_ACCOUNT_TYPE_INCOME]: 'Income',
+  [GL_ACCOUNT_TYPE_EXPENSE]: 'Expense'
+};
+
+/** First digit convention for chart-of-accounts GL codes. */
+export const GL_ACCOUNT_CODE_CLASS_PREFIX: Record<number, string> = {
+  [GL_ACCOUNT_TYPE_ASSET]: '1',
+  [GL_ACCOUNT_TYPE_LIABILITY]: '2',
+  [GL_ACCOUNT_TYPE_EQUITY]: '3',
+  [GL_ACCOUNT_TYPE_INCOME]: '4',
+  [GL_ACCOUNT_TYPE_EXPENSE]: '5'
+};
+
+export const GL_ACCOUNT_CODE_NUMBERING_GUIDANCE =
+  'Number GL codes by account class: Assets start with 1, Liabilities with 2, Equity with 3, Income with 4, and Expense with 5.';
+
+export function glAccountCodeHintForType(typeId: number | undefined): string {
+  if (typeId == null) {
+    return GL_ACCOUNT_CODE_NUMBERING_GUIDANCE;
+  }
+  const prefix = GL_ACCOUNT_CODE_CLASS_PREFIX[typeId];
+  const label = TYPE_ID_LABELS[typeId];
+  if (!prefix || !label) {
+    return GL_ACCOUNT_CODE_NUMBERING_GUIDANCE;
+  }
+  return `${label} accounts typically start with ${prefix} (for example, ${prefix}000).`;
+}
+
 const TYPE_LABELS: Record<string, string> = {
   ASSET: 'Asset',
   LIABILITY: 'Liability',

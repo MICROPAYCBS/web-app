@@ -8,8 +8,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ShieldCheckIcon } from 'lucide-react';
-import { useState } from 'react';
+import { Loader2, ShieldCheckIcon } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginMarketingPanel } from '@/components/auth/login-marketing-panel';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
@@ -21,6 +21,7 @@ import { Field, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/f
 import { Input } from '@/components/ui/input';
 import type { FineractServerProfile } from '@mifos/servers';
 import { APP_NAME } from '@/lib/branding';
+import { LOGIN_JSON_ACCEPT, type LoginApiResponse } from '@/lib/auth/login-api';
 import { cn } from '@/lib/utils';
 
 export interface LoginFormProps {
@@ -45,6 +46,41 @@ export function LoginForm({
   className
 }: LoginFormProps) {
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+          Accept: LOGIN_JSON_ACCEPT
+        }
+      });
+
+      const body = (await response.json().catch(() => null)) as LoginApiResponse | null;
+      if (body?.ok) {
+        window.location.assign(body.redirectTo);
+        return;
+      }
+
+      setIsSubmitting(false);
+      setSubmitError(body?.message ?? 'Sign-in failed. Please try again.');
+    } catch {
+      setIsSubmitting(false);
+      setSubmitError('Could not reach the server. Check your connection and try again.');
+    }
+  }
+
+  const displayedError = submitError ?? loginError;
 
   return (
     <div className={cn('grid min-h-svh lg:grid-cols-2', className)}>
@@ -75,9 +111,9 @@ export function LoginForm({
 
               {canSignIn ? (
                 <form
-                  method="post"
-                  action="/api/auth/login"
+                  onSubmit={handleSubmit}
                   className={cn('space-y-4', activeServer ? 'mt-5' : 'mt-0')}
+                  aria-busy={isSubmitting}
                 >
                   <input type="hidden" name="redirectTo" value={redirectTo} />
 
@@ -90,6 +126,7 @@ export function LoginForm({
                       autoComplete="username"
                       className="h-10 bg-background"
                       required
+                      disabled={isSubmitting}
                     />
                   </Field>
                   <Field>
@@ -102,6 +139,7 @@ export function LoginForm({
                       autoComplete="current-password"
                       className="h-10 bg-background"
                       required
+                      disabled={isSubmitting}
                     />
                   </Field>
 
@@ -114,12 +152,12 @@ export function LoginForm({
                     </div>
                   ) : null}
 
-                  {loginError ? (
+                  {displayedError ? (
                     <div
                       className="max-h-64 overflow-auto rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm whitespace-pre-wrap text-destructive"
                       role="alert"
                     >
-                      {loginError}
+                      {displayedError}
                     </div>
                   ) : null}
 
@@ -128,8 +166,16 @@ export function LoginForm({
                       type="submit"
                       size="lg"
                       className="h-11 w-full text-base font-semibold shadow-sm"
+                      disabled={isSubmitting}
                     >
-                      Sign in
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                          Signing in…
+                        </>
+                      ) : (
+                        'Sign in'
+                      )}
                     </Button>
                   </Field>
 
@@ -137,7 +183,7 @@ export function LoginForm({
                     <>
                       <FieldSeparator />
                       <Field>
-                        <DemoLoginButton className="w-full" />
+                        <DemoLoginButton className="w-full" disabled={isSubmitting} />
                       </Field>
                     </>
                   ) : null}
