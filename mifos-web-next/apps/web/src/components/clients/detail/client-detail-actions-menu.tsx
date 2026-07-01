@@ -10,12 +10,12 @@
 
 import type { FineractClientDetail } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { formatActionErrorMessage } from '@mifos/validation';
+
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastActionError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   deleteClientAction
@@ -220,7 +220,7 @@ export function ClientDetailActionsMenu({
       if (item.command === 'deleteClient') {
         const result = await deleteClientAction(clientId);
         if (!result.ok) {
-          toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
+          toastActionError(result.message, result.fieldErrors);
           return;
         }
         toastCommandOutcome(result, {

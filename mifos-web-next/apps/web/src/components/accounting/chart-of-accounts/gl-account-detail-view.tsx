@@ -14,7 +14,7 @@ import { Lock, LockOpen, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   deleteGlAccountAction,
@@ -68,7 +68,7 @@ export function GlAccountDetailView({
       });
       if (!result.ok) {
         setActionError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toast.success(result.disabled ? 'Account disabled.' : 'Account enabled.');
@@ -83,7 +83,7 @@ export function GlAccountDetailView({
       if (!result.ok) {
 
         setActionError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'GL account deleted.', pending: 'GL account deleted sent for approval.' });

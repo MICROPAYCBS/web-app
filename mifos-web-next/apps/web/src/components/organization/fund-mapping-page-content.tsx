@@ -15,6 +15,7 @@ import type {
 import { Filter, Map, Search } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { searchFundMappingAction } from '@/actions/fund-mapping';
 import {
   DEFAULT_FUND_MAPPING_SEARCH,
@@ -92,7 +93,7 @@ export function FundMappingPageContent({
           setFieldErrors(result.fieldErrors);
           setSheetOpen(true);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setItems(result.items);

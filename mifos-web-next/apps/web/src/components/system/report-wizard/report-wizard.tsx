@@ -12,7 +12,7 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import type { UpsertReportFormInput } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createReportAction, updateReportAction } from '@/actions/reports';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -217,7 +217,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
       if (!result.ok) {
 
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: mode === 'create' ? 'Report created.' : 'Report updated.', pending: mode === 'create' ? 'Report created. sent for approval.' : 'Report updated. sent for approval.' });

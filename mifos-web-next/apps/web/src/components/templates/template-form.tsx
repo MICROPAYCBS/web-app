@@ -19,7 +19,7 @@ import { Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createTemplateAction, updateTemplateAction } from '@/actions/templates';
 import { FormLabel } from '@/components/composites/form-label';
@@ -189,7 +189,7 @@ export function TemplateForm({
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       if (mode === 'create' && result.resourceId != null) {

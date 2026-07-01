@@ -13,7 +13,7 @@ import { Can } from '@mifos/auth';
 import { Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { revertJournalEntryAction } from '@/actions/journal-entries';
 import {
@@ -134,7 +134,7 @@ export function JournalEntryTransactionView({
       });
       if (!result.ok) {
         setActionError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
 

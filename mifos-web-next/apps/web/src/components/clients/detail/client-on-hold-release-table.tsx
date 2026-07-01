@@ -8,10 +8,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage } from '@mifos/validation';
+
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastActionError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { releaseSavingsOnHoldAction } from '@/actions/client-transfer-hold';
 import type { ClientTransferOnHoldRow } from '@/lib/fineract/client-transfer';
@@ -36,7 +36,7 @@ export function ClientOnHoldReleaseTable({
       );
       if (!result.ok) {
 
-        toast.error(formatActionErrorMessage(result.message));
+        toastActionError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Held amount released.', pending: 'Held amount released sent for approval.' });

@@ -9,11 +9,11 @@
  */
 
 import type { CenterGroupOption, FineractOfficeOption } from '@mifos/api-client';
-import { formatActionErrorMessage } from '@mifos/validation';
+
 import { Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError, toastActionError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createCenterAction,
@@ -87,12 +87,12 @@ export function CreateCenterPageContent({ offices }: { offices: FineractOfficeOp
         loadCenterGroupsAction(officeId)
       ]);
       if (!staffResult.ok) {
-        toast.error(staffResult.message);
+        toastFineractError(staffResult.message);
       } else {
         setStaffOptions(staffResult.data);
       }
       if (!groupsResult.ok) {
-        toast.error(groupsResult.message);
+        toastFineractError(groupsResult.message);
       } else {
         setGroupOptions(groupsResult.data);
       }
@@ -129,7 +129,7 @@ export function CreateCenterPageContent({ offices }: { offices: FineractOfficeOp
         pending: 'Center creation sent for approval.'
       })) {
         setFieldErrors(result.fieldErrors ?? {});
-        toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
+        toastActionError(result.message, result.fieldErrors);
         return;
       }
       if (result.centerId != null) {

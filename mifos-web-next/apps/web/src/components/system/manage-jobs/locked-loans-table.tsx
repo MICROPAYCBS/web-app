@@ -21,6 +21,7 @@ import { ExternalLink, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { resolveLoanClientPathAction } from '@/actions/jobs';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
@@ -131,7 +132,7 @@ export function LockedLoansTable({
                 startTransition(async () => {
                   const result = await resolveLoanClientPathAction(row.original.loanId);
                   if (!result.ok) {
-                    toast.error(result.message);
+                    toastFineractError(result.message);
                     return;
                   }
                   router.push(result.path);

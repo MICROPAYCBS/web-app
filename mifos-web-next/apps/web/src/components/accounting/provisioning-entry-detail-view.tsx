@@ -17,7 +17,7 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createProvisioningJournalEntriesAction } from '@/actions/provisioning-entries';
 import { ProvisioningEntryEntriesTable } from '@/components/accounting/provisioning-entry-entries-table';
@@ -46,7 +46,7 @@ export function ProvisioningEntryDetailView({
       const result = await createProvisioningJournalEntriesAction(entry.id);
       if (!result.ok) {
 
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Journal entries created.', pending: 'Journal entries created sent for approval.' });

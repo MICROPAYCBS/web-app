@@ -11,7 +11,7 @@
 import type { InvestorTransferItem, InvestorTransferSearchPage } from '@mifos/api-client';
 import { Filter, Users } from 'lucide-react';
 import { useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   cancelInvestorTransferAction,
@@ -78,7 +78,7 @@ export function InvestorsPageContent({
           setFieldErrors(result.fieldErrors);
           setSheetOpen(true);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setItems(result.data.content);
@@ -111,7 +111,7 @@ export function InvestorsPageContent({
         transferExternalId: cancelTarget.transferExternalId!
       });
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, {

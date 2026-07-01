@@ -13,6 +13,7 @@ import { Can } from '@mifos/auth';
 import Link from 'next/link';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { searchHolidaysByOfficeAction } from '@/actions/holidays';
 import { HolidaysTable } from '@/components/organization/holidays-table';
 import { ListPage } from '@/components/composites/list-page';
@@ -38,7 +39,7 @@ export function HolidaysPageContent({ offices }: { offices: FineractOfficeListIt
     startTransition(async () => {
       const result = await searchHolidaysByOfficeAction(officeId);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         setHolidays([]);
         return;
       }

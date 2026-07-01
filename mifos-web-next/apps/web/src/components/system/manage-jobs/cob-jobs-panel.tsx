@@ -12,7 +12,7 @@ import type { FineractLockedLoan } from '@mifos/api-client';
 import { Play, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { runInlineCobAction, startCobCatchUpAction } from '@/actions/jobs';
 import { LockedLoansTable } from '@/components/system/manage-jobs/locked-loans-table';
@@ -38,7 +38,7 @@ export function CobJobsPanel({
       const result = await startCobCatchUpAction();
       if (!result.ok) {
 
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Catch-up started.', pending: 'Catch-up started sent for approval.' });
@@ -51,7 +51,7 @@ export function CobJobsPanel({
       const result = await runInlineCobAction(selectedLoans.map((loan) => loan.loanId));
       if (!result.ok) {
 
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Inline COB started for selected loans.', pending: 'Inline COB started for selected loans sent for approval.' });

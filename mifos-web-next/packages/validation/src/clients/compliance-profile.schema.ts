@@ -9,9 +9,11 @@
 import { z } from 'zod';
 
 export const otherBankAccountSchema = z.object({
+  id: z.coerce.number().int().positive().optional(),
   bankName: z.string().trim().max(200),
   branchName: z.string().trim().max(200).optional().or(z.literal('')),
-  accountNumber: z.string().trim().max(50)
+  accountNumber: z.string().trim().max(50),
+  displayOrder: z.coerce.number().int().min(1).max(2).optional()
 });
 
 function otherBankSlotHasAnyInput(account: z.infer<typeof otherBankAccountSchema>): boolean {

@@ -9,7 +9,7 @@
  */
 
 import { useEffect } from 'react';
-import { ErrorPanel } from '@/components/composites/error-panel';
+import { RouteErrorPanel } from '@/components/composites/route-error-panel';
 import { logClientError } from '@/lib/errors/log-client-error';
 
 export default function RootError({
@@ -23,13 +23,5 @@ export default function RootError({
     logClientError('root-error', error, { digest: error.digest });
   }, [error]);
 
-  return (
-    <ErrorPanel
-      error={error}
-      digest={error.digest}
-      onReset={reset}
-      variant="page"
-      className="min-h-screen"
-    />
-  );
+  return <RouteErrorPanel error={error} reset={reset} variant="page" className="min-h-screen" />;
 }

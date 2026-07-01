@@ -27,6 +27,7 @@ import {
   isTabularReportType,
   mergeReportRunParameters
 } from '@/lib/fineract/report-run-display';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { cn } from '@/lib/utils';
 
 export function ReportRunPageContent({
@@ -56,7 +57,7 @@ export function ReportRunPageContent({
         return;
       }
       if (!metadataResult.ok) {
-        toast.error(metadataResult.message);
+        toastFineractError(metadataResult.message);
         setParameters(mergeReportRunParameters([], report));
         setMetadataLoading(false);
         setSheetOpen(true);
@@ -89,7 +90,7 @@ export function ReportRunPageContent({
         parameters: values
       });
       if (!runResult.ok) {
-        toast.error(runResult.message);
+        toastFineractError(runResult.message);
         return;
       }
       setResult(runResult.data);

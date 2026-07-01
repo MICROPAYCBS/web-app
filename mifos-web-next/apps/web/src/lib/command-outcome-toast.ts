@@ -9,8 +9,11 @@
  */
 
 import { notifyCheckerInboxPendingChanged } from '@/lib/checker-inbox/pending-count';
+import { toastActionError, toastFineractError } from '@/lib/toast-fineract-error';
 import { commandOutcomeMessage, type FineractCommandActionMeta } from '@mifos/validation';
 import { toast } from 'sonner';
+
+export { toastActionError, toastFineractError };
 
 export type CommandOutcomeToastMessages = {
   /** Shown when the Fineract command committed immediately. */
@@ -48,4 +51,13 @@ export function toastCommandOutcome(
     notifyCheckerInboxPendingChanged();
   }
   return true;
+}
+
+/** Present a failed server-action / Fineract mutation result. */
+export function toastCommandFailure(result: {
+  ok: false;
+  message: string;
+  fieldErrors?: Record<string, string>;
+}): void {
+  toastActionError(result.message, result.fieldErrors);
 }

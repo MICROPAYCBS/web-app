@@ -13,7 +13,7 @@ import type { JobParameterInput } from '@mifos/validation';
 import { Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { executeSchedulerJobsAction } from '@/actions/jobs';
 import { Button } from '@/components/ui/button';
@@ -89,7 +89,7 @@ export function CustomParametersDialog({
       );
       if (!result.ok) {
 
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Jobs started with custom parameters.', pending: 'Jobs started with custom parameters sent for approval.' });

@@ -14,7 +14,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { deleteFinancialActivityMappingAction } from '@/actions/financial-activity-mappings';
 import {
@@ -61,7 +61,7 @@ export function FinancialActivityMappingDetailView({
       if (!result.ok) {
 
         setActionError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Financial activity mapping deleted.', pending: 'Financial activity mapping deleted sent for approval.' });

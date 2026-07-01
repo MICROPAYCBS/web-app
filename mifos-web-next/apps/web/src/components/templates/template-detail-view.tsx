@@ -14,7 +14,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { deleteTemplateAction } from '@/actions/templates';
 import {
@@ -56,7 +56,7 @@ export function TemplateDetailView({
       if (!result.ok) {
 
         setActionError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Template deleted.', pending: 'Template deleted sent for approval.' });

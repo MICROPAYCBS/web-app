@@ -9,25 +9,45 @@
  */
 
 import type { FineractReportRunParameter } from '@mifos/api-client';
-import { isReportParameterDate, isReportParameterSelect, resolveReportParameterDisplayLabel } from '@mifos/domain';
+import {
+  isReportParameterDate,
+  isReportParameterSelect,
+  resolveReportParameterDisplayLabel
+} from '@mifos/domain';
 import { useMemo, useState } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { ReportParameterSelect } from '@/components/reports/report-parameter-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { dateToFineract, fineractDateToDate, isoDateToFineract } from '@/lib/fineract/date-input';
+import {
+  formatReportRunDateValue,
+  formatReportRunParameterValues
+} from '@/lib/fineract/report-run-display';
 
-function formatReportDateValue(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return trimmed;
+function todayIsoDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function resolveReportParameterDefault(parameter: FineractReportRunParameter): string | boolean {
+  if (parameter.parameterType === 'checkbox') {
+    return false;
   }
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return isoDateToFineract(trimmed);
+
+  const defaultVal = parameter.defaultVal?.trim();
+  if (!defaultVal) {
+    return '';
   }
-  const parsed = fineractDateToDate(trimmed);
-  return parsed ? (dateToFineract(parsed) ?? trimmed) : trimmed;
+
+  if (defaultVal.toLowerCase() === 'today' && isReportParameterDate(parameter)) {
+    return todayIsoDate();
+  }
+
+  return defaultVal;
 }
 
 export function ReportParameterForm({
@@ -47,10 +67,8 @@ export function ReportParameterForm({
       const fieldName = parameter.parameterVariable || parameter.parameterName;
       if (parameter.parameterType === 'checkbox') {
         initial[fieldName] = false;
-      } else if (parameter.defaultVal) {
-        initial[fieldName] = parameter.defaultVal;
       } else {
-        initial[fieldName] = '';
+        initial[fieldName] = resolveReportParameterDefault(parameter);
       }
     }
     return initial;
@@ -101,7 +119,7 @@ export function ReportParameterForm({
         continue;
       }
 
-      formatted[fieldName] = isDate ? formatReportDateValue(stringValue) : stringValue;
+      formatted[fieldName] = isDate ? formatReportRunDateValue(stringValue) : stringValue;
     }
 
     if (Object.keys(nextErrors).length) {
@@ -109,7 +127,7 @@ export function ReportParameterForm({
       return;
     }
 
-    onSubmit(formatted);
+    onSubmit(formatReportRunParameterValues(parameters, formatted));
   }
 
   if (!parameters.length) {
@@ -147,6 +165,7 @@ export function ReportParameterForm({
                 id={fieldName}
                 label={label}
                 parameterReportName={parameter.parameterName}
+                selectAll={parameter.selectAll === true}
                 value={String(values[fieldName] ?? '') || undefined}
                 onValueChange={(value) => setFieldValue(fieldName, value ?? '')}
                 parentVariable={parentFieldName}

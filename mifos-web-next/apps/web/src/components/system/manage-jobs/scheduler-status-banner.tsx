@@ -12,6 +12,7 @@ import type { FineractSchedulerStatus } from '@mifos/api-client';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { runSchedulerCommandAction } from '@/actions/jobs';
 import { Button } from '@/components/ui/button';
 
@@ -29,7 +30,7 @@ export function SchedulerStatusBanner({
     startTransition(async () => {
       const result = await runSchedulerCommandAction(command);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toast.success(command === 'start' ? 'Scheduler activated.' : 'Scheduler suspended.');

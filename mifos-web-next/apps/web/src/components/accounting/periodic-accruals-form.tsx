@@ -18,7 +18,7 @@ import { Play } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { executePeriodicAccrualsAction } from '@/actions/periodic-accruals';
 import { DateField } from '@/components/composites/date-field';
@@ -72,7 +72,7 @@ export function PeriodicAccrualsForm({ canExecute }: { canExecute: boolean }) {
         return;
       }
       toastCommandOutcome(result, { completed: 'Periodic accruals completed.', pending: 'Periodic accruals completed sent for approval.' });
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setForm(defaultFormValues());

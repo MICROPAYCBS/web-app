@@ -9,11 +9,11 @@
  */
 
 import type { GroupClientOption, FineractOfficeOption } from '@mifos/api-client';
-import { formatActionErrorMessage } from '@mifos/validation';
+
 import { Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError, toastActionError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createGroupAction,
@@ -85,7 +85,7 @@ export function CreateGroupPageContent({ offices }: { offices: FineractOfficeOpt
     startClientTransition(async () => {
       const result = await searchGroupClientsAction(form.officeId, debouncedClientSearch);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setClientOptions(result.data);
@@ -110,7 +110,7 @@ export function CreateGroupPageContent({ offices }: { offices: FineractOfficeOpt
     startOfficeTransition(async () => {
       const staffResult = await loadGroupStaffAction(officeId);
       if (!staffResult.ok) {
-        toast.error(staffResult.message);
+        toastFineractError(staffResult.message);
       } else {
         setStaffOptions(staffResult.data);
       }
@@ -148,7 +148,7 @@ export function CreateGroupPageContent({ offices }: { offices: FineractOfficeOpt
         pending: 'Group creation sent for approval.'
       })) {
         setFieldErrors(result.fieldErrors ?? {});
-        toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
+        toastActionError(result.message, result.fieldErrors);
         return;
       }
       if (result.groupId != null) {

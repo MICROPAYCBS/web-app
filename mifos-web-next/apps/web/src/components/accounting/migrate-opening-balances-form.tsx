@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import {
   defineOpeningBalanceAction,
   fetchOpeningBalanceTemplateAction,
@@ -178,7 +179,7 @@ export function MigrateOpeningBalancesForm({
       const result = await fetchOpeningBalanceTemplateAction(parsedOfficeId);
       if (isFetchError(result)) {
         setRetrieveError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
 
@@ -245,7 +246,7 @@ export function MigrateOpeningBalancesForm({
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
 

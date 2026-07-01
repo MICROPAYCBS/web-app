@@ -15,6 +15,7 @@ import type {
 import { ArrowLeftRight, Filter, Search } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { searchStandingInstructionHistoryAction } from '@/actions/standing-instruction-history';
 import {
   EMPTY_STANDING_INSTRUCTION_HISTORY_SEARCH,
@@ -61,7 +62,7 @@ export function StandingInstructionHistoryPageContent({
         dateFormat: FINERACT_DATE_FORMAT
       });
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setItems(result.data.pageItems);

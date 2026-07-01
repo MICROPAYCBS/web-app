@@ -12,8 +12,9 @@ import type {
   SmsCampaignDetail,
   SmsCampaignTemplate
 } from '@mifos/api-client';
-import { isReportParameterSelect } from '@mifos/domain';
+import { isReportParameterDate, isReportParameterSelect, reportRunQueryParameterVariable } from '@mifos/domain';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
+import { formatReportRunDateValue } from '@/lib/fineract/report-run-display';
 
 export const SMS_MESSAGE_STATUS_TABS = [
   { label: 'Pending SMS', status: 100 },
@@ -83,7 +84,9 @@ export function metadataToReportParameters(
   return metadata.map((entry) => ({
     ...entry,
     parameterLabel: entry.parameterLabel || entry.parameterName,
-    parameterVariable: entry.parameterVariable || entry.parameterName,
+    parameterVariable:
+      reportRunQueryParameterVariable(entry.parameterName, entry.parameterVariable) ??
+      entry.parameterName,
     parameterType:
       entry.parameterDisplayType === 'checkbox'
         ? 'checkbox'
@@ -109,6 +112,10 @@ export function buildSmsCampaignParamValue(input: {
     if (raw == null || raw === '') {
       continue;
     }
+    if (isReportParameterDate(parameter)) {
+      formatted[key] = formatReportRunDateValue(raw);
+      continue;
+    }
     if (isReportParameterSelect(parameter)) {
       formatted[key] = raw;
       continue;
@@ -130,7 +137,7 @@ export function buildReportHeaderQueryValues(input: {
     if (raw == null || raw === '') {
       continue;
     }
-    formatted[fieldName] = raw;
+    formatted[fieldName] = isReportParameterDate(parameter) ? formatReportRunDateValue(raw) : raw;
   }
   return formatted;
 }

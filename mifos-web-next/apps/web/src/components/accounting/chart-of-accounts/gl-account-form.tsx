@@ -17,7 +17,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createGlAccountAction, updateGlAccountAction } from '@/actions/gl-accounts';
 import { SelectField } from '@/components/composites/select-field';
@@ -116,7 +116,7 @@ export function GlAccountForm({
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: mode === 'create' ? 'GL account created.' : 'GL account updated.', pending: mode === 'create' ? 'GL account created. sent for approval.' : 'GL account updated. sent for approval.' });

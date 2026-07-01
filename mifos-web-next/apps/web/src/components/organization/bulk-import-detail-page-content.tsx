@@ -14,7 +14,7 @@ import { Can } from '@mifos/auth';
 import { Download, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   loadBulkImportStaffAction,
@@ -87,7 +87,7 @@ export function BulkImportDetailPageContent({
       const result = await loadBulkImportStaffAction(officeId);
       if (!result.ok) {
 
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Import file uploaded.', pending: 'Import file uploaded sent for approval.' });
@@ -118,7 +118,7 @@ export function BulkImportDetailPageContent({
     startRefreshTransition(async () => {
       const result = await refreshBulkImportHistoryAction(definition.name);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setImports(result.data);
@@ -137,7 +137,7 @@ export function BulkImportDetailPageContent({
     startUploadTransition(async () => {
       const result = await uploadBulkImportFileAction(definition.name, payload);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setSelectedFile(null);

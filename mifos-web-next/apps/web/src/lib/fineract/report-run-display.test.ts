@@ -9,7 +9,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { FineractReportRunResult } from '@mifos/api-client';
-import { mergeReportRunParameters, parseReportParameterMetadata } from './report-run-display';
+import {
+  buildReportRunQueryParams,
+  formatReportRunDateValue,
+  formatReportRunParameterValues,
+  mergeReportRunParameters,
+  parseReportParameterMetadata
+} from './report-run-display';
 
 function parameterListResult(rows: Record<string, unknown>[]): FineractReportRunResult {
   return {
@@ -138,6 +144,115 @@ describe('mergeReportRunParameters', () => {
     assert.deepEqual(
       parameters.map((parameter) => parameter.parameterLabel),
       ['Currency', 'As On Date', 'Branch']
+    );
+    assert.deepEqual(
+      parameters.map((parameter) => parameter.parameterVariable),
+      ['currencyId', 'asOn', 'officeId']
+    );
+  });
+
+  it('uses metadata variables when parameter metadata is available', () => {
+    const parameters = mergeReportRunParameters(
+      [
+        {
+          parameterName: 'OfficeIdSelectOne',
+          parameterLabel: 'Branch',
+          parameterVariable: 'officeId',
+          selectOne: true
+        },
+        {
+          parameterName: 'asOnDate',
+          parameterLabel: 'As On Date',
+          parameterVariable: 'asOn',
+          parameterDisplayType: 'date'
+        }
+      ],
+      {
+        id: 1,
+        reportName: 'Balance Sheet Table',
+        reportType: 'Table',
+        coreReport: true,
+        useReport: true,
+        allowedReportTypes: [],
+        allowedReportSubTypes: [],
+        allowedParameters: [],
+        reportParameters: [
+          { parameterId: 5, parameterName: 'OfficeIdSelectOne', reportParameterName: 'branch' },
+          { parameterId: 1009, parameterName: 'asOnDate', reportParameterName: 'date' }
+        ]
+      }
+    );
+
+    assert.deepEqual(
+      parameters.map((parameter) => parameter.parameterVariable),
+      ['officeId', 'asOn']
+    );
+  });
+});
+
+describe('formatReportRunDateValue', () => {
+  it('keeps ISO dates for stretchy report query params', () => {
+    assert.equal(formatReportRunDateValue('2026-07-01'), '2026-07-01');
+  });
+
+  it('converts Fineract display dates to ISO', () => {
+    assert.equal(formatReportRunDateValue('01 July 2026'), '2026-07-01');
+  });
+});
+
+describe('formatReportRunParameterValues', () => {
+  it('formats Balance Sheet Table parameters for Fineract input validation', () => {
+    const formatted = formatReportRunParameterValues(
+      [
+        {
+          parameterName: 'OfficeIdSelectOne',
+          parameterVariable: 'officeId',
+          parameterFormatType: 'number',
+          selectOne: true
+        },
+        {
+          parameterName: 'asOnDate',
+          parameterVariable: 'asOn',
+          parameterDisplayType: 'date',
+          parameterFormatType: 'date'
+        },
+        {
+          parameterName: 'currencyIdSelectAll',
+          parameterVariable: 'currencyId',
+          parameterFormatType: 'number',
+          selectAll: true
+        }
+      ],
+      {
+        officeId: '1',
+        asOn: '01 July 2026',
+        currencyId: 'USD'
+      }
+    );
+
+    assert.deepEqual(formatted, {
+      officeId: '1',
+      asOn: '2026-07-01',
+      currencyId: 'USD'
+    });
+  });
+});
+
+describe('buildReportRunQueryParams', () => {
+  it('prefixes stretchy variables and adds locale metadata for ISO dates', () => {
+    assert.deepEqual(
+      buildReportRunQueryParams({
+        officeId: '1',
+        asOn: '2026-07-01',
+        currencyId: '-1'
+      }),
+      {
+        R_officeId: '1',
+        R_asOn: '2026-07-01',
+        R_currencyId: '-1',
+        locale: 'en',
+        dateFormat: 'yyyy-MM-dd'
+      }
     );
   });
 });

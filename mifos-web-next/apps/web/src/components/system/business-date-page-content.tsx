@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { updateBusinessDateAction } from '@/actions/business-date';
 import { DateField } from '@/components/composites/date-field';
 import { ListPage } from '@/components/composites/list-page';
@@ -84,7 +85,7 @@ function BusinessDateRow({
     startTransition(async () => {
       const result = await updateBusinessDateAction({ type: dateType, date: draft });
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toast.success(`${label} updated.`);

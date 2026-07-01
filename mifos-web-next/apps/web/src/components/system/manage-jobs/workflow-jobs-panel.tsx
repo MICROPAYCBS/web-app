@@ -12,7 +12,7 @@ import type { FineractWorkflowJobStep } from '@mifos/api-client';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   fetchAvailableWorkflowStepsAction,
@@ -68,7 +68,7 @@ export function WorkflowJobsPanel({
     startLoadTransition(async () => {
       const result = await fetchWorkflowJobStepsAction(selectedJob);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       setSteps(result.steps);
@@ -101,7 +101,7 @@ export function WorkflowJobsPanel({
     startTransition(async () => {
       const result = await fetchAvailableWorkflowStepsAction(selectedJob);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       const existing = new Set(steps.map((step) => step.stepName));
@@ -140,7 +140,7 @@ export function WorkflowJobsPanel({
     startTransition(async () => {
       const result = await updateWorkflowJobStepsAction(selectedJob, steps);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, {

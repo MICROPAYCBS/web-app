@@ -18,7 +18,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   createAccountingRuleAction,
@@ -246,7 +246,7 @@ export function AccountingRuleForm({
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: mode === 'create' ? 'Accounting rule created.' : 'Accounting rule updated.', pending: mode === 'create' ? 'Accounting rule created. sent for approval.' : 'Accounting rule updated. sent for approval.' });

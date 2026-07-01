@@ -229,20 +229,62 @@ export function isReportParameterSelect(parameter: ReportParameterPresentationHi
   );
 }
 
+function reportParameterFormatType(parameter: {
+  parameterFormatType?: string;
+  parameterType?: string;
+}): string {
+  return (
+    parameter.parameterFormatType?.trim().toLowerCase() ||
+    parameter.parameterType?.trim().toLowerCase() ||
+    ''
+  );
+}
+
 export function isReportParameterDate(parameter: {
   parameterDisplayType?: string;
+  parameterFormatType?: string;
   parameterType?: string;
   parameterName?: string;
 }): boolean {
   const displayType = parameter.parameterDisplayType?.trim().toLowerCase();
-  if (displayType === 'date' || parameter.parameterType?.trim().toLowerCase() === 'date') {
+  const formatType = reportParameterFormatType(parameter);
+  if (displayType === 'date' || formatType === 'date') {
     return true;
   }
   const name = parameter.parameterName?.trim().toLowerCase();
   return Boolean(name && (name.endsWith('dateselect') || name === 'asondate'));
 }
 
-/** Name substituted in report SQL / passed to the reporting engine at run time. */
+/** Stretchy parameters declared with `parameter_FormatType = number` (office id, funds, etc.). */
+export function isReportParameterNumeric(parameter: {
+  parameterDisplayType?: string;
+  parameterFormatType?: string;
+  parameterType?: string;
+  parameterName?: string;
+}): boolean {
+  if (isReportParameterDate(parameter)) {
+    return false;
+  }
+  const formatType = reportParameterFormatType(parameter);
+  if (formatType === 'number') {
+    return true;
+  }
+  const displayType = parameter.parameterDisplayType?.trim().toLowerCase();
+  return displayType === 'number';
+}
+
+export function isReportCurrencyCodeParameter(
+  parameterName?: string,
+  parameterVariable?: string
+): boolean {
+  if (parameterVariable?.trim().toLowerCase() === 'currencyid') {
+    return true;
+  }
+  const name = parameterName?.trim().toLowerCase();
+  return name === 'currencyidselectall';
+}
+
+/** SQL placeholder name configured on a report definition (Pentaho/BIRT and query editor). */
 export function reportEngineParameterName(
   parameterName: string,
   reportParameterName?: string
@@ -252,4 +294,20 @@ export function reportEngineParameterName(
     return override;
   }
   return catalogReportParameterVariable(parameterName);
+}
+
+/**
+ * Stretchy variable for GET /runreports/{name} query keys (`R_{variable}`).
+ * Uses FullParameterList metadata when present; never uses per-report SQL placeholder names.
+ */
+export function reportRunQueryParameterVariable(
+  parameterName: string,
+  metadataVariable?: string
+): string | undefined {
+  const name = parameterName.trim();
+  const metaVar = metadataVariable?.trim();
+  if (metaVar && metaVar !== name) {
+    return metaVar;
+  }
+  return catalogReportParameterVariable(name);
 }

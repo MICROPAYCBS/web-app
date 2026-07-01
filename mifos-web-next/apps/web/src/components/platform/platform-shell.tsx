@@ -61,7 +61,7 @@ export function PlatformShell({
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                   <ErrorBoundary
                     title="This section failed to load"
-                    description="Something went wrong while rendering this page. The sidebar and header are still available."
+                    description="An unexpected error occurred while rendering this page. Fineract request failures are shown as notifications instead."
                   >
                     <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                       {children}

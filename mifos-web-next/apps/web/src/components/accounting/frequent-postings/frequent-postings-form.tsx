@@ -25,7 +25,7 @@ import { Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { parseAmount, areJournalEntryTotalsBalanced } from '@mifos/domain';
 import { createFrequentPostingAction } from '@/actions/frequent-postings';
@@ -279,7 +279,7 @@ export function FrequentPostingsForm({
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       if (result.transactionId) {

@@ -7,6 +7,7 @@
  */
 
 import type { CreateClientPayload } from '@mifos/validation';
+import { buildOtherBankAccountsForApi } from '@/lib/fineract/compliance-profile-payload';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 
 function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
@@ -72,14 +73,7 @@ export function buildCreateClientPayload(input: CreateClientPayload): Record<str
   if (input.complianceProfile) {
     const profile = input.complianceProfile;
     const accounts = profile.hasOtherBankAccounts
-      ? profile.otherBankAccounts
-          ?.filter((account) => account.bankName?.trim() && account.accountNumber?.trim())
-          .map((account, index) =>
-            stripEmpty({
-              ...account,
-              displayOrder: index + 1
-            })
-          )
+      ? buildOtherBankAccountsForApi(profile.otherBankAccounts)
       : undefined;
     base.complianceProfile = stripEmpty({
       ...profile,

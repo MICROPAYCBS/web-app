@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { activateSurveyAction, deactivateSurveyAction } from '@/actions/surveys';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
@@ -75,7 +76,7 @@ export function SurveysTable({
       const result = await activateSurveyAction(surveyId);
       if (!result.ok) {
         setActionError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       applyLocalActivationState(surveyId, true);
@@ -90,7 +91,7 @@ export function SurveysTable({
       const result = await deactivateSurveyAction(surveyId);
       if (!result.ok) {
         setActionError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       applyLocalActivationState(surveyId, false);

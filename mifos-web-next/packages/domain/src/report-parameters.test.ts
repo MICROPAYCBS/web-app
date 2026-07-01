@@ -11,11 +11,59 @@ import { describe, it } from 'node:test';
 import {
   catalogReportParameterVariable,
   inferReportParameterPresentation,
+  isReportCurrencyCodeParameter,
   isReportParameterDate,
+  isReportParameterNumeric,
   isReportParameterSelect,
   reportEngineParameterName,
+  reportRunQueryParameterVariable,
   resolveReportParameterDisplayLabel
 } from './report-parameters';
+
+describe('isReportParameterNumeric', () => {
+  it('detects number format types from stretchy metadata', () => {
+    assert.equal(
+      isReportParameterNumeric({
+        parameterName: 'OfficeIdSelectOne',
+        parameterDisplayType: 'select',
+        parameterFormatType: 'number'
+      }),
+      true
+    );
+    assert.equal(
+      isReportParameterNumeric({
+        parameterName: 'asOnDate',
+        parameterDisplayType: 'date',
+        parameterFormatType: 'date'
+      }),
+      false
+    );
+  });
+});
+
+describe('isReportCurrencyCodeParameter', () => {
+  it('identifies currency select-all parameters by name or query variable', () => {
+    assert.equal(isReportCurrencyCodeParameter('currencyIdSelectAll'), true);
+    assert.equal(isReportCurrencyCodeParameter(undefined, 'currencyId'), true);
+    assert.equal(isReportCurrencyCodeParameter('OfficeIdSelectOne'), false);
+  });
+});
+
+describe('reportRunQueryParameterVariable', () => {
+  it('uses metadata variable and ignores SQL placeholder names', () => {
+    assert.equal(reportRunQueryParameterVariable('OfficeIdSelectOne', 'officeId'), 'officeId');
+    assert.equal(reportRunQueryParameterVariable('asOnDate', 'asOn'), 'asOn');
+  });
+
+  it('falls back to stretchy catalog when metadata variable is missing', () => {
+    assert.equal(reportRunQueryParameterVariable('OfficeIdSelectOne'), 'officeId');
+    assert.equal(reportRunQueryParameterVariable('currencyIdSelectAll'), 'currencyId');
+  });
+
+  it('does not treat catalog parameter name as a runtime variable', () => {
+    assert.equal(reportRunQueryParameterVariable('OfficeIdSelectOne', 'OfficeIdSelectOne'), 'officeId');
+  });
+});
 
 describe('reportEngineParameterName', () => {
   it('returns catalog variable for known parameters', () => {

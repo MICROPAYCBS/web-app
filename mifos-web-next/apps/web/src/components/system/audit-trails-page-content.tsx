@@ -16,6 +16,7 @@ import { Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import { exportAuditTrailsCsvAction } from '@/actions/audit-trails';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
@@ -128,7 +129,7 @@ export function AuditTrailsPageContent({
     startTransition(async () => {
       const result = await exportAuditTrailsCsvAction(query);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       const blob = new Blob([result.csv], { type: 'text/csv;charset=utf-8;' });

@@ -13,6 +13,7 @@ import { Check, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import {
   deleteCheckerInboxItemAction,
   executeCheckerInboxActionAction
@@ -55,7 +56,7 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
           ? await deleteCheckerInboxItemAction(item.id)
           : await executeCheckerInboxActionAction(item.id, action);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toast.success(

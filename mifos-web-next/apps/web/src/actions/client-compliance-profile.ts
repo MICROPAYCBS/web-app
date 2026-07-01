@@ -78,5 +78,3 @@ export async function updateClientComplianceProfileAction(
     return toFineractActionError(err, 'Could not update compliance details.');
   }
 }
-
-export type { ComplianceProfileInput };

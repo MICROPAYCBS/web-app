@@ -12,7 +12,7 @@ import type { FineractReportRunColumnHeader, SmsCampaignDetail } from '@mifos/ap
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   fetchSmsCampaignTemplateColumnsAction,
@@ -115,7 +115,7 @@ export function SmsCampaignEditForm({ campaign }: { campaign: SmsCampaignDetail 
       if (!result.ok) {
         const errorMessage = formatActionErrorMessage(result.message, result.fieldErrors);
         setSubmitError(errorMessage);
-        toast.error(errorMessage);
+        toastFineractError(errorMessage);
         return;
       }
       toastCommandOutcome(result, { completed: 'SMS campaign updated', pending: 'SMS campaign updated sent for approval.' });

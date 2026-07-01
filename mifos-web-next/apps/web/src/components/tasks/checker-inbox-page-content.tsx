@@ -13,6 +13,7 @@ import { Check, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { toastFineractError } from '@/lib/toast-fineract-error';
 import {
   bulkDeleteCheckerInboxItemsAction,
   bulkExecuteCheckerInboxActionAction
@@ -82,7 +83,7 @@ export function CheckerInboxPageContent({
           ? await bulkDeleteCheckerInboxItemsAction(ids)
           : await bulkExecuteCheckerInboxActionAction(ids, action);
       if (!result.ok) {
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toast.success(

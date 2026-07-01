@@ -13,9 +13,17 @@ import type {
   FineractReportRunParameterMetadata,
   FineractReportRunResult
 } from '@mifos/api-client';
-import { inferReportParameterPresentation, reportEngineParameterName, resolveReportParameterDisplayLabel } from '@mifos/domain';
+import {
+  inferReportParameterPresentation,
+  isReportCurrencyCodeParameter,
+  isReportParameterDate,
+  isReportParameterNumeric,
+  reportRunQueryParameterVariable,
+  resolveReportParameterDisplayLabel
+} from '@mifos/domain';
 import { parseFineractDateString } from '@/lib/fineract/dates';
 import { fineractDateToIso } from '@/lib/fineract/date-input';
+import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 
 export function listRunnableReports(reports: FineractReportListItem[]): FineractReportListItem[] {
   return reports.filter((report) => report.useReport).sort((a, b) => a.reportName.localeCompare(b.reportName));
@@ -158,13 +166,20 @@ export function parseReportParameterMetadata(
 export function parseReportParameterOptions(
   result: FineractReportRunResult | null | undefined
 ): Array<{ id: string | number; name: string }> {
-  return sanitizeReportRunRows(result).map((row) => {
-    const values = Object.values(row);
-    return {
-      id: values[0] as string | number,
-      name: String(values[1] ?? values[0] ?? '')
-    };
-  });
+  if (!result?.columnHeaders?.length || !Array.isArray(result.data)) {
+    return [];
+  }
+
+  const idColumn = result.columnHeaders[0]?.columnName;
+  const nameColumn = result.columnHeaders[1]?.columnName;
+  if (!idColumn) {
+    return [];
+  }
+
+  return sanitizeReportRunRows(result).map((row) => ({
+    id: row[idColumn] as string | number,
+    name: String(nameColumn ? row[nameColumn] : row[idColumn] ?? '')
+  }));
 }
 
 export function mergeReportRunParameters(
@@ -184,7 +199,7 @@ export function mergeReportRunParameters(
             reportParameterName: parameter.reportParameterName
           }),
           parameterVariable:
-            reportEngineParameterName(parameterName, parameter.reportParameterName) ?? parameterName
+            reportRunQueryParameterVariable(parameterName) ?? parameterName
         }),
         id: parameter.id,
         reportParameterName: parameter.reportParameterName
@@ -196,7 +211,6 @@ export function mergeReportRunParameters(
     const reportParam = definition?.reportParameters?.find(
       (parameter) => parameter.parameterName === meta.parameterName
     );
-    const catalogName = reportParam?.parameterName ?? meta.parameterName;
     return {
       ...reportParam,
       ...enrichReportParameterMetadata({
@@ -209,10 +223,7 @@ export function mergeReportRunParameters(
           reportParameterName: reportParam?.reportParameterName
         }),
         parameterVariable:
-          meta.parameterVariable ||
-          (catalogName
-            ? reportEngineParameterName(catalogName, reportParam?.reportParameterName)
-            : undefined) ||
+          reportRunQueryParameterVariable(meta.parameterName, meta.parameterVariable) ??
           meta.parameterName,
         selectAll: Boolean(meta.selectAll),
         selectOne: Boolean(meta.selectOne),
@@ -288,13 +299,79 @@ export function isTabularReportType(reportType: string): boolean {
   return reportType === 'Table' || reportType === 'SMS';
 }
 
+/** Table/SMS stretchy reports expect ISO dates in query params (legacy web-app parity). */
+export const REPORT_RUN_DATE_FORMAT = 'yyyy-MM-dd';
+
+export function formatReportRunDateValue(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  return fineractDateToIso(trimmed) || trimmed;
+}
+
+export function coerceReportNumericParameterValue(value: string): string {
+  const trimmed = value.trim();
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    return trimmed;
+  }
+  const match = trimmed.match(/^(-?\d+)/);
+  return match?.[1] ?? trimmed;
+}
+
+export function formatReportRunParameterValues(
+  parameters: FineractReportRunParameter[],
+  values: Record<string, string>
+): Record<string, string> {
+  const formatted: Record<string, string> = {};
+
+  for (const parameter of parameters) {
+    const fieldName = parameter.parameterVariable || parameter.parameterName;
+    const raw = values[fieldName];
+    if (raw == null || raw === '') {
+      continue;
+    }
+
+    if (isReportParameterDate(parameter)) {
+      formatted[fieldName] = formatReportRunDateValue(raw);
+      continue;
+    }
+
+    if (
+      isReportParameterNumeric(parameter) &&
+      !isReportCurrencyCodeParameter(parameter.parameterName, fieldName)
+    ) {
+      formatted[fieldName] = coerceReportNumericParameterValue(raw);
+      continue;
+    }
+
+    formatted[fieldName] = raw.trim();
+  }
+
+  return formatted;
+}
+
 export function buildReportRunQueryParams(values: Record<string, string>): Record<string, string> {
   const queryParams: Record<string, string> = {};
+  let includesDates = false;
+
   for (const [key, value] of Object.entries(values)) {
     if (!value) {
       continue;
     }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      includesDates = true;
+    }
     queryParams[key.startsWith('R_') ? key : `R_${key}`] = value;
   }
+
+  if (includesDates) {
+    queryParams.locale = FINERACT_LOCALE;
+    queryParams.dateFormat = REPORT_RUN_DATE_FORMAT;
+  }
+
   return queryParams;
 }

@@ -11,7 +11,7 @@
 import { validateCreateProvisioningEntry, type CreateProvisioningEntryInput } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createProvisioningEntryAction } from '@/actions/provisioning-entries';
 import { DateField } from '@/components/composites/date-field';
@@ -87,7 +87,7 @@ export function ProvisioningEntryFormSheet({
           setFieldErrors(result.fieldErrors);
         }
         setSubmitError(result.message);
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       toastCommandOutcome(result, { completed: 'Provisioning entry created.', pending: 'Provisioning entry created sent for approval.' });

@@ -9,7 +9,9 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { ErrorPanel } from '@/components/composites/error-panel';
+import { fineractUserErrorMessage, isFineractUserError } from '@/lib/errors/is-fineract-user-error';
 import { cn } from '@/lib/utils';
 
 export interface ErrorBoundaryProps {
@@ -26,7 +28,7 @@ interface ErrorBoundaryState {
 }
 
 /**
- * Catches render errors in client components so surrounding chrome (sidebar, header) stays usable.
+ * Catches unexpected render errors. Fineract API failures belong in toasts or {@link FineractErrorAlert}.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = {
@@ -61,15 +63,25 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return (
       <div className={cn('flex min-h-0 flex-1 flex-col', this.props.className)}>
         {error ? (
-          <ErrorPanel
-            error={error}
-            componentStack={componentStack ?? undefined}
-            title={this.props.title}
-            description={this.props.description}
-            onReset={this.reset}
-            variant="inline"
-            className="flex-1"
-          />
+          isFineractUserError(error) ? (
+            <FineractErrorAlert
+              title={this.props.title ?? 'Request failed'}
+              message={fineractUserErrorMessage(error) ?? 'Something went wrong.'}
+              hint={this.props.description}
+              onRetry={this.reset}
+              className="m-4 flex-1"
+            />
+          ) : (
+            <ErrorPanel
+              error={error}
+              componentStack={componentStack ?? undefined}
+              title={this.props.title}
+              description={this.props.description}
+              onReset={this.reset}
+              variant="inline"
+              className="flex-1"
+            />
+          )
         ) : (
           this.props.children
         )}

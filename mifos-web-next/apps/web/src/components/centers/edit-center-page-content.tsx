@@ -9,10 +9,10 @@
  */
 
 import type { CenterEditTemplate } from '@mifos/api-client';
-import { formatActionErrorMessage } from '@mifos/validation';
+
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastActionError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { updateCenterAction } from '@/actions/centers';
 import { DetailBackLink } from '@/components/composites';
@@ -61,7 +61,7 @@ export function EditCenterPageContent({ center }: { center: CenterEditTemplate }
         pending: 'Center update sent for approval.'
       })) {
         setFieldErrors(result.fieldErrors ?? {});
-        toast.error(formatActionErrorMessage(result.message, result.fieldErrors));
+        toastActionError(result.message, result.fieldErrors);
         return;
       }
       router.push(centerGeneralPath(center.id));

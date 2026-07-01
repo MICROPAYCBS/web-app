@@ -12,7 +12,7 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { buildSmsCampaignParamValue, createSmsCampaignAction } from '@/actions/sms-campaign';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -156,7 +156,7 @@ export function SmsCampaignWizard({ template }: SmsCampaignWizardProps) {
 
         const message = formatActionErrorMessage(result.message, result.fieldErrors);
         setSubmitError(message);
-        toast.error(message);
+        toastFineractError(message);
         return;
       }
       if (result.campaignId) {

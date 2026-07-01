@@ -9,10 +9,13 @@
 export {
   catalogReportParameterVariable,
   inferReportParameterPresentation,
+  isReportCurrencyCodeParameter,
   isReportParameterDate,
+  isReportParameterNumeric,
   isReportParameterSelect,
   REPORT_PARAMETER_DISPLAY_LABELS,
   reportEngineParameterName,
+  reportRunQueryParameterVariable,
   resolveReportParameterDisplayLabel,
   STRETCHY_PARAMETER_VARIABLES,
   type ReportParameterLabelInput,

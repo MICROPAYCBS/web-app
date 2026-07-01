@@ -11,7 +11,6 @@
 import type { FineractClientComplianceProfile } from '@mifos/api-client';
 import {
   complianceProfileSchema,
-  formatActionErrorMessage,
   prepareComplianceProfileForValidation,
   type ComplianceProfileInput
 } from '@mifos/validation';
@@ -23,6 +22,7 @@ import { ClientComplianceProfileSections } from '@/components/clients/detail/cli
 import { Button } from '@/components/ui/button';
 import type { CreateClientDraft } from '@/components/clients/create/types';
 import type { StepErrors } from '@/components/clients/create/validation';
+import { toastActionError } from '@/lib/toast-fineract-error';
 import { normalizeOtherBankAccounts } from '@/lib/fineract/compliance-profile-normalize';
 
 function mapProfileToInput(profile: FineractClientComplianceProfile | null): ComplianceProfileInput {
@@ -40,9 +40,11 @@ function mapProfileToInput(profile: FineractClientComplianceProfile | null): Com
     dpfAlternativeBankName: profile.dpfAlternativeBankName ?? '',
     dpfAlternativeAccountNumber: profile.dpfAlternativeAccountNumber ?? '',
     otherBankAccounts: normalizeOtherBankAccounts(profile.otherBankAccounts).map((account) => ({
+      id: account.id,
       bankName: account.bankName,
       branchName: account.branchName ?? '',
-      accountNumber: account.accountNumber
+      accountNumber: account.accountNumber,
+      displayOrder: account.displayOrder
     }))
   };
 }
@@ -58,7 +60,7 @@ export function ClientComplianceProfileView({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<StepErrors>({});
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<CreateClientDraft>(() => ({
@@ -73,7 +75,7 @@ export function ClientComplianceProfileView({
   }));
 
   function handleSave() {
-    setError(null);
+    setValidationError(null);
     setFieldErrors({});
     const prepared = prepareComplianceProfileForValidation(draft.complianceProfile);
     const parsed = complianceProfileSchema.safeParse(prepared);
@@ -86,15 +88,20 @@ export function ClientComplianceProfileView({
         }
       }
       setFieldErrors(nextErrors);
-      setError('Please fix the highlighted fields.');
+      setValidationError('Please fix the highlighted fields.');
       return;
     }
 
     startTransition(async () => {
       const result = await updateClientComplianceProfileAction(clientId, parsed.data);
       if (!result.ok) {
-        setFieldErrors(result.fieldErrors ?? {});
-        setError(formatActionErrorMessage(result.message, result.fieldErrors));
+        const { _form: _ignored, ...inputFieldErrors } = result.fieldErrors ?? {};
+        setFieldErrors(inputFieldErrors);
+        if (result.message === 'Please fix the highlighted fields.') {
+          setValidationError(result.message);
+        } else {
+          toastActionError(result.message, inputFieldErrors);
+        }
         return;
       }
       setEditing(false);
@@ -107,12 +114,12 @@ export function ClientComplianceProfileView({
       <div className="space-y-4">
         <ComplianceProfileStep
           draft={draft}
-          errors={{ ...fieldErrors, ...(error ? { _form: error } : {}) }}
+          errors={{ ...fieldErrors, ...(validationError ? { _form: validationError } : {}) }}
           onComplianceChange={(complianceProfile) =>
             setDraft((current) => ({ ...current, complianceProfile }))
           }
         />
-        <div className="flex gap-2">
+        <div className="flex justify-end gap-2">
           <Button type="button" onClick={handleSave} disabled={pending}>
             {pending ? 'Saving…' : 'Save'}
           </Button>
@@ -122,7 +129,7 @@ export function ClientComplianceProfileView({
             disabled={pending}
             onClick={() => {
               setEditing(false);
-              setError(null);
+              setValidationError(null);
               setFieldErrors({});
               setDraft((current) => ({
                 ...current,

@@ -24,7 +24,7 @@ import { Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
-import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { parseAmount, areJournalEntryTotalsBalanced } from '@mifos/domain';
 import { createJournalEntryAction } from '@/actions/journal-entries';
@@ -233,7 +233,7 @@ export function JournalEntryForm({
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toast.error(result.message);
+        toastFineractError(result.message);
         return;
       }
       if (result.transactionId) {

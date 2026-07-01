@@ -17,6 +17,7 @@ export function ReportParameterSelect({
   id,
   label,
   parameterReportName,
+  selectAll = false,
   value,
   onValueChange,
   parentVariable,
@@ -28,6 +29,7 @@ export function ReportParameterSelect({
   id?: string;
   label: string;
   parameterReportName: string;
+  selectAll?: boolean;
   value?: string;
   onValueChange: (value: string | undefined) => void;
   parentVariable?: string;
@@ -75,15 +77,17 @@ export function ReportParameterSelect({
     };
   }, [parameterReportName, parentVariable, parentValue, parentBlocked]);
 
-  const selectOptions = useMemo(
-    () =>
-      options.map((option) => ({
-        value: String(option.id),
-        label: option.name,
-        keywords: [String(option.id)]
-      })),
-    [options]
-  );
+  const selectOptions = useMemo(() => {
+    const mapped = options.map((option) => ({
+      value: String(option.id),
+      label: option.name,
+      keywords: [String(option.id)]
+    }));
+    if (selectAll && !mapped.some((option) => option.value === '-1')) {
+      mapped.push({ value: '-1', label: 'All', keywords: ['-1', 'all'] });
+    }
+    return mapped;
+  }, [options, selectAll]);
 
   const resolvedPlaceholder = parentBlocked
     ? 'Select parent parameter first'
