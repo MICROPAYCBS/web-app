@@ -588,6 +588,8 @@ export {
   updateOfficeSchema,
   validateCreateOffice,
   validateUpdateOffice,
+  type BranchProfileInput,
+  type BranchProfilePayload,
   type CreateOfficeInput,
   type CreateOfficePayload,
   type UpdateOfficeInput,

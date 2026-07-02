@@ -15,6 +15,7 @@
     "check:lint": "pnpm run lint",
     "check:ci": "pnpm run typecheck && pnpm run build",
     "check:pre-commit": "node scripts/pre-commit-check.mjs",
+    "check:pre-push": "node scripts/pre-push-check.mjs",
     "clean": "pnpm --filter web clean",
     "format": "prettier --write .",
     "prepare": "node scripts/ensure-git-hooks.mjs",

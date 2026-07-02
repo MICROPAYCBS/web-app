@@ -7,9 +7,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { runMifosWebNextHookCheck, stagedPaths } from './hook-check.mjs';
+import { pushedPaths, runMifosWebNextHookCheck } from './hook-check.mjs';
 
 runMifosWebNextHookCheck({
-  changedPaths: stagedPaths(),
-  hookLabel: 'pre-commit'
+  changedPaths: pushedPaths(),
+  hookLabel: 'pre-push'
 });

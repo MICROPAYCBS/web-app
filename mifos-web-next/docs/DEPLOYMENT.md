@@ -117,13 +117,15 @@ pnpm run check:ci
 
 Git **pre-commit** (repo root `.husky/pre-commit`) runs the same gate when staged files touch `mifos-web-next/apps/`, `packages/`, or lockfiles. Docs-only changes under `mifos-web-next/docs/` run typecheck only.
 
+**pre-push** (`.husky/pre-push`) runs the same checks on commits being pushed — useful if a commit used `--no-verify` or hooks were not installed when committing.
+
 Install hooks once from the **repository root** (not only inside `mifos-web-next`):
 
 ```bash
 npm install   # runs husky via prepare
 ```
 
-Emergency bypass (not for routine use): `MIFOS_WEB_NEXT_SKIP_HOOK=1 git commit …`
+Emergency bypass (not for routine use): `MIFOS_WEB_NEXT_SKIP_HOOK=1 git commit …` or `MIFOS_WEB_NEXT_SKIP_HOOK=1 git push …`
 
 
 ## Security

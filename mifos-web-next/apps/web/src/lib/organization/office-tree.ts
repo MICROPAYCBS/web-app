@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractOfficeListItem } from '@mifos/api-client';
+import type { FineractOfficeListItem, OfficeBranchProfile } from '@mifos/api-client';
 
 export interface OfficeTreeNode {
   id: number;
@@ -17,6 +17,7 @@ export interface OfficeTreeNode {
   externalId?: string;
   parentName?: string;
   openingDate?: number[] | string;
+  branchProfile?: OfficeBranchProfile;
   children: OfficeTreeNode[];
 }
 
@@ -41,6 +42,7 @@ export function buildOfficeTree(offices: FineractOfficeListItem[]): OfficeTreeNo
       externalId: mainOffice.externalId,
       parentName: mainOffice.parentName,
       openingDate: mainOffice.openingDate,
+      branchProfile: mainOffice.branchProfile,
       children: []
     }
   ];
@@ -62,6 +64,7 @@ export function buildOfficeTree(offices: FineractOfficeListItem[]): OfficeTreeNo
       externalId: office.externalId,
       parentName: office.parentName,
       openingDate: office.openingDate,
+      branchProfile: office.branchProfile,
       children: []
     };
   }

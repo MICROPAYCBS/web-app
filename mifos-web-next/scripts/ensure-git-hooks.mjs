@@ -18,19 +18,24 @@ try {
   process.exit(0);
 }
 
-const hookPath = join(root, '.husky/pre-commit');
-if (!existsSync(hookPath)) {
-  console.warn(
-    '\nmifos-web-next: Git hooks are not installed. Commits will not be checked before Vercel.\n' +
-      'From the repository root run: npm install\n'
-  );
-  process.exit(0);
+function warnMissingHook(hookName, scriptName) {
+  const hookPath = join(root, `.husky/${hookName}`);
+  if (!existsSync(hookPath)) {
+    console.warn(
+      `\nmifos-web-next: Git ${hookName} hook is not installed. Pushes may reach Vercel without local checks.\n` +
+        'From the repository root run: npm install\n'
+    );
+    return;
+  }
+
+  const hook = readFileSync(hookPath, 'utf8');
+  if (!hook.includes(scriptName)) {
+    console.warn(
+      `\nmifos-web-next: .husky/${hookName} does not run mifos-web-next/scripts/${scriptName}.\n` +
+        'Restore the hook or run `pnpm run check:ci` before pushing.\n'
+    );
+  }
 }
 
-const hook = readFileSync(hookPath, 'utf8');
-if (!hook.includes('pre-commit-check.mjs')) {
-  console.warn(
-    '\nmifos-web-next: .husky/pre-commit does not run mifos-web-next/scripts/pre-commit-check.mjs.\n' +
-      'Restore the hook or run `pnpm run check:ci` before pushing.\n'
-  );
-}
+warnMissingHook('pre-commit', 'pre-commit-check.mjs');
+warnMissingHook('pre-push', 'pre-push-check.mjs');
