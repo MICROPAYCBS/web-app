@@ -13,8 +13,9 @@ import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-
 import { useMemo } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import {
-  formatJournalEntryAmount,
-  formatJournalEntryDate
+  formatJournalEntryDate,
+  formatJournalEntryLineAmount,
+  formatJournalEntrySideLabel
 } from '@/lib/accounting/journal-entry-display';
 
 function buildColumns(): ColumnDef<FineractJournalEntryListItem>[] {
@@ -32,7 +33,7 @@ function buildColumns(): ColumnDef<FineractJournalEntryListItem>[] {
     {
       id: 'glAccountType',
       accessorFn: (row) => row.glAccountType.value,
-      header: 'Type',
+      header: 'Account type',
       cell: ({ row }) => row.original.glAccountType.value
     },
     {
@@ -46,22 +47,18 @@ function buildColumns(): ColumnDef<FineractJournalEntryListItem>[] {
       cell: ({ row }) => row.original.glAccountName
     },
     {
-      id: 'debit',
-      header: () => <span className="block w-full text-right">Debit</span>,
-      cell: ({ row }) => (
-        <span className="block w-full text-right tabular-nums">
-          {formatJournalEntryAmount(row.original, 'DEBIT')}
-        </span>
-      )
-    },
-    {
-      id: 'credit',
-      header: () => <span className="block w-full text-right">Credit</span>,
-      cell: ({ row }) => (
-        <span className="block w-full text-right tabular-nums">
-          {formatJournalEntryAmount(row.original, 'CREDIT')}
-        </span>
-      )
+      id: 'entryType',
+      accessorFn: (row) => row.entryType.value,
+      header: () => <span className="block w-full text-right">Entry type</span>,
+      cell: ({ row }) => {
+        const entry = row.original;
+        return (
+          <div className="flex items-baseline justify-end gap-3 tabular-nums text-right">
+            <span>{formatJournalEntrySideLabel(entry)}</span>
+            <span>{formatJournalEntryLineAmount(entry)}</span>
+          </div>
+        );
+      }
     },
     {
       id: 'transactionDate',

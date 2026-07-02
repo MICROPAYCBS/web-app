@@ -39,12 +39,27 @@ export function formatJournalEntryDateTime(value: string | number[] | undefined)
   }).format(date);
 }
 
+export function formatJournalEntrySideLabel(entry: FineractJournalEntryListItem) {
+  switch (entry.entryType.value) {
+    case 'DEBIT':
+      return 'Debit';
+    case 'CREDIT':
+      return 'Credit';
+    default:
+      return entry.entryType.value ?? '—';
+  }
+}
+
+export function formatJournalEntryLineAmount(entry: FineractJournalEntryListItem) {
+  const symbol = entry.currency.displaySymbol || entry.currency.code;
+  return `${symbol} ${formatAccountMoney(entry.amount).replace(/^[^ ]+\s/, '')}`;
+}
+
 export function formatJournalEntryAmount(entry: FineractJournalEntryListItem, side: 'DEBIT' | 'CREDIT') {
   if (entry.entryType.value !== side) {
     return '—';
   }
-  const symbol = entry.currency.displaySymbol || entry.currency.code;
-  return `${symbol} ${formatAccountMoney(entry.amount).replace(/^[^ ]+\s/, '')}`;
+  return formatJournalEntryLineAmount(entry);
 }
 
 export function defaultCreateJournalEntryFormValues(
