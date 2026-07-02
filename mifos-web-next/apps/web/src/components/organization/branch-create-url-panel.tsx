@@ -10,10 +10,19 @@
 
 import type { FineractOfficeOption } from '@mifos/api-client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { BranchFormSheet } from '@/components/organization/branch-form-sheet';
+import {
+  BranchFormSheet,
+  type BranchManagerOption
+} from '@/components/organization/branch-form-sheet';
 
 /** Opens the create branch sidebar when the URL contains `?create=1`. */
-export function BranchCreateUrlPanel({ parentOptions }: { parentOptions: FineractOfficeOption[] }) {
+export function BranchCreateUrlPanel({
+  parentOptions,
+  managerOptions = []
+}: {
+  parentOptions: FineractOfficeOption[];
+  managerOptions?: BranchManagerOption[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -35,6 +44,7 @@ export function BranchCreateUrlPanel({ parentOptions }: { parentOptions: Finerac
       onOpenChange={handleOpenChange}
       mode="create"
       parentOptions={parentOptions}
+      managerOptions={managerOptions}
     />
   );
 }

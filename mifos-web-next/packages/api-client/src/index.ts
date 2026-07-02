@@ -459,7 +459,8 @@ export type {
   FineractCreateOfficeResponse,
   FineractOfficeDetail,
   FineractOfficeEditTemplate,
-  FineractOfficeListItem
+  FineractOfficeListItem,
+  OfficeBranchProfile
 } from './organization/office-types';
 
 export type {

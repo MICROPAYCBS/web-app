@@ -21,6 +21,11 @@ import {
 import { getClientAccounts } from '@/lib/fineract/client-accounts';
 import { getClientTransferProposalDate } from '@/lib/fineract/client-action-data';
 import {
+  destinationOfficeIdFromClient,
+  destinationOfficeNameFromClient,
+  formatOfficeDisplayName
+} from '@/lib/fineract/client-transfer-display';
+import {
   clientAccountGeneralPath,
   type ClientAccountProductKind
 } from '@/lib/fineract/client-account-links';
@@ -28,6 +33,7 @@ import { getClient } from '@/lib/fineract/clients';
 import { clientStatusKind, type ClientStatusKind } from '@/lib/fineract/client-status';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { formatFineractDateArray, fromFineractDateArray } from '@/lib/fineract/dates';
+import { getOffice, listOfficeOptions } from '@/lib/fineract/offices';
 
 export type ClientTransferAccountRow = {
   id: number;
@@ -217,6 +223,29 @@ async function collectOnHoldRows(
   );
 }
 
+async function resolveDestinationOfficeName(
+  client: Awaited<ReturnType<typeof getClient>>
+): Promise<string | undefined> {
+  const direct = destinationOfficeNameFromClient(client);
+  if (direct) {
+    return direct;
+  }
+
+  const officeId = destinationOfficeIdFromClient(client);
+  if (officeId == null) {
+    return undefined;
+  }
+
+  try {
+    const office = await getOffice(officeId);
+    return formatOfficeDisplayName(office);
+  } catch {
+    const offices = await listOfficeOptions();
+    const match = offices.find((office) => office.id === officeId);
+    return formatOfficeDisplayName(match);
+  }
+}
+
 export async function getClientTransferContext(
   clientId: string | number
 ): Promise<ClientTransferContext | null> {
@@ -226,9 +255,10 @@ export async function getClientTransferContext(
     return null;
   }
 
-  const [proposalDate, accounts] = await Promise.all([
+  const [proposalDate, accounts, destinationOfficeName] = await Promise.all([
     getClientTransferProposalDate(clientId).catch(() => null),
-    getClientAccounts(clientId).catch(() => null)
+    getClientAccounts(clientId).catch(() => null),
+    resolveDestinationOfficeName(client)
   ]);
 
   if (!accounts) {
@@ -242,11 +272,6 @@ export async function getClientTransferContext(
   const transferDateLabel = transferDate
     ? new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(transferDate)
     : null;
-
-  const destinationOfficeName =
-    client.transferToOffice?.nameDecorated?.trim() ||
-    client.transferToOffice?.name?.trim() ||
-    undefined;
 
   const onHoldTransactions =
     clientStatus === 'transferOnHold'

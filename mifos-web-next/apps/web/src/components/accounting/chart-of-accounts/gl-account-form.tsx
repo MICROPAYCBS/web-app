@@ -17,9 +17,9 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
-import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { createGlAccountAction, updateGlAccountAction } from '@/actions/gl-accounts';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -113,15 +113,19 @@ export function GlAccountForm({
           : await updateGlAccountAction(glAccountId as number, parsed.data);
 
       if (!result.ok) {
-
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toastFineractError(result.message);
         return;
       }
-      toastCommandOutcome(result, { completed: mode === 'create' ? 'GL account created.' : 'GL account updated.', pending: mode === 'create' ? 'GL account created. sent for approval.' : 'GL account updated. sent for approval.' });
+      toastCommandOutcome(result, {
+        completed: mode === 'create' ? 'GL account created.' : 'GL account updated.',
+        pending:
+          mode === 'create'
+            ? 'GL account created. Sent for approval.'
+            : 'GL account updated. Sent for approval.'
+      });
       router.push(`/accounting/chart-of-accounts/${result.resourceId ?? glAccountId}`);
       router.refresh();
     });
@@ -232,9 +236,13 @@ export function GlAccountForm({
       />
 
       {submitError ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {submitError}
-        </p>
+        submitError === 'Fix the highlighted fields.' ? (
+          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {submitError}
+          </p>
+        ) : (
+          <FineractErrorAlert message={submitError} />
+        )
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2">

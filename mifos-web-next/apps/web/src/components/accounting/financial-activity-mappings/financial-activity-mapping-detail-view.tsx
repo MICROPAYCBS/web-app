@@ -38,6 +38,10 @@ import {
   formatFinancialActivityNameOnly,
   formatMappedGlAccountTypeLabel
 } from '@/lib/accounting/financial-activity-mapping-display';
+import {
+  FINANCIAL_ACTIVITY_MAPPING_LIST_PATH,
+  financialActivityMappingEditPath
+} from '@/lib/fineract/financial-activity-mapping-paths';
 import { cn } from '@/lib/utils';
 
 export function FinancialActivityMappingDetailView({
@@ -64,8 +68,11 @@ export function FinancialActivityMappingDetailView({
         toastFineractError(result.message);
         return;
       }
-      toastCommandOutcome(result, { completed: 'Financial activity mapping deleted.', pending: 'Financial activity mapping deleted sent for approval.' });
-      router.push('/accounting/financial-activity-mappings');
+      toastCommandOutcome(result, {
+        completed: 'Financial activity mapping deleted.',
+        pending: 'Financial activity mapping deletion sent for approval.'
+      });
+      router.push(FINANCIAL_ACTIVITY_MAPPING_LIST_PATH);
       router.refresh();
     });
   }
@@ -77,7 +84,7 @@ export function FinancialActivityMappingDetailView({
           <DetailHeader
             backLink={
               <DetailBackLink
-                href="/accounting/financial-activity-mappings"
+                href={FINANCIAL_ACTIVITY_MAPPING_LIST_PATH}
                 label="Back to financial activity mappings"
               />
             }
@@ -87,7 +94,7 @@ export function FinancialActivityMappingDetailView({
               <div className="flex flex-wrap gap-2">
                 {canUpdate ? (
                   <Link
-                    href={`/accounting/financial-activity-mappings/${mapping.id}/edit`}
+                    href={financialActivityMappingEditPath(mapping.id)}
                     className={cn(buttonVariants({ size: 'sm' }))}
                   >
                     <Pencil className="mr-2 size-4" />

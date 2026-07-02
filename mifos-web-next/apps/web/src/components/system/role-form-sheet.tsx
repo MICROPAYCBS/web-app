@@ -16,7 +16,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
 import { createRoleAction, updateRoleAction } from '@/actions/system-roles';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { TextField } from '@/components/composites/text-field';
@@ -64,6 +63,10 @@ export function RoleFormSheet({
     }
   }, [open, initial?.name, initial?.description]);
 
+  function closeSheet() {
+    onOpenChange(false);
+  }
+
   function handleOpenChange(next: boolean) {
     if (pending) {
       return;
@@ -104,13 +107,16 @@ export function RoleFormSheet({
           return;
         }
 
-        toastCommandOutcome(result, { completed: 'Role created.', pending: 'Role creation sent for approval.' });
-        onOpenChange(false);
+        toastCommandOutcome(result, {
+          completed: 'Role created.',
+          pending: 'Role creation sent for approval.'
+        });
         if (result.resourceId != null) {
           router.push(`/system/roles-and-permissions/${result.resourceId}`);
-        } else {
-          router.refresh();
+          return;
         }
+        closeSheet();
+        queueMicrotask(() => router.refresh());
       });
       return;
     }
@@ -146,9 +152,12 @@ export function RoleFormSheet({
         return;
       }
 
-      toastCommandOutcome(result, { completed: 'Role updated.', pending: 'Role update sent for approval.' });
-      onOpenChange(false);
-      router.refresh();
+      toastCommandOutcome(result, {
+        completed: 'Role updated.',
+        pending: 'Role update sent for approval.'
+      });
+      closeSheet();
+      queueMicrotask(() => router.refresh());
     });
   }
 

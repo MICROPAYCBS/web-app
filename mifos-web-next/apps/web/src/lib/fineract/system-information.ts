@@ -17,7 +17,8 @@ export interface SystemInformationSnapshot {
   serverName: string;
   serverBaseUrl: string;
   applicationVersion: string;
-  coreBankingVersion: string | null;
+  coreBankingRelease: string | null;
+  coreBankingCommit: string | null;
   coreBankingVersionNote: string | null;
 }
 
@@ -30,7 +31,9 @@ export async function getSystemInformation(): Promise<SystemInformationSnapshot>
     serverName,
     serverBaseUrl: baseUrl,
     applicationVersion: APP_VERSION,
-    coreBankingVersion: probe.version ?? null,
-    coreBankingVersionNote: probe.version == null && probe.message ? probe.message : null
+    coreBankingRelease: probe.release ?? probe.version ?? null,
+    coreBankingCommit: probe.commit ?? null,
+    coreBankingVersionNote:
+      probe.release == null && probe.version == null && probe.message ? probe.message : null
   };
 }

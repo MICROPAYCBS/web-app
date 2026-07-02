@@ -14,7 +14,10 @@ export type ServerHealthUiStatus = 'probing' | 'healthy' | 'unhealthy' | 'idle';
 
 export interface ServerHealthSnapshot {
   status: ServerHealthUiStatus;
+  /** Formatted `release+commit` label when available. */
   version?: string;
+  release?: string;
+  commit?: string;
   message?: string;
 }
 

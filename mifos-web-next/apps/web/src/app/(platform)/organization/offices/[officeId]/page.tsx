@@ -11,7 +11,9 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { BranchDetailView } from '@/components/organization/branch-detail-view';
 import { BranchEditUrlPanel } from '@/components/organization/branch-edit-url-panel';
+import { toBranchManagerOptions } from '@/lib/fineract/branch-manager-options';
 import { getOffice, getOfficeEditTemplate } from '@/lib/fineract/offices';
+import { listStaffByOffice } from '@/lib/fineract/staff';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationOfficeDetailPage({
@@ -30,10 +32,12 @@ export default async function OrganizationOfficeDetailPage({
 
   let office;
   let editTemplate;
+  let managerOptions = [];
   try {
-    [office, editTemplate] = await Promise.all([
+    [office, editTemplate, managerOptions] = await Promise.all([
       getOffice(officeId),
-      canEdit ? getOfficeEditTemplate(officeId) : Promise.resolve(null)
+      canEdit ? getOfficeEditTemplate(officeId) : Promise.resolve(null),
+      canEdit ? listStaffByOffice(Number(officeId)).then(toBranchManagerOptions) : Promise.resolve([])
     ]);
   } catch {
     notFound();
@@ -50,12 +54,14 @@ export default async function OrganizationOfficeDetailPage({
           <BranchEditUrlPanel
             officeId={editTemplate.id}
             parentOptions={allowedParents}
+            managerOptions={managerOptions}
             showParentField={showParentField}
             initial={{
               name: editTemplate.name,
               parentId: editTemplate.parentId,
               openingDate: editTemplate.openingDate,
-              externalId: editTemplate.externalId
+              externalId: editTemplate.externalId,
+              branchProfile: editTemplate.branchProfile ?? office.branchProfile
             }}
           />
         </Suspense>

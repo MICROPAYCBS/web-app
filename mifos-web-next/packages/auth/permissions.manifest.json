@@ -387,6 +387,46 @@
       "DELETE_CONTACTTYPE"
     ]
   },
+  "organization.sectors": {
+    "any": [
+      "READ_SECTOR"
+    ]
+  },
+  "organization.sectors.create": {
+    "any": [
+      "CREATE_SECTOR"
+    ]
+  },
+  "organization.sectors.update": {
+    "any": [
+      "UPDATE_SECTOR"
+    ]
+  },
+  "organization.sectors.delete": {
+    "any": [
+      "DELETE_SECTOR"
+    ]
+  },
+  "organization.industries": {
+    "any": [
+      "READ_INDUSTRY"
+    ]
+  },
+  "organization.industries.create": {
+    "any": [
+      "CREATE_INDUSTRY"
+    ]
+  },
+  "organization.industries.update": {
+    "any": [
+      "UPDATE_INDUSTRY"
+    ]
+  },
+  "organization.industries.delete": {
+    "any": [
+      "DELETE_INDUSTRY"
+    ]
+  },
   "organization.identityTypes": {
     "any": [
       "READ_IDENTITYTYPE"

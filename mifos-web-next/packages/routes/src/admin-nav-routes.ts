@@ -197,6 +197,30 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'orgSectors',
+    path: '/organization/sectors',
+    label: 'Sectors',
+    navGroup: 'organization',
+    webAppRef: 'organization/sectors',
+    permissionKey: 'organization.sectors',
+    navOrder: 117.5,
+    navIcon: 'layers',
+    keywords: ['sector', 'economic sector', 'industry classification'],
+    parityStatus: 'done'
+  },
+  {
+    id: 'orgIndustries',
+    path: '/organization/industries',
+    label: 'Industries',
+    navGroup: 'organization',
+    webAppRef: 'organization/industries',
+    permissionKey: 'organization.industries',
+    navOrder: 117.6,
+    navIcon: 'briefcase',
+    keywords: ['industry', 'sub-industry', 'aml', 'credit risk'],
+    parityStatus: 'done'
+  },
+  {
     id: 'orgIdentityTypes',
     path: '/organization/identity-types',
     label: 'Identity type guides',

@@ -16,6 +16,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import { updateClientComplianceProfileAction } from '@/actions/client-compliance-profile';
 import { ComplianceProfileStep, emptyComplianceProfile } from '@/components/clients/create/steps/compliance-profile-step';
 import { ClientComplianceProfileSections } from '@/components/clients/detail/client-compliance-profile-sections';
@@ -104,6 +105,7 @@ export function ClientComplianceProfileView({
         }
         return;
       }
+      toast.success('Compliance profile saved.');
       setEditing(false);
       router.refresh();
     });

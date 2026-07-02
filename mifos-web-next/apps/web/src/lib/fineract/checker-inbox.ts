@@ -11,7 +11,6 @@ import 'server-only';
 import type {
   CheckerInboxActionCommand,
   CheckerInboxListItem,
-  CheckerInboxSearchTemplate,
   FineractAuditTrailDetail,
   FineractCommandProcessingResult
 } from '@mifos/api-client';
@@ -56,18 +55,6 @@ function normalizeCheckerInboxList(raw: unknown): CheckerInboxListItem[] {
     .filter((item): item is CheckerInboxListItem => item !== null);
 }
 
-function normalizeCheckerInboxSearchTemplate(raw: unknown): CheckerInboxSearchTemplate {
-  const row = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  return {
-    actionNames: Array.isArray(row.actionNames)
-      ? row.actionNames.filter((item): item is string => typeof item === 'string')
-      : [],
-    entityNames: Array.isArray(row.entityNames)
-      ? row.entityNames.filter((item): item is string => typeof item === 'string')
-      : []
-  };
-}
-
 export async function listCheckerInboxItems(
   filters: CheckerInboxSearchFilters = {}
 ): Promise<CheckerInboxListItem[]> {
@@ -84,12 +71,6 @@ export async function getCheckerInboxPendingCount(): Promise<number> {
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(MAKER_CHECKERS_PATH, { fields: 'id' });
   return normalizeCheckerInboxList(raw).length;
-}
-
-export async function getCheckerInboxSearchTemplate(): Promise<CheckerInboxSearchTemplate> {
-  const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>(`${MAKER_CHECKERS_PATH}/searchtemplate`);
-  return normalizeCheckerInboxSearchTemplate(raw);
 }
 
 export async function getCheckerInboxDetail(

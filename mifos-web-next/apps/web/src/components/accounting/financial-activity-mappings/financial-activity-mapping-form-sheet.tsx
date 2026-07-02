@@ -8,43 +8,53 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractFinancialActivityMappingFormTemplate } from '@mifos/api-client';
+import type {
+  FineractFinancialActivityMappingFormTemplate,
+  FineractFinancialActivityMappingListItem
+} from '@mifos/api-client';
 import {
   formatActionErrorMessage,
   validateUpsertFinancialActivityMappingForm,
   type UpsertFinancialActivityMappingFormInput
 } from '@mifos/validation';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState, useTransition } from 'react';
-import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
+import { useId, useMemo, useRef, useState, useTransition } from 'react';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import {
   createFinancialActivityMappingAction,
   updateFinancialActivityMappingAction
 } from '@/actions/financial-activity-mappings';
+import { FormErrorAlert } from '@/components/composites/form-error-alert';
+import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
-import { Button, buttonVariants } from '@/components/ui/button';
 import {
+  defaultFinancialActivityMappingFormValues,
   financialActivityGlAccountSelectOptions,
+  financialActivityMappingFormValuesFromDetail,
   financialActivitySelectOptions,
   glAccountsForFinancialActivity
 } from '@/lib/accounting/financial-activity-mapping-display';
-import { cn } from '@/lib/utils';
 
-export function FinancialActivityMappingForm({
+export function FinancialActivityMappingFormSheet({
+  open,
+  onOpenChange,
   mode,
-  mappingId,
-  initialValues,
-  template
+  template,
+  mapping
 }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
-  mappingId?: number;
-  initialValues: UpsertFinancialActivityMappingFormInput;
   template: FineractFinancialActivityMappingFormTemplate;
+  mapping?: FineractFinancialActivityMappingListItem;
 }) {
   const router = useRouter();
-  const [form, setForm] = useState<UpsertFinancialActivityMappingFormInput>(initialValues);
+  const formId = useId();
+  const [form, setForm] = useState<UpsertFinancialActivityMappingFormInput>(() =>
+    mapping
+      ? financialActivityMappingFormValuesFromDetail(mapping)
+      : defaultFinancialActivityMappingFormValues()
+  );
   const formRef = useRef(form);
   formRef.current = form;
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -62,6 +72,22 @@ export function FinancialActivityMappingForm({
       : [];
     return financialActivityGlAccountSelectOptions(accounts);
   }, [form.financialActivityId, template.glAccountOptions]);
+
+  function handleOpenChange(next: boolean) {
+    if (pending) {
+      return;
+    }
+    if (next) {
+      setForm(
+        mapping
+          ? financialActivityMappingFormValuesFromDetail(mapping)
+          : defaultFinancialActivityMappingFormValues()
+      );
+      setFieldErrors({});
+      setSubmitError(null);
+    }
+    onOpenChange(next);
+  }
 
   function patchForm(patch: Partial<UpsertFinancialActivityMappingFormInput>) {
     setForm((current) => {
@@ -84,8 +110,11 @@ export function FinancialActivityMappingForm({
     });
   }
 
-  function handleSubmit() {
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setSubmitError(null);
+    setFieldErrors({});
+
     const parsed = validateUpsertFinancialActivityMappingForm(formRef.current);
     if (!parsed.success) {
       const nextErrors: Record<string, string> = {};
@@ -102,47 +131,56 @@ export function FinancialActivityMappingForm({
       const result =
         mode === 'create'
           ? await createFinancialActivityMappingAction(parsed.data)
-          : await updateFinancialActivityMappingAction(mappingId!, parsed.data);
+          : await updateFinancialActivityMappingAction(mapping!.id, parsed.data);
 
       if (!result.ok) {
-
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
-        toastFineractError(result.message);
         return;
       }
-      toastCommandOutcome(result, { completed: mode === 'create'
-          ? 'Financial activity mapping created.'
-          : 'Financial activity mapping updated.', pending: mode === 'create'
-          ? 'Financial activity mapping created.'
-          : 'Financial activity mapping updated.' });
-      router.push(`/accounting/financial-activity-mappings/${result.resourceId ?? mappingId}`);
+
+      toastCommandOutcome(result, {
+        completed:
+          mode === 'create'
+            ? 'Financial activity mapping created.'
+            : 'Financial activity mapping updated.',
+        pending:
+          mode === 'create'
+            ? 'Financial activity mapping creation sent for approval.'
+            : 'Financial activity mapping update sent for approval.'
+      });
+      handleOpenChange(false);
       router.refresh();
     });
   }
 
   return (
-    <form
-      className="space-y-6"
-      onSubmit={(event) => {
-        event.preventDefault();
-        handleSubmit();
-      }}
+    <FormSheet
+      open={open}
+      onOpenChange={handleOpenChange}
+      title={mode === 'create' ? 'Define mapping' : 'Edit mapping'}
+      description="Link a financial activity to a GL account for automated accounting transfers."
+      formId={formId}
+      submitLabel={mode === 'create' ? 'Create mapping' : 'Save changes'}
+      submitLoading={pending}
+      error={submitError ? <FormErrorAlert>{submitError}</FormErrorAlert> : null}
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <form id={formId} className="grid gap-4" onSubmit={handleSubmit}>
         <SelectField
+          id={`${formId}-financial-activity`}
           label="Financial activity"
           required
           value={form.financialActivityId > 0 ? String(form.financialActivityId) : undefined}
           onValueChange={handleFinancialActivityChange}
           options={financialActivityOptions}
           placeholder="Select financial activity"
-          disabled={pending}
+          disabled={pending || mode === 'edit'}
           error={fieldErrors.financialActivityId}
         />
         <SelectField
+          id={`${formId}-gl-account`}
           label="GL account"
           required
           value={form.glAccountId > 0 ? String(form.glAccountId) : undefined}
@@ -159,29 +197,7 @@ export function FinancialActivityMappingForm({
           emptyMessage="No GL accounts available for this activity."
           error={fieldErrors.glAccountId}
         />
-      </div>
-
-      {submitError ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {submitError}
-        </p>
-      ) : null}
-
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Link
-          href={
-            mode === 'edit' && mappingId
-              ? `/accounting/financial-activity-mappings/${mappingId}`
-              : '/accounting/financial-activity-mappings'
-          }
-          className={cn(buttonVariants({ variant: 'outline' }))}
-        >
-          Cancel
-        </Link>
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Submitting…' : 'Submit'}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </FormSheet>
   );
 }

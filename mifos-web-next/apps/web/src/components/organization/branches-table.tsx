@@ -21,6 +21,7 @@ import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Input } from '@/components/ui/input';
+import { branchCodeLabel } from '@/lib/fineract/branch-profile-form';
 import { branchDisplayName } from '@/lib/fineract/office-display';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
@@ -37,9 +38,14 @@ export function BranchesTable({ offices }: { offices: FineractOfficeListItem[] }
       return offices;
     }
     return offices.filter((row) => {
+      const profile = row.branchProfile;
       const haystack = [
         row.name,
         row.nameDecorated,
+        profile?.officeCode,
+        profile?.branchType,
+        profile?.city,
+        profile?.status,
         row.parentName,
         row.externalId
       ]
@@ -54,7 +60,7 @@ export function BranchesTable({ offices }: { offices: FineractOfficeListItem[] }
     () => [
       {
         id: 'name',
-        header: 'Name',
+        header: 'Branch name',
         cell: ({ row }) => (
           <Link
             href={`/organization/offices/${row.original.id}`}
@@ -65,9 +71,21 @@ export function BranchesTable({ offices }: { offices: FineractOfficeListItem[] }
         )
       },
       {
-        accessorKey: 'externalId',
-        header: 'External ID',
-        cell: ({ row }) => row.original.externalId?.trim() || '—'
+        id: 'officeCode',
+        header: 'Code',
+        cell: ({ row }) => (
+          <span className="font-mono text-sm">{branchCodeLabel(row.original) ?? '—'}</span>
+        )
+      },
+      {
+        id: 'branchType',
+        header: 'Type',
+        cell: ({ row }) => row.original.branchProfile?.branchType ?? '—'
+      },
+      {
+        id: 'city',
+        header: 'City',
+        cell: ({ row }) => row.original.branchProfile?.city ?? '—'
       },
       {
         accessorKey: 'parentName',
@@ -78,6 +96,11 @@ export function BranchesTable({ offices }: { offices: FineractOfficeListItem[] }
         id: 'openingDate',
         header: 'Opening date',
         cell: ({ row }) => formatFineractDateArray(row.original.openingDate) ?? '—'
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: ({ row }) => row.original.branchProfile?.status ?? '—'
       }
     ],
     []
@@ -95,7 +118,7 @@ export function BranchesTable({ offices }: { offices: FineractOfficeListItem[] }
   return (
     <div className="space-y-4">
       <Input
-        placeholder="Filter branches…"
+        placeholder="Filter branches by name, code, city, type…"
         value={filter}
         onChange={(event) => {
           setFilter(event.target.value);

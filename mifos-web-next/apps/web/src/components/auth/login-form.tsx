@@ -14,6 +14,7 @@ import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginMarketingPanel } from '@/components/auth/login-marketing-panel';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
 import { LoginActiveServer } from '@/components/auth/login-active-server';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { PasswordInput } from '@/components/composites/password-input';
 import { Button } from '@/components/ui/button';
@@ -80,7 +81,7 @@ export function LoginForm({
     }
   }
 
-  const displayedError = submitError ?? loginError;
+  const displayedError = submitError ?? (isSubmitting ? null : loginError);
 
   return (
     <div className={cn('grid min-h-svh lg:grid-cols-2', className)}>
@@ -152,14 +153,7 @@ export function LoginForm({
                     </div>
                   ) : null}
 
-                  {displayedError ? (
-                    <div
-                      className="max-h-64 overflow-auto rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm whitespace-pre-wrap text-destructive"
-                      role="alert"
-                    >
-                      {displayedError}
-                    </div>
-                  ) : null}
+                  {displayedError ? <FineractErrorAlert message={displayedError} /> : null}
 
                   <Field className="pt-2">
                     <Button

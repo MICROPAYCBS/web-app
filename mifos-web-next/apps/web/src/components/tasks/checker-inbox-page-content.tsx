@@ -114,25 +114,19 @@ export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem
           </>
         }
       >
-        {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No checker inbox data available for this account.
-          </p>
-        ) : (
-          <CheckerInboxTable
-            key={selectionEpoch}
-            items={items}
-            filters={filters}
-            onSelectedItemsChange={setSelectedItems}
-            toolbar={
-              <ListFilterTrigger
-                activeCount={activeFilterCount}
-                onClick={() => setFilterOpen(true)}
-                disabled={pending}
-              />
-            }
-          />
-        )}
+        <CheckerInboxTable
+          key={selectionEpoch}
+          items={items}
+          filters={filters}
+          onSelectedItemsChange={setSelectedItems}
+          toolbar={
+            <ListFilterTrigger
+              activeCount={activeFilterCount}
+              onClick={() => setFilterOpen(true)}
+              disabled={pending}
+            />
+          }
+        />
       </ListPage>
 
       <CheckerInboxFilterSheet

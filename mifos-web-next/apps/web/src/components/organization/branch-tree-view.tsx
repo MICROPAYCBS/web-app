@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DetailField, DetailFieldGrid } from '@/components/composites';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { branchCodeLabel } from '@/lib/fineract/branch-profile-form';
 import { branchDisplayName } from '@/lib/fineract/office-display';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 import {
@@ -148,7 +149,9 @@ export function BranchTreeView({ offices }: { offices: FineractOfficeListItem[] 
           <div className="mb-4 flex items-start justify-between gap-2">
             <div>
               <h3 className="font-medium">{branchDisplayName(selected)}</h3>
-              {selected.externalId ? (
+              {branchCodeLabel(selected) ? (
+                <p className="text-sm text-muted-foreground">Code {branchCodeLabel(selected)}</p>
+              ) : selected.externalId ? (
                 <p className="text-sm text-muted-foreground">{selected.externalId}</p>
               ) : null}
             </div>
@@ -160,6 +163,10 @@ export function BranchTreeView({ offices }: { offices: FineractOfficeListItem[] 
             </Link>
           </div>
           <DetailFieldGrid columns={1}>
+            <DetailField label="Branch code">{branchCodeLabel(selected) ?? '—'}</DetailField>
+            <DetailField label="Branch type">{selected.branchProfile?.branchType ?? '—'}</DetailField>
+            <DetailField label="City">{selected.branchProfile?.city ?? '—'}</DetailField>
+            <DetailField label="Status">{selected.branchProfile?.status ?? '—'}</DetailField>
             <DetailField label="Parent branch">{selected.parentName ?? '—'}</DetailField>
             <DetailField label="Opening date">
               {formatFineractDateArray(selected.openingDate) ?? '—'}

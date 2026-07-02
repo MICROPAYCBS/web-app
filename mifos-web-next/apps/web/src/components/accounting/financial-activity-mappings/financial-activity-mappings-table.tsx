@@ -17,21 +17,30 @@ import {
   type ColumnDef,
   type PaginationState
 } from '@tanstack/react-table';
+import { Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
+import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   formatFinancialActivityGlAccountLabel,
   formatFinancialActivityLabel,
   formatMappedGlAccountTypeLabel
 } from '@/lib/accounting/financial-activity-mapping-display';
+import {
+  financialActivityMappingDetailPath,
+  financialActivityMappingEditPath
+} from '@/lib/fineract/financial-activity-mapping-paths';
+import { cn } from '@/lib/utils';
 
 export function FinancialActivityMappingsTable({
-  mappings
+  mappings,
+  canUpdate
 }: {
   mappings: FineractFinancialActivityMappingListItem[];
+  canUpdate: boolean;
 }) {
   const [filter, setFilter] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
@@ -47,7 +56,7 @@ export function FinancialActivityMappingsTable({
         accessorFn: (row) => formatFinancialActivityLabel(row.financialActivityData),
         cell: ({ row }) => (
           <Link
-            href={`/accounting/financial-activity-mappings/${row.original.id}`}
+            href={financialActivityMappingDetailPath(row.original.id)}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
             {formatFinancialActivityLabel(row.original.financialActivityData)}
@@ -73,9 +82,27 @@ export function FinancialActivityMappingsTable({
         header: 'Account name',
         accessorFn: (row) => row.glAccountData.name,
         cell: ({ row }) => formatFinancialActivityGlAccountLabel(row.original.glAccountData)
-      }
+      },
+      ...(canUpdate
+        ? [
+            {
+              id: 'actions',
+              header: 'Actions',
+              meta: { sticky: 'right' },
+              cell: ({ row }: { row: { original: FineractFinancialActivityMappingListItem } }) => (
+                <Link
+                  href={financialActivityMappingEditPath(row.original.id)}
+                  className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}
+                  aria-label={`Edit ${formatFinancialActivityLabel(row.original.financialActivityData)}`}
+                >
+                  <Pencil className="size-4" />
+                </Link>
+              )
+            } satisfies ColumnDef<FineractFinancialActivityMappingListItem>
+          ]
+        : [])
     ],
-    []
+    [canUpdate]
   );
 
   const table = useReactTable({

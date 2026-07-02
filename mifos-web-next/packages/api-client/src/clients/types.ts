@@ -303,7 +303,11 @@ export interface FineractClientDetail extends FineractClientSummary {
   gender?: FineractEnumOption;
   officeId?: number;
   staffId?: number;
-  /** Destination office while transfer is in progress or on hold. */
+  /** Destination office id while transfer is in progress or on hold (Fineract flat field). */
+  transferToOfficeId?: number;
+  /** Destination office name while transfer is in progress or on hold (Fineract flat field). */
+  transferToOfficeName?: string;
+  /** Destination office while transfer is in progress or on hold (nested, if returned). */
   transferToOffice?: FineractOfficeRef;
   /** Proposed transfer date from client record (Fineract date array). */
   proposedTransferDate?: number[];

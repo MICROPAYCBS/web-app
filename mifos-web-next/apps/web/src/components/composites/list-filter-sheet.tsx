@@ -21,18 +21,16 @@ import {
   SheetHeader,
   SheetTitle
 } from '@/components/ui/sheet';
+import {
+  DOCKED_SHEET_LAYOUT_CLASSNAME,
+  dockedSheetSideMaxWidth
+} from '@/components/composites/form-sheet';
 import { cn } from '@/lib/utils';
 
-/** Floating inset panel — keeps list content full width while filters are open. */
+/** Full-height docked panel — matches FormSheet and other app sidebars. */
 export const listFilterSheetContentClassName = cn(
-  'flex flex-col gap-0 p-0',
-  'data-[side=right]:inset-y-auto data-[side=right]:top-4 data-[side=right]:right-4 data-[side=right]:bottom-4',
-  'data-[side=left]:inset-y-auto data-[side=left]:top-4 data-[side=left]:left-4 data-[side=left]:bottom-4',
-  'data-[side=right]:h-auto data-[side=left]:h-auto',
-  'data-[side=right]:max-h-[calc(100dvh-2rem)] data-[side=left]:max-h-[calc(100dvh-2rem)]',
-  'data-[side=right]:w-full data-[side=left]:w-full',
-  'data-[side=right]:sm:max-w-md data-[side=left]:sm:max-w-md',
-  'rounded-xl border shadow-xl'
+  DOCKED_SHEET_LAYOUT_CLASSNAME,
+  dockedSheetSideMaxWidth.right
 );
 
 export interface ListFilterSheetProps {
@@ -90,7 +88,7 @@ export function ListFilterSheet({
       <SheetContent
         side={side}
         showCloseButton
-        className={cn(listFilterSheetContentClassName, className)}
+        className={cn(DOCKED_SHEET_LAYOUT_CLASSNAME, dockedSheetSideMaxWidth[side], className)}
       >
         <SheetHeader className="shrink-0 border-b border-border">
           <SheetTitle>{title}</SheetTitle>

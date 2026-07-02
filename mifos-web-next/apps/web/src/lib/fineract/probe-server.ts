@@ -5,6 +5,12 @@ import {
   actuatorInfoUrl,
   getFineractProviderRoot
 } from '@/lib/fineract/actuator-url';
+import {
+  formatFineractBuildVersionLabel,
+  resolveFineractBuildVersion,
+  type FineractActuatorInfo,
+  type FineractBuildVersion
+} from '@/lib/fineract/fineract-build-version';
 import { fineractFetch } from '@/lib/fineract/fineract-fetch';
 
 const PROBE_TIMEOUT_MS = 10_000;
@@ -13,8 +19,10 @@ export type FineractHealthState = 'healthy' | 'unhealthy';
 
 export interface FineractProbeResult {
   state: FineractHealthState;
-  /** Fineract build version from `/actuator/info` when healthy */
+  /** Formatted `release+commit` label for compact UI. */
   version?: string;
+  release?: string;
+  commit?: string;
   message?: string;
 }
 
@@ -22,13 +30,19 @@ interface ActuatorHealthResponse {
   status?: string;
 }
 
-interface ActuatorInfoResponse {
-  build?: { version?: string };
-  git?: { build?: { version?: string } };
-}
-
-function readVersion(info: ActuatorInfoResponse): string | undefined {
-  return info.build?.version ?? info.git?.build?.version;
+function probeResultFromBuild(
+  build: FineractBuildVersion | null,
+  message?: string
+): Pick<FineractProbeResult, 'version' | 'release' | 'commit' | 'message'> {
+  if (!build) {
+    return { message };
+  }
+  return {
+    version: formatFineractBuildVersionLabel(build),
+    release: build.release,
+    commit: build.commit,
+    message
+  };
 }
 
 /**
@@ -75,13 +89,20 @@ export async function probeFineractServer(apiBaseUrl: string): Promise<FineractP
       };
     }
 
-    const info = (await infoRes.json()) as ActuatorInfoResponse;
-    const version = readVersion(info);
+    let build: FineractBuildVersion | null = null;
+    try {
+      const info = (await infoRes.json()) as FineractActuatorInfo;
+      build = resolveFineractBuildVersion(info);
+    } catch {
+      build = null;
+    }
 
     return {
       state: 'healthy',
-      version: version ?? undefined,
-      message: version ? undefined : 'Health is UP; version not reported.'
+      ...probeResultFromBuild(
+        build,
+        build ? undefined : 'Health is UP; version not reported.'
+      )
     };
   } catch (error) {
     const message =

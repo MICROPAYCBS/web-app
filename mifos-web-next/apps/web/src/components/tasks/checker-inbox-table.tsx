@@ -65,7 +65,7 @@ export function CheckerInboxTable({
   useEffect(() => {
     setRowSelection({});
     setPagination((current) => ({ ...current, pageIndex: 0 }));
-  }, [filters]);
+  }, [filters, items]);
 
   const columns = useMemo<ColumnDef<CheckerInboxListItem>[]>(
     () => [

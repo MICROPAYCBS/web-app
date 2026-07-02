@@ -12,18 +12,21 @@ import type { FineractOfficeOption } from '@mifos/api-client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   BranchFormSheet,
-  type BranchFormInitial
+  type BranchFormInitial,
+  type BranchManagerOption
 } from '@/components/organization/branch-form-sheet';
 
 /** Opens the edit branch sidebar when the URL contains `?edit=1`. */
 export function BranchEditUrlPanel({
   officeId,
   parentOptions,
+  managerOptions = [],
   initial,
   showParentField
 }: {
   officeId: number;
   parentOptions: FineractOfficeOption[];
+  managerOptions?: BranchManagerOption[];
   initial: BranchFormInitial;
   showParentField: boolean;
 }) {
@@ -49,6 +52,7 @@ export function BranchEditUrlPanel({
       mode="edit"
       officeId={officeId}
       parentOptions={parentOptions}
+      managerOptions={managerOptions}
       initial={initial}
       showParentField={showParentField}
     />

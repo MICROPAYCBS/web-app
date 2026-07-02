@@ -8,6 +8,25 @@
 
 import type { FineractOfficeOption } from '../clients/types';
 
+export interface OfficeBranchProfile {
+  officeCode?: string;
+  branchType?: string;
+  regionCode?: string;
+  address?: string;
+  city?: string;
+  countryCode?: string;
+  phoneNo?: string;
+  emailAddress?: string;
+  managerStaffId?: number;
+  managerStaffName?: string;
+  swiftCode?: string;
+  latitude?: string;
+  longitude?: string;
+  cashLimit?: number;
+  workingHours?: string;
+  status?: string;
+}
+
 export interface FineractOfficeListItem {
   id: number;
   name: string;
@@ -17,6 +36,7 @@ export interface FineractOfficeListItem {
   parentName?: string;
   parentId?: number;
   hierarchy?: string;
+  branchProfile?: OfficeBranchProfile;
 }
 
 export interface FineractOfficeDetail extends FineractOfficeListItem {}

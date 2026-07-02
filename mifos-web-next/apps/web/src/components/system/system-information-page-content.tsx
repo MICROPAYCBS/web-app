@@ -40,10 +40,15 @@ export function SystemInformationPageContent({ info }: { info: SystemInformation
               <DetailField label="Core banking release">
                 <TextValue
                   value={
-                    info.coreBankingVersion ?? info.coreBankingVersionNote ?? 'Version not reported'
+                    info.coreBankingRelease ?? info.coreBankingVersionNote ?? 'Version not reported'
                   }
                 />
               </DetailField>
+              {info.coreBankingCommit ? (
+                <DetailField label="Build commit">
+                  <TextValue value={info.coreBankingCommit} />
+                </DetailField>
+              ) : null}
             </DetailFieldGrid>
           </CardContent>
         </Card>

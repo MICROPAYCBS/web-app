@@ -18,6 +18,8 @@ type ProbePayload = {
     {
       state: 'healthy' | 'unhealthy';
       version?: string;
+      release?: string;
+      commit?: string;
       message?: string;
     }
   >;
@@ -43,6 +45,8 @@ function mapProbeResults(
           {
             status: 'healthy' as const,
             version: probe.version,
+            release: probe.release,
+            commit: probe.commit,
             message: probe.message
           }
         ];

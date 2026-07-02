@@ -59,6 +59,6 @@ Server mutations use **Server Actions** in `apps/web/src/actions/servers.ts` (no
 The app probes each server via Fineract Spring Actuator (BFF-only):
 
 - `GET {provider}/actuator/health` — must return `"status":"UP"`
-- `GET {provider}/actuator/info` — `build.version` shown when healthy
+- `GET {provider}/actuator/info` — release and 7-character build commit from `git.build.version` / `git.commit.id`
 
 Status lights: **amber** (checking), **green** (healthy + version), **red** (unreachable).

@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CreateOfficePayload, UpdateOfficePayload } from '@mifos/validation';
+import type { BranchProfilePayload, CreateOfficePayload, UpdateOfficePayload } from '@mifos/validation';
 import {
   FINERACT_DATE_FORMAT,
   FINERACT_LOCALE,
@@ -24,17 +24,30 @@ function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
   return next;
 }
 
+function buildBranchProfilePayload(
+  profile?: BranchProfilePayload
+): Record<string, unknown> | undefined {
+  if (!profile) {
+    return undefined;
+  }
+  const next = stripEmpty({ ...profile });
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
 export function buildOfficePayload(
   input: CreateOfficePayload | UpdateOfficePayload
 ): Record<string, unknown> {
   const dateFormat = input.dateFormat ?? FINERACT_DATE_FORMAT;
   const locale = input.locale ?? FINERACT_LOCALE;
+  const branchProfile = buildBranchProfilePayload(input.branchProfile);
+  const { branchProfile: _ignored, ...rest } = input;
 
   return stripEmpty({
-    ...input,
+    ...rest,
     dateFormat,
     locale,
     openingDate: normalizeFineractDateField(input.openingDate),
-    externalId: input.externalId === '' ? undefined : input.externalId
+    externalId: input.externalId === '' ? undefined : input.externalId,
+    ...(branchProfile ? { branchProfile } : {})
   });
 }

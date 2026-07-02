@@ -9,7 +9,10 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { FinancialActivityMappingsPageContent } from '@/components/accounting/financial-activity-mappings/financial-activity-mappings-page-content';
-import { listFinancialActivityMappings } from '@/lib/fineract/financial-activity-mappings';
+import {
+  getFinancialActivityMappingFormTemplate,
+  listFinancialActivityMappings
+} from '@/lib/fineract/financial-activity-mappings';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function FinancialActivityMappingsPage() {
@@ -18,7 +21,17 @@ export default async function FinancialActivityMappingsPage() {
     notFound();
   }
 
-  const mappings = await listFinancialActivityMappings();
+  const [mappings, template] = await Promise.all([
+    listFinancialActivityMappings(),
+    getFinancialActivityMappingFormTemplate()
+  ]);
 
-  return <FinancialActivityMappingsPageContent mappings={mappings} />;
+  return (
+    <FinancialActivityMappingsPageContent
+      mappings={mappings}
+      template={template}
+      canCreate={can(session, 'CREATE_FINANCIALACTIVITYACCOUNT')}
+      canUpdate={can(session, 'UPDATE_FINANCIALACTIVITYACCOUNT')}
+    />
+  );
 }

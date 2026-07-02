@@ -6,56 +6,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can, resolvePermission } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { FinancialActivityMappingForm } from '@/components/accounting/financial-activity-mappings/financial-activity-mapping-form';
-import { DetailBackLink } from '@/components/composites';
-import { ListPage } from '@/components/composites/list-page';
-import {
-  financialActivityMappingFormTemplateFromEditData,
-  financialActivityMappingFormValuesFromEditData
-} from '@/lib/accounting/financial-activity-mapping-display';
-import { getFinancialActivityMappingForEdit } from '@/lib/fineract/financial-activity-mappings';
-import { getServerSession } from '@/lib/session/server';
+import { redirect } from 'next/navigation';
+import { financialActivityMappingEditPath } from '@/lib/fineract/financial-activity-mapping-paths';
 
+/** Legacy edit URL → list with edit side panel. */
 export default async function EditFinancialActivityMappingPage({
   params
 }: {
   params: Promise<{ mappingId: string }>;
-}) {
-  const session = await getServerSession();
-  if (
-    !can(session, resolvePermission('accounting.financialActivity')) ||
-    !can(session, 'UPDATE_FINANCIALACTIVITYACCOUNT')
-  ) {
-    notFound();
-  }
-
+}): Promise<never> {
   const { mappingId } = await params;
-  const editData = await getFinancialActivityMappingForEdit(Number(mappingId));
-  if (!editData) {
-    notFound();
-  }
-
-  return (
-    <ListPage
-      backLink={
-        <DetailBackLink
-          href={`/accounting/financial-activity-mappings/${mappingId}`}
-          label="Back to mapping"
-        />
-      }
-      title="Edit mapping"
-      description="Update the GL account linked to this financial activity."
-    >
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-        <FinancialActivityMappingForm
-          mode="edit"
-          mappingId={Number(mappingId)}
-          initialValues={financialActivityMappingFormValuesFromEditData(editData)}
-          template={financialActivityMappingFormTemplateFromEditData(editData)}
-        />
-      </div>
-    </ListPage>
-  );
+  redirect(financialActivityMappingEditPath(mappingId));
 }

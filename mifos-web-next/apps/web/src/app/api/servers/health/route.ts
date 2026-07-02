@@ -15,6 +15,8 @@ export async function GET() {
         {
           state: probe.state,
           version: probe.version,
+          release: probe.release,
+          commit: probe.commit,
           message: probe.message
         }
       ] as const;

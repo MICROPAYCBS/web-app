@@ -11,7 +11,9 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { BranchCreateUrlPanel } from '@/components/organization/branch-create-url-panel';
 import { BranchesPageContent } from '@/components/organization/branches-page-content';
+import { toBranchManagerOptions } from '@/lib/fineract/branch-manager-options';
 import { listOfficeOptions, listOffices } from '@/lib/fineract/offices';
+import { listStaff } from '@/lib/fineract/staff';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function OrganizationOfficesPage() {
@@ -21,9 +23,10 @@ export default async function OrganizationOfficesPage() {
   }
 
   const canCreate = can(session, 'CREATE_OFFICE');
-  const [offices, parentOptions] = await Promise.all([
+  const [offices, parentOptions, staff] = await Promise.all([
     listOffices(),
-    canCreate ? listOfficeOptions() : Promise.resolve([])
+    canCreate ? listOfficeOptions() : Promise.resolve([]),
+    canCreate ? listStaff() : Promise.resolve([])
   ]);
 
   return (
@@ -31,7 +34,10 @@ export default async function OrganizationOfficesPage() {
       <BranchesPageContent offices={offices} />
       {canCreate ? (
         <Suspense fallback={null}>
-          <BranchCreateUrlPanel parentOptions={parentOptions} />
+          <BranchCreateUrlPanel
+            parentOptions={parentOptions}
+            managerOptions={toBranchManagerOptions(staff)}
+          />
         </Suspense>
       ) : null}
     </>
