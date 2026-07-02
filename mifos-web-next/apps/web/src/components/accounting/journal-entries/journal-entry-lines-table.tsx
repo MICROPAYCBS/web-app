@@ -25,6 +25,11 @@ function buildColumns(): ColumnDef<FineractJournalEntryListItem>[] {
       cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span>
     },
     {
+      accessorKey: 'officeName',
+      header: 'Branch',
+      cell: ({ row }) => row.original.officeName || '—'
+    },
+    {
       id: 'glAccountType',
       accessorFn: (row) => row.glAccountType.value,
       header: 'Type',
