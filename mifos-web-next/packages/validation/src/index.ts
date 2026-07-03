@@ -486,6 +486,19 @@ export {
   type UpsertSurveyFormInput
 } from './system/survey.schema';
 export {
+  WORKFLOW_MODULE_SUGGESTIONS,
+  buildWorkflowDefinitionApiPayload,
+  upsertWorkflowDefinitionSchema,
+  validateUpsertWorkflowDefinition,
+  workflowParticipantSchema,
+  workflowStageSchema,
+  workflowTransitionSchema,
+  type UpsertWorkflowDefinitionInput,
+  type WorkflowParticipantInput,
+  type WorkflowStageInput,
+  type WorkflowTransitionInput
+} from './system/workflow-definition.schema';
+export {
   buildCreateAccountNumberPreferencePayload,
   buildUpdateAccountNumberPreferencePayload,
   createAccountNumberPreferenceSchema,

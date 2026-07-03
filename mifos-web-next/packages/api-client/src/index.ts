@@ -357,6 +357,19 @@ export type {
 } from './system/survey-types';
 
 export type {
+  WorkflowApprovalAction,
+  WorkflowDefinition,
+  WorkflowDefinitionStatus,
+  WorkflowDefinitionWritePayload,
+  WorkflowExpiryPeriodUnit,
+  WorkflowRejectionPolicy,
+  WorkflowStage,
+  WorkflowStageParticipant,
+  WorkflowStageType,
+  WorkflowTransition
+} from './system/workflow-definition-types';
+
+export type {
   FineractAccountNumberPreferenceDetail,
   FineractAccountNumberPreferenceListItem,
   FineractAccountNumberPreferenceMutationResponse,

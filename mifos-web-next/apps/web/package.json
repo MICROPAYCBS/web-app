@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
+    "test:e2e": "node ../../node_modules/@playwright/test/cli.js test",
+    "test:e2e:ui": "node ../../node_modules/@playwright/test/cli.js test --ui",
+    "test:e2e:report": "node ../../node_modules/@playwright/test/cli.js show-report",
     "clean": "rimraf .next",
     "vercel-build": "next build"
   },
@@ -52,13 +55,13 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "playwright": "^1.60.0",
     "rimraf": "^6.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"

@@ -19,11 +19,11 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 
 ---
 
-## Scorecard (16 routes)
+## Scorecard (17 routes)
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|   16 |       0 |       0 |
+|   17 |       0 |       0 |
 
 ---
 
@@ -40,6 +40,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-070 | `/system/roles-and-permissions`      | Roles                 | **Done**    | CRUD + permission assignment             |
 | SYS-080 | `/system/configure-mc-tasks`         | Maker checker         | **Done**    | Permission toggles                       |
 | SYS-090 | `/system/surveys`                    | Surveys               | **Done**    | List, create, view, edit, activate       |
+| SYS-095 | `/system/approval-workflows`         | Approval workflows    | **Done**    | List, create, edit, activate/deactivate  |
 | SYS-100 | `/system/manage-jobs`                | Manage jobs           | **Done**    | Scheduler, workflow, COB tabs + detail   |
 | SYS-110 | `/system/configurations`             | Global configurations | **Done**    | Inline edit sheet                        |
 | SYS-120 | `/system/account-number-preferences` | Account number prefs  | **Done**    | List, create sheet, view, edit, delete   |

@@ -467,6 +467,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'sysApprovalWorkflows',
+    path: '/system/approval-workflows',
+    label: 'Approval workflows',
+    navGroup: 'system',
+    webAppRef: 'system/approval-workflows',
+    permissionKey: 'system.approvalWorkflows',
+    navOrder: 95,
+    navIcon: 'gavel',
+    keywords: ['workflow', 'approval', 'maker checker'],
+    parityStatus: 'done'
+  },
+  {
     id: 'sysJobs',
     path: '/system/manage-jobs',
     label: 'Manage jobs',

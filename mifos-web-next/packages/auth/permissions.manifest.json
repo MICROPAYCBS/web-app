@@ -604,6 +604,36 @@
       "UPDATE_SURVEY"
     ]
   },
+  "system.approvalWorkflows": {
+    "any": [
+      "READ_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.create": {
+    "any": [
+      "CREATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.update": {
+    "any": [
+      "UPDATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.activate": {
+    "any": [
+      "ACTIVATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.deactivate": {
+    "any": [
+      "DEACTIVATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.delete": {
+    "any": [
+      "DELETE_WORKFLOW_DEFINITION"
+    ]
+  },
   "system.jobs": {
     "any": [
       "READ_SCHEDULER"
