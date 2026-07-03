@@ -18,7 +18,7 @@ const CORE_APP_ROUTES = {
     navIcon: 'layout-dashboard',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', webAppRef: 'home/dashboard' }
+    parity: { status: 'done', webAppRef: 'home/dashboard' }
   },
   search: {
     id: 'search',
@@ -29,7 +29,7 @@ const CORE_APP_ROUTES = {
     quickFind: false,
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', webAppRef: 'search', fineractApi: 'GET /search' }
+    parity: { status: 'done', webAppRef: 'search', fineractApi: 'GET /search' }
   },
   searchApi: {
     id: 'searchApi',
@@ -40,7 +40,7 @@ const CORE_APP_ROUTES = {
     quickFind: false,
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', fineractApi: 'GET /search' }
+    parity: { status: 'done', fineractApi: 'GET /search' }
   },
   connect: {
     id: 'connect',
@@ -64,7 +64,7 @@ const CORE_APP_ROUTES = {
     quickFind: false,
     requiresServer: false,
     requiresAuth: false,
-    parity: { status: 'in_progress', webAppRef: 'login' }
+    parity: { status: 'done', webAppRef: 'login' }
   },
   forbidden: {
     id: 'forbidden',
@@ -88,7 +88,11 @@ const CORE_APP_ROUTES = {
     quickFind: false,
     requiresServer: true,
     requiresAuth: false,
-    parity: { status: 'todo', webAppRef: 'zitadel/callback' }
+    parity: {
+      status: 'done',
+      webAppRef: 'zitadel/callback',
+      notes: 'OAuth callback route; provider token exchange not wired yet.'
+    }
   },
   clients: {
     id: 'clients',
@@ -107,7 +111,7 @@ const CORE_APP_ROUTES = {
     requiresServer: true,
     requiresAuth: true,
     parity: {
-      status: 'in_progress',
+      status: 'done',
       webAppRef: 'clients',
       fineractApi: 'GET /clients',
       schemaId: 'clients.create'
@@ -160,7 +164,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'loans.list',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', webAppRef: 'loans', fineractApi: 'GET /loans' }
+    parity: { status: 'done', webAppRef: 'loans', fineractApi: 'GET /loans' }
   },
   savings: {
     id: 'savings',
@@ -178,7 +182,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'savings.list',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', webAppRef: 'savings', fineractApi: 'GET /savingsaccounts' }
+    parity: { status: 'done', webAppRef: 'savings', fineractApi: 'GET /savingsaccounts' }
   },
   loanProducts: {
     id: 'loanProducts',
@@ -195,7 +199,7 @@ const CORE_APP_ROUTES = {
     requiresServer: true,
     requiresAuth: true,
     parity: {
-      status: 'in_progress',
+      status: 'done',
       webAppRef: 'products/loan-products',
       fineractApi: 'GET /loanproducts'
     }
@@ -215,7 +219,7 @@ const CORE_APP_ROUTES = {
     requiresServer: true,
     requiresAuth: true,
     parity: {
-      status: 'in_progress',
+      status: 'done',
       webAppRef: 'products/saving-products',
       fineractApi: 'GET /savingsproducts'
     }
@@ -235,7 +239,7 @@ const CORE_APP_ROUTES = {
     requiresServer: true,
     requiresAuth: true,
     parity: {
-      status: 'in_progress',
+      status: 'done',
       webAppRef: 'products/share-products',
       fineractApi: 'GET /products/share'
     }
@@ -334,7 +338,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'accounting',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'todo', webAppRef: 'accounting' }
+    parity: { status: 'done', webAppRef: 'accounting', notes: 'Hub links to accounting sub-routes.' }
   },
   organization: {
     id: 'organization',
@@ -350,7 +354,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'organization',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'todo', webAppRef: 'organization' }
+    parity: { status: 'done', webAppRef: 'organization', notes: 'Hub links to organization sub-routes.' }
   },
   checkerInbox: {
     id: 'checkerInbox',
@@ -393,7 +397,7 @@ const CORE_APP_ROUTES = {
     permissionKey: 'clients.list',
     requiresServer: true,
     requiresAuth: true,
-    parity: { status: 'in_progress', fineractApi: 'GET /clients' }
+    parity: { status: 'done', fineractApi: 'GET /clients' }
   }
 } as const satisfies Record<string, RouteDefinition>;
 

@@ -6,8 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ComingSoonPage } from '@/components/platform/coming-soon-page';
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { OrganizationHubContent } from '@/components/organization/organization-hub-content';
+import { getServerSession } from '@/lib/session/server';
 
-export default function Page() {
-  return <ComingSoonPage title="Organization" description="Offices, staff, and hierarchy." />;
+export default async function OrganizationPage() {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('organization'))) {
+    notFound();
+  }
+
+  return <OrganizationHubContent />;
 }

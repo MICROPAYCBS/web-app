@@ -84,6 +84,21 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Form fields: name, external ID (create only), status, originator type, channel type.
 - Detail view supports edit; delete is available from the list (legacy parity).
 
+## Manage funds
+
+| Route                                           | Method | web-app screen       | Fineract API                         | Schema ID                      | E2E | Status |
+| ----------------------------------------------- | ------ | -------------------- | ------------------------------------ | ------------------------------ | --- | ------ |
+| `/organization/manage-funds`                    | GET    | ManageFundsComponent | `GET /funds`                         | —                              | —   | done   |
+| `/organization/manage-funds?create=1`           | POST   | CreateFundComponent  | `POST /funds`                        | `organization.fund.create`     | —   | done   |
+| `/organization/manage-funds/[fundId]`           | GET    | ViewFundComponent    | `GET /funds/{id}`                    | —                              | —   | done   |
+| `/organization/manage-funds?edit={id}`          | PUT    | EditFundComponent    | `PUT /funds/{id}`                    | `organization.fund.update`     | —   | done   |
+
+### Notes
+
+- List with filter; row links to detail view.
+- Create and edit use `FormSheet` side panels (`?create=1`, `?edit={id}`). Legacy `/create` and `/[fundId]/edit` redirect.
+- Fields: name, external ID.
+
 ## Password preferences
 
 | Route                                | Method  | web-app screen               | Fineract API                                                    | Schema ID                                  | E2E | Status |

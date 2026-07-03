@@ -45,11 +45,19 @@ export function mergeClientLoanAccounts(accounts: FineractClientAccounts): Finer
 }
 
 export function filterOpenLoanAccounts(accounts: FineractClientLoanAccount[]): FineractClientLoanAccount[] {
-  return accounts.filter((account) => !CLOSED_LOAN_CODES.has(account.status?.code ?? ''));
+  return accounts.filter((account) => !isClosedLoanAccount(account.status?.code));
 }
 
 export function filterClosedLoanAccounts(accounts: FineractClientLoanAccount[]): FineractClientLoanAccount[] {
-  return accounts.filter((account) => CLOSED_LOAN_CODES.has(account.status?.code ?? ''));
+  return accounts.filter((account) => isClosedLoanAccount(account.status?.code));
+}
+
+export function isClosedLoanAccount(statusCode?: string): boolean {
+  return CLOSED_LOAN_CODES.has(statusCode ?? '');
+}
+
+export function isClosedSavingsAccount(statusCode?: string): boolean {
+  return CLOSED_SAVINGS_CODES.has(statusCode ?? '');
 }
 
 export function filterSavingsByDepositType(
@@ -62,13 +70,13 @@ export function filterSavingsByDepositType(
 export function filterOpenSavingsAccounts(
   accounts: FineractClientSavingsAccount[]
 ): FineractClientSavingsAccount[] {
-  return accounts.filter((account) => !CLOSED_SAVINGS_CODES.has(account.status?.code ?? ''));
+  return accounts.filter((account) => !isClosedSavingsAccount(account.status?.code));
 }
 
 export function filterClosedSavingsAccounts(
   accounts: FineractClientSavingsAccount[]
 ): FineractClientSavingsAccount[] {
-  return accounts.filter((account) => CLOSED_SAVINGS_CODES.has(account.status?.code ?? ''));
+  return accounts.filter((account) => isClosedSavingsAccount(account.status?.code));
 }
 
 const CLOSED_SHARE_CODES = new Set([

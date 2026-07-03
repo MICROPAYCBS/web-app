@@ -139,6 +139,18 @@ export function countSelectedPermissions(permissions: FineractRolePermissionUsag
   return permissions.filter((permission) => permission.selected).length;
 }
 
+export type PermissionAssignmentFilter = 'all' | 'assigned';
+
+export function filterPermissionsByAssignment(
+  permissions: FineractRolePermissionUsage[],
+  assignment: PermissionAssignmentFilter
+): FineractRolePermissionUsage[] {
+  if (assignment === 'assigned') {
+    return permissions.filter((permission) => permission.selected);
+  }
+  return permissions;
+}
+
 export function countPermissionsByGrouping(
   permissions: FineractRolePermissionUsage[],
   query: string

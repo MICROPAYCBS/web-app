@@ -625,6 +625,17 @@ export {
   type UpdateSystemPaymentTypePayload
 } from './organization/payment-type.schema';
 export {
+  buildFundPayload,
+  createFundSchema,
+  updateFundSchema,
+  validateCreateFund,
+  validateUpdateFund,
+  type CreateFundInput,
+  type CreateFundPayload,
+  type UpdateFundInput,
+  type UpdateFundPayload
+} from './organization/fund.schema';
+export {
   buildUpdateCustomerClassPayload,
   buildUpsertCustomerClassPayload,
   createCustomerClassSchema,

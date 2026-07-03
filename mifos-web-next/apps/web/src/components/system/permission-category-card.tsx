@@ -9,16 +9,19 @@
  */
 
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 export function PermissionCategoryCard({
   header,
-  children
+  children,
+  className
 }: {
   header: ReactNode;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <section className={cn('rounded-lg border border-border bg-card p-4 shadow-sm', className)}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {header}
       </div>

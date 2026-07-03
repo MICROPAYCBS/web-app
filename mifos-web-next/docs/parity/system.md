@@ -75,11 +75,11 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 
 ## Related platform progress (context)
 
-| Domain                          | Status              | Doc                      |
-| ------------------------------- | ------------------- | ------------------------ |
-| Clients                         | In progress         | [clients.md](clients.md) |
-| Platform (auth, shell, servers) | In progress         | —                        |
-| Organization (19 routes)        | Planned (catch-all) | —                        |
-| Accounting (9 routes)           | Planned             | —                        |
+| Domain                          | Status              | Doc                              |
+| ------------------------------- | ------------------- | -------------------------------- |
+| Clients                         | In progress         | [clients.md](clients.md)         |
+| Platform (auth, shell, servers) | In progress         | —                                |
+| Organization                    | In progress         | [organization.md](organization.md) |
+| Accounting                      | Done (9/9 routes)   | [accounting.md](accounting.md)   |
 
 Run `pnpm run routes:parity` for machine-readable counts across all domains.

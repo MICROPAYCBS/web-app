@@ -507,6 +507,16 @@
       "READ_FUND"
     ]
   },
+  "organization.funds.create": {
+    "any": [
+      "CREATE_FUND"
+    ]
+  },
+  "organization.funds.update": {
+    "any": [
+      "UPDATE_FUND"
+    ]
+  },
   "organization.bulkImport": {
     "any": [
       "READ_OFFICE"

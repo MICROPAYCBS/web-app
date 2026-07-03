@@ -31,6 +31,7 @@ import {
 } from '@/lib/fineract/client-account-links';
 import { getDepositAccount } from '@/lib/fineract/deposit-account-officer-commands';
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
+import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashier';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -118,12 +119,19 @@ export default async function ClientAccountGeneralPage({
       notFound();
     }
 
+    const cashierSnapshot = await loadAccountCashierForSession(session, {
+      accountId: result.data.id,
+      accountKind: 'loan',
+      currencyCode: result.data.currency.code ?? 'USD'
+    });
+
     return (
       <Suspense fallback={null}>
         <LoanAccountDetailView
           account={result.data}
           clientId={clientId}
           permissions={loanOfficerPermissions(session)}
+          cashierSnapshot={cashierSnapshot}
         />
       </Suspense>
     );

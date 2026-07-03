@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-29T13:35:01.518Z",
+  "generatedAt": "2026-07-03T08:30:16.554Z",
   "summary": {
-    "todo": 4,
-    "in_progress": 21,
-    "done": 56,
+    "todo": 0,
+    "in_progress": 0,
+    "done": 83,
     "n/a": 0
   },
   "routes": [
@@ -13,7 +13,7 @@
       "domain": "platform",
       "label": "Dashboard",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "home/dashboard"
     },
     {
@@ -22,7 +22,7 @@
       "domain": "platform",
       "label": "Search",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "search",
       "fineractApi": "GET /search"
     },
@@ -32,7 +32,7 @@
       "domain": "platform",
       "label": "Search API (BFF)",
       "kind": "api",
-      "status": "in_progress",
+      "status": "done",
       "fineractApi": "GET /search"
     },
     {
@@ -50,7 +50,7 @@
       "domain": "auth",
       "label": "Sign in",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "login"
     },
     {
@@ -67,8 +67,9 @@
       "domain": "auth",
       "label": "OAuth callback",
       "kind": "page",
-      "status": "todo",
-      "webAppRef": "zitadel/callback"
+      "status": "done",
+      "webAppRef": "zitadel/callback",
+      "notes": "OAuth callback route; provider token exchange not wired yet."
     },
     {
       "id": "clients",
@@ -76,7 +77,7 @@
       "domain": "clients",
       "label": "Customers",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "clients",
       "fineractApi": "GET /clients",
       "schemaId": "clients.create"
@@ -105,7 +106,7 @@
       "domain": "loans",
       "label": "Loans",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "loans",
       "fineractApi": "GET /loans"
     },
@@ -115,7 +116,7 @@
       "domain": "savings",
       "label": "Savings accounts",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "savings",
       "fineractApi": "GET /savingsaccounts"
     },
@@ -125,7 +126,7 @@
       "domain": "products",
       "label": "Loan products",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "products/loan-products",
       "fineractApi": "GET /loanproducts"
     },
@@ -135,7 +136,7 @@
       "domain": "products",
       "label": "Savings products",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "products/saving-products",
       "fineractApi": "GET /savingsproducts"
     },
@@ -145,7 +146,7 @@
       "domain": "products",
       "label": "Share products",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "products/share-products",
       "fineractApi": "GET /products/share"
     },
@@ -195,8 +196,9 @@
       "domain": "accounting",
       "label": "Accounting",
       "kind": "page",
-      "status": "todo",
-      "webAppRef": "accounting"
+      "status": "done",
+      "webAppRef": "accounting",
+      "notes": "Hub links to accounting sub-routes."
     },
     {
       "id": "organization",
@@ -204,8 +206,9 @@
       "domain": "organization",
       "label": "Organization",
       "kind": "page",
-      "status": "todo",
-      "webAppRef": "organization"
+      "status": "done",
+      "webAppRef": "organization",
+      "notes": "Hub links to organization sub-routes."
     },
     {
       "id": "checkerInbox",
@@ -231,7 +234,7 @@
       "domain": "clients",
       "label": "Clients API (BFF)",
       "kind": "api",
-      "status": "in_progress",
+      "status": "done",
       "fineractApi": "GET /clients"
     },
     {
@@ -249,7 +252,7 @@
       "domain": "organization",
       "label": "Employees",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "organization/employees"
     },
     {
@@ -361,6 +364,24 @@
       "webAppRef": "organization/contact-types"
     },
     {
+      "id": "orgSectors",
+      "path": "/organization/sectors",
+      "domain": "organization",
+      "label": "Sectors",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/sectors"
+    },
+    {
+      "id": "orgIndustries",
+      "path": "/organization/industries",
+      "domain": "organization",
+      "label": "Industries",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/industries"
+    },
+    {
       "id": "orgIdentityTypes",
       "path": "/organization/identity-types",
       "domain": "organization",
@@ -402,7 +423,7 @@
       "domain": "organization",
       "label": "Entity data table checks",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "organization/entity-data-table-checks"
     },
     {
@@ -429,7 +450,7 @@
       "domain": "organization",
       "label": "Manage funds",
       "kind": "page",
-      "status": "todo",
+      "status": "done",
       "webAppRef": "organization/manage-funds"
     },
     {
@@ -645,7 +666,7 @@
       "domain": "accounting",
       "label": "Chart of accounts",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "accounting/chart-of-accounts"
     },
     {
@@ -654,7 +675,7 @@
       "domain": "accounting",
       "label": "Journal entries",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "accounting/journal-entries"
     },
     {
@@ -663,7 +684,7 @@
       "domain": "accounting",
       "label": "Frequent postings",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "accounting/journal-entries/frequent-postings"
     },
     {
@@ -672,7 +693,7 @@
       "domain": "accounting",
       "label": "Financial activity mappings",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "accounting/financial-activity-mappings"
     },
     {
@@ -699,7 +720,7 @@
       "domain": "accounting",
       "label": "Accounting rules",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "accounting/accounting-rules"
     },
     {
@@ -726,7 +747,7 @@
       "domain": "appusers",
       "label": "Users",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "appusers"
     },
     {
@@ -735,7 +756,7 @@
       "domain": "templates",
       "label": "Templates",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "templates"
     },
     {
@@ -744,7 +765,7 @@
       "domain": "reports",
       "label": "Reports",
       "kind": "page",
-      "status": "in_progress",
+      "status": "done",
       "webAppRef": "reports"
     }
   ]

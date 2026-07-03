@@ -33,7 +33,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 20,
     navIcon: 'users',
     keywords: ['staff', 'employee', 'relationship officer'],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'orgProvisioningCriteria',
@@ -296,7 +296,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 140,
     navIcon: 'table-2',
     keywords: [],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'orgWorkingDays',
@@ -331,7 +331,8 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'organization.funds',
     navOrder: 170,
     navIcon: 'landmark',
-    keywords: []
+    keywords: [],
+    parityStatus: 'done'
   },
   {
     id: 'orgBulkImport',
@@ -626,7 +627,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 10,
     navIcon: 'book-open',
     keywords: ['gl', 'coa'],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'acctJournal',
@@ -638,7 +639,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 20,
     navIcon: 'notebook-pen',
     keywords: [],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'acctFrequentPostings',
@@ -650,7 +651,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 25,
     navIcon: 'repeat-2',
     keywords: [],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'acctFinancialActivity',
@@ -662,7 +663,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 30,
     navIcon: 'activity',
     keywords: [],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'acctMigrateBalances',
@@ -698,7 +699,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 60,
     navIcon: 'gavel',
     keywords: [],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'acctAccruals',
@@ -734,7 +735,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 20,
     navIcon: 'user',
     keywords: ['app user'],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'adminTemplates',
@@ -746,7 +747,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 30,
     navIcon: 'file-text',
     keywords: [],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   },
   {
     id: 'adminReports',
@@ -758,7 +759,7 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     navOrder: 40,
     navIcon: 'file-bar-chart',
     keywords: ['report'],
-    parityStatus: 'in_progress'
+    parityStatus: 'done'
   }
 ];
 

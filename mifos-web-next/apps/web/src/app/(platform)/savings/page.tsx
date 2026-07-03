@@ -6,8 +6,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ComingSoonPage } from '@/components/platform/coming-soon-page';
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { SavingsAccountsPageContent } from '@/components/savings/savings-accounts-page-content';
+import { parsePortfolioListQuery } from '@/lib/fineract/portfolio-list-query';
+import { fetchSavingsAccountsList } from '@/lib/fineract/savings-accounts-list';
+import { getServerSession } from '@/lib/session/server';
 
-export default function Page() {
-  return <ComingSoonPage title="Savings accounts" description="Deposits and savings account operations." />;
+export default async function SavingsPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('savings.list'))) {
+    notFound();
+  }
+
+  const params = await searchParams;
+  const query = parsePortfolioListQuery(params);
+  const initialPage = await fetchSavingsAccountsList(query);
+
+  return <SavingsAccountsPageContent initialPage={initialPage} initialQuery={query} />;
 }

@@ -9,7 +9,7 @@
  */
 
 import type { FineractAuditTrailListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
-import { AlertTriangle, ArrowRightLeft, FileText, PiggyBank, Receipt, ScrollText } from 'lucide-react';
+import { AlertTriangle, ArrowRightLeft, FileText, PiggyBank, Receipt, ScrollText, Wallet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
@@ -38,6 +38,7 @@ import {
   savingsAccountStatusVariant,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
+import type { AccountCashierSnapshot } from '@/lib/fineract/cashier-display';
 import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
 
 const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
@@ -45,6 +46,7 @@ const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
   transactions: ArrowRightLeft,
   statement: FileText,
   charges: Receipt,
+  cashier: Wallet,
   audit: ScrollText
 };
 
@@ -61,7 +63,8 @@ export function SavingsAccountDetailView({
     undoTransfer: false,
     modifyTransaction: false,
     viewJournal: false
-  }
+  },
+  cashierSnapshot = null
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -71,24 +74,36 @@ export function SavingsAccountDetailView({
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
+  cashierSnapshot?: AccountCashierSnapshot | null;
 }) {
   const sectionIds = useMemo(() => {
     const ids = SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id);
-    if (!canViewAudits) {
-      return ids.filter((id) => id !== 'audit');
-    }
-    return ids;
-  }, [canViewAudits]);
+    return ids.filter((id) => {
+      if (id === 'audit' && !canViewAudits) {
+        return false;
+      }
+      if (id === 'cashier' && !cashierSnapshot) {
+        return false;
+      }
+      return true;
+    });
+  }, [canViewAudits, cashierSnapshot]);
 
   const navItems = useMemo(
     () =>
-      SAVINGS_ACCOUNT_SECTIONS.filter((section) => canViewAudits || section.id !== 'audit').map(
-        (section) => ({
-          ...section,
-          icon: SECTION_ICONS[section.id]
-        })
-      ),
-    [canViewAudits]
+      SAVINGS_ACCOUNT_SECTIONS.filter((section) => {
+        if (section.id === 'audit' && !canViewAudits) {
+          return false;
+        }
+        if (section.id === 'cashier' && !cashierSnapshot) {
+          return false;
+        }
+        return true;
+      }).map((section) => ({
+        ...section,
+        icon: SECTION_ICONS[section.id]
+      })),
+    [canViewAudits, cashierSnapshot]
   );
 
   const { activeSection, setSection } = useDetailSection(
@@ -194,6 +209,7 @@ export function SavingsAccountDetailView({
         auditLoadFailed={auditLoadFailed}
         auditTotalRecords={auditTotalRecords}
         transactionActionPermissions={transactionActionPermissions}
+        cashierSnapshot={cashierSnapshot}
       />
     </DetailPage>
   );

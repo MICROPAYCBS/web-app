@@ -408,6 +408,12 @@ export type {
   GroupsPage
 } from './groups/types';
 
+export type { LoanListItem, LoansPage } from './portfolio/loan-list-types';
+export type {
+  SavingsAccountListItem,
+  SavingsAccountsPage
+} from './portfolio/savings-list-types';
+
 export type {
   FineractReportAllowedParameter,
   FineractReportDetail,
@@ -483,6 +489,10 @@ export type {
   OrganizationPaymentType,
   OrganizationPaymentTypeMutationResponse
 } from './organization/payment-type-types';
+export type {
+  OrganizationFund,
+  OrganizationFundMutationResponse
+} from './organization/fund-types';
 export type {
   CustomerClass,
   CustomerClassLegalFormOption,
