@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { LoanProductKind } from '@mifos/api-client';
 import type { LoanProductSettingsInput } from '@mifos/validation';
 import { DetailSection } from '@/components/composites';
 import { SelectField } from '@/components/composites/select-field';
@@ -19,6 +20,7 @@ import {
   LOAN_PRODUCT_SCHEDULE_PROCESSING_TYPE_HINT
 } from '@/lib/fineract/loan-product-field-hints';
 import type { LoanProductStepProps } from '../types';
+import { LoanProductAttributeOverridesFields } from '../loan-product-attribute-overrides-fields';
 
 function strategyOptions(template: LoanProductStepProps['template']) {
   return (template.transactionProcessingStrategyOptions ?? []).map((option) => ({
@@ -28,11 +30,13 @@ function strategyOptions(template: LoanProductStepProps['template']) {
 }
 
 export function SettingsStep({
+  productKind,
   template,
   draft,
   errors,
   onChange
 }: LoanProductStepProps & {
+  productKind: LoanProductKind;
   onChange: (patch: Partial<LoanProductSettingsInput>) => void;
 }) {
   const settings = draft.settings;
@@ -506,6 +510,15 @@ export function SettingsStep({
           />
         </div>
       </DetailSection>
+
+      <LoanProductAttributeOverridesFields
+        productKind={productKind}
+        enabled={settings.allowAttributeConfiguration ?? false}
+        overrides={settings.allowAttributeOverrides ?? {}}
+        errors={errors}
+        onEnabledChange={(allowAttributeConfiguration) => onChange({ allowAttributeConfiguration })}
+        onOverridesChange={(allowAttributeOverrides) => onChange({ allowAttributeOverrides })}
+      />
     </div>
   );
 }

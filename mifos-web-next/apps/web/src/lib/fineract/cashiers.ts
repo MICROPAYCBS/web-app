@@ -27,6 +27,19 @@ import {
 } from '@/lib/fineract/build-cashier-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
+function extractCashierRows(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+  if (raw && typeof raw === 'object') {
+    const cashiers = (raw as Record<string, unknown>).cashiers;
+    if (Array.isArray(cashiers)) {
+      return cashiers;
+    }
+  }
+  return [];
+}
+
 function normalizeCashier(raw: unknown): OrganizationCashierListItem | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -44,8 +57,32 @@ function normalizeCashier(raw: unknown): OrganizationCashierListItem | null {
     tellerName: typeof row.tellerName === 'string' ? row.tellerName : undefined,
     startDate: row.startDate as number[] | string | undefined,
     endDate: row.endDate as number[] | string | undefined,
-    isFullDay: row.isFullDay === true
+    isFullDay: row.isFullDay === true || row.fullDay === true
   };
+}
+
+function coerceSummaryAmount(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+function extractCashierTransactionPageItems(raw: unknown): OrganizationCashierTransaction[] {
+  if (Array.isArray(raw)) {
+    return raw as OrganizationCashierTransaction[];
+  }
+  if (raw && typeof raw === 'object') {
+    const pageItems = (raw as Record<string, unknown>).pageItems;
+    if (Array.isArray(pageItems)) {
+      return pageItems as OrganizationCashierTransaction[];
+    }
+  }
+  return [];
 }
 
 function normalizeSummary(raw: unknown): OrganizationCashierSummary {
@@ -53,26 +90,17 @@ function normalizeSummary(raw: unknown): OrganizationCashierSummary {
     return {};
   }
   const row = raw as Record<string, unknown>;
-  const transactions = row.cashierTransactions;
+  const pageItems = extractCashierTransactionPageItems(row.cashierTransactions);
   return {
-    netCash: typeof row.netCash === 'number' ? row.netCash : undefined,
-    sumCashAllocation:
-      typeof row.sumCashAllocation === 'number' ? row.sumCashAllocation : undefined,
-    sumCashSettlement:
-      typeof row.sumCashSettlement === 'number' ? row.sumCashSettlement : undefined,
-    sumInwardCash: typeof row.sumInwardCash === 'number' ? row.sumInwardCash : undefined,
-    sumOutwardCash: typeof row.sumOutwardCash === 'number' ? row.sumOutwardCash : undefined,
+    netCash: coerceSummaryAmount(row.netCash),
+    sumCashAllocation: coerceSummaryAmount(row.sumCashAllocation),
+    sumCashSettlement: coerceSummaryAmount(row.sumCashSettlement),
+    sumInwardCash: coerceSummaryAmount(row.sumInwardCash),
+    sumOutwardCash: coerceSummaryAmount(row.sumOutwardCash),
     cashierName: typeof row.cashierName === 'string' ? row.cashierName : undefined,
     tellerName: typeof row.tellerName === 'string' ? row.tellerName : undefined,
     officeName: typeof row.officeName === 'string' ? row.officeName : undefined,
-    cashierTransactions:
-      transactions && typeof transactions === 'object'
-        ? {
-            pageItems: Array.isArray((transactions as Record<string, unknown>).pageItems)
-              ? ((transactions as Record<string, unknown>).pageItems as OrganizationCashierTransaction[])
-              : undefined
-          }
-        : undefined
+    cashierTransactions: { pageItems }
   };
 }
 
@@ -81,10 +109,7 @@ export async function listOrganizationCashiers(
 ): Promise<OrganizationCashierListItem[]> {
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(`/tellers/${tellerId}/cashiers`);
-  if (!Array.isArray(raw)) {
-    return [];
-  }
-  return raw
+  return extractCashierRows(raw)
     .map((item) => normalizeCashier(item))
     .filter((item): item is OrganizationCashierListItem => item !== null);
 }

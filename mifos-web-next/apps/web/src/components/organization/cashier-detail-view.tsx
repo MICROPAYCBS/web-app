@@ -29,18 +29,17 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { loadCashierSummaryAction } from '@/actions/cashier';
 import { CashierCashActionSheet } from '@/components/organization/cashier-cash-action-sheet';
 import { CashierFormSheet } from '@/components/organization/cashier-form-sheet';
+import { CashierSummaryFields } from '@/components/organization/cashier-summary-fields';
 import {
   DetailBackLink,
-  DetailField,
-  DetailFieldGrid,
   DetailHeader,
-  DetailPage,
-  DetailSection
+  DetailPage
 } from '@/components/composites';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import { tellerCashiersPath } from '@/lib/fineract/teller-paths';
 import type { SelectOption } from '@/components/composites/select-field';
@@ -73,7 +72,8 @@ export function CashierDetailView({
   initialSummary,
   canUpdate,
   canAllocate,
-  canSettle
+  canSettle,
+  showCashiersListBackLink = true
 }: {
   teller: OrganizationTeller;
   cashier: OrganizationCashierListItem;
@@ -83,6 +83,7 @@ export function CashierDetailView({
   canUpdate: boolean;
   canAllocate: boolean;
   canSettle: boolean;
+  showCashiersListBackLink?: boolean;
 }) {
   const [currencyCode, setCurrencyCode] = useState(initialCurrencyCode);
   const [summary, setSummary] = useState(initialSummary);
@@ -180,19 +181,26 @@ export function CashierDetailView({
         header={
           <DetailHeader
             backLink={
-              <DetailBackLink
-                href={tellerCashiersPath(teller.id)}
-                label="Back to cashiers"
-              />
+              showCashiersListBackLink ? (
+                <DetailBackLink
+                  href={tellerCashiersPath(teller.id)}
+                  label="Back to cashiers"
+                />
+              ) : (
+                <DetailBackLink href="/" label="Back to dashboard" />
+              )
             }
             title={displayName}
             meta={[summary.tellerName ?? teller.name, summary.officeName ?? teller.officeName]
               .filter(Boolean)
               .join(' · ')}
+            actionsClassName="sm:self-end"
             actions={
               <div className="flex flex-wrap items-center gap-2">
                 <SelectField
+                  id="cashier-currency"
                   label="Currency"
+                  hideLabel
                   value={currencyCode}
                   onValueChange={(value) => {
                     if (value && value !== currencyCode) {
@@ -201,7 +209,7 @@ export function CashierDetailView({
                   }}
                   options={currencyOptions}
                   disabled={pending || currencyOptions.length === 0}
-                  className="w-48"
+                  className="w-44"
                 />
                 <Button
                   type="button"
@@ -250,35 +258,33 @@ export function CashierDetailView({
           <p className="mb-4 text-sm text-destructive">{summaryError}</p>
         ) : null}
 
-        <DetailSection title="Cash summary">
-          <DetailFieldGrid>
-            <DetailField label="Net cash">
-              {formatSummaryAmount(summary.netCash, currencyCode)}
-            </DetailField>
-            <DetailField label="Cash allocated">
-              {formatSummaryAmount(summary.sumCashAllocation, currencyCode)}
-            </DetailField>
-            <DetailField label="Cash settled">
-              {formatSummaryAmount(summary.sumCashSettlement, currencyCode)}
-            </DetailField>
-            <DetailField label="Inward cash">
-              {formatSummaryAmount(summary.sumInwardCash, currencyCode)}
-            </DetailField>
-            <DetailField label="Outward cash">
-              {formatSummaryAmount(summary.sumOutwardCash, currencyCode)}
-            </DetailField>
-          </DetailFieldGrid>
-        </DetailSection>
+        <Tabs defaultValue="summary" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="transactions">
+              Transactions{transactions.length > 0 ? ` (${transactions.length})` : ''}
+            </TabsTrigger>
+          </TabsList>
 
-        <DetailSection title="Transactions">
-          <DataTable
-            table={table}
-            stickyHeader={false}
-            emptyMessage="No transactions"
-            emptyDescription="Cashier transactions for the selected currency will appear here."
-          />
-          <DataTablePagination table={table} totalRecords={transactions.length} />
-        </DetailSection>
+          <TabsContent value="summary" className="mt-0">
+            <CashierSummaryFields
+              summary={summary}
+              currencyCode={currencyCode}
+              cashier={cashier}
+              tellerName={summary.tellerName ?? teller.name}
+            />
+          </TabsContent>
+
+          <TabsContent value="transactions" className="mt-0 space-y-4">
+            <DataTable
+              table={table}
+              stickyHeader={false}
+              emptyMessage="No transactions"
+              emptyDescription="Cashier transactions for the selected currency will appear here."
+            />
+            <DataTablePagination table={table} totalRecords={transactions.length} />
+          </TabsContent>
+        </Tabs>
       </DetailPage>
 
       {canUpdate ? (

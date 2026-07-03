@@ -10,8 +10,10 @@
 
 import { Calendar, Search } from 'lucide-react';
 import Link from 'next/link';
+import { CashierHeaderBalance } from '@/components/platform/cashier-header-balance';
 import { useEntitySearch } from '@/components/platform/entity-search-provider';
 import { CheckerInboxHeaderLink } from '@/components/platform/checker-inbox-header-link';
+import type { CashierNavBalance } from '@/lib/fineract/cashier-display';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -22,11 +24,13 @@ import { cn } from '@/lib/utils';
 export function MifosSiteHeader({
   businessDateLabel,
   businessDateIsNotToday = false,
-  checkerInboxPendingCount
+  checkerInboxPendingCount,
+  cashierNavBalance
 }: {
   businessDateLabel?: string | null;
   businessDateIsNotToday?: boolean;
   checkerInboxPendingCount?: number | null;
+  cashierNavBalance?: CashierNavBalance | null;
 }) {
   const { openEntitySearch } = useEntitySearch();
   const showBusinessDate = Boolean(businessDateLabel?.trim());
@@ -75,6 +79,8 @@ export function MifosSiteHeader({
             </TooltipContent>
           </Tooltip>
         ) : null}
+
+        {cashierNavBalance ? <CashierHeaderBalance balance={cashierNavBalance} /> : null}
 
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <CheckerInboxHeaderLink initialCount={checkerInboxPendingCount} />

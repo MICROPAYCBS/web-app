@@ -10,10 +10,11 @@
 
 import type { DepositProductAccountingInput } from '@mifos/validation';
 import type { LoanProductGlAccountOption } from '@mifos/api-client';
+import { useMemo } from 'react';
 import { DetailSection } from '@/components/composites';
-import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { MappingSection } from '@/components/products/loan/wizard/steps/mapping-section';
+import { ProductAccountingAccountFieldGroups } from '@/components/products/shared/product-accounting-account-field-groups';
 import { toSelectOptions } from '@/lib/form/select-options';
 import {
   formatProductChargeOptionLabel,
@@ -24,7 +25,13 @@ import {
   glAccountLabel,
   resolveSelectableAccountingRuleId
 } from '@/lib/fineract/product-display';
+import type { ProductAccountingAccountField } from '@/lib/fineract/product-accounting-groups';
 import type { DepositProductStepProps } from '../types';
+
+type DepositAccountFieldKey = keyof DepositProductAccountingInput;
+type DepositAccountField = ProductAccountingAccountField<DepositAccountFieldKey> & {
+  optionKey: keyof NonNullable<DepositProductStepProps['template']['accountingMappingOptions']>;
+};
 
 function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   return (accounts ?? []).map((account) => ({
@@ -33,44 +40,77 @@ function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   }));
 }
 
-const CORE_ACCOUNT_FIELDS: {
-  key: keyof DepositProductAccountingInput;
-  label: string;
-  optionKey: keyof NonNullable<DepositProductStepProps['template']['accountingMappingOptions']>;
-}[] = [
-  { key: 'savingsReferenceAccountId', label: 'Saving reference', optionKey: 'assetAccountOptions' },
-  { key: 'savingsControlAccountId', label: 'Saving control', optionKey: 'assetAccountOptions' },
+const DEPOSIT_ACCOUNT_FIELDS: DepositAccountField[] = [
   {
-    key: 'transfersInSuspenseAccountId',
-    label: 'Transfer in suspense',
+    key: 'savingsReferenceAccountId',
+    label: 'Saving reference',
+    group: 'Assets',
     optionKey: 'assetAccountOptions'
   },
   {
-    key: 'interestOnSavingsAccountId',
-    label: 'Interest on savings',
-    optionKey: 'expenseAccountOptions'
+    key: 'savingsControlAccountId',
+    label: 'Saving control',
+    group: 'Liabilities',
+    optionKey: 'liabilityAccountOptions'
   },
-  { key: 'incomeFromFeeAccountId', label: 'Income from fees', optionKey: 'incomeAccountOptions' },
   {
-    key: 'incomeFromPenaltyAccountId',
-    label: 'Income from penalties',
-    optionKey: 'incomeAccountOptions'
-  }
-];
-
-const ACCRUAL_ACCOUNT_FIELDS: typeof CORE_ACCOUNT_FIELDS = [
-  { key: 'feesReceivableAccountId', label: 'Fees receivable', optionKey: 'assetAccountOptions' },
+    key: 'transfersInSuspenseAccountId',
+    label: 'Transfer in suspense',
+    group: 'Liabilities',
+    optionKey: 'liabilityAccountOptions'
+  },
+  {
+    key: 'feesReceivableAccountId',
+    label: 'Fees receivable',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions'
+  },
   {
     key: 'penaltiesReceivableAccountId',
     label: 'Penalties receivable',
+    group: 'Assets',
     optionKey: 'assetAccountOptions'
   },
   {
     key: 'interestPayableAccountId',
     label: 'Interest payable',
+    group: 'Liabilities',
     optionKey: 'liabilityAccountOptions'
+  },
+  {
+    key: 'interestOnSavingsAccountId',
+    label: 'Interest on savings',
+    group: 'Expenses',
+    optionKey: 'expenseAccountOptions'
+  },
+  {
+    key: 'incomeFromFeeAccountId',
+    label: 'Income from fees',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
+  },
+  {
+    key: 'incomeFromPenaltyAccountId',
+    label: 'Income from penalties',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
   }
 ];
+
+const CASH_FIELD_KEYS = new Set<DepositAccountFieldKey>([
+  'savingsReferenceAccountId',
+  'savingsControlAccountId',
+  'transfersInSuspenseAccountId',
+  'interestOnSavingsAccountId',
+  'incomeFromFeeAccountId',
+  'incomeFromPenaltyAccountId'
+]);
+
+const ACCRUAL_FIELD_KEYS = new Set<DepositAccountFieldKey>([
+  'feesReceivableAccountId',
+  'penaltiesReceivableAccountId',
+  'interestPayableAccountId'
+]);
 
 function allGlOptions(
   mappingOptions: DepositProductStepProps['template']['accountingMappingOptions']
@@ -107,18 +147,27 @@ export function AccountingStep({
         { id: 3, value: 'Accrual (periodic)', code: 'ACCRUAL_PERIODIC' }
       ];
 
-  function setAccountField(key: keyof DepositProductAccountingInput, value: string | undefined) {
+  const visibleFields = useMemo(() => {
+    return DEPOSIT_ACCOUNT_FIELDS.filter((field) => {
+      if (CASH_FIELD_KEYS.has(field.key)) {
+        return true;
+      }
+      return isAccrual && ACCRUAL_FIELD_KEYS.has(field.key);
+    });
+  }, [isAccrual]);
+
+  function setAccountField(key: DepositAccountFieldKey, value: string | undefined) {
     onChange({ [key]: value ? Number(value) : undefined } as Partial<DepositProductAccountingInput>);
   }
 
   function setRule(id: number) {
     const patch: Partial<DepositProductAccountingInput> = { accountingRule: id };
     if (id === 1) {
-      for (const { key } of [...CORE_ACCOUNT_FIELDS, ...ACCRUAL_ACCOUNT_FIELDS]) {
+      for (const { key } of DEPOSIT_ACCOUNT_FIELDS) {
         (patch as Record<string, undefined>)[key] = undefined;
       }
     } else if (id === 2) {
-      for (const { key } of ACCRUAL_ACCOUNT_FIELDS) {
+      for (const key of ACCRUAL_FIELD_KEYS) {
         (patch as Record<string, undefined>)[key] = undefined;
       }
     }
@@ -165,40 +214,13 @@ export function AccountingStep({
       </DetailSection>
 
       {accountingEnabled ? (
-        <DetailSection title="Ledger accounts">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {CORE_ACCOUNT_FIELDS.map(({ key, label, optionKey }) => (
-              <SelectField
-                key={key}
-                id={`accounting.${key}`}
-                label={label}
-                required
-                value={
-                  accounting[key] != null ? String(accounting[key]) : undefined
-                }
-                onValueChange={(value) => setAccountField(key, value)}
-                options={glOptions(mappingOptions[optionKey])}
-                error={errors[`accounting.${key}`]}
-              />
-            ))}
-            {isAccrual
-              ? ACCRUAL_ACCOUNT_FIELDS.map(({ key, label, optionKey }) => (
-                  <SelectField
-                    key={key}
-                    id={`accounting.${key}`}
-                    label={label}
-                    required
-                    value={
-                      accounting[key] != null ? String(accounting[key]) : undefined
-                    }
-                    onValueChange={(value) => setAccountField(key, value)}
-                    options={glOptions(mappingOptions[optionKey])}
-                    error={errors[`accounting.${key}`]}
-                  />
-                ))
-              : null}
-          </div>
-        </DetailSection>
+        <ProductAccountingAccountFieldGroups
+          fields={visibleFields}
+          getValue={(key) => accounting[key] as number | undefined}
+          errors={errors}
+          getOptions={(field) => glOptions(mappingOptions[field.optionKey])}
+          onValueChange={setAccountField}
+        />
       ) : null}
 
       {accountingEnabled ? (

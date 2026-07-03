@@ -1,11 +1,12 @@
 {
   "schemaId": "organization.cashier.update",
   "fineractSources": [
-    "org.apache.fineract.organisation.teller.api.TellerApiResource",
-    "org.apache.fineract.organisation.teller.data.CashierDataValidator"
+    "org.apache.fineract.organisation.teller.serialization.TellerCommandFromApiJsonDeserializer.validateForAllocateCashier"
   ],
   "fields": {
+    "staffId": { "required": true, "type": "integer" },
     "startDate": { "required": true, "type": "date" },
+    "endDate": { "required": true, "type": "date" },
     "isFullDay": { "required": true, "type": "boolean" }
   }
 }

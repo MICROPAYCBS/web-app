@@ -7,6 +7,7 @@
  */
 
 import type { FineractCurrencyOption, FineractEnumOption } from '../clients/types';
+import type { LoanProductAttributeOverrides } from './loan-product-attribute-overrides';
 import type { ProductGlAccountRef } from './loan-product-types';
 
 export interface FineractCodeNameOption {
@@ -89,6 +90,7 @@ export interface LoanProductTemplate {
   paymentChannelToFundSourceMappings?: unknown[];
   feeToIncomeAccountMappings?: unknown[];
   penaltyToIncomeAccountMappings?: unknown[];
+  allowAttributeOverrides?: LoanProductAttributeOverrides;
   dueDaysForRepaymentEvent?: number;
   overDueDaysForRepaymentEvent?: number;
   [key: string]: unknown;

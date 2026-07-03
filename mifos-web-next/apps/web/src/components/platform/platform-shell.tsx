@@ -15,6 +15,7 @@ import { EntitySearchProvider } from '@/components/platform/entity-search-provid
 import { MifosSiteHeader } from '@/components/platform/mifos-site-header';
 import { NavigationProvider } from '@/components/platform/navigation-provider';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
+import type { CashierNavBalance } from '@/lib/fineract/cashier-display';
 import type { BusinessDateContextValue } from '@/lib/fineract/business-date-context';
 import { ErrorBoundary } from '@/components/composites/error-boundary';
 import { InactivityTimeout } from '@/components/auth/inactivity-timeout';
@@ -35,6 +36,7 @@ export function PlatformShell({
   serverName,
   businessDateContext,
   checkerInboxPendingCount,
+  cashierNavBalance,
   children
 }: {
   nav: PlatformNavStructure;
@@ -42,6 +44,8 @@ export function PlatformShell({
   businessDateContext: BusinessDateContextValue;
   /** SSR seed for header badge; null when unavailable. */
   checkerInboxPendingCount?: number | null;
+  /** SSR seed for signed-in teller cashiers; null when not assigned. */
+  cashierNavBalance?: CashierNavBalance | null;
   children: ReactNode;
 }) {
   return (
@@ -57,6 +61,7 @@ export function PlatformShell({
                   businessDateLabel={businessDateContext.displayLabel}
                   businessDateIsNotToday={businessDateContext.isNotToday}
                   checkerInboxPendingCount={checkerInboxPendingCount}
+                  cashierNavBalance={cashierNavBalance}
                 />
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                   <ErrorBoundary

@@ -90,6 +90,18 @@ export async function createClientAction(data: unknown) {
 
 Separate from RBAC. Use permission keys like `checkerInbox` in the manifest (OR list of approve/read checker codes). See reference web-app checker menu.
 
+## Cashier self-read
+
+Teller staff need to see **their own** drawer without org-wide teller admin access.
+
+| Semantic key | Fineract code | Scope |
+|--------------|---------------|--------|
+| `organization.cashiers.readSelf` | `READ_MY_CASHIER` | Header balance + own cashier detail |
+| `organization.cashiers.view` | `READ_MY_CASHIER` **or** `READ_TELLER` | Route gate for cashier detail URL |
+| `organization.tellers` | `READ_TELLER` | All tellers/cashiers (managers) |
+
+The app enforces **staff ownership** (`cashier.staffId === user.staff.id`) on self-read paths even when Fineract returns data. Assign `READ_MY_CASHIER` to teller roles in Fineract (seed in your fork if the code is not yet in `m_permission`).
+
 ## Related
 
 - [ADR-007](adr/007-rbac.md)

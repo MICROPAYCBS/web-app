@@ -34,6 +34,19 @@ export interface AccountCashierSnapshot {
   canOpenCashierDetail: boolean;
 }
 
+/** Net cash per organization currency — shown inline on account detail nav. */
+export interface CashierCurrencyBalance {
+  currencyCode: string;
+  netCash?: number;
+}
+
+export interface CashierNavBalance {
+  tellerId: number;
+  cashierId: number;
+  canOpenCashierDetail: boolean;
+  balances: CashierCurrencyBalance[];
+}
+
 function assignmentBoundaryDate(value: number[] | string | undefined): Date | null {
   const coerced = coerceFineractDateTime(value);
   if (coerced == null) {

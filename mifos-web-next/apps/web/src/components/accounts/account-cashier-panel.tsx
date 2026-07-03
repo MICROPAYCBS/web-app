@@ -19,20 +19,16 @@ import {
 } from '@tanstack/react-table';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import {
-  DetailField,
-  DetailFieldGrid,
-  DetailSection
-} from '@/components/composites';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CashierSummaryFields } from '@/components/organization/cashier-summary-fields';
 import type { AccountCashierSnapshot } from '@/lib/fineract/cashier-display';
 import {
   cashierAssignmentStatusLabel,
-  cashierAssignmentStatusVariant,
-  formatCashierAssignmentPeriod
+  cashierAssignmentStatusVariant
 } from '@/lib/fineract/cashier-display';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import { tellerCashierDetailPath } from '@/lib/fineract/teller-paths';
@@ -116,67 +112,65 @@ function CashierTransactionsTable({
 export function AccountCashierPanel({ snapshot }: { snapshot: AccountCashierSnapshot }) {
   const displayName =
     snapshot.summary.cashierName ?? snapshot.cashier.staffName ?? `Cashier ${snapshot.cashier.id}`;
+  const accountTransactionCount = snapshot.accountTransactions.length;
+  const sessionTransactionCount = snapshot.sessionTransactions.length;
+  const transactionCount = accountTransactionCount + sessionTransactionCount;
 
   return (
-    <div className="space-y-6">
-      <DetailSection
-        title="Your cashier session"
-        description="Your teller assignment, cash position, and transaction history for this account."
-        actions={
-          snapshot.canOpenCashierDetail ? (
-            <Link
-              href={tellerCashierDetailPath(snapshot.tellerId, snapshot.cashier.id)}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-            >
-              Open cashier details
-            </Link>
-          ) : null
-        }
-      >
-        <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant={cashierAssignmentStatusVariant(snapshot.assignmentStatus)}>
             {cashierAssignmentStatusLabel(snapshot.assignmentStatus)}
           </Badge>
           <span className="text-sm text-muted-foreground">{displayName}</span>
         </div>
+        {snapshot.canOpenCashierDetail ? (
+          <Link
+            href={tellerCashierDetailPath(snapshot.tellerId, snapshot.cashier.id)}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+          >
+            Open cashier details
+          </Link>
+        ) : null}
+      </div>
 
-        <DetailFieldGrid>
-          <DetailField label="Teller">{snapshot.tellerName ?? '—'}</DetailField>
-          <DetailField label="Branch">{snapshot.summary.officeName ?? '—'}</DetailField>
-          <DetailField label="Assignment period">
-            {formatCashierAssignmentPeriod(snapshot.cashier)}
-          </DetailField>
-          <DetailField label="Schedule">
-            {snapshot.cashier.isFullDay === false ? 'Partial day' : 'Full day'}
-          </DetailField>
-          <DetailField label="Net cash">
-            {formatCashierAmount(snapshot.summary.netCash, snapshot.currencyCode)}
-          </DetailField>
-          <DetailField label="Cash allocated">
-            {formatCashierAmount(snapshot.summary.sumCashAllocation, snapshot.currencyCode)}
-          </DetailField>
-          <DetailField label="Cash settled">
-            {formatCashierAmount(snapshot.summary.sumCashSettlement, snapshot.currencyCode)}
-          </DetailField>
-          <DetailField label="Currency">{snapshot.currencyCode}</DetailField>
-        </DetailFieldGrid>
-      </DetailSection>
+      <Tabs defaultValue="summary" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="transactions">
+            Transactions{transactionCount > 0 ? ` (${transactionCount})` : ''}
+          </TabsTrigger>
+        </TabsList>
 
-      <DetailSection title="Transactions on this account">
-        <CashierTransactionsTable
-          transactions={snapshot.accountTransactions}
-          currencyCode={snapshot.currencyCode}
-          emptyMessage="No cashier transactions for this account"
-        />
-      </DetailSection>
+        <TabsContent value="summary" className="mt-0">
+          <CashierSummaryFields
+            summary={snapshot.summary}
+            currencyCode={snapshot.currencyCode}
+            cashier={snapshot.cashier}
+            tellerName={snapshot.tellerName}
+          />
+        </TabsContent>
 
-      <DetailSection title="Session history">
-        <CashierTransactionsTable
-          transactions={snapshot.sessionTransactions}
-          currencyCode={snapshot.currencyCode}
-          emptyMessage="No transactions in this cashier session"
-        />
-      </DetailSection>
+        <TabsContent value="transactions" className="mt-0 space-y-6">
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium">On this account</h3>
+            <CashierTransactionsTable
+              transactions={snapshot.accountTransactions}
+              currencyCode={snapshot.currencyCode}
+              emptyMessage="No cashier transactions for this account"
+            />
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium">Session history</h3>
+            <CashierTransactionsTable
+              transactions={snapshot.sessionTransactions}
+              currencyCode={snapshot.currencyCode}
+              emptyMessage="No transactions in this cashier session"
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -47,7 +47,7 @@ export default async function EditLoanProductPage({
   }
 
   const template = await enrichLoanProductTemplate(rawTemplate);
-  const initialDraft = loanProductDraftFromTemplate(template);
+  const initialDraft = loanProductDraftFromTemplate(template, kind);
 
   return (
     <LoanProductWizard

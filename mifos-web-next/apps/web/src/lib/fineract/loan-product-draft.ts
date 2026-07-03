@@ -6,12 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { LoanProductTemplate } from '@mifos/api-client';
+import type { LoanProductKind, LoanProductTemplate } from '@mifos/api-client';
 import type { UpsertLoanProductInput } from '@mifos/validation';
 import {
   filterCurrencyOptionsBySelected,
   getOrganizationSelectedCurrencies
 } from '@/lib/fineract/organization-currencies';
+import { resolveLoanProductAttributeOverrideSettings } from '@/lib/fineract/loan-product-attribute-overrides';
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
 import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import {
@@ -56,7 +57,8 @@ function optionalAccountId(value: unknown): number | undefined {
 }
 
 export function loanProductDraftFromTemplate(
-  template: LoanProductTemplate
+  template: LoanProductTemplate,
+  productKind: LoanProductKind
 ): UpsertLoanProductInput {
   const currency = template.currency ?? template.currencyOptions?.[0];
   const accountingRuleId = productDraftAccountingRuleId(
@@ -64,6 +66,10 @@ export function loanProductDraftFromTemplate(
     template.accountingRuleOptions
   );
   const mappings = template.accountingMappings ?? {};
+  const attributeOverrides = resolveLoanProductAttributeOverrideSettings(
+    productKind,
+    template.allowAttributeOverrides
+  );
 
   return {
     details: {
@@ -175,7 +181,9 @@ export function loanProductDraftFromTemplate(
       syncExpectedWithDisbursementDate: Boolean(template.syncExpectedWithDisbursementDate),
       allowApprovedDisbursedAmountsOverApplied: Boolean(
         template.allowApprovedDisbursedAmountsOverApplied
-      )
+      ),
+      allowAttributeConfiguration: attributeOverrides.allowAttributeConfiguration,
+      allowAttributeOverrides: attributeOverrides.allowAttributeOverrides
     },
     charges: {
       chargeIds: (template.charges ?? []).map((c) => c.id).filter((id) => Number.isFinite(id))

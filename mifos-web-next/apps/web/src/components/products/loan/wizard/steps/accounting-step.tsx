@@ -10,60 +10,105 @@
 
 import type { LoanProductAccountingInput } from '@mifos/validation';
 import type { LoanProductGlAccountOption } from '@mifos/api-client';
+import { useMemo } from 'react';
 import { DetailSection } from '@/components/composites';
-import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
+import { ProductAccountingAccountFieldGroups } from '@/components/products/shared/product-accounting-account-field-groups';
 import { ProductAccountingRuleField } from '@/components/products/shared/product-accounting-rule-field';
 import { resolveSelectableAccountingRuleId } from '@/lib/fineract/product-display';
+import type { ProductAccountingAccountField } from '@/lib/fineract/product-accounting-groups';
 import type { LoanProductStepProps } from '../types';
+
+type LoanAccountFieldKey = keyof LoanProductAccountingInput;
+type LoanAccountField = ProductAccountingAccountField<LoanAccountFieldKey> & {
+  optionKey: keyof NonNullable<LoanProductStepProps['template']['accountingMappingOptions']>;
+};
 
 function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   return (accounts ?? []).map((account) => ({
     value: String(account.id),
-    label: account.glCode && account.name ? `${account.glCode} — ${account.name}` : (account.name ?? account.glCode ?? `Account ${account.id}`)
+    label:
+      account.glCode && account.name
+        ? `${account.glCode} — ${account.name}`
+        : (account.name ?? account.glCode ?? `Account ${account.id}`)
   }));
 }
 
-const CORE_ACCOUNT_FIELDS: {
-  key: keyof LoanProductAccountingInput;
-  label: string;
-  optionKey: keyof NonNullable<LoanProductStepProps['template']['accountingMappingOptions']>;
-}[] = [
-  { key: 'fundSourceAccountId', label: 'Fund source', optionKey: 'assetAccountOptions' },
-  { key: 'loanPortfolioAccountId', label: 'Loan portfolio', optionKey: 'assetAccountOptions' },
+const LOAN_ACCOUNT_FIELDS: LoanAccountField[] = [
+  {
+    key: 'fundSourceAccountId',
+    label: 'Fund source',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions'
+  },
+  {
+    key: 'loanPortfolioAccountId',
+    label: 'Loan portfolio',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions'
+  },
   {
     key: 'transfersInSuspenseAccountId',
     label: 'Transfer in suspense',
+    group: 'Assets',
     optionKey: 'assetAccountOptions'
   },
-  { key: 'interestOnLoanAccountId', label: 'Income from interest', optionKey: 'incomeAccountOptions' },
-  { key: 'incomeFromFeeAccountId', label: 'Income from fees', optionKey: 'incomeAccountOptions' },
+  {
+    key: 'receivableInterestAccountId',
+    label: 'Interest receivable',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions'
+  },
+  {
+    key: 'receivableFeeAccountId',
+    label: 'Fees receivable',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions'
+  },
+  {
+    key: 'receivablePenaltyAccountId',
+    label: 'Penalties receivable',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions'
+  },
+  {
+    key: 'overpaymentLiabilityAccountId',
+    label: 'Overpayment liability',
+    group: 'Liabilities',
+    optionKey: 'liabilityAccountOptions'
+  },
+  {
+    key: 'interestOnLoanAccountId',
+    label: 'Income from interest',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
+  },
+  {
+    key: 'incomeFromFeeAccountId',
+    label: 'Income from fees',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
+  },
   {
     key: 'incomeFromPenaltyAccountId',
     label: 'Income from penalties',
+    group: 'Income',
     optionKey: 'incomeAccountOptions'
   },
   {
     key: 'incomeFromRecoveryAccountId',
     label: 'Income from recovery',
+    group: 'Income',
     optionKey: 'incomeAccountOptions'
   },
-  { key: 'writeOffAccountId', label: 'Losses written off', optionKey: 'expenseAccountOptions' },
-  {
-    key: 'overpaymentLiabilityAccountId',
-    label: 'Overpayment liability',
-    optionKey: 'liabilityAccountOptions'
-  }
+  { key: 'writeOffAccountId', label: 'Losses written off', group: 'Expenses', optionKey: 'expenseAccountOptions' }
 ];
 
-const ACCRUAL_ACCOUNT_FIELDS: {
-  key: keyof LoanProductAccountingInput;
-  label: string;
-}[] = [
-  { key: 'receivableInterestAccountId', label: 'Interest receivable' },
-  { key: 'receivableFeeAccountId', label: 'Fees receivable' },
-  { key: 'receivablePenaltyAccountId', label: 'Penalties receivable' }
-];
+const ACCRUAL_FIELD_KEYS = new Set<LoanAccountFieldKey>([
+  'receivableInterestAccountId',
+  'receivableFeeAccountId',
+  'receivablePenaltyAccountId'
+]);
 
 export function AccountingStep({
   template,
@@ -81,12 +126,17 @@ export function AccountingStep({
   const accountingEnabled = rule !== 1;
   const accrualEnabled = rule === 3 || rule === 4;
   const mappingOptions = template.accountingMappingOptions ?? {};
-  const assetOptions = glOptions(mappingOptions.assetAccountOptions);
 
-  function setAccountField(
-    key: keyof LoanProductAccountingInput,
-    value: string | undefined
-  ) {
+  const visibleFields = useMemo(() => {
+    return LOAN_ACCOUNT_FIELDS.filter((field) => {
+      if (ACCRUAL_FIELD_KEYS.has(field.key)) {
+        return accrualEnabled;
+      }
+      return true;
+    });
+  }, [accrualEnabled]);
+
+  function setAccountField(key: LoanAccountFieldKey, value: string | undefined) {
     onChange({ [key]: value ? Number(value) : undefined } as Partial<LoanProductAccountingInput>);
   }
 
@@ -112,46 +162,15 @@ export function AccountingStep({
       </DetailSection>
 
       {accountingEnabled ? (
-        <>
-          <DetailSection title="Core accounts">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {CORE_ACCOUNT_FIELDS.map((field) => {
-                const options =
-                  field.optionKey === 'assetAccountOptions'
-                    ? assetOptions
-                    : glOptions(mappingOptions[field.optionKey]);
-                const value = accounting[field.key];
-                return (
-                  <SelectField
-                    key={field.key}
-                    id={`accounting.${field.key}`}
-                    label={field.label}
-                    required
-                    value={value != null ? String(value) : undefined}
-                    onValueChange={(next) => setAccountField(field.key, next)}
-                    options={options}
-                    error={errors[`accounting.${field.key}`]}
-                  />
-                );
-              })}
-              {accrualEnabled
-                ? ACCRUAL_ACCOUNT_FIELDS.map((field) => {
-                    const value = accounting[field.key];
-                    return (
-                      <SelectField
-                        key={field.key}
-                        id={`accounting.${field.key}`}
-                        label={field.label}
-                        required
-                        value={value != null ? String(value) : undefined}
-                        onValueChange={(next) => setAccountField(field.key, next)}
-                        options={assetOptions}
-                        error={errors[`accounting.${field.key}`]}
-                      />
-                    );
-                  })
-                : null}
-              {accrualEnabled ? (
+        <ProductAccountingAccountFieldGroups
+          fields={visibleFields}
+          getValue={(key) => accounting[key] as number | undefined}
+          errors={errors}
+          getOptions={(field) => glOptions(mappingOptions[field.optionKey])}
+          onValueChange={setAccountField}
+          footer={
+            accrualEnabled ? (
+              <DetailSection title="Accrual">
                 <SwitchField
                   id="accounting.enableAccrualActivityPosting"
                   label="Accrual activity posting on due date"
@@ -161,10 +180,10 @@ export function AccountingStep({
                   }
                   error={errors['accounting.enableAccrualActivityPosting']}
                 />
-              ) : null}
-            </div>
-          </DetailSection>
-        </>
+              </DetailSection>
+            ) : null
+          }
+        />
       ) : null}
     </div>
   );

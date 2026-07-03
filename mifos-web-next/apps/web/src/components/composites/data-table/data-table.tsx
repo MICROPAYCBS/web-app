@@ -66,7 +66,7 @@ export function DataTable<TData>({
   const columnCount = table.getAllColumns().length;
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-md border">
       <Table>
         <TableHeader
           className={cn(

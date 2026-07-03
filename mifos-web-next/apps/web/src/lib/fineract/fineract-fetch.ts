@@ -45,7 +45,10 @@ export function fineractFetch(
   init?: RequestInit
 ): Promise<Response> {
   configureDevInsecureTls();
-  return fetch(input, init);
+  return fetch(input, {
+    ...init,
+    cache: init?.cache ?? 'no-store'
+  });
 }
 
 export async function buildFineractRequestInit(

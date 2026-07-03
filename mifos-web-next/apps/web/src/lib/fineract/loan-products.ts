@@ -19,6 +19,7 @@ import { createFineractClient } from '@/lib/fineract/create-client';
 import { loanProductApiPath } from '@/lib/fineract/loan-product-paths';
 import { filterProductChargeOptions, type FilteredProductChargeOptions } from '@/lib/fineract/product-charge-options';
 import { normalizeLoanProductTemplate } from '@/lib/fineract/loan-product-draft';
+import { asLoanProductAttributeOverrides } from '@/lib/fineract/loan-product-attribute-overrides';
 import {
   asAccountingMappings,
   asChargeIncomeMappings,
@@ -127,6 +128,7 @@ function normalizeDetail(raw: unknown): LoanProductDetail | null {
       typeof row.graceOnInterestPayment === 'number' ? row.graceOnInterestPayment : undefined,
     inArrearsTolerance:
       typeof row.inArrearsTolerance === 'number' ? row.inArrearsTolerance : undefined,
+    allowAttributeOverrides: asLoanProductAttributeOverrides(row.allowAttributeOverrides),
     accountingRule: asEnumOption(row.accountingRule),
     enableAccrualActivityPosting:
       typeof row.enableAccrualActivityPosting === 'boolean'

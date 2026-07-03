@@ -59,6 +59,29 @@ describe('buildLoanProductPayload', () => {
 
     assert.equal('useDueForRepaymentsConfigurations' in payload, false);
     assert.equal('allowAccrualPostingInArrears' in payload, false);
+    assert.equal('allowAttributeConfiguration' in payload, false);
+  });
+
+  it('includes allowAttributeOverrides in the payload', () => {
+    const payload = buildLoanProductPayload(
+      minimalDraft({
+        settings: {
+          allowAttributeConfiguration: true,
+          allowAttributeOverrides: {
+            amortizationType: true,
+            interestType: false,
+            repaymentEvery: true
+          }
+        }
+      })
+    );
+
+    assert.equal('allowAttributeConfiguration' in payload, false);
+    assert.deepEqual(payload.allowAttributeOverrides, {
+      amortizationType: true,
+      interestType: false,
+      repaymentEvery: true
+    });
   });
 
   it('clears due-day fields when repayment configuration override is enabled', () => {

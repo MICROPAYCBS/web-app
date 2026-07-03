@@ -27,6 +27,10 @@ import {
   loanProductPenaltyCharges
 } from '@/lib/fineract/loan-product-sections';
 import {
+  loanProductAttributeOverrideFields,
+  loanProductAttributeOverridesEnabled
+} from '@/lib/fineract/loan-product-attribute-overrides';
+import {
   accountingRuleLabel,
   glAccountLabel
 } from '@/lib/fineract/product-display';
@@ -36,7 +40,7 @@ import {
 } from '@/lib/fineract/product-status-display';
 
 const LOAN_ACCOUNTING_FIELDS: { key: string; label: string; group: string }[] = [
-  { key: 'fundSourceAccount', label: 'Fund source', group: 'Assets / Liabilities' },
+  { key: 'fundSourceAccount', label: 'Fund source', group: 'Assets' },
   { key: 'loanPortfolioAccount', label: 'Loan portfolio', group: 'Assets' },
   { key: 'receivableInterestAccount', label: 'Interest receivable', group: 'Assets' },
   { key: 'receivableFeeAccount', label: 'Fees receivable', group: 'Assets' },
@@ -221,6 +225,21 @@ function LoanProductSettingsSection({ product, productKind }: SectionProps) {
           </DetailFieldGrid>
         </DetailSection>
       ) : null}
+
+      <DetailSection title="Configurable terms and settings">
+        <DetailFieldGrid>
+          <DetailField label="Allow overrides in loan accounts">
+            {formatYesNo(loanProductAttributeOverridesEnabled(product.allowAttributeOverrides))}
+          </DetailField>
+          {loanProductAttributeOverridesEnabled(product.allowAttributeOverrides)
+            ? loanProductAttributeOverrideFields(productKind).map((field) => (
+                <DetailField key={field.key} label={field.label}>
+                  {formatYesNo(product.allowAttributeOverrides?.[field.key])}
+                </DetailField>
+              ))
+            : null}
+        </DetailFieldGrid>
+      </DetailSection>
     </>
   );
 }

@@ -267,6 +267,17 @@
       "READ_TELLER"
     ]
   },
+  "organization.cashiers.readSelf": {
+    "any": [
+      "READ_MY_CASHIER"
+    ]
+  },
+  "organization.cashiers.view": {
+    "any": [
+      "READ_MY_CASHIER",
+      "READ_TELLER"
+    ]
+  },
   "organization.tellers.create": {
     "any": [
       "CREATE_TELLER"

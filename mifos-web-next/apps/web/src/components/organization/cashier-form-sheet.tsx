@@ -25,6 +25,7 @@ import {
   fineractApiDateToFormString,
   toFineractDate
 } from '@/lib/fineract/dates';
+import { fineractDateToDate } from '@/lib/fineract/date-input';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 type CashierFormState = {
@@ -92,6 +93,8 @@ export function CashierFormSheet({
     [staff]
   );
 
+  const startDateMin = useMemo(() => fineractDateToDate(form.startDate), [form.startDate]);
+
   const title = mode === 'assign' ? 'Assign cashier' : 'Edit cashier assignment';
   const description =
     mode === 'assign'
@@ -125,6 +128,7 @@ export function CashierFormSheet({
           ? await assignCashierAction(tellerId, payload)
           : cashier
             ? await updateCashierAction(tellerId, cashier.id, {
+                staffId: form.staffId,
                 startDate: form.startDate,
                 endDate: form.endDate,
                 isFullDay: form.isFullDay
@@ -162,6 +166,7 @@ export function CashierFormSheet({
         {mode === 'assign' ? (
           <SelectField
             label="Staff member"
+            required
             value={form.staffId}
             onValueChange={(value) => setForm((current) => ({ ...current, staffId: value ?? '' }))}
             options={staffOptions}
@@ -178,6 +183,8 @@ export function CashierFormSheet({
 
         <DateField
           label="Start date"
+          required
+          allowFuture
           value={form.startDate}
           onChange={(value) => setForm((current) => ({ ...current, startDate: value ?? '' }))}
           error={fieldErrors.startDate}
@@ -186,11 +193,13 @@ export function CashierFormSheet({
 
         <DateField
           label="End date"
+          required
+          allowFuture
+          fromDate={startDateMin ?? undefined}
           value={form.endDate}
           onChange={(value) => setForm((current) => ({ ...current, endDate: value ?? '' }))}
           error={fieldErrors.endDate}
           disabled={pending}
-          optional
         />
 
         <Field>

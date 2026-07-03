@@ -11,7 +11,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/can.test.ts"
+    "test": "node --import tsx --test src/can.test.ts src/route-manifest.test.ts"
   },
   "dependencies": {
     "@mifos/api-client": "workspace:*",

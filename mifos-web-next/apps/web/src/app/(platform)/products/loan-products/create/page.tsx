@@ -37,7 +37,7 @@ export default async function CreateLoanProductPage({
   const kind = parseLoanProductKind(productType);
   const rawTemplate = await getLoanProductTemplate(kind);
   const template = await enrichLoanProductTemplate(rawTemplate);
-  const initialDraft = loanProductDraftFromTemplate(template);
+  const initialDraft = loanProductDraftFromTemplate(template, kind);
 
   return (
     <LoanProductWizard

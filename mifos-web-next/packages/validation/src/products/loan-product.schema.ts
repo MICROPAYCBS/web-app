@@ -159,7 +159,25 @@ export const loanProductSettingsStepSchema = z.object({
   syncExpectedWithDisbursementDate: z.boolean().optional(),
   allowApprovedDisbursedAmountsOverApplied: z.boolean().optional(),
   overAppliedCalculationType: z.string().trim().optional(),
-  overAppliedNumber: z.coerce.number().optional()
+  overAppliedNumber: z.coerce.number().optional(),
+  allowAttributeConfiguration: z.boolean().optional(),
+  allowAttributeOverrides: z
+    .object({
+      amortizationType: z.boolean().optional(),
+      interestType: z.boolean().optional(),
+      transactionProcessingStrategyCode: z.boolean().optional(),
+      interestCalculationPeriodType: z.boolean().optional(),
+      inArrearsTolerance: z.boolean().optional(),
+      repaymentEvery: z.boolean().optional(),
+      graceOnPrincipalAndInterestPayment: z.boolean().optional(),
+      graceOnArrearsAgeing: z.boolean().optional(),
+      delinquencyBucketClassification: z.boolean().optional(),
+      discountDefault: z.boolean().optional(),
+      periodPaymentFrequency: z.boolean().optional(),
+      periodPaymentFrequencyType: z.boolean().optional(),
+      breach: z.boolean().optional()
+    })
+    .optional()
 });
 
 export const loanProductChargesStepSchema = z.object({

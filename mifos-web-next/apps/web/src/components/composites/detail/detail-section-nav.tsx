@@ -9,6 +9,7 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface DetailSectionNavItem {
@@ -24,19 +25,21 @@ export function DetailSectionNav({
   items,
   activeId,
   onSelect,
-  className
+  className,
+  footer
 }: {
   items: DetailSectionNavItem[];
   activeId: string;
   onSelect: (id: string) => void;
   className?: string;
+  footer?: ReactNode;
 }) {
   return (
     <nav aria-label="Sections" className={cn('flex flex-col', className)}>
       <ul className="flex flex-col gap-0.5">
         {items.map((item) => {
-          const active = item.id === activeId;
           const Icon = item.icon;
+          const active = item.id === activeId;
           return (
             <li key={item.id}>
               <button
@@ -65,6 +68,7 @@ export function DetailSectionNav({
           );
         })}
       </ul>
+      {footer}
     </nav>
   );
 }

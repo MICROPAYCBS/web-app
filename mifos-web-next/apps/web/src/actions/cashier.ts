@@ -24,15 +24,29 @@ import {
   createOrganizationCashier,
   deleteOrganizationCashier,
   getOrganizationCashierSummary,
+  listOrganizationCashiers,
   settleCashFromCashier,
   updateOrganizationCashier
 } from '@/lib/fineract/cashiers';
 import {
+  assertCanViewCashier,
+  CashierAccessError
+} from '@/lib/fineract/cashier-access';
+import {
+  TELLER_LIST_PATH,
   tellerCashierDetailPath,
   tellerCashiersPath,
   tellerDetailPath
 } from '@/lib/fineract/teller-paths';
 import { getServerSession } from '@/lib/session/server';
+
+async function loadCashierForAccessCheck(
+  tellerId: string | number,
+  cashierId: string | number
+) {
+  const cashiers = await listOrganizationCashiers(tellerId);
+  return cashiers.find((row) => String(row.id) === String(cashierId)) ?? null;
+}
 
 export type CashierActionResult =
   | { ok: true; cashierId?: number }
@@ -54,8 +68,11 @@ function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, st
 }
 
 function revalidateCashierViews(tellerId: string | number, cashierId?: string | number) {
+  const cashiersPath = tellerCashiersPath(tellerId);
+  revalidatePath(TELLER_LIST_PATH, 'layout');
   revalidatePath(tellerDetailPath(tellerId));
-  revalidatePath(tellerCashiersPath(tellerId));
+  revalidatePath(cashiersPath, 'page');
+  revalidatePath(cashiersPath, 'layout');
   if (cashierId != null) {
     revalidatePath(tellerCashierDetailPath(tellerId, cashierId));
   }
@@ -68,8 +85,15 @@ export async function loadCashierSummaryAction(
 ): Promise<CashierSummaryActionResult> {
   const session = await getServerSession();
   try {
-    assertCan(session, 'READ_TELLER');
-  } catch {
+    const cashier = await loadCashierForAccessCheck(tellerId, cashierId);
+    if (!cashier) {
+      return { ok: false, message: 'Cashier not found.' };
+    }
+    await assertCanViewCashier(session, cashier);
+  } catch (error) {
+    if (error instanceof CashierAccessError) {
+      return { ok: false, message: error.message };
+    }
     return { ok: false, message: 'You do not have permission to view cashiers.' };
   }
 
@@ -172,7 +196,15 @@ export async function allocateCashierCashAction(
   const session = await getServerSession();
   try {
     assertCan(session, 'ALLOCATECASHTOCASHIER_TELLER');
-  } catch {
+    const cashier = await loadCashierForAccessCheck(tellerId, cashierId);
+    if (!cashier) {
+      return { ok: false, message: 'Cashier not found.' };
+    }
+    await assertCanViewCashier(session, cashier);
+  } catch (error) {
+    if (error instanceof CashierAccessError) {
+      return { ok: false, message: error.message };
+    }
     return { ok: false, message: 'You do not have permission to allocate cash.' };
   }
 
@@ -202,7 +234,15 @@ export async function settleCashierCashAction(
   const session = await getServerSession();
   try {
     assertCan(session, 'SETTLECASHFROMCASHIER_TELLER');
-  } catch {
+    const cashier = await loadCashierForAccessCheck(tellerId, cashierId);
+    if (!cashier) {
+      return { ok: false, message: 'Cashier not found.' };
+    }
+    await assertCanViewCashier(session, cashier);
+  } catch (error) {
+    if (error instanceof CashierAccessError) {
+      return { ok: false, message: error.message };
+    }
     return { ok: false, message: 'You do not have permission to settle cash.' };
   }
 

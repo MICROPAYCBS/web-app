@@ -54,7 +54,7 @@ export function buildPublicPathPrefixes(): string[] {
 
 /** Longest-prefix match; returns semantic permission key if any. */
 export function resolveRoutePermissionKey(pathname: string): string | undefined {
-  const sorted = routesByPathLength();
+  const sorted = [...routesByPathLength()].sort((a, b) => b.path.length - a.path.length);
   const match = sorted.find(
     (r) =>
       r.permissionKey &&

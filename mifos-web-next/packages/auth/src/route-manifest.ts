@@ -13,6 +13,10 @@ export interface RouteRule {
   permission?: PermissionInput;
 }
 
+/** Cashier session detail — self (`READ_MY_CASHIER`) or org-wide (`READ_TELLER`). */
+const ORGANIZATION_CASHIER_DETAIL_PATH =
+  /^\/organization\/tellers\/[^/]+\/cashiers\/[^/]+\/?$/;
+
 /** Derived from @mifos/routes — do not edit manually. */
 export const ROUTE_MANIFEST: RouteRule[] = buildRouteManifest().map((r) => ({
   ...r,
@@ -20,6 +24,10 @@ export const ROUTE_MANIFEST: RouteRule[] = buildRouteManifest().map((r) => ({
 }));
 
 export function getRoutePermission(pathname: string): PermissionInput | PermissionRule | undefined {
+  if (ORGANIZATION_CASHIER_DETAIL_PATH.test(pathname)) {
+    return resolvePermission('organization.cashiers.view');
+  }
+
   const key = resolveRoutePermissionKey(pathname);
   if (!key) {
     return undefined;

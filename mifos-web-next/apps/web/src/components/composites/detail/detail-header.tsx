@@ -8,13 +8,15 @@
 
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export function DetailHeader({
   backLink,
   title,
   status,
   meta,
-  actions
+  actions,
+  actionsClassName
 }: {
   /** Placed above the title — use {@link DetailBackLink}. */
   backLink?: ReactNode;
@@ -22,6 +24,8 @@ export function DetailHeader({
   status?: { label: string; variant?: 'default' | 'secondary' | 'outline' | 'destructive' };
   meta?: ReactNode;
   actions?: ReactNode;
+  /** Applied to the actions container (e.g. `sm:self-end` to align with title meta). */
+  actionsClassName?: string;
 }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -33,7 +37,9 @@ export function DetailHeader({
         </div>
         {meta ? <div className="text-sm text-muted-foreground">{meta}</div> : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className={cn('flex shrink-0 items-center gap-2', actionsClassName)}>{actions}</div>
+      ) : null}
     </div>
   );
 }

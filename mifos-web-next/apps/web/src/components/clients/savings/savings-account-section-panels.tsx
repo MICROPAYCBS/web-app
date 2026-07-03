@@ -29,7 +29,6 @@ import {
 import { SavingsTransactionActionsMenu } from '@/components/clients/savings/actions/savings-transaction-actions-menu';
 import { SavingsAccountAuditView } from '@/components/clients/savings/savings-account-audit-view';
 import { SavingsStatementSection } from '@/components/clients/savings/statement';
-import { AccountCashierPanel } from '@/components/accounts/account-cashier-panel';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
@@ -53,7 +52,6 @@ import {
   savingsTransactionRowClassName,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
-import type { AccountCashierSnapshot } from '@/lib/fineract/cashier-display';
 import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
 import { cn } from '@/lib/utils';
 
@@ -577,8 +575,7 @@ export function SavingsAccountSectionPanel({
     undoTransfer: false,
     modifyTransaction: false,
     viewJournal: false
-  },
-  cashierSnapshot = null
+  }
 }: {
   section: SavingsAccountSectionId;
   account: FineractSavingsAccountDetail;
@@ -588,7 +585,6 @@ export function SavingsAccountSectionPanel({
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
-  cashierSnapshot?: AccountCashierSnapshot | null;
 }) {
   switch (section) {
     case 'summary':
@@ -605,8 +601,6 @@ export function SavingsAccountSectionPanel({
       return <SavingsStatementSection account={account} />;
     case 'charges':
       return <SavingsAccountChargesSection account={account} />;
-    case 'cashier':
-      return cashierSnapshot ? <AccountCashierPanel snapshot={cashierSnapshot} /> : null;
     case 'audit':
       return canViewAudits ? (
         <SavingsAccountAuditView

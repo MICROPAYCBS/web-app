@@ -12,22 +12,19 @@ import type { LoanProductKind, LoanProductListItem } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
+import {
+  countActiveLoanProductFilters,
+  LoanProductsFilterSheet
+} from '@/components/products/loan/loan-products-filter-sheet';
 import { LoanProductsTable } from '@/components/products/loan/loan-products-table';
 import { buttonVariants } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import {
   LOAN_PRODUCT_KIND,
   loanProductCreatePath,
-  loanProductKindLabel,
   loanProductListPath
 } from '@/lib/fineract/loan-product-paths';
 import { cn } from '@/lib/utils';
@@ -42,46 +39,58 @@ export function LoanProductsPageContent({
   loadError?: string;
 }) {
   const router = useRouter();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [draftKind, setDraftKind] = useState(productKind);
+  const activeFilterCount = countActiveLoanProductFilters(productKind);
+
+  useEffect(() => {
+    setDraftKind(productKind);
+  }, [productKind]);
+
+  function handleApplyFilters(kind: LoanProductKind) {
+    router.push(loanProductListPath(kind));
+  }
+
+  function handleClearFilters() {
+    router.push(loanProductListPath(LOAN_PRODUCT_KIND.LOAN));
+  }
 
   return (
-    <ListPage
-      title="Loan products"
-      description="Loan and working capital product definitions used when opening new loan accounts."
-      actions={
-        <Can permission="CREATE_LOANPRODUCT">
-          <Link href={loanProductCreatePath(productKind)} className={cn(buttonVariants())}>
-            Create loan product
-          </Link>
-        </Can>
-      }
-      toolbar={
-        <div className="flex max-w-xs flex-col gap-2">
-          <Label htmlFor="loan-product-kind">Product type</Label>
-          <Select
-            value={productKind}
-            onValueChange={(value) => {
-              router.push(loanProductListPath(value as LoanProductKind));
-            }}
-          >
-            <SelectTrigger id="loan-product-kind" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={LOAN_PRODUCT_KIND.LOAN}>
-                {loanProductKindLabel(LOAN_PRODUCT_KIND.LOAN)}
-              </SelectItem>
-              <SelectItem value={LOAN_PRODUCT_KIND.WORKING_CAPITAL}>
-                {loanProductKindLabel(LOAN_PRODUCT_KIND.WORKING_CAPITAL)}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      }
-    >
-      {loadError ? (
-        <LoadErrorAlert message={loadError} title="Could not load loan products" />
-      ) : null}
-      <LoanProductsTable products={products} productKind={productKind} />
-    </ListPage>
+    <>
+      <ListPage
+        title="Loan products"
+        description="Loan and working capital product definitions used when opening new loan accounts."
+        actions={
+          <Can permission="CREATE_LOANPRODUCT">
+            <Link href={loanProductCreatePath(productKind)} className={cn(buttonVariants())}>
+              Create loan product
+            </Link>
+          </Can>
+        }
+      >
+        {loadError ? (
+          <LoadErrorAlert message={loadError} title="Could not load loan products" />
+        ) : null}
+        <LoanProductsTable
+          products={products}
+          productKind={productKind}
+          filterTrigger={
+            <ListFilterTrigger
+              activeCount={activeFilterCount}
+              onClick={() => setFilterOpen(true)}
+            />
+          }
+        />
+      </ListPage>
+
+      <LoanProductsFilterSheet
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        draftKind={draftKind}
+        onDraftKindChange={setDraftKind}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+      />
+    </>
   );
 }

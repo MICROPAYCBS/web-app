@@ -17,6 +17,7 @@ import {
   type PaginationState
 } from '@tanstack/react-table';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { DateValue } from '@/components/composites/detail/date-value';
 import { DataTable } from '@/components/composites/data-table/data-table';
@@ -83,10 +84,12 @@ function buildColumns(kind: LoanProductKind): ColumnDef<LoanProductListItem>[] {
 
 export function LoanProductsTable({
   products,
-  productKind
+  productKind,
+  filterTrigger
 }: {
   products: LoanProductListItem[];
   productKind: LoanProductKind;
+  filterTrigger?: ReactNode;
 }) {
   const [filter, setFilter] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
@@ -128,15 +131,20 @@ export function LoanProductsTable({
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Filter loan products…"
-        value={filter}
-        onChange={(event) => {
-          setFilter(event.target.value);
-          setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-        }}
-        className="max-w-sm"
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <Input
+          placeholder="Filter loan products…"
+          value={filter}
+          onChange={(event) => {
+            setFilter(event.target.value);
+            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+          }}
+          className="max-w-sm"
+        />
+        {filterTrigger ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">{filterTrigger}</div>
+        ) : null}
+      </div>
       <DataTable
         table={table}
         stickyHeader={false}

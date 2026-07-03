@@ -10,11 +10,18 @@
 
 import type { SavingsProductAccountingInput } from '@mifos/validation';
 import type { LoanProductGlAccountOption } from '@mifos/api-client';
+import { useMemo } from 'react';
 import { DetailSection } from '@/components/composites';
-import { SelectField } from '@/components/composites/select-field';
+import { ProductAccountingAccountFieldGroups } from '@/components/products/shared/product-accounting-account-field-groups';
 import { ProductAccountingRuleField } from '@/components/products/shared/product-accounting-rule-field';
 import { glAccountLabel, resolveSelectableAccountingRuleId } from '@/lib/fineract/product-display';
+import type { ProductAccountingAccountField } from '@/lib/fineract/product-accounting-groups';
 import type { SavingsProductStepProps } from '../types';
+
+type SavingsAccountFieldKey = keyof SavingsProductAccountingInput;
+type SavingsAccountField = ProductAccountingAccountField<SavingsAccountFieldKey> & {
+  optionKey: keyof NonNullable<SavingsProductStepProps['template']['accountingMappingOptions']>;
+};
 
 function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   return (accounts ?? []).map((account) => ({
@@ -23,55 +30,106 @@ function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   }));
 }
 
-const CORE_ACCOUNT_FIELDS: {
-  key: keyof SavingsProductAccountingInput;
-  label: string;
-  optionKey: keyof NonNullable<SavingsProductStepProps['template']['accountingMappingOptions']>;
-}[] = [
-  { key: 'savingsReferenceAccountId', label: 'Saving reference', optionKey: 'assetAccountOptions' },
+const SAVINGS_ACCOUNT_FIELDS: SavingsAccountField[] = [
+  {
+    key: 'savingsReferenceAccountId',
+    label: 'Saving reference',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions'
+  },
   {
     key: 'overdraftPortfolioControlId',
     label: 'Overdraft portfolio control',
+    group: 'Assets',
     optionKey: 'assetAccountOptions'
   },
-  { key: 'savingsControlAccountId', label: 'Saving control', optionKey: 'assetAccountOptions' },
+  {
+    key: 'savingsControlAccountId',
+    label: 'Saving control',
+    group: 'Liabilities',
+    optionKey: 'liabilityAccountOptions'
+  },
   {
     key: 'transfersInSuspenseAccountId',
     label: 'Transfer in suspense',
+    group: 'Liabilities',
+    optionKey: 'liabilityAccountOptions'
+  },
+  {
+    key: 'feesReceivableAccountId',
+    label: 'Fees receivable',
+    group: 'Assets',
     optionKey: 'assetAccountOptions'
   },
-  {
-    key: 'interestOnSavingsAccountId',
-    label: 'Interest on savings',
-    optionKey: 'expenseAccountOptions'
-  },
-  { key: 'writeOffAccountId', label: 'Losses written off', optionKey: 'expenseAccountOptions' },
-  { key: 'incomeFromFeeAccountId', label: 'Income from fees', optionKey: 'incomeAccountOptions' },
-  {
-    key: 'incomeFromPenaltyAccountId',
-    label: 'Income from penalties',
-    optionKey: 'incomeAccountOptions'
-  },
-  { key: 'incomeFromInterestId', label: 'Income from interest', optionKey: 'incomeAccountOptions' }
-];
-
-const ACCRUAL_ACCOUNT_FIELDS: {
-  key: keyof SavingsProductAccountingInput;
-  label: string;
-  optionKey: keyof NonNullable<SavingsProductStepProps['template']['accountingMappingOptions']>;
-}[] = [
-  { key: 'feesReceivableAccountId', label: 'Fees receivable', optionKey: 'assetAccountOptions' },
   {
     key: 'penaltiesReceivableAccountId',
     label: 'Penalties receivable',
+    group: 'Assets',
     optionKey: 'assetAccountOptions'
+  },
+  {
+    key: 'interestReceivableAccountId',
+    label: 'Interest receivable',
+    group: 'Assets',
+    optionKey: 'assetAccountOptions',
+    optional: true
   },
   {
     key: 'interestPayableAccountId',
     label: 'Interest payable',
+    group: 'Liabilities',
     optionKey: 'liabilityAccountOptions'
+  },
+  {
+    key: 'escheatLiabilityId',
+    label: 'Escheat liability',
+    group: 'Liabilities',
+    optionKey: 'liabilityAccountOptions'
+  },
+  {
+    key: 'interestOnSavingsAccountId',
+    label: 'Interest on savings',
+    group: 'Expenses',
+    optionKey: 'expenseAccountOptions'
+  },
+  { key: 'writeOffAccountId', label: 'Losses written off', group: 'Expenses', optionKey: 'expenseAccountOptions' },
+  {
+    key: 'incomeFromFeeAccountId',
+    label: 'Income from fees',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
+  },
+  {
+    key: 'incomeFromPenaltyAccountId',
+    label: 'Income from penalties',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
+  },
+  {
+    key: 'incomeFromInterestId',
+    label: 'Income from interest',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
   }
 ];
+
+const CASH_FIELD_KEYS = new Set<SavingsAccountFieldKey>([
+  'savingsReferenceAccountId',
+  'overdraftPortfolioControlId',
+  'savingsControlAccountId',
+  'transfersInSuspenseAccountId',
+  'interestOnSavingsAccountId',
+  'writeOffAccountId',
+  'incomeFromFeeAccountId',
+  'incomeFromPenaltyAccountId',
+  'incomeFromInterestId'
+]);
+
+const ACCRUAL_FIELD_KEYS = new Set<SavingsAccountFieldKey>([
+  'feesReceivableAccountId',
+  'penaltiesReceivableAccountId',
+  'interestPayableAccountId'
+]);
 
 export function AccountingStep({
   template,
@@ -92,10 +150,25 @@ export function AccountingStep({
   const dormancyEnabled = draft.settings.isDormancyTrackingActive ?? false;
   const overdraftEnabled = draft.settings.allowOverdraft ?? false;
 
-  function setAccountField(
-    key: keyof SavingsProductAccountingInput,
-    value: string | undefined
-  ) {
+  const visibleFields = useMemo(() => {
+    return SAVINGS_ACCOUNT_FIELDS.filter((field) => {
+      if (CASH_FIELD_KEYS.has(field.key)) {
+        return true;
+      }
+      if (ACCRUAL_FIELD_KEYS.has(field.key)) {
+        return accrualEnabled;
+      }
+      if (field.key === 'interestReceivableAccountId') {
+        return accrualEnabled && overdraftEnabled;
+      }
+      if (field.key === 'escheatLiabilityId') {
+        return dormancyEnabled;
+      }
+      return false;
+    });
+  }, [accrualEnabled, dormancyEnabled, overdraftEnabled]);
+
+  function setAccountField(key: SavingsAccountFieldKey, value: string | undefined) {
     onChange({ [key]: value ? Number(value) : undefined } as Partial<SavingsProductAccountingInput>);
   }
 
@@ -141,76 +214,13 @@ export function AccountingStep({
       </DetailSection>
 
       {accountingEnabled ? (
-        <>
-          <DetailSection title="Core accounts">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {CORE_ACCOUNT_FIELDS.map((field) => {
-                const options = glOptions(mappingOptions[field.optionKey]);
-                const value = accounting[field.key];
-                return (
-                  <SelectField
-                    key={field.key}
-                    id={`accounting.${field.key}`}
-                    label={field.label}
-                    required
-                    value={value != null ? String(value) : undefined}
-                    onValueChange={(next) => setAccountField(field.key, next)}
-                    options={options}
-                    error={errors[`accounting.${field.key}`]}
-                  />
-                );
-              })}
-              {accrualEnabled
-                ? ACCRUAL_ACCOUNT_FIELDS.map((field) => {
-                    const options = glOptions(mappingOptions[field.optionKey]);
-                    const value = accounting[field.key];
-                    return (
-                      <SelectField
-                        key={field.key}
-                        id={`accounting.${field.key}`}
-                        label={field.label}
-                        required
-                        value={value != null ? String(value) : undefined}
-                        onValueChange={(next) => setAccountField(field.key, next)}
-                        options={options}
-                        error={errors[`accounting.${field.key}`]}
-                      />
-                    );
-                  })
-                : null}
-              {accrualEnabled && overdraftEnabled ? (
-                <SelectField
-                  id="accounting.interestReceivableAccountId"
-                  label="Interest receivable"
-                  optional
-                  value={
-                    accounting.interestReceivableAccountId != null
-                      ? String(accounting.interestReceivableAccountId)
-                      : undefined
-                  }
-                  onValueChange={(next) => setAccountField('interestReceivableAccountId', next)}
-                  options={glOptions(mappingOptions.assetAccountOptions)}
-                  error={errors['accounting.interestReceivableAccountId']}
-                />
-              ) : null}
-              {dormancyEnabled ? (
-                <SelectField
-                  id="accounting.escheatLiabilityId"
-                  label="Escheat liability"
-                  required
-                  value={
-                    accounting.escheatLiabilityId != null
-                      ? String(accounting.escheatLiabilityId)
-                      : undefined
-                  }
-                  onValueChange={(next) => setAccountField('escheatLiabilityId', next)}
-                  options={glOptions(mappingOptions.liabilityAccountOptions)}
-                  error={errors['accounting.escheatLiabilityId']}
-                />
-              ) : null}
-            </div>
-          </DetailSection>
-        </>
+        <ProductAccountingAccountFieldGroups
+          fields={visibleFields}
+          getValue={(key) => accounting[key] as number | undefined}
+          errors={errors}
+          getOptions={(field) => glOptions(mappingOptions[field.optionKey])}
+          onValueChange={setAccountField}
+        />
       ) : null}
     </div>
   );

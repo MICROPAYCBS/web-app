@@ -20,10 +20,8 @@ import {
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForSavingsAccount } from '@/lib/fineract/audit-trails';
-import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashier';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
-import { savingsAccountCurrencyCode } from '@/lib/fineract/savings-account-display';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -114,12 +112,6 @@ export default async function SavingsAccountGeneralPage({
   const auditTotalRecords =
     auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
 
-  const cashierSnapshot = await loadAccountCashierForSession(session, {
-    accountId: result.data.id,
-    accountKind: 'savings',
-    currencyCode: savingsAccountCurrencyCode(result.data)
-  });
-
   return (
     <Suspense fallback={null}>
       <SavingsAccountDetailView
@@ -131,7 +123,6 @@ export default async function SavingsAccountGeneralPage({
         auditLoadFailed={auditResult != null && !auditResult.ok}
         auditTotalRecords={auditTotalRecords}
         transactionActionPermissions={savingsTransactionActionPermissions(session)}
-        cashierSnapshot={cashierSnapshot}
       />
     </Suspense>
   );

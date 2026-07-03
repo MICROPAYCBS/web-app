@@ -11,11 +11,17 @@
 import type { ShareProductAccountingInput } from '@mifos/validation';
 import type { LoanProductGlAccountOption } from '@mifos/api-client';
 import { DetailSection } from '@/components/composites';
-import { SelectField } from '@/components/composites/select-field';
+import { ProductAccountingAccountFieldGroups } from '@/components/products/shared/product-accounting-account-field-groups';
 import { ProductAccountingRuleField } from '@/components/products/shared/product-accounting-rule-field';
 import { SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS } from '@/lib/fineract/share-product-accounting';
 import { glAccountLabel, resolveSelectableAccountingRuleId } from '@/lib/fineract/product-display';
+import type { ProductAccountingAccountField } from '@/lib/fineract/product-accounting-groups';
 import type { ShareProductStepProps } from '../types';
+
+type ShareAccountFieldKey = keyof ShareProductAccountingInput;
+type ShareAccountField = ProductAccountingAccountField<ShareAccountFieldKey> & {
+  optionKey: keyof NonNullable<ShareProductStepProps['template']['accountingMappingOptions']>;
+};
 
 function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   return (accounts ?? []).map((account) => ({
@@ -24,15 +30,16 @@ function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   }));
 }
 
-const ACCOUNT_FIELDS: {
-  key: keyof ShareProductAccountingInput;
-  label: string;
-  optionKey: keyof NonNullable<ShareProductStepProps['template']['accountingMappingOptions']>;
-}[] = [
-  { key: 'shareReferenceId', label: 'Share reference', optionKey: 'assetAccountOptions' },
-  { key: 'shareSuspenseId', label: 'Share suspense', optionKey: 'liabilityAccountOptions' },
-  { key: 'shareEquityId', label: 'Share equity', optionKey: 'equityAccountOptions' },
-  { key: 'incomeFromFeeAccountId', label: 'Income from fees', optionKey: 'incomeAccountOptions' }
+const SHARE_ACCOUNT_FIELDS: ShareAccountField[] = [
+  { key: 'shareReferenceId', label: 'Share reference', group: 'Assets', optionKey: 'assetAccountOptions' },
+  { key: 'shareSuspenseId', label: 'Share suspense', group: 'Liabilities', optionKey: 'liabilityAccountOptions' },
+  { key: 'shareEquityId', label: 'Share equity', group: 'Equity', optionKey: 'equityAccountOptions' },
+  {
+    key: 'incomeFromFeeAccountId',
+    label: 'Income from fees',
+    group: 'Income',
+    optionKey: 'incomeAccountOptions'
+  }
 ];
 
 export function AccountingStep({
@@ -56,11 +63,11 @@ export function AccountingStep({
     ? template.accountingRuleOptions
     : SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS;
 
-  const hasGlAccounts = ACCOUNT_FIELDS.some(
+  const hasGlAccounts = SHARE_ACCOUNT_FIELDS.some(
     ({ optionKey }) => (mappingOptions[optionKey]?.length ?? 0) > 0
   );
 
-  function setAccountField(key: keyof ShareProductAccountingInput, value: string | undefined) {
+  function setAccountField(key: ShareAccountFieldKey, value: string | undefined) {
     onChange({ [key]: value ? Number(value) : undefined } as Partial<ShareProductAccountingInput>);
   }
 
@@ -91,29 +98,22 @@ export function AccountingStep({
       </DetailSection>
 
       {accountingEnabled ? (
-        <DetailSection title="Ledger accounts">
-          {!hasGlAccounts ? (
+        !hasGlAccounts ? (
+          <DetailSection title="Ledger accounts">
             <p className="text-sm text-muted-foreground">
               No ledger accounts are available for share products. Configure asset, liability,
               equity, and income accounts in accounting settings, then reopen this wizard.
             </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {ACCOUNT_FIELDS.map(({ key, label, optionKey }) => (
-                <SelectField
-                  key={key}
-                  id={`accounting.${key}`}
-                  label={label}
-                  required
-                  value={accounting[key] != null ? String(accounting[key]) : undefined}
-                  onValueChange={(value) => setAccountField(key, value)}
-                  options={glOptions(mappingOptions[optionKey])}
-                  error={errors[`accounting.${key}`]}
-                />
-              ))}
-            </div>
-          )}
-        </DetailSection>
+          </DetailSection>
+        ) : (
+          <ProductAccountingAccountFieldGroups
+            fields={SHARE_ACCOUNT_FIELDS}
+            getValue={(key) => accounting[key] as number | undefined}
+            errors={errors}
+            getOptions={(field) => glOptions(mappingOptions[field.optionKey])}
+            onValueChange={setAccountField}
+          />
+        )
       ) : null}
     </div>
   );

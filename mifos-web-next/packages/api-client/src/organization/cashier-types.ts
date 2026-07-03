@@ -20,6 +20,15 @@ export interface OrganizationCashier {
 
 export interface OrganizationCashierListItem extends OrganizationCashier {}
 
+/** Fineract GET `/tellers/{id}/cashiers` wrapper (see `CashiersForTeller` in fineract-branch). */
+export interface OrganizationCashiersForTeller {
+  tellerId?: number;
+  tellerName?: string;
+  officeId?: number;
+  officeName?: string;
+  cashiers?: OrganizationCashierListItem[];
+}
+
 export interface OrganizationCashierMutationResponse {
   resourceId?: number;
 }

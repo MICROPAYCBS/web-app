@@ -24,6 +24,8 @@ import {
   sortCashierTransactions
 } from '@/lib/fineract/cashier-display';
 import { listOrganizationTellers } from '@/lib/fineract/tellers';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
+import type { CashierNavBalance } from '@/lib/fineract/cashier-display';
 
 interface CashierMatch {
   tellerId: number;
@@ -75,6 +77,62 @@ async function findCashierForStaff(
   }
 
   return matches[0];
+}
+
+export async function findCurrentUserCashierAssignment(options: {
+  userId: number;
+  officeId: number;
+}): Promise<CashierMatch | null> {
+  const user = await getUser(options.userId);
+  const staffId = user?.staff?.id;
+  if (!staffId) {
+    return null;
+  }
+  return findCashierForStaff(staffId, options.officeId);
+}
+
+export async function loadCurrentUserCashierNavBalance(options: {
+  userId: number;
+  officeId: number;
+  canOpenCashierDetail: boolean;
+}): Promise<CashierNavBalance | null> {
+  const user = await getUser(options.userId);
+  const staffId = user?.staff?.id;
+  if (!staffId) {
+    return null;
+  }
+
+  const match = await findCashierForStaff(staffId, options.officeId);
+  if (!match) {
+    return null;
+  }
+
+  const currencies = await getOrganizationSelectedCurrencies();
+  const currencyCodes = currencies
+    .map((currency) => currency.code)
+    .filter((code): code is string => Boolean(code));
+
+  if (currencyCodes.length === 0) {
+    return null;
+  }
+
+  const balances = await Promise.all(
+    currencyCodes.map(async (currencyCode) => {
+      const summary = await getOrganizationCashierSummary(
+        match.tellerId,
+        match.cashier.id,
+        currencyCode
+      );
+      return { currencyCode, netCash: summary.netCash };
+    })
+  );
+
+  return {
+    tellerId: match.tellerId,
+    cashierId: match.cashier.id,
+    canOpenCashierDetail: options.canOpenCashierDetail,
+    balances
+  };
 }
 
 export async function loadCurrentUserAccountCashier(options: {

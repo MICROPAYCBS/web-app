@@ -20,7 +20,9 @@ import {
   productChargeLabelById
 } from '@/lib/fineract/charge-display';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
+import { loanProductAttributeOverrideFields } from '@/lib/fineract/loan-product-attribute-overrides';
 import { fineractOptionLabel } from '@/lib/form/select-options';
+import type { LoanProductKind } from '@mifos/api-client';
 import type { LoanProductStepProps } from '../types';
 
 function optionLabelById(
@@ -59,10 +61,12 @@ function strategyLabel(
 }
 
 export function PreviewStep({
+  productKind,
   template,
   draft,
   submitError
 }: LoanProductStepProps & {
+  productKind: LoanProductKind;
   submitError: string | null;
 }) {
   const { details, currency, settings, terms, charges, accounting } = draft;
@@ -167,6 +171,21 @@ export function PreviewStep({
           <DetailField label="Variable installments">
             {formatYesNo(settings.allowVariableInstallments)}
           </DetailField>
+        </DetailFieldGrid>
+      </DetailSection>
+
+      <DetailSection title="Configurable terms and settings">
+        <DetailFieldGrid>
+          <DetailField label="Allow overrides in loan accounts">
+            {formatYesNo(settings.allowAttributeConfiguration)}
+          </DetailField>
+          {settings.allowAttributeConfiguration
+            ? loanProductAttributeOverrideFields(productKind).map((field) => (
+                <DetailField key={field.key} label={field.label}>
+                  {formatYesNo(settings.allowAttributeOverrides?.[field.key])}
+                </DetailField>
+              ))
+            : null}
         </DetailFieldGrid>
       </DetailSection>
 

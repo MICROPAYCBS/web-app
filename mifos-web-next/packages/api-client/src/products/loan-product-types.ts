@@ -7,6 +7,7 @@
  */
 
 import type { FineractCurrencyOption, FineractEnumOption } from '../clients/types';
+import type { LoanProductAttributeOverrides } from './loan-product-attribute-overrides';
 
 export type LoanProductKind = 'loan' | 'working-capital';
 
@@ -88,6 +89,7 @@ export interface LoanProductDetail extends LoanProductListItem {
   graceOnPrincipalPayment?: number;
   graceOnInterestPayment?: number;
   inArrearsTolerance?: number;
+  allowAttributeOverrides?: LoanProductAttributeOverrides;
   accountingRule?: FineractEnumOption;
   enableAccrualActivityPosting?: boolean;
   accountingMappings?: Record<string, ProductGlAccountRef | undefined>;

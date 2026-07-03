@@ -257,6 +257,7 @@ export function LoanProductWizard({
 
         {stepId === 'settings' ? (
           <SettingsStep
+            productKind={productKind}
             template={template}
             draft={draft}
             errors={stepErrors}
@@ -318,6 +319,7 @@ export function LoanProductWizard({
 
         {isPreview ? (
           <PreviewStep
+            productKind={productKind}
             template={template}
             draft={draft}
             errors={{}}

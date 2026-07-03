@@ -13,15 +13,16 @@ const fineractDate = z.string().trim().min(1, 'Date is required');
 const assignCashierFields = {
   staffId: z.coerce.number().int().positive('Staff member is required'),
   startDate: fineractDate,
-  endDate: z.string().trim().optional().or(z.literal('')),
+  endDate: fineractDate,
   isFullDay: z.boolean(),
   dateFormat: z.string().optional(),
   locale: z.string().optional()
 };
 
 const updateCashierFields = {
+  staffId: z.coerce.number().int().positive('Staff member is required'),
   startDate: fineractDate,
-  endDate: z.string().trim().optional().or(z.literal('')),
+  endDate: fineractDate,
   isFullDay: z.boolean(),
   dateFormat: z.string().optional(),
   locale: z.string().optional()

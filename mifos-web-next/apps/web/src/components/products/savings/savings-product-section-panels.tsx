@@ -29,12 +29,12 @@ import {
 
 const SAVINGS_ACCOUNTING_FIELDS: { key: string; label: string; group: string }[] = [
   { key: 'savingsReferenceAccount', label: 'Saving reference', group: 'Assets' },
-  { key: 'savingsControlAccount', label: 'Saving control', group: 'Assets' },
+  { key: 'overdraftPortfolioControl', label: 'Overdraft portfolio control', group: 'Assets' },
+  { key: 'savingsControlAccount', label: 'Saving control', group: 'Liabilities' },
+  { key: 'transfersInSuspenseAccount', label: 'Transfer in suspense', group: 'Liabilities' },
   { key: 'interestOnSavingsAccount', label: 'Interest on savings', group: 'Expenses' },
   { key: 'incomeFromFeeAccount', label: 'Income from fees', group: 'Income' },
   { key: 'incomeFromPenaltyAccount', label: 'Income from penalties', group: 'Income' },
-  { key: 'transfersInSuspenseAccount', label: 'Transfer in suspense', group: 'Assets' },
-  { key: 'overdraftPortfolioControl', label: 'Overdraft portfolio control', group: 'Assets' },
   { key: 'incomeFromInterest', label: 'Income from interest', group: 'Income' }
 ];
 

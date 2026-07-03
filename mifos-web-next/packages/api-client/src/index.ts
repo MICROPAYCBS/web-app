@@ -122,6 +122,11 @@ export type {
 } from './standing-instructions/types';
 
 export type {
+  LoanProductAttributeOverrides,
+  LoanProductLoanAttributeOverrides,
+  LoanProductWorkingCapitalAttributeOverrides
+} from './products/loan-product-attribute-overrides';
+export type {
   ChargeIncomeAccountMapping,
   LoanProductCharge,
   LoanProductDetail,

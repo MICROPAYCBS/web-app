@@ -214,7 +214,7 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 | `/organization/tellers/[tellerId]`          | DELETE | ViewTellerComponent   | `DELETE /tellers/{id}`       | —                            | —   | done   |
 | `/organization/tellers/[tellerId]/cashiers` | GET    | CashiersComponent     | `GET /tellers/{id}/cashiers` | —                            | —   | done   |
 | `/organization/tellers/[tellerId]/cashiers` | POST   | CashiersComponent     | `POST /tellers/{id}/cashiers` | `organization.cashier.assign` | —   | done   |
-| `/organization/tellers/[tellerId]/cashiers/[cashierId]` | GET    | ViewCashierComponent  | `GET /tellers/{id}/cashiers/{cashierId}/summaryandtransactions` | — | —   | done   |
+| `/organization/tellers/[tellerId]/cashiers/[cashierId]` | GET    | ViewCashierComponent  | `GET /tellers/{id}/cashiers/{cashierId}/summaryandtransactions` | `organization.cashiers.view` (`READ_MY_CASHIER` or `READ_TELLER`) + staff ownership for self | —   | done   |
 | `/organization/tellers/[tellerId]/cashiers/[cashierId]` | PUT    | ViewCashierComponent  | `PUT /tellers/{id}/cashiers/{cashierId}` | `organization.cashier.update` | —   | done   |
 | `/organization/tellers/[tellerId]/cashiers/[cashierId]` | DELETE | ViewCashierComponent  | `DELETE /tellers/{id}/cashiers/{cashierId}` | — | —   | done   |
 | `/organization/tellers/[tellerId]/cashiers/[cashierId]` | POST   | ViewCashierComponent  | `POST .../allocate`, `POST .../settle` | `organization.cashier.allocate`, `organization.cashier.settle` | — | done |

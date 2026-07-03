@@ -46,6 +46,8 @@ export interface SelectFieldProps {
   hint?: string;
   hintAriaLabel?: string;
   contextHelpSectionId?: string;
+  /** Visually hide the label (kept for screen readers and combobox search). */
+  hideLabel?: boolean;
 }
 
 const triggerClassName = cn(
@@ -74,7 +76,8 @@ export function SelectField({
   emptyMessage = 'No results found.',
   hint,
   hintAriaLabel,
-  contextHelpSectionId
+  contextHelpSectionId,
+  hideLabel = false
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false);
 
@@ -90,10 +93,11 @@ export function SelectField({
       <FormLabel
         htmlFor={id}
         required={required}
-        optional={optional ?? !required}
+        optional={hideLabel ? false : (optional ?? !required)}
         hint={hint}
         hintAriaLabel={hintAriaLabel}
         contextHelpSectionId={contextHelpSectionId}
+        className={hideLabel ? 'sr-only' : undefined}
       >
         {label}
       </FormLabel>

@@ -6,14 +6,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can, resolvePermission } from '@mifos/auth';
+import { can } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { CashierDetailView } from '@/components/organization/cashier-detail-view';
 import { DetailBackLink, DetailHeader, DetailPage } from '@/components/composites';
 import {
+  assertCanViewCashier,
+  canReadAllOrganizationCashiers,
+  canViewOrganizationCashierRoute
+} from '@/lib/fineract/cashier-access';
+import {
   getOrganizationCashierSummary,
   listOrganizationCashiers
 } from '@/lib/fineract/cashiers';
+import { findCurrentUserCashierAssignment } from '@/lib/fineract/current-user-cashier';
 import {
   getDefaultOrganizationCurrencyCode,
   getOrganizationSelectedCurrencies
@@ -30,10 +36,11 @@ export default async function OrganizationTellerCashierDetailPage({
   const { tellerId, cashierId } = await params;
   const session = await getServerSession();
 
-  if (!can(session, resolvePermission('organization.tellers'))) {
+  if (!canViewOrganizationCashierRoute(session)) {
     notFound();
   }
 
+  const readAllCashiers = canReadAllOrganizationCashiers(session);
   const canUpdate = can(session, 'UPDATECASHIERALLOCATION_TELLER');
   const canAllocate = can(session, 'ALLOCATECASHTOCASHIER_TELLER');
   const canSettle = can(session, 'SETTLECASHFROMCASHIER_TELLER');
@@ -45,9 +52,31 @@ export default async function OrganizationTellerCashierDetailPage({
     notFound();
   }
 
-  const cashiers = await listOrganizationCashiers(tellerId);
-  const cashier = cashiers.find((row) => String(row.id) === cashierId);
+  let cashier;
+  if (readAllCashiers) {
+    const cashiers = await listOrganizationCashiers(tellerId);
+    cashier = cashiers.find((row) => String(row.id) === cashierId);
+  } else if (session) {
+    const assignment = await findCurrentUserCashierAssignment({
+      userId: session.userId,
+      officeId: session.officeId
+    });
+    if (
+      assignment &&
+      String(assignment.tellerId) === tellerId &&
+      String(assignment.cashier.id) === cashierId
+    ) {
+      cashier = assignment.cashier;
+    }
+  }
+
   if (!cashier) {
+    notFound();
+  }
+
+  try {
+    await assertCanViewCashier(session, cashier);
+  } catch {
     notFound();
   }
 
@@ -62,7 +91,11 @@ export default async function OrganizationTellerCashierDetailPage({
         header={
           <DetailHeader
             backLink={
-              <DetailBackLink href={tellerCashiersPath(tellerId)} label="Back to cashiers" />
+              readAllCashiers ? (
+                <DetailBackLink href={tellerCashiersPath(tellerId)} label="Back to cashiers" />
+              ) : (
+                <DetailBackLink href="/" label="Back to dashboard" />
+              )
             }
             title="Cashier details"
           />
@@ -93,9 +126,10 @@ export default async function OrganizationTellerCashierDetailPage({
       currencies={currencies}
       initialCurrencyCode={defaultCurrencyCode}
       initialSummary={initialSummary}
-      canUpdate={canUpdate}
+      canUpdate={readAllCashiers && canUpdate}
       canAllocate={canAllocate}
       canSettle={canSettle}
+      showCashiersListBackLink={readAllCashiers}
     />
   );
 }
