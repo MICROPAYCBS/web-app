@@ -52,6 +52,16 @@ import { getClientWithTemplate } from '@/lib/fineract/client-action-data';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
 import { savingsAccountAnnualFeeCharge } from '@/lib/fineract/savings-account-display';
 import { listCodeValuesByName } from '@/lib/fineract/system-codes';
+import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
+import {
+  hasActiveCashierSession,
+  loadCashierAwarePaymentTypeOptions,
+  validateCashTransactionCashierSession
+} from '@/lib/fineract/cashier-cash-transaction-guard';
+import type { CashierPolicySettings } from '@/lib/fineract/cashier-policy-paths';
+import { getCashierPolicySettings } from '@/lib/fineract/cashier-policy';
+import { findCurrentUserCashierAssignment } from '@/lib/fineract/current-user-cashier';
+import { canOpenCashierDetail } from '@/lib/fineract/cashier-access';
 import { getServerSession } from '@/lib/session/server';
 
 const LIFECYCLE_PERMISSIONS: Record<SavingsAccountLifecycleCommand, string> = {
@@ -165,13 +175,50 @@ function omitEmptyStrings(fields: Record<string, unknown>) {
   return body;
 }
 
+async function rejectCashTransactionWithoutActiveCashier(
+  paymentTypeId: number | string | undefined
+): Promise<SavingsAccountActionResult | null> {
+  if (paymentTypeId == null || paymentTypeId === '') {
+    return null;
+  }
+
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must sign in to continue.' };
+  }
+
+  const paymentTypeNumeric =
+    typeof paymentTypeId === 'number' ? paymentTypeId : Number(paymentTypeId);
+  if (!Number.isFinite(paymentTypeNumeric) || paymentTypeNumeric <= 0) {
+    return null;
+  }
+
+  const check = await validateCashTransactionCashierSession({
+    userId: session.userId,
+    officeId: session.officeId,
+    paymentTypeId: paymentTypeNumeric
+  });
+  if (!check.ok) {
+    return { ok: false, message: check.message };
+  }
+
+  return null;
+}
+
 export async function loadSavingsAccountTransactionSheetDataAction(
   accountId: string,
   command: 'deposit' | 'withdrawal'
 ): Promise<
   | {
       ok: true;
-      paymentTypeOptions: { id: number; name: string }[];
+      paymentTypeOptions: CashierAwarePaymentTypeOption[];
+      cashierPolicy: CashierPolicySettings;
+      activeCashierSession: boolean;
+      cashierSessionLink: {
+        tellerId: number;
+        cashierId: number;
+        canOpenCashierDetail: boolean;
+      } | null;
     }
   | { ok: false; message: string }
 > {
@@ -185,11 +232,47 @@ export async function loadSavingsAccountTransactionSheetDataAction(
   }
 
   try {
-    const template = await getSavingsAccountTransactionTemplate(accountId, command);
-    const paymentTypeOptions = (template.paymentTypeOptions ?? [])
-      .filter((option) => option.isSystemDefined !== true)
-      .map((option) => ({ id: option.id, name: option.name }));
-    return { ok: true, paymentTypeOptions };
+    const session = await getServerSession();
+    const [template, cashierPolicy] = await Promise.all([
+      getSavingsAccountTransactionTemplate(accountId, command),
+      getCashierPolicySettings()
+    ]);
+    const paymentTypeOptions = await loadCashierAwarePaymentTypeOptions(
+      template.paymentTypeOptions ?? []
+    );
+
+    let activeCashierSession = false;
+    let cashierSessionLink: {
+      tellerId: number;
+      cashierId: number;
+      canOpenCashierDetail: boolean;
+    } | null = null;
+
+    if (session) {
+      activeCashierSession = await hasActiveCashierSession({
+        userId: session.userId,
+        officeId: session.officeId
+      });
+      const assignment = await findCurrentUserCashierAssignment({
+        userId: session.userId,
+        officeId: session.officeId
+      });
+      if (assignment) {
+        cashierSessionLink = {
+          tellerId: assignment.tellerId,
+          cashierId: assignment.cashier.id,
+          canOpenCashierDetail: canOpenCashierDetail(session)
+        };
+      }
+    }
+
+    return {
+      ok: true,
+      paymentTypeOptions,
+      cashierPolicy,
+      activeCashierSession,
+      cashierSessionLink
+    };
   } catch (error) {
     return toFineractActionError(error, 'Could not load transaction template.');
   }
@@ -314,6 +397,14 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
+        if (parsed.data.withdrawBalance && parsed.data.paymentTypeId) {
+          const cashierDenied = await rejectCashTransactionWithoutActiveCashier(
+            parsed.data.paymentTypeId
+          );
+          if (cashierDenied) {
+            return cashierDenied;
+          }
+        }
         response = await executeSavingsAccountCommand(
           accountId,
           command,
@@ -416,6 +507,11 @@ export async function executeSavingsAccountTransactionCommandAction(
   const parsed = parseOrError(savingsAccountTransactionCommandSchema, raw);
   if (!parsed.success) {
     return parsed.result;
+  }
+
+  const cashierDenied = await rejectCashTransactionWithoutActiveCashier(parsed.data.paymentTypeId);
+  if (cashierDenied) {
+    return cashierDenied;
   }
 
   try {

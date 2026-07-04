@@ -61,7 +61,26 @@ const ERROR_MESSAGES: Record<string, string> = {
   'validation.msg.ComplianceProfile.pepPosition.cannot.be.blank':
     'PEP position is required when the customer is a PEP.',
   'validation.msg.ComplianceProfile.fatcaRegistrationNo.cannot.be.blank':
-    'FATCA registration number is required when FATCA registered is selected.'
+    'FATCA registration number is required when FATCA registered is selected.',
+  'error.msg.cashier.insufficient.amount.exception':
+    'The cashier does not have enough cash for this transaction.',
+  'error.msg.cashier.active.session.required.exception':
+    'An active cashier session is required for cash transactions.',
+  'error.msg.cashier.legal.tender.lines.required':
+    'Enter at least one note or coin count.',
+  'error.msg.cashier.legal.tender.duplicate':
+    'Each denomination can only appear once.',
+  'error.msg.cashier.legal.tender.not.found':
+    'One or more denominations are no longer available. Refresh and try again.',
+  'error.msg.cashier.legal.tender.inactive':
+    'One or more denominations are inactive. Choose active notes or coins.',
+  'error.msg.cashier.legal.tender.currency.mismatch':
+    'Selected denominations do not match the transaction currency.',
+  'error.msg.cashier.legal.tender.sum.mismatch':
+    'The denomination total must match the transaction amount.',
+  'error.msg.legal.tender.not.found': 'Legal tender not found.',
+  'error.msg.legal.tender.duplicate':
+    'A denomination with this face value and type already exists for this currency.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

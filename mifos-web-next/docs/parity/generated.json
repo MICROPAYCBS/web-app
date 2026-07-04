@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-04T06:46:25.264Z",
+  "generatedAt": "2026-07-04T20:48:16.552Z",
   "summary": {
     "todo": 0,
     "in_progress": 0,
-    "done": 87,
+    "done": 88,
     "n/a": 0
   },
   "routes": [
@@ -302,6 +302,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "organization/currencies"
+    },
+    {
+      "id": "orgLegalTenders",
+      "path": "/organization/legal-tenders",
+      "domain": "organization",
+      "label": "Legal tenders",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/legal-tenders"
     },
     {
       "id": "orgSmsCampaigns",

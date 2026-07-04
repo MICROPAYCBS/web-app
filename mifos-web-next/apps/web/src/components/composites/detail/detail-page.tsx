@@ -14,6 +14,9 @@ import { cn } from '@/lib/utils';
 /** Fills the platform main area; only the detail body scrolls (sidebar + header stay put). */
 const DETAIL_SIDEBAR_LAYOUT = 'flex min-h-0 flex-1 flex-col lg:flex-row';
 
+/** Top inset shared with {@link PageHeader} — applied once on the sidebar shell, not per column. */
+const DETAIL_SIDEBAR_TOP_PADDING = 'pt-5';
+
 export function DetailPage({
   header,
   summary,
@@ -39,7 +42,7 @@ export function DetailPage({
 
   if (hasSidebar) {
     return (
-      <div className={cn(DETAIL_SIDEBAR_LAYOUT, className)}>
+      <div className={cn(DETAIL_SIDEBAR_LAYOUT, DETAIL_SIDEBAR_TOP_PADDING, className)}>
         <aside
           className={cn(
             'max-h-[min(40vh,20rem)] w-full shrink-0 overflow-y-auto border-b border-border',
@@ -49,9 +52,11 @@ export function DetailPage({
           <div className={cn(platformInset, 'lg:py-6')}>{sidebar}</div>
         </aside>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <PageHeader className={headerContentClassName}>
-            {header}
-            {summary}
+          <PageHeader className={cn('pt-0', headerClassName)}>
+            <div className={pageHeaderContentSpacing}>
+              {header}
+              {summary}
+            </div>
           </PageHeader>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div className={cn(platformInset, 'space-y-6 lg:pl-8')}>{children}</div>

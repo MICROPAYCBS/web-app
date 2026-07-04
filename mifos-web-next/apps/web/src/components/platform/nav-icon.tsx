@@ -12,6 +12,7 @@ import {
   Activity,
   AlertTriangle,
   BadgeCheck,
+  Banknote,
   ArrowLeftRight,
   ArrowRightLeft,
   BookOpen,
@@ -150,7 +151,8 @@ const ICONS: Record<string, LucideIcon> = {
   'file-stack': FileStack,
   'file-text': FileText,
   scale: Scale,
-  briefcase: Briefcase
+  briefcase: Briefcase,
+  banknote: Banknote
 };
 
 export function NavIcon({ name, className }: { name?: string; className?: string }) {

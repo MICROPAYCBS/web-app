@@ -60,6 +60,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'orgLegalTenders',
+    path: '/organization/legal-tenders',
+    label: 'Legal tenders',
+    navGroup: 'organization',
+    webAppRef: 'organization/legal-tenders',
+    permissionKey: 'organization.legalTenders',
+    navOrder: 45,
+    navIcon: 'banknote',
+    keywords: ['denomination', 'note', 'coin', 'cash', 'tender'],
+    parityStatus: 'done'
+  },
+  {
     id: 'orgSmsCampaigns',
     path: '/organization/sms-campaigns',
     label: 'SMS campaigns',

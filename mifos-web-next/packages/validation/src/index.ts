@@ -772,6 +772,21 @@ export {
   type UpdateCashierPayload
 } from './organization/cashier.schema';
 export {
+  upsertLegalTenderSchema,
+  validateUpsertLegalTender,
+  type UpsertLegalTenderInput,
+  type UpsertLegalTenderPayload
+} from './organization/legal-tender.schema';
+export {
+  amountsEqualForCurrency,
+  findDuplicateLegalTenderIds,
+  hasPositiveLegalTenderQuantity,
+  roundAmountForCurrency,
+  sumLegalTenderLines,
+  type LegalTenderLineInput,
+  type LegalTenderMasterRow
+} from './organization/cashier-legal-tender-sum';
+export {
   standingInstructionHistorySearchSchema,
   validateStandingInstructionHistorySearch,
   type StandingInstructionHistorySearchInput

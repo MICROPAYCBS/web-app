@@ -600,8 +600,15 @@ export type {
   OrganizationCashierSummary,
   OrganizationCashierTransaction,
   OrganizationCashierTxnCurrency,
-  OrganizationCashierTxnType
+  OrganizationCashierTxnType,
+  CashierLegalTenderLine,
+  CashierLegalTenderLineDetail
 } from './organization/cashier-types';
+export type {
+  CurrencyLegalTender,
+  CurrencyLegalTenderMutationResponse,
+  LegalTenderType
+} from './organization/legal-tender-types';
 export type {
   OrganizationTeller,
   OrganizationTellerListItem,

@@ -11,6 +11,7 @@ import type {
   OrganizationCashierSummary,
   OrganizationCashierTransaction
 } from '@mifos/api-client';
+import { formatMoney } from '@mifos/domain';
 import {
   coerceFineractDateTime,
   formatFineractDateArray,
@@ -149,4 +150,51 @@ export function filterCashierTransactionsForAccount(
       cashierTransactionMatchesAccount(transaction, accountId, accountKind)
     )
   );
+}
+
+export const CASHIER_TXN_TYPE_ALLOCATE = 101;
+export const CASHIER_TXN_TYPE_SETTLE = 102;
+
+export function cashierTransactionHasLegalTenderBreakdown(
+  transaction: OrganizationCashierTransaction
+): boolean {
+  const typeId = transaction.txnType?.id;
+  return typeId === CASHIER_TXN_TYPE_ALLOCATE || typeId === CASHIER_TXN_TYPE_SETTLE;
+}
+
+export function cashierTransactionCurrencyCode(
+  transaction: OrganizationCashierTransaction,
+  fallbackCurrencyCode: string
+): string {
+  return transaction.currencyCode ?? transaction.currency?.code ?? fallbackCurrencyCode;
+}
+
+/** Stable list key — Fineract may reuse `id` across txn types (e.g. allocate vs loan). */
+export function cashierTransactionRowKey(
+  transaction: OrganizationCashierTransaction,
+  index: number
+): string {
+  const txnTypePart = transaction.txnType?.id ?? transaction.txnType?.code ?? 'unknown';
+  const datePart = Array.isArray(transaction.txnDate)
+    ? transaction.txnDate.join('.')
+    : String(transaction.txnDate ?? '');
+  return [
+    index,
+    transaction.id,
+    txnTypePart,
+    datePart,
+    transaction.txnAmount ?? '',
+    transaction.entityId ?? '',
+    transaction.entityType ?? ''
+  ].join(':');
+}
+
+export function formatCashierNavBalanceLines(balance: CashierNavBalance): string[] {
+  return balance.balances.map(
+    (row) => formatMoney(row.netCash ?? 0, row.currencyCode) ?? row.currencyCode
+  );
+}
+
+export function formatCashierNavBalanceLabel(balance: CashierNavBalance): string {
+  return formatCashierNavBalanceLines(balance).join(' · ');
 }

@@ -8,8 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { APP_LOGO_ABBREV, APP_NAME } from '@/lib/branding';
 import { MifosNavUser } from '@/components/platform/mifos-nav-user';
+import { isNavPathActive } from '@/components/platform/navigation-utils';
 import { QuickCreate } from '@/components/platform/quick-create';
 import { SidebarNavFind } from '@/components/platform/sidebar-nav-find';
 import { SidebarNavPanel } from '@/components/platform/sidebar-nav-panel';
@@ -28,12 +31,20 @@ export function MifosAppSidebar({
   serverName,
   ...props
 }: React.ComponentProps<typeof Sidebar> & { serverName?: string | null }) {
+  const pathname = usePathname();
+  const dashboardActive = isNavPathActive(pathname, '/');
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="pointer-events-none">
+            <SidebarMenuButton
+              size="lg"
+              isActive={dashboardActive}
+              tooltip="Dashboard"
+              render={<Link href="/" aria-label="Dashboard" />}
+            >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
                 {APP_LOGO_ABBREV}
               </div>

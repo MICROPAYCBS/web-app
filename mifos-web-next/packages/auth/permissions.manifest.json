@@ -191,6 +191,26 @@
       "UPDATE_CURRENCY"
     ]
   },
+  "organization.legalTenders": {
+    "any": [
+      "READ_LEGAL_TENDER"
+    ]
+  },
+  "organization.legalTenders.create": {
+    "any": [
+      "CREATE_LEGAL_TENDER"
+    ]
+  },
+  "organization.legalTenders.update": {
+    "any": [
+      "UPDATE_LEGAL_TENDER"
+    ]
+  },
+  "organization.legalTenders.delete": {
+    "any": [
+      "DELETE_LEGAL_TENDER"
+    ]
+  },
   "organization.smsCampaigns": {
     "any": [
       "READ_SMSCAMPAIGN"

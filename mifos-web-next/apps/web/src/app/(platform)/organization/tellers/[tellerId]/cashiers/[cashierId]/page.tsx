@@ -25,6 +25,7 @@ import {
   getOrganizationSelectedCurrencies
 } from '@/lib/fineract/organization-currencies';
 import { getOrganizationTeller } from '@/lib/fineract/tellers';
+import { getCashierPolicySettings } from '@/lib/fineract/cashier-policy';
 import { tellerCashiersPath } from '@/lib/fineract/teller-paths';
 import { getServerSession } from '@/lib/session/server';
 
@@ -80,9 +81,10 @@ export default async function OrganizationTellerCashierDetailPage({
     notFound();
   }
 
-  const [currencies, defaultCurrencyCode] = await Promise.all([
+  const [currencies, defaultCurrencyCode, cashierPolicy] = await Promise.all([
     getOrganizationSelectedCurrencies(),
-    getDefaultOrganizationCurrencyCode()
+    getDefaultOrganizationCurrencyCode(),
+    getCashierPolicySettings()
   ]);
 
   if (!defaultCurrencyCode) {
@@ -130,6 +132,7 @@ export default async function OrganizationTellerCashierDetailPage({
       canAllocate={canAllocate}
       canSettle={canSettle}
       showCashiersListBackLink={readAllCashiers}
+      preventCashierOverdraw={cashierPolicy.preventCashierOverdraw}
     />
   );
 }

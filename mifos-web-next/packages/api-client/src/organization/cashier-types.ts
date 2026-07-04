@@ -6,6 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { CashierLegalTenderLineDetail } from './legal-tender-types';
+
+export type {
+  CashierLegalTenderLine,
+  CashierLegalTenderLineDetail,
+  CurrencyLegalTender,
+  CurrencyLegalTenderMutationResponse,
+  LegalTenderType
+} from './legal-tender-types';
+
 export interface OrganizationCashier {
   id: number;
   staffId?: number;
@@ -49,6 +59,7 @@ export interface OrganizationCashierTxnCurrency {
 export interface OrganizationCashierTransaction {
   id: number;
   cashierId?: number;
+  currencyCode?: string;
   txnDate?: number[] | string;
   txnAmount?: number;
   txnType?: OrganizationCashierTxnType;
@@ -56,6 +67,7 @@ export interface OrganizationCashierTransaction {
   entityType?: string;
   txnNote?: string;
   currency?: OrganizationCashierTxnCurrency;
+  legalTenderLines?: CashierLegalTenderLineDetail[];
 }
 
 export interface OrganizationCashierSummary {

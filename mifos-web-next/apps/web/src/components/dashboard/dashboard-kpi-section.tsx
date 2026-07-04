@@ -14,6 +14,7 @@ import {
   CalendarClock,
   CheckCircle2,
   ClipboardList,
+  Inbox,
   PiggyBank,
   TrendingUp,
   Users,
@@ -54,7 +55,7 @@ const WIDGET_ICONS = {
   loans_in_arrears: AlertTriangle,
   portfolio_at_risk: AlertTriangle,
   savings_accounts: PiggyBank,
-  checker_pending: ClipboardList,
+  checker_pending: Inbox,
   cashier_balance: Wallet
 } satisfies Partial<Record<DashboardKpiWidgetId, typeof Users>>;
 

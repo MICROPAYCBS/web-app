@@ -42,12 +42,13 @@ export function DashboardScopeFilters({
   }
 
   return (
-    <div className={cn('flex flex-wrap items-end gap-2', className)}>
+    <div className={cn('flex flex-wrap items-center gap-2', className)}>
       {showBranch ? (
         <div className="min-w-[12rem]">
           <SelectField
             id="dashboard-scope-office"
             label="Branch"
+            hideLabel
             value={officeId}
             onValueChange={(value) => value && onOfficeIdChange(value)}
             options={offices.map((office) => ({
@@ -63,6 +64,7 @@ export function DashboardScopeFilters({
           <SelectField
             id="dashboard-scope-currency"
             label="Currency"
+            hideLabel
             value={currencyCode}
             onValueChange={(value) => value && onCurrencyCodeChange(value)}
             options={currencies.map((currency) => ({

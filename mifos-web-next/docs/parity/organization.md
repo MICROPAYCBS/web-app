@@ -226,8 +226,24 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 - Edit locks branch assignment (legacy parity).
 - Status values: Active (300), Inactive (400).
 - Cashiers: assign staff (`FormSheet`), edit/delete from list, detail view with summary and transactions. Cashier status uses the first selected organization currency by default; currency can be switched on the detail page.
+- Allocate and settle capture a denomination breakdown (`legalTenderLines`) from active legal tenders for the selected currency; `txnAmount` is derived from line totals. Transaction history shows breakdown for allocate (101) and settle (102) rows.
 
-## Standing instructions history
+## Legal tenders
+
+| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
+| ----- | ------ | -------------- | ------------ | --------- | --- | ------ |
+| `/organization/legal-tenders` | GET | — | `GET /currencies` | — | — | done |
+| `/organization/currencies/[currencyCode]/legal-tenders` | GET | — | `GET /currencies/{code}/legal-tenders?includeInactive=true` | — | — | done |
+| `/organization/currencies/[currencyCode]/legal-tenders?create=1` | POST | — | `POST /currencies/{code}/legal-tenders` | `organization.legal-tender.create` | — | done |
+| `/organization/currencies/[currencyCode]/legal-tenders?edit={id}` | PUT | — | `PUT /currencies/{code}/legal-tenders/{id}` | `organization.legal-tender.update` | — | done |
+| `/organization/currencies/[currencyCode]/legal-tenders` | DELETE | — | `DELETE /currencies/{code}/legal-tenders/{id}` | — | — | done |
+
+### Notes
+
+- Hub lists tenant currencies; each currency opens a DataTable of notes and coins (label, face value, type, display order, active).
+- Create and edit use `FormSheet` side panels (`?create=1`, `?edit={id}`). Legacy `/create` and `/[id]/edit` routes redirect.
+- Active tenders appear in cashier allocate/settle denomination grids; inactive tenders remain visible in admin with an inactive badge.
+
 
 | Route                                         | Method | web-app screen                       | Fineract API                                                               | Schema ID | E2E | Status |
 | --------------------------------------------- | ------ | ------------------------------------ | -------------------------------------------------------------------------- | --------- | --- | ------ |

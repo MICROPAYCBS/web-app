@@ -8,8 +8,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { OrganizationCashierSummary } from '@mifos/api-client';
+import type { CurrencyLegalTender, OrganizationCashierSummary } from '@mifos/api-client';
 import { assertCan } from '@mifos/auth';
+import type { ZodError } from 'zod';
 import {
   toFineractActionError,
   validateAllocateCashierCash,
@@ -38,6 +39,10 @@ import {
   tellerCashiersPath,
   tellerDetailPath
 } from '@/lib/fineract/teller-paths';
+import { validateSettleAmountAgainstNetCash } from '@/lib/fineract/cashier-cash-transaction-guard';
+import { legalTenderLoadFailureFromError } from '@/lib/fineract/legal-tender-load';
+import { listActiveCurrencyLegalTenders } from '@/lib/fineract/legal-tenders';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
 import { getServerSession } from '@/lib/session/server';
 
 async function loadCashierForAccessCheck(
@@ -56,7 +61,7 @@ export type CashierSummaryActionResult =
   | { ok: true; summary: OrganizationCashierSummary }
   | { ok: false; message: string };
 
-function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, string[]> } }) {
+function zodFieldErrors(error: ZodError) {
   const flattened = error.flatten().fieldErrors;
   const fieldErrors: Record<string, string> = {};
   for (const [key, messages] of Object.entries(flattened)) {
@@ -75,6 +80,47 @@ function revalidateCashierViews(tellerId: string | number, cashierId?: string | 
   revalidatePath(cashiersPath, 'layout');
   if (cashierId != null) {
     revalidatePath(tellerCashierDetailPath(tellerId, cashierId));
+  }
+}
+
+async function resolveCurrencyDecimalPlaces(currencyCode: string): Promise<number> {
+  const currencies = await getOrganizationSelectedCurrencies();
+  return currencies.find((row) => row.code === currencyCode)?.decimalPlaces ?? 2;
+}
+
+async function loadCashierCashValidationContext(currencyCode: string): Promise<{
+  tenders: CurrencyLegalTender[];
+  decimalPlaces: number;
+}> {
+  const [tenders, decimalPlaces] = await Promise.all([
+    listActiveCurrencyLegalTenders(currencyCode),
+    resolveCurrencyDecimalPlaces(currencyCode)
+  ]);
+  return { tenders, decimalPlaces };
+}
+
+export async function loadCashierCashActionSheetDataAction(currencyCode: string): Promise<
+  | {
+      ok: true;
+      tenders: CurrencyLegalTender[];
+      decimalPlaces: number;
+    }
+  | { ok: false; message: string }
+> {
+  const trimmed = currencyCode.trim();
+  if (!trimmed) {
+    return { ok: false, message: 'Currency is required.' };
+  }
+
+  try {
+    const context = await loadCashierCashValidationContext(trimmed);
+    return { ok: true, ...context };
+  } catch (error) {
+    const failure = legalTenderLoadFailureFromError(
+      error,
+      'Could not load legal tender denominations.'
+    );
+    return { ok: false, message: failure.message };
   }
 }
 
@@ -208,12 +254,31 @@ export async function allocateCashierCashAction(
     return { ok: false, message: 'You do not have permission to allocate cash.' };
   }
 
-  const parsed = validateAllocateCashierCash(input);
+  const currencyCode =
+    typeof input === 'object' && input !== null && 'currencyCode' in input
+      ? String((input as { currencyCode: unknown }).currencyCode ?? '').trim()
+      : '';
+  if (!currencyCode) {
+    return { ok: false, message: 'Currency is required.' };
+  }
+
+  let validationContext;
+  try {
+    validationContext = await loadCashierCashValidationContext(currencyCode);
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load legal tender denominations.');
+  }
+
+  const parsed = validateAllocateCashierCash(
+    input,
+    validationContext.tenders,
+    validationContext.decimalPlaces
+  );
   if (!parsed.success) {
     return {
       ok: false,
       message: 'Fix the highlighted fields.',
-      fieldErrors: zodFieldErrors(parsed.error)
+      fieldErrors: zodFieldErrors(parsed.error as ZodError)
     };
   }
 
@@ -246,12 +311,45 @@ export async function settleCashierCashAction(
     return { ok: false, message: 'You do not have permission to settle cash.' };
   }
 
-  const parsed = validateSettleCashierCash(input);
+  const currencyCode =
+    typeof input === 'object' && input !== null && 'currencyCode' in input
+      ? String((input as { currencyCode: unknown }).currencyCode ?? '').trim()
+      : '';
+  if (!currencyCode) {
+    return { ok: false, message: 'Currency is required.' };
+  }
+
+  let validationContext;
+  try {
+    validationContext = await loadCashierCashValidationContext(currencyCode);
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load legal tender denominations.');
+  }
+
+  const parsed = validateSettleCashierCash(
+    input,
+    validationContext.tenders,
+    validationContext.decimalPlaces
+  );
   if (!parsed.success) {
     return {
       ok: false,
       message: 'Fix the highlighted fields.',
-      fieldErrors: zodFieldErrors(parsed.error)
+      fieldErrors: zodFieldErrors(parsed.error as ZodError)
+    };
+  }
+
+  const overdrawCheck = await validateSettleAmountAgainstNetCash({
+    tellerId,
+    cashierId,
+    currencyCode: parsed.data.currencyCode,
+    txnAmount: parsed.data.txnAmount
+  });
+  if (!overdrawCheck.ok) {
+    return {
+      ok: false,
+      message: overdrawCheck.message,
+      fieldErrors: overdrawCheck.fieldErrors
     };
   }
 

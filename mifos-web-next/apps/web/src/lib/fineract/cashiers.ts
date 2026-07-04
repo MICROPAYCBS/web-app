@@ -9,10 +9,12 @@
 import 'server-only';
 
 import type {
+  CashierLegalTenderLineDetail,
   OrganizationCashierListItem,
   OrganizationCashierMutationResponse,
   OrganizationCashierSummary,
-  OrganizationCashierTransaction
+  OrganizationCashierTransaction,
+  OrganizationCashierTxnType
 } from '@mifos/api-client';
 import type {
   AllocateCashierCashPayload,
@@ -72,14 +74,85 @@ function coerceSummaryAmount(value: unknown): number | undefined {
   return undefined;
 }
 
+function normalizeLegalTenderLineDetail(raw: unknown): CashierLegalTenderLineDetail | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const legalTenderId = Number(row.legalTenderId);
+  const quantity = Number(row.quantity);
+  const value = Number(row.value);
+  const lineAmount = Number(row.lineAmount);
+  const label = typeof row.label === 'string' ? row.label : '';
+  const tenderType = row.tenderType === 'COIN' ? 'COIN' : row.tenderType === 'NOTE' ? 'NOTE' : null;
+  if (
+    !Number.isFinite(legalTenderId) ||
+    !Number.isFinite(quantity) ||
+    !Number.isFinite(value) ||
+    !Number.isFinite(lineAmount) ||
+    !label ||
+    !tenderType
+  ) {
+    return null;
+  }
+  return {
+    legalTenderId,
+    quantity,
+    value,
+    lineAmount,
+    label,
+    tenderType
+  };
+}
+
+function normalizeCashierTransaction(raw: unknown): OrganizationCashierTransaction | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = Number(row.id);
+  if (!Number.isFinite(id)) {
+    return null;
+  }
+  const legalTenderLines = Array.isArray(row.legalTenderLines)
+    ? row.legalTenderLines
+        .map((line) => normalizeLegalTenderLineDetail(line))
+        .filter((line): line is CashierLegalTenderLineDetail => line !== null)
+    : undefined;
+  const currencyCode =
+    typeof row.currencyCode === 'string'
+      ? row.currencyCode
+      : typeof (row.currency as Record<string, unknown> | undefined)?.code === 'string'
+        ? ((row.currency as Record<string, unknown>).code as string)
+        : undefined;
+
+  return {
+    id,
+    cashierId: row.cashierId != null ? Number(row.cashierId) : undefined,
+    currencyCode,
+    txnDate: row.txnDate as number[] | string | undefined,
+    txnAmount: coerceSummaryAmount(row.txnAmount),
+    txnType: row.txnType as OrganizationCashierTxnType | undefined,
+    entityId: row.entityId != null ? Number(row.entityId) : undefined,
+    entityType: typeof row.entityType === 'string' ? row.entityType : undefined,
+    txnNote: typeof row.txnNote === 'string' ? row.txnNote : undefined,
+    currency: row.currency as OrganizationCashierTransaction['currency'],
+    legalTenderLines: legalTenderLines && legalTenderLines.length > 0 ? legalTenderLines : undefined
+  };
+}
+
 function extractCashierTransactionPageItems(raw: unknown): OrganizationCashierTransaction[] {
   if (Array.isArray(raw)) {
-    return raw as OrganizationCashierTransaction[];
+    return raw
+      .map((item) => normalizeCashierTransaction(item))
+      .filter((item): item is OrganizationCashierTransaction => item !== null);
   }
   if (raw && typeof raw === 'object') {
     const pageItems = (raw as Record<string, unknown>).pageItems;
     if (Array.isArray(pageItems)) {
-      return pageItems as OrganizationCashierTransaction[];
+      return pageItems
+        .map((item) => normalizeCashierTransaction(item))
+        .filter((item): item is OrganizationCashierTransaction => item !== null);
     }
   }
   return [];

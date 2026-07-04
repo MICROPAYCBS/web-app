@@ -15,33 +15,25 @@ import type {
   OrganizationCashierTransaction,
   OrganizationTeller
 } from '@mifos/api-client';
-import { formatMoney } from '@mifos/domain';
 import { formatActionErrorMessage } from '@mifos/validation';
-import {
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-  type ColumnDef,
-  type PaginationState
-} from '@tanstack/react-table';
 import { ArrowDownToLine, ArrowUpFromLine, Pencil, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { loadCashierSummaryAction } from '@/actions/cashier';
 import { CashierCashActionSheet } from '@/components/organization/cashier-cash-action-sheet';
 import { CashierFormSheet } from '@/components/organization/cashier-form-sheet';
 import { CashierSummaryFields } from '@/components/organization/cashier-summary-fields';
+import { CashierTransactionsTable } from '@/components/organization/cashier-transactions-table';
 import {
   DetailBackLink,
   DetailHeader,
   DetailPage
 } from '@/components/composites';
-import { DataTable } from '@/components/composites/data-table/data-table';
-import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
+import { formatFineractDateArray } from '@/lib/fineract/dates';
 import { tellerCashiersPath } from '@/lib/fineract/teller-paths';
+import { cn } from '@/lib/utils';
 import type { SelectOption } from '@/components/composites/select-field';
 
 function sortTransactions(
@@ -54,16 +46,6 @@ function sortTransactions(
   });
 }
 
-function formatSummaryAmount(
-  amount: number | undefined,
-  currencyCode: string
-): string {
-  if (amount == null) {
-    return '—';
-  }
-  return formatMoney(amount, currencyCode, FINERACT_LOCALE) ?? String(amount);
-}
-
 export function CashierDetailView({
   teller,
   cashier,
@@ -73,7 +55,8 @@ export function CashierDetailView({
   canUpdate,
   canAllocate,
   canSettle,
-  showCashiersListBackLink = true
+  showCashiersListBackLink = true,
+  preventCashierOverdraw = false
 }: {
   teller: OrganizationTeller;
   cashier: OrganizationCashierListItem;
@@ -84,6 +67,7 @@ export function CashierDetailView({
   canAllocate: boolean;
   canSettle: boolean;
   showCashiersListBackLink?: boolean;
+  preventCashierOverdraw?: boolean;
 }) {
   const [currencyCode, setCurrencyCode] = useState(initialCurrencyCode);
   const [summary, setSummary] = useState(initialSummary);
@@ -91,10 +75,6 @@ export function CashierDetailView({
   const [editOpen, setEditOpen] = useState(false);
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [settleOpen, setSettleOpen] = useState(false);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 25
-  });
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -119,45 +99,6 @@ export function CashierDetailView({
     [summary.cashierTransactions?.pageItems]
   );
 
-  const columns = useMemo<ColumnDef<OrganizationCashierTransaction>[]>(
-    () => [
-      {
-        id: 'txnDate',
-        header: 'Date',
-        cell: ({ row }) => formatFineractDateArray(row.original.txnDate) ?? '—'
-      },
-      {
-        id: 'txnType',
-        header: 'Type',
-        cell: ({ row }) => row.original.txnType?.value ?? row.original.txnType?.code ?? '—'
-      },
-      {
-        id: 'txnAmount',
-        header: 'Amount',
-        cell: ({ row }) =>
-          formatSummaryAmount(
-            row.original.txnAmount,
-            row.original.currency?.code ?? currencyCode
-          )
-      },
-      {
-        id: 'txnNote',
-        header: 'Note',
-        cell: ({ row }) => row.original.txnNote ?? '—'
-      }
-    ],
-    [currencyCode]
-  );
-
-  const table = useReactTable({
-    data: transactions,
-    columns,
-    state: { pagination },
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel()
-  });
-
   function reloadSummary(nextCurrencyCode: string) {
     setSummaryError(null);
     startTransition(async () => {
@@ -168,7 +109,6 @@ export function CashierDetailView({
       }
       setSummary(result.summary);
       setCurrencyCode(nextCurrencyCode);
-      setPagination((current) => ({ ...current, pageIndex: 0 }));
     });
   }
 
@@ -216,16 +156,21 @@ export function CashierDetailView({
                   variant="outline"
                   size="sm"
                   disabled={pending}
+                  aria-busy={pending}
                   onClick={() => reloadSummary(currencyCode)}
                 >
-                  <RefreshCw className="mr-2 size-4" />
-                  Refresh
+                  <RefreshCw
+                    className={cn('mr-2 size-4', pending && 'animate-spin')}
+                    aria-hidden
+                  />
+                  {pending ? 'Refreshing…' : 'Refresh'}
                 </Button>
                 {canUpdate ? (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
+                    disabled={pending}
                     onClick={() => setEditOpen(true)}
                   >
                     <Pencil className="mr-2 size-4" />
@@ -233,7 +178,12 @@ export function CashierDetailView({
                   </Button>
                 ) : null}
                 {canAllocate ? (
-                  <Button type="button" size="sm" onClick={() => setAllocateOpen(true)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pending}
+                    onClick={() => setAllocateOpen(true)}
+                  >
                     <ArrowDownToLine className="mr-2 size-4" />
                     Allocate
                   </Button>
@@ -243,6 +193,7 @@ export function CashierDetailView({
                     type="button"
                     variant="secondary"
                     size="sm"
+                    disabled={pending}
                     onClick={() => setSettleOpen(true)}
                   >
                     <ArrowUpFromLine className="mr-2 size-4" />
@@ -276,13 +227,11 @@ export function CashierDetailView({
           </TabsContent>
 
           <TabsContent value="transactions" className="mt-0 space-y-4">
-            <DataTable
-              table={table}
-              stickyHeader={false}
-              emptyMessage="No transactions"
-              emptyDescription="Cashier transactions for the selected currency will appear here."
+            <CashierTransactionsTable
+              transactions={transactions}
+              currencyCode={currencyCode}
+              loading={pending}
             />
-            <DataTablePagination table={table} totalRecords={transactions.length} />
           </TabsContent>
         </Tabs>
       </DetailPage>
@@ -317,6 +266,8 @@ export function CashierDetailView({
           tellerId={teller.id}
           cashierId={cashier.id}
           currencyCode={currencyCode}
+          preventCashierOverdraw={preventCashierOverdraw}
+          availableNetCash={summary.netCash}
         />
       ) : null}
     </>

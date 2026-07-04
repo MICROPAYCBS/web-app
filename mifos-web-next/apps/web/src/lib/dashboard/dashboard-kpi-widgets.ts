@@ -44,8 +44,8 @@ export const DASHBOARD_KPI_WIDGETS: DashboardKpiWidgetDefinition[] = [
   },
   {
     id: 'pending_approval',
-    title: 'Pending approval',
-    description: 'Loan applications awaiting approval',
+    title: 'Loans pending approval',
+    description: 'Submitted loan applications awaiting approval',
     category: 'loans',
     variant: 'warning',
     href: '/loans?status=100',
@@ -53,7 +53,7 @@ export const DASHBOARD_KPI_WIDGETS: DashboardKpiWidgetDefinition[] = [
   },
   {
     id: 'pending_disbursal',
-    title: 'Pending disbursal',
+    title: 'Loans pending disbursal',
     description: 'Approved loans awaiting disbursement',
     category: 'loans',
     variant: 'warning',
@@ -116,8 +116,8 @@ export const DASHBOARD_KPI_WIDGETS: DashboardKpiWidgetDefinition[] = [
   },
   {
     id: 'checker_pending',
-    title: 'Pending approvals',
-    description: 'Maker-checker tasks awaiting review',
+    title: 'Checker inbox',
+    description: 'Submissions waiting for your review',
     category: 'operations',
     variant: 'warning',
     href: '/checker-inbox-and-tasks',
@@ -183,11 +183,17 @@ export function resolveDashboardKpiWidgetValue(
         : null;
     case 'pending_approval':
       return kpis.loans.pendingApproval != null
-        ? { value: kpis.loans.pendingApproval.toLocaleString(), description: 'Awaiting approval' }
+        ? {
+            value: kpis.loans.pendingApproval.toLocaleString(),
+            description: 'Loan applications awaiting approval'
+          }
         : null;
     case 'pending_disbursal':
       return kpis.loans.pendingDisbursal != null
-        ? { value: kpis.loans.pendingDisbursal.toLocaleString(), description: 'Awaiting disbursement' }
+        ? {
+            value: kpis.loans.pendingDisbursal.toLocaleString(),
+            description: 'Approved loans awaiting disbursement'
+          }
         : null;
     case 'disbursed_today':
       return kpis.loans.disbursedTodayAmount != null
@@ -230,7 +236,10 @@ export function resolveDashboardKpiWidgetValue(
         : null;
     case 'checker_pending':
       return kpis.checkerInboxPending != null
-        ? { value: kpis.checkerInboxPending.toLocaleString(), description: 'Tasks to review' }
+        ? {
+            value: kpis.checkerInboxPending.toLocaleString(),
+            description: 'Tasks in checker inbox'
+          }
         : null;
     case 'cashier_balance':
       return kpis.cashier

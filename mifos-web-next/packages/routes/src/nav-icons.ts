@@ -76,7 +76,8 @@ export const NAV_ICON_NAMES = [
   'file-stack',
   'file-text',
   'scale',
-  'briefcase'
+  'briefcase',
+  'banknote'
 ] as const;
 
 export type NavIcon = (typeof NAV_ICON_NAMES)[number];

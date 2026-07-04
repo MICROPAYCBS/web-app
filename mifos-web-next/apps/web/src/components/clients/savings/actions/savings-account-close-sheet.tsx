@@ -10,11 +10,12 @@
 
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useEffect, useId, useMemo, useState, useTransition } from 'react';
 import {
   executeSavingsAccountLifecycleCommandAction,
   loadSavingsAccountTransactionSheetDataAction
 } from '@/actions/savings-account-command';
+import { CashierSessionRequiredAlert } from '@/components/accounts/cashier-session-required-alert';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
@@ -22,6 +23,8 @@ import { TextField } from '@/components/composites/text-field';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
+import type { CashierPolicySettings } from '@/lib/fineract/cashier-policy-paths';
 
 export function SavingsAccountCloseSheet({
   clientId,
@@ -38,7 +41,17 @@ export function SavingsAccountCloseSheet({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
-  const [paymentTypes, setPaymentTypes] = useState<{ id: number; name: string }[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<CashierAwarePaymentTypeOption[]>([]);
+  const [cashierPolicy, setCashierPolicy] = useState<CashierPolicySettings>({
+    preventCashierOverdraw: true,
+    requireCashierForCashTransactions: true
+  });
+  const [activeCashierSession, setActiveCashierSession] = useState(false);
+  const [cashierSessionLink, setCashierSessionLink] = useState<{
+    tellerId: number;
+    cashierId: number;
+    canOpenCashierDetail: boolean;
+  } | null>(null);
   const initialTransactionDate = useInitialTransactionDate();
   const [closedOnDate, setClosedOnDate] = useState(initialTransactionDate);
   const [withdrawBalance, setWithdrawBalance] = useState(false);
@@ -71,12 +84,25 @@ export function SavingsAccountCloseSheet({
           return;
         }
         setPaymentTypes(result.paymentTypeOptions);
+        setCashierPolicy(result.cashierPolicy);
+        setActiveCashierSession(result.activeCashierSession);
+        setCashierSessionLink(result.cashierSessionLink);
       }
     );
     return () => {
       cancelled = true;
     };
   }, [open, accountId, initialTransactionDate]);
+
+  const selectedPaymentType = useMemo(
+    () => paymentTypes.find((row) => String(row.id) === paymentTypeId),
+    [paymentTypeId, paymentTypes]
+  );
+  const requiresActiveCashier =
+    withdrawBalance &&
+    cashierPolicy.requireCashierForCashTransactions &&
+    selectedPaymentType?.isCashPayment === true;
+  const blockedByCashierSession = requiresActiveCashier && !activeCashierSession;
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -116,7 +142,7 @@ export function SavingsAccountCloseSheet({
       formId={formId}
       submitLabel="Close account"
       submitLoading={pending}
-      submitDisabled={loading}
+      submitDisabled={loading || blockedByCashierSession}
       className="data-[side=right]:sm:max-w-lg"
     >
       {loading ? (
@@ -145,16 +171,25 @@ export function SavingsAccountCloseSheet({
             />
           </div>
           {withdrawBalance ? (
-            <SelectField
-              id={`${formId}-payment-type`}
-              label="Payment type"
-              value={paymentTypeId}
-              onValueChange={(value) => setPaymentTypeId(value ?? '')}
-              options={paymentTypes.map((row) => ({ value: String(row.id), label: row.name }))}
-              placeholder="Select payment type"
-              error={fieldErrors.paymentTypeId}
-              required
-            />
+            <>
+              <SelectField
+                id={`${formId}-payment-type`}
+                label="Payment type"
+                value={paymentTypeId}
+                onValueChange={(value) => setPaymentTypeId(value ?? '')}
+                options={paymentTypes.map((row) => ({ value: String(row.id), label: row.name }))}
+                placeholder="Select payment type"
+                error={fieldErrors.paymentTypeId}
+                required
+              />
+              {blockedByCashierSession ? (
+                <CashierSessionRequiredAlert
+                  tellerId={cashierSessionLink?.tellerId}
+                  cashierId={cashierSessionLink?.cashierId}
+                  canOpenCashierDetail={cashierSessionLink?.canOpenCashierDetail}
+                />
+              ) : null}
+            </>
           ) : null}
           <TextField
             id={`${formId}-note`}

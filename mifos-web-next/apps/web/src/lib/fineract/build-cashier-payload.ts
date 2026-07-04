@@ -62,9 +62,17 @@ export function buildUpdateCashierPayload(
 export function buildCashierCashPayload(
   input: AllocateCashierCashPayload | SettleCashierCashPayload
 ): Record<string, unknown> {
-  return stripEmpty({
+  const payload = stripEmpty({
     ...withFineractLocale(input),
     txnDate: normalizeFineractDateField(input.txnDate),
-    description: input.description === '' ? undefined : input.description
+    txnNote: input.txnNote?.trim(),
+    legalTenderLines: input.legalTenderLines.map((line) => ({
+      legalTenderId: line.legalTenderId,
+      quantity: line.quantity
+    }))
   });
+  if (!payload.txnNote) {
+    delete payload.txnNote;
+  }
+  return payload;
 }

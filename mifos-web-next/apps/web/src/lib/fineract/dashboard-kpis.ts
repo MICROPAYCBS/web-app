@@ -8,7 +8,6 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatMoney } from '@mifos/domain';
 import { format, startOfMonth } from 'date-fns';
 import {
   parseActiveLoansSummaryHealth,
@@ -18,6 +17,7 @@ import {
 } from '@/lib/dashboard/dashboard-kpi-parse';
 import type { DashboardKpiFetchOptions, DashboardKpis } from '@/lib/dashboard/dashboard-kpi-types';
 import { resolveDashboardReportCurrencyId } from '@/lib/dashboard/dashboard-currency';
+import { formatCashierNavBalanceLabel } from '@/lib/fineract/cashier-display';
 import { loadCashierNavBalanceForSession } from '@/lib/fineract/load-cashier-nav-balance';
 import { fetchExpectedCollectionsToday } from '@/lib/fineract/collection-sheet';
 import { getCheckerInboxPendingCount } from '@/lib/fineract/checker-inbox';
@@ -228,9 +228,7 @@ async function fetchCashierKpi(
     return null;
   }
 
-  const label = scopedBalances
-    .map((row) => formatMoney(row.netCash ?? 0, row.currencyCode) ?? row.currencyCode)
-    .join(' · ');
+  const label = formatCashierNavBalanceLabel({ ...balance, balances: scopedBalances });
 
   return {
     label,

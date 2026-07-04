@@ -12,7 +12,7 @@ import { formatMoney, parseAmount } from '@mifos/domain';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useEffect, useId, useMemo, useState, useTransition } from 'react';
 import {
   executeSavingsAccountTransactionCommandAction,
   loadSavingsAccountTransactionSheetDataAction
@@ -44,6 +44,9 @@ import {
 } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { CashierSessionRequiredAlert } from '@/components/accounts/cashier-session-required-alert';
+import type { CashierPolicySettings } from '@/lib/fineract/cashier-policy-paths';
+import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
 
 type DepositWithdrawCommand = 'deposit' | 'withdrawal';
 
@@ -78,7 +81,17 @@ export function SavingsAccountTransactionSheet({
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
-  const [paymentTypes, setPaymentTypes] = useState<{ id: number; name: string }[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<CashierAwarePaymentTypeOption[]>([]);
+  const [cashierPolicy, setCashierPolicy] = useState<CashierPolicySettings>({
+    preventCashierOverdraw: true,
+    requireCashierForCashTransactions: true
+  });
+  const [activeCashierSession, setActiveCashierSession] = useState(false);
+  const [cashierSessionLink, setCashierSessionLink] = useState<{
+    tellerId: number;
+    cashierId: number;
+    canOpenCashierDetail: boolean;
+  } | null>(null);
   const initialTransactionDate = useInitialTransactionDate();
   const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
   const [amount, setAmount] = useState('');
@@ -112,6 +125,12 @@ export function SavingsAccountTransactionSheet({
     setPaymentTypeId('');
     setNote('');
     setPaymentDetails(emptyPaymentDetailFields());
+    setCashierPolicy({
+      preventCashierOverdraw: true,
+      requireCashierForCashTransactions: true
+    });
+    setActiveCashierSession(false);
+    setCashierSessionLink(null);
     void loadSavingsAccountTransactionSheetDataAction(String(accountId), command).then((result) => {
       if (cancelled) {
         return;
@@ -123,9 +142,10 @@ export function SavingsAccountTransactionSheet({
         return;
       }
       setPaymentTypes(result.paymentTypeOptions);
-      const cash = result.paymentTypeOptions.find((row) =>
-        row.name.toLowerCase().includes('cash')
-      );
+      setCashierPolicy(result.cashierPolicy);
+      setActiveCashierSession(result.activeCashierSession);
+      setCashierSessionLink(result.cashierSessionLink);
+      const cash = result.paymentTypeOptions.find((row) => row.isCashPayment);
       const defaultId = cash?.id ?? result.paymentTypeOptions[0]?.id;
       if (defaultId) {
         setPaymentTypeId(String(defaultId));
@@ -135,6 +155,14 @@ export function SavingsAccountTransactionSheet({
       cancelled = true;
     };
   }, [open, command, accountId, initialTransactionDate]);
+
+  const selectedPaymentType = useMemo(
+    () => paymentTypes.find((row) => String(row.id) === paymentTypeId),
+    [paymentTypeId, paymentTypes]
+  );
+  const requiresActiveCashier =
+    cashierPolicy.requireCashierForCashTransactions && selectedPaymentType?.isCashPayment === true;
+  const blockedByCashierSession = requiresActiveCashier && !activeCashierSession;
 
   if (!command) {
     return null;
@@ -247,6 +275,13 @@ export function SavingsAccountTransactionSheet({
         optional
         disabled={disabled}
       />
+      {blockedByCashierSession ? (
+        <CashierSessionRequiredAlert
+          tellerId={cashierSessionLink?.tellerId}
+          cashierId={cashierSessionLink?.cashierId}
+          canOpenCashierDetail={cashierSessionLink?.canOpenCashierDetail}
+        />
+      ) : null}
     </div>
   );
 
@@ -334,7 +369,11 @@ export function SavingsAccountTransactionSheet({
               <Button type="button" variant="outline" onClick={handleClose} disabled={pending}>
                 Cancel
               </Button>
-              <Button type="submit" form={formId} disabled={disabled || pending}>
+              <Button
+                type="submit"
+                form={formId}
+                disabled={disabled || pending || blockedByCashierSession}
+              >
                 {pending ? 'Saving…' : title}
               </Button>
             </>
