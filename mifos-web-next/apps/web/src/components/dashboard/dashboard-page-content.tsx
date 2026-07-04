@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright since 2026 Mifos Initiative
+ * Copyright since 2026 MicroPay
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,10 +9,11 @@
  */
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { DetailSummary } from '@/components/composites/detail/detail-summary';
+import { useCallback, useMemo, useState } from 'react';
 import { TextField } from '@/components/composites/text-field';
 import { DashboardAnalyticsSection } from '@/components/dashboard/dashboard-analytics-section';
+import { DashboardKpiSection } from '@/components/dashboard/dashboard-kpi-section';
+import { DashboardScopeFilters } from '@/components/dashboard/dashboard-scope-filters';
 import { NavIcon } from '@/components/platform/nav-icon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
@@ -23,10 +24,11 @@ import type {
 } from '@/lib/dashboard/dashboard-activities';
 import type {
   DashboardAnalytics,
+  DashboardCurrencyOption,
   DashboardOfficeOption
 } from '@/lib/dashboard/analytics-types';
-import type { DashboardCounts } from '@/lib/fineract/dashboard-counts';
-import { platformInset, platformScrollRegion } from '@/lib/platform-layout';
+import type { DashboardKpis } from '@/lib/dashboard/dashboard-kpi-types';
+import { platformScrollRegion } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 const ACTIVITY_PREVIEW_LIMIT = 8;
@@ -34,21 +36,49 @@ const ACTIVITY_PREVIEW_LIMIT = 8;
 export function DashboardPageContent({
   activities,
   shortcuts,
-  counts,
   offices,
+  currencies,
   defaultOfficeId,
+  defaultCurrencyCode,
+  initialKpis,
   initialAnalytics,
-  showAnalytics
+  showKpis,
+  showAnalytics,
+  permissions
 }: {
   activities: DashboardActivity[];
   shortcuts: DashboardShortcut[];
-  counts: DashboardCounts;
   offices: DashboardOfficeOption[];
+  currencies: DashboardCurrencyOption[];
   defaultOfficeId: number | null;
+  defaultCurrencyCode: string | null;
+  initialKpis: DashboardKpis;
   initialAnalytics: DashboardAnalytics | null;
+  showKpis: boolean;
   showAnalytics: boolean;
+  permissions: {
+    clients: boolean;
+    loans: boolean;
+    savings: boolean;
+    reports: boolean;
+    checker: boolean;
+    collections: boolean;
+    cashier: boolean;
+  };
 }) {
   const [query, setQuery] = useState('');
+  const [officeId, setOfficeId] = useState(
+    defaultOfficeId != null ? String(defaultOfficeId) : ''
+  );
+  const [currencyCode, setCurrencyCode] = useState(defaultCurrencyCode ?? '');
+
+  const handleOfficeIdChange = useCallback((nextOfficeId: string) => {
+    setOfficeId(nextOfficeId);
+  }, []);
+
+  const handleCurrencyCodeChange = useCallback((nextCurrencyCode: string) => {
+    setCurrencyCode(nextCurrencyCode);
+  }, []);
 
   const filteredActivities = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -64,63 +94,57 @@ export function DashboardPageContent({
       .slice(0, ACTIVITY_PREVIEW_LIMIT);
   }, [activities, query]);
 
-  const summaryItems = [
-    counts.clients != null
-      ? {
-          id: 'clients',
-          label: 'Customers',
-          value: (
-            <Link href="/clients" className="font-semibold tabular-nums hover:underline">
-              {counts.clients.toLocaleString()}
-            </Link>
-          )
-        }
-      : null,
-    counts.loans != null
-      ? {
-          id: 'loans',
-          label: 'Loan accounts',
-          value: (
-            <Link href="/loans" className="font-semibold tabular-nums hover:underline">
-              {counts.loans.toLocaleString()}
-            </Link>
-          )
-        }
-      : null,
-    counts.savings != null
-      ? {
-          id: 'savings',
-          label: 'Savings accounts',
-          value: (
-            <Link href="/savings" className="font-semibold tabular-nums hover:underline">
-              {counts.savings.toLocaleString()}
-            </Link>
-          )
-        }
-      : null
-  ].filter((item): item is NonNullable<typeof item> => item !== null);
-
   return (
     <div className={platformScrollRegion}>
-      <div className={cn(platformInset, 'mx-auto max-w-5xl space-y-8')}>
-        <div>
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <div className="space-y-2 px-4 lg:px-6">
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">
-            Welcome to {APP_NAME}. Review portfolio totals, reports, and jump to any screen.
+          <p className="text-muted-foreground">
+            Welcome to {APP_NAME}. Review portfolio KPIs, reports, and jump to any screen.
           </p>
         </div>
 
-        {summaryItems.length > 0 ? <DetailSummary items={summaryItems} /> : null}
-
-        {showAnalytics && defaultOfficeId != null && initialAnalytics ? (
-          <DashboardAnalyticsSection
+        {showKpis || showAnalytics ? (
+          <DashboardScopeFilters
             offices={offices}
-            defaultOfficeId={defaultOfficeId}
-            initialAnalytics={initialAnalytics}
+            currencies={currencies}
+            officeId={officeId}
+            currencyCode={currencyCode}
+            onOfficeIdChange={handleOfficeIdChange}
+            onCurrencyCodeChange={handleCurrencyCodeChange}
+            className="px-4 lg:px-6"
           />
         ) : null}
 
-        <Card>
+        {showKpis ? (
+          <DashboardKpiSection
+            officeId={officeId}
+            currencyCode={currencyCode}
+            initialKpis={initialKpis}
+            permissions={permissions}
+            className="px-4 lg:px-6"
+          />
+        ) : null}
+
+        {showAnalytics && defaultOfficeId != null && initialAnalytics ? (
+          <section className="space-y-4 px-4 lg:px-6">
+            <div>
+              <h2 className="text-lg font-medium">Analytics</h2>
+              <p className="text-sm text-muted-foreground">
+                Collection, disbursement, and trend reports for the selected branch
+                {currencyCode ? ` in ${currencyCode}` : ''}.
+              </p>
+            </div>
+            <DashboardAnalyticsSection
+              officeId={officeId}
+              currencyCode={currencyCode}
+              initialAnalytics={initialAnalytics}
+            />
+          </section>
+        ) : null}
+
+        <div className="px-4 lg:px-6">
+          <Card>
           <CardHeader>
             <CardTitle>Search activity</CardTitle>
           </CardHeader>
@@ -150,10 +174,11 @@ export function DashboardPageContent({
               <p className="text-sm text-muted-foreground">No matching screens.</p>
             )}
           </CardContent>
-        </Card>
+          </Card>
+        </div>
 
         {shortcuts.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 px-4 lg:px-6">
             <h2 className="text-lg font-medium">Shortcuts</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {shortcuts.map((shortcut) => (

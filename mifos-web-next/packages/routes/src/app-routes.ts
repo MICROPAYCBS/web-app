@@ -372,6 +372,55 @@ const CORE_APP_ROUTES = {
     requiresAuth: true,
     parity: { status: 'done', webAppRef: 'tasks/checker-inbox-and-tasks' }
   },
+  collectionSheet: {
+    id: 'collectionSheet',
+    path: '/collections/collection-sheet',
+    kind: 'page',
+    label: 'Collection sheet',
+    domain: 'collections',
+    nav: true,
+    navOrder: 30,
+    navGroup: 'portfolio',
+    navIcon: 'clipboard-list',
+    keywords: ['collection', 'repayment', 'due', 'expected'],
+    permissionKey: 'collections',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      webAppRef: 'collections/collection-sheet',
+      fineractApi: 'POST /collectionsheet?command=generateCollectionSheet',
+      schemaId: 'collections.collection-sheet.generate'
+    }
+  },
+  collectionSheetApi: {
+    id: 'collectionSheetApi',
+    path: '/api/collections/collection-sheet',
+    kind: 'api',
+    label: 'Collection sheet API (BFF)',
+    domain: 'collections',
+    quickFind: false,
+    permissionKey: 'collections',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      fineractApi: 'POST /collectionsheet?command=generateCollectionSheet',
+      schemaId: 'collections.collection-sheet.generate'
+    }
+  },
+  collectionSheetStaffApi: {
+    id: 'collectionSheetStaffApi',
+    path: '/api/collections/staff',
+    kind: 'api',
+    label: 'Collection sheet staff API (BFF)',
+    domain: 'collections',
+    quickFind: false,
+    permissionKey: 'collections',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'done', fineractApi: 'GET /staff' }
+  },
   settingsServers: {
     id: 'settingsServers',
     path: '/settings/servers',

@@ -57,3 +57,15 @@ export async function runReport(
   const fineract = await createFineractClient();
   return fineract.get<FineractReportRunResult>(runReportPath(reportName), parameters);
 }
+
+/** Best-effort report run for optional dashboard metrics — returns null on failure. */
+export async function tryRunReport(
+  reportName: string,
+  parameters: Record<string, string>
+): Promise<FineractReportRunResult | null> {
+  try {
+    return await runReport(reportName, parameters);
+  } catch {
+    return null;
+  }
+}

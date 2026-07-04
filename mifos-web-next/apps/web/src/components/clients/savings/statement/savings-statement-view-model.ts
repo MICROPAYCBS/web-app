@@ -69,19 +69,20 @@ function formatStatementRowAmount(
 }
 
 export function buildSavingsStatementDocumentData(input: {
-  account: Pick<FineractSavingsAccountDetail, 'accountNo' | 'clientName' | 'officeName'>;
+  account: Pick<FineractSavingsAccountDetail, 'accountNo' | 'clientName'>;
+  orgName: string;
   currencyCode: string;
   fromDate: Date;
   toDate: Date;
   statement: SavingsStatementResult;
 }): SavingsStatementDocumentData {
-  const { account, currencyCode, fromDate, toDate, statement } = input;
+  const { account, orgName, currencyCode, fromDate, toDate, statement } = input;
 
   return {
     accountNo: account.accountNo,
     clientName: account.clientName?.trim() || '—',
     currencyCode,
-    orgName: account.officeName,
+    orgName,
     periodFromLabel: formatStatementPeriodDate(fromDate),
     periodToLabel: formatStatementPeriodDate(toDate),
     openingBalanceLabel: formatAccountMoney(statement.openingBalance, currencyCode),

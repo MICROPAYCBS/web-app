@@ -51,6 +51,7 @@ const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
 export function SavingsAccountDetailView({
   account,
   clientId,
+  reportOrgName,
   permissions,
   canViewAudits = false,
   auditEntries = [],
@@ -65,6 +66,7 @@ export function SavingsAccountDetailView({
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
+  reportOrgName: string;
   permissions: SavingsAccountActionPermissions;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
@@ -142,6 +144,7 @@ export function SavingsAccountDetailView({
               <SavingsAccountActions
                 account={account}
                 clientId={clientId}
+                reportOrgName={reportOrgName}
                 permissions={permissions}
               />
             }
@@ -186,6 +189,7 @@ export function SavingsAccountDetailView({
         section={activeSection as SavingsAccountSectionId}
         account={account}
         clientId={clientId}
+        reportOrgName={reportOrgName}
         canViewAudits={canViewAudits}
         auditEntries={auditEntries}
         auditLoadFailed={auditLoadFailed}

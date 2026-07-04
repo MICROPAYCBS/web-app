@@ -105,7 +105,7 @@ export class FineractClient {
           body = { defaultUserMessage: raw };
         }
       }
-      if (process.env.NODE_ENV === 'development' || res.status >= 500) {
+      if (res.status >= 500) {
         console.error(
           JSON.stringify({
             tag: 'fineract-http',

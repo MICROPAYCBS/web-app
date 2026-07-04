@@ -9,8 +9,13 @@
 import { assertCan, resolvePermission } from '@mifos/auth';
 import { jsonError, jsonOk } from '@/lib/bff/json-response';
 import { requireRoutePermission } from '@/lib/bff/require-session';
+import {
+  mapOrganizationCurrencies,
+  parseDashboardCurrencyCode
+} from '@/lib/dashboard/dashboard-currency';
 import type { DashboardTimescale } from '@/lib/dashboard/analytics-types';
 import { fetchDashboardAnalytics } from '@/lib/fineract/dashboard-analytics';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
 
 function parseTimescale(value: string | null): DashboardTimescale {
   if (value === 'Day' || value === 'Week' || value === 'Month') {
@@ -33,7 +38,14 @@ export async function GET(request: Request) {
       return jsonError(new Error('officeId is required'));
     }
     const timescale = parseTimescale(searchParams.get('timescale'));
-    const data = await fetchDashboardAnalytics(officeId, timescale);
+    const currencies = mapOrganizationCurrencies(
+      await getOrganizationSelectedCurrencies().catch(() => [])
+    );
+    const currencyCode = parseDashboardCurrencyCode(
+      searchParams.get('currencyCode'),
+      currencies
+    );
+    const data = await fetchDashboardAnalytics(officeId, timescale, currencyCode);
     return jsonOk(data);
   } catch (err) {
     return jsonError(err);

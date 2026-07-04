@@ -31,3 +31,8 @@ export interface DashboardOfficeOption {
   id: number;
   name: string;
 }
+
+export interface DashboardCurrencyOption {
+  code: string;
+  name?: string;
+}

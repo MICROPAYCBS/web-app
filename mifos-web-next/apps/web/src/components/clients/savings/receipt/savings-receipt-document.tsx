@@ -11,6 +11,7 @@
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import type { SavingsReceiptData } from '@/components/clients/savings/receipt/savings-receipt-view-model';
+import { DEFAULT_REPORT_ORG_NAME } from '@/lib/fineract/report-branding';
 
 const styles = StyleSheet.create({
   page: {
@@ -118,7 +119,7 @@ export function SavingsReceiptDocument({ receipt }: { receipt: SavingsReceiptDat
       <Page size="A5" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <Text style={styles.orgName}>{receipt.orgName?.trim() || 'Mifos'}</Text>
+            <Text style={styles.orgName}>{receipt.orgName?.trim() || DEFAULT_REPORT_ORG_NAME}</Text>
             <Text style={styles.title}>Transaction Receipt</Text>
           </View>
         </View>

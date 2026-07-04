@@ -49,7 +49,13 @@ function formatPeriodLabel(fromDate: Date, toDate: Date): string {
   return `${format(fromDate, FINERACT_DATE_FORMAT)} to ${format(toDate, FINERACT_DATE_FORMAT)}`;
 }
 
-export function SavingsStatementSection({ account }: { account: FineractSavingsAccountDetail }) {
+export function SavingsStatementSection({
+  account,
+  reportOrgName
+}: {
+  account: FineractSavingsAccountDetail;
+  reportOrgName: string;
+}) {
   const endDateDefault = useInitialTransactionDate();
   const [fromDateValue, setFromDateValue] = useState(() => defaultFromDate(endDateDefault));
   const [toDateValue, setToDateValue] = useState(endDateDefault);
@@ -85,6 +91,7 @@ export function SavingsStatementSection({ account }: { account: FineractSavingsA
       const statement = buildSavingsStatement(account.transactions ?? [], fromDate, toDate);
       const documentData = buildSavingsStatementDocumentData({
         account,
+        orgName: reportOrgName,
         currencyCode,
         fromDate,
         toDate,

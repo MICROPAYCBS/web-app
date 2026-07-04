@@ -61,6 +61,7 @@ export function SavingsAccountTransactionDetailView({
   account,
   transaction,
   clientId,
+  reportOrgName,
   canViewJournal = false,
   journalTransactionId,
   journalEntries = [],
@@ -78,6 +79,7 @@ export function SavingsAccountTransactionDetailView({
   account: FineractSavingsAccountDetail;
   transaction: FineractSavingsAccountTransaction;
   clientId: string;
+  reportOrgName: string;
   canViewJournal?: boolean;
   journalTransactionId?: string;
   journalEntries?: FineractJournalEntryListItem[];
@@ -161,7 +163,7 @@ export function SavingsAccountTransactionDetailView({
               accountId={account.id}
               accountNo={account.accountNo}
               clientName={account.clientName}
-              orgName={account.officeName}
+              orgName={reportOrgName}
               transaction={transaction}
               currencyCode={savingsTransactionCurrencyCode(transaction) ?? savingsAccountCurrencyCode(account)}
               permissions={{

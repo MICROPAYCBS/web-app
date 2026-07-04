@@ -65,6 +65,8 @@ export interface PortfolioListQuery {
   includeClosed: boolean;
   orderBy?: string;
   sortOrder?: PortfolioListSortOrder;
+  /** Fineract loan status id, e.g. 100 pending approval, 200 approved, 300 active. */
+  status?: string;
 }
 
 function readParam(
@@ -99,7 +101,8 @@ export function parsePortfolioListQuery(
     accountNo: readParam(params, 'accountNo'),
     includeClosed: readParam(params, 'includeClosed') === 'true',
     orderBy,
-    sortOrder
+    sortOrder,
+    status: readParam(params, 'status')
   };
 }
 
@@ -115,6 +118,9 @@ export function buildPortfolioListApiQuery(query: PortfolioListQuery): Record<st
   if (query.orderBy) {
     params.orderBy = query.orderBy;
     params.sortOrder = query.sortOrder ?? 'ASC';
+  }
+  if (query.status) {
+    params.status = query.status;
   }
   return params;
 }

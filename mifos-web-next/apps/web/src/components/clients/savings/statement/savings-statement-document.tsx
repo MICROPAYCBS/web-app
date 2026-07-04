@@ -11,6 +11,7 @@
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import type { SavingsStatementDocumentData } from '@/components/clients/savings/statement/savings-statement-view-model';
+import { DEFAULT_REPORT_ORG_NAME } from '@/lib/fineract/report-branding';
 
 const styles = StyleSheet.create({
   page: {
@@ -137,7 +138,7 @@ export function SavingsStatementDocument({ data }: { data: SavingsStatementDocum
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <Text style={styles.orgName}>{data.orgName?.trim() || 'Mifos'}</Text>
+            <Text style={styles.orgName}>{data.orgName?.trim() || DEFAULT_REPORT_ORG_NAME}</Text>
             <Text style={styles.statementTitle}>Statement of Account</Text>
           </View>
         </View>

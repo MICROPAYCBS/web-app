@@ -22,6 +22,7 @@ import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForSavingsAccount } from '@/lib/fineract/audit-trails';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
+import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -71,14 +72,15 @@ export default async function SavingsAccountGeneralPage({
     notFound();
   }
 
-  const [result, auditResult] = await Promise.all([
+  const [result, auditResult, reportOrgName] = await Promise.all([
     tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
     canViewAudits
       ? tryFineractLoad(
           () => listAuditTrailsForSavingsAccount(accountId),
           'Could not load audit trail.'
         )
-      : Promise.resolve(null)
+      : Promise.resolve(null),
+    loadReportOrganisationName()
   ]);
 
   if (!result.ok) {
@@ -117,6 +119,7 @@ export default async function SavingsAccountGeneralPage({
       <SavingsAccountDetailView
         account={result.data}
         clientId={clientId}
+        reportOrgName={reportOrgName}
         permissions={savingsAccountPermissions(session)}
         canViewAudits={canViewAudits}
         auditEntries={auditEntries}

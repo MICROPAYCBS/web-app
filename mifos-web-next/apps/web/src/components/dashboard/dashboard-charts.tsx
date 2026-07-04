@@ -70,12 +70,14 @@ export function DashboardAmountPieChart({
   title,
   completeLabel,
   pending,
-  complete
+  complete,
+  currencyCode
 }: {
   title: string;
   completeLabel: string;
   pending: number;
   complete: number;
+  currencyCode?: string;
 }) {
   const data = [
     { name: 'pending', value: pending, label: 'Pending' },
@@ -102,7 +104,9 @@ export function DashboardAmountPieChart({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  formatter={(value) => formatAccountMoney(Number(value))}
+                  formatter={(value) =>
+                    formatAccountMoney(Number(value), currencyCode)
+                  }
                 />
               }
             />
@@ -115,11 +119,15 @@ export function DashboardAmountPieChart({
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-muted-foreground">Pending</dt>
-            <dd className="font-medium tabular-nums">{formatAccountMoney(pending)}</dd>
+            <dd className="font-medium tabular-nums">
+              {formatAccountMoney(pending, currencyCode)}
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{completeLabel}</dt>
-            <dd className="font-medium tabular-nums">{formatAccountMoney(complete)}</dd>
+            <dd className="font-medium tabular-nums">
+              {formatAccountMoney(complete, currencyCode)}
+            </dd>
           </div>
         </dl>
       </CardContent>

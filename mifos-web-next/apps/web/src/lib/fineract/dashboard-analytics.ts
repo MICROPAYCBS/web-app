@@ -9,6 +9,7 @@ import 'server-only';
  */
 
 import type { DashboardAnalytics, DashboardTimescale } from '@/lib/dashboard/analytics-types';
+import { resolveDashboardReportCurrencyId } from '@/lib/dashboard/dashboard-currency';
 import {
   buildTrendSeries,
   extractAmountPair,
@@ -19,11 +20,13 @@ import { runReport } from '@/lib/fineract/run-reports';
 
 async function runDashboardReport(
   reportName: string,
-  officeId: number
+  officeId: number,
+  currencyCode: string | null
 ): Promise<Record<string, unknown>[]> {
   try {
     const raw = await runReport(reportName, {
       R_officeId: String(officeId),
+      R_currencyId: resolveDashboardReportCurrencyId(currencyCode),
       genericResultSet: 'false'
     });
     return normalizeDashboardReportRows(raw);
@@ -34,7 +37,8 @@ async function runDashboardReport(
 
 export async function fetchDashboardAnalytics(
   officeId: number,
-  timescale: DashboardTimescale
+  timescale: DashboardTimescale,
+  currencyCode: string | null = null
 ): Promise<DashboardAnalytics> {
   const [
     collectionRows,
@@ -42,10 +46,10 @@ export async function fetchDashboardAnalytics(
     clientTrendRows,
     loanTrendRows
   ] = await Promise.all([
-    runDashboardReport('Demand Vs Collection', officeId),
-    runDashboardReport('Disbursal Vs Awaitingdisbursal', officeId),
-    runDashboardReport(getTrendReportName(timescale, 'client'), officeId),
-    runDashboardReport(getTrendReportName(timescale, 'loan'), officeId)
+    runDashboardReport('Demand Vs Collection', officeId, currencyCode),
+    runDashboardReport('Disbursal Vs Awaitingdisbursal', officeId, currencyCode),
+    runDashboardReport(getTrendReportName(timescale, 'client'), officeId, currencyCode),
+    runDashboardReport(getTrendReportName(timescale, 'loan'), officeId, currencyCode)
   ]);
 
   const collectionBreakdown = extractAmountPair(collectionRows, 'Demand Vs Collection');

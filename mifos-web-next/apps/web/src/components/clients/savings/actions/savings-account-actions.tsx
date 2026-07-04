@@ -101,10 +101,12 @@ type DepositWithdrawCommand = 'deposit' | 'withdrawal';
 export function SavingsAccountActions({
   account,
   clientId,
+  reportOrgName,
   permissions
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
+  reportOrgName: string;
   permissions: SavingsAccountActionPermissions;
 }) {
   const visibility = savingsAccountActionVisibility(account);
@@ -432,7 +434,7 @@ export function SavingsAccountActions({
         accountId={account.id}
         accountNo={account.accountNo}
         clientName={account.clientName}
-        orgName={account.officeName}
+        orgName={reportOrgName}
         command={transactionCommand}
         currencyCode={currencyCode}
         open={transactionCommand !== null}

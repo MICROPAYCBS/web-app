@@ -256,6 +256,7 @@ function TransactionCell({
 function buildTransactionColumns(
   account: FineractSavingsAccountDetail,
   clientId: string,
+  reportOrgName: string,
   transactionActionPermissions: SavingsTransactionActionPermissions
 ): ColumnDef<TransactionRow>[] {
   const currency = savingsAccountCurrencyCode(account);
@@ -363,7 +364,7 @@ function buildTransactionColumns(
           accountId={account.id}
           accountNo={account.accountNo}
           clientName={account.clientName}
-          orgName={account.officeName}
+          orgName={reportOrgName}
           transaction={row.original}
           currencyCode={currency}
           permissions={transactionActionPermissions}
@@ -393,10 +394,12 @@ function filterSavingsTransactions(
 function SavingsAccountTransactionsSection({
   account,
   clientId,
+  reportOrgName,
   transactionActionPermissions
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
+  reportOrgName: string;
   transactionActionPermissions: SavingsTransactionActionPermissions;
 }) {
   const [hideReversed, setHideReversed] = useState(false);
@@ -424,8 +427,8 @@ function SavingsAccountTransactionsSection({
   }, [hideAccruals, hideReversed]);
 
   const columns = useMemo(
-    () => buildTransactionColumns(account, clientId, transactionActionPermissions),
-    [account, clientId, transactionActionPermissions]
+    () => buildTransactionColumns(account, clientId, reportOrgName, transactionActionPermissions),
+    [account, clientId, reportOrgName, transactionActionPermissions]
   );
   const table = useReactTable({
     data: rows,
@@ -566,6 +569,7 @@ export function SavingsAccountSectionPanel({
   section,
   account,
   clientId,
+  reportOrgName,
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
@@ -580,6 +584,7 @@ export function SavingsAccountSectionPanel({
   section: SavingsAccountSectionId;
   account: FineractSavingsAccountDetail;
   clientId: string;
+  reportOrgName: string;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
@@ -594,11 +599,12 @@ export function SavingsAccountSectionPanel({
         <SavingsAccountTransactionsSection
           account={account}
           clientId={clientId}
+          reportOrgName={reportOrgName}
           transactionActionPermissions={transactionActionPermissions}
         />
       );
     case 'statement':
-      return <SavingsStatementSection account={account} />;
+      return <SavingsStatementSection account={account} reportOrgName={reportOrgName} />;
     case 'charges':
       return <SavingsAccountChargesSection account={account} />;
     case 'audit':

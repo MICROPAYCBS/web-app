@@ -19,6 +19,7 @@ import { savingsAccountSectionPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForSavingsTransaction } from '@/lib/fineract/audit-trails';
 import { getJournalEntryTransaction } from '@/lib/fineract/journal-entries';
 import { getSavingsAccount, getSavingsAccountTransaction } from '@/lib/fineract/savings-accounts';
+import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
@@ -41,12 +42,13 @@ export default async function SavingsAccountTransactionPage({
     notFound();
   }
 
-  const [accountResult, transactionResult] = await Promise.all([
+  const [accountResult, transactionResult, reportOrgName] = await Promise.all([
     tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
     tryFineractLoad(
       () => getSavingsAccountTransaction(accountId, transactionId),
       'Could not load transaction.'
-    )
+    ),
+    loadReportOrganisationName()
   ]);
 
   if (!accountResult.ok || !transactionResult.ok) {
@@ -112,6 +114,7 @@ export default async function SavingsAccountTransactionPage({
         account={accountResult.data}
         transaction={transactionResult.data}
         clientId={clientId}
+        reportOrgName={reportOrgName}
         canViewJournal={canViewJournal}
         journalTransactionId={journalTransactionId}
         journalEntries={journalEntries}

@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-03T08:30:16.554Z",
+  "generatedAt": "2026-07-04T06:46:25.264Z",
   "summary": {
     "todo": 0,
     "in_progress": 0,
-    "done": 83,
+    "done": 87,
     "n/a": 0
   },
   "routes": [
@@ -218,6 +218,36 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "tasks/checker-inbox-and-tasks"
+    },
+    {
+      "id": "collectionSheet",
+      "path": "/collections/collection-sheet",
+      "domain": "collections",
+      "label": "Collection sheet",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "collections/collection-sheet",
+      "fineractApi": "POST /collectionsheet?command=generateCollectionSheet",
+      "schemaId": "collections.collection-sheet.generate"
+    },
+    {
+      "id": "collectionSheetApi",
+      "path": "/api/collections/collection-sheet",
+      "domain": "collections",
+      "label": "Collection sheet API (BFF)",
+      "kind": "api",
+      "status": "done",
+      "fineractApi": "POST /collectionsheet?command=generateCollectionSheet",
+      "schemaId": "collections.collection-sheet.generate"
+    },
+    {
+      "id": "collectionSheetStaffApi",
+      "path": "/api/collections/staff",
+      "domain": "collections",
+      "label": "Collection sheet staff API (BFF)",
+      "kind": "api",
+      "status": "done",
+      "fineractApi": "GET /staff"
     },
     {
       "id": "settingsServers",
@@ -551,6 +581,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "system/surveys"
+    },
+    {
+      "id": "sysApprovalWorkflows",
+      "path": "/system/approval-workflows",
+      "domain": "system",
+      "label": "Approval workflows",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/approval-workflows"
     },
     {
       "id": "sysJobs",

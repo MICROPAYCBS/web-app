@@ -1,0 +1,12 @@
+{
+  "schemaId": "collections.collection-sheet.generate",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.collectionsheet.api.CollectionSheetApiResource",
+    "org.apache.fineract.portfolio.collectionsheet.serialization.CollectionSheetGenerateCommandFromApiJsonDeserializer"
+  ],
+  "fields": {
+    "officeId": { "required": true, "type": "integer" },
+    "staffId": { "required": false, "type": "integer" },
+    "transactionDate": { "required": true, "type": "date" }
+  }
+}

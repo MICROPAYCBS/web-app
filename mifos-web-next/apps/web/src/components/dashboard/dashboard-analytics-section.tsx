@@ -10,7 +10,6 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { DetailSummary } from '@/components/composites/detail/detail-summary';
-import { SelectField } from '@/components/composites/select-field';
 import {
   DashboardAmountPieChart,
   DashboardTrendsChart
@@ -19,35 +18,33 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { isAnalyticsEmpty } from '@/lib/dashboard/analytics-parse';
-import type {
-  DashboardAnalytics,
-  DashboardOfficeOption,
-  DashboardTimescale
-} from '@/lib/dashboard/analytics-types';
+import type { DashboardAnalytics, DashboardTimescale } from '@/lib/dashboard/analytics-types';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 
 export function DashboardAnalyticsSection({
-  offices,
-  defaultOfficeId,
+  officeId,
+  currencyCode,
   initialAnalytics
 }: {
-  offices: DashboardOfficeOption[];
-  defaultOfficeId: number;
+  officeId: string;
+  currencyCode: string;
   initialAnalytics: DashboardAnalytics;
 }) {
-  const [officeId, setOfficeId] = useState(String(defaultOfficeId));
   const [timescale, setTimescale] = useState<DashboardTimescale>('Month');
   const [analytics, setAnalytics] = useState(initialAnalytics);
   const [pending, startTransition] = useTransition();
   const skipInitialFetch = useRef(true);
 
   const loadAnalytics = useCallback(
-    (nextOfficeId: string, nextTimescale: DashboardTimescale) => {
+    (nextOfficeId: string, nextCurrencyCode: string, nextTimescale: DashboardTimescale) => {
       startTransition(async () => {
         const params = new URLSearchParams({
           officeId: nextOfficeId,
           timescale: nextTimescale
         });
+        if (nextCurrencyCode.trim()) {
+          params.set('currencyCode', nextCurrencyCode);
+        }
         const res = await fetch(`/api/dashboard/analytics?${params.toString()}`, {
           credentials: 'include'
         });
@@ -66,13 +63,8 @@ export function DashboardAnalyticsSection({
       skipInitialFetch.current = false;
       return;
     }
-    loadAnalytics(officeId, timescale);
-  }, [officeId, timescale, loadAnalytics]);
-
-  const officeOptions = offices.map((office) => ({
-    value: String(office.id),
-    label: office.name
-  }));
+    loadAnalytics(officeId, currencyCode, timescale);
+  }, [currencyCode, loadAnalytics, officeId, timescale]);
 
   const reportMetrics = [
     analytics.amountCollected != null
@@ -81,7 +73,7 @@ export function DashboardAnalyticsSection({
           label: 'Amount collected',
           value: (
             <span className="font-semibold tabular-nums">
-              {formatAccountMoney(analytics.amountCollected)}
+              {formatAccountMoney(analytics.amountCollected, currencyCode || undefined)}
             </span>
           )
         }
@@ -92,7 +84,7 @@ export function DashboardAnalyticsSection({
           label: 'Amount disbursed',
           value: (
             <span className="font-semibold tabular-nums">
-              {formatAccountMoney(analytics.amountDisbursed)}
+              {formatAccountMoney(analytics.amountDisbursed, currencyCode || undefined)}
             </span>
           )
         }
@@ -104,16 +96,7 @@ export function DashboardAnalyticsSection({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <SelectField
-          id="dashboard-office"
-          label="Branch"
-          value={officeId}
-          onValueChange={(value) => setOfficeId(value ?? officeId)}
-          options={officeOptions}
-          disabled={pending || officeOptions.length === 0}
-          className="max-w-sm"
-        />
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 lg:ml-auto">
           <ToggleGroup
             value={[timescale]}
             onValueChange={(values) => {
@@ -136,7 +119,7 @@ export function DashboardAnalyticsSection({
             variant="outline"
             size="sm"
             disabled={pending}
-            onClick={() => loadAnalytics(officeId, timescale)}
+            onClick={() => loadAnalytics(officeId, currencyCode, timescale)}
           >
             Refresh
           </Button>
@@ -163,6 +146,7 @@ export function DashboardAnalyticsSection({
                 completeLabel="Collected"
                 pending={analytics.collectionBreakdown.pending}
                 complete={analytics.collectionBreakdown.complete}
+                currencyCode={currencyCode || undefined}
               />
             ) : null}
             {analytics.disbursementBreakdown ? (
@@ -171,6 +155,7 @@ export function DashboardAnalyticsSection({
                 completeLabel="Disbursed"
                 pending={analytics.disbursementBreakdown.pending}
                 complete={analytics.disbursementBreakdown.complete}
+                currencyCode={currencyCode || undefined}
               />
             ) : null}
           </div>
