@@ -102,7 +102,7 @@ test.describe('Approval workflows', () => {
     await page.goto(`${APPROVAL_WORKFLOWS_PATH}/create`);
     await waitForPageReady(page);
     await expect(page.getByRole('heading', { name: 'Create approval workflow' })).toBeVisible();
-    await expect(page.locator('#moduleName')).toHaveValue('LOAN');
+    await expect(page.getByText('CREATE_LOAN').first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Stages' })).toBeVisible();
 
     await page.goto(APPROVAL_WORKFLOWS_PATH);

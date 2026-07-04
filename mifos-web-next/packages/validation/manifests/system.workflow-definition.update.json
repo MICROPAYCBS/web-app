@@ -5,7 +5,7 @@
     "org.apache.fineract.workflow.serialization.WorkflowDefinitionDataValidator"
   ],
   "fields": {
-    "moduleName": { "required": true },
+    "taskPermissionCode": { "required": true },
     "name": { "required": true },
     "stages": { "required": true }
   }

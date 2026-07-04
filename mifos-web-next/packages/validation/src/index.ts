@@ -486,7 +486,6 @@ export {
   type UpsertSurveyFormInput
 } from './system/survey.schema';
 export {
-  WORKFLOW_MODULE_SUGGESTIONS,
   buildWorkflowDefinitionApiPayload,
   upsertWorkflowDefinitionSchema,
   validateUpsertWorkflowDefinition,

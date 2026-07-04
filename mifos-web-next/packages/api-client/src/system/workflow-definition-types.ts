@@ -53,7 +53,7 @@ export interface WorkflowTransition {
 
 export interface WorkflowDefinition {
   id: number;
-  moduleName: string;
+  taskPermissionCode: string;
   name: string;
   description?: string;
   status: WorkflowDefinitionStatus;
@@ -66,7 +66,7 @@ export interface WorkflowDefinition {
 }
 
 export interface WorkflowDefinitionWritePayload {
-  moduleName: string;
+  taskPermissionCode: string;
   name: string;
   description?: string;
   priority?: number | null;

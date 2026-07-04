@@ -136,10 +136,15 @@ function parseWorkflowDefinition(raw: unknown): WorkflowDefinition | null {
   }
   const row = raw as Record<string, unknown>;
   const id = Number(row.id);
-  const moduleName = typeof row.moduleName === 'string' ? row.moduleName : '';
+  const taskPermissionCode =
+    typeof row.taskPermissionCode === 'string'
+      ? row.taskPermissionCode
+      : typeof row.moduleName === 'string'
+        ? row.moduleName
+        : '';
   const name = typeof row.name === 'string' ? row.name : '';
   const status = row.status;
-  if (!Number.isFinite(id) || !moduleName || !name) {
+  if (!Number.isFinite(id) || !taskPermissionCode || !name) {
     return null;
   }
   if (status !== 'DRAFT' && status !== 'ACTIVE' && status !== 'INACTIVE') {
@@ -161,7 +166,7 @@ function parseWorkflowDefinition(raw: unknown): WorkflowDefinition | null {
 
   return {
     id,
-    moduleName,
+    taskPermissionCode,
     name,
     description: typeof row.description === 'string' ? row.description : undefined,
     status: status as WorkflowDefinitionStatus,
@@ -175,13 +180,13 @@ function parseWorkflowDefinition(raw: unknown): WorkflowDefinition | null {
 }
 
 export async function listWorkflowDefinitions(filters?: {
-  moduleName?: string;
+  taskPermissionCode?: string;
   status?: WorkflowDefinitionStatus;
 }): Promise<WorkflowDefinition[]> {
   const fineract = await createFineractClient();
   const params = new URLSearchParams();
-  if (filters?.moduleName?.trim()) {
-    params.set('moduleName', filters.moduleName.trim());
+  if (filters?.taskPermissionCode?.trim()) {
+    params.set('taskPermissionCode', filters.taskPermissionCode.trim());
   }
   if (filters?.status) {
     params.set('status', filters.status);

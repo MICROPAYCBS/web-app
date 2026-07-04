@@ -7,6 +7,7 @@
  */
 
 import type {
+  FineractRolePermissionUsage,
   WorkflowDefinition,
   WorkflowDefinitionStatus,
   WorkflowStage,
@@ -15,6 +16,9 @@ import type {
 import type { UpsertWorkflowDefinitionInput } from '@mifos/validation';
 import { formatMoney } from '@mifos/domain';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { formatPermissionCode, formatRoleGroupingName } from '@/lib/fineract/role-display';
+
+export const CONFIGURE_MC_TASKS_PATH = '/system/configure-mc-tasks';
 
 export function workflowDefinitionStatusLabel(status: WorkflowDefinitionStatus): string {
   switch (status) {
@@ -136,9 +140,83 @@ export function transitionAmountBandSummary(
   return `≤ ${formatCriteriaAmount(transition.maxAmount as number, currency)}`;
 }
 
-export function defaultWorkflowDefinitionFormValues(): UpsertWorkflowDefinitionInput {
+export function findWorkflowTaskPermission(
+  permissions: FineractRolePermissionUsage[],
+  taskPermissionCode: string
+): FineractRolePermissionUsage | undefined {
+  const normalized = taskPermissionCode.trim();
+  return permissions.find((permission) => permission.code === normalized);
+}
+
+export function formatWorkflowTaskSubtitle(permission: FineractRolePermissionUsage): string | null {
+  const parts = [permission.entityName, permission.actionName].filter(Boolean);
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
+export function formatWorkflowTaskOptionLabel(permission: FineractRolePermissionUsage): string {
+  const subtitle = formatWorkflowTaskSubtitle(permission);
+  const readable = formatPermissionCode(permission.code, permission.grouping);
+  if (subtitle) {
+    return `${permission.code} — ${subtitle}`;
+  }
+  if (readable !== permission.code) {
+    return `${permission.code} — ${readable}`;
+  }
+  return permission.code;
+}
+
+export function workflowTaskPermissionSelectOptions(
+  permissions: FineractRolePermissionUsage[]
+): Array<{ value: string; label: string; keywords?: string[] }> {
+  return [...permissions]
+    .sort((left, right) => {
+      const groupCompare = formatRoleGroupingName(left.grouping).localeCompare(
+        formatRoleGroupingName(right.grouping)
+      );
+      return groupCompare !== 0 ? groupCompare : left.code.localeCompare(right.code);
+    })
+    .map((permission) => ({
+      value: permission.code,
+      label: formatWorkflowTaskOptionLabel(permission),
+      keywords: [
+        permission.code,
+        permission.entityName,
+        permission.actionName,
+        permission.grouping,
+        formatRoleGroupingName(permission.grouping),
+        formatPermissionCode(permission.code, permission.grouping)
+      ].filter((value): value is string => Boolean(value?.trim()))
+    }));
+}
+
+export function formatWorkflowTaskDisplay(
+  taskPermissionCode: string,
+  permissions?: FineractRolePermissionUsage[]
+): { code: string; subtitle?: string; makerCheckerEnabled?: boolean } {
+  const match = permissions?.length
+    ? findWorkflowTaskPermission(permissions, taskPermissionCode)
+    : undefined;
+
   return {
-    moduleName: 'LOAN',
+    code: taskPermissionCode,
+    subtitle: match ? formatWorkflowTaskSubtitle(match) ?? undefined : undefined,
+    makerCheckerEnabled: match?.selected
+  };
+}
+
+export function isWorkflowActivationMcDisabledError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('task.not.maker.checker.enabled') ||
+    (normalized.includes('maker-checker') && normalized.includes('not enabled'))
+  );
+}
+
+export function defaultWorkflowDefinitionFormValues(
+  preferredTaskPermissionCode?: string
+): UpsertWorkflowDefinitionInput {
+  return {
+    taskPermissionCode: preferredTaskPermissionCode?.trim() || '',
     name: '',
     description: '',
     priority: 10,
@@ -171,7 +249,7 @@ export function workflowDefinitionToFormValues(
   definition: WorkflowDefinition
 ): UpsertWorkflowDefinitionInput {
   return {
-    moduleName: definition.moduleName,
+    taskPermissionCode: definition.taskPermissionCode,
     name: definition.name,
     description: definition.description ?? '',
     priority: definition.priority ?? null,

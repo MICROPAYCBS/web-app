@@ -9,8 +9,6 @@
 import { z } from 'zod';
 import type { WorkflowDefinitionWritePayload } from '@mifos/api-client';
 
-export const WORKFLOW_MODULE_SUGGESTIONS = ['LOAN', 'SAVINGS', 'CLIENT', 'TRANSACTION'] as const;
-
 export const workflowStageTypeSchema = z.enum(['REVIEW', 'APPROVAL', 'VERIFICATION']);
 export const workflowRejectionPolicySchema = z.enum(['ANY', 'ALL', 'THRESHOLD']);
 export const workflowExpiryPeriodUnitSchema = z.enum(['HOURS', 'DAYS']);
@@ -145,7 +143,7 @@ export const workflowTransitionSchema = z
 
 export const upsertWorkflowDefinitionSchema = z
   .object({
-    moduleName: z.string().trim().min(1, 'Module is required.').max(100),
+    taskPermissionCode: z.string().trim().min(1, 'Task is required.').max(100),
     name: z.string().trim().min(1, 'Name is required.').max(255),
     description: z.string().trim().max(1000).optional(),
     priority: z.preprocess(
@@ -230,7 +228,7 @@ export function buildWorkflowDefinitionApiPayload(
   input: UpsertWorkflowDefinitionInput
 ): WorkflowDefinitionWritePayload {
   return {
-    moduleName: input.moduleName.trim(),
+    taskPermissionCode: input.taskPermissionCode.trim(),
     name: input.name.trim(),
     description: input.description?.trim() || undefined,
     priority: input.priority ?? undefined,

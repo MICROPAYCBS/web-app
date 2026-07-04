@@ -13,6 +13,7 @@ import { DetailBackLink } from '@/components/composites';
 import { ListPage } from '@/components/composites/list-page';
 import { APPROVAL_WORKFLOWS_LIST_PATH } from '@/lib/fineract/approval-workflow-paths';
 import { defaultWorkflowDefinitionFormValues } from '@/lib/fineract/approval-workflow-display';
+import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
 import { listRoles } from '@/lib/fineract/system-roles';
 import { getServerSession } from '@/lib/session/server';
@@ -23,7 +24,15 @@ export default async function CreateApprovalWorkflowPage() {
     notFound();
   }
 
-  const [roles, currencies] = await Promise.all([listRoles(), getOrganizationSelectedCurrencies()]);
+  const [roles, currencies, taskPermissions] = await Promise.all([
+    listRoles(),
+    getOrganizationSelectedCurrencies(),
+    listMakerCheckerPermissions()
+  ]);
+
+  const preferredTask =
+    taskPermissions.find((permission) => permission.code === 'CREATE_LOAN')?.code ??
+    taskPermissions[0]?.code;
 
   return (
     <ListPage
@@ -34,9 +43,10 @@ export default async function CreateApprovalWorkflowPage() {
       <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <ApprovalWorkflowForm
           mode="create"
-          initialValues={defaultWorkflowDefinitionFormValues()}
+          initialValues={defaultWorkflowDefinitionFormValues(preferredTask)}
           roles={roles}
           currencies={currencies}
+          taskPermissions={taskPermissions}
         />
       </div>
     </ListPage>

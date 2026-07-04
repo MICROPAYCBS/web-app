@@ -26,7 +26,7 @@ function baseStage(overrides: Record<string, unknown> = {}) {
 
 function baseDefinition(overrides: Record<string, unknown> = {}) {
   return {
-    moduleName: 'LOAN',
+    taskPermissionCode: 'CREATE_LOAN',
     name: 'Large Loan Approval',
     priority: 20,
     currencyCode: 'UGX',

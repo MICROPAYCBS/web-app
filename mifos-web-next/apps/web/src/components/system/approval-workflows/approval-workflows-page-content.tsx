@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractGlobalConfiguration, WorkflowDefinition } from '@mifos/api-client';
+import type { FineractGlobalConfiguration, FineractRolePermissionUsage, WorkflowDefinition } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
@@ -26,15 +26,17 @@ import {
 import { cn } from '@/lib/utils';
 
 function filtersSignature(filters: ApprovalWorkflowListFilters): string {
-  return `${filters.moduleName ?? ''}|${filters.status ?? ''}`;
+  return `${filters.taskPermissionCode ?? ''}|${filters.status ?? ''}`;
 }
 
 export function ApprovalWorkflowsPageContent({
   definitions,
+  taskPermissions,
   engineConfiguration,
   canUpdateConfiguration
 }: {
   definitions: WorkflowDefinition[];
+  taskPermissions: FineractRolePermissionUsage[];
   engineConfiguration: FineractGlobalConfiguration | null;
   canUpdateConfiguration: boolean;
 }) {
@@ -64,7 +66,7 @@ export function ApprovalWorkflowsPageContent({
     <>
       <ListPage
         title="Approval workflows"
-        description="Define multi-stage approval chains with amount-based selection criteria per module."
+        description="Define multi-stage approval chains with amount-based selection criteria per maker-checker task."
         actions={
           <Can permission="CREATE_WORKFLOW_DEFINITION">
             <Link href={approvalWorkflowCreatePath()} className={cn(buttonVariants())}>
@@ -81,6 +83,7 @@ export function ApprovalWorkflowsPageContent({
           <ApprovalWorkflowsTable
             definitions={definitions}
             appliedFilters={appliedFilters}
+            taskPermissions={taskPermissions}
             filterTrigger={
               <ListFilterTrigger
                 activeCount={activeFilterCount}
@@ -98,6 +101,7 @@ export function ApprovalWorkflowsPageContent({
         onDraftChange={setDraftFilters}
         onApply={handleApplyFilters}
         onClear={handleClearFilters}
+        taskPermissions={taskPermissions}
       />
     </>
   );

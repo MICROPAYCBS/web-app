@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { WorkflowDefinition } from '@mifos/api-client';
+import type { FineractRolePermissionUsage, WorkflowDefinition } from '@mifos/api-client';
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -24,6 +24,7 @@ import { DataTablePagination } from '@/components/composites/data-table/data-tab
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
+  formatWorkflowTaskDisplay,
   workflowDefinitionStatusLabel,
   workflowDefinitionStatusVariant,
   workflowSelectionCriteriaSummary
@@ -37,10 +38,12 @@ import {
 export function ApprovalWorkflowsTable({
   definitions,
   appliedFilters,
+  taskPermissions,
   filterTrigger
 }: {
   definitions: WorkflowDefinition[];
   appliedFilters: ApprovalWorkflowListFilters;
+  taskPermissions: FineractRolePermissionUsage[];
   filterTrigger?: ReactNode;
 }) {
   const [search, setSearch] = useState('');
@@ -72,7 +75,24 @@ export function ApprovalWorkflowsTable({
           </Link>
         )
       },
-      { accessorKey: 'moduleName', header: 'Module' },
+      {
+        id: 'task',
+        header: 'Task',
+        cell: ({ row }) => {
+          const task = formatWorkflowTaskDisplay(
+            row.original.taskPermissionCode,
+            taskPermissions
+          );
+          return (
+            <div className="min-w-0">
+              <p className="font-medium">{task.code}</p>
+              {task.subtitle ? (
+                <p className="text-xs text-muted-foreground">{task.subtitle}</p>
+              ) : null}
+            </div>
+          );
+        }
+      },
       {
         id: 'status',
         header: 'Status',
@@ -98,7 +118,7 @@ export function ApprovalWorkflowsTable({
         cell: ({ row }) => row.original.stages.length
       }
     ],
-    []
+    [taskPermissions]
   );
 
   const table = useReactTable({
@@ -115,7 +135,7 @@ export function ApprovalWorkflowsTable({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <Input
           id="workflow-search"
-          placeholder="Search by name or module"
+          placeholder="Search by name or task"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           className="max-w-sm"

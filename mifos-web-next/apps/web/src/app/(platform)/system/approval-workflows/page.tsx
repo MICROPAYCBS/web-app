@@ -14,6 +14,7 @@ import { ListPage } from '@/components/composites/list-page';
 import { ENABLE_APPROVAL_WORKFLOWS_CONFIG_NAME } from '@/lib/fineract/approval-workflow-paths';
 import { listWorkflowDefinitions } from '@/lib/fineract/approval-workflows';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
+import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -23,8 +24,9 @@ export default async function ApprovalWorkflowsPage() {
     notFound();
   }
 
-  const [definitionsResult, engineConfiguration] = await Promise.all([
+  const [definitionsResult, taskPermissions, engineConfiguration] = await Promise.all([
     tryFineractLoad(() => listWorkflowDefinitions(), 'Could not load approval workflows.'),
+    listMakerCheckerPermissions().catch(() => []),
     getGlobalConfigurationByName(ENABLE_APPROVAL_WORKFLOWS_CONFIG_NAME)
   ]);
 
@@ -39,6 +41,7 @@ export default async function ApprovalWorkflowsPage() {
   return (
     <ApprovalWorkflowsPageContent
       definitions={definitionsResult.data ?? []}
+      taskPermissions={taskPermissions}
       engineConfiguration={engineConfiguration}
       canUpdateConfiguration={can(session, 'UPDATE_CONFIGURATION')}
     />

@@ -10,7 +10,7 @@ import type { WorkflowDefinition, WorkflowDefinitionStatus } from '@mifos/api-cl
 
 /** Category filters applied from the floating sidebar (excludes inline search). */
 export type ApprovalWorkflowListFilters = {
-  moduleName?: string;
+  taskPermissionCode?: string;
   status?: WorkflowDefinitionStatus;
 };
 
@@ -18,7 +18,7 @@ export function countActiveApprovalWorkflowListFilters(
   filters: ApprovalWorkflowListFilters
 ): number {
   let count = 0;
-  if (filters.moduleName) {
+  if (filters.taskPermissionCode) {
     count += 1;
   }
   if (filters.status) {
@@ -34,7 +34,10 @@ export function filterApprovalWorkflowDefinitions(
 ): WorkflowDefinition[] {
   const query = search.trim().toLowerCase();
   return definitions.filter((definition) => {
-    if (filters.moduleName && definition.moduleName !== filters.moduleName) {
+    if (
+      filters.taskPermissionCode &&
+      definition.taskPermissionCode !== filters.taskPermissionCode
+    ) {
       return false;
     }
     if (filters.status && definition.status !== filters.status) {
@@ -45,7 +48,7 @@ export function filterApprovalWorkflowDefinitions(
     }
     return (
       definition.name.toLowerCase().includes(query) ||
-      definition.moduleName.toLowerCase().includes(query) ||
+      definition.taskPermissionCode.toLowerCase().includes(query) ||
       (definition.description?.toLowerCase().includes(query) ?? false)
     );
   });

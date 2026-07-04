@@ -8,9 +8,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractCurrencyOption, FineractRoleListItem, WorkflowApprovalAction } from '@mifos/api-client';
+import type {
+  FineractCurrencyOption,
+  FineractRoleListItem,
+  FineractRolePermissionUsage,
+  WorkflowApprovalAction
+} from '@mifos/api-client';
 import {
-  WORKFLOW_MODULE_SUGGESTIONS,
   formatActionErrorMessage,
   validateUpsertWorkflowDefinition,
   type UpsertWorkflowDefinitionInput,
@@ -19,13 +23,15 @@ import {
 import { Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useId, useRef, useState, useTransition } from 'react';
+import { useId, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   createApprovalWorkflowAction,
   updateApprovalWorkflowAction
 } from '@/actions/approval-workflows';
+import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -38,6 +44,11 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { APPROVAL_WORKFLOWS_LIST_PATH, approvalWorkflowDetailPath } from '@/lib/fineract/approval-workflow-paths';
+import {
+  CONFIGURE_MC_TASKS_PATH,
+  findWorkflowTaskPermission,
+  workflowTaskPermissionSelectOptions
+} from '@/lib/fineract/approval-workflow-display';
 import { cn } from '@/lib/utils';
 
 const WORKFLOW_ACTIONS: WorkflowApprovalAction[] = ['APPROVE', 'REJECT', 'RETURN', 'ESCALATE'];
@@ -402,13 +413,15 @@ export function ApprovalWorkflowForm({
   definitionId,
   initialValues,
   roles,
-  currencies
+  currencies,
+  taskPermissions
 }: {
   mode: 'create' | 'edit';
   definitionId?: number;
   initialValues: UpsertWorkflowDefinitionInput;
   roles: FineractRoleListItem[];
   currencies: FineractCurrencyOption[];
+  taskPermissions: FineractRolePermissionUsage[];
 }) {
   const router = useRouter();
   const formId = useId();
@@ -418,6 +431,12 @@ export function ApprovalWorkflowForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const taskOptions = useMemo(
+    () => workflowTaskPermissionSelectOptions(taskPermissions),
+    [taskPermissions]
+  );
+  const selectedTask = findWorkflowTaskPermission(taskPermissions, form.taskPermissionCode);
 
   const stageCodes = form.stages.map((stage) => stage.stageCode.trim()).filter(Boolean);
 
@@ -488,27 +507,41 @@ export function ApprovalWorkflowForm({
       <section className="space-y-4">
         <div>
           <h3 className="text-base font-semibold">Basics</h3>
-          <p className="text-sm text-muted-foreground">Module, name, and routing priority.</p>
+          <p className="text-sm text-muted-foreground">
+            Maker-checker task, name, and routing priority.
+          </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="moduleName">Module</Label>
-            <Input
-              id="moduleName"
-              list="workflow-module-suggestions"
-              value={form.moduleName}
-              disabled={pending}
-              onChange={(event) => patchForm({ moduleName: event.target.value })}
-            />
-            <datalist id="workflow-module-suggestions">
-              {WORKFLOW_MODULE_SUGGESTIONS.map((moduleName) => (
-                <option key={moduleName} value={moduleName} />
-              ))}
-            </datalist>
-            {fieldErrors.moduleName ? (
-              <p className="text-sm text-destructive">{fieldErrors.moduleName}</p>
-            ) : null}
-          </div>
+          <SelectField
+            id="taskPermissionCode"
+            label="Task"
+            required
+            value={form.taskPermissionCode}
+            onValueChange={(value) => patchForm({ taskPermissionCode: value ?? '' })}
+            options={taskOptions}
+            placeholder="Select a maker-checker task"
+            disabled={pending}
+            error={fieldErrors.taskPermissionCode}
+            emptyMessage="No maker-checker tasks found."
+          />
+          {selectedTask && !selectedTask.selected ? (
+            <div className="md:col-span-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm">
+              <p className="text-foreground">
+                Maker-checker is not enabled for this task yet. Enable it before activating this
+                workflow.
+              </p>
+              <Link
+                href={CONFIGURE_MC_TASKS_PATH}
+                className="mt-1 inline-flex font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Configure maker-checker tasks
+              </Link>
+            </div>
+          ) : selectedTask?.selected ? (
+            <div className="md:col-span-2">
+              <Badge variant="secondary">Maker-checker enabled</Badge>
+            </div>
+          ) : null}
           <TextField
             label="Name"
             required
@@ -538,7 +571,7 @@ export function ApprovalWorkflowForm({
         <div>
           <h3 className="text-base font-semibold">Selection criteria</h3>
           <p className="text-sm text-muted-foreground">
-            Amount bands let several workflows coexist for the same module. Leave amounts empty for
+            Amount bands let several workflows coexist for the same task. Leave amounts empty for
             the default catch-all workflow.
           </p>
         </div>

@@ -20,7 +20,7 @@ import {
   UserCheck,
   Wallet
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
 import { DashboardStatCard } from '@/components/dashboard/dashboard-stat-card';
 import {
   DashboardKpiCustomizeButton,
@@ -63,6 +63,7 @@ export function DashboardKpiSection({
   currencyCode,
   initialKpis,
   permissions,
+  filtersSlot,
   className
 }: {
   officeId: string;
@@ -77,6 +78,7 @@ export function DashboardKpiSection({
     collections: boolean;
     cashier: boolean;
   };
+  filtersSlot?: ReactNode;
   className?: string;
 }) {
   const [kpis, setKpis] = useState(initialKpis);
@@ -166,15 +168,24 @@ export function DashboardKpiSection({
 
   return (
     <section className={cn('space-y-4', className)}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-lg font-medium">Portfolio overview</h2>
-          <p className="text-sm text-muted-foreground">
-            Key counts for your branch
-            {currencyCode ? ` in ${currencyCode}` : ''}. Select a card to open the related list.
-          </p>
+      {filtersSlot ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          {filtersSlot}
+          <div className="flex flex-wrap items-center gap-2">
+            <DashboardKpiCustomizeButton onClick={() => setCustomizerOpen(true)} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => loadKpis(officeId, currencyCode)}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap items-end gap-2">
+      ) : (
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <DashboardKpiCustomizeButton onClick={() => setCustomizerOpen(true)} />
           <Button
             type="button"
@@ -186,7 +197,7 @@ export function DashboardKpiSection({
             Refresh
           </Button>
         </div>
-      </div>
+      )}
 
       {activeWidgets.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 *:h-full *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">

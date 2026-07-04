@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { WorkflowDefinition } from '@mifos/api-client';
+import type { FineractRolePermissionUsage, WorkflowDefinition } from '@mifos/api-client';
 import { Pencil, Power, PowerOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -38,6 +38,9 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import {
+  CONFIGURE_MC_TASKS_PATH,
+  formatWorkflowTaskDisplay,
+  isWorkflowActivationMcDisabledError,
   workflowDefinitionStatusLabel,
   workflowDefinitionStatusVariant,
   workflowSelectionCriteriaSummary
@@ -50,9 +53,11 @@ import { cn } from '@/lib/utils';
 
 export function ApprovalWorkflowDetailView({
   definition,
+  taskPermissions,
   permissions
 }: {
   definition: WorkflowDefinition;
+  taskPermissions: FineractRolePermissionUsage[];
   permissions: {
     canUpdate: boolean;
     canActivate: boolean;
@@ -68,6 +73,7 @@ export function ApprovalWorkflowDetailView({
   const [actionError, setActionError] = useState<string | null>(null);
   const isDraft = definition.status === 'DRAFT';
   const isActive = definition.status === 'ACTIVE';
+  const taskDisplay = formatWorkflowTaskDisplay(definition.taskPermissionCode, taskPermissions);
 
   function handleActivate() {
     setActionError(null);
@@ -135,7 +141,9 @@ export function ApprovalWorkflowDetailView({
             }}
             meta={
               <p>
-                {definition.moduleName} · priority {definition.priority ?? '—'}
+                {taskDisplay.code}
+                {taskDisplay.subtitle ? ` · ${taskDisplay.subtitle}` : ''} · priority{' '}
+                {definition.priority ?? '—'}
               </p>
             }
             actions={
@@ -192,7 +200,14 @@ export function ApprovalWorkflowDetailView({
 
         <DetailSection title="Overview">
           <DetailFieldGrid>
-            <DetailField label="Module">{definition.moduleName}</DetailField>
+            <DetailField label="Task">
+              <div>
+                <p>{taskDisplay.code}</p>
+                {taskDisplay.subtitle ? (
+                  <p className="text-sm text-muted-foreground">{taskDisplay.subtitle}</p>
+                ) : null}
+              </div>
+            </DetailField>
             <DetailField label="Priority">{definition.priority ?? '—'}</DetailField>
             <DetailField label="Selection criteria">
               {workflowSelectionCriteriaSummary(definition)}
@@ -233,8 +248,20 @@ export function ApprovalWorkflowDetailView({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Activation failed</DialogTitle>
-            <DialogDescription className="whitespace-pre-wrap text-foreground">
-              {activationError}
+            <DialogDescription className="space-y-3 whitespace-pre-wrap text-foreground">
+              <span>{activationError}</span>
+              {activationError && isWorkflowActivationMcDisabledError(activationError) ? (
+                <span className="block text-sm text-muted-foreground">
+                  Enable maker-checker for this task on{' '}
+                  <Link
+                    href={CONFIGURE_MC_TASKS_PATH}
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Configure maker-checker tasks
+                  </Link>{' '}
+                  before activating.
+                </span>
+              ) : null}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

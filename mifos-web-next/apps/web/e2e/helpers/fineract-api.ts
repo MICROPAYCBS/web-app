@@ -179,7 +179,7 @@ export class FineractE2eClient {
 
   buildDefaultLoanWorkflow(roleId: number, runSuffix: string) {
     return {
-      moduleName: 'LOAN',
+      taskPermissionCode: 'CREATE_LOAN',
       name: e2eWorkflowName('Default Loan Approval', runSuffix),
       description: 'Two-stage default loan approval chain',
       priority: 10,
@@ -221,7 +221,7 @@ export class FineractE2eClient {
 
   buildLargeLoanWorkflow(roleId: number, runSuffix: string, currencyCode = 'UGX') {
     return {
-      moduleName: 'LOAN',
+      taskPermissionCode: 'CREATE_LOAN',
       name: e2eWorkflowName('Large Loan Approval', runSuffix),
       description: 'Loans of 5M and above require three approval levels',
       priority: 20,
@@ -285,7 +285,7 @@ export class FineractE2eClient {
 
   buildCyclicDraftWorkflow(roleId: number, runSuffix: string) {
     return {
-      moduleName: 'LOAN',
+      taskPermissionCode: 'CREATE_LOAN',
       name: e2eWorkflowName('Cyclic Draft', runSuffix),
       description: 'Intentionally cyclic draft for activation error testing',
       priority: 99,

@@ -13,6 +13,7 @@ import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
 import { APPROVAL_WORKFLOWS_LIST_PATH } from '@/lib/fineract/approval-workflow-paths';
 import { getWorkflowDefinition } from '@/lib/fineract/approval-workflows';
+import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -27,10 +28,13 @@ export default async function ApprovalWorkflowDetailPage({
     notFound();
   }
 
-  const result = await tryFineractLoad(
-    () => getWorkflowDefinition(Number(definitionId)),
-    'Could not load approval workflow.'
-  );
+  const [result, taskPermissions] = await Promise.all([
+    tryFineractLoad(
+      () => getWorkflowDefinition(Number(definitionId)),
+      'Could not load approval workflow.'
+    ),
+    listMakerCheckerPermissions().catch(() => [])
+  ]);
 
   if (!result.ok) {
     return (
@@ -47,6 +51,7 @@ export default async function ApprovalWorkflowDetailPage({
   return (
     <ApprovalWorkflowDetailView
       definition={result.data}
+      taskPermissions={taskPermissions}
       permissions={{
         canUpdate: can(session, 'UPDATE_WORKFLOW_DEFINITION'),
         canActivate: can(session, 'ACTIVATE_WORKFLOW_DEFINITION'),

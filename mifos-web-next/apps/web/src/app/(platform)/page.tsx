@@ -10,25 +10,20 @@ import { can, resolvePermission } from '@mifos/auth';
 import { format } from 'date-fns';
 import { notFound } from 'next/navigation';
 import { DashboardPageContent } from '@/components/dashboard/dashboard-page-content';
-import {
-  buildDashboardActivities,
-  buildDashboardShortcuts
-} from '@/lib/dashboard/dashboard-activities';
-import { fetchDashboardAnalytics } from '@/lib/fineract/dashboard-analytics';
+import { mapOrganizationCurrencies } from '@/lib/dashboard/dashboard-currency';
+import type { DashboardCurrencyOption } from '@/lib/dashboard/analytics-types';
+import type { DashboardKpis } from '@/lib/dashboard/dashboard-kpi-types';
 import { fetchDashboardKpis } from '@/lib/fineract/dashboard-kpis';
 import { getBusinessDateContext } from '@/lib/fineract/business-date';
 import { resolveTransactionDate } from '@/lib/fineract/business-date-context';
 import { canOpenCashierDetail } from '@/lib/fineract/cashier-access';
 import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
-import { listOffices } from '@/lib/fineract/offices';
+import { dateToFineract } from '@/lib/fineract/date-input';
 import {
   getDefaultOrganizationCurrencyCode,
   getOrganizationSelectedCurrencies
 } from '@/lib/fineract/organization-currencies';
-import { mapOrganizationCurrencies } from '@/lib/dashboard/dashboard-currency';
-import type { DashboardCurrencyOption } from '@/lib/dashboard/analytics-types';
-import type { DashboardKpis } from '@/lib/dashboard/dashboard-kpi-types';
-import { dateToFineract } from '@/lib/fineract/date-input';
+import { listOffices } from '@/lib/fineract/offices';
 import { getServerSession } from '@/lib/session/server';
 
 function resolveDefaultOfficeId(
@@ -96,56 +91,46 @@ export default async function DashboardPage() {
     today
   );
 
-  const offices =
-    showKpis || includeReports ? await listOffices().catch(() => []) : [];
+  const offices = showKpis ? await listOffices().catch(() => []) : [];
   const defaultOfficeId =
     offices.length > 0 ? resolveDefaultOfficeId(session.officeId, offices) : null;
 
-  const selectedCurrencies: DashboardCurrencyOption[] =
-    showKpis || includeReports
-      ? mapOrganizationCurrencies(await getOrganizationSelectedCurrencies().catch(() => []))
-      : [];
+  const selectedCurrencies: DashboardCurrencyOption[] = showKpis
+    ? mapOrganizationCurrencies(await getOrganizationSelectedCurrencies().catch(() => []))
+    : [];
   const defaultCurrencyCode =
     selectedCurrencies[0]?.code ??
     (await getDefaultOrganizationCurrencyCode().catch(() => undefined)) ??
     null;
 
-  const kpiOptions = {
-    officeId: defaultOfficeId,
-    currencyCode: defaultCurrencyCode,
-    businessDate,
-    includeClients,
-    includeLoans,
-    includeSavings,
-    includeReports,
-    includeCollections,
-    includeCheckerInbox,
-    includeCashier,
-    userId: session.userId,
-    userOfficeId: session.officeId
-  };
-
-  const [initialKpis, initialAnalytics] = await Promise.all([
-    showKpis
-      ? fetchDashboardKpis(kpiOptions, session)
-      : Promise.resolve(emptyDashboardKpis(defaultOfficeId, defaultCurrencyCode, businessDate)),
-    includeReports && defaultOfficeId != null
-      ? fetchDashboardAnalytics(defaultOfficeId, 'Month', defaultCurrencyCode)
-      : Promise.resolve(null)
-  ]);
+  const initialKpis = showKpis
+    ? await fetchDashboardKpis(
+        {
+          officeId: defaultOfficeId,
+          currencyCode: defaultCurrencyCode,
+          businessDate,
+          includeClients,
+          includeLoans,
+          includeSavings,
+          includeReports,
+          includeCollections,
+          includeCheckerInbox,
+          includeCashier,
+          userId: session.userId,
+          userOfficeId: session.officeId
+        },
+        session
+      )
+    : emptyDashboardKpis(defaultOfficeId, defaultCurrencyCode, businessDate);
 
   return (
     <DashboardPageContent
-      activities={buildDashboardActivities()}
-      shortcuts={buildDashboardShortcuts()}
       offices={offices.map((office) => ({ id: office.id, name: office.name }))}
       currencies={selectedCurrencies}
       defaultOfficeId={defaultOfficeId}
       defaultCurrencyCode={defaultCurrencyCode}
       initialKpis={initialKpis}
-      initialAnalytics={initialAnalytics}
       showKpis={showKpis}
-      showAnalytics={includeReports && defaultOfficeId != null && initialAnalytics != null}
       permissions={{
         clients: includeClients,
         loans: includeLoans,

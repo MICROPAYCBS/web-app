@@ -8,47 +8,51 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { WorkflowDefinitionStatus } from '@mifos/api-client';
+import type { FineractRolePermissionUsage, WorkflowDefinitionStatus } from '@mifos/api-client';
 import { ListFilterSection, ListFilterSheet } from '@/components/composites/list-filter-sheet';
 import { SelectField } from '@/components/composites/select-field';
-import { workflowDefinitionStatusLabel } from '@/lib/fineract/approval-workflow-display';
+import {
+  workflowDefinitionStatusLabel,
+  workflowTaskPermissionSelectOptions
+} from '@/lib/fineract/approval-workflow-display';
 import type { ApprovalWorkflowListFilters } from '@/lib/fineract/approval-workflow-list-query';
-import { WORKFLOW_MODULE_SUGGESTIONS } from '@mifos/validation';
 
 const STATUS_OPTIONS: WorkflowDefinitionStatus[] = ['DRAFT', 'ACTIVE', 'INACTIVE'];
 
 export function ApprovalWorkflowsFilterFields({
   draft,
   onDraftChange,
+  taskPermissions,
   disabled = false
 }: {
   draft: ApprovalWorkflowListFilters;
   onDraftChange: (draft: ApprovalWorkflowListFilters) => void;
+  taskPermissions: FineractRolePermissionUsage[];
   disabled?: boolean;
 }) {
   function patchDraft(patch: Partial<ApprovalWorkflowListFilters>) {
     onDraftChange({ ...draft, ...patch });
   }
 
+  const taskOptions = workflowTaskPermissionSelectOptions(taskPermissions);
+
   return (
     <ListFilterSection
       title="Workflow criteria"
-      description="Limit the list by module or lifecycle status."
+      description="Limit the list by maker-checker task or lifecycle status."
     >
       <SelectField
-        id="approval-workflows-module-filter"
-        label="Module"
+        id="approval-workflows-task-filter"
+        label="Task"
         optional
-        value={draft.moduleName ?? ''}
+        value={draft.taskPermissionCode ?? ''}
         onValueChange={(value) =>
-          patchDraft({ moduleName: value ? value : undefined })
+          patchDraft({ taskPermissionCode: value ? value : undefined })
         }
-        options={WORKFLOW_MODULE_SUGGESTIONS.map((moduleName) => ({
-          value: moduleName,
-          label: moduleName
-        }))}
-        placeholder="All modules"
+        options={taskOptions}
+        placeholder="All tasks"
         disabled={disabled}
+        emptyMessage="No maker-checker tasks found."
       />
       <SelectField
         id="approval-workflows-status-filter"
@@ -78,6 +82,7 @@ export function ApprovalWorkflowsFilterSheet({
   onDraftChange,
   onApply,
   onClear,
+  taskPermissions,
   pending = false,
   disabled = false
 }: {
@@ -87,12 +92,13 @@ export function ApprovalWorkflowsFilterSheet({
   onDraftChange: (draft: ApprovalWorkflowListFilters) => void;
   onApply: (filters: ApprovalWorkflowListFilters) => void;
   onClear: () => void;
+  taskPermissions: FineractRolePermissionUsage[];
   pending?: boolean;
   disabled?: boolean;
 }) {
   function handleApply() {
     onApply({
-      moduleName: draft.moduleName || undefined,
+      taskPermissionCode: draft.taskPermissionCode || undefined,
       status: draft.status || undefined
     });
   }
@@ -102,7 +108,7 @@ export function ApprovalWorkflowsFilterSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Filter approval workflows"
-      description="Narrow the list by module or status."
+      description="Narrow the list by task or status."
       applyLabel={pending ? 'Applying…' : 'Apply filters'}
       onApply={handleApply}
       onClear={onClear}
@@ -112,6 +118,7 @@ export function ApprovalWorkflowsFilterSheet({
       <ApprovalWorkflowsFilterFields
         draft={draft}
         onDraftChange={onDraftChange}
+        taskPermissions={taskPermissions}
         disabled={disabled || pending}
       />
     </ListFilterSheet>
