@@ -9,6 +9,7 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { LoanProductDetailView } from '@/components/products/loan/loan-product-detail-view';
 import { getLoanProduct } from '@/lib/fineract/loan-products';
 import { parseLoanProductKind } from '@/lib/fineract/loan-product-paths';
@@ -38,10 +39,10 @@ export default async function LoanProductDetailPage({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <Suspense fallback={null}>
         <LoanProductDetailView product={product} productKind={kind} />
       </Suspense>
-    </div>
+    </PlatformRouteLayout>
   );
 }

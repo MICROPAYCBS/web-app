@@ -32,7 +32,6 @@ export function GroupDetailShell({
 
   return (
     <DetailPage
-      className="min-h-0 flex-1"
       header={<GroupDetailTop group={group} canEdit={canEdit} />}
     >
       <DetailNavTabs tabs={tabs} />

@@ -101,7 +101,6 @@ export function SavingsAccountDetailView({
 
   return (
     <DetailPage
-      className="min-h-0 flex-1"
       header={
         <div className="space-y-4">
           {blockedMessage ? (

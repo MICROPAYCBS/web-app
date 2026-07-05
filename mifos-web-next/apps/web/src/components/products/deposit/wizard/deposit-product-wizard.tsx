@@ -17,6 +17,7 @@ import {
   fetchDepositProductChargeOptionsAction,
   updateDepositProductAction
 } from '@/actions/deposit-product';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { useProductChargeOptions } from '@/components/products/shared/use-product-charge-options';
@@ -213,7 +214,7 @@ export function DepositProductWizard({
   const stepProps = { config, template, draft, errors: stepErrors };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <FormWizard
         steps={WIZARD_STEPS}
         currentStepId={stepId}
@@ -309,6 +310,6 @@ export function DepositProductWizard({
           <PreviewStep {...stepProps} submitError={submitError} />
         ) : null}
       </FormWizard>
-    </div>
+    </PlatformRouteLayout>
   );
 }

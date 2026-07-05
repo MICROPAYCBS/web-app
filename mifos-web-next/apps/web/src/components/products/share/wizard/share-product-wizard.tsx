@@ -17,6 +17,7 @@ import {
   fetchShareProductChargeOptionsAction,
   updateShareProductAction
 } from '@/actions/share-product';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { useProductChargeOptions } from '@/components/products/shared/use-product-charge-options';
@@ -195,7 +196,7 @@ export function ShareProductWizard({
       : 'Update the product configuration and save your changes.';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <FormWizard
         steps={WIZARD_STEPS}
         currentStepId={stepId}
@@ -310,6 +311,6 @@ export function ShareProductWizard({
           />
         ) : null}
       </FormWizard>
-    </div>
+    </PlatformRouteLayout>
   );
 }

@@ -10,7 +10,7 @@ import type { FormWizardStep } from '@/components/composites/form-wizard';
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { platformInset, platformInsetX } from '@/lib/platform-layout';
+import { platformInset, platformInsetX, platformPageShell, platformSidebarRowLayout } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface FormWizardSkeletonProps {
@@ -85,7 +85,7 @@ export function FormWizardSkeleton({
       }));
 
   return (
-    <div className={cn('flex min-h-0 w-full flex-1 flex-col', className)} aria-busy aria-label={`Loading ${title}`}>
+    <div className={cn(platformPageShell, 'w-full', className)} aria-busy aria-label={`Loading ${title}`}>
       <PageHeader>
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -95,7 +95,7 @@ export function FormWizardSkeleton({
         </div>
       </PageHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className={platformSidebarRowLayout}>
         <nav
           aria-hidden
           className={cn(

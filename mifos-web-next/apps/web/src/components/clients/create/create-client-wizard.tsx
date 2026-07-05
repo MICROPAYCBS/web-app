@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { addClientDatatableRowAction } from '@/actions/client-datatable';
 import { createClientAction } from '@/actions/clients';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
@@ -377,7 +378,7 @@ export function CreateClientWizard({
   const isPreview = resolvedStepId === 'preview';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <FormWizard
       steps={steps}
       currentStepId={resolvedStepId}
@@ -523,6 +524,6 @@ export function CreateClientWizard({
         />
       ) : null}
     </FormWizard>
-    </div>
+    </PlatformRouteLayout>
   );
 }

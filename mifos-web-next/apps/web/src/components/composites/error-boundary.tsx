@@ -12,6 +12,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { ErrorPanel } from '@/components/composites/error-panel';
 import { fineractUserErrorMessage, isFineractUserError } from '@/lib/errors/is-fineract-user-error';
+import { platformRouteLayout } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface ErrorBoundaryProps {
@@ -61,7 +62,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { error, componentStack } = this.state;
 
     return (
-      <div className={cn('flex min-h-0 flex-1 flex-col', this.props.className)}>
+      <div className={cn(platformRouteLayout, this.props.className)}>
         {error ? (
           isFineractUserError(error) ? (
             <FineractErrorAlert

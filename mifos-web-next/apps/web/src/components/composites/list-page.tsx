@@ -9,7 +9,7 @@
 import type { ReactNode } from 'react';
 import { TitleWithHint } from '@/components/composites/field-hint-tooltip';
 import { PageHeader } from '@/components/composites/page-header';
-import { pageHeaderContentSpacing, platformInset } from '@/lib/platform-layout';
+import { pageHeaderContentSpacing, platformInset, platformPageShell } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export function ListPage({
@@ -39,7 +39,7 @@ export function ListPage({
   className?: string;
 }) {
   return (
-    <div className={cn('flex min-h-0 flex-1 flex-col', className)}>
+    <div className={cn(platformPageShell, className)}>
       <PageHeader>
         <div className={pageHeaderContentSpacing}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

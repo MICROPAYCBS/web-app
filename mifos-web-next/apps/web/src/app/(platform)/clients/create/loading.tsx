@@ -7,11 +7,12 @@
  */
 
 import { CreateClientWizardSkeleton } from '@/components/clients/create/create-client-wizard-skeleton';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
 export default function CreateClientLoading() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <CreateClientWizardSkeleton />
-    </div>
+    </PlatformRouteLayout>
   );
 }

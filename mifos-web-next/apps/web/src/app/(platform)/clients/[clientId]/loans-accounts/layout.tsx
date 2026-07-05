@@ -7,8 +7,9 @@
  */
 
 import type { ReactNode } from 'react';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
-/** Full-page loan application flows — platform shell only, no client detail chrome. */
-export default function LoanAccountApplicationLayout({ children }: { children: ReactNode }) {
-  return <div className="flex min-h-0 flex-1 flex-col">{children}</div>;
+/** Loan account routes — platform shell only, not the client detail chrome. */
+export default function ClientLoansAccountsLayout({ children }: { children: ReactNode }) {
+  return <PlatformRouteLayout>{children}</PlatformRouteLayout>;
 }

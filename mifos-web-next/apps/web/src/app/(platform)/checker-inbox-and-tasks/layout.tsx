@@ -7,8 +7,9 @@
  */
 
 import type { ReactNode } from 'react';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
-/** Flex chain from @container/main into ListPage / DetailPage shells. */
-export default function CheckerInboxAndTasksSegmentLayout({ children }: { children: ReactNode }) {
-  return <div className="flex min-h-0 flex-1 flex-col">{children}</div>;
+/** Flex chain from platformContentArea into ListPage / DetailPage shells. */
+export default function CheckerInboxAndTasksLayout({ children }: { children: ReactNode }) {
+  return <PlatformRouteLayout>{children}</PlatformRouteLayout>;
 }

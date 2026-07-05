@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createChargeAction, updateChargeAction } from '@/actions/charge';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { penaltyDisabled } from '@/lib/fineract/charge-form-logic';
@@ -181,7 +182,7 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
   const stepProps = { mode, template, draft, errors: stepErrors };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <FormWizard
         steps={WIZARD_STEPS}
         currentStepId={stepId}
@@ -229,6 +230,6 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
           <PreviewStep {...stepProps} submitError={submitError} />
         ) : null}
       </FormWizard>
-    </div>
+    </PlatformRouteLayout>
   );
 }

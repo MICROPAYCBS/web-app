@@ -41,13 +41,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn('h-full antialiased font-sans', inter.variable, geistMono.variable)}
+      className={cn('h-svh overflow-hidden antialiased font-sans', inter.variable, geistMono.variable)}
       data-shadcn-preset={SHADCN_PRESET_CODE}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex h-svh flex-col overflow-hidden">
         <ThemeProvider defaultTheme="system" enableSystem>
-          <AppProviders>{children}</AppProviders>
+          <AppProviders>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+          </AppProviders>
         </ThemeProvider>
       </body>
     </html>

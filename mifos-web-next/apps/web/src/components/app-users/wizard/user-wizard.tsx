@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createUserAction, fetchStaffByOfficeAction, updateUserAction } from '@/actions/app-users';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { formatUserDisplayName } from '@/lib/fineract/user-display';
@@ -207,7 +208,7 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
   const stepProps = { mode, template, draft, errors: stepErrors };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <FormWizard
         steps={wizardSteps}
         currentStepId={stepId}
@@ -250,6 +251,6 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
           />
         ) : null}
       </FormWizard>
-    </div>
+    </PlatformRouteLayout>
   );
 }

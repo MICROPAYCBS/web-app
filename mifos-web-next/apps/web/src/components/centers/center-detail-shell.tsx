@@ -32,7 +32,6 @@ export function CenterDetailShell({
 
   return (
     <DetailPage
-      className="min-h-0 flex-1"
       header={<CenterDetailTop center={center} canEdit={canEdit} />}
     >
       <DetailNavTabs tabs={tabs} />

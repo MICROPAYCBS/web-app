@@ -9,7 +9,6 @@
 import type { ReactNode } from 'react';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
-/** Client segment — detail shell or account routes share the platform flex chain. */
-export default function ClientSegmentLayout({ children }: { children: ReactNode }) {
+export default function CenterSegmentLayout({ children }: { children: ReactNode }) {
   return <PlatformRouteLayout>{children}</PlatformRouteLayout>;
 }

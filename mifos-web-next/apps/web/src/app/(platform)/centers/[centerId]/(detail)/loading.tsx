@@ -7,11 +7,12 @@
  */
 
 import { DetailPageSkeleton } from '@/components/composites/detail-page-skeleton';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
 export default function CenterDetailLoading() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <DetailPageSkeleton showSidebar={false} showAvatar={false} contentSectionCount={2} tableSection />
-    </div>
+    </PlatformRouteLayout>
   );
 }

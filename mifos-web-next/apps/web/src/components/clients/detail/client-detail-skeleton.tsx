@@ -173,7 +173,6 @@ export function ClientDetailTableTabSkeleton() {
 export function ClientDetailShellSkeleton() {
   return (
     <DetailPage
-      className="min-h-0 flex-1"
       header={<ClientDetailHeaderSkeleton />}
       sidebar={<ClientDetailNavSkeleton />}
     >

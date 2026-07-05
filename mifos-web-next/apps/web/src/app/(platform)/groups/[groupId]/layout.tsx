@@ -7,7 +7,8 @@
  */
 
 import type { ReactNode } from 'react';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
 export default function GroupSegmentLayout({ children }: { children: ReactNode }) {
-  return children;
+  return <PlatformRouteLayout>{children}</PlatformRouteLayout>;
 }

@@ -103,7 +103,6 @@ export function CheckerInboxDetailView({ item }: { item: FineractAuditTrailDetai
   return (
     <>
       <DetailPage
-        className="min-h-0 flex-1"
         header={
           <DetailHeader
             backLink={

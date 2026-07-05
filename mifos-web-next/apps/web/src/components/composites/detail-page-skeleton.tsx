@@ -8,7 +8,14 @@
 
 import { PageHeader } from '@/components/composites/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { pageHeaderContentSpacing, platformInset, detailSidebarInsetX, detailSidebarTopPadding } from '@/lib/platform-layout';
+import {
+  detailSidebarInsetX,
+  detailSidebarTopPadding,
+  pageHeaderContentSpacing,
+  platformInset,
+  platformPageShell,
+  platformSidebarRowLayout
+} from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface DetailPageSkeletonProps {
@@ -153,7 +160,7 @@ export function DetailPageSkeleton({
         <DetailHeaderSkeleton showAvatar={showAvatar} summaryFieldCount={summaryFieldCount} />
       </PageHeader>
 
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className={cn(platformInset, 'space-y-6', showSidebar && 'lg:pl-8')}>
           {Array.from({ length: contentSectionCount }).map((_, index) => (
             <ContentSectionSkeleton key={index} tableSection={tableSection} />
@@ -166,7 +173,7 @@ export function DetailPageSkeleton({
   if (!showSidebar) {
     return (
       <div
-        className={cn('flex min-h-0 flex-1 flex-col', className)}
+        className={cn(platformPageShell, className)}
         aria-busy
         aria-label="Loading detail page"
       >
@@ -177,7 +184,7 @@ export function DetailPageSkeleton({
 
   return (
     <div
-      className={cn('flex min-h-0 flex-1 flex-col lg:flex-row', className)}
+      className={cn(platformSidebarRowLayout, className)}
       aria-busy
       aria-label="Loading detail page"
     >

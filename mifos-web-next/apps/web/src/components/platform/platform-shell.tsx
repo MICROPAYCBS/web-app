@@ -17,6 +17,7 @@ import { NavigationProvider } from '@/components/platform/navigation-provider';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
 import type { CashierNavBalance } from '@/lib/fineract/cashier-display';
 import type { BusinessDateContextValue } from '@/lib/fineract/business-date-context';
+import { PlatformContentArea } from '@/components/platform/platform-content-area';
 import { ErrorBoundary } from '@/components/composites/error-boundary';
 import { InactivityTimeout } from '@/components/auth/inactivity-timeout';
 import { AuditTrailPanelProvider } from '@/components/audit';
@@ -29,7 +30,8 @@ const shellStyle = {
 
 /**
  * Authenticated shell — shadcn dashboard-01 layout + sidebar nav Find (F) + header entity search (⌘K).
- * Site header stays fixed. List/detail/wizard pages scroll in their body region; simple pages use platformScrollRegion.
+ * Site header stays fixed. {@link PlatformContentArea} bounds the dashboard pane; list/detail/wizard
+ * pages scroll in their body region; simple pages use platformScrollRegion.
  */
 export function PlatformShell({
   nav,
@@ -68,9 +70,7 @@ export function PlatformShell({
                     title="This section failed to load"
                     description="An unexpected error occurred while rendering this page. Fineract request failures are shown as notifications instead."
                   >
-                    <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                      {children}
-                    </div>
+                    <PlatformContentArea>{children}</PlatformContentArea>
                   </ErrorBoundary>
                 </div>
               </SidebarInset>

@@ -10,6 +10,7 @@ import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { DepositProductDetailView } from '@/components/products/deposit/deposit-product-detail-view';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { getDepositProduct } from '@/lib/fineract/deposit-products';
 import { getServerSession } from '@/lib/session/server';
 
@@ -33,10 +34,10 @@ export default async function RecurringDepositProductDetailPage({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <Suspense fallback={null}>
         <DepositProductDetailView kind="recurring" product={product} />
       </Suspense>
-    </div>
+    </PlatformRouteLayout>
   );
 }

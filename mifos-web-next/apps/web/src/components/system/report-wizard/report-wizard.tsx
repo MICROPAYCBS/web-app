@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import { createReportAction, updateReportAction } from '@/actions/reports';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import type { ReportParameterRow } from '@/components/system/report-parameters-editor';
@@ -247,7 +248,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <FormWizard
         steps={wizardSteps}
         currentStepId={stepId}
@@ -291,6 +292,6 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
           />
         ) : null}
       </FormWizard>
-    </div>
+    </PlatformRouteLayout>
   );
 }

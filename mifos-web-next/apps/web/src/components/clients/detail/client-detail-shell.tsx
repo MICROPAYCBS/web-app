@@ -40,7 +40,6 @@ export function ClientDetailShell({
 
   return (
     <DetailPage
-      className="min-h-0 flex-1"
       header={
         <ClientDetailTop
           client={client}

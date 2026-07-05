@@ -7,8 +7,9 @@
  */
 
 import type { ReactNode } from 'react';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
 /** Individual savings account — full-page shell (see SavingsAccountDetailView), not nested in client detail. */
 export default function SavingsAccountDetailLayout({ children }: { children: ReactNode }) {
-  return <div className="flex min-h-0 flex-1 flex-col">{children}</div>;
+  return <PlatformRouteLayout>{children}</PlatformRouteLayout>;
 }

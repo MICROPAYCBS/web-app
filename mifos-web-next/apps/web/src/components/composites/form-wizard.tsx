@@ -10,7 +10,7 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
-import { platformInset, platformInsetX } from '@/lib/platform-layout';
+import { platformInset, platformInsetX, platformPageShell, platformSidebarRowLayout } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface FormWizardStep {
@@ -85,7 +85,7 @@ export function FormWizard({
   const currentIndex = steps.findIndex((s) => s.id === currentStepId);
 
   return (
-    <div className={cn('flex min-h-0 w-full flex-1 flex-col', className)}>
+    <div className={cn(platformPageShell, 'w-full', className)}>
       <PageHeader>
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -95,7 +95,7 @@ export function FormWizard({
         </div>
       </PageHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className={platformSidebarRowLayout}>
         <nav
           aria-label="Progress"
           className={cn(

@@ -11,6 +11,7 @@ import { FineractHttpError } from '@mifos/api-client';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { ShareProductDetailView } from '@/components/products/share/share-product-detail-view';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { getShareProduct } from '@/lib/fineract/share-products';
 import { getServerSession } from '@/lib/session/server';
 
@@ -37,10 +38,10 @@ export default async function ShareProductDetailPage({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <Suspense fallback={null}>
         <ShareProductDetailView product={product} />
       </Suspense>
-    </div>
+    </PlatformRouteLayout>
   );
 }

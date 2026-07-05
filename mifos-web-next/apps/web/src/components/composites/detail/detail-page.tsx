@@ -12,12 +12,14 @@ import {
   detailSidebarInsetX,
   detailSidebarTopPadding,
   pageHeaderContentSpacing,
-  platformInset
+  platformInset,
+  platformPageShell,
+  platformSidebarRowLayout
 } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 /** Fills the platform main area; only the detail body scrolls (sidebar + header stay put). */
-const DETAIL_SIDEBAR_LAYOUT = 'flex min-h-0 flex-1 flex-col lg:flex-row';
+const DETAIL_SIDEBAR_LAYOUT = cn(platformSidebarRowLayout);
 
 export function DetailPage({
   header,
@@ -77,7 +79,7 @@ export function DetailPage({
   }
 
   return (
-    <div className={cn('flex min-h-0 flex-1 flex-col', className)}>
+    <div className={cn(platformPageShell, className)}>
       <PageHeader>
         <div className={headerContentClassName}>
           {header}

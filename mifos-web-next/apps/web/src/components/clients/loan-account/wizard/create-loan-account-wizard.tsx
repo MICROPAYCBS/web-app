@@ -34,6 +34,7 @@ import {
 
 } from '@/actions/client-loan-account';
 
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
@@ -411,7 +412,7 @@ export function CreateLoanAccountWizard({
 
   return (
 
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
 
       {submitError ? (
 
@@ -593,7 +594,7 @@ export function CreateLoanAccountWizard({
 
       </FormWizard>
 
-    </div>
+    </PlatformRouteLayout>
 
   );
 

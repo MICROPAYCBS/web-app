@@ -15,6 +15,7 @@ import { getClientProfileImage, clientHasProfileImage } from '@/lib/fineract/cli
 import { getClientSignatureInfo } from '@/lib/fineract/client-signature';
 import { buildClientDatatableNavItems } from '@/lib/fineract/client-datatable-nav';
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
+import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { getClient } from '@/lib/fineract/clients';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
@@ -38,9 +39,9 @@ async function ClientDetailLayoutBody({
       notFound();
     }
     return (
-      <div className="flex min-h-0 flex-1 flex-col p-4 md:p-6">
+      <PlatformRouteLayout className="p-4 md:p-6">
         <LoadErrorAlert title="Customer unavailable" message={clientResult.message} />
-      </div>
+      </PlatformRouteLayout>
     );
   }
 
@@ -85,10 +86,10 @@ export default async function ClientDetailLayout({
   const { clientId } = await params;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <PlatformRouteLayout>
       <Suspense fallback={<ClientDetailShellSkeleton />}>
         <ClientDetailLayoutBody clientId={clientId}>{children}</ClientDetailLayoutBody>
       </Suspense>
-    </div>
+    </PlatformRouteLayout>
   );
 }

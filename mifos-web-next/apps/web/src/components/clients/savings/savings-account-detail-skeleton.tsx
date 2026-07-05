@@ -177,7 +177,6 @@ export function SavingsAccountTableSectionSkeleton({
 export function SavingsAccountShellSkeleton() {
   return (
     <DetailPage
-      className="min-h-0 flex-1"
       header={<SavingsAccountHeaderSkeleton />}
       sidebar={<SavingsAccountSectionNavSkeleton />}
     >
