@@ -33,6 +33,22 @@ export function normalizeFineractMessage(message: string): string {
   return message.replace(/\\\./g, '.').trim();
 }
 
+const RAW_DATABASE_ERROR_PATTERN =
+  /^(ERROR:|SQLSTATE|PSQLException|org\.postgresql\.util\.PSQLException)/i;
+
+/** Replace leaked PostgreSQL/JDBC messages with user-safe copy. */
+export function sanitizeRawDatabaseErrorMessage(message: string): string {
+  const normalized = normalizeFineractMessage(message);
+  if (
+    RAW_DATABASE_ERROR_PATTERN.test(normalized) ||
+    /syntax error at or near "\$\d+"/i.test(normalized) ||
+    /\bPosition:\s*\d+\b/i.test(normalized)
+  ) {
+    return 'The server could not save the denomination breakdown. Confirm Fineract migrations 3063 and 3064 are applied, then check server logs for database errors.';
+  }
+  return normalized;
+}
+
 const GENERIC_TOP_LEVEL_MESSAGES = new Set([
   'Validation errors exist.',
   'Please correct the validation errors.',
@@ -67,7 +83,7 @@ export function resolveFineractErrorItemMessage(item?: FineractErrorItem | null)
         return translated;
       }
     }
-    return normalized;
+    return sanitizeRawDatabaseErrorMessage(normalized);
   }
 
   if (code) {
@@ -169,7 +185,7 @@ export function getFineractErrorMessage(
   }
 
   if (body.developerMessage && !isGenericTopLevelMessage(normalizeFineractMessage(body.developerMessage))) {
-    return normalizeFineractMessage(body.developerMessage);
+    return sanitizeRawDatabaseErrorMessage(body.developerMessage);
   }
 
   if (topLevel) {

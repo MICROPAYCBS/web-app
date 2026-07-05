@@ -29,11 +29,13 @@ import type { CashierPolicySettings } from '@/lib/fineract/cashier-policy-paths'
 export function SavingsAccountCloseSheet({
   clientId,
   accountId,
+  currencyCode,
   open,
   onOpenChange
 }: {
   clientId: string;
   accountId: number;
+  currencyCode: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -44,7 +46,8 @@ export function SavingsAccountCloseSheet({
   const [paymentTypes, setPaymentTypes] = useState<CashierAwarePaymentTypeOption[]>([]);
   const [cashierPolicy, setCashierPolicy] = useState<CashierPolicySettings>({
     preventCashierOverdraw: true,
-    requireCashierForCashTransactions: true
+    requireCashierForCashTransactions: true,
+    captureLegalTenderForCashTransactions: 'OPTIONAL'
   });
   const [activeCashierSession, setActiveCashierSession] = useState(false);
   const [cashierSessionLink, setCashierSessionLink] = useState<{
@@ -72,7 +75,11 @@ export function SavingsAccountCloseSheet({
     setWithdrawBalance(false);
     setPaymentTypeId('');
     setNote('');
-    void loadSavingsAccountTransactionSheetDataAction(String(accountId), 'deposit').then(
+    void loadSavingsAccountTransactionSheetDataAction(
+      String(accountId),
+      'deposit',
+      currencyCode
+    ).then(
       (result) => {
         if (cancelled) {
           return;
@@ -92,7 +99,7 @@ export function SavingsAccountCloseSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, accountId, initialTransactionDate]);
+  }, [open, accountId, currencyCode, initialTransactionDate]);
 
   const selectedPaymentType = useMemo(
     () => paymentTypes.find((row) => String(row.id) === paymentTypeId),

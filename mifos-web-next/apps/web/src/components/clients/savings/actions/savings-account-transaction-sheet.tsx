@@ -8,9 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { CurrencyLegalTender } from '@mifos/api-client';
 import { formatMoney, parseAmount } from '@mifos/domain';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, useTransition } from 'react';
 import {
@@ -33,6 +35,14 @@ import {
 } from '@/components/composites/payment-detail-fields';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import {
+  buildLegalTenderLines,
+  CashierLegalTenderGrid,
+  emptyLegalTenderQuantities,
+  legalTenderTotalAmount,
+  legalTenderTotalIsValid,
+  type LegalTenderQuantityMap
+} from '@/components/organization/cashier-legal-tender-grid';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -45,8 +55,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { CashierSessionRequiredAlert } from '@/components/accounts/cashier-session-required-alert';
-import type { CashierPolicySettings } from '@/lib/fineract/cashier-policy-paths';
+import type {
+  CashierPolicySettings,
+  LegalTenderCaptureMode
+} from '@/lib/fineract/cashier-policy-paths';
+import type { CashTransactionEntryMode } from '@mifos/validation';
 import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
+import { legalTenderListPath } from '@/lib/fineract/legal-tender-paths';
 
 type DepositWithdrawCommand = 'deposit' | 'withdrawal';
 
@@ -84,7 +99,8 @@ export function SavingsAccountTransactionSheet({
   const [paymentTypes, setPaymentTypes] = useState<CashierAwarePaymentTypeOption[]>([]);
   const [cashierPolicy, setCashierPolicy] = useState<CashierPolicySettings>({
     preventCashierOverdraw: true,
-    requireCashierForCashTransactions: true
+    requireCashierForCashTransactions: true,
+    captureLegalTenderForCashTransactions: 'OPTIONAL'
   });
   const [activeCashierSession, setActiveCashierSession] = useState(false);
   const [cashierSessionLink, setCashierSessionLink] = useState<{
@@ -92,6 +108,10 @@ export function SavingsAccountTransactionSheet({
     cashierId: number;
     canOpenCashierDetail: boolean;
   } | null>(null);
+  const [legalTenders, setLegalTenders] = useState<CurrencyLegalTender[]>([]);
+  const [decimalPlaces, setDecimalPlaces] = useState(2);
+  const [entryMode, setEntryMode] = useState<CashTransactionEntryMode>('amount');
+  const [quantities, setQuantities] = useState<LegalTenderQuantityMap>({});
   const initialTransactionDate = useInitialTransactionDate();
   const [transactionDate, setTransactionDate] = useState(initialTransactionDate);
   const [amount, setAmount] = useState('');
@@ -125,13 +145,22 @@ export function SavingsAccountTransactionSheet({
     setPaymentTypeId('');
     setNote('');
     setPaymentDetails(emptyPaymentDetailFields());
+    setEntryMode('amount');
+    setQuantities({});
+    setLegalTenders([]);
+    setDecimalPlaces(2);
     setCashierPolicy({
       preventCashierOverdraw: true,
-      requireCashierForCashTransactions: true
+      requireCashierForCashTransactions: true,
+      captureLegalTenderForCashTransactions: 'OPTIONAL'
     });
     setActiveCashierSession(false);
     setCashierSessionLink(null);
-    void loadSavingsAccountTransactionSheetDataAction(String(accountId), command).then((result) => {
+    void loadSavingsAccountTransactionSheetDataAction(
+      String(accountId),
+      command,
+      currencyCode
+    ).then((result) => {
       if (cancelled) {
         return;
       }
@@ -145,6 +174,14 @@ export function SavingsAccountTransactionSheet({
       setCashierPolicy(result.cashierPolicy);
       setActiveCashierSession(result.activeCashierSession);
       setCashierSessionLink(result.cashierSessionLink);
+      setLegalTenders(result.legalTenders);
+      setDecimalPlaces(result.decimalPlaces);
+      setQuantities(emptyLegalTenderQuantities(result.legalTenders));
+      const defaultEntryMode: CashTransactionEntryMode =
+        result.cashierPolicy.captureLegalTenderForCashTransactions === 'REQUIRED'
+          ? 'denominations'
+          : 'amount';
+      setEntryMode(defaultEntryMode);
       const cash = result.paymentTypeOptions.find((row) => row.isCashPayment);
       const defaultId = cash?.id ?? result.paymentTypeOptions[0]?.id;
       if (defaultId) {
@@ -154,15 +191,42 @@ export function SavingsAccountTransactionSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, command, accountId, initialTransactionDate]);
+  }, [open, command, accountId, currencyCode, initialTransactionDate]);
 
   const selectedPaymentType = useMemo(
     () => paymentTypes.find((row) => String(row.id) === paymentTypeId),
     [paymentTypeId, paymentTypes]
   );
+  const isCashPayment = selectedPaymentType?.isCashPayment === true;
+  const captureMode: LegalTenderCaptureMode =
+    cashierPolicy.captureLegalTenderForCashTransactions;
+  const showDenominationFeature = isCashPayment && captureMode !== 'OFF';
+  const useDenominationEntry =
+    showDenominationFeature &&
+    (captureMode === 'REQUIRED' || entryMode === 'denominations');
+  const showEntryModeToggle = showDenominationFeature && captureMode === 'OPTIONAL';
+
+  useEffect(() => {
+    if (!showDenominationFeature && entryMode === 'denominations') {
+      setEntryMode('amount');
+    }
+  }, [showDenominationFeature, entryMode]);
+
+  useEffect(() => {
+    if (!useDenominationEntry || legalTenders.length === 0) {
+      return;
+    }
+    const total = legalTenderTotalAmount(legalTenders, quantities, decimalPlaces);
+    setAmount(total > 0 ? String(total) : '');
+  }, [useDenominationEntry, legalTenders, quantities, decimalPlaces]);
+
   const requiresActiveCashier =
-    cashierPolicy.requireCashierForCashTransactions && selectedPaymentType?.isCashPayment === true;
+    cashierPolicy.requireCashierForCashTransactions && isCashPayment;
   const blockedByCashierSession = requiresActiveCashier && !activeCashierSession;
+  const denominationSubmitBlocked =
+    useDenominationEntry &&
+    (legalTenders.length === 0 ||
+      !legalTenderTotalIsValid(legalTenders, quantities, decimalPlaces));
 
   if (!command) {
     return null;
@@ -178,6 +242,10 @@ export function SavingsAccountTransactionSheet({
     setError(null);
     setFieldErrors({});
 
+    const legalTenderLines = useDenominationEntry
+      ? buildLegalTenderLines(legalTenders, quantities)
+      : undefined;
+
     startTransition(async () => {
       const result = await executeSavingsAccountTransactionCommandAction(
         clientId,
@@ -187,6 +255,8 @@ export function SavingsAccountTransactionSheet({
           transactionDate,
           transactionAmount: amount,
           paymentTypeId,
+          entryMode: showDenominationFeature ? entryMode : undefined,
+          legalTenderLines,
           note: note.trim() || undefined,
           accountNumber: paymentDetails.accountNumber.trim() || undefined,
           checkNumber: paymentDetails.checkNumber.trim() || undefined,
@@ -244,16 +314,6 @@ export function SavingsAccountTransactionSheet({
         required
         disabled={disabled}
       />
-      <MoneyField
-        id={`${formId}-amount`}
-        label="Amount"
-        value={amount}
-        onChange={setAmount}
-        currencyCode={currencyCode}
-        error={fieldErrors.transactionAmount}
-        required
-        disabled={disabled}
-      />
       <SelectField
         id={`${formId}-payment-type`}
         label="Payment type"
@@ -265,6 +325,56 @@ export function SavingsAccountTransactionSheet({
         required
         disabled={disabled}
       />
+      {showEntryModeToggle ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Entry mode</p>
+          <Tabs
+            value={entryMode}
+            onValueChange={(value) => setEntryMode(value as CashTransactionEntryMode)}
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="amount" disabled={disabled}>
+                Amount
+              </TabsTrigger>
+              <TabsTrigger value="denominations" disabled={disabled}>
+                Denominations
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      ) : null}
+      {useDenominationEntry ? (
+        <CashierLegalTenderGrid
+          currencyCode={currencyCode}
+          decimalPlaces={decimalPlaces}
+          tenders={legalTenders}
+          quantities={quantities}
+          onQuantitiesChange={setQuantities}
+          disabled={disabled}
+          emptyMessage={
+            <>
+              No denominations are configured for {currencyCode}. Set them up under{' '}
+              <Link
+                href={legalTenderListPath(currencyCode)}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Organization → Legal tenders
+              </Link>{' '}
+              before posting cash {isDeposit ? 'deposits' : 'withdrawals'} by denomination.
+            </>
+          }
+        />
+      ) : null}
+      <MoneyField
+        id={`${formId}-amount`}
+        label="Amount"
+        value={amount}
+        onChange={setAmount}
+        currencyCode={currencyCode}
+        error={fieldErrors.transactionAmount}
+        required
+        disabled={disabled || useDenominationEntry}
+      />
       <TextField
         id={`${formId}-note`}
         label="Note"
@@ -275,6 +385,9 @@ export function SavingsAccountTransactionSheet({
         optional
         disabled={disabled}
       />
+      {fieldErrors.legalTenderLines ? (
+        <p className="text-sm text-destructive">{fieldErrors.legalTenderLines}</p>
+      ) : null}
       {blockedByCashierSession ? (
         <CashierSessionRequiredAlert
           tellerId={cashierSessionLink?.tellerId}
@@ -372,7 +485,9 @@ export function SavingsAccountTransactionSheet({
               <Button
                 type="submit"
                 form={formId}
-                disabled={disabled || pending || blockedByCashierSession}
+                disabled={
+                  disabled || pending || blockedByCashierSession || denominationSubmitBlocked
+                }
               >
                 {pending ? 'Saving…' : title}
               </Button>

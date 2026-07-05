@@ -11,12 +11,16 @@
 import type { FineractGlobalConfiguration } from '@mifos/api-client';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
 import { updateGlobalConfigurationValuesAction } from '@/actions/global-configurations';
 import { DateField } from '@/components/composites/date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
+import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { globalConfigurationToEditValues } from '@/lib/fineract/global-configuration-display';
+import {
+  globalConfigurationStringValueField,
+  normalizeGlobalConfigurationStringValue
+} from '@/lib/fineract/global-configuration-string-options';
 import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
 
 export function GlobalConfigurationEditSheet({
@@ -46,10 +50,14 @@ export function GlobalConfigurationEditSheet({
     }
     const nextValues = globalConfigurationToEditValues(configuration);
     setValue(nextValues.value);
-    setStringValue(nextValues.stringValue);
+    setStringValue(
+      normalizeGlobalConfigurationStringValue(configuration.name, nextValues.stringValue)
+    );
     setDateValue(nextValues.dateValue);
     setError(null);
   }, [configuration, open]);
+
+  const stringValueField = globalConfigurationStringValueField(configuration?.name ?? null);
 
   function handleSubmit() {
     if (!configuration) {
@@ -119,13 +127,28 @@ export function GlobalConfigurationEditSheet({
           onChange={setValue}
           optional
         />
-        <TextField
-          id={stringValueId}
-          label="String value"
-          value={stringValue}
-          onChange={setStringValue}
-          optional
-        />
+        {stringValueField ? (
+          <SelectField
+            id={stringValueId}
+            label={stringValueField.fieldLabel}
+            value={stringValue}
+            onValueChange={(next) => setStringValue(next ?? '')}
+            options={stringValueField.options.map((option) => ({
+              value: option.value,
+              label: option.label
+            }))}
+            placeholder="Select a mode"
+            optional
+          />
+        ) : (
+          <TextField
+            id={stringValueId}
+            label="String value"
+            value={stringValue}
+            onChange={setStringValue}
+            optional
+          />
+        )}
         <DateField
           id={dateValueId}
           label="Date value"

@@ -78,6 +78,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Selected denominations do not match the transaction currency.',
   'error.msg.cashier.legal.tender.sum.mismatch':
     'The denomination total must match the transaction amount.',
+  'error.msg.cashier.legal.tender.lines.not.allowed':
+    'Denomination breakdown is not enabled for cash transactions.',
   'error.msg.legal.tender.not.found': 'Legal tender not found.',
   'error.msg.legal.tender.duplicate':
     'A denomination with this face value and type already exists for this currency.'

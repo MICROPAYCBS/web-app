@@ -24,6 +24,7 @@ import {
   updateGlobalConfigurationEnabled,
   updateGlobalConfigurationValues
 } from '@/lib/fineract/global-configurations';
+import { isKnownGlobalConfigurationStringValue } from '@/lib/fineract/global-configuration-string-options';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, normalizeFineractDateField } from '@/lib/fineract/dates';
 import { getServerSession } from '@/lib/session/server';
 
@@ -121,6 +122,15 @@ export async function updateGlobalConfigurationValuesAction(input: {
   }
 
   try {
+    const existing = await getGlobalConfiguration(parsed.data.id);
+    if (
+      existing &&
+      parsed.data.stringValue != null &&
+      !isKnownGlobalConfigurationStringValue(existing.name, parsed.data.stringValue)
+    ) {
+      return { ok: false, message: 'Select a valid option for this configuration.' };
+    }
+
     const data = await updateGlobalConfigurationValues(parsed.data);
     revalidatePath(LIST_PATH);
     return { ok: true, data };

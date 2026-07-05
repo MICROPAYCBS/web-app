@@ -13,7 +13,14 @@ export const PREVENT_CASHIER_OVERDRAW_CONFIG_NAME = 'prevent-cashier-overdraw';
 export const REQUIRE_CASHIER_FOR_CASH_TRANSACTIONS_CONFIG_NAME =
   'require-cashier-for-cash-transactions';
 
+/** Controls denomination capture on cash savings deposit/withdrawal (OFF / OPTIONAL / REQUIRED). */
+export const CAPTURE_LEGAL_TENDER_FOR_CASH_TRANSACTIONS_CONFIG_NAME =
+  'capture-legal-tender-for-cash-transactions';
+
+export type LegalTenderCaptureMode = 'OFF' | 'OPTIONAL' | 'REQUIRED';
+
 export interface CashierPolicySettings {
   preventCashierOverdraw: boolean;
   requireCashierForCashTransactions: boolean;
+  captureLegalTenderForCashTransactions: LegalTenderCaptureMode;
 }

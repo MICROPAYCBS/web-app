@@ -12,7 +12,7 @@ import type { CurrencyLegalTender } from '@mifos/api-client';
 import { formatMoney } from '@mifos/domain';
 import { amountsEqualForCurrency, sumLegalTenderLines } from '@mifos/validation';
 import Decimal from 'decimal.js';
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
@@ -122,7 +122,8 @@ export function CashierLegalTenderGrid({
   tenders,
   quantities,
   onQuantitiesChange,
-  disabled
+  disabled,
+  emptyMessage
 }: {
   currencyCode: string;
   decimalPlaces: number;
@@ -130,6 +131,7 @@ export function CashierLegalTenderGrid({
   quantities: LegalTenderQuantityMap;
   onQuantitiesChange: (next: LegalTenderQuantityMap) => void;
   disabled?: boolean;
+  emptyMessage?: React.ReactNode;
 }) {
   const grouped = useMemo(() => groupTenders(tenders), [tenders]);
   const total = useMemo(
@@ -155,8 +157,12 @@ export function CashierLegalTenderGrid({
   if (tenders.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-        No legal tender denominations are configured for {currencyCode}. Set them up under
-        Organization → Legal tenders before allocating or settling cash.
+        {emptyMessage ?? (
+          <>
+            No legal tender denominations are configured for {currencyCode}. Set them up under
+            Organization → Legal tenders before allocating or settling cash.
+          </>
+        )}
       </div>
     );
   }

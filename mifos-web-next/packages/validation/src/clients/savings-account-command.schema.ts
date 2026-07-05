@@ -7,6 +7,16 @@
  */
 
 import { z } from 'zod';
+import {
+  hasPositiveLegalTenderQuantity,
+  type LegalTenderMasterRow
+} from '../organization/cashier-legal-tender-sum';
+import {
+  legalTenderLineInputSchema,
+  validateLegalTenderLinesForAmount,
+  type CashTransactionEntryMode,
+  type LegalTenderCaptureMode
+} from '../organization/legal-tender-lines.schema';
 
 const requiredDate = z.string().trim().min(1, 'Date is required.');
 const optionalNote = z.string().trim().max(1000).optional();
@@ -68,6 +78,8 @@ export const savingsAccountTransactionCommandSchema = z.object({
   transactionDate: requiredDate,
   transactionAmount: z.coerce.number().positive('Amount must be greater than zero.'),
   paymentTypeId: z.coerce.number().int().positive('Select a payment type.'),
+  entryMode: z.enum(['amount', 'denominations']).optional(),
+  legalTenderLines: z.array(legalTenderLineInputSchema).optional(),
   ...optionalPaymentFields,
   note: optionalNote
 });
@@ -147,6 +159,93 @@ export type SavingsAccountBlockCommandInput = z.infer<typeof savingsAccountBlock
 export type SavingsAccountTransactionCommandInput = z.infer<
   typeof savingsAccountTransactionCommandSchema
 >;
+
+export type SavingsAccountTransactionCommandPayload = Omit<
+  SavingsAccountTransactionCommandInput,
+  'entryMode' | 'legalTenderLines'
+> & {
+  legalTenderLines?: { legalTenderId: number; quantity: number }[];
+};
+
+function zodCustomError(message: string, path: (string | number)[]) {
+  return {
+    success: false as const,
+    error: new z.ZodError([
+      {
+        code: 'custom' as const,
+        message,
+        path
+      }
+    ])
+  };
+}
+
+function stripCashTransactionMeta(
+  input: SavingsAccountTransactionCommandInput
+): SavingsAccountTransactionCommandPayload {
+  const { entryMode: _entryMode, legalTenderLines: _lines, ...rest } = input;
+  return rest;
+}
+
+export function validateSavingsAccountCashTransaction(
+  input: SavingsAccountTransactionCommandInput,
+  context: {
+    isCashPayment: boolean;
+    captureMode: LegalTenderCaptureMode;
+    activeTenders: LegalTenderMasterRow[];
+    decimalPlaces: number;
+  }
+) {
+  const { isCashPayment, captureMode, activeTenders, decimalPlaces } = context;
+  const rawLines = input.legalTenderLines ?? [];
+  const entryMode: CashTransactionEntryMode =
+    input.entryMode ?? (captureMode === 'REQUIRED' ? 'denominations' : 'amount');
+
+  if (!isCashPayment) {
+    if (hasPositiveLegalTenderQuantity(rawLines)) {
+      return zodCustomError('Denomination breakdown applies to cash payments only.', [
+        'legalTenderLines'
+      ]);
+    }
+    return { success: true as const, data: stripCashTransactionMeta(input) };
+  }
+
+  if (captureMode === 'OFF') {
+    if (hasPositiveLegalTenderQuantity(rawLines)) {
+      return zodCustomError('Denomination breakdown is not enabled for cash transactions.', [
+        'legalTenderLines'
+      ]);
+    }
+    return { success: true as const, data: stripCashTransactionMeta(input) };
+  }
+
+  if (captureMode === 'OPTIONAL' && entryMode === 'amount') {
+    return { success: true as const, data: stripCashTransactionMeta(input) };
+  }
+
+  const linesResult = validateLegalTenderLinesForAmount({
+    lines: rawLines,
+    amount: input.transactionAmount,
+    activeTenders,
+    decimalPlaces,
+    required: true,
+    amountFieldPath: 'transactionAmount',
+    linesFieldPath: 'legalTenderLines'
+  });
+
+  if (!linesResult.success) {
+    return linesResult;
+  }
+
+  return {
+    success: true as const,
+    data: {
+      ...stripCashTransactionMeta(input),
+      legalTenderLines: linesResult.data
+    }
+  };
+}
+
 export type SavingsAccountPostInterestAsOnInput = z.infer<
   typeof savingsAccountPostInterestAsOnSchema
 >;

@@ -447,6 +447,7 @@ export function SavingsAccountActions({
       <SavingsAccountCloseSheet
         clientId={clientId}
         accountId={account.id}
+        currencyCode={currencyCode}
         open={closeOpen}
         onOpenChange={setCloseOpen}
       />

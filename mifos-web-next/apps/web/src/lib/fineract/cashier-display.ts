@@ -154,12 +154,13 @@ export function filterCashierTransactionsForAccount(
 
 export const CASHIER_TXN_TYPE_ALLOCATE = 101;
 export const CASHIER_TXN_TYPE_SETTLE = 102;
+export const CASHIER_TXN_TYPE_CASH_IN = 103;
+export const CASHIER_TXN_TYPE_CASH_OUT = 104;
 
 export function cashierTransactionHasLegalTenderBreakdown(
   transaction: OrganizationCashierTransaction
 ): boolean {
-  const typeId = transaction.txnType?.id;
-  return typeId === CASHIER_TXN_TYPE_ALLOCATE || typeId === CASHIER_TXN_TYPE_SETTLE;
+  return (transaction.legalTenderLines?.length ?? 0) > 0;
 }
 
 export function cashierTransactionCurrencyCode(

@@ -11,7 +11,8 @@ import { describe, it } from 'node:test';
 import {
   getFineractErrorMessage,
   normalizeFineractMessage,
-  resolveFineractErrorItemMessage
+  resolveFineractErrorItemMessage,
+  sanitizeRawDatabaseErrorMessage
 } from './fineract-error-message';
 
 describe('normalizeFineractMessage', () => {
@@ -41,6 +42,15 @@ describe('resolveFineractErrorItemMessage', () => {
         developerMessage: 'Validation failed for argument'
       }),
       'Validation failed for argument'
+    );
+  });
+});
+
+describe('sanitizeRawDatabaseErrorMessage', () => {
+  it('maps PostgreSQL syntax errors to user-safe copy', () => {
+    assert.equal(
+      sanitizeRawDatabaseErrorMessage('ERROR: syntax error at or near "$4" Position: 177'),
+      'The server could not save the denomination breakdown. Confirm Fineract migrations 3063 and 3064 are applied, then check server logs for database errors.'
     );
   });
 });
@@ -163,6 +173,15 @@ describe('getFineractErrorMessage', () => {
         ]
       }),
       'User has no authority to: UPDATE_COMPLIANCEPROFILE'
+    );
+  });
+
+  it('sanitizes leaked PostgreSQL syntax errors', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        developerMessage: 'ERROR: syntax error at or near "$4" Position: 177'
+      }),
+      'The server could not save the denomination breakdown. Confirm Fineract migrations 3063 and 3064 are applied, then check server logs for database errors.'
     );
   });
 });

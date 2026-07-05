@@ -26,7 +26,8 @@ import {
   savingsAccountWithdrawnByApplicantCommandSchema,
   savingsAccountWithholdTaxSchema,
   toFineractActionError,
-  actionSuccessFromFineractCommand
+  actionSuccessFromFineractCommand,
+  validateSavingsAccountCashTransaction
 } from '@mifos/validation';
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
@@ -62,6 +63,8 @@ import type { CashierPolicySettings } from '@/lib/fineract/cashier-policy-paths'
 import { getCashierPolicySettings } from '@/lib/fineract/cashier-policy';
 import { findCurrentUserCashierAssignment } from '@/lib/fineract/current-user-cashier';
 import { canOpenCashierDetail } from '@/lib/fineract/cashier-access';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
+import { listActiveCurrencyLegalTenders } from '@/lib/fineract/legal-tenders';
 import { getServerSession } from '@/lib/session/server';
 
 const LIFECYCLE_PERMISSIONS: Record<SavingsAccountLifecycleCommand, string> = {
@@ -104,6 +107,15 @@ function fieldErrorsFromZod(
     }
   }
   return fieldErrors;
+}
+
+function fieldErrorsFromZodError(error: z.ZodError): Record<string, string> {
+  return fieldErrorsFromZod(error.issues);
+}
+
+async function resolveCurrencyDecimalPlaces(currencyCode: string): Promise<number> {
+  const currencies = await getOrganizationSelectedCurrencies();
+  return currencies.find((row) => row.code === currencyCode)?.decimalPlaces ?? 2;
 }
 
 type ParsedResult<T> = { success: true; data: T } | { success: false; result: SavingsAccountActionResult };
@@ -207,7 +219,8 @@ async function rejectCashTransactionWithoutActiveCashier(
 
 export async function loadSavingsAccountTransactionSheetDataAction(
   accountId: string,
-  command: 'deposit' | 'withdrawal'
+  command: 'deposit' | 'withdrawal',
+  currencyCode: string
 ): Promise<
   | {
       ok: true;
@@ -219,6 +232,8 @@ export async function loadSavingsAccountTransactionSheetDataAction(
         cashierId: number;
         canOpenCashierDetail: boolean;
       } | null;
+      legalTenders: Awaited<ReturnType<typeof listActiveCurrencyLegalTenders>>;
+      decimalPlaces: number;
     }
   | { ok: false; message: string }
 > {
@@ -233,13 +248,27 @@ export async function loadSavingsAccountTransactionSheetDataAction(
 
   try {
     const session = await getServerSession();
-    const [template, cashierPolicy] = await Promise.all([
+    const trimmedCurrency = currencyCode.trim();
+    const [template, cashierPolicy, decimalPlaces] = await Promise.all([
       getSavingsAccountTransactionTemplate(accountId, command),
-      getCashierPolicySettings()
+      getCashierPolicySettings(),
+      resolveCurrencyDecimalPlaces(trimmedCurrency)
     ]);
     const paymentTypeOptions = await loadCashierAwarePaymentTypeOptions(
       template.paymentTypeOptions ?? []
     );
+
+    let legalTenders: Awaited<ReturnType<typeof listActiveCurrencyLegalTenders>> = [];
+    if (
+      trimmedCurrency &&
+      cashierPolicy.captureLegalTenderForCashTransactions !== 'OFF'
+    ) {
+      try {
+        legalTenders = await listActiveCurrencyLegalTenders(trimmedCurrency);
+      } catch {
+        legalTenders = [];
+      }
+    }
 
     let activeCashierSession = false;
     let cashierSessionLink: {
@@ -271,7 +300,9 @@ export async function loadSavingsAccountTransactionSheetDataAction(
       paymentTypeOptions,
       cashierPolicy,
       activeCashierSession,
-      cashierSessionLink
+      cashierSessionLink,
+      legalTenders,
+      decimalPlaces
     };
   } catch (error) {
     return toFineractActionError(error, 'Could not load transaction template.');
@@ -515,20 +546,67 @@ export async function executeSavingsAccountTransactionCommandAction(
   }
 
   try {
+    const account = await getSavingsAccount(accountId);
+    if (!account) {
+      return { ok: false, message: 'Savings account not found.' };
+    }
+    const accountCurrencyCode = account.currency?.code?.trim() ?? '';
+
+    const [template, cashierPolicy] = await Promise.all([
+      getSavingsAccountTransactionTemplate(accountId, command),
+      getCashierPolicySettings()
+    ]);
+    const paymentTypeOptions = await loadCashierAwarePaymentTypeOptions(
+      template.paymentTypeOptions ?? []
+    );
+    const isCashPayment =
+      paymentTypeOptions.find((row) => row.id === parsed.data.paymentTypeId)?.isCashPayment ===
+      true;
+
+    let decimalPlaces = 2;
+    let activeTenders: Awaited<ReturnType<typeof listActiveCurrencyLegalTenders>> = [];
+    if (isCashPayment && cashierPolicy.captureLegalTenderForCashTransactions !== 'OFF') {
+      decimalPlaces = await resolveCurrencyDecimalPlaces(accountCurrencyCode);
+      if (accountCurrencyCode) {
+        try {
+          activeTenders = await listActiveCurrencyLegalTenders(accountCurrencyCode);
+        } catch {
+          activeTenders = [];
+        }
+      }
+    }
+
+    const validated = validateSavingsAccountCashTransaction(parsed.data, {
+      isCashPayment,
+      captureMode: cashierPolicy.captureLegalTenderForCashTransactions,
+      activeTenders,
+      decimalPlaces
+    });
+    if (!validated.success) {
+      return {
+        ok: false,
+        message: 'Fix the highlighted fields.',
+        fieldErrors: fieldErrorsFromZodError(validated.error)
+      };
+    }
+
     const response = await executeSavingsAccountTransaction(
       accountId,
       command,
       buildFineractCommandBody(
         omitEmptyStrings({
-          transactionDate: parsed.data.transactionDate,
-          transactionAmount: parsed.data.transactionAmount,
-          paymentTypeId: parsed.data.paymentTypeId,
-          accountNumber: parsed.data.accountNumber,
-          checkNumber: parsed.data.checkNumber,
-          routingCode: parsed.data.routingCode,
-          receiptNumber: parsed.data.receiptNumber,
-          bankNumber: parsed.data.bankNumber,
-          note: parsed.data.note
+          transactionDate: validated.data.transactionDate,
+          transactionAmount: validated.data.transactionAmount,
+          paymentTypeId: validated.data.paymentTypeId,
+          accountNumber: validated.data.accountNumber,
+          checkNumber: validated.data.checkNumber,
+          routingCode: validated.data.routingCode,
+          receiptNumber: validated.data.receiptNumber,
+          bankNumber: validated.data.bankNumber,
+          note: validated.data.note,
+          ...(validated.data.legalTenderLines?.length
+            ? { legalTenderLines: validated.data.legalTenderLines }
+            : {})
         })
       )
     );

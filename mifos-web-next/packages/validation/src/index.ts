@@ -120,6 +120,7 @@ export {
   savingsAccountCloseCommandSchema,
   savingsAccountRejectCommandSchema,
   savingsAccountTransactionCommandSchema,
+  validateSavingsAccountCashTransaction,
   savingsAccountUndoApprovalCommandSchema,
   savingsAccountWithdrawnByApplicantCommandSchema,
   savingsAccountPostInterestAsOnSchema,
@@ -138,6 +139,7 @@ export {
   type SavingsAccountCloseCommandInput,
   type SavingsAccountRejectCommandInput,
   type SavingsAccountTransactionCommandInput,
+  type SavingsAccountTransactionCommandPayload,
   type SavingsAccountUndoApprovalCommandInput,
   type SavingsAccountWithdrawnByApplicantCommandInput,
   type SavingsAccountPostInterestAsOnInput,
@@ -777,6 +779,12 @@ export {
   type UpsertLegalTenderInput,
   type UpsertLegalTenderPayload
 } from './organization/legal-tender.schema';
+export {
+  legalTenderLineInputSchema,
+  validateLegalTenderLinesForAmount,
+  type CashTransactionEntryMode,
+  type LegalTenderCaptureMode
+} from './organization/legal-tender-lines.schema';
 export {
   amountsEqualForCurrency,
   findDuplicateLegalTenderIds,
