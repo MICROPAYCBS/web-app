@@ -10,7 +10,6 @@ import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
 import {
   detailSidebarInsetX,
-  detailSidebarTopPadding,
   pageHeaderContentSpacing,
   platformInset,
   platformPageShell,
@@ -50,7 +49,6 @@ export function DetailPage({
         <aside
           className={cn(
             'flex w-full shrink-0 flex-col border-border',
-            detailSidebarTopPadding,
             'max-h-[min(40vh,20rem)] border-b lg:max-h-none lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
           )}
         >

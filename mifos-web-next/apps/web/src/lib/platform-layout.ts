@@ -12,6 +12,9 @@ export const platformInsetX = 'px-4 md:px-6';
 /** Standard padded region inside a full-bleed bordered section. */
 export const platformInset = 'px-4 py-4 md:px-6 md:py-6';
 
+/** Top inset for page shells — matches {@link platformInset} vertical rhythm. */
+export const platformDetailTopInset = 'pt-4 md:pt-6';
+
 /**
  * Bounded region below the platform shell site header.
  * Platform routes fill this; scrolling must stay inside page shells or
@@ -23,18 +26,20 @@ export const platformContentArea =
 /**
  * Root shell for ListPage, DetailPage, and FormWizard — fills {@link platformContentArea}.
  */
-export const platformPageShell = 'flex min-h-0 flex-1 flex-col overflow-hidden';
+export const platformPageShell =
+  'flex min-h-0 flex-1 flex-col overflow-hidden pt-4 md:pt-6';
 
 /**
  * Flex chain for nested App Router layouts between platformContentArea and page shells.
+ * No top inset — page shells own {@link platformDetailTopInset}.
  */
-export const platformRouteLayout = platformPageShell;
+export const platformRouteLayout = 'flex min-h-0 flex-1 flex-col overflow-hidden';
 
 /**
  * Sidebar rail + main column row inside DetailPage and FormWizard.
  */
 export const platformSidebarRowLayout =
-  'flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row';
+  'flex min-h-0 flex-1 flex-col overflow-hidden pt-4 md:pt-6 lg:flex-row';
 
 /**
  * Scroll region for simple platform pages (dashboard, settings) that do not use
@@ -45,12 +50,9 @@ export const platformScrollRegion =
 
 /**
  * Fixed page header padding — use via {@link PageHeader} only.
- * Detail, list, and wizard shells share this top spacing.
+ * Top inset lives on {@link platformPageShell} / {@link platformSidebarRowLayout}.
  */
-export const pageHeaderPadding = 'pb-4 pt-5';
-
-/** Top inset for detail sidebar rails — aligns with {@link pageHeaderPadding}. */
-export const detailSidebarTopPadding = 'pt-5';
+export const pageHeaderPadding = 'pb-4 md:pb-6';
 
 /** Horizontal inset for detail sidebar nav (scroll region below top inset). */
 export const detailSidebarInsetX = platformInsetX;
