@@ -62,6 +62,7 @@ export function FinancialActivityMappingEditUrlPanel({
       mode="edit"
       template={template}
       mapping={mapping}
+      existingMappings={mappings}
     />
   );
 }

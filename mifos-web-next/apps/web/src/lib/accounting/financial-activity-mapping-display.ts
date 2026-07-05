@@ -82,6 +82,25 @@ export function financialActivitySelectOptions(activities: FineractFinancialActi
   }));
 }
 
+export function mappedFinancialActivityIds(
+  mappings: FineractFinancialActivityMappingListItem[]
+): number[] {
+  return mappings.map((mapping) => mapping.financialActivityData.id);
+}
+
+/** Activities not yet mapped; on edit, always include the row being edited. */
+export function availableFinancialActivitiesForMapping(
+  activities: FineractFinancialActivityRef[],
+  mappedActivityIds: Iterable<number>,
+  options?: { includeActivityId?: number }
+): FineractFinancialActivityRef[] {
+  const mapped = new Set(mappedActivityIds);
+  const includeActivityId = options?.includeActivityId;
+  return activities.filter(
+    (activity) => activity.id === includeActivityId || !mapped.has(activity.id)
+  );
+}
+
 export function financialActivityGlAccountSelectOptions(
   accounts: FineractFinancialActivityGlAccountRef[]
 ) {

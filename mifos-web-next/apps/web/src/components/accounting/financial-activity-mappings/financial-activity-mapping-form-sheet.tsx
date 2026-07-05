@@ -28,11 +28,13 @@ import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import {
+  availableFinancialActivitiesForMapping,
   defaultFinancialActivityMappingFormValues,
   financialActivityGlAccountSelectOptions,
   financialActivityMappingFormValuesFromDetail,
   financialActivitySelectOptions,
-  glAccountsForFinancialActivity
+  glAccountsForFinancialActivity,
+  mappedFinancialActivityIds
 } from '@/lib/accounting/financial-activity-mapping-display';
 
 export function FinancialActivityMappingFormSheet({
@@ -40,13 +42,15 @@ export function FinancialActivityMappingFormSheet({
   onOpenChange,
   mode,
   template,
-  mapping
+  mapping,
+  existingMappings = []
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   template: FineractFinancialActivityMappingFormTemplate;
   mapping?: FineractFinancialActivityMappingListItem;
+  existingMappings?: FineractFinancialActivityMappingListItem[];
 }) {
   const router = useRouter();
   const formId = useId();
@@ -61,10 +65,24 @@ export function FinancialActivityMappingFormSheet({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const financialActivityOptions = useMemo(
-    () => financialActivitySelectOptions(template.financialActivityOptions),
-    [template.financialActivityOptions]
+  const mappedActivityIds = useMemo(
+    () => mappedFinancialActivityIds(existingMappings),
+    [existingMappings]
   );
+
+  const financialActivityOptions = useMemo(() => {
+    const activities = availableFinancialActivitiesForMapping(
+      template.financialActivityOptions,
+      mappedActivityIds,
+      mode === 'edit' ? { includeActivityId: mapping?.financialActivityData.id } : undefined
+    );
+    return financialActivitySelectOptions(activities);
+  }, [
+    mappedActivityIds,
+    mode,
+    mapping?.financialActivityData.id,
+    template.financialActivityOptions
+  ]);
 
   const glAccountOptions = useMemo(() => {
     const accounts = form.financialActivityId
@@ -176,7 +194,12 @@ export function FinancialActivityMappingFormSheet({
           onValueChange={handleFinancialActivityChange}
           options={financialActivityOptions}
           placeholder="Select financial activity"
-          disabled={pending || mode === 'edit'}
+          disabled={pending}
+          emptyMessage={
+            mode === 'create' && financialActivityOptions.length === 0
+              ? 'All financial activities are already mapped.'
+              : 'No financial activities available.'
+          }
           error={fieldErrors.financialActivityId}
         />
         <SelectField

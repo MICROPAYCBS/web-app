@@ -54,7 +54,10 @@ export function FinancialActivityMappingsPageContent({
 
       {canCreate ? (
         <Suspense fallback={null}>
-          <FinancialActivityMappingCreateUrlPanel template={template} />
+          <FinancialActivityMappingCreateUrlPanel
+            template={template}
+            existingMappings={mappings}
+          />
         </Suspense>
       ) : null}
       {canUpdate ? (

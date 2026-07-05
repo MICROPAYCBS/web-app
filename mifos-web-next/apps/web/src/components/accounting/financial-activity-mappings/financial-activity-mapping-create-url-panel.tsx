@@ -8,15 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractFinancialActivityMappingFormTemplate } from '@mifos/api-client';
+import type { FineractFinancialActivityMappingFormTemplate, FineractFinancialActivityMappingListItem } from '@mifos/api-client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { FinancialActivityMappingFormSheet } from '@/components/accounting/financial-activity-mappings/financial-activity-mapping-form-sheet';
 
 /** Opens the create mapping sidebar when the URL contains `?create=1`. */
 export function FinancialActivityMappingCreateUrlPanel({
-  template
+  template,
+  existingMappings
 }: {
   template: FineractFinancialActivityMappingFormTemplate;
+  existingMappings: FineractFinancialActivityMappingListItem[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -39,6 +41,7 @@ export function FinancialActivityMappingCreateUrlPanel({
       onOpenChange={handleOpenChange}
       mode="create"
       template={template}
+      existingMappings={existingMappings}
     />
   );
 }
