@@ -8,18 +8,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAccountNumberPreferenceListItem } from '@mifos/api-client';
+import type {
+  FineractAccountNumberPreferenceListItem,
+  FineractGlobalConfiguration
+} from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import Link from 'next/link';
 import { ListPage } from '@/components/composites/list-page';
 import { AccountNumberPreferencesTable } from '@/components/system/account-number-preferences-table';
+import { StructuredAccountNumberFormatsAlert } from '@/components/system/structured-account-number-formats-alert';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export function AccountNumberPreferencesPageContent({
-  preferences
+  preferences,
+  structuredFormatsConfiguration,
+  canUpdateConfiguration
 }: {
   preferences: FineractAccountNumberPreferenceListItem[];
+  structuredFormatsConfiguration: FineractGlobalConfiguration | null;
+  canUpdateConfiguration: boolean;
 }) {
   return (
     <ListPage
@@ -36,7 +44,13 @@ export function AccountNumberPreferencesPageContent({
         </Can>
       }
     >
-      <AccountNumberPreferencesTable preferences={preferences} />
+      <div className="space-y-4">
+        <StructuredAccountNumberFormatsAlert
+          configuration={structuredFormatsConfiguration}
+          canUpdateConfiguration={canUpdateConfiguration}
+        />
+        <AccountNumberPreferencesTable preferences={preferences} />
+      </div>
     </ListPage>
   );
 }

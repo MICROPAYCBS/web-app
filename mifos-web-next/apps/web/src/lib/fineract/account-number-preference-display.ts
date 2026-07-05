@@ -11,15 +11,36 @@ import type {
   FineractAccountNumberPreferenceOption,
   FineractAccountNumberPreferenceTemplate
 } from '@mifos/api-client';
+import { patternTotalWidth } from '@mifos/domain';
 import type { UpdateAccountNumberPreferenceInput } from '@mifos/validation';
 
 export function accountNumberPreferenceLabel(
-  option: FineractAccountNumberPreferenceOption | undefined
+  option: FineractAccountNumberPreferenceOption | undefined | null
 ): string {
   if (!option) {
     return '—';
   }
   return option.value || String(option.id);
+}
+
+export function accountNumberFormatModeLabel(preference: {
+  structuredEnabled?: boolean | null;
+}): string {
+  return preference.structuredEnabled ? 'Structured' : 'Legacy';
+}
+
+export function accountNumberFormatPatternSummary(
+  preference: FineractAccountNumberPreferenceDetail
+): string {
+  if (preference.structuredEnabled && preference.formatPattern?.trim()) {
+    const pattern = preference.formatPattern.trim();
+    const width = patternTotalWidth(pattern);
+    return width > 0 ? `${pattern} (${width} chars)` : pattern;
+  }
+  if (preference.prefixType) {
+    return accountNumberPreferenceLabel(preference.prefixType);
+  }
+  return '—';
 }
 
 export function prefixTypeOptionsKey(
@@ -62,6 +83,11 @@ export function preferenceToUpdateValues(
   preference: FineractAccountNumberPreferenceDetail
 ): UpdateAccountNumberPreferenceInput {
   return {
-    prefixType: preference.prefixType?.id
+    prefixType: preference.prefixType?.id,
+    prefixCharacter: preference.prefixCharacter ?? null,
+    formatPattern: preference.formatPattern ?? undefined,
+    sequenceScope: preference.sequenceScope?.id,
+    checkDigitAlgorithm: preference.checkDigitAlgorithm?.id,
+    structuredEnabled: preference.structuredEnabled ?? false
   };
 }

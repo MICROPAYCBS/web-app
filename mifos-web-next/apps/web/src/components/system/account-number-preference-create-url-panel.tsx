@@ -11,12 +11,17 @@
 import type { FineractAccountNumberPreferenceTemplate } from '@mifos/api-client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AccountNumberPreferenceFormSheet } from '@/components/system/account-number-preference-form-sheet';
+import type { AccountNumberFormatOfficeOption } from '@/components/system/account-number-format-structured-fields';
 
 /** Opens the create preference sidebar when the URL contains `?create=1`. */
 export function AccountNumberPreferenceCreateUrlPanel({
-  template
+  template,
+  structuredFormatsEnabled,
+  officeOptions = []
 }: {
   template: FineractAccountNumberPreferenceTemplate;
+  structuredFormatsEnabled: boolean;
+  officeOptions?: AccountNumberFormatOfficeOption[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -39,6 +44,8 @@ export function AccountNumberPreferenceCreateUrlPanel({
       open={open}
       onOpenChange={handleOpenChange}
       template={template}
+      structuredFormatsEnabled={structuredFormatsEnabled}
+      officeOptions={officeOptions}
     />
   );
 }

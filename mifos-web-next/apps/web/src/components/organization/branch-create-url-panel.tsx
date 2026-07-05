@@ -18,10 +18,12 @@ import {
 /** Opens the create branch sidebar when the URL contains `?create=1`. */
 export function BranchCreateUrlPanel({
   parentOptions,
-  managerOptions = []
+  managerOptions = [],
+  structuredAccountNumberFormatsEnabled = false
 }: {
   parentOptions: FineractOfficeOption[];
   managerOptions?: BranchManagerOption[];
+  structuredAccountNumberFormatsEnabled?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,6 +47,7 @@ export function BranchCreateUrlPanel({
       mode="create"
       parentOptions={parentOptions}
       managerOptions={managerOptions}
+      structuredAccountNumberFormatsEnabled={structuredAccountNumberFormatsEnabled}
     />
   );
 }

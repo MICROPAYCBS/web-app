@@ -21,8 +21,13 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { accountNumberPreferenceLabel } from '@/lib/fineract/account-number-preference-display';
+import {
+  accountNumberFormatModeLabel,
+  accountNumberFormatPatternSummary,
+  accountNumberPreferenceLabel
+} from '@/lib/fineract/account-number-preference-display';
 
 export function AccountNumberPreferencesTable({
   preferences
@@ -51,10 +56,31 @@ export function AccountNumberPreferencesTable({
         )
       },
       {
+        id: 'mode',
+        accessorFn: (row) => accountNumberFormatModeLabel(row),
+        header: 'Mode',
+        cell: ({ row }) => (
+          <Badge variant={row.original.structuredEnabled ? 'default' : 'secondary'}>
+            {accountNumberFormatModeLabel(row.original)}
+          </Badge>
+        )
+      },
+      {
+        id: 'summary',
+        accessorFn: (row) => accountNumberFormatPatternSummary(row),
+        header: 'Format summary',
+        cell: ({ row }) => (
+          <span className="font-mono text-xs">{accountNumberFormatPatternSummary(row.original)}</span>
+        )
+      },
+      {
         id: 'prefixType',
         accessorFn: (row) => row.prefixType?.value ?? '',
-        header: 'Prefix field',
-        cell: ({ row }) => accountNumberPreferenceLabel(row.original.prefixType)
+        header: 'Legacy prefix',
+        cell: ({ row }) =>
+          row.original.structuredEnabled
+            ? '—'
+            : accountNumberPreferenceLabel(row.original.prefixType)
       }
     ],
     []
@@ -77,7 +103,9 @@ export function AccountNumberPreferencesTable({
       const preference = row.original;
       return (
         preference.accountType.value.toLowerCase().includes(query) ||
-        (preference.prefixType?.value.toLowerCase().includes(query) ?? false)
+        (preference.prefixType?.value.toLowerCase().includes(query) ?? false) ||
+        (preference.formatPattern?.toLowerCase().includes(query) ?? false) ||
+        accountNumberFormatModeLabel(preference).toLowerCase().includes(query)
       );
     },
     getCoreRowModel: getCoreRowModel(),

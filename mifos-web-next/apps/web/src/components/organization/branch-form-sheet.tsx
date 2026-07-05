@@ -131,7 +131,8 @@ export function BranchFormSheet({
   managerOptions = [],
   officeId,
   initial,
-  showParentField = true
+  showParentField = true,
+  structuredAccountNumberFormatsEnabled = false
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -141,6 +142,7 @@ export function BranchFormSheet({
   officeId?: number;
   initial?: BranchFormInitial;
   showParentField?: boolean;
+  structuredAccountNumberFormatsEnabled?: boolean;
 }) {
   const router = useRouter();
   const formId = useId();
@@ -243,11 +245,17 @@ export function BranchFormSheet({
         <TextField
           id={`${formId}-officeCode`}
           label="Branch code"
-          optional
+          required={structuredAccountNumberFormatsEnabled}
+          optional={!structuredAccountNumberFormatsEnabled}
           value={form.officeCode}
           onChange={(value) => patchForm({ officeCode: value })}
           error={fieldErrors['branchProfile.officeCode'] ?? fieldErrors.officeCode}
-          placeholder="e.g. BR001"
+          placeholder="e.g. 001"
+          hint={
+            structuredAccountNumberFormatsEnabled
+              ? 'Required for structured account numbers that include a branch code segment.'
+              : undefined
+          }
         />
         <SelectField
           id={`${formId}-branchType`}

@@ -22,13 +22,15 @@ export function BranchEditUrlPanel({
   parentOptions,
   managerOptions = [],
   initial,
-  showParentField
+  showParentField,
+  structuredAccountNumberFormatsEnabled = false
 }: {
   officeId: number;
   parentOptions: FineractOfficeOption[];
   managerOptions?: BranchManagerOption[];
   initial: BranchFormInitial;
   showParentField: boolean;
+  structuredAccountNumberFormatsEnabled?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -55,6 +57,7 @@ export function BranchEditUrlPanel({
       managerOptions={managerOptions}
       initial={initial}
       showParentField={showParentField}
+      structuredAccountNumberFormatsEnabled={structuredAccountNumberFormatsEnabled}
     />
   );
 }

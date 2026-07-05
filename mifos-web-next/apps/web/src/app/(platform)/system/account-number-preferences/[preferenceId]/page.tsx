@@ -9,10 +9,13 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { AccountNumberPreferenceDetailView } from '@/components/system/account-number-preference-detail-view';
+import { getStructuredAccountNumberFormatsEnabled } from '@/lib/fineract/account-number-format-policy';
+import { toAccountNumberFormatOfficeOptions } from '@/lib/fineract/account-number-format-offices';
 import {
   getAccountNumberPreference,
   getAccountNumberPreferenceTemplate
 } from '@/lib/fineract/account-number-preferences';
+import { listOffices } from '@/lib/fineract/offices';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function AccountNumberPreferenceDetailPage({
@@ -31,9 +34,12 @@ export default async function AccountNumberPreferenceDetailPage({
     notFound();
   }
 
-  const [preference, template] = await Promise.all([
+  const structuredFormatsEnabled = await getStructuredAccountNumberFormatsEnabled();
+
+  const [preference, template, offices] = await Promise.all([
     getAccountNumberPreference(id),
-    getAccountNumberPreferenceTemplate()
+    getAccountNumberPreferenceTemplate(),
+    structuredFormatsEnabled ? listOffices() : Promise.resolve([])
   ]);
 
   if (!preference) {
@@ -46,6 +52,8 @@ export default async function AccountNumberPreferenceDetailPage({
       template={template}
       canUpdate={can(session, 'UPDATE_ACCOUNTNUMBERFORMAT')}
       canDelete={can(session, 'DELETE_ACCOUNTNUMBERFORMAT')}
+      structuredFormatsEnabled={structuredFormatsEnabled}
+      officeOptions={toAccountNumberFormatOfficeOptions(offices)}
     />
   );
 }

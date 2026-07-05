@@ -500,12 +500,15 @@ export {
   type WorkflowTransitionInput
 } from './system/workflow-definition.schema';
 export {
+  accountNumberFormatPreviewQuerySchema,
   buildCreateAccountNumberPreferencePayload,
   buildUpdateAccountNumberPreferencePayload,
   createAccountNumberPreferenceSchema,
   updateAccountNumberPreferenceSchema,
+  validateAccountNumberFormatPreviewQuery,
   validateCreateAccountNumberPreference,
   validateUpdateAccountNumberPreference,
+  type AccountNumberFormatPreviewQueryInput,
   type CreateAccountNumberPreferenceInput,
   type UpdateAccountNumberPreferenceInput
 } from './system/account-number-preference.schema';

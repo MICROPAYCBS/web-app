@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { BranchDetailView } from '@/components/organization/branch-detail-view';
 import { BranchEditUrlPanel } from '@/components/organization/branch-edit-url-panel';
+import { getStructuredAccountNumberFormatsEnabled } from '@/lib/fineract/account-number-format-policy';
 import { toBranchManagerOptions } from '@/lib/fineract/branch-manager-options';
 import { getOffice, getOfficeEditTemplate } from '@/lib/fineract/offices';
 import { listStaffByOffice } from '@/lib/fineract/staff';
@@ -29,6 +30,7 @@ export default async function OrganizationOfficeDetailPage({
   }
 
   const canEdit = can(session, 'UPDATE_OFFICE');
+  const structuredAccountNumberFormatsEnabled = await getStructuredAccountNumberFormatsEnabled();
 
   let office;
   let editTemplate;
@@ -56,6 +58,7 @@ export default async function OrganizationOfficeDetailPage({
             parentOptions={allowedParents}
             managerOptions={managerOptions}
             showParentField={showParentField}
+            structuredAccountNumberFormatsEnabled={structuredAccountNumberFormatsEnabled}
             initial={{
               name: editTemplate.name,
               parentId: editTemplate.parentId,

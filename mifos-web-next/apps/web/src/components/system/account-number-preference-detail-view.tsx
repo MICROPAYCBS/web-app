@@ -24,6 +24,8 @@ import {
   DetailPage
 } from '@/components/composites';
 import { AccountNumberPreferenceFormSheet } from '@/components/system/account-number-preference-form-sheet';
+import type { AccountNumberFormatOfficeOption } from '@/components/system/account-number-format-structured-fields';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -33,18 +35,26 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { accountNumberPreferenceLabel } from '@/lib/fineract/account-number-preference-display';
+import {
+  accountNumberFormatModeLabel,
+  accountNumberFormatPatternSummary,
+  accountNumberPreferenceLabel
+} from '@/lib/fineract/account-number-preference-display';
 
 export function AccountNumberPreferenceDetailView({
   preference,
   template,
   canUpdate,
-  canDelete
+  canDelete,
+  structuredFormatsEnabled,
+  officeOptions = []
 }: {
   preference: FineractAccountNumberPreferenceDetail;
   template: FineractAccountNumberPreferenceTemplate;
   canUpdate: boolean;
   canDelete: boolean;
+  structuredFormatsEnabled: boolean;
+  officeOptions?: AccountNumberFormatOfficeOption[];
 }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
@@ -108,9 +118,36 @@ export function AccountNumberPreferenceDetailView({
             <DetailField label="Account type">
               {accountNumberPreferenceLabel(preference.accountType)}
             </DetailField>
-            <DetailField label="Prefix field">
-              {accountNumberPreferenceLabel(preference.prefixType)}
+            <DetailField label="Mode">
+              <Badge variant={preference.structuredEnabled ? 'default' : 'secondary'}>
+                {accountNumberFormatModeLabel(preference)}
+              </Badge>
             </DetailField>
+            {preference.structuredEnabled ? (
+              <>
+                <DetailField label="Format pattern">
+                  <span className="font-mono text-sm">{preference.formatPattern ?? '—'}</span>
+                </DetailField>
+                <DetailField label="Format summary">
+                  {accountNumberFormatPatternSummary(preference)}
+                </DetailField>
+                <DetailField label="Sequence scope">
+                  {accountNumberPreferenceLabel(preference.sequenceScope)}
+                </DetailField>
+                <DetailField label="Check digit">
+                  {accountNumberPreferenceLabel(preference.checkDigitAlgorithm)}
+                </DetailField>
+              </>
+            ) : (
+              <>
+                <DetailField label="Prefix field">
+                  {accountNumberPreferenceLabel(preference.prefixType)}
+                </DetailField>
+                <DetailField label="Prefix character">
+                  {preference.prefixCharacter?.trim() ? preference.prefixCharacter : '—'}
+                </DetailField>
+              </>
+            )}
           </DetailFieldGrid>
         }
       >
@@ -128,6 +165,8 @@ export function AccountNumberPreferenceDetailView({
           onOpenChange={setEditOpen}
           template={template}
           preference={preference}
+          structuredFormatsEnabled={structuredFormatsEnabled}
+          officeOptions={officeOptions}
         />
       ) : null}
 

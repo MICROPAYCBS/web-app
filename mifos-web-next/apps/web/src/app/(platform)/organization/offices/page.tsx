@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { BranchCreateUrlPanel } from '@/components/organization/branch-create-url-panel';
 import { BranchesPageContent } from '@/components/organization/branches-page-content';
+import { getStructuredAccountNumberFormatsEnabled } from '@/lib/fineract/account-number-format-policy';
 import { toBranchManagerOptions } from '@/lib/fineract/branch-manager-options';
 import { listOfficeOptions, listOffices } from '@/lib/fineract/offices';
 import { listStaff } from '@/lib/fineract/staff';
@@ -23,6 +24,7 @@ export default async function OrganizationOfficesPage() {
   }
 
   const canCreate = can(session, 'CREATE_OFFICE');
+  const structuredAccountNumberFormatsEnabled = await getStructuredAccountNumberFormatsEnabled();
   const [offices, parentOptions, staff] = await Promise.all([
     listOffices(),
     canCreate ? listOfficeOptions() : Promise.resolve([]),
@@ -37,6 +39,7 @@ export default async function OrganizationOfficesPage() {
           <BranchCreateUrlPanel
             parentOptions={parentOptions}
             managerOptions={toBranchManagerOptions(staff)}
+            structuredAccountNumberFormatsEnabled={structuredAccountNumberFormatsEnabled}
           />
         </Suspense>
       ) : null}

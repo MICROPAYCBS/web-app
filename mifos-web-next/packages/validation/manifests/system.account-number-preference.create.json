@@ -1,3 +1,11 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 {
   "command": "system.account-number-preference.create",
   "fineractSources": [
@@ -5,6 +13,11 @@
   ],
   "fields": {
     "accountType": { "required": true },
-    "prefixType": { "required": false }
+    "prefixType": { "required": false },
+    "prefixCharacter": { "required": false },
+    "formatPattern": { "required": false },
+    "sequenceScope": { "required": false },
+    "checkDigitAlgorithm": { "required": false },
+    "structuredEnabled": { "required": false }
   }
 }

@@ -18,6 +18,7 @@ import {
   actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
+import { getStructuredAccountNumberFormatsEnabled } from '@/lib/fineract/account-number-format-policy';
 import { createOffice, updateOffice } from '@/lib/fineract/offices';
 import { getServerSession } from '@/lib/session/server';
 
@@ -47,6 +48,23 @@ function revalidateOfficeViews(officeId: string | number) {
   revalidatePath(officePath(officeId));
 }
 
+function validateBranchCodeWhenStructured(
+  branchProfile: CreateOfficeInput['branchProfile'] | UpdateOfficeInput['branchProfile'],
+  structuredEnabled: boolean
+): Record<string, string> | null {
+  if (!structuredEnabled) {
+    return null;
+  }
+  const officeCode = branchProfile?.officeCode?.trim();
+  if (!officeCode) {
+    return {
+      'branchProfile.officeCode':
+        'Branch code is required when structured account numbers are enabled.'
+    };
+  }
+  return null;
+}
+
 export async function createOfficeAction(input: CreateOfficeInput): Promise<OfficeActionResult> {
   const session = await getServerSession();
   try {
@@ -61,6 +79,16 @@ export async function createOfficeAction(input: CreateOfficeInput): Promise<Offi
       ok: false,
       message: 'Fix the highlighted fields.',
       fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  const structuredEnabled = await getStructuredAccountNumberFormatsEnabled();
+  const branchCodeError = validateBranchCodeWhenStructured(parsed.data.branchProfile, structuredEnabled);
+  if (branchCodeError) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: branchCodeError
     };
   }
 
@@ -90,6 +118,16 @@ export async function updateOfficeAction(
       ok: false,
       message: 'Fix the highlighted fields.',
       fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  const structuredEnabled = await getStructuredAccountNumberFormatsEnabled();
+  const branchCodeError = validateBranchCodeWhenStructured(parsed.data.branchProfile, structuredEnabled);
+  if (branchCodeError) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: branchCodeError
     };
   }
 

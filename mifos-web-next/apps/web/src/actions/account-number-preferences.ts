@@ -11,8 +11,10 @@
 import { assertCan } from '@mifos/auth';
 import {
   toFineractActionError,
+  validateAccountNumberFormatPreviewQuery,
   validateCreateAccountNumberPreference,
   validateUpdateAccountNumberPreference,
+  type AccountNumberFormatPreviewQueryInput,
   type CreateAccountNumberPreferenceInput,
   type UpdateAccountNumberPreferenceInput,
   actionSuccessFromFineractCommand
@@ -21,6 +23,7 @@ import { revalidatePath } from 'next/cache';
 import {
   createAccountNumberPreference,
   deleteAccountNumberPreference,
+  previewAccountNumberFormat,
   updateAccountNumberPreference
 } from '@/lib/fineract/account-number-preferences';
 import { getServerSession } from '@/lib/session/server';
@@ -29,6 +32,10 @@ const LIST_PATH = '/system/account-number-preferences';
 
 export type AccountNumberPreferencesActionResult =
   | { ok: true; resourceId?: number }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+export type AccountNumberFormatPreviewActionResult =
+  | { ok: true; preview: { accountNumber: string; formatPattern: string; accountType: number } }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 function preferencePath(preferenceId: number | string) {
@@ -134,5 +141,35 @@ export async function deleteAccountNumberPreferenceAction(
     return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete account number preference.');
+  }
+}
+
+export async function previewAccountNumberFormatAction(
+  query: AccountNumberFormatPreviewQueryInput
+): Promise<AccountNumberFormatPreviewActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'READ_ACCOUNTNUMBERFORMAT');
+  } catch {
+    return { ok: false, message: 'You do not have permission to preview account number formats.' };
+  }
+
+  const parsed = validateAccountNumberFormatPreviewQuery(query);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  try {
+    const preview = await previewAccountNumberFormat(parsed.data);
+    if (!preview) {
+      return { ok: false, message: 'Preview is unavailable for this format.' };
+    }
+    return { ok: true, preview };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to preview account number format.');
   }
 }

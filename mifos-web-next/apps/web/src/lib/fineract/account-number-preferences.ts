@@ -8,14 +8,20 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAccountNumberPreferenceDetail,
+import type {
+  FineractAccountNumberFormatPreview,
+  FineractAccountNumberPreferenceDetail,
   FineractAccountNumberPreferenceListItem,
   FineractAccountNumberPreferenceMutationResponse,
   FineractAccountNumberPreferenceOption,
-  FineractAccountNumberPreferenceTemplate, FineractCommandProcessingResult } from '@mifos/api-client';
+  FineractAccountNumberPreferenceTemplate,
+  FineractCommandProcessingResult
+} from '@mifos/api-client';
+import { buildAccountNumberFormatPreviewSearchParams } from '@mifos/domain';
 import {
   buildCreateAccountNumberPreferencePayload,
   buildUpdateAccountNumberPreferencePayload,
+  type AccountNumberFormatPreviewQueryInput,
   type CreateAccountNumberPreferenceInput,
   type UpdateAccountNumberPreferenceInput
 } from '@mifos/validation';
@@ -50,11 +56,28 @@ function normalizeListItem(raw: unknown): FineractAccountNumberPreferenceListIte
   if (!Number.isFinite(id) || !accountType) {
     return null;
   }
-  const prefixType = normalizeOption(row.prefixType) ?? undefined;
+  const prefixType = normalizeOption(row.prefixType);
+  const sequenceScope = normalizeOption(row.sequenceScope);
+  const checkDigitAlgorithm = normalizeOption(row.checkDigitAlgorithm);
   return {
     id,
     accountType,
-    prefixType
+    prefixType: prefixType ?? undefined,
+    prefixCharacter:
+      typeof row.prefixCharacter === 'string'
+        ? row.prefixCharacter
+        : row.prefixCharacter == null
+          ? null
+          : undefined,
+    formatPattern:
+      typeof row.formatPattern === 'string'
+        ? row.formatPattern
+        : row.formatPattern == null
+          ? null
+          : undefined,
+    sequenceScope: sequenceScope ?? null,
+    checkDigitAlgorithm: checkDigitAlgorithm ?? null,
+    structuredEnabled: row.structuredEnabled === true
   };
 }
 
@@ -74,6 +97,13 @@ function normalizePrefixTypeOptions(raw: unknown): Record<string, FineractAccoun
   return options;
 }
 
+function normalizeStringOptions(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+}
+
 function normalizeTemplate(raw: unknown): FineractAccountNumberPreferenceTemplate {
   if (!raw || typeof raw !== 'object') {
     return { accountTypeOptions: [], prefixTypeOptions: {} };
@@ -85,8 +115,33 @@ function normalizeTemplate(raw: unknown): FineractAccountNumberPreferenceTemplat
           .map((item) => normalizeOption(item))
           .filter((item): item is FineractAccountNumberPreferenceOption => item !== null)
       : [],
-    prefixTypeOptions: normalizePrefixTypeOptions(row.prefixTypeOptions)
+    prefixTypeOptions: normalizePrefixTypeOptions(row.prefixTypeOptions),
+    sequenceScopeOptions: Array.isArray(row.sequenceScopeOptions)
+      ? row.sequenceScopeOptions
+          .map((item) => normalizeOption(item))
+          .filter((item): item is FineractAccountNumberPreferenceOption => item !== null)
+      : undefined,
+    checkDigitAlgorithmOptions: Array.isArray(row.checkDigitAlgorithmOptions)
+      ? row.checkDigitAlgorithmOptions
+          .map((item) => normalizeOption(item))
+          .filter((item): item is FineractAccountNumberPreferenceOption => item !== null)
+      : undefined,
+    segmentTokenOptions: normalizeStringOptions(row.segmentTokenOptions)
   };
+}
+
+function normalizePreview(raw: unknown): FineractAccountNumberFormatPreview | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const accountType = Number(row.accountType);
+  const accountNumber = typeof row.accountNumber === 'string' ? row.accountNumber : '';
+  const formatPattern = typeof row.formatPattern === 'string' ? row.formatPattern : '';
+  if (!Number.isFinite(accountType) || !accountNumber) {
+    return null;
+  }
+  return { accountType, accountNumber, formatPattern };
 }
 
 export async function listAccountNumberPreferences(): Promise<FineractAccountNumberPreferenceListItem[]> {
@@ -110,11 +165,24 @@ export async function getAccountNumberPreferenceTemplate(): Promise<FineractAcco
 }
 
 export async function getAccountNumberPreference(
-  preferenceId: number
+  preferenceId: number,
+  options?: { template?: boolean }
 ): Promise<FineractAccountNumberPreferenceDetail | null> {
   const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>(`${ACCOUNT_NUMBER_FORMATS_PATH}/${preferenceId}`);
+  const query = options?.template ? '?template=true' : '';
+  const raw = await fineract.get<unknown>(`${ACCOUNT_NUMBER_FORMATS_PATH}/${preferenceId}${query}`);
   return normalizeListItem(raw);
+}
+
+export async function previewAccountNumberFormat(
+  query: AccountNumberFormatPreviewQueryInput
+): Promise<FineractAccountNumberFormatPreview | null> {
+  const fineract = await createFineractClient();
+  const params = buildAccountNumberFormatPreviewSearchParams(query);
+  const raw = await fineract.get<unknown>(
+    `${ACCOUNT_NUMBER_FORMATS_PATH}/preview?${params.toString()}`
+  );
+  return normalizePreview(raw);
 }
 
 export async function createAccountNumberPreference(

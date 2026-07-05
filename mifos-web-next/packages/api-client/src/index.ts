@@ -375,6 +375,13 @@ export type {
 } from './system/workflow-definition-types';
 
 export type {
+  AccountNumberFormat,
+  AccountNumberFormatPreview,
+  AccountNumberFormatTemplate,
+  AccountNumberSequenceScope,
+  CheckDigitAlgorithm,
+  EnumOption,
+  FineractAccountNumberFormatPreview,
   FineractAccountNumberPreferenceDetail,
   FineractAccountNumberPreferenceListItem,
   FineractAccountNumberPreferenceMutationResponse,
