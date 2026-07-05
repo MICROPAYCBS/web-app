@@ -83,7 +83,9 @@ export {
   type ClientNoteInput
 } from './clients/client-details.schema';
 export {
+  CLIENT_IDENTIFIERS_REQUIRED_MESSAGE,
   clientIdentifierSchema,
+  countValidClientIdentifiers,
   findIdentityTypeRule,
   validateClientIdentifier,
   validateDocumentKeyAgainstIdentityRule,

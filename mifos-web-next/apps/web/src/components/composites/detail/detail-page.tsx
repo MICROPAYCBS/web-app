@@ -8,14 +8,16 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
-import { pageHeaderContentSpacing, platformInset } from '@/lib/platform-layout';
+import {
+  detailSidebarInsetX,
+  detailSidebarTopPadding,
+  pageHeaderContentSpacing,
+  platformInset
+} from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 /** Fills the platform main area; only the detail body scrolls (sidebar + header stay put). */
 const DETAIL_SIDEBAR_LAYOUT = 'flex min-h-0 flex-1 flex-col lg:flex-row';
-
-/** Top inset shared with {@link PageHeader} — applied once on the sidebar shell, not per column. */
-const DETAIL_SIDEBAR_TOP_PADDING = 'pt-5';
 
 export function DetailPage({
   header,
@@ -42,17 +44,25 @@ export function DetailPage({
 
   if (hasSidebar) {
     return (
-      <div className={cn(DETAIL_SIDEBAR_LAYOUT, DETAIL_SIDEBAR_TOP_PADDING, className)}>
+      <div className={cn(DETAIL_SIDEBAR_LAYOUT, className)}>
         <aside
           className={cn(
-            'max-h-[min(40vh,20rem)] w-full shrink-0 overflow-y-auto border-b border-border',
-            'lg:max-h-none lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
+            'flex w-full shrink-0 flex-col border-border',
+            detailSidebarTopPadding,
+            'max-h-[min(40vh,20rem)] border-b lg:max-h-none lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
           )}
         >
-          <div className={cn(platformInset, 'lg:py-6')}>{sidebar}</div>
+          <div
+            className={cn(
+              detailSidebarInsetX,
+              'min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 md:pb-6'
+            )}
+          >
+            {sidebar}
+          </div>
         </aside>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <PageHeader className={cn('pt-0', headerClassName)}>
+          <PageHeader className={headerClassName}>
             <div className={pageHeaderContentSpacing}>
               {header}
               {summary}

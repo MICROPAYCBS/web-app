@@ -22,6 +22,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'A customer signature is required for the assigned customer class.',
   'validation.msg.client.customerClassId.document.required':
     'At least one identification document is required for the assigned customer class.',
+  'validation.msg.client.identifiers.required':
+    'At least one identification document is required for individual customers.',
   'validation.msg.client.customerClassId.legalForm.required':
     'Legal form is required to assign the selected customer class.',
   'validation.msg.client.customerClassId.legalForm.mismatch':

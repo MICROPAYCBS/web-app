@@ -416,6 +416,7 @@ export function CreateClientWizard({
           documentTypes={identifierDocumentTypes}
           identityTypeOptions={identifierIdentityTypeOptions}
           draft={draft}
+          errors={stepErrors}
           onIdentifiersChange={(clientIdentifiers) =>
             setDraft((d) => ({ ...d, clientIdentifiers }))
           }

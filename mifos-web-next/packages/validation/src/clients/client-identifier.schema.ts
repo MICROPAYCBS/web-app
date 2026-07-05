@@ -32,6 +32,21 @@ export type ClientIdentifierValidationContext = {
   identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
 };
 
+export function countValidClientIdentifiers(
+  identifiers: ClientIdentifierInput[] | undefined
+): number {
+  if (!identifiers?.length) {
+    return 0;
+  }
+  return identifiers.filter(
+    (identifier) =>
+      identifier.documentTypeId > 0 && identifier.documentKey.trim().length > 0
+  ).length;
+}
+
+export const CLIENT_IDENTIFIERS_REQUIRED_MESSAGE =
+  'At least one identification document is required for individual customers.';
+
 export function findIdentityTypeRule(
   documentTypeId: number,
   identityTypeOptions: ClientIdentifierIdentityTypeOption[] | undefined

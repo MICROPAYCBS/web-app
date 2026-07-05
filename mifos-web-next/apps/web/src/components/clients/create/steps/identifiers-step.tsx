@@ -8,12 +8,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { LEGAL_FORM_PERSON } from '@mifos/validation';
 import type { ClientIdentifierIdentityTypeOption, ClientIdentifierInput } from '@mifos/validation';
 import { Plus, IdCard } from 'lucide-react';
 import { useState } from 'react';
 import { ClientIdentifierFormSheet } from '@/components/clients/shared/client-identifier-form-sheet';
 import { DraftCollectionView } from '@/components/clients/shared/draft-collection-view';
 import type { CreateClientDraft } from '../types';
+import type { StepErrors } from '../validation';
 import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,17 +38,21 @@ export function IdentifiersStep({
   documentTypes,
   identityTypeOptions = [],
   draft,
+  errors = {},
   onIdentifiersChange
 }: {
   documentTypes: { id: number; name: string }[];
   identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
   draft: CreateClientDraft;
+  errors?: StepErrors;
   onIdentifiersChange: (identifiers: ClientIdentifierInput[]) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const identifiers = draft.clientIdentifiers;
+  const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
+  const identifiersRequired = legalFormId === LEGAL_FORM_PERSON;
 
   function openAdd() {
     setEditIndex(null);
@@ -65,8 +71,14 @@ export function IdentifiersStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Add ID or passport details for this customer (optional). You can skip this step.
+        {identifiersRequired
+          ? 'Add at least one identification document for this individual customer (for example national ID or passport).'
+          : 'Add ID or passport details for this customer (optional).'}
       </p>
+
+      {errors.clientIdentifiers ? (
+        <p className="text-sm text-destructive">{errors.clientIdentifiers}</p>
+      ) : null}
 
       <Button type="button" variant="outline" size="sm" onClick={openAdd}>
         <Plus className="mr-2 size-4" />
@@ -76,8 +88,12 @@ export function IdentifiersStep({
       {identifiers.length === 0 ? (
         <EmptyState
           icon={IdCard}
-          title="No identifiers added yet"
-          description="National ID, passport, or other identification can be captured here."
+          title={identifiersRequired ? 'Identification required' : 'No identifiers added yet'}
+          description={
+            identifiersRequired
+              ? 'Add at least one valid identification document before you can continue.'
+              : 'National ID, passport, or other identification can be captured here.'
+          }
           action={
             <Button type="button" variant="outline" size="sm" onClick={openAdd}>
               <Plus className="mr-2 size-4" />
@@ -95,6 +111,7 @@ export function IdentifiersStep({
               const summary = identifierInputSummary(identifier);
               const onEdit = () => openEdit(index);
               const onDelete = () => remove(index);
+              const rowError = errors[`clientIdentifiers.${index}`];
 
               if (mode === 'grid') {
                 return (
@@ -111,6 +128,7 @@ export function IdentifiersStep({
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">{summary}</p>
+                        {rowError ? <p className="text-sm text-destructive">{rowError}</p> : null}
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -138,6 +156,7 @@ export function IdentifiersStep({
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{summary}</p>
+                    {rowError ? <p className="text-sm text-destructive">{rowError}</p> : null}
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <button

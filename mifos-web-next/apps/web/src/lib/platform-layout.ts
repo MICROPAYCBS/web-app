@@ -25,5 +25,11 @@ export const platformScrollRegion =
  */
 export const pageHeaderPadding = 'pb-4 pt-5';
 
+/** Top inset for detail sidebar rails — aligns with {@link pageHeaderPadding}. */
+export const detailSidebarTopPadding = 'pt-5';
+
+/** Horizontal inset for detail sidebar nav (scroll region below top inset). */
+export const detailSidebarInsetX = platformInsetX;
+
 /** Vertical rhythm between blocks inside a page header (back link, title, toolbar). */
 export const pageHeaderContentSpacing = 'space-y-4';

@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, complianceProfileSchema, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE, complianceProfileSchema, countValidClientIdentifiers, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
@@ -219,6 +219,15 @@ export function validateIdentifiersStep(
   context: CreateClientValidationContext = {}
 ): StepErrors {
   const errors: StepErrors = {};
+  const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
+
+  if (
+    legalFormId === LEGAL_FORM_PERSON &&
+    countValidClientIdentifiers(draft.clientIdentifiers) < 1
+  ) {
+    errors.clientIdentifiers = CLIENT_IDENTIFIERS_REQUIRED_MESSAGE;
+  }
+
   draft.clientIdentifiers.forEach((identifier, index) => {
     const parsed = validateClientIdentifier(identifier, {
       identityTypeOptions: context.identityTypeOptions

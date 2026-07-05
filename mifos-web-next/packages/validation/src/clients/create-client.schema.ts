@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { GENDER_FEMALE, GENDER_MALE } from './gender';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 import { incomeSourceSchema } from './income-source.schema';
-import { clientIdentifierSchema } from './client-identifier.schema';
+import { clientIdentifierSchema, countValidClientIdentifiers, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE } from './client-identifier.schema';
 import { complianceProfileSchema } from './compliance-profile.schema';
 import { ugandaMobileInternationalSchema, optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 
@@ -170,6 +170,15 @@ export const createClientSchema = z
         message: 'Marital status is required',
         path: ['maritalStatusId']
       });
+    }
+    if (data.legalFormId === LEGAL_FORM_PERSON) {
+      if (countValidClientIdentifiers(data.clientIdentifiers) < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: CLIENT_IDENTIFIERS_REQUIRED_MESSAGE,
+          path: ['clientIdentifiers']
+        });
+      }
     }
     if (data.address?.length) {
       const primaryCount = data.address.filter((entry) => entry.isPrimary).length;

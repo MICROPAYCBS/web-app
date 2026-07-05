@@ -8,7 +8,7 @@
 
 import { PageHeader } from '@/components/composites/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { pageHeaderContentSpacing, platformInset } from '@/lib/platform-layout';
+import { pageHeaderContentSpacing, platformInset, detailSidebarInsetX, detailSidebarTopPadding } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface DetailPageSkeletonProps {
@@ -183,18 +183,21 @@ export function DetailPageSkeleton({
     >
       <aside
         className={cn(
-          'max-h-[min(40vh,20rem)] w-full shrink-0 overflow-hidden border-b border-border',
-          'lg:max-h-none lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
+          'flex w-full shrink-0 flex-col border-border',
+          detailSidebarTopPadding,
+          'max-h-[min(40vh,20rem)] border-b lg:max-h-none lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
         )}
         aria-hidden
       >
-        <div className={cn(platformInset, 'space-y-1 lg:py-6')}>
-          {Array.from({ length: sidebarItemCount }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3 rounded-lg px-3 py-2">
-              <Skeleton className="size-4 shrink-0 rounded-sm" />
-              <Skeleton className="h-4 flex-1" />
-            </div>
-          ))}
+        <div className={cn(detailSidebarInsetX, 'min-h-0 flex-1 overflow-hidden pb-4 md:pb-6')}>
+          <div className="space-y-1">
+            {Array.from({ length: sidebarItemCount }).map((_, index) => (
+              <div key={index} className="flex items-center gap-3 rounded-lg px-3 py-2">
+                <Skeleton className="size-4 shrink-0 rounded-sm" />
+                <Skeleton className="h-4 flex-1" />
+              </div>
+            ))}
+          </div>
         </div>
       </aside>
       {body}
