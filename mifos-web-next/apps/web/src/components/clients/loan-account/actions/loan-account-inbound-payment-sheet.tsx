@@ -27,7 +27,6 @@ import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
-import { accountTransferAvailableBalance } from '@/lib/fineract/account-transfer-balance';
 import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
 import {
   loanAccountCurrencyCode,
@@ -210,7 +209,7 @@ export function LoanAccountInboundPaymentSheet({
         return;
       }
 
-      const balance = accountTransferAvailableBalance(result.template);
+      const balance = result.availableBalance;
       const officeId =
         result.template.fromClient?.officeId ??
         result.template.fromOffice?.id ??

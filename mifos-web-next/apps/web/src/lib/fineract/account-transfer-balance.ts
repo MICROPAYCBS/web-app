@@ -6,7 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { AccountTransferTemplate } from '@mifos/api-client';
+import type { AccountTransferTemplate, FineractSavingsAccountDetail } from '@mifos/api-client';
+import { savingsAccountAvailableBalance } from '@/lib/fineract/savings-account-display';
 
 export function accountTransferAvailableBalance(template: AccountTransferTemplate): number {
   const fromAccount = template.fromAccount as
@@ -26,4 +27,15 @@ export function accountTransferAvailableBalance(template: AccountTransferTemplat
     fromAccount.balance ??
     0
   );
+}
+
+/** Prefer savings account summary (matches savings detail); fall back to transfer template. */
+export function resolveAccountTransferSourceAvailableBalance(
+  template: AccountTransferTemplate,
+  savingsAccount?: FineractSavingsAccountDetail | null
+): number {
+  if (savingsAccount) {
+    return savingsAccountAvailableBalance(savingsAccount);
+  }
+  return accountTransferAvailableBalance(template);
 }

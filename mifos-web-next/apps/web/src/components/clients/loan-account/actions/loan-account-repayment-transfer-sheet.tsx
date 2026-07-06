@@ -21,7 +21,6 @@ import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
-import { accountTransferAvailableBalance } from '@/lib/fineract/account-transfer-balance';
 import {
   loanAccountCanRepayFromSavings,
   loanAccountLinkedSavingsLabel,
@@ -90,7 +89,7 @@ export function LoanAccountRepaymentTransferSheet({
         return;
       }
 
-      const balance = accountTransferAvailableBalance(result.template);
+      const balance = result.availableBalance;
       const officeId =
         result.template.fromClient?.officeId ??
         result.template.fromOffice?.id ??

@@ -10,7 +10,6 @@ import 'server-only';
 
 import type { AccountTransferTemplate,
   CreateAccountTransferResponse, FineractCommandProcessingResult } from '@mifos/api-client';
-import { accountTransferAvailableBalance } from '@/lib/fineract/account-transfer-balance';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import {
   normalizeFineractDateField,
@@ -50,7 +49,10 @@ function toSearchParams(
   return out;
 }
 
-export { accountTransferAvailableBalance } from '@/lib/fineract/account-transfer-balance';
+export {
+  accountTransferAvailableBalance,
+  resolveAccountTransferSourceAvailableBalance
+} from '@/lib/fineract/account-transfer-balance';
 
 export async function getAccountTransferTemplate(
   query: AccountTransferTemplateQuery

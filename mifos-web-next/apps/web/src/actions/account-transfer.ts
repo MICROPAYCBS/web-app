@@ -22,7 +22,7 @@ import type {
   AccountTransferTemplateResult
 } from '@/lib/fineract/account-transfer-action-result';
 import {
-  accountTransferAvailableBalance,
+  resolveAccountTransferSourceAvailableBalance,
   buildCreateAccountTransferBody,
   createAccountTransfer,
   getAccountTransferTemplate,
@@ -39,7 +39,6 @@ import { LOAN_PORTFOLIO_ACCOUNT_TYPE } from '@/lib/fineract/portfolio-account-ty
 import { resolveClientOfficeId } from '@/lib/fineract/resolve-client-office-id';
 import { getClient } from '@/lib/fineract/clients';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
-import { savingsAccountAvailableBalance } from '@/lib/fineract/savings-account-display';
 import {
   resolveTransferBeneficiaryClient,
   searchTransferBeneficiaryClients
@@ -166,7 +165,7 @@ export async function loadLoanAccountRepaymentTransferSheetAction(
   loanAccountId: string | number,
   fromSavingsAccountId: string | number
 ): Promise<
-  | { ok: true; template: AccountTransferTemplate }
+  | { ok: true; template: AccountTransferTemplate; availableBalance: number }
   | Extract<AccountTransferActionResult, { ok: false }>
 > {
   const session = await getServerSession();
@@ -186,7 +185,9 @@ export async function loadLoanAccountRepaymentTransferSheetAction(
         Number(loanAccountId)
       )
     });
-    return { ok: true, template };
+    const fromAccount = await getSavingsAccount(fromSavingsAccountId);
+    const availableBalance = resolveAccountTransferSourceAvailableBalance(template, fromAccount);
+    return { ok: true, template, availableBalance };
   } catch (err) {
     return toFineractActionError(err, 'Could not load repayment transfer form.');
   }
@@ -261,11 +262,9 @@ export async function createLoanRepaymentTransferAction(
       return { ok: false, message: 'Could not load the linked savings account.' };
     }
 
-    const availableBalance = savingsAccountAvailableBalance(fromAccount);
-    const templateBalance = accountTransferAvailableBalance(template);
-    const maxTransferAmount = availableBalance > 0 ? availableBalance : templateBalance;
+    const availableBalance = resolveAccountTransferSourceAvailableBalance(template, fromAccount);
 
-    if (input.transferAmount > maxTransferAmount) {
+    if (input.transferAmount > availableBalance) {
       return {
         ok: false,
         message: 'Transfer amount exceeds available balance.',
@@ -343,11 +342,9 @@ export async function createSavingsAccountTransferAction(
     if (!fromAccount) {
       return { ok: false, message: 'Could not load the source savings account.' };
     }
-    const availableBalance = savingsAccountAvailableBalance(fromAccount);
-    const templateBalance = accountTransferAvailableBalance(template);
-    const maxTransferAmount = availableBalance > 0 ? availableBalance : templateBalance;
+    const availableBalance = resolveAccountTransferSourceAvailableBalance(template, fromAccount);
 
-    if (input.transferAmount > maxTransferAmount) {
+    if (input.transferAmount > availableBalance) {
       return {
         ok: false,
         message: 'Transfer amount exceeds available balance.',
