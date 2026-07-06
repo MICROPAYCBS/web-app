@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { translateFineractCode } from '@mifos/i18n';
 import { assertCan } from '@mifos/auth';
 import {
   loanAccountApproveCommandSchema,
@@ -49,6 +50,14 @@ import {
 import { loadCashierAwarePaymentTypeOptions } from '@/lib/fineract/cashier-cash-transaction-guard';
 import { chargeExpectsDueDate } from '@/lib/fineract/loan-application-charges';
 import { getServerSession } from '@/lib/session/server';
+import {
+  isDirectLoanInboundPaymentCommand
+} from '@/lib/fineract/loan-repayment-policy-paths';
+import { getLoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy';
+
+const DIRECT_LOAN_REPAYMENT_DENIED_MESSAGE = translateFineractCode(
+  'error.msg.direct.loan.repayment.not.allowed'
+);
 
 function fieldErrorsFromZod(
   issues: { path: (string | number)[]; message: string }[]
@@ -198,6 +207,13 @@ export async function loadLoanAccountTransactionSheetDataAction(
   );
   if (denied) {
     return denied;
+  }
+
+  if (isDirectLoanInboundPaymentCommand(command)) {
+    const policy = await getLoanRepaymentPolicySettings();
+    if (!policy.allowDirectLoanRepayments) {
+      return { ok: false, message: DIRECT_LOAN_REPAYMENT_DENIED_MESSAGE };
+    }
   }
 
   try {
@@ -354,6 +370,13 @@ export async function executeLoanAccountTransactionCommandAction(
   );
   if (denied) {
     return denied;
+  }
+
+  if (isDirectLoanInboundPaymentCommand(command)) {
+    const policy = await getLoanRepaymentPolicySettings();
+    if (!policy.allowDirectLoanRepayments) {
+      return { ok: false, message: DIRECT_LOAN_REPAYMENT_DENIED_MESSAGE };
+    }
   }
 
   const schema =

@@ -57,7 +57,7 @@ import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashie
 import { loadLoanAccountStandingInstructionContext } from '@/lib/fineract/load-loan-account-standing-instruction-context';
 
 import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
-
+import { getLoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 
 import { getServerSession } from '@/lib/session/server';
@@ -109,10 +109,10 @@ function loanAccountPermissions(
     assignOfficer: can(session, LOAN_OFFICER_CONFIG.assignPermission),
 
     reassignOfficer: can(session, {
-
       all: [LOAN_OFFICER_CONFIG.assignPermission, LOAN_OFFICER_CONFIG.removePermission]
+    }),
 
-    })
+    repayFromSavings: can(session, 'CREATE_ACCOUNTTRANSFER')
 
   };
 
@@ -200,14 +200,15 @@ export default async function LoanAccountGeneralPage({
 
 
 
-  const [cashierSnapshot, reportOrgName, standingInstructions] = await Promise.all([
+  const [cashierSnapshot, reportOrgName, standingInstructions, repaymentPolicy] = await Promise.all([
     loadAccountCashierForSession(session, {
       accountId: result.data.id,
       accountKind: 'loan',
       currencyCode: result.data.currency.code ?? 'USD'
     }),
     loadReportOrganisationName(),
-    loadLoanAccountStandingInstructionContext(session, clientId, result.data)
+    loadLoanAccountStandingInstructionContext(session, clientId, result.data),
+    getLoanRepaymentPolicySettings()
   ]);
 
 
@@ -221,6 +222,8 @@ export default async function LoanAccountGeneralPage({
       clientId={clientId}
 
       permissions={loanAccountPermissions(session)}
+
+      repaymentPolicy={repaymentPolicy}
 
       cashierSnapshot={cashierSnapshot}
 

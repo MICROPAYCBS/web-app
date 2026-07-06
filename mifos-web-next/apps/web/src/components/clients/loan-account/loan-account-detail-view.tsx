@@ -44,12 +44,14 @@ import {
 } from '@/lib/fineract/loan-account-display';
 import { loanAccountSectionIds } from '@/components/clients/loan-account/loan-account-detail-sidebar';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
+import type { LoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy-paths';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 
 export function LoanAccountDetailView({
   account,
   clientId,
   permissions,
+  repaymentPolicy,
   cashierSnapshot = null,
   reportOrgName,
   standingInstructions = null
@@ -57,6 +59,7 @@ export function LoanAccountDetailView({
   account: FineractLoanAccountDetail;
   clientId: string;
   permissions: LoanAccountActionPermissions;
+  repaymentPolicy: LoanRepaymentPolicySettings;
   cashierSnapshot?: AccountCashierSnapshot | null;
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
@@ -135,6 +138,7 @@ export function LoanAccountDetailView({
                   account={account}
                   clientId={clientId}
                   permissions={permissions}
+                  repaymentPolicy={repaymentPolicy}
                 />
               </AccountDetailActionsBar>
             }

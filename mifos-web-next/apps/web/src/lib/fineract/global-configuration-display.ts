@@ -8,6 +8,15 @@
 
 import type { FineractGlobalConfiguration } from '@mifos/api-client';
 import { fineractApiDateToFormString, formatFineractDateArray } from '@/lib/fineract/dates';
+import { ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME } from '@/lib/fineract/loan-repayment-policy-paths';
+
+const GLOBAL_CONFIGURATION_DISPLAY_NAMES: Record<string, string> = {
+  [ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME]: 'Allow direct loan repayments'
+};
+
+export function globalConfigurationDisplayName(name: string): string {
+  return GLOBAL_CONFIGURATION_DISPLAY_NAMES[name] ?? name;
+}
 
 export function formatGlobalConfigurationValue(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) {

@@ -35,6 +35,7 @@ import {
   LoanAccountLifecycleDialog,
   type LoanAccountLifecycleDialogKind
 } from '@/components/clients/loan-account/actions/loan-account-lifecycle-dialog';
+import { LoanAccountInboundPaymentSheet } from '@/components/clients/loan-account/actions/loan-account-inbound-payment-sheet';
 import { LoanAccountTransactionSheet } from '@/components/clients/loan-account/actions/loan-account-transaction-sheet';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,7 +47,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { loanAccountActionVisibility } from '@/lib/fineract/loan-account-command-meta';
 import type { LoanAccountTransactionCommand } from '@/lib/fineract/loan-account-command-meta';
-import { loanAccountCurrencyCode } from '@/lib/fineract/loan-account-display';
+import {
+  loanAccountCurrencyCode
+} from '@/lib/fineract/loan-account-display';
+import type { LoanInboundPaymentKind } from '@/lib/fineract/loan-repayment-policy-paths';
+import type { LoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy-paths';
+import { loanInboundPaymentEligibility } from '@/lib/fineract/loan-repayment-ui';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 
 export interface LoanAccountActionPermissions {
@@ -69,6 +75,7 @@ export interface LoanAccountActionPermissions {
   undoWriteOff: boolean;
   assignOfficer: boolean;
   reassignOfficer: boolean;
+  repayFromSavings: boolean;
 }
 
 type MenuItem = {
@@ -83,11 +90,13 @@ type MenuItem = {
 export function LoanAccountActions({
   account,
   clientId,
-  permissions
+  permissions,
+  repaymentPolicy
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
   permissions: LoanAccountActionPermissions;
+  repaymentPolicy: LoanRepaymentPolicySettings;
 }) {
   const visibility = loanAccountActionVisibility(account);
   const currencyCode = loanAccountCurrencyCode(account);
@@ -100,10 +109,28 @@ export function LoanAccountActions({
     null
   );
   const [addChargeOpen, setAddChargeOpen] = useState(false);
+  const [inboundPaymentKind, setInboundPaymentKind] = useState<LoanInboundPaymentKind | null>(null);
+
+  const repaymentEligibility = loanInboundPaymentEligibility({
+    account,
+    kind: 'repayment',
+    policy: repaymentPolicy,
+    permissions,
+    statusVisible: visibility.makeRepayment
+  });
+  const recoveryEligibility = loanInboundPaymentEligibility({
+    account,
+    kind: 'recoverypayment',
+    policy: repaymentPolicy,
+    permissions,
+    statusVisible: visibility.recoveryPayment
+  });
+
+  const showMakeRepayment = repaymentEligibility.show;
+  const showRecoveryPayment = recoveryEligibility.show;
 
   const showApprove = visibility.approve && permissions.approve;
   const showDisburse = visibility.disburse && permissions.disburse;
-  const showRepayment = visibility.makeRepayment && permissions.makeRepayment;
 
   const menuItems: MenuItem[] = [];
 
@@ -192,12 +219,12 @@ export function LoanAccountActions({
       onSelect: () => setTransactionCommand('close-rescheduled')
     });
   }
-  if (visibility.recoveryPayment && permissions.recoveryPayment) {
+  if (showRecoveryPayment) {
     menuItems.push({
       id: 'recovery',
       label: 'Recovery payment',
       icon: Banknote,
-      onSelect: () => setTransactionCommand('recoverypayment')
+      onSelect: () => setInboundPaymentKind('recoverypayment')
     });
   }
   if (visibility.foreclosure && permissions.foreclosure) {
@@ -210,7 +237,7 @@ export function LoanAccountActions({
     });
   }
 
-  const hasPrimary = showApprove || showDisburse || showRepayment;
+  const hasPrimary = showApprove || showDisburse || showMakeRepayment;
   const hasMenu = menuItems.length > 0;
 
   if (!hasPrimary && !hasMenu) {
@@ -238,10 +265,10 @@ export function LoanAccountActions({
             Disburse to savings
           </Button>
         ) : null}
-        {showRepayment ? (
-          <Button type="button" onClick={() => setTransactionCommand('repayment')}>
+        {showMakeRepayment ? (
+          <Button type="button" onClick={() => setInboundPaymentKind('repayment')}>
             <HandCoins className="mr-1 size-4" aria-hidden />
-            Make repayment
+            {repaymentPolicy.allowDirectLoanRepayments ? 'Make repayment' : 'Repay from savings'}
           </Button>
         ) : null}
         {hasMenu ? (
@@ -326,6 +353,28 @@ export function LoanAccountActions({
         currencyCode={currencyCode}
         open={addChargeOpen}
         onOpenChange={setAddChargeOpen}
+      />
+      <LoanAccountInboundPaymentSheet
+        clientId={clientId}
+        account={account}
+        kind={inboundPaymentKind}
+        open={inboundPaymentKind != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setInboundPaymentKind(null);
+          }
+        }}
+        allowDirectLoanRepayments={repaymentPolicy.allowDirectLoanRepayments}
+        canDirect={
+          inboundPaymentKind === 'recoverypayment'
+            ? recoveryEligibility.canDirect
+            : repaymentEligibility.canDirect
+        }
+        canTransfer={
+          inboundPaymentKind === 'recoverypayment'
+            ? recoveryEligibility.canTransfer
+            : repaymentEligibility.canTransfer
+        }
       />
     </>
   );

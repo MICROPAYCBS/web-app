@@ -10,6 +10,7 @@ import 'server-only';
 
 import type { AccountTransferTemplate,
   CreateAccountTransferResponse, FineractCommandProcessingResult } from '@mifos/api-client';
+import { accountTransferAvailableBalance } from '@/lib/fineract/account-transfer-balance';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import {
   normalizeFineractDateField,
@@ -49,6 +50,8 @@ function toSearchParams(
   return out;
 }
 
+export { accountTransferAvailableBalance } from '@/lib/fineract/account-transfer-balance';
+
 export async function getAccountTransferTemplate(
   query: AccountTransferTemplateQuery
 ): Promise<AccountTransferTemplate> {
@@ -58,26 +61,6 @@ export async function getAccountTransferTemplate(
     fromAccountType: String(query.fromAccountType ?? SAVINGS_PORTFOLIO_ACCOUNT_TYPE),
     ...toSearchParams(query.cascade ?? {})
   });
-}
-
-export function accountTransferAvailableBalance(template: AccountTransferTemplate): number {
-  const fromAccount = template.fromAccount as
-    | (NonNullable<AccountTransferTemplate['fromAccount']> & {
-        accountBalance?: number;
-        balance?: number;
-      })
-    | undefined;
-  if (!fromAccount) {
-    return 0;
-  }
-  return (
-    fromAccount.availableBalance ??
-    fromAccount.summary?.availableBalance ??
-    fromAccount.summary?.accountBalance ??
-    fromAccount.accountBalance ??
-    fromAccount.balance ??
-    0
-  );
 }
 
 export function buildCreateAccountTransferBody(

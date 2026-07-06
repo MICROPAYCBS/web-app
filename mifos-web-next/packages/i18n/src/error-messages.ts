@@ -84,7 +84,9 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Denomination breakdown is not enabled for cash transactions.',
   'error.msg.legal.tender.not.found': 'Legal tender not found.',
   'error.msg.legal.tender.duplicate':
-    'A denomination with this face value and type already exists for this currency.'
+    'A denomination with this face value and type already exists for this currency.',
+  'error.msg.direct.loan.repayment.not.allowed':
+    "Direct loan repayments are not allowed for this institution. Repay by transferring from the client's savings account."
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

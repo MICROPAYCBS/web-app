@@ -34,7 +34,8 @@ import {
   applyGlobalConfigurationChanges,
   formatGlobalConfigurationDateValue,
   formatGlobalConfigurationStringValue,
-  formatGlobalConfigurationValue
+  formatGlobalConfigurationValue,
+  globalConfigurationDisplayName
 } from '@/lib/fineract/global-configuration-display';
 
 export function GlobalConfigurationsTable({
@@ -113,9 +114,10 @@ export function GlobalConfigurationsTable({
         cell: ({ row }) => {
           const configuration = row.original;
           const description = configuration.description?.trim();
+          const displayName = globalConfigurationDisplayName(configuration.name);
           return (
             <div className="flex items-start gap-2">
-              <span className="font-medium break-all">{configuration.name}</span>
+              <span className="font-medium break-all">{displayName}</span>
               {description ? (
                 <Tooltip>
                   <TooltipTrigger
@@ -125,7 +127,7 @@ export function GlobalConfigurationsTable({
                         variant="ghost"
                         size="icon-sm"
                         className="mt-0.5 shrink-0 text-muted-foreground"
-                        aria-label={`About ${configuration.name}`}
+                        aria-label={`About ${displayName}`}
                       />
                     }
                   >
