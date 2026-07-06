@@ -30,20 +30,18 @@ export function resolveLoanInboundPaymentMethods(input: {
   }
 
   const methods: LoanInboundPaymentMethod[] = [];
-  if (showDirect) {
-    methods.push('direct');
-  }
   if (showTransfer) {
     methods.push('savings');
   }
+  if (showDirect) {
+    methods.push('direct');
+  }
 
   let defaultMethod: LoanInboundPaymentMethod;
-  if (showDirect && showTransfer) {
-    defaultMethod = 'direct';
-  } else if (showDirect) {
-    defaultMethod = 'direct';
-  } else {
+  if (showTransfer) {
     defaultMethod = 'savings';
+  } else {
+    defaultMethod = 'direct';
   }
 
   return { methods, defaultMethod };
@@ -70,17 +68,10 @@ export function loanInboundPaymentEligibility(input: {
     input.kind === 'repayment'
       ? input.permissions.makeRepayment
       : input.permissions.recoveryPayment;
-  const canTransfer = input.permissions.repayFromSavings && hasLinkedSavings;
-  const { methods } = resolveLoanInboundPaymentMethods({
-    allowDirectLoanRepayments: input.policy.allowDirectLoanRepayments,
-    canDirect,
-    canTransfer
-  });
+  const canTransfer = input.permissions.repayFromSavings;
+  const canDirectPost = input.policy.allowDirectLoanRepayments && canDirect;
 
-  const show =
-    input.statusVisible &&
-    (methods.length > 0 ||
-      (!input.policy.allowDirectLoanRepayments && input.permissions.repayFromSavings));
+  const show = input.statusVisible && (canTransfer || canDirectPost);
 
   return {
     show,

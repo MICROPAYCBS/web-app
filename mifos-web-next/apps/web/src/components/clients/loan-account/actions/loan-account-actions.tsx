@@ -50,8 +50,11 @@ import type { LoanAccountTransactionCommand } from '@/lib/fineract/loan-account-
 import {
   loanAccountCurrencyCode
 } from '@/lib/fineract/loan-account-display';
-import type { LoanInboundPaymentKind } from '@/lib/fineract/loan-repayment-policy-paths';
-import type { LoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy-paths';
+import type {
+  LoanInboundPaymentKind,
+  LoanInboundPaymentMethod,
+  LoanRepaymentPolicySettings
+} from '@/lib/fineract/loan-repayment-policy-paths';
 import { loanInboundPaymentEligibility } from '@/lib/fineract/loan-repayment-ui';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 
@@ -110,6 +113,13 @@ export function LoanAccountActions({
   );
   const [addChargeOpen, setAddChargeOpen] = useState(false);
   const [inboundPaymentKind, setInboundPaymentKind] = useState<LoanInboundPaymentKind | null>(null);
+  const [inboundInitialMethod, setInboundInitialMethod] =
+    useState<LoanInboundPaymentMethod>('savings');
+
+  function openInboundPayment(kind: LoanInboundPaymentKind, method: LoanInboundPaymentMethod = 'savings') {
+    setInboundInitialMethod(method);
+    setInboundPaymentKind(kind);
+  }
 
   const repaymentEligibility = loanInboundPaymentEligibility({
     account,
@@ -224,7 +234,7 @@ export function LoanAccountActions({
       id: 'recovery',
       label: 'Recovery payment',
       icon: Banknote,
-      onSelect: () => setInboundPaymentKind('recoverypayment')
+      onSelect: () => openInboundPayment('recoverypayment')
     });
   }
   if (visibility.foreclosure && permissions.foreclosure) {
@@ -266,9 +276,9 @@ export function LoanAccountActions({
           </Button>
         ) : null}
         {showMakeRepayment ? (
-          <Button type="button" onClick={() => setInboundPaymentKind('repayment')}>
+          <Button type="button" onClick={() => openInboundPayment('repayment')}>
             <HandCoins className="mr-1 size-4" aria-hidden />
-            {repaymentPolicy.allowDirectLoanRepayments ? 'Make repayment' : 'Repay from savings'}
+            Make repayment
           </Button>
         ) : null}
         {hasMenu ? (
@@ -375,6 +385,7 @@ export function LoanAccountActions({
             ? recoveryEligibility.canTransfer
             : repaymentEligibility.canTransfer
         }
+        initialMethod={inboundInitialMethod}
       />
     </>
   );

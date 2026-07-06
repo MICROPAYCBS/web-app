@@ -28,7 +28,7 @@ export type LoanRepaymentPolicySettings = {
 };
 
 export const SAVINGS_ONLY_REPAYMENT_MESSAGE =
-  'This institution requires loan repayments from a savings account. Open a savings account for this client first.';
+  'Link a savings account to this loan before repaying from savings.';
 
 export function isDirectLoanInboundPaymentCommand(
   command: string

@@ -35,6 +35,7 @@ import {
   formatGlobalConfigurationDateValue,
   formatGlobalConfigurationStringValue,
   formatGlobalConfigurationValue,
+  globalConfigurationDescription,
   globalConfigurationDisplayName
 } from '@/lib/fineract/global-configuration-display';
 
@@ -113,7 +114,7 @@ export function GlobalConfigurationsTable({
         header: 'Name',
         cell: ({ row }) => {
           const configuration = row.original;
-          const description = configuration.description?.trim();
+          const description = globalConfigurationDescription(configuration);
           const displayName = globalConfigurationDisplayName(configuration.name);
           return (
             <div className="flex items-start gap-2">

@@ -10,7 +10,7 @@
 
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from 'react';
 import {
   createLoanRepaymentTransferAction,
   loadLoanAccountRepaymentTransferSheetAction
@@ -51,22 +51,15 @@ import { LOAN_PORTFOLIO_ACCOUNT_TYPE } from '@/lib/fineract/portfolio-account-ty
 
 const COPY: Record<
   LoanInboundPaymentKind,
-  {
-    title: string;
-    description: string;
-    directSubmitLabel: string;
-    savingsSubmitLabel: string;
-  }
+  { title: string; directSubmitLabel: string; savingsSubmitLabel: string }
 > = {
   repayment: {
     title: 'Make loan repayment',
-    description: 'Post a repayment against this loan.',
     directSubmitLabel: 'Post repayment',
     savingsSubmitLabel: 'Post repayment'
   },
   recoverypayment: {
     title: 'Recovery payment',
-    description: 'Post a recovery payment on this written-off loan.',
     directSubmitLabel: 'Post recovery payment',
     savingsSubmitLabel: 'Post recovery payment'
   }
@@ -80,7 +73,8 @@ export function LoanAccountInboundPaymentSheet({
   onOpenChange,
   allowDirectLoanRepayments,
   canDirect,
-  canTransfer
+  canTransfer,
+  initialMethod = 'savings'
 }: {
   clientId: string;
   account: FineractLoanAccountDetail;
@@ -90,6 +84,7 @@ export function LoanAccountInboundPaymentSheet({
   allowDirectLoanRepayments: boolean;
   canDirect: boolean;
   canTransfer: boolean;
+  initialMethod?: LoanInboundPaymentMethod;
 }) {
   const formId = useId();
   const router = useRouter();
@@ -98,17 +93,21 @@ export function LoanAccountInboundPaymentSheet({
   const linkedSavingsLabel = loanAccountLinkedSavingsLabel(account);
   const command = kind as LoanAccountTransactionCommand | null;
 
-  const { methods, defaultMethod } = resolveLoanInboundPaymentMethods({
-    allowDirectLoanRepayments,
-    canDirect,
-    canTransfer
-  });
-  const showMethodTabs = methods.length > 1;
+  const { methods, defaultMethod } = useMemo(
+    () =>
+      resolveLoanInboundPaymentMethods({
+        allowDirectLoanRepayments,
+        canDirect,
+        canTransfer
+      }),
+    [allowDirectLoanRepayments, canDirect, canTransfer]
+  );
+  const showMethodTabs = methods.includes('direct') && methods.includes('savings');
   const savingsOnlyRequired =
     methods.length === 0 ||
     (!allowDirectLoanRepayments && linkedSavingsAccountId == null);
 
-  const [paymentMethod, setPaymentMethod] = useState<LoanInboundPaymentMethod>('direct');
+  const [paymentMethod, setPaymentMethod] = useState<LoanInboundPaymentMethod>('savings');
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const initialTransactionDate = useInitialTransactionDate();
@@ -127,15 +126,23 @@ export function LoanAccountInboundPaymentSheet({
 
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
-    if (!open || !kind) {
+    const justOpened = open && !wasOpenRef.current;
+    wasOpenRef.current = open;
+
+    if (!justOpened || !kind) {
       return;
     }
-    setPaymentMethod(defaultMethod ?? 'savings');
+
+    const resolvedInitial = methods.includes(initialMethod)
+      ? initialMethod
+      : (defaultMethod ?? 'savings');
+    setPaymentMethod(resolvedInitial);
     setError(null);
     setFieldErrors({});
-  }, [defaultMethod, kind, open]);
+  }, [defaultMethod, initialMethod, kind, methods, open]);
 
   useEffect(() => {
     if (!open || !kind || paymentMethod !== 'direct' || !methods.includes('direct') || !command) {
@@ -240,6 +247,9 @@ export function LoanAccountInboundPaymentSheet({
     : (defaultMethod ?? methods[0] ?? 'savings');
   const submitLabel =
     activeMethod === 'direct' ? copy.directSubmitLabel : copy.savingsSubmitLabel;
+  const submitDisabled =
+    savingsOnlyRequired ||
+    (activeMethod === 'savings' && linkedSavingsAccountId == null && !methods.includes('direct'));
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -427,52 +437,62 @@ export function LoanAccountInboundPaymentSheet({
     </div>
   );
 
+  const savingsPanel =
+    linkedSavingsAccountId == null ? (
+      <p className="rounded-md border border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
+        {SAVINGS_ONLY_REPAYMENT_MESSAGE}
+      </p>
+    ) : (
+      savingsForm
+    );
+
+  const paymentBody = savingsOnlyRequired ? (
+    <p className="rounded-md border border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
+      {SAVINGS_ONLY_REPAYMENT_MESSAGE}
+    </p>
+  ) : showMethodTabs ? (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Payment method</p>
+        <Tabs
+          value={activeMethod}
+          onValueChange={(value) => setPaymentMethod(value as LoanInboundPaymentMethod)}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="savings" disabled={pending || loading}>
+              From savings account
+            </TabsTrigger>
+            <TabsTrigger value="direct" disabled={pending || loading}>
+              Direct
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="savings" className="mt-4">
+            {savingsPanel}
+          </TabsContent>
+          <TabsContent value="direct" className="mt-4">
+            {directForm}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  ) : activeMethod === 'direct' ? (
+    directForm
+  ) : (
+    savingsPanel
+  );
+
   return (
     <FormSheet
       open={open}
       onOpenChange={onOpenChange}
       title={copy.title}
-      description={copy.description}
       formId={formId}
       submitLabel={submitLabel}
       submitLoading={pending || loading}
-      submitDisabled={savingsOnlyRequired}
+      submitDisabled={submitDisabled}
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-4">
-        {savingsOnlyRequired ? (
-          <p className="rounded-md border border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
-            {SAVINGS_ONLY_REPAYMENT_MESSAGE}
-          </p>
-        ) : showMethodTabs ? (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Payment method</p>
-              <Tabs
-                value={activeMethod}
-                onValueChange={(value) => setPaymentMethod(value as LoanInboundPaymentMethod)}
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="direct" disabled={pending || loading}>
-                    Direct
-                  </TabsTrigger>
-                  <TabsTrigger value="savings" disabled={pending || loading}>
-                    From savings account
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="direct" className="mt-4">
-                  {directForm}
-                </TabsContent>
-                <TabsContent value="savings" className="mt-4">
-                  {savingsForm}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        ) : activeMethod === 'direct' ? (
-          directForm
-        ) : (
-          savingsForm
-        )}
+        {paymentBody}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
       </form>
     </FormSheet>

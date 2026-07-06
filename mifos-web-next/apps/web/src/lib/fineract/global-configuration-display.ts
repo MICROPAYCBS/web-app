@@ -14,8 +14,23 @@ const GLOBAL_CONFIGURATION_DISPLAY_NAMES: Record<string, string> = {
   [ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME]: 'Allow direct loan repayments'
 };
 
+const GLOBAL_CONFIGURATION_DESCRIPTIONS: Record<string, string> = {
+  [ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME]:
+    'Savings-account transfer is always available and is the preferred way to repay. When this setting is on, staff may also post repayments directly on the loan (cash, bank, etc.). When off, only savings transfer is permitted (direct API calls are rejected).'
+};
+
 export function globalConfigurationDisplayName(name: string): string {
   return GLOBAL_CONFIGURATION_DISPLAY_NAMES[name] ?? name;
+}
+
+export function globalConfigurationDescription(
+  configuration: FineractGlobalConfiguration
+): string | null {
+  const fromApi = configuration.description?.trim();
+  if (fromApi) {
+    return fromApi;
+  }
+  return GLOBAL_CONFIGURATION_DESCRIPTIONS[configuration.name] ?? null;
 }
 
 export function formatGlobalConfigurationValue(value: number | null | undefined): string {
