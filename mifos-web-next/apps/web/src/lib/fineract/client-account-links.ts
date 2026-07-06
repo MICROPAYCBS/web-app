@@ -53,6 +53,33 @@ export function savingsAccountTransactionSectionPath(
   return section === 'details' ? base : `${base}?section=${section}`;
 }
 
+export function loanAccountSectionPath(
+  clientId: string | number,
+  accountId: string | number,
+  section: 'summary' | 'transactions' | 'charges' | 'audit' = 'summary'
+): string {
+  const base = clientAccountGeneralPath(clientId, 'loan', accountId);
+  return section === 'summary' ? base : `${base}?section=${section}`;
+}
+
+export function loanAccountTransactionPath(
+  clientId: string | number,
+  accountId: string | number,
+  transactionId: string | number
+): string {
+  return `/clients/${clientId}/${CLIENT_ACCOUNT_SEGMENTS.loan}/${accountId}/transactions/${transactionId}`;
+}
+
+export function loanAccountTransactionSectionPath(
+  clientId: string | number,
+  accountId: string | number,
+  transactionId: string | number,
+  section: 'details' | 'journal' | 'audit'
+): string {
+  const base = loanAccountTransactionPath(clientId, accountId, transactionId);
+  return section === 'details' ? base : `${base}?section=${section}`;
+}
+
 export function clientAccountListPath(
   clientId: string | number,
   kind: ClientAccountProductKind

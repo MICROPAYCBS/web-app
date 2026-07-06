@@ -21,7 +21,8 @@ export const LOAN_ACCOUNT_SECTIONS = [
   { id: 'schedule', label: 'Repayment schedule' },
   { id: 'transactions', label: 'Transactions' },
   { id: 'charges', label: 'Charges' },
-  { id: 'standingInstructions', label: 'Standing instructions' }
+  { id: 'standingInstructions', label: 'Standing instructions' },
+  { id: 'audit', label: 'Audit trail' }
 ] as const;
 
 export type LoanAccountSectionId = (typeof LOAN_ACCOUNT_SECTIONS)[number]['id'];
@@ -170,6 +171,19 @@ export function buildLoanAccountSummaryMatrix(
       overdue: summary.totalOverdue
     }
   ];
+}
+
+export function loanTransactionCurrencyCode(
+  transaction: FineractLoanAccountTransaction,
+  account?: FineractLoanAccountDetail
+): string | undefined {
+  return transaction.currency?.code ?? (account ? loanAccountCurrencyCode(account) : undefined);
+}
+
+export function loanTransactionHasRecordTimestamps(
+  transaction: FineractLoanAccountTransaction
+): boolean {
+  return Boolean(transaction.submittedOnDate || transaction.createdDate || transaction.submittedByUsername);
 }
 
 export function formatLoanTransactionType(transaction: FineractLoanAccountTransaction) {

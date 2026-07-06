@@ -14,7 +14,7 @@
 
 
 
-import { can } from '@mifos/auth';
+import { can, resolvePermission } from '@mifos/auth';
 
 import { notFound } from 'next/navigation';
 
@@ -49,6 +49,8 @@ import {
 } from '@/lib/fineract/client-action-paths';
 
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
+
+import { listAuditTrailsForLoanAccount } from '@/lib/fineract/audit-trails';
 
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
 
@@ -134,6 +136,8 @@ export default async function LoanAccountGeneralPage({
 
   const session = await getServerSession();
 
+  const canViewAudits = can(session, resolvePermission('system.audit'));
+
 
 
   if (CLIENT_ACCOUNT_RESERVED_IDS.has(accountId)) {
@@ -200,7 +204,8 @@ export default async function LoanAccountGeneralPage({
 
 
 
-  const [cashierSnapshot, reportOrgName, standingInstructions, repaymentPolicy] = await Promise.all([
+  const [cashierSnapshot, reportOrgName, standingInstructions, repaymentPolicy, auditResult] =
+    await Promise.all([
     loadAccountCashierForSession(session, {
       accountId: result.data.id,
       accountKind: 'loan',
@@ -208,8 +213,19 @@ export default async function LoanAccountGeneralPage({
     }),
     loadReportOrganisationName(),
     loadLoanAccountStandingInstructionContext(session, clientId, result.data),
-    getLoanRepaymentPolicySettings()
+    getLoanRepaymentPolicySettings(),
+    canViewAudits
+      ? tryFineractLoad(
+          () => listAuditTrailsForLoanAccount(accountId),
+          'Could not load audit trail.'
+        )
+      : Promise.resolve(null)
   ]);
+
+  const auditEntries =
+    auditResult?.ok && auditResult.data ? auditResult.data.pageItems : [];
+  const auditTotalRecords =
+    auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
 
 
 
@@ -230,6 +246,14 @@ export default async function LoanAccountGeneralPage({
       reportOrgName={reportOrgName}
 
       standingInstructions={standingInstructions}
+
+      canViewAudits={canViewAudits}
+
+      auditEntries={auditEntries}
+
+      auditLoadFailed={auditResult != null && !auditResult.ok}
+
+      auditTotalRecords={auditTotalRecords}
 
     />
 

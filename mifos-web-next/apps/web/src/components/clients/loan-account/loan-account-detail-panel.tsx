@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractAuditTrailListItem } from '@mifos/api-client';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 import { LoanAccountSectionPanel } from '@/components/clients/loan-account/loan-account-section-panels';
 import {
@@ -24,19 +25,28 @@ export function LoanAccountDetailPanel({
   clientId,
   cashierSnapshot = null,
   reportOrgName,
-  standingInstructions = null
+  standingInstructions = null,
+  canViewAudits = false,
+  auditEntries = [],
+  auditLoadFailed = false,
+  auditTotalRecords
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
   cashierSnapshot?: AccountCashierSnapshot | null;
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
+  canViewAudits?: boolean;
+  auditEntries?: FineractAuditTrailListItem[];
+  auditLoadFailed?: boolean;
+  auditTotalRecords?: number;
 }) {
   const includeCashier = Boolean(cashierSnapshot);
   const standingInstructionsEnabled = standingInstructions != null;
   const { activeSection } = useLoanAccountDetailSection(account, {
     includeCashier,
-    standingInstructions: standingInstructionsEnabled
+    standingInstructions: standingInstructionsEnabled,
+    canViewAudits
   });
 
   if (activeSection === LOAN_ACCOUNT_CASHIER_SECTION_ID && cashierSnapshot) {
@@ -50,6 +60,10 @@ export function LoanAccountDetailPanel({
       clientId={clientId}
       reportOrgName={reportOrgName}
       standingInstructions={standingInstructions}
+      canViewAudits={canViewAudits}
+      auditEntries={auditEntries}
+      auditLoadFailed={auditLoadFailed}
+      auditTotalRecords={auditTotalRecords}
     />
   );
 }

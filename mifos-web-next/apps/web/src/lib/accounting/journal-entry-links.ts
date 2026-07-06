@@ -11,6 +11,11 @@ export function savingsJournalTransactionId(transactionId: string | number): str
   return `S${transactionId}`;
 }
 
+/** Fineract journal lookup id for a loan portfolio transaction. */
+export function loanJournalTransactionId(transactionId: string | number): string {
+  return `L${transactionId}`;
+}
+
 /** Full-page journal entry transaction view in accounting. */
 export function journalEntryTransactionPath(transactionId: string): string {
   return `/accounting/journal-entries/transactions/${encodeURIComponent(transactionId)}`;

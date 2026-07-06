@@ -68,12 +68,22 @@ export interface FineractLoanAccountTransaction {
   type?: FineractEnumOption;
   date?: number[] | string;
   submittedOnDate?: number[] | string;
+  createdDate?: number[] | string;
   amount: number;
   outstandingLoanBalance?: number;
   manuallyReversed?: boolean;
   reversed?: boolean;
   note?: string;
   currency?: FineractCurrencyOption;
+  paymentDetailData?: {
+    paymentType?: { id?: number; name?: string };
+    accountNumber?: string;
+    checkNumber?: string;
+    routingCode?: string;
+    receiptNumber?: string;
+    bankNumber?: string;
+  };
+  submittedByUsername?: string;
 }
 
 export interface FineractLoanAccountCharge {

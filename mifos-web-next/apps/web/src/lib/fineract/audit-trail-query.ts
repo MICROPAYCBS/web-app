@@ -13,6 +13,7 @@ export const AUDIT_TRAILS_DEFAULT_LIMIT = 25;
 export type AuditTrailSearchFilters = {
   resourceId?: string;
   clientId?: string;
+  loanId?: string;
   savingsAccountId?: string;
   processingResult?: string;
   makerId?: string;
@@ -62,6 +63,7 @@ export function parseAuditTrailListQuery(
     sortOrder,
     resourceId: readParam(params, 'resourceId'),
     clientId: readParam(params, 'clientId'),
+    loanId: readParam(params, 'loanId'),
     savingsAccountId: readParam(params, 'savingsAccountId'),
     processingResult: readParam(params, 'processingResult'),
     makerId: readParam(params, 'makerId'),
@@ -101,6 +103,9 @@ export function buildAuditTrailSearchParams(query: AuditTrailListQuery): Record<
   }
   if (query.clientId) {
     params.clientId = query.clientId;
+  }
+  if (query.loanId) {
+    params.loanid = query.loanId;
   }
   if (query.savingsAccountId) {
     params.savingsAccountId = query.savingsAccountId;
@@ -147,6 +152,9 @@ export function countActiveAuditTrailFilters(filters: AuditTrailSearchFilters): 
   if (filters.clientId?.trim()) {
     count += 1;
   }
+  if (filters.loanId?.trim()) {
+    count += 1;
+  }
   if (filters.savingsAccountId?.trim()) {
     count += 1;
   }
@@ -184,6 +192,7 @@ export function auditTrailFiltersFromQuery(query: AuditTrailListQuery): AuditTra
   return {
     resourceId: query.resourceId,
     clientId: query.clientId,
+    loanId: query.loanId,
     savingsAccountId: query.savingsAccountId,
     processingResult: query.processingResult,
     makerId: query.makerId,

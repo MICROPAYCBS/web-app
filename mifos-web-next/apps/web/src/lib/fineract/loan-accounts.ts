@@ -9,8 +9,8 @@ import 'server-only';
  */
 
 import type { FineractCommandProcessingResult } from '@mifos/api-client';
-import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
-import { normalizeLoanAccountDetail } from '@/lib/fineract/loan-account-normalize';
+import type { FineractLoanAccountDetail, FineractLoanAccountTransaction } from '@/lib/fineract/loan-account-types';
+import { normalizeLoanAccountDetail, normalizeLoanAccountTransaction } from '@/lib/fineract/loan-account-normalize';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 export type {
@@ -31,6 +31,17 @@ export async function getLoanAccount(
     exclude: 'guarantors,futureSchedule'
   });
   return normalizeLoanAccountDetail(raw);
+}
+
+export async function getLoanAccountTransaction(
+  accountId: string | number,
+  transactionId: string | number
+): Promise<FineractLoanAccountTransaction | null> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(
+    `/loans/${accountId}/transactions/${transactionId}`
+  );
+  return normalizeLoanAccountTransaction(raw);
 }
 
 export async function getLoanOfficerAssignTemplate(

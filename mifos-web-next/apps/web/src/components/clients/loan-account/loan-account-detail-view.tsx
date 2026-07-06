@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractAuditTrailListItem } from '@mifos/api-client';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useMemo } from 'react';
@@ -54,7 +55,11 @@ export function LoanAccountDetailView({
   repaymentPolicy,
   cashierSnapshot = null,
   reportOrgName,
-  standingInstructions = null
+  standingInstructions = null,
+  canViewAudits = false,
+  auditEntries = [],
+  auditLoadFailed = false,
+  auditTotalRecords
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
@@ -63,6 +68,10 @@ export function LoanAccountDetailView({
   cashierSnapshot?: AccountCashierSnapshot | null;
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
+  canViewAudits?: boolean;
+  auditEntries?: FineractAuditTrailListItem[];
+  auditLoadFailed?: boolean;
+  auditTotalRecords?: number;
 }) {
   const currency = loanAccountCurrencyCode(account);
   const summary = account.summary;
@@ -73,9 +82,10 @@ export function LoanAccountDetailView({
     () =>
       loanAccountSectionIds(account, {
         includeCashier,
-        standingInstructions: standingInstructionsEnabled
+        standingInstructions: standingInstructionsEnabled,
+        canViewAudits
       }).length > 1,
-    [account, includeCashier, standingInstructionsEnabled]
+    [account, canViewAudits, includeCashier, standingInstructionsEnabled]
   );
 
   return (
@@ -193,6 +203,7 @@ export function LoanAccountDetailView({
                 account={account}
                 includeCashier={includeCashier}
                 standingInstructions={standingInstructionsEnabled}
+                canViewAudits={canViewAudits}
               />
             </Suspense>
           </div>
@@ -206,6 +217,10 @@ export function LoanAccountDetailView({
           cashierSnapshot={cashierSnapshot}
           reportOrgName={reportOrgName}
           standingInstructions={standingInstructions}
+          canViewAudits={canViewAudits}
+          auditEntries={auditEntries}
+          auditLoadFailed={auditLoadFailed}
+          auditTotalRecords={auditTotalRecords}
         />
       </Suspense>
     </DetailPage>

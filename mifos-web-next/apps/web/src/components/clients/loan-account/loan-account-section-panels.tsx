@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractAuditTrailListItem } from '@mifos/api-client';
 import Link from 'next/link';
 
 import {
@@ -18,6 +19,7 @@ import {
   type PaginationState
 } from '@tanstack/react-table';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { LoanAccountAuditView } from '@/components/clients/loan-account/loan-account-audit-view';
 import { LoanAccountSchedulePreview } from '@/components/clients/loan-account/loan-account-schedule-preview';
 import { LoanAccountStandingInstructionsSection } from '@/components/clients/loan-account/loan-account-standing-instructions-section';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
@@ -42,7 +44,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
-import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
+import { clientAccountGeneralPath, loanAccountTransactionPath } from '@/lib/fineract/client-account-links';
 import type {
   FineractLoanAccountCharge,
   FineractLoanAccountDetail,
@@ -489,7 +491,8 @@ function filterLoanTransactions(
 }
 
 function buildTransactionColumns(
-  account: FineractLoanAccountDetail
+  account: FineractLoanAccountDetail,
+  clientId: string
 ): ColumnDef<TransactionRow>[] {
   const currency = loanAccountCurrencyCode(account);
 
@@ -512,7 +515,12 @@ function buildTransactionColumns(
       header: 'Id',
       cell: ({ row }) => (
         <TransactionCell transaction={row.original}>
-          <span className="tabular-nums">{row.original.id}</span>
+          <Link
+            href={loanAccountTransactionPath(clientId, account.id, row.original.id)}
+            className="tabular-nums text-primary underline-offset-4 hover:underline"
+          >
+            {row.original.id}
+          </Link>
         </TransactionCell>
       )
     },
@@ -580,7 +588,13 @@ function buildTransactionColumns(
   ];
 }
 
-function LoanAccountTransactionsSection({ account }: { account: FineractLoanAccountDetail }) {
+function LoanAccountTransactionsSection({
+  account,
+  clientId
+}: {
+  account: FineractLoanAccountDetail;
+  clientId: string;
+}) {
   const [hideReversed, setHideReversed] = useState(false);
   const [hideAccruals, setHideAccruals] = useState(false);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -602,7 +616,7 @@ function LoanAccountTransactionsSection({ account }: { account: FineractLoanAcco
     setPagination((current) => ({ ...current, pageIndex: 0 }));
   }, [hideAccruals, hideReversed]);
 
-  const columns = useMemo(() => buildTransactionColumns(account), [account]);
+  const columns = useMemo(() => buildTransactionColumns(account, clientId), [account, clientId]);
 
   const table = useReactTable({
     data: rows,
@@ -736,13 +750,21 @@ export function LoanAccountSectionPanel({
   account,
   clientId,
   reportOrgName,
-  standingInstructions = null
+  standingInstructions = null,
+  canViewAudits = false,
+  auditEntries = [],
+  auditLoadFailed = false,
+  auditTotalRecords
 }: {
   section: LoanAccountSectionId;
   account: FineractLoanAccountDetail;
   clientId: string;
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
+  canViewAudits?: boolean;
+  auditEntries?: FineractAuditTrailListItem[];
+  auditLoadFailed?: boolean;
+  auditTotalRecords?: number;
 }) {
   switch (section) {
     case 'summary':
@@ -750,9 +772,17 @@ export function LoanAccountSectionPanel({
     case 'schedule':
       return <LoanAccountScheduleSection account={account} reportOrgName={reportOrgName} />;
     case 'transactions':
-      return <LoanAccountTransactionsSection account={account} />;
+      return <LoanAccountTransactionsSection account={account} clientId={clientId} />;
     case 'charges':
       return <LoanAccountChargesSection account={account} />;
+    case 'audit':
+      return canViewAudits ? (
+        <LoanAccountAuditView
+          audits={auditEntries}
+          loadFailed={auditLoadFailed}
+          totalRecords={auditTotalRecords}
+        />
+      ) : null;
     case 'standingInstructions':
       return standingInstructions ? (
         <LoanAccountStandingInstructionsSection

@@ -163,7 +163,7 @@ function normalizeTimeline(raw: unknown): FineractLoanAccountTimeline | undefine
   };
 }
 
-function normalizeTransaction(raw: unknown): FineractLoanAccountTransaction | null {
+export function normalizeLoanAccountTransaction(raw: unknown): FineractLoanAccountTransaction | null {
   if (!raw || typeof raw !== 'object') {
     return null;
   }
@@ -180,13 +180,22 @@ function normalizeTransaction(raw: unknown): FineractLoanAccountTransaction | nu
     type: normalizeEnumOption(row.type),
     date: normalizeDateField(row.date),
     submittedOnDate: normalizeDateField(row.submittedOnDate),
+    createdDate: normalizeDateField(row.createdDate),
     amount,
     outstandingLoanBalance: toNumber(row.outstandingLoanBalance),
     manuallyReversed: row.manuallyReversed === true,
     reversed: row.reversed === true || row.manuallyReversed === true,
     note: typeof row.note === 'string' ? row.note : undefined,
-    currency: normalizeCurrency(row.currency)
+    currency: normalizeCurrency(row.currency),
+    paymentDetailData:
+      row.paymentDetailData as FineractLoanAccountTransaction['paymentDetailData'],
+    submittedByUsername:
+      typeof row.submittedByUsername === 'string' ? row.submittedByUsername : undefined
   };
+}
+
+function normalizeTransaction(raw: unknown): FineractLoanAccountTransaction | null {
+  return normalizeLoanAccountTransaction(raw);
 }
 
 function normalizeLinkedAccount(raw: unknown): FineractLoanAccountLinkedAccount | undefined {

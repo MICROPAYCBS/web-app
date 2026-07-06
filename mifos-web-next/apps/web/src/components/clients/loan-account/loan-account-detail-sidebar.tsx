@@ -14,6 +14,7 @@ import {
   Landmark,
   Receipt,
   Repeat,
+  ScrollText,
   Wallet,
   type LucideIcon
 } from 'lucide-react';
@@ -35,36 +36,46 @@ const SECTION_ICONS: Record<LoanAccountSectionId, LucideIcon> = {
   schedule: CalendarDays,
   transactions: ArrowRightLeft,
   charges: Receipt,
-  standingInstructions: Repeat
+  standingInstructions: Repeat,
+  audit: ScrollText
 };
 
 export function loanAccountSectionIds(
   account: FineractLoanAccountDetail,
-  options?: { includeCashier?: boolean; standingInstructions?: boolean }
+  options?: { includeCashier?: boolean; standingInstructions?: boolean; canViewAudits?: boolean }
 ): string[] {
   const ids = loanAccountVisibleSections(account, {
     standingInstructions: options?.standingInstructions
-  });
+  }).filter((id) => id !== 'audit' || options?.canViewAudits);
   return options?.includeCashier ? [...ids, LOAN_ACCOUNT_CASHIER_SECTION_ID] : ids;
 }
 
 export function LoanAccountDetailSidebar({
   account,
   includeCashier = false,
-  standingInstructions = false
+  standingInstructions = false,
+  canViewAudits = false
 }: {
   account: FineractLoanAccountDetail;
   includeCashier?: boolean;
   standingInstructions?: boolean;
+  canViewAudits?: boolean;
 }) {
   const sectionIds = useMemo(
-    () => loanAccountSectionIds(account, { includeCashier, standingInstructions }),
-    [account, includeCashier, standingInstructions]
+    () =>
+      loanAccountSectionIds(account, {
+        includeCashier,
+        standingInstructions,
+        canViewAudits
+      }),
+    [account, canViewAudits, includeCashier, standingInstructions]
   );
 
   const navItems = useMemo(() => {
     const items: Array<{ id: string; label: string; icon: LucideIcon }> =
-      LOAN_ACCOUNT_SECTIONS.filter((section) => sectionIds.includes(section.id)).map((section) => ({
+      LOAN_ACCOUNT_SECTIONS.filter(
+        (section) => sectionIds.includes(section.id) && (section.id !== 'audit' || canViewAudits)
+      ).map((section) => ({
         id: section.id,
         label: section.label,
         icon: SECTION_ICONS[section.id]
@@ -77,7 +88,7 @@ export function LoanAccountDetailSidebar({
       });
     }
     return items;
-  }, [includeCashier, sectionIds]);
+  }, [canViewAudits, includeCashier, sectionIds]);
 
   const { activeSection, setSection } = useDetailSection(
     sectionIds,
@@ -99,15 +110,16 @@ export function LoanAccountDetailSidebar({
 
 export function useLoanAccountDetailSection(
   account: FineractLoanAccountDetail,
-  options?: { includeCashier?: boolean; standingInstructions?: boolean }
+  options?: { includeCashier?: boolean; standingInstructions?: boolean; canViewAudits?: boolean }
 ) {
   const sectionIds = useMemo(
     () =>
       loanAccountSectionIds(account, {
         includeCashier: options?.includeCashier,
-        standingInstructions: options?.standingInstructions
+        standingInstructions: options?.standingInstructions,
+        canViewAudits: options?.canViewAudits
       }),
-    [account, options?.includeCashier, options?.standingInstructions]
+    [account, options?.canViewAudits, options?.includeCashier, options?.standingInstructions]
   );
   return useDetailSection(sectionIds, LOAN_ACCOUNT_DEFAULT_SECTION);
 }

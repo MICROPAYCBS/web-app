@@ -236,3 +236,56 @@ export async function listAuditTrailsForClient(
     locale: FINERACT_LOCALE
   });
 }
+
+/** Fineract audit entity for loan account commands (including transactions). */
+export const LOAN_ACCOUNT_AUDIT_ENTITY = 'LOAN';
+
+export function filterAuditTrailsForLoanTransaction(
+  audits: FineractAuditTrailListItem[],
+  transactionId: string | number
+): FineractAuditTrailListItem[] {
+  const txId = Number(transactionId);
+  if (!Number.isFinite(txId)) {
+    return [];
+  }
+  return audits.filter((audit) => audit.subresourceId === txId || audit.resourceId === txId);
+}
+
+export async function listAuditTrailsForLoanTransaction(
+  accountId: string | number,
+  transactionId: string | number,
+  options?: { limit?: number }
+): Promise<FineractAuditTrailsPage> {
+  const page = await listAuditTrails({
+    offset: 0,
+    limit: options?.limit ?? 200,
+    orderBy: 'id',
+    sortOrder: 'desc',
+    entityName: LOAN_ACCOUNT_AUDIT_ENTITY,
+    loanId: String(accountId),
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  });
+  const pageItems = filterAuditTrailsForLoanTransaction(page.pageItems, transactionId);
+  return {
+    pageItems,
+    totalFilteredRecords: pageItems.length
+  };
+}
+
+export async function listAuditTrailsForLoanAccount(
+  accountId: string | number,
+  options?: { limit?: number; offset?: number }
+): Promise<FineractAuditTrailsPage> {
+  return listAuditTrails({
+    offset: options?.offset ?? 0,
+    limit: options?.limit ?? 100,
+    orderBy: 'id',
+    sortOrder: 'desc',
+    entityName: LOAN_ACCOUNT_AUDIT_ENTITY,
+    loanId: String(accountId),
+    includeJson: true,
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  });
+}
