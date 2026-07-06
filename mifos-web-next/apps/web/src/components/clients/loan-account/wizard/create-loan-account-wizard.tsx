@@ -20,11 +20,11 @@
 
 import type { ClientLoanAccountTemplate } from '@mifos/api-client';
 
-import { formatActionErrorMessage } from '@mifos/validation';
+import { formatActionErrorMessage, loanApplicationStepForField } from '@mifos/validation';
 
 import { useRouter } from 'next/navigation';
 
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
 import {
 
@@ -34,6 +34,7 @@ import {
 
 } from '@/actions/client-loan-account';
 
+import { useLoanSchedulePreview } from '@/components/clients/loan-account/use-loan-schedule-preview';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 
@@ -50,6 +51,8 @@ import {
 
   loanAccountDraftFromTemplate,
 
+  mergeLoanAccountChargesStep,
+
   mergeLoanAccountCoreStep,
 
   mergeLoanAccountFinancialStep,
@@ -64,6 +67,10 @@ import {
 
 } from '@/lib/fineract/client-loan-account-draft';
 
+import { defaultLoanAccountChargesFromTemplate } from '@/lib/fineract/loan-application-charges';
+
+import { LoanAccountChargesStep } from './steps/charges-step';
+
 import { LoanAccountCoreStep } from './steps/core-step';
 
 import { LoanAccountFinancialStep } from './steps/financial-step';
@@ -72,11 +79,13 @@ import { LoanAccountPayoutStep } from './steps/payout-step';
 
 import { LoanAccountPreviewStep } from './steps/preview-step';
 
+import { LoanAccountScheduleStep } from './steps/schedule-step';
+
 import { LoanAccountSecurityStep } from './steps/security-step';
 
 import { LoanAccountTimelineStep } from './steps/timeline-step';
 
-import { validateLoanAccountStep } from './validation';
+import { validateLoanAccountStep, resolveLoanAccountWizardStepErrors } from './validation';
 
 
 
@@ -88,6 +97,10 @@ const WIZARD_STEPS: FormWizardStep[] = [
 
   { id: 'timeline', label: 'Interest' },
 
+  { id: 'charges', label: 'Charges' },
+
+  { id: 'schedule', label: 'Schedule' },
+
   { id: 'security', label: 'Security' },
 
   { id: 'payout', label: 'Payout' },
@@ -95,6 +108,10 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'preview', label: 'Preview' }
 
 ];
+
+
+
+const SCHEDULE_STEP_INDEX = WIZARD_STEPS.findIndex((step) => step.id === 'schedule');
 
 
 
@@ -134,11 +151,31 @@ export function CreateLoanAccountWizard({
 
   const [pending, startTransition] = useTransition();
 
+  const [productTemplateLoading, setProductTemplateLoading] = useState(false);
 
+  const productTemplateRequestRef = useRef(0);
+
+  const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
+
+  const [scheduleStepError, setScheduleStepError] = useState<string | null>(null);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
 
+  const schedulePreviewEnabled =
+    draft.productId > 0 && currentIndex >= SCHEDULE_STEP_INDEX;
+
+  const schedulePreview = useLoanSchedulePreview({
+    clientId,
+    draft,
+    template,
+    enabled: schedulePreviewEnabled
+  });
+
+  const isSchedule = stepId === 'schedule';
+
   const isPreview = stepId === 'preview';
+
+  const isReviewStep = isSchedule || isPreview;
 
   const cancelHref = `/clients/${clientId}/loans`;
 
@@ -170,93 +207,111 @@ export function CreateLoanAccountWizard({
 
     return [...validationAttemptedStepIds].filter((id) => {
 
-      if (id === 'preview') {
+      if (id === 'preview' || id === 'schedule' || id === 'charges') {
 
         return false;
 
       }
 
-      return Object.keys(validateLoanAccountStep(id, draft)).length > 0;
+      return Object.keys(validateLoanAccountStep(id, draft, template)).length > 0;
 
     });
 
-  }, [validationAttemptedStepIds, draft]);
+  }, [validationAttemptedStepIds, draft, template]);
 
 
 
   const stepErrors = useMemo(() => {
+    return resolveLoanAccountWizardStepErrors(stepId, draft, template, {
+      validationAttempted: validationAttemptedStepIds.has(stepId),
+      isReviewStep,
+      serverFieldErrors
+    });
+  }, [
+    validationAttemptedStepIds,
+    stepId,
+    draft,
+    template,
+    isReviewStep,
+    isPreview,
+    isSchedule,
+    serverFieldErrors
+  ]);
 
-    if (isPreview || !validationAttemptedStepIds.has(stepId)) {
-
-      return {};
-
-    }
-
-    return validateLoanAccountStep(stepId, draft);
-
-  }, [validationAttemptedStepIds, stepId, draft, isPreview]);
 
 
+  const applyProductTemplate = useCallback(
+    (productId: number, result: ClientLoanAccountTemplate) => {
+      const seededDraft = loanAccountDraftFromTemplate(result);
+
+      setTemplate(result);
+      setDraft((current) => ({
+        ...current,
+        ...seededDraft,
+        productId,
+        loanOfficerId: current.loanOfficerId,
+        loanPurposeId: current.loanPurposeId,
+        fundId: current.fundId,
+        externalId: current.externalId,
+        submittedOnDate: current.submittedOnDate,
+        expectedDisbursementDate: current.expectedDisbursementDate,
+        linkAccountId: current.linkAccountId,
+        charges: seededDraft.charges,
+        collateral: current.collateral,
+        guarantors: current.guarantors
+      }));
+    },
+    [clientId]
+  );
 
   const loadProductTemplate = useCallback(
-
-    (productId: number) => {
-
+    async (productId: number) => {
       if (!productId) {
-
         return;
-
       }
 
-      startTransition(async () => {
+      const requestId = ++productTemplateRequestRef.current;
+      setProductTemplateLoading(true);
 
+      try {
         const result = await fetchClientLoanAccountTemplateAction(clientId, String(productId));
-
-        if (!isClientLoanAccountTemplate(result)) {
-
+        if (requestId !== productTemplateRequestRef.current) {
           return;
-
         }
 
-        setTemplate(result);
+        if (!isClientLoanAccountTemplate(result)) {
+          console.warn('[loan application] template charge fields', {
+            source: 'product-template-error',
+            clientId,
+            productId,
+            result
+          });
+          return;
+        }
 
-        setDraft((current) => ({
-
-          ...current,
-
-          ...loanAccountDraftFromTemplate(result),
-
-          productId,
-
-          loanOfficerId: current.loanOfficerId,
-
-          loanPurposeId: current.loanPurposeId,
-
-          fundId: current.fundId,
-
-          externalId: current.externalId,
-
-          submittedOnDate: current.submittedOnDate,
-
-          expectedDisbursementDate: current.expectedDisbursementDate,
-
-          linkAccountId: current.linkAccountId,
-
-          disburseToSavings: current.disburseToSavings,
-
-          collateral: current.collateral,
-
-          guarantors: current.guarantors
-
-        }));
-
-      });
-
+        applyProductTemplate(productId, result);
+      } finally {
+        if (requestId === productTemplateRequestRef.current) {
+          setProductTemplateLoading(false);
+        }
+      }
     },
-
-    [clientId]
-
+    [applyProductTemplate, clientId]
   );
+
+  useEffect(() => {
+    if (
+      draft.productId > 0 &&
+      template.product?.id === draft.productId &&
+      (draft.charges?.length ?? 0) === 0 &&
+      (template.charges?.length ?? 0) > 0
+    ) {
+      setDraft((current) => ({
+        ...current,
+        charges: defaultLoanAccountChargesFromTemplate(template.charges)
+      }));
+    }
+  }, [draft.charges?.length, draft.productId, template]);
 
 
 
@@ -316,7 +371,7 @@ export function CreateLoanAccountWizard({
 
         const stepToValidate = WIZARD_STEPS[i].id;
 
-        const errors = validateLoanAccountStep(stepToValidate, draft);
+        const errors = validateLoanAccountStep(stepToValidate, draft, template);
 
         if (Object.keys(errors).length > 0) {
 
@@ -336,17 +391,17 @@ export function CreateLoanAccountWizard({
 
     },
 
-    [currentIndex, draft, markValidationAttempted]
+    [currentIndex, draft, template, markValidationAttempted]
 
   );
 
 
 
-  const tryNext = useCallback(() => {
+  const tryNext = useCallback(async () => {
 
     markValidationAttempted(stepId);
 
-    const errors = validateLoanAccountStep(stepId, draft);
+    const errors = validateLoanAccountStep(stepId, draft, template);
 
     if (Object.keys(errors).length > 0) {
 
@@ -354,15 +409,40 @@ export function CreateLoanAccountWizard({
 
     }
 
+    if (stepId === 'schedule') {
+      if (schedulePreview.loading) {
+        setScheduleStepError('Repayment schedule is still calculating. Please wait.');
+        return;
+      }
+
+      if (!schedulePreview.canPreview) {
+        setScheduleStepError('Complete loan terms on earlier steps to calculate the repayment schedule.');
+        return;
+      }
+
+      if (!schedulePreview.hasSuccessfulPreview || schedulePreview.stale) {
+        setScheduleStepError('Recalculate the repayment schedule before continuing.');
+        return;
+      }
+
+      setScheduleStepError(null);
+    }
+
     if (stepId === 'core' && draft.productId > 0) {
-
-      loadProductTemplate(draft.productId);
-
+      await loadProductTemplate(draft.productId);
     }
 
     goNext();
 
-  }, [markValidationAttempted, stepId, draft, loadProductTemplate, goNext]);
+  }, [
+    markValidationAttempted,
+    stepId,
+    draft,
+    template,
+    loadProductTemplate,
+    goNext,
+    schedulePreview
+  ]);
 
 
 
@@ -370,9 +450,25 @@ export function CreateLoanAccountWizard({
 
     markValidationAttempted('preview');
 
-    const errors = validateLoanAccountStep('preview', draft);
+    const errors = validateLoanAccountStep('preview', draft, template, serverFieldErrors);
 
     if (Object.keys(errors).length > 0) {
+
+      return;
+
+    }
+
+    if (schedulePreview.loading) {
+
+      setSubmitError('Repayment schedule is still calculating. Please wait.');
+
+      return;
+
+    }
+
+    if (!schedulePreview.hasSuccessfulPreview || schedulePreview.stale) {
+
+      setSubmitError('Recalculate the repayment schedule before submitting.');
 
       return;
 
@@ -382,13 +478,28 @@ export function CreateLoanAccountWizard({
 
     startTransition(async () => {
 
-      const result = await createClientLoanAccountAction(clientId, draft);
+      const result = await createClientLoanAccountAction(
+        clientId,
+        draft,
+        schedulePreview.productContext
+      );
 
       if (!toastCommandOutcome(result, {
         completed: 'Loan application submitted.',
         pending: 'Loan application sent for approval.'
       })) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        if (result.fieldErrors) {
+          setServerFieldErrors(result.fieldErrors);
+          const firstField = Object.keys(result.fieldErrors)[0];
+          const targetStep = firstField
+            ? loanApplicationStepForField(firstField)
+            : undefined;
+          if (targetStep) {
+            setStepId(targetStep);
+            markValidationAttempted(targetStep);
+          }
+        }
         return;
       }
 
@@ -406,7 +517,16 @@ export function CreateLoanAccountWizard({
 
     });
 
-  }, [markValidationAttempted, draft, clientId, router, cancelHref]);
+  }, [
+    markValidationAttempted,
+    draft,
+    template,
+    clientId,
+    router,
+    cancelHref,
+    schedulePreview,
+    serverFieldErrors
+  ]);
 
 
 
@@ -472,7 +592,18 @@ export function CreateLoanAccountWizard({
 
             primaryLoadingLabel="Submitting…"
 
-            primaryDisabled={pending}
+            primaryDisabled={
+              pending ||
+              productTemplateLoading ||
+              (isSchedule &&
+                (schedulePreview.loading ||
+                  !schedulePreview.hasSuccessfulPreview ||
+                  schedulePreview.stale)) ||
+              (isPreview &&
+                (schedulePreview.loading ||
+                  !schedulePreview.hasSuccessfulPreview ||
+                  schedulePreview.stale))
+            }
 
           />
 
@@ -556,6 +687,8 @@ export function CreateLoanAccountWizard({
 
             errors={stepErrors}
 
+            principal={draft.principal}
+
             onChange={(patch) =>
 
               setDraft((current) => mergeLoanAccountSecurityStep(current, patch))
@@ -576,14 +709,43 @@ export function CreateLoanAccountWizard({
 
             errors={stepErrors}
 
-            onChange={(patch) =>
-
-              setDraft((current) => mergeLoanAccountPayoutStep(current, patch))
-
-            }
+            onChange={(patch) => {
+              setDraft((current) => mergeLoanAccountPayoutStep(current, patch));
+              setServerFieldErrors((current) => {
+                const next = { ...current };
+                for (const key of Object.keys(patch)) {
+                  delete next[key];
+                }
+                return next;
+              });
+            }}
 
           />
 
+        ) : null}
+
+        {stepId === 'charges' ? (
+          <LoanAccountChargesStep
+            template={template}
+            draft={draft}
+            errors={stepErrors}
+            onChange={(patch) =>
+              setDraft((current) => mergeLoanAccountChargesStep(current, patch))
+            }
+          />
+        ) : null}
+
+        {stepId === 'schedule' ? (
+          <LoanAccountScheduleStep
+            schedule={schedulePreview.schedule}
+            loading={schedulePreview.loading}
+            stale={schedulePreview.stale}
+            error={schedulePreview.error}
+            fieldErrors={schedulePreview.fieldErrors}
+            stepError={scheduleStepError}
+            canPreview={schedulePreview.canPreview}
+            onRecalculate={() => void schedulePreview.recalculate()}
+          />
         ) : null}
 
         {stepId === 'preview' ? (

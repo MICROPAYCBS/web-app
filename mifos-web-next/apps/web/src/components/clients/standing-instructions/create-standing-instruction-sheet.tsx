@@ -62,6 +62,8 @@ type FormState = {
   recurrenceOnMonthDay: string;
 };
 
+export type CreateStandingInstructionFormDefaults = Partial<FormState>;
+
 const EMPTY_FORM: FormState = {
   name: '',
   transferType: '',
@@ -116,6 +118,8 @@ export function CreateStandingInstructionSheet({
   fromOfficeId,
   fromAccountType,
   initialTemplate,
+  initialFormDefaults,
+  revalidatePaths,
   open,
   onOpenChange
 }: {
@@ -123,6 +127,8 @@ export function CreateStandingInstructionSheet({
   fromOfficeId: number;
   fromAccountType: string;
   initialTemplate: StandingInstructionTemplate;
+  initialFormDefaults?: CreateStandingInstructionFormDefaults;
+  revalidatePaths?: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -163,13 +169,14 @@ export function CreateStandingInstructionSheet({
       return;
     }
     setTemplate(initialTemplate);
-    setForm(EMPTY_FORM);
+    const seededForm = { ...EMPTY_FORM, ...initialFormDefaults };
+    setForm(seededForm);
     setFieldErrors({});
     setSubmitError(null);
     setTemplateLoadError(null);
     skipCascadeRef.current = true;
-    loadTemplate(EMPTY_FORM);
-  }, [open, initialTemplate, loadTemplate]);
+    loadTemplate(seededForm);
+  }, [open, initialTemplate, initialFormDefaults, loadTemplate]);
 
   const lockBeneficiary = form.destination === String(DESTINATION_OWN_ACCOUNT);
 
@@ -240,13 +247,18 @@ export function CreateStandingInstructionSheet({
     setSubmitError(null);
     setFieldErrors({});
     startTransition(async () => {
-      const result = await createClientStandingInstructionAction(clientId, fromOfficeId, {
-        ...form,
-        amount: form.amount ? Number(form.amount) : undefined,
-        recurrenceInterval: form.recurrenceInterval
-          ? Number(form.recurrenceInterval)
-          : undefined
-      });
+      const result = await createClientStandingInstructionAction(
+        clientId,
+        fromOfficeId,
+        {
+          ...form,
+          amount: form.amount ? Number(form.amount) : undefined,
+          recurrenceInterval: form.recurrenceInterval
+            ? Number(form.recurrenceInterval)
+            : undefined
+        },
+        { revalidatePaths }
+      );
       if (!result.ok) {
 
         setSubmitError(result.message);

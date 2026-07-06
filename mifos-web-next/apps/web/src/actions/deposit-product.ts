@@ -24,10 +24,12 @@ import {
 import { buildDepositProductPayload } from '@/lib/fineract/deposit-product-payload';
 import {
   createDepositProductRecord,
+  getDepositProduct,
   getDepositProductChargeOptions,
   updateDepositProductRecord
 } from '@/lib/fineract/deposit-products';
 import { getServerSession } from '@/lib/session/server';
+import { preserveEstablishedProductShortName } from '@/lib/fineract/product-short-name';
 
 function parseInput(
   raw: unknown
@@ -151,7 +153,9 @@ export async function updateDepositProductAction(
   }
 
   try {
-    const payload = buildDepositProductPayload(parsed);
+    const existingProduct = await getDepositProduct(kind, productId);
+    const updateInput = preserveEstablishedProductShortName(parsed, existingProduct.shortName);
+    const payload = buildDepositProductPayload(updateInput);
     const response = await updateDepositProductRecord(kind, productId, payload);
     revalidatePath(config.listPath);
     revalidatePath(depositProductDetailPath(kind, productId));

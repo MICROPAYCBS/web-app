@@ -27,6 +27,13 @@ import { DetailSection } from '@/components/composites';
 import { MoneyValue } from '@/components/composites/detail/money-value';
 
 import { fineractOptionLabel } from '@/lib/form/select-options';
+import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
+import {
+  formatLoanAccountChargeDate,
+  loanAccountChargeMetadata
+} from '@/lib/fineract/loan-application-charges';
+import { loanApplicationInterestRateFieldLabel } from '@/lib/fineract/loan-application-rules';
+import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
 
 
 
@@ -244,7 +251,9 @@ export function LoanAccountPreviewStep({
 
           <div>
 
-            <dt className="text-muted-foreground">Interest rate per period</dt>
+            <dt className="text-muted-foreground">
+              {loanApplicationInterestRateFieldLabel(template, { includePercentInLabel: false })}
+            </dt>
 
             <dd className="font-medium">{draft.interestRatePerPeriod}%</dd>
 
@@ -263,6 +272,14 @@ export function LoanAccountPreviewStep({
             <dt className="text-muted-foreground">Expected disbursement</dt>
 
             <dd className="font-medium">{draft.expectedDisbursementDate}</dd>
+
+          </div>
+
+          <div>
+
+            <dt className="text-muted-foreground">Expected first repayment</dt>
+
+            <dd className="font-medium">{draft.repaymentsStartingFromDate ?? '—'}</dd>
 
           </div>
 
@@ -301,6 +318,43 @@ export function LoanAccountPreviewStep({
         </dl>
 
       </DetailSection>
+
+      {(draft.charges?.length ?? 0) > 0 ? (
+        <DetailSection title="Charges">
+          <ul className="space-y-3 text-sm">
+            {draft.charges?.map((charge, index) => {
+              const meta = loanAccountChargeMetadata(template, charge.chargeId);
+              return (
+                <li
+                  key={`charge-preview-${charge.chargeId}-${index}`}
+                  className="rounded-lg border border-border p-3"
+                >
+                  <p className="font-medium">{meta?.name ?? `Charge #${charge.chargeId}`}</p>
+                  <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div>
+                      <dt className="text-muted-foreground">Amount</dt>
+                      <dd>
+                        {formatChargeAmountDisplay(
+                          { ...meta, amount: charge.amount },
+                          template.currency?.code
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Collected on</dt>
+                      <dd>{enumOptionLabel(meta?.chargeTimeType) ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Date</dt>
+                      <dd>{formatLoanAccountChargeDate(charge)}</dd>
+                    </div>
+                  </dl>
+                </li>
+              );
+            })}
+          </ul>
+        </DetailSection>
+      ) : null}
 
       {(draft.collateral?.length ?? 0) > 0 || (draft.guarantors?.length ?? 0) > 0 ? (
 
@@ -376,6 +430,16 @@ export function LoanAccountPreviewStep({
 
           <div>
 
+            <dt className="text-muted-foreground">Standing instruction at disbursement</dt>
+
+            <dd className="font-medium">
+              {draft.createStandingInstructionAtDisbursement ? 'Yes' : 'No'}
+            </dd>
+
+          </div>
+
+          <div>
+
             <dt className="text-muted-foreground">Linked savings account</dt>
 
             <dd className="font-medium">
@@ -385,14 +449,6 @@ export function LoanAccountPreviewStep({
                 ?.accountNo ?? '—'}
 
             </dd>
-
-          </div>
-
-          <div>
-
-            <dt className="text-muted-foreground">Disburse to savings</dt>
-
-            <dd className="font-medium">{draft.disburseToSavings ? 'Yes' : 'No'}</dd>
 
           </div>
 

@@ -37,17 +37,6 @@ export function CreateClientSavingsAccountAdvancedFields({
 
   return (
     <div className="space-y-4">
-      <SelectField
-        label="Field officer"
-        optional
-        value={form.fieldOfficerId || undefined}
-        onValueChange={(value) => onPatch({ fieldOfficerId: value ?? '' })}
-        options={toSelectOptions(template.fieldOfficerOptions)}
-        placeholder="Optional"
-        disabled={disabled}
-        error={fieldErrors.fieldOfficerId}
-      />
-
       <TextField
         id="savings-external-id"
         label="External ID"

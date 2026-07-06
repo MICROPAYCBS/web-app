@@ -85,10 +85,12 @@ export function branchProfileFormFromApi(
 }
 
 export function branchProfileInputFromForm(
-  form: BranchProfileFormFields
+  form: BranchProfileFormFields,
+  options?: { lockedBranchCode?: string }
 ): BranchProfileInput | undefined {
+  const lockedCode = options?.lockedBranchCode?.trim();
   const payload: BranchProfileInput = {
-    officeCode: form.officeCode.trim() || undefined,
+    officeCode: lockedCode || form.officeCode.trim() || undefined,
     branchType: form.branchType.trim() || undefined,
     regionCode: form.regionCode.trim() || undefined,
     address: form.address.trim() || undefined,
@@ -112,3 +114,14 @@ export function branchProfileInputFromForm(
 export function branchCodeLabel(office: { name?: string; branchProfile?: OfficeBranchProfile | null }) {
   return office.branchProfile?.officeCode?.trim() || null;
 }
+
+/** True when a branch code was previously saved — it must not be changed afterward. */
+export function isBranchCodeLocked(officeCode?: string | null): boolean {
+  return Boolean(officeCode?.trim());
+}
+
+export const BRANCH_CODE_LOCKED_HINT =
+  'This code is used when generating account numbers and cannot be changed after it has been set.';
+
+export const BRANCH_CODE_EDITABLE_HINT =
+  'Used in structured account number patterns. Choose carefully — it cannot be changed once saved.';

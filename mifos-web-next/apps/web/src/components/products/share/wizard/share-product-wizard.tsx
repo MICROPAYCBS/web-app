@@ -25,6 +25,10 @@ import {
   shareProductDetailPath,
   SHARE_PRODUCTS_LIST_PATH
 } from '@/lib/fineract/share-product-paths';
+import {
+  isProductShortNameLocked,
+  preserveEstablishedProductShortName
+} from '@/lib/fineract/product-short-name';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';
 import { CurrencyStep } from './steps/currency-step';
@@ -49,15 +53,21 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'preview', label: 'Preview' }
 ];
 
-function sanitizeDraftForSubmit(draft: UpsertShareProductInput): UpsertShareProductInput {
+function sanitizeDraftForSubmit(
+  draft: UpsertShareProductInput,
+  lockedShortName?: string
+): UpsertShareProductInput {
   const marketPricePeriods = (draft.marketPrice.marketPricePeriods ?? []).filter(
     (row) => row.fromDate?.trim() && row.shareValue > 0
   );
 
-  return {
-    ...draft,
-    marketPrice: { marketPricePeriods }
-  };
+  return preserveEstablishedProductShortName(
+    {
+      ...draft,
+      marketPrice: { marketPricePeriods }
+    },
+    lockedShortName
+  );
 }
 
 export function ShareProductWizard({
@@ -84,6 +94,14 @@ export function ShareProductWizard({
     setTemplate,
     setDraft
   });
+
+  const lockedShortName = useMemo(() => {
+    if (mode !== 'edit') {
+      return undefined;
+    }
+    const name = initialDraft.details.shortName?.trim();
+    return isProductShortNameLocked(name) ? name : undefined;
+  }, [mode, initialDraft.details.shortName]);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
@@ -170,7 +188,7 @@ export function ShareProductWizard({
 
   function handleSubmit() {
     setSubmitError(null);
-    const payload = sanitizeDraftForSubmit(draft);
+    const payload = sanitizeDraftForSubmit(draft, lockedShortName);
 
     startTransition(async () => {
       const result =
@@ -224,6 +242,7 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
+            lockedShortName={lockedShortName}
             onChange={(patch) =>
               setDraft((current) => ({ ...current, details: { ...current.details, ...patch } }))
             }

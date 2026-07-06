@@ -158,8 +158,28 @@ export {
 export {
   loanAccountAssignOfficerSchema,
   loanAccountUnassignOfficerSchema,
+  loanAccountApproveCommandSchema,
+  loanAccountRejectCommandSchema,
+  loanAccountWithdrawnCommandSchema,
+  loanAccountUndoApprovalCommandSchema,
+  loanAccountUndoDisbursalCommandSchema,
+  loanAccountDisburseCommandSchema,
+  loanAccountDisburseToSavingsCommandSchema,
+  loanAccountWriteOffCommandSchema,
+  loanAccountTransactionCommandSchema,
+  loanAccountAddChargeSchema,
   type LoanAccountAssignOfficerInput,
-  type LoanAccountUnassignOfficerInput
+  type LoanAccountUnassignOfficerInput,
+  type LoanAccountApproveCommandInput,
+  type LoanAccountRejectCommandInput,
+  type LoanAccountWithdrawnCommandInput,
+  type LoanAccountUndoApprovalCommandInput,
+  type LoanAccountUndoDisbursalCommandInput,
+  type LoanAccountDisburseCommandInput,
+  type LoanAccountDisburseToSavingsCommandInput,
+  type LoanAccountWriteOffCommandInput,
+  type LoanAccountTransactionCommandInput,
+  type LoanAccountAddChargeInput
 } from './clients/loan-account-command.schema';
 export {
   createSystemDatatableSchema,
@@ -197,16 +217,20 @@ export {
   loanAccountCoreStepSchema,
   loanAccountFinancialStepSchema,
   loanAccountTimelineStepSchema,
+  loanAccountChargesStepSchema,
   loanAccountSecurityStepSchema,
   loanAccountPayoutStepSchema,
   loanAccountProductStepSchema,
   loanAccountTermsStepSchema,
+  loanAccountChargeItemSchema,
   loanCollateralItemSchema,
   loanGuarantorItemSchema,
   type CreateLoanAccountInput,
   type LoanAccountCoreStepInput,
   type LoanAccountFinancialStepInput,
   type LoanAccountTimelineStepInput,
+  type LoanAccountChargeItemInput,
+  type LoanAccountChargesStepInput,
   type LoanAccountSecurityStepInput,
   type LoanAccountPayoutStepInput,
   type LoanCollateralItemInput,
@@ -214,6 +238,25 @@ export {
   type LoanAccountProductStepInput,
   type LoanAccountTermsStepInput
 } from './clients/create-loan-account.schema';
+export {
+  computedLoanTermFrequency,
+  computedNumberOfRepayments,
+  loanApplicationHasScheduleMinimumFields,
+  loanApplicationLinkedSavingsReasons,
+  loanApplicationRequiresLinkedSavingsAccount,
+  loanTermMatchesRepaymentStructure,
+  validateLoanApplicationProductRangeRules,
+  validateLoanApplicationProductRules,
+  validateLoanApplicationChargeAmountRules,
+  type LoanApplicationProductContext,
+  type LoanApplicationChargeAmountLimit,
+  type LoanApplicationValidationOptions
+} from './clients/loan-application-validation';
+export {
+  loanApplicationStepForField,
+  mapLoanApplicationFineractErrors,
+  mapLoanApplicationFineractField
+} from './clients/loan-application-error-map';
 export {
   upsertCollateralProductSchema,
   type UpsertCollateralProductInput

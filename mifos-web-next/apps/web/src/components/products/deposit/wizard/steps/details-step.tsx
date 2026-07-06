@@ -10,13 +10,16 @@
 
 import type { DepositProductDetailsInput } from '@mifos/validation';
 import { TextField } from '@/components/composites/text-field';
+import { ProductShortNameField } from '@/components/products/shared/product-short-name-field';
 import type { DepositProductStepProps } from '../types';
 
 export function DetailsStep({
   draft,
   errors,
+  lockedShortName,
   onChange
 }: DepositProductStepProps & {
+  lockedShortName?: string;
   onChange: (patch: Partial<DepositProductDetailsInput>) => void;
 }) {
   const details = draft.details;
@@ -34,14 +37,12 @@ export function DetailsStep({
           onChange={(name) => onChange({ name })}
           error={errors['details.name']}
         />
-        <TextField
+        <ProductShortNameField
           id="details.shortName"
-          label="Short name"
-          required
           value={details.shortName}
           onChange={(shortName) => onChange({ shortName })}
           error={errors['details.shortName']}
-          hint="Up to 4 characters."
+          lockedShortName={lockedShortName}
         />
         <TextField
           id="details.description"

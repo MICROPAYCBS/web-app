@@ -16,6 +16,18 @@ export const CHARGE_APPLIES_TO = {
   WORKING_CAPITAL: 5
 } as const;
 
+/** Client-level charges are not offered in the create wizard. */
+export function chargeAppliesToOptionsForWizard(
+  mode: 'create' | 'edit',
+  options: FineractEnumOption[] | undefined
+): FineractEnumOption[] {
+  const list = options ?? [];
+  if (mode === 'create') {
+    return list.filter((option) => option.id !== CHARGE_APPLIES_TO.CLIENT);
+  }
+  return list;
+}
+
 export function chargeTimeTypeOptions(
   template: ChargeTemplate,
   chargeAppliesTo?: number

@@ -21,17 +21,23 @@ import {
   buildCreateStandingInstructionBody,
   createStandingInstruction,
   deleteStandingInstruction,
+  getStandingInstruction,
   getStandingInstructionTemplate,
   listStandingInstructions,
   type StandingInstructionListQuery,
   type StandingInstructionTemplateQuery
 } from '@/lib/fineract/standing-instructions';
 import { clientStandingInstructionsListPath } from '@/lib/fineract/client-secondary-list-paths';
-import type {
-  StandingInstructionActionResult,
-  StandingInstructionTemplateResult
-} from '@/lib/fineract/standing-instruction-action-result';
+import type { StandingInstructionDetail } from '@mifos/api-client';
+import type { StandingInstructionActionResult } from '@/lib/fineract/standing-instruction-action-result';
+import type { StandingInstructionTemplateResult } from '@/lib/fineract/standing-instruction-action-result';
 import { getServerSession } from '@/lib/session/server';
+
+function revalidateStandingInstructionPaths(paths: string[]) {
+  for (const path of paths) {
+    revalidatePath(path);
+  }
+}
 
 function parseCreateInput(
   raw: unknown
@@ -84,10 +90,29 @@ export async function fetchStandingInstructionTemplateAction(
   }
 }
 
+export async function fetchStandingInstructionDetailAction(
+  instructionId: string | number
+): Promise<
+  | StandingInstructionDetail
+  | Extract<StandingInstructionActionResult, { ok: false }>
+> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, 'READ_STANDINGINSTRUCTION');
+    return await getStandingInstruction(instructionId);
+  } catch (err) {
+    return toFineractActionError(err, 'Could not load standing instruction.');
+  }
+}
+
 export async function createClientStandingInstructionAction(
   clientId: string,
   fromOfficeId: string | number,
-  raw: unknown
+  raw: unknown,
+  options?: { revalidatePaths?: string[] }
 ): Promise<StandingInstructionActionResult> {
   const session = await getServerSession();
   if (!session) {
@@ -113,6 +138,9 @@ export async function createClientStandingInstructionAction(
     });
     const response = await createStandingInstruction(body);
     revalidatePath(clientStandingInstructionsListPath(clientId));
+    if (options?.revalidatePaths?.length) {
+      revalidateStandingInstructionPaths(options.revalidatePaths);
+    }
     return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not create standing instruction.');
@@ -121,7 +149,8 @@ export async function createClientStandingInstructionAction(
 
 export async function deleteClientStandingInstructionAction(
   clientId: string,
-  instructionId: string | number
+  instructionId: string | number,
+  options?: { revalidatePaths?: string[] }
 ): Promise<StandingInstructionActionResult> {
   const session = await getServerSession();
   if (!session) {
@@ -136,6 +165,9 @@ export async function deleteClientStandingInstructionAction(
   try {
     const response = await deleteStandingInstruction(instructionId);
     revalidatePath(clientStandingInstructionsListPath(clientId));
+    if (options?.revalidatePaths?.length) {
+      revalidateStandingInstructionPaths(options.revalidatePaths);
+    }
     return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Could not delete standing instruction.');

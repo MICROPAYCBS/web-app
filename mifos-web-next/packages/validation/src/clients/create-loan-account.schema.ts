@@ -124,7 +124,7 @@ export const loanAccountCoreStepSchema = z.object({
 
   productId: z.coerce.number().int().positive('Select a loan product.'),
 
-  loanOfficerId: optionalId,
+  loanOfficerId: z.coerce.number().int().positive('Select a loan officer.'),
 
   loanPurposeId: optionalId,
 
@@ -160,11 +160,16 @@ export const loanAccountFinancialStepSchema = z.object({
 
 export const loanAccountTimelineStepSchema = z.object({
 
-  interestRatePerPeriod: z.coerce.number().min(0, 'Interest rate is required.'),
+  interestRatePerPeriod: z.coerce.number().min(0).default(0),
+
+  interestRateDifferential: z.coerce.number().min(0).optional(),
+
+  isFloatingInterestRate: z.boolean().optional(),
 
   submittedOnDate: fineractDate,
-
   expectedDisbursementDate: fineractDate,
+
+  repaymentsStartingFromDate: fineractDate.optional().or(z.literal('')),
 
   graceOnPrincipalPayment: z.coerce.number().int().min(0).default(0),
 
@@ -179,6 +184,32 @@ export const loanAccountTimelineStepSchema = z.object({
   interestCalculationPeriodType: z.coerce.number().int().min(0),
 
   transactionProcessingStrategyCode: z.string().trim().min(1, 'Select a processing strategy.')
+
+  });
+
+
+
+export const loanAccountChargeItemSchema = z.object({
+
+  chargeId: z.coerce.number().int().positive(),
+
+  amount: z.coerce.number().min(0, 'Amount is required.'),
+
+  dueDate: z.string().trim().optional().or(z.literal('')),
+
+  feeInterval: z.coerce.number().int().positive().optional(),
+
+  feeOnMonthDay: z.string().trim().optional().or(z.literal(''))
+
+});
+
+
+
+/** Step — Fees & penalties on the application */
+
+export const loanAccountChargesStepSchema = z.object({
+
+  charges: z.array(loanAccountChargeItemSchema).default([])
 
 });
 
@@ -202,10 +233,9 @@ export const loanAccountPayoutStepSchema = z.object({
 
   linkAccountId: optionalId,
 
-  disburseToSavings: z.boolean().default(false)
+  createStandingInstructionAtDisbursement: z.boolean().default(false)
 
 });
-
 
 
 export const createLoanAccountSchema = loanAccountCoreStepSchema
@@ -213,6 +243,8 @@ export const createLoanAccountSchema = loanAccountCoreStepSchema
   .merge(loanAccountFinancialStepSchema)
 
   .merge(loanAccountTimelineStepSchema)
+
+  .merge(loanAccountChargesStepSchema)
 
   .merge(loanAccountSecurityStepSchema)
 
@@ -259,6 +291,10 @@ export type LoanAccountCoreStepInput = z.infer<typeof loanAccountCoreStepSchema>
 export type LoanAccountFinancialStepInput = z.infer<typeof loanAccountFinancialStepSchema>;
 
 export type LoanAccountTimelineStepInput = z.infer<typeof loanAccountTimelineStepSchema>;
+
+export type LoanAccountChargeItemInput = z.infer<typeof loanAccountChargeItemSchema>;
+
+export type LoanAccountChargesStepInput = z.infer<typeof loanAccountChargesStepSchema>;
 
 export type LoanAccountSecurityStepInput = z.infer<typeof loanAccountSecurityStepSchema>;
 

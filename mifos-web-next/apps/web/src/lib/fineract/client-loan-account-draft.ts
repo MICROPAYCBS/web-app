@@ -26,6 +26,8 @@ import type {
 
   LoanAccountPayoutStepInput,
 
+  LoanAccountChargesStepInput,
+
   LoanAccountSecurityStepInput,
 
   LoanAccountTimelineStepInput
@@ -33,6 +35,7 @@ import type {
 } from '@mifos/validation';
 
 import { toFineractDate } from '@/lib/fineract/dates';
+import { defaultLoanAccountChargesFromTemplate } from '@/lib/fineract/loan-application-charges';
 
 
 
@@ -47,6 +50,8 @@ export function emptyLoanAccountDraft(): LoanAccountDraft {
   return {
 
     productId: 0,
+
+    loanOfficerId: 0,
 
     submittedOnDate: today,
 
@@ -70,6 +75,10 @@ export function emptyLoanAccountDraft(): LoanAccountDraft {
 
     interestRatePerPeriod: 0,
 
+    interestRateDifferential: undefined,
+
+    isFloatingInterestRate: undefined,
+
     graceOnPrincipalPayment: 0,
 
     graceOnInterestPayment: 0,
@@ -84,11 +93,13 @@ export function emptyLoanAccountDraft(): LoanAccountDraft {
 
     transactionProcessingStrategyCode: '',
 
+    charges: [],
+
     collateral: [],
 
     guarantors: [],
 
-    disburseToSavings: false
+    createStandingInstructionAtDisbursement: false
 
   };
 
@@ -130,9 +141,24 @@ export function loanAccountDraftFromTemplate(
 
       template.interestRatePerPeriod ?? base.interestRatePerPeriod,
 
+    interestRateDifferential:
+
+      template.defaultDifferentialLendingRate ?? base.interestRateDifferential,
+
+    isFloatingInterestRate:
+
+      template.linkedToFloatingInterestRates === true ||
+      template.isLoanProductLinkedToFloatingRate === true
+        ? true
+        : base.isFloatingInterestRate,
+
     amortizationType: template.amortizationType?.id ?? base.amortizationType,
 
-    interestType: template.interestType?.id ?? base.interestType,
+    interestType:
+      template.linkedToFloatingInterestRates === true ||
+      template.isLoanProductLinkedToFloatingRate === true
+        ? 0
+        : template.interestType?.id ?? base.interestType,
 
     interestCalculationPeriodType:
 
@@ -144,7 +170,9 @@ export function loanAccountDraftFromTemplate(
 
       template.transactionProcessingStrategyOptions?.[0]?.code ??
 
-      base.transactionProcessingStrategyCode
+      base.transactionProcessingStrategyCode,
+
+    charges: defaultLoanAccountChargesFromTemplate(template.charges)
 
   };
 
@@ -199,6 +227,20 @@ export function mergeLoanAccountTimelineStep(
   draft: LoanAccountDraft,
 
   patch: Partial<LoanAccountTimelineStepInput>
+
+): LoanAccountDraft {
+
+  return { ...draft, ...patch };
+
+}
+
+
+
+export function mergeLoanAccountChargesStep(
+
+  draft: LoanAccountDraft,
+
+  patch: Partial<LoanAccountChargesStepInput>
 
 ): LoanAccountDraft {
 

@@ -131,3 +131,28 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  body.loan-schedule-print [data-slot='sidebar'],
+  body.loan-schedule-print [data-slot='sidebar-wrapper'] > [data-slot='sidebar'],
+  body.loan-schedule-print [data-slot='sidebar-inset'] > header {
+    display: none !important;
+  }
+
+  body.loan-schedule-print [data-slot='sidebar-inset'] {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.loan-schedule-print {
+    background: white !important;
+    color: black !important;
+  }
+
+  body.loan-schedule-print [data-loan-schedule-printable] {
+    break-inside: avoid;
+  }
+}

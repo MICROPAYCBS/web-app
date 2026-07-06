@@ -37,6 +37,10 @@ export function patternIncludesOfficeCode(pattern: string): boolean {
   return /\{officeCode:\d+\}/.test(pattern);
 }
 
+export function patternIncludesProductCode(pattern: string): boolean {
+  return /\{productCode:\d+\}/.test(pattern);
+}
+
 export function patternIncludesSequence(pattern: string): boolean {
   return /\{sequence:\d+\}/.test(pattern);
 }

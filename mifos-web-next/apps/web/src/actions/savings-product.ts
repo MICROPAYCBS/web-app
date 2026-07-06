@@ -23,10 +23,12 @@ import {
 } from '@/lib/fineract/savings-product-paths';
 import {
   createSavingsProductRecord,
+  getSavingsProduct,
   getSavingsProductChargeOptions,
   updateSavingsProductRecord
 } from '@/lib/fineract/savings-products';
 import { getServerSession } from '@/lib/session/server';
+import { preserveEstablishedProductShortName } from '@/lib/fineract/product-short-name';
 
 function parseInput(
   raw: unknown
@@ -124,7 +126,9 @@ export async function updateSavingsProductAction(
   }
 
   try {
-    const payload = buildSavingsProductPayload(parsed);
+    const existingProduct = await getSavingsProduct(productId);
+    const updateInput = preserveEstablishedProductShortName(parsed, existingProduct.shortName);
+    const payload = buildSavingsProductPayload(updateInput);
     const response = await updateSavingsProductRecord(productId, payload);
     revalidatePath(SAVINGS_PRODUCTS_LIST_PATH);
     revalidatePath(savingsProductDetailPath(productId));

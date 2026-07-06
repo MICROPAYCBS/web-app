@@ -23,10 +23,12 @@ import {
 } from '@/lib/fineract/share-product-paths';
 import {
   createShareProductRecord,
+  getShareProduct,
   getShareProductChargeOptions,
   updateShareProductRecord
 } from '@/lib/fineract/share-products';
 import { getServerSession } from '@/lib/session/server';
+import { preserveEstablishedProductShortName } from '@/lib/fineract/product-short-name';
 
 function parseInput(
   raw: unknown
@@ -124,7 +126,9 @@ export async function updateShareProductAction(
   }
 
   try {
-    const payload = buildShareProductPayload(parsed);
+    const existingProduct = await getShareProduct(productId);
+    const updateInput = preserveEstablishedProductShortName(parsed, existingProduct.shortName);
+    const payload = buildShareProductPayload(updateInput);
     const response = await updateShareProductRecord(productId, payload);
     revalidatePath(SHARE_PRODUCTS_LIST_PATH);
     revalidatePath(shareProductDetailPath(productId));

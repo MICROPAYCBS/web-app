@@ -15,6 +15,7 @@ import {
   accountTypeUsesProductShortName,
   defaultPatternForAccountType,
   patternIncludesOfficeCode,
+  patternIncludesProductCode,
   patternToSegments,
   segmentTokenOptionsForAccountType,
   sequenceScopeAllowedForAccountType,
@@ -197,6 +198,7 @@ export function AccountNumberFormatStructuredFields({
   }
 
   const showOfficeCodeWarning = patternIncludesOfficeCode(values.formatPattern);
+  const showProductCodeWarning = patternIncludesProductCode(values.formatPattern);
 
   return (
     <div className="space-y-4 border-t border-border pt-4">
@@ -314,6 +316,13 @@ export function AccountNumberFormatStructuredFields({
             branches
           </Link>{' '}
           screen before creating new accounts.
+        </p>
+      ) : null}
+
+      {showProductCodeWarning ? (
+        <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          This pattern uses product short names. Set each product&apos;s short name when creating it
+          on the product screens — it cannot be changed afterward.
         </p>
       ) : null}
 

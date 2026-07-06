@@ -9,6 +9,8 @@ import 'server-only';
  */
 
 import type { CreateStandingInstructionResponse,
+  StandingInstructionDetail,
+  StandingInstructionListItem,
   StandingInstructionTemplate,
   StandingInstructionsPage, FineractCommandProcessingResult } from '@mifos/api-client';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
@@ -25,6 +27,8 @@ export type StandingInstructionListQuery = {
   clientName?: string;
   fromAccountType: string;
   fromAccountId?: string | number;
+  toAccountType?: string | number;
+  toAccountId?: string | number;
   fromTransferType?: string | number;
   limit?: number;
   offset?: number;
@@ -65,9 +69,60 @@ export async function listStandingInstructions(
     fromAccountType: query.fromAccountType,
     ...toSearchParams({
       fromAccountId: query.fromAccountId,
+      toAccountType: query.toAccountType,
+      toAccountId: query.toAccountId,
       fromTransferType: query.fromTransferType
     })
   });
+}
+
+export async function getStandingInstruction(
+  instructionId: string | number
+): Promise<StandingInstructionDetail> {
+  const fineract = await createFineractClient();
+  return fineract.get<StandingInstructionDetail>(`/standinginstructions/${instructionId}`);
+}
+
+/** Standing instructions linked to a loan (from or to this account). */
+export async function listLoanAccountStandingInstructions(input: {
+  clientId: string | number;
+  clientName: string;
+  loanAccountId: string | number;
+  linkedSavingsAccountId?: number;
+}): Promise<StandingInstructionListItem[]> {
+  const loanId = Number(input.loanAccountId);
+  const queries: StandingInstructionListQuery[] = [
+    {
+      clientId: input.clientId,
+      clientName: input.clientName,
+      fromAccountType: '1',
+      fromAccountId: input.loanAccountId
+    }
+  ];
+
+  if (input.linkedSavingsAccountId != null) {
+    queries.push({
+      clientId: input.clientId,
+      clientName: input.clientName,
+      fromAccountType: '2',
+      fromAccountId: input.linkedSavingsAccountId
+    });
+  }
+
+  const pages = await Promise.all(queries.map((query) => listStandingInstructions(query)));
+  const merged = new Map<number, StandingInstructionListItem>();
+
+  for (const page of pages) {
+    for (const item of page.pageItems) {
+      const relatedToLoan =
+        item.toAccount?.id === loanId || item.fromAccount?.id === loanId;
+      if (relatedToLoan) {
+        merged.set(item.id, item);
+      }
+    }
+  }
+
+  return [...merged.values()];
 }
 
 export async function getStandingInstructionTemplate(

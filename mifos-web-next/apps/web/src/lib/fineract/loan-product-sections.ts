@@ -11,6 +11,7 @@ import type {
   LoanProductKind,
   LoanProductSectionId
 } from '@mifos/api-client';
+import { loanProductAttributeOverridesEnabled } from '@/lib/fineract/loan-product-attribute-overrides';
 import { isProductAccountingEnabled } from '@/lib/fineract/product-display';
 
 export const LOAN_PRODUCT_DEFAULT_SECTION: LoanProductSectionId = 'general';
@@ -49,6 +50,10 @@ export function loanProductSections(
     { id: 'terms', label: 'Terms' },
     { id: 'settings', label: 'Settings' }
   ];
+
+  if (loanProductAttributeOverridesEnabled(product.allowAttributeOverrides)) {
+    items.push({ id: 'overrideables', label: 'Overrideables' });
+  }
 
   if (loanProductFeeCharges(product).length > 0) {
     items.push({ id: 'fees', label: 'Fees' });

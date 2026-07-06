@@ -7,6 +7,7 @@
  */
 
 import type { FineractCurrencyOption, FineractEnumOption } from './types';
+import type { LoanProductAttributeOverrides } from '../products/loan-product-attribute-overrides';
 
 export type ClientDepositAccountKind = 'savings' | 'fixedDeposit' | 'recurringDeposit';
 
@@ -89,6 +90,25 @@ export interface ClientLoanCollateralOption {
   collateralId: number;
   name?: string;
   description?: string;
+  value?: number;
+  pctToBase?: number;
+}
+
+/** Charge row from loan application / product template APIs. */
+export interface ClientLoanAccountChargeOption {
+  id?: number;
+  chargeId?: number;
+  name?: string;
+  amount?: number;
+  amountOrPercentage?: number;
+  percentage?: number;
+  penalty?: boolean;
+  currency?: FineractCurrencyOption;
+  chargeCalculationType?: FineractEnumOption;
+  chargeTimeType?: FineractEnumOption;
+  chargePaymentMode?: FineractEnumOption;
+  minCap?: number;
+  maxCap?: number;
 }
 
 export interface ClientLoanAccountTemplate {
@@ -108,17 +128,42 @@ export interface ClientLoanAccountTemplate {
   transactionProcessingStrategyOptions?: Array<{ code?: string; name?: string }>;
   currency?: FineractCurrencyOption;
   principal?: number;
+  minPrincipal?: number;
+  maxPrincipal?: number;
   loanTermFrequency?: number;
   loanTermFrequencyType?: FineractEnumOption;
   numberOfRepayments?: number;
+  minNumberOfRepayments?: number;
+  maxNumberOfRepayments?: number;
   repaymentEvery?: number;
   repaymentFrequencyType?: FineractEnumOption;
   interestRatePerPeriod?: number;
+  minInterestRatePerPeriod?: number;
+  maxInterestRatePerPeriod?: number;
+  interestRateFrequencyType?: FineractEnumOption;
   amortizationType?: FineractEnumOption;
   interestType?: FineractEnumOption;
   interestCalculationPeriodType?: FineractEnumOption;
   transactionProcessingStrategyCode?: string;
+  transactionProcessingStrategyName?: string;
+  allowAttributeOverrides?: LoanProductAttributeOverrides;
+  linkedToFloatingInterestRates?: boolean;
+  isLoanProductLinkedToFloatingRate?: boolean;
+  minInterestRateDifferential?: number;
+  maxInterestRateDifferential?: number;
+  defaultDifferentialLendingRate?: number;
+  multiDisburseLoan?: boolean;
+  disallowExpectedDisbursements?: boolean;
+  maxTrancheCount?: number;
+  canUseForTopup?: boolean;
+  canDefineInstallmentAmount?: boolean;
+  isInterestRecalculationEnabled?: boolean;
+  loanScheduleType?: FineractEnumOption;
+  enableDownPayment?: boolean;
   product?: { id?: number; name?: string };
+  chargeOptions?: ClientLoanAccountChargeOption[];
+  charges?: ClientLoanAccountChargeOption[];
+  overdueCharges?: ClientLoanAccountChargeOption[];
 }
 
 export interface CreateClientLoanAccountResponse {

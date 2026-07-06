@@ -16,11 +16,15 @@
 
 import type {
 
+  ClientLoanAccountChargeOption,
+
   ClientLoanAccountTemplate,
 
   FineractEnumOption
 
 } from '@mifos/api-client';
+
+import { asLoanProductAttributeOverrides } from '@/lib/fineract/loan-product-attribute-overrides';
 
 
 
@@ -174,7 +178,11 @@ function asLoanCollateralOptions(
 
         name: typeof row.name === 'string' ? row.name : undefined,
 
-        description: typeof row.description === 'string' ? row.description : undefined
+        description: typeof row.description === 'string' ? row.description : undefined,
+
+        value: toNumber(row.value ?? row.basePrice),
+
+        pctToBase: toNumber(row.pctToBase)
 
       };
 
@@ -182,6 +190,104 @@ function asLoanCollateralOptions(
 
     .filter((item): item is NonNullable<typeof item> => item !== null);
 
+}
+
+
+
+function flattenLoanAccountChargeRow(row: Record<string, unknown>): Record<string, unknown> {
+  const nested = row.charge;
+  if (!nested || typeof nested !== 'object') {
+    return row;
+  }
+
+  const charge = nested as Record<string, unknown>;
+  const currency =
+    row.currency && typeof row.currency === 'object'
+      ? row.currency
+      : charge.currency && typeof charge.currency === 'object'
+        ? charge.currency
+        : undefined;
+
+  return {
+    ...charge,
+    ...row,
+    id: row.id ?? charge.id,
+    chargeId: row.chargeId ?? charge.id ?? row.id,
+    name: typeof row.name === 'string' ? row.name : charge.name,
+    amount: row.amount ?? charge.amount,
+    amountOrPercentage: row.amountOrPercentage ?? charge.amountOrPercentage,
+    percentage: row.percentage ?? charge.percentage,
+    penalty: row.penalty ?? charge.penalty,
+    currency,
+    currencyCode: row.currencyCode ?? charge.currencyCode,
+    chargeCalculationType: row.chargeCalculationType ?? charge.chargeCalculationType,
+    chargeTimeType: row.chargeTimeType ?? charge.chargeTimeType,
+    chargePaymentMode: row.chargePaymentMode ?? charge.chargePaymentMode
+  };
+}
+
+function chargeCurrencyFromRow(row: Record<string, unknown>): ClientLoanAccountChargeOption['currency'] {
+  if (row.currency && typeof row.currency === 'object') {
+    return row.currency as ClientLoanAccountChargeOption['currency'];
+  }
+
+  if (typeof row.currencyCode === 'string' && row.currencyCode.trim()) {
+    return { code: row.currencyCode.trim() };
+  }
+
+  return undefined;
+}
+
+export function normalizeLoanAccountChargeOptions(
+  value: unknown
+): ClientLoanAccountChargeOption[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const options: ClientLoanAccountChargeOption[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+
+    const row = flattenLoanAccountChargeRow(item as Record<string, unknown>);
+    const chargeDefinitionId = toNumber(row.chargeId) ?? toNumber(row.id);
+
+    if (chargeDefinitionId == null) {
+      continue;
+    }
+
+    options.push({
+      id: chargeDefinitionId,
+      chargeId: chargeDefinitionId,
+      name: typeof row.name === 'string' ? row.name : undefined,
+      amount: toNumber(row.amount),
+      amountOrPercentage: toNumber(row.amountOrPercentage),
+      percentage: toNumber(row.percentage),
+      penalty: row.penalty === true ? true : undefined,
+      currency: chargeCurrencyFromRow(row),
+      chargeCalculationType: asEnumOption(row.chargeCalculationType),
+      chargeTimeType: asEnumOption(row.chargeTimeType),
+      chargePaymentMode: asEnumOption(row.chargePaymentMode)
+    });
+  }
+
+  return options;
+}
+
+function asLoanAccountChargeOptions(value: unknown): ClientLoanAccountChargeOption[] {
+  return normalizeLoanAccountChargeOptions(value);
+}
+
+function loanTemplateSourceRow(raw: Record<string, unknown>): Record<string, unknown> {
+  const loanData = raw.loanData;
+  if (loanData && typeof loanData === 'object') {
+    return { ...raw, ...(loanData as Record<string, unknown>) };
+  }
+
+  return raw;
 }
 
 
@@ -194,7 +300,7 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
   }
 
-  const row = raw as Record<string, unknown>;
+  const row = loanTemplateSourceRow(raw as Record<string, unknown>);
 
   const productOptions = Array.isArray(row.productOptions)
 
@@ -396,17 +502,31 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     principal: toNumber(row.principal),
 
+    minPrincipal: toNumber(row.minPrincipal),
+
+    maxPrincipal: toNumber(row.maxPrincipal),
+
     loanTermFrequency: toNumber(row.loanTermFrequency),
 
     loanTermFrequencyType: asEnumOption(row.loanTermFrequencyType),
 
     numberOfRepayments: toNumber(row.numberOfRepayments),
 
+    minNumberOfRepayments: toNumber(row.minNumberOfRepayments),
+
+    maxNumberOfRepayments: toNumber(row.maxNumberOfRepayments),
+
     repaymentEvery: toNumber(row.repaymentEvery),
 
     repaymentFrequencyType: asEnumOption(row.repaymentFrequencyType),
 
     interestRatePerPeriod: toNumber(row.interestRatePerPeriod),
+
+    minInterestRatePerPeriod: toNumber(row.minInterestRatePerPeriod),
+
+    maxInterestRatePerPeriod: toNumber(row.maxInterestRatePerPeriod),
+
+    interestRateFrequencyType: asEnumOption(row.interestRateFrequencyType),
 
     amortizationType: asEnumOption(row.amortizationType),
 
@@ -422,13 +542,57 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
         : undefined,
 
+    transactionProcessingStrategyName:
+
+      typeof row.transactionProcessingStrategyName === 'string'
+
+        ? row.transactionProcessingStrategyName
+
+        : undefined,
+
+    allowAttributeOverrides: asLoanProductAttributeOverrides(row.allowAttributeOverrides),
+
+    linkedToFloatingInterestRates:
+      row.isLoanProductLinkedToFloatingRate === true ||
+      row.linkedToFloatingInterestRates === true,
+
+    isLoanProductLinkedToFloatingRate:
+      row.isLoanProductLinkedToFloatingRate === true ? true : undefined,
+
+    minInterestRateDifferential: toNumber(row.minDifferentialLendingRate),
+
+    maxInterestRateDifferential: toNumber(row.maxDifferentialLendingRate),
+
+    defaultDifferentialLendingRate: toNumber(row.defaultDifferentialLendingRate),
+
+    multiDisburseLoan: row.multiDisburseLoan === true ? true : undefined,
+
+    disallowExpectedDisbursements:
+      row.disallowExpectedDisbursements === true ? true : undefined,
+
+    maxTrancheCount: toNumber(row.maxTrancheCount),
+
+    canUseForTopup: row.canUseForTopup === true ? true : undefined,
+
+    canDefineInstallmentAmount:
+      row.canDefineInstallmentAmount === true ? true : undefined,
+
+    isInterestRecalculationEnabled:
+      row.isInterestRecalculationEnabled === true ? true : undefined,
+
+    loanScheduleType: asEnumOption(row.loanScheduleType),
+
+    enableDownPayment: row.enableDownPayment === true ? true : undefined,
+
     product:
 
       row.product && typeof row.product === 'object'
 
         ? {
 
-            id: toNumber((row.product as Record<string, unknown>).id),
+            id:
+              toNumber((row.product as Record<string, unknown>).id) ??
+              toNumber(row.loanProductId),
 
             name:
 
@@ -436,11 +600,33 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
                 ? ((row.product as Record<string, unknown>).name as string)
 
-                : undefined
+                : typeof row.loanProductName === 'string'
+
+                  ? row.loanProductName
+
+                  : undefined
 
           }
 
-        : undefined
+        : toNumber(row.loanProductId) != null
+
+          ? {
+
+              id: toNumber(row.loanProductId),
+
+              name:
+
+                typeof row.loanProductName === 'string' ? row.loanProductName : undefined
+
+            }
+
+          : undefined,
+
+    chargeOptions: asLoanAccountChargeOptions(row.chargeOptions),
+
+    charges: asLoanAccountChargeOptions(row.charges),
+
+    overdueCharges: asLoanAccountChargeOptions(row.overdueCharges)
 
   };
 

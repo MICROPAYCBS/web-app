@@ -27,7 +27,7 @@ export const createClientSavingsAccountSchema = z.object({
   productId: z.coerce.number().int().positive('Select a product.'),
   submittedOnDate,
   externalId: z.string().trim().max(100).optional().or(z.literal('')),
-  fieldOfficerId: optionalId,
+  fieldOfficerId: z.coerce.number().int().positive('Select a field officer.'),
   nominalAnnualInterestRate: optionalNonNegativeNumber,
   interestCompoundingPeriodType: optionalId,
   interestPostingPeriodType: optionalId,

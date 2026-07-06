@@ -159,7 +159,6 @@ export function applyDepositTemplateDefaults(
 
 export function clearSavingsAdvancedFields(): Partial<DepositFormState> {
   return {
-    fieldOfficerId: '',
     externalId: '',
     nominalAnnualInterestRate: '',
     interestCompoundingPeriodType: '',

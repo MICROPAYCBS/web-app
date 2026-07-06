@@ -9,11 +9,15 @@
 import { PageHeader } from '@/components/composites/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+  detailSidebarGridAreaHeader,
+  detailSidebarGridAreaMain,
+  detailSidebarGridAreaNav,
   detailSidebarInsetX,
+  detailSidebarScrollPadding,
   pageHeaderContentSpacing,
+  platformDetailSidebarGridLayout,
   platformInset,
-  platformPageShell,
-  platformSidebarRowLayout
+  platformPageShell
 } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
@@ -154,11 +158,7 @@ export function DetailPageSkeleton({
   className
 }: DetailPageSkeletonProps) {
   const body = (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <PageHeader className={pageHeaderContentSpacing}>
-        <DetailHeaderSkeleton showAvatar={showAvatar} summaryFieldCount={summaryFieldCount} />
-      </PageHeader>
-
+    <div className={cn(detailSidebarGridAreaMain, 'flex min-h-0 min-w-0 flex-col overflow-hidden')}>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className={cn(platformInset, 'space-y-6', showSidebar && 'lg:pl-8')}>
           {Array.from({ length: contentSectionCount }).map((_, index) => (
@@ -169,6 +169,12 @@ export function DetailPageSkeleton({
     </div>
   );
 
+  const header = (
+    <PageHeader className={cn(detailSidebarGridAreaHeader, pageHeaderContentSpacing)}>
+      <DetailHeaderSkeleton showAvatar={showAvatar} summaryFieldCount={summaryFieldCount} />
+    </PageHeader>
+  );
+
   if (!showSidebar) {
     return (
       <div
@@ -176,25 +182,36 @@ export function DetailPageSkeleton({
         aria-busy
         aria-label="Loading detail page"
       >
-        {body}
+        <PageHeader className={pageHeaderContentSpacing}>
+          <DetailHeaderSkeleton showAvatar={showAvatar} summaryFieldCount={summaryFieldCount} />
+        </PageHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className={cn(platformInset, 'space-y-6')}>
+            {Array.from({ length: contentSectionCount }).map((_, index) => (
+              <ContentSectionSkeleton key={index} tableSection={tableSection} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className={cn(platformSidebarRowLayout, className)}
+      className={cn(platformDetailSidebarGridLayout, className)}
       aria-busy
       aria-label="Loading detail page"
     >
+      {header}
       <aside
         className={cn(
-          'flex w-full shrink-0 flex-col border-border',
-          'max-h-[min(40vh,20rem)] border-b lg:max-h-none lg:w-56 lg:min-h-0 lg:self-stretch lg:border-b-0 lg:border-r xl:w-60'
+          detailSidebarGridAreaNav,
+          'flex min-h-0 w-full flex-col border-border',
+          'max-h-[min(40vh,20rem)] border-b lg:max-h-none lg:border-b-0 lg:border-r'
         )}
         aria-hidden
       >
-        <div className={cn(detailSidebarInsetX, 'min-h-0 flex-1 overflow-hidden pb-4 md:pb-6')}>
+        <div className={cn(detailSidebarInsetX, detailSidebarScrollPadding, 'min-h-0 flex-1 overflow-hidden')}>
           <div className="space-y-1">
             {Array.from({ length: sidebarItemCount }).map((_, index) => (
               <div key={index} className="flex items-center gap-3 rounded-lg px-3 py-2">

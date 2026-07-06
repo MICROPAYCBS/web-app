@@ -8,7 +8,6 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { SavingsAccountDetailView } from '@/components/clients/savings/savings-account-detail-view';
 import type { SavingsAccountActionPermissions } from '@/components/clients/savings/actions/savings-account-actions';
 import { DetailBackLink } from '@/components/composites';
@@ -115,18 +114,16 @@ export default async function SavingsAccountGeneralPage({
     auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
 
   return (
-    <Suspense fallback={null}>
-      <SavingsAccountDetailView
-        account={result.data}
-        clientId={clientId}
-        reportOrgName={reportOrgName}
-        permissions={savingsAccountPermissions(session)}
-        canViewAudits={canViewAudits}
-        auditEntries={auditEntries}
-        auditLoadFailed={auditResult != null && !auditResult.ok}
-        auditTotalRecords={auditTotalRecords}
-        transactionActionPermissions={savingsTransactionActionPermissions(session)}
-      />
-    </Suspense>
+    <SavingsAccountDetailView
+      account={result.data}
+      clientId={clientId}
+      reportOrgName={reportOrgName}
+      permissions={savingsAccountPermissions(session)}
+      canViewAudits={canViewAudits}
+      auditEntries={auditEntries}
+      auditLoadFailed={auditResult != null && !auditResult.ok}
+      auditTotalRecords={auditTotalRecords}
+      transactionActionPermissions={savingsTransactionActionPermissions(session)}
+    />
   );
 }

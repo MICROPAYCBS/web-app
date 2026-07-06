@@ -17,9 +17,10 @@ import {
   DetailSection
 } from '@/components/composites';
 import {
-  DepositAccountFieldOfficerActions,
-  type DepositAccountFieldOfficerPermissions
-} from '@/components/clients/accounts/actions/deposit-account-field-officer-actions';
+  AccountOfficerActions,
+  type AccountOfficerPermissions
+} from '@/components/clients/accounts/actions/account-officer-actions';
+import { AccountOfficerMeta } from '@/components/clients/accounts/account-officer-meta';
 import { clientGeneralPath } from '@/lib/fineract/client-action-paths';
 import {
   clientAccountListPath,
@@ -54,7 +55,7 @@ export function DepositAccountDetailView({
   account: FineractSavingsAccountDetail;
   clientId: string;
   kind: ClientDepositAccountKind;
-  permissions: DepositAccountFieldOfficerPermissions;
+  permissions: AccountOfficerPermissions;
 }) {
   const listKind = LIST_KIND[kind];
 
@@ -77,16 +78,20 @@ export function DepositAccountDetailView({
           title={savingsAccountProductName(account)}
           status={{ label: account.status.value ?? 'Unknown' }}
           meta={
-            <p>
-              {KIND_LABELS[kind]} · {account.accountNo}
-            </p>
+            <div className="space-y-1">
+              <p>
+                {KIND_LABELS[kind]} · {account.accountNo}
+              </p>
+              <AccountOfficerMeta label="Field officer" name={account.fieldOfficerName} />
+            </div>
           }
           actions={
-            <DepositAccountFieldOfficerActions
+            <AccountOfficerActions
+              kind={kind}
               account={account}
               clientId={clientId}
-              kind={kind}
               permissions={permissions}
+              presentation="standalone"
             />
           }
         />

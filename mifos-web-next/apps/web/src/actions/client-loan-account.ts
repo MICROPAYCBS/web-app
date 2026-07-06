@@ -9,9 +9,14 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
+import { FineractHttpError } from '@mifos/api-client';
+import type { LoanScheduleData } from '@mifos/api-client';
 import {
   createLoanAccountSchema,
+  mapFineractErrors,
+  mapLoanApplicationFineractErrors,
   toFineractActionError,
+  validateLoanApplicationProductRules,
   type CreateLoanAccountInput,
   actionSuccessFromFineractCommand
 } from '@mifos/validation';
@@ -22,13 +27,30 @@ import {
 } from '@/lib/fineract/client-account-action-result';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import {
+  calculateClientLoanSchedule,
   createClientLoanAccountRecord,
   getClientLoanAccountTemplate
 } from '@/lib/fineract/client-loan-accounts';
 import { getServerSession } from '@/lib/session/server';
 
+function mapActionFineractFieldErrors(
+  err: unknown,
+  schedulePreview = false
+): Record<string, string> | undefined {
+  if (!(err instanceof FineractHttpError)) {
+    return undefined;
+  }
+  const mapped = mapFineractErrors(err.body);
+  if (!mapped.fieldErrors.length) {
+    return undefined;
+  }
+  return mapLoanApplicationFineractErrors(mapped.fieldErrors, { schedulePreview });
+}
+
 function parseCreateInput(
-  raw: unknown
+  raw: unknown,
+  productContext?: Parameters<typeof validateLoanApplicationProductRules>[1],
+  options?: Parameters<typeof validateLoanApplicationProductRules>[2]
 ): Extract<ClientLoanAccountActionResult, { ok: false }> | CreateLoanAccountInput {
   const parsed = createLoanAccountSchema.safeParse(raw);
   if (!parsed.success) {
@@ -45,6 +67,20 @@ function parseCreateInput(
       fieldErrors
     };
   }
+
+  const productErrors = validateLoanApplicationProductRules(
+    parsed.data,
+    productContext,
+    options
+  );
+  if (Object.keys(productErrors).length > 0) {
+    return {
+      ok: false,
+      message: 'Please fix the highlighted fields.',
+      fieldErrors: productErrors
+    };
+  }
+
   return parsed.data;
 }
 
@@ -64,29 +100,71 @@ export async function fetchClientLoanAccountTemplateAction(
   }
 }
 
-export async function createClientLoanAccountAction(
+export async function calculateClientLoanScheduleAction(
   clientId: string,
-  raw: unknown
-): Promise<ClientLoanAccountActionResult> {
+  raw: unknown,
+  productContext?: Parameters<typeof validateLoanApplicationProductRules>[1]
+): Promise<
+  | { ok: true; schedule: LoanScheduleData }
+  | Extract<ClientLoanAccountActionResult, { ok: false }>
+> {
   const session = await getServerSession();
   if (!session) {
     return { ok: false, message: 'You must be signed in.' };
   }
 
-  const parsed = parseCreateInput(raw);
+  const parsed = parseCreateInput(raw, productContext, { schedulePreview: true });
   if (isClientLoanAccountActionError(parsed)) {
     return parsed;
   }
 
   try {
     assertCan(session, resolvePermission('loans.create'));
-    const response = await createClientLoanAccountRecord(clientId, parsed);
+    const schedule = await calculateClientLoanSchedule(clientId, parsed, {
+      linkedToFloatingInterestRates: productContext?.linkedToFloatingInterestRates
+    });
+    return { ok: true, schedule };
+  } catch (err) {
+    const mapped = toFineractActionError(err, 'Could not calculate repayment schedule.');
+    return {
+      ok: false,
+      message: mapped.message,
+      fieldErrors: mapActionFineractFieldErrors(err, true) ?? mapped.fieldErrors
+    };
+  }
+}
+
+export async function createClientLoanAccountAction(
+  clientId: string,
+  raw: unknown,
+  productContext?: Parameters<typeof validateLoanApplicationProductRules>[1]
+): Promise<ClientLoanAccountActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+
+  const parsed = parseCreateInput(raw, productContext);
+  if (isClientLoanAccountActionError(parsed)) {
+    return parsed;
+  }
+
+  try {
+    assertCan(session, resolvePermission('loans.create'));
+    const response = await createClientLoanAccountRecord(clientId, parsed, {
+      linkedToFloatingInterestRates: productContext?.linkedToFloatingInterestRates
+    });
     const resourceId = response.resourceId ?? response.loanId;
     revalidatePath(clientAccountListPath(clientId, 'loan'));
     revalidatePath(`/clients/${clientId}/loans-accounts/create`);
     revalidatePath(`/clients/${clientId}`);
     return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
-    return toFineractActionError(err, 'Could not submit the loan application.');
+    const mapped = toFineractActionError(err, 'Could not submit the loan application.');
+    return {
+      ok: false,
+      message: mapped.message,
+      fieldErrors: mapActionFineractFieldErrors(err) ?? mapped.fieldErrors
+    };
   }
 }

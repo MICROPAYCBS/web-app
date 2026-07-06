@@ -6,7 +6,7 @@
   ],
   "fields": {
     "productId": { "required": true },
-    "loanOfficerId": { "required": false },
+    "loanOfficerId": { "required": true },
     "loanPurposeId": { "required": false },
     "fundId": { "required": false },
     "principal": { "required": true, "min": 0 },
@@ -16,13 +16,15 @@
     "interestRatePerPeriod": { "required": true, "min": 0 },
     "submittedOnDate": { "required": true },
     "expectedDisbursementDate": { "required": true },
+    "repaymentsStartingFromDate": { "required": false },
     "graceOnPrincipalPayment": { "required": false, "default": 0 },
     "graceOnInterestPayment": { "required": false, "default": 0 },
     "graceOnInterestCharged": { "required": false, "default": 0 },
     "transactionProcessingStrategyCode": { "required": true },
     "collateral": { "required": false },
+    "charges": { "required": false },
     "guarantors": { "required": false },
     "linkAccountId": { "required": false },
-    "disburseToSavings": { "required": true, "default": false }
+    "createStandingInstructionAtDisbursement": { "required": false, "default": false }
   }
 }

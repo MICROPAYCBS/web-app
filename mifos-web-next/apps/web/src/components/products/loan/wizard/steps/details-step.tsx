@@ -13,6 +13,7 @@ import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
+import { ProductShortNameField } from '@/components/products/shared/product-short-name-field';
 import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { LoanProductStepProps } from '../types';
@@ -21,8 +22,10 @@ export function DetailsStep({
   template,
   draft,
   errors,
+  lockedShortName,
   onChange
 }: LoanProductStepProps & {
+  lockedShortName?: string;
   onChange: (patch: Partial<LoanProductDetailsInput>) => void;
 }) {
   const details = draft.details;
@@ -42,14 +45,12 @@ export function DetailsStep({
           onChange={(name) => onChange({ name })}
           error={errors['details.name']}
         />
-        <TextField
+        <ProductShortNameField
           id="details.shortName"
-          label="Short name"
-          required
           value={details.shortName}
           onChange={(shortName) => onChange({ shortName })}
           error={errors['details.shortName']}
-          hint="Up to 4 characters."
+          lockedShortName={lockedShortName}
         />
         <TextField
           id="details.externalId"

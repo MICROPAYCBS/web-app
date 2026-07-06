@@ -37,7 +37,6 @@ import {
 import { Fragment, useState } from 'react';
 import { SavingsAccountAddChargeSheet } from '@/components/clients/savings/actions/savings-account-add-charge-sheet';
 import { SavingsAccountApplyAnnualFeesSheet } from '@/components/clients/savings/actions/savings-account-apply-annual-fees-sheet';
-import { SavingsAccountAssignStaffSheet } from '@/components/clients/savings/actions/savings-account-assign-staff-sheet';
 import type { SavingsAccountBlockDialogKind } from '@/components/clients/savings/actions/savings-account-block-dialog';
 import { SavingsAccountBlockDialog } from '@/components/clients/savings/actions/savings-account-block-dialog';
 import { SavingsAccountCloseSheet } from '@/components/clients/savings/actions/savings-account-close-sheet';
@@ -53,7 +52,6 @@ import {
 import { SavingsAccountPostInterestAsOnSheet } from '@/components/clients/savings/actions/savings-account-post-interest-as-on-sheet';
 import { SavingsAccountTransferFundsSheet } from '@/components/clients/savings/actions/savings-account-transfer-funds-sheet';
 import { SavingsAccountTransactionSheet } from '@/components/clients/savings/actions/savings-account-transaction-sheet';
-import { SavingsAccountReassignStaffSheet } from '@/components/clients/savings/actions/savings-account-reassign-staff-sheet';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -122,8 +120,6 @@ export function SavingsAccountActions({
   const [confirmKind, setConfirmKind] = useState<SavingsAccountConfirmDialogKind | null>(null);
   const [closeOpen, setCloseOpen] = useState(false);
   const [postInterestAsOnOpen, setPostInterestAsOnOpen] = useState(false);
-  const [assignStaffOpen, setAssignStaffOpen] = useState(false);
-  const [reassignStaffOpen, setReassignStaffOpen] = useState(false);
   const [holdAmountOpen, setHoldAmountOpen] = useState(false);
   const [addChargeOpen, setAddChargeOpen] = useState(false);
   const [applyAnnualFeesOpen, setApplyAnnualFeesOpen] = useState(false);
@@ -178,22 +174,6 @@ export function SavingsAccountActions({
       label: 'Undo approval',
       icon: Undo2,
       onSelect: () => setLifecycleKind('undoApproval')
-    });
-  }
-  if (visibility.assignStaff && permissions.assignStaff) {
-    menuItems.push({
-      id: 'assign-staff',
-      label: 'Assign field officer',
-      icon: UserPlus,
-      onSelect: () => setAssignStaffOpen(true)
-    });
-  }
-  if (visibility.reassignStaff && permissions.reassignStaff) {
-    menuItems.push({
-      id: 'reassign-staff',
-      label: 'Reassign field officer',
-      icon: ArrowRightLeft,
-      onSelect: () => setReassignStaffOpen(true)
     });
   }
   if (visibility.addCharge && permissions.addCharge) {
@@ -456,18 +436,6 @@ export function SavingsAccountActions({
         accountId={account.id}
         open={postInterestAsOnOpen}
         onOpenChange={setPostInterestAsOnOpen}
-      />
-      <SavingsAccountAssignStaffSheet
-        clientId={clientId}
-        accountId={account.id}
-        open={assignStaffOpen}
-        onOpenChange={setAssignStaffOpen}
-      />
-      <SavingsAccountReassignStaffSheet
-        clientId={clientId}
-        accountId={account.id}
-        open={reassignStaffOpen}
-        onOpenChange={setReassignStaffOpen}
       />
       <SavingsAccountHoldAmountSheet
         clientId={clientId}

@@ -35,6 +35,16 @@ export interface StandingInstructionListItem {
   validTill?: number[] | string;
 }
 
+export interface StandingInstructionDetail extends StandingInstructionListItem {
+  transferType?: FineractEnumOption;
+  priority?: FineractEnumOption;
+  recurrenceType?: FineractEnumOption;
+  recurrenceFrequency?: FineractEnumOption;
+  recurrenceInterval?: number;
+  recurrenceOnMonthDay?: number[] | string;
+  toOffice?: { id: number; name?: string };
+}
+
 export interface StandingInstructionsPage {
   pageItems: StandingInstructionListItem[];
   totalFilteredRecords?: number;

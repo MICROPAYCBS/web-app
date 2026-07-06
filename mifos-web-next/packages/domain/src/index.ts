@@ -35,6 +35,7 @@ export {
   defaultPatternForAccountType,
   FORMAT_SEGMENT_PATTERN,
   patternIncludesOfficeCode,
+  patternIncludesProductCode,
   patternIncludesSequence,
   patternToSegments,
   patternTotalWidth,

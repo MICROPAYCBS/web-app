@@ -9,7 +9,13 @@
  */
 
 import type { ClientLoanAccountTemplate } from '@mifos/api-client';
-import type { LoanAccountSecurityStepInput, LoanCollateralItemInput, LoanGuarantorItemInput } from '@mifos/validation';
+import type {
+  LoanAccountSecurityStepInput,
+  LoanCollateralItemInput,
+  LoanGuarantorItemInput
+} from '@mifos/validation';
+import { MoneyValue } from '@/components/composites/detail/money-value';
+import { collateralCoverageTotal } from '@/lib/fineract/loan-application-rules';
 import { Plus, Trash2 } from 'lucide-react';
 import { DetailSection, EmptyState } from '@/components/composites';
 import { NumericField } from '@/components/composites/numeric-field';
@@ -37,12 +43,14 @@ export function LoanAccountSecurityStep({
   template,
   draft,
   errors,
-  onChange
+  onChange,
+  principal = 0
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountSecurityStepInput;
   errors: LoanAccountStepErrors;
   onChange: (patch: Partial<LoanAccountSecurityStepInput>) => void;
+  principal?: number;
 }) {
   const collateralOptions = toSelectOptions(
     template.loanCollateralOptions?.map((option) => ({
@@ -53,6 +61,8 @@ export function LoanAccountSecurityStep({
 
   const collateral = draft.collateral ?? [];
   const guarantors = draft.guarantors ?? [];
+  const coverageTotal = collateralCoverageTotal(template, collateral);
+  const currencyCode = template.currency?.code ?? 'USD';
 
   const updateCollateral = (index: number, patch: Partial<LoanCollateralItemInput>) => {
     const next = collateral.map((row, rowIndex) =>
@@ -74,6 +84,21 @@ export function LoanAccountSecurityStep({
         Optionally add collateral and guarantors to support this loan application.
       </p>
       <DetailSection title="Collateral">
+        {coverageTotal != null && principal > 0 ? (
+          <p
+            className={`mb-4 text-sm ${
+              coverageTotal >= principal ? 'text-muted-foreground' : 'text-destructive'
+            }`}
+          >
+            Collateral value:{' '}
+            <MoneyValue amount={coverageTotal} currencyCode={currencyCode} />
+            {' · '}
+            Principal: <MoneyValue amount={principal} currencyCode={currencyCode} />
+            {coverageTotal >= principal
+              ? ' — coverage is sufficient.'
+              : ' — collateral must cover the loan principal.'}
+          </p>
+        ) : null}
         {collateral.length === 0 ? (
           <EmptyState
             title="No collateral added"

@@ -228,6 +228,20 @@ export function CreateClientDepositAccountSheet({
         error={fieldErrors.submittedOnDate}
       />
 
+      {kind === 'savings' ? (
+        <SelectField
+          label="Field officer"
+          required
+          value={form.fieldOfficerId || undefined}
+          onValueChange={(value) => patchForm({ fieldOfficerId: value ?? '' })}
+          options={officerOptions}
+          placeholder="Select field officer"
+          disabled={disabled}
+          error={fieldErrors.fieldOfficerId}
+          emptyMessage="No field officers available."
+        />
+      ) : null}
+
       {kind !== 'savings' && !productSelected ? (
         <p className="text-sm text-muted-foreground">
           Select a product first — amount fields use the product currency.

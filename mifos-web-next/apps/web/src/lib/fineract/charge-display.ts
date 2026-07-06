@@ -51,6 +51,59 @@ export function isFlatChargeCalculation(calculationTypeId?: number): boolean {
   return calculationTypeId === CHARGE_CALCULATION_FLAT;
 }
 
+export function chargeAmountInputLabel(charge?: ChargeAmountLike): string {
+  return isPercentageChargeCalculation(chargeCalculationTypeId(charge)) ? 'Rate (%)' : 'Amount';
+}
+
+export function formatChargeAmountLimitDisplay(
+  amount: number,
+  charge: ChargeAmountLike | undefined,
+  fallbackCurrencyCode?: string
+): string {
+  if (isPercentageChargeCalculation(chargeCalculationTypeId(charge))) {
+    return `${new Intl.NumberFormat('en', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6
+    }).format(amount)}%`;
+  }
+  const code = chargeAmountCurrencyCode(charge, fallbackCurrencyCode);
+  if (code) {
+    return formatMoney(amount, code) ?? String(amount);
+  }
+  return String(amount);
+}
+
+export function formatChargeAmountRangeHint(
+  charge: ChargeAmountLike & { minCap?: number; maxCap?: number },
+  fallbackCurrencyCode?: string
+): string | undefined {
+  const minCap = charge.minCap;
+  const maxCap = charge.maxCap;
+  if (minCap == null && maxCap == null) {
+    return undefined;
+  }
+
+  const percentage = isPercentageChargeCalculation(chargeCalculationTypeId(charge));
+  const formatLimit = (value: number) =>
+    formatChargeAmountLimitDisplay(value, charge, fallbackCurrencyCode);
+
+  if (minCap != null && maxCap != null) {
+    return `${formatLimit(minCap)} – ${formatLimit(maxCap)}`;
+  }
+  if (minCap != null) {
+    return `Minimum ${formatLimit(minCap)}`;
+  }
+  return `Maximum ${formatLimit(maxCap as number)}`;
+}
+
+export function chargeAmountCurrencyCode(
+  charge: ChargeAmountLike | undefined,
+  fallbackCurrencyCode?: string
+): string | undefined {
+  const code = chargeCurrencyCodeFromLike(charge ?? {}, fallbackCurrencyCode);
+  return code || fallbackCurrencyCode?.trim().toUpperCase() || undefined;
+}
+
 function formatPercentageAmount(amount: number): string {
   return `${new Intl.NumberFormat('en', {
     minimumFractionDigits: 0,

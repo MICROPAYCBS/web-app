@@ -112,6 +112,10 @@ export interface MoneyFieldProps {
   placeholder?: string;
   hint?: string;
   hintAriaLabel?: string;
+  /** Always-visible helper text shown below the label (e.g. allowed value range). */
+  description?: string;
+  /** Visually hide the label (kept for screen readers). */
+  hideLabel?: boolean;
   contextHelpSectionId?: string;
   onBlur?: () => void;
 }
@@ -131,6 +135,8 @@ export function MoneyField({
   placeholder,
   hint,
   hintAriaLabel,
+  description,
+  hideLabel = false,
   contextHelpSectionId,
   onBlur
 }: MoneyFieldProps) {
@@ -173,13 +179,17 @@ export function MoneyField({
       <FormLabel
         htmlFor={id}
         required={required}
-        optional={optional ?? !required}
+        optional={hideLabel ? false : (optional ?? !required)}
         hint={hint}
         hintAriaLabel={hintAriaLabel}
         contextHelpSectionId={contextHelpSectionId}
+        className={hideLabel ? 'sr-only' : undefined}
       >
         {label}
       </FormLabel>
+      {description ? (
+        <p className="-mt-1 text-xs text-muted-foreground">{description}</p>
+      ) : null}
       <FieldContent>
         <div className="relative flex">
           {currencyCode ? (

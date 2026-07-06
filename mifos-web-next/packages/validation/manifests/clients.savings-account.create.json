@@ -7,7 +7,7 @@
   "fields": {
     "productId": { "required": true },
     "submittedOnDate": { "required": true },
-    "fieldOfficerId": { "required": false },
+    "fieldOfficerId": { "required": true },
     "externalId": { "required": false },
     "nominalAnnualInterestRate": { "required": false },
     "interestCompoundingPeriodType": { "required": false },

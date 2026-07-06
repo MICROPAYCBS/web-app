@@ -12,6 +12,7 @@ import {
   coerceFineractDateTime,
   fineractApiDateToFormString,
   formatFineractDateTimeArray,
+  formatFineractDateValue,
   fromFineractDateArray,
   normalizeFineractDateField,
   parseFineractDateString,
@@ -36,6 +37,11 @@ describe('fineract date serialization', () => {
 
   it('formats local calendar dates with zero-padded day', () => {
     assert.equal(toFineractDate(fromFineractDateArray([2026, 3, 1])!), '01 March 2026');
+  });
+
+  it('formats Fineract date arrays for schedule display', () => {
+    assert.match(formatFineractDateValue([2026, 8, 1]) ?? '', /Aug.*1.*2026|1.*Aug.*2026/i);
+    assert.equal(formatFineractDateValue('01 August 2026'), 'Aug 1, 2026');
   });
 
   it('formats Fineract datetime arrays with time', () => {

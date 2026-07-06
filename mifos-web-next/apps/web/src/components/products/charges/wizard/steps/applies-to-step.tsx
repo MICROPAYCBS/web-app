@@ -13,11 +13,13 @@ import {
   Landmark,
   PieChart,
   PiggyBank,
-  User,
   type LucideIcon
 } from 'lucide-react';
 import { DetailField } from '@/components/composites';
-import { CHARGE_APPLIES_TO } from '@/lib/fineract/charge-form-logic';
+import {
+  CHARGE_APPLIES_TO,
+  chargeAppliesToOptionsForWizard
+} from '@/lib/fineract/charge-form-logic';
 import { fineractOptionLabel } from '@/lib/form/select-options';
 import { cn } from '@/lib/utils';
 import type { ChargeStepProps, ChargeWizardDraft } from '../types';
@@ -30,10 +32,6 @@ const APPLIES_TO_META: Record<number, { description: string; icon: LucideIcon }>
   [CHARGE_APPLIES_TO.SAVINGS]: {
     description: 'Fees on savings and deposit products.',
     icon: PiggyBank
-  },
-  [CHARGE_APPLIES_TO.CLIENT]: {
-    description: 'Fees charged directly to a customer.',
-    icon: User
   },
   [CHARGE_APPLIES_TO.SHARES]: {
     description: 'Fees on share products and accounts.',
@@ -71,7 +69,7 @@ export function AppliesToStep({
   const appliesToLabel = template.chargeAppliesTo
     ? fineractOptionLabel(template.chargeAppliesTo)
     : undefined;
-  const options = template.chargeAppliesToOptions ?? [];
+  const options = chargeAppliesToOptionsForWizard(mode, template.chargeAppliesToOptions);
 
   return (
     <div className="space-y-6">

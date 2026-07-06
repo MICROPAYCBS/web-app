@@ -24,9 +24,12 @@ import {
   BRANCH_REGION_OPTIONS,
   BRANCH_STATUS_OPTIONS,
   BRANCH_TYPE_OPTIONS,
+  BRANCH_CODE_EDITABLE_HINT,
+  BRANCH_CODE_LOCKED_HINT,
   branchProfileFormFromApi,
   branchProfileInputFromForm,
   defaultBranchProfileFormFields,
+  isBranchCodeLocked,
   type BranchProfileFormFields
 } from '@/lib/fineract/branch-profile-form';
 import {
@@ -94,14 +97,18 @@ function toCreatePayload(form: BranchFormState): CreateOfficeInput {
   };
 }
 
-function toUpdatePayload(form: BranchFormState, includeParent: boolean): UpdateOfficeInput {
+function toUpdatePayload(
+  form: BranchFormState,
+  includeParent: boolean,
+  lockedBranchCode?: string
+): UpdateOfficeInput {
   const base: UpdateOfficeInput = {
     name: form.name.trim(),
     openingDate: form.openingDate,
     externalId: form.externalId.trim(),
     dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE,
-    branchProfile: branchProfileInputFromForm(form)
+    branchProfile: branchProfileInputFromForm(form, { lockedBranchCode })
   };
   if (!includeParent) {
     return base;
@@ -167,6 +174,13 @@ export function BranchFormSheet({
     [managerOptions]
   );
 
+  const lockedBranchCode = useMemo(() => {
+    const code = initial?.branchProfile?.officeCode?.trim();
+    return isBranchCodeLocked(code) ? code : undefined;
+  }, [initial?.branchProfile?.officeCode]);
+
+  const branchCodeLocked = lockedBranchCode != null;
+
   function handleOpenChange(next: boolean) {
     if (pending) {
       return;
@@ -194,7 +208,11 @@ export function BranchFormSheet({
           ? await createOfficeAction(toCreatePayload(form))
           : await updateOfficeAction(
               officeId!,
-              toUpdatePayload(form, showParentField && form.parentId.trim().length > 0)
+              toUpdatePayload(
+                form,
+                showParentField && form.parentId.trim().length > 0,
+                lockedBranchCode
+              )
             );
 
       if (!result.ok) {
@@ -245,16 +263,19 @@ export function BranchFormSheet({
         <TextField
           id={`${formId}-officeCode`}
           label="Branch code"
-          required={structuredAccountNumberFormatsEnabled}
-          optional={!structuredAccountNumberFormatsEnabled}
+          required={structuredAccountNumberFormatsEnabled && !branchCodeLocked}
+          optional={!structuredAccountNumberFormatsEnabled && !branchCodeLocked}
           value={form.officeCode}
           onChange={(value) => patchForm({ officeCode: value })}
           error={fieldErrors['branchProfile.officeCode'] ?? fieldErrors.officeCode}
           placeholder="e.g. 001"
+          disabled={branchCodeLocked}
           hint={
-            structuredAccountNumberFormatsEnabled
-              ? 'Required for structured account numbers that include a branch code segment.'
-              : undefined
+            branchCodeLocked
+              ? BRANCH_CODE_LOCKED_HINT
+              : structuredAccountNumberFormatsEnabled
+                ? `Required for structured account numbers that include a branch code segment. ${BRANCH_CODE_EDITABLE_HINT}`
+                : BRANCH_CODE_EDITABLE_HINT
           }
         />
         <SelectField

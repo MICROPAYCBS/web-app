@@ -101,6 +101,32 @@ export function toFineractDate(date: Date = new Date()): string {
   return format(toLocalCalendarDate(date), FINERACT_DATE_FORMAT);
 }
 
+/** Map API date payloads (array, string, epoch millis, Java date object) to a display string. */
+export function formatFineractDateValue(
+  value: unknown,
+  locale = FINERACT_LOCALE
+): string | undefined {
+  const coerced = coerceFineractDateTime(value);
+  if (coerced == null) {
+    return undefined;
+  }
+
+  if (typeof coerced === 'number') {
+    const date = new Date(coerced);
+    if (Number.isNaN(date.getTime())) {
+      return undefined;
+    }
+    return (
+      formatFineractDateArray(
+        [date.getFullYear(), date.getMonth() + 1, date.getDate()],
+        locale
+      ) ?? undefined
+    );
+  }
+
+  return formatFineractDateArray(coerced, locale) ?? undefined;
+}
+
 /** Fineract often returns dates as `[yyyy, mm, dd]` (month 1–12). */
 export function fromFineractDateArray(value: number[] | undefined): Date | null {
   if (!value || value.length < 3) {

@@ -12,7 +12,7 @@ import { SAVINGS_ACCOUNT_SECTIONS } from '@/lib/fineract/savings-account-display
 import { cn } from '@/lib/utils';
 
 /** Matches {@link DetailSectionNav} — Summary, Transactions, Charges. */
-function SavingsAccountSectionNavSkeleton() {
+export function SavingsAccountSectionNavSkeleton() {
   return (
     <nav className="flex flex-col" aria-hidden>
       <ul className="flex flex-col gap-0.5">

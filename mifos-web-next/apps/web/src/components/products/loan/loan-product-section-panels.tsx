@@ -26,10 +26,7 @@ import {
   loanProductFeeCharges,
   loanProductPenaltyCharges
 } from '@/lib/fineract/loan-product-sections';
-import {
-  loanProductAttributeOverrideFields,
-  loanProductAttributeOverridesEnabled
-} from '@/lib/fineract/loan-product-attribute-overrides';
+import { loanProductAttributeOverrideFields } from '@/lib/fineract/loan-product-attribute-overrides';
 import {
   accountingRuleLabel,
   glAccountLabel
@@ -111,63 +108,77 @@ function LoanProductTermsSection({ product }: { product: LoanProductDetail }) {
   const currency = loanProductCurrencyCode(product);
 
   return (
-    <DetailSection title="Terms">
-      <DetailFieldGrid>
-        <DetailField label="Default principal">
-          <MoneyValue amount={product.principal} currencyCode={currency} />
-        </DetailField>
-        <DetailField label="Min principal">
-          <MoneyValue amount={product.minPrincipal} currencyCode={currency} />
-        </DetailField>
-        <DetailField label="Max principal">
-          <MoneyValue amount={product.maxPrincipal} currencyCode={currency} />
-        </DetailField>
-        <DetailField label="Number of repayments">
-          {product.numberOfRepayments ?? '—'}
-        </DetailField>
-        <DetailField label="Min repayments">
-          {product.minNumberOfRepayments ?? '—'}
-        </DetailField>
-        <DetailField label="Max repayments">
-          {product.maxNumberOfRepayments ?? '—'}
-        </DetailField>
-        <DetailField label="Repay every">
-          {product.repaymentEvery !== undefined && product.repaymentFrequencyType
-            ? `${product.repaymentEvery} ${enumOptionLabel(product.repaymentFrequencyType) ?? ''}`.trim()
-            : (product.repaymentEvery ?? '—')}
-        </DetailField>
-        <DetailField label="Minimum interest rate">
-          {product.minInterestRatePerPeriod !== undefined
-            ? `${product.minInterestRatePerPeriod}%`
-            : '—'}
-        </DetailField>
-        <DetailField label="Default interest rate">
-          {product.interestRatePerPeriod !== undefined
-            ? `${product.interestRatePerPeriod}%`
-            : '—'}
-        </DetailField>
-        <DetailField label="Maximum interest rate">
-          {product.maxInterestRatePerPeriod !== undefined
-            ? `${product.maxInterestRatePerPeriod}%`
-            : '—'}
-        </DetailField>
-        <DetailField label="Annual interest rate">
-          {product.annualInterestRate !== undefined ? `${product.annualInterestRate}%` : '—'}
-        </DetailField>
-        <DetailField label="Amortization">
-          {enumOptionLabel(product.amortizationType) ?? '—'}
-        </DetailField>
-        <DetailField label="Interest type">
-          {enumOptionLabel(product.interestType) ?? '—'}
-        </DetailField>
-        <DetailField label="Interest calculation">
-          {enumOptionLabel(product.interestCalculationPeriodType) ?? '—'}
-        </DetailField>
-        <DetailField label="Repayment strategy">
-          {product.transactionProcessingStrategyName ?? '—'}
-        </DetailField>
-      </DetailFieldGrid>
-    </DetailSection>
+    <>
+      <DetailSection title="Principal">
+        <DetailFieldGrid>
+          <DetailField label="Default principal">
+            <MoneyValue amount={product.principal} currencyCode={currency} />
+          </DetailField>
+          <DetailField label="Min principal">
+            <MoneyValue amount={product.minPrincipal} currencyCode={currency} />
+          </DetailField>
+          <DetailField label="Max principal">
+            <MoneyValue amount={product.maxPrincipal} currencyCode={currency} />
+          </DetailField>
+        </DetailFieldGrid>
+      </DetailSection>
+
+      <DetailSection title="Repayments">
+        <DetailFieldGrid>
+          <DetailField label="Number of repayments">
+            {product.numberOfRepayments ?? '—'}
+          </DetailField>
+          <DetailField label="Min repayments">
+            {product.minNumberOfRepayments ?? '—'}
+          </DetailField>
+          <DetailField label="Max repayments">
+            {product.maxNumberOfRepayments ?? '—'}
+          </DetailField>
+          <DetailField label="Repay every">{product.repaymentEvery ?? '—'}</DetailField>
+          <DetailField label="Repayment frequency">
+            {enumOptionLabel(product.repaymentFrequencyType) ?? '—'}
+          </DetailField>
+          <DetailField label="Repayment strategy">
+            {product.transactionProcessingStrategyName ?? '—'}
+          </DetailField>
+        </DetailFieldGrid>
+      </DetailSection>
+
+      <DetailSection title="Interest">
+        <DetailFieldGrid>
+          <DetailField label="Minimum interest rate">
+            {product.minInterestRatePerPeriod !== undefined
+              ? `${product.minInterestRatePerPeriod}%`
+              : '—'}
+          </DetailField>
+          <DetailField label="Default interest rate">
+            {product.interestRatePerPeriod !== undefined
+              ? `${product.interestRatePerPeriod}%`
+              : '—'}
+          </DetailField>
+          <DetailField label="Maximum interest rate">
+            {product.maxInterestRatePerPeriod !== undefined
+              ? `${product.maxInterestRatePerPeriod}%`
+              : '—'}
+          </DetailField>
+          <DetailField label="Interest rate frequency">
+            {enumOptionLabel(product.interestRateFrequencyType) ?? '—'}
+          </DetailField>
+          <DetailField label="Annual interest rate">
+            {product.annualInterestRate !== undefined ? `${product.annualInterestRate}%` : '—'}
+          </DetailField>
+          <DetailField label="Amortization">
+            {enumOptionLabel(product.amortizationType) ?? '—'}
+          </DetailField>
+          <DetailField label="Interest type">
+            {enumOptionLabel(product.interestType) ?? '—'}
+          </DetailField>
+          <DetailField label="Interest calculation">
+            {enumOptionLabel(product.interestCalculationPeriodType) ?? '—'}
+          </DetailField>
+        </DetailFieldGrid>
+      </DetailSection>
+    </>
   );
 }
 
@@ -225,22 +236,24 @@ function LoanProductSettingsSection({ product, productKind }: SectionProps) {
           </DetailFieldGrid>
         </DetailSection>
       ) : null}
-
-      <DetailSection title="Configurable terms and settings">
-        <DetailFieldGrid>
-          <DetailField label="Allow overrides in loan accounts">
-            {formatYesNo(loanProductAttributeOverridesEnabled(product.allowAttributeOverrides))}
-          </DetailField>
-          {loanProductAttributeOverridesEnabled(product.allowAttributeOverrides)
-            ? loanProductAttributeOverrideFields(productKind).map((field) => (
-                <DetailField key={field.key} label={field.label}>
-                  {formatYesNo(product.allowAttributeOverrides?.[field.key])}
-                </DetailField>
-              ))
-            : null}
-        </DetailFieldGrid>
-      </DetailSection>
     </>
+  );
+}
+
+function LoanProductOverrideablesSection({ product, productKind }: SectionProps) {
+  return (
+    <DetailSection title="Overrideables">
+      <p className="mb-4 text-sm text-muted-foreground">
+        Loan officers may change these terms when opening a loan account on this product.
+      </p>
+      <DetailFieldGrid>
+        {loanProductAttributeOverrideFields(productKind).map((field) => (
+          <DetailField key={field.key} label={field.label}>
+            {formatYesNo(product.allowAttributeOverrides?.[field.key])}
+          </DetailField>
+        ))}
+      </DetailFieldGrid>
+    </DetailSection>
   );
 }
 
@@ -364,6 +377,8 @@ export function LoanProductSectionPanel({
       return <LoanProductTermsSection product={product} />;
     case 'settings':
       return <LoanProductSettingsSection product={product} productKind={productKind} />;
+    case 'overrideables':
+      return <LoanProductOverrideablesSection product={product} productKind={productKind} />;
     case 'fees':
       return (
         <DetailSection title="Fees">

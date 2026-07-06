@@ -25,6 +25,10 @@ import {
   savingsProductDetailPath,
   SAVINGS_PRODUCTS_LIST_PATH
 } from '@/lib/fineract/savings-product-paths';
+import {
+  isProductShortNameLocked,
+  preserveEstablishedProductShortName
+} from '@/lib/fineract/product-short-name';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';
 import { CurrencyStep } from './steps/currency-step';
@@ -49,31 +53,37 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'preview', label: 'Preview' }
 ];
 
-function sanitizeDraftForSubmit(draft: UpsertSavingsProductInput): UpsertSavingsProductInput {
+function sanitizeDraftForSubmit(
+  draft: UpsertSavingsProductInput,
+  lockedShortName?: string
+): UpsertSavingsProductInput {
   const accounting = draft.accounting;
   const filterMappings = <T extends Record<string, number>>(
     rows: T[] | undefined,
     keys: [keyof T, keyof T]
   ) => (rows ?? []).filter((row) => row[keys[0]] > 0 && row[keys[1]] > 0);
 
-  return {
-    ...draft,
-    accounting: {
-      ...accounting,
-      paymentChannelToFundSourceMappings: filterMappings(
-        accounting.paymentChannelToFundSourceMappings,
-        ['paymentTypeId', 'fundSourceAccountId']
-      ),
-      feeToIncomeAccountMappings: filterMappings(accounting.feeToIncomeAccountMappings, [
-        'chargeId',
-        'incomeAccountId'
-      ]),
-      penaltyToIncomeAccountMappings: filterMappings(
-        accounting.penaltyToIncomeAccountMappings,
-        ['chargeId', 'incomeAccountId']
-      )
-    }
-  };
+  return preserveEstablishedProductShortName(
+    {
+      ...draft,
+      accounting: {
+        ...accounting,
+        paymentChannelToFundSourceMappings: filterMappings(
+          accounting.paymentChannelToFundSourceMappings,
+          ['paymentTypeId', 'fundSourceAccountId']
+        ),
+        feeToIncomeAccountMappings: filterMappings(accounting.feeToIncomeAccountMappings, [
+          'chargeId',
+          'incomeAccountId'
+        ]),
+        penaltyToIncomeAccountMappings: filterMappings(
+          accounting.penaltyToIncomeAccountMappings,
+          ['chargeId', 'incomeAccountId']
+        )
+      }
+    },
+    lockedShortName
+  );
 }
 
 export function SavingsProductWizard({
@@ -100,6 +110,14 @@ export function SavingsProductWizard({
     setTemplate,
     setDraft
   });
+
+  const lockedShortName = useMemo(() => {
+    if (mode !== 'edit') {
+      return undefined;
+    }
+    const name = initialDraft.details.shortName?.trim();
+    return isProductShortNameLocked(name) ? name : undefined;
+  }, [mode, initialDraft.details.shortName]);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
@@ -186,7 +204,7 @@ export function SavingsProductWizard({
 
   function handleSubmit() {
     setSubmitError(null);
-    const payload = sanitizeDraftForSubmit(draft);
+    const payload = sanitizeDraftForSubmit(draft, lockedShortName);
 
     startTransition(async () => {
       const result =
@@ -240,6 +258,7 @@ export function SavingsProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
+            lockedShortName={lockedShortName}
             onChange={(patch) =>
               setDraft((current) => ({ ...current, details: { ...current.details, ...patch } }))
             }

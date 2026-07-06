@@ -11,6 +11,7 @@ import 'server-only';
 import type { ClientLoanAccountTemplate, CreateClientLoanAccountResponse } from '@mifos/api-client';
 import type { CreateLoanAccountInput } from '@mifos/validation';
 import { buildLoanAccountPayload, buildLoanGuarantorPayload } from '@/lib/fineract/client-loan-account-payload';
+import { normalizeLoanScheduleData } from '@/lib/fineract/loan-schedule-normalize';
 import {
   normalizeClientLoanAccountTemplate,
   normalizeLoanCollateralTemplate
@@ -69,10 +70,14 @@ export async function createLoanGuarantorRecord(
 
 export async function createClientLoanAccountRecord(
   clientId: string | number,
-  input: CreateLoanAccountInput
+  input: CreateLoanAccountInput,
+  options?: { linkedToFloatingInterestRates?: boolean }
 ): Promise<CreateClientLoanAccountResponse> {
   const fineract = await createFineractClient();
-  const payload = buildLoanAccountPayload(clientId, input);
+  const payload = buildLoanAccountPayload(input, {
+    clientId,
+    linkedToFloatingInterestRates: options?.linkedToFloatingInterestRates
+  });
   const response = await fineract.post<CreateClientLoanAccountResponse>(LOANS_API_PATH, payload);
 
   const loanId = response.resourceId ?? response.loanId;
@@ -83,4 +88,25 @@ export async function createClientLoanAccountRecord(
   }
 
   return response;
+}
+
+export async function calculateClientLoanSchedule(
+  clientId: string | number,
+  input: CreateLoanAccountInput,
+  options?: { linkedToFloatingInterestRates?: boolean }
+) {
+  const fineract = await createFineractClient();
+  const payload = buildLoanAccountPayload(input, {
+    clientId,
+    linkedToFloatingInterestRates: options?.linkedToFloatingInterestRates,
+    forSchedulePreview: true
+  });
+  const raw = await fineract.post<unknown>(LOANS_API_PATH, payload, {
+    command: 'calculateLoanSchedule'
+  });
+  const schedule = normalizeLoanScheduleData(raw);
+  if (!schedule) {
+    throw new Error('Could not read repayment schedule.');
+  }
+  return schedule;
 }

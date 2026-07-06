@@ -103,6 +103,7 @@ export type LoanProductSectionId =
   | 'general'
   | 'terms'
   | 'settings'
+  | 'overrideables'
   | 'fees'
   | 'penalties'
   | 'accounting'

@@ -86,10 +86,13 @@ export type {
   ClientDepositAccountProductOption,
   ClientDepositAccountTemplate,
   ClientLoanAccountProductOption,
+  ClientLoanAccountChargeOption,
   ClientLoanAccountTemplate,
   CreateClientDepositAccountResponse,
   CreateClientLoanAccountResponse
 } from './clients/deposit-account-types';
+
+export type { LoanScheduleData, LoanSchedulePeriod } from './clients/loan-schedule-types';
 
 export type {
   FineractCreateEntityDatatableCheckPayload,
@@ -114,6 +117,7 @@ export type {
   CreateStandingInstructionResponse,
   StandingInstructionAccountRef,
   StandingInstructionClientRef,
+  StandingInstructionDetail,
   StandingInstructionListItem,
   StandingInstructionRunHistoryItem,
   StandingInstructionRunHistoryPage,

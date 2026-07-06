@@ -36,10 +36,27 @@ export const platformPageShell =
 export const platformRouteLayout = 'flex min-h-0 flex-1 flex-col overflow-hidden';
 
 /**
- * Sidebar rail + main column row inside DetailPage and FormWizard.
+ * Sidebar rail + main column row inside FormWizard (header sits above this row).
  */
 export const platformSidebarRowLayout =
-  'flex min-h-0 flex-1 flex-col overflow-hidden pt-4 md:pt-6 lg:flex-row';
+  'flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row';
+
+/**
+ * Detail pages with a left rail — header spans full width on lg so its bottom
+ * border is continuous; mobile order stays nav → header → main.
+ */
+export const platformDetailSidebarGridLayout = [
+  'grid min-h-0 flex-1 grid-cols-1 overflow-hidden pt-4 md:pt-6',
+  '[grid-template-areas:"nav"_"header"_"main"]',
+  'lg:grid-cols-[14rem_minmax(0,1fr)] lg:grid-rows-[auto_minmax(0,1fr)]',
+  'xl:grid-cols-[15rem_minmax(0,1fr)]',
+  'lg:[grid-template-areas:"header_header"_"nav_main"]'
+].join(' ');
+
+/** Grid placement for {@link platformDetailSidebarGridLayout} regions. */
+export const detailSidebarGridAreaNav = '[grid-area:nav]';
+export const detailSidebarGridAreaHeader = '[grid-area:header]';
+export const detailSidebarGridAreaMain = '[grid-area:main]';
 
 /**
  * Scroll region for simple platform pages (dashboard, settings) that do not use
@@ -54,8 +71,11 @@ export const platformScrollRegion =
  */
 export const pageHeaderPadding = 'pb-4 md:pb-6';
 
-/** Horizontal inset for detail sidebar nav (scroll region below top inset). */
+/** Horizontal inset for detail sidebar nav. */
 export const detailSidebarInsetX = platformInsetX;
+
+/** Scroll region padding for detail sidebar nav (top inset from lg when nav sits below header). */
+export const detailSidebarScrollPadding = 'pb-4 md:pb-6 max-lg:pt-0 lg:pt-6';
 
 /** Vertical rhythm between blocks inside a page header (back link, title, toolbar). */
 export const pageHeaderContentSpacing = 'space-y-4';

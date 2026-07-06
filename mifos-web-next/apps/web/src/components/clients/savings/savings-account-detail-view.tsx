@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * Copyright since 2026 Mifos Initiative
  *
@@ -9,44 +7,38 @@
  */
 
 import type { FineractAuditTrailListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
-import { AlertTriangle, ArrowRightLeft, FileText, PiggyBank, Receipt, ScrollText } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { Suspense } from 'react';
 import {
   DetailBackLink,
   DetailHeader,
   DetailPage,
-  DetailSectionNav,
   MoneyValue
 } from '@/components/composites';
 import {
   SavingsAccountActions,
   type SavingsAccountActionPermissions
 } from '@/components/clients/savings/actions/savings-account-actions';
-import { SavingsAccountSectionPanel } from '@/components/clients/savings/savings-account-section-panels';
-import { useDetailSection } from '@/hooks/use-detail-section';
+import { AccountDetailActionsBar } from '@/components/clients/accounts/actions/account-detail-actions-bar';
+import { AccountOfficerActions } from '@/components/clients/accounts/actions/account-officer-actions';
+import { AccountOfficerMeta } from '@/components/clients/accounts/account-officer-meta';
+import { SavingsAccountDetailPanel } from '@/components/clients/savings/savings-account-detail-panel';
+import { SavingsAccountDetailSidebar } from '@/components/clients/savings/savings-account-detail-sidebar';
+import {
+  SavingsAccountSectionNavSkeleton,
+  SavingsAccountSummarySkeleton
+} from '@/components/clients/savings/savings-account-detail-skeleton';
 import { clientGeneralPath } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import {
-  SAVINGS_ACCOUNT_DEFAULT_SECTION,
-  SAVINGS_ACCOUNT_SECTIONS,
   savingsAccountBlockedMessage,
   savingsAccountClientBackLabel,
   savingsAccountCurrencyCode,
   savingsAccountProductName,
-  savingsAccountStatusVariant,
-  type SavingsAccountSectionId
+  savingsAccountStatusVariant
 } from '@/lib/fineract/savings-account-display';
 import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
-
-const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
-  summary: PiggyBank,
-  transactions: ArrowRightLeft,
-  statement: FileText,
-  charges: Receipt,
-  audit: ScrollText
-};
 
 export function SavingsAccountDetailView({
   account,
@@ -74,27 +66,6 @@ export function SavingsAccountDetailView({
   auditTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
 }) {
-  const sectionIds = useMemo(() => {
-    const ids = SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id);
-    return ids.filter((id) => id !== 'audit' || canViewAudits);
-  }, [canViewAudits]);
-
-  const navItems = useMemo(
-    () =>
-      SAVINGS_ACCOUNT_SECTIONS.filter((section) => section.id !== 'audit' || canViewAudits).map(
-        (section) => ({
-          ...section,
-          icon: SECTION_ICONS[section.id]
-        })
-      ),
-    [canViewAudits]
-  );
-
-  const { activeSection, setSection } = useDetailSection(
-    sectionIds,
-    SAVINGS_ACCOUNT_DEFAULT_SECTION
-  );
-
   const currency = savingsAccountCurrencyCode(account);
   const blockedMessage = savingsAccountBlockedMessage(account);
   const onHold = account.onHoldFunds ?? account.savingsAmountOnHold ?? 0;
@@ -140,16 +111,32 @@ export function SavingsAccountDetailView({
               variant: savingsAccountStatusVariant(account.status.code)
             }}
             actions={
-              <SavingsAccountActions
-                account={account}
-                clientId={clientId}
-                reportOrgName={reportOrgName}
-                permissions={permissions}
-              />
+              <AccountDetailActionsBar
+                officer={
+                  <AccountOfficerActions
+                    kind="savings"
+                    account={account}
+                    clientId={clientId}
+                    permissions={{
+                      assign: permissions.assignStaff,
+                      reassign: permissions.reassignStaff
+                    }}
+                    presentation="inline"
+                  />
+                }
+              >
+                <SavingsAccountActions
+                  account={account}
+                  clientId={clientId}
+                  reportOrgName={reportOrgName}
+                  permissions={permissions}
+                />
+              </AccountDetailActionsBar>
             }
             meta={
               <div className="space-y-1">
                 <p className="tabular-nums">Account no. {account.accountNo}</p>
+                <AccountOfficerMeta label="Field officer" name={account.fieldOfficerName} />
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">
                     Available balance
@@ -177,24 +164,23 @@ export function SavingsAccountDetailView({
         </div>
       }
       sidebar={
-        <DetailSectionNav
-          items={navItems}
-          activeId={activeSection}
-          onSelect={(id) => setSection(id)}
-        />
+        <Suspense fallback={<SavingsAccountSectionNavSkeleton />}>
+          <SavingsAccountDetailSidebar canViewAudits={canViewAudits} />
+        </Suspense>
       }
     >
-      <SavingsAccountSectionPanel
-        section={activeSection as SavingsAccountSectionId}
-        account={account}
-        clientId={clientId}
-        reportOrgName={reportOrgName}
-        canViewAudits={canViewAudits}
-        auditEntries={auditEntries}
-        auditLoadFailed={auditLoadFailed}
-        auditTotalRecords={auditTotalRecords}
-        transactionActionPermissions={transactionActionPermissions}
-      />
+      <Suspense fallback={<SavingsAccountSummarySkeleton />}>
+        <SavingsAccountDetailPanel
+          account={account}
+          clientId={clientId}
+          reportOrgName={reportOrgName}
+          canViewAudits={canViewAudits}
+          auditEntries={auditEntries}
+          auditLoadFailed={auditLoadFailed}
+          auditTotalRecords={auditTotalRecords}
+          transactionActionPermissions={transactionActionPermissions}
+        />
+      </Suspense>
     </DetailPage>
   );
 }

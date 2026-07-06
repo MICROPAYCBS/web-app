@@ -173,7 +173,7 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
   const title = mode === 'create' ? 'Create charge' : 'Edit charge';
   const description =
     mode === 'create'
-      ? 'Define a fee or penalty for loans, savings, deposits, shares, or customers.'
+      ? 'Define a fee or penalty for loans, savings, deposits, or shares.'
       : (template.name ?? 'Update charge configuration.');
 
   const cancelHref =

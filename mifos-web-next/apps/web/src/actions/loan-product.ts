@@ -20,10 +20,12 @@ import { buildLoanProductPayload } from '@/lib/fineract/loan-product-payload';
 import type { LoanProductActionResult } from '@/lib/fineract/loan-product-action-result';
 import {
   createLoanProductRecord,
+  getLoanProduct,
   getLoanProductChargeOptions,
   updateLoanProductRecord
 } from '@/lib/fineract/loan-products';
 import { loanProductDetailPath, loanProductListPath } from '@/lib/fineract/loan-product-paths';
+import { preserveEstablishedProductShortName } from '@/lib/fineract/product-short-name';
 import { getServerSession } from '@/lib/session/server';
 
 function parseInput(raw: unknown): LoanProductActionResult | ReturnType<typeof upsertLoanProductSchema.parse> {
@@ -125,7 +127,9 @@ export async function updateLoanProductAction(
   }
 
   try {
-    const payload = buildLoanProductPayload(parsed);
+    const existingProduct = await getLoanProduct(productId, kind);
+    const updateInput = preserveEstablishedProductShortName(parsed, existingProduct.shortName);
+    const payload = buildLoanProductPayload(updateInput);
     const response = await updateLoanProductRecord(productId, kind, payload);
     revalidatePath(loanProductListPath(kind));
     revalidatePath(loanProductDetailPath(productId, kind));

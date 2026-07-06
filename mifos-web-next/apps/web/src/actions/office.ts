@@ -19,7 +19,7 @@ import {
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { getStructuredAccountNumberFormatsEnabled } from '@/lib/fineract/account-number-format-policy';
-import { createOffice, updateOffice } from '@/lib/fineract/offices';
+import { createOffice, getOffice, updateOffice } from '@/lib/fineract/offices';
 import { getServerSession } from '@/lib/session/server';
 
 export type OfficeActionResult =
@@ -63,6 +63,23 @@ function validateBranchCodeWhenStructured(
     };
   }
   return null;
+}
+
+function preserveEstablishedBranchCode<T extends { branchProfile?: CreateOfficeInput['branchProfile'] }>(
+  payload: T,
+  existingOfficeCode?: string
+): T {
+  const establishedCode = existingOfficeCode?.trim();
+  if (!establishedCode || !payload.branchProfile) {
+    return payload;
+  }
+  return {
+    ...payload,
+    branchProfile: {
+      ...payload.branchProfile,
+      officeCode: establishedCode
+    }
+  };
 }
 
 export async function createOfficeAction(input: CreateOfficeInput): Promise<OfficeActionResult> {
@@ -132,7 +149,12 @@ export async function updateOfficeAction(
   }
 
   try {
-    const response = await updateOffice(officeId, parsed.data);
+    const existingOffice = await getOffice(officeId);
+    const updatePayload = preserveEstablishedBranchCode(
+      parsed.data,
+      existingOffice.branchProfile?.officeCode
+    );
+    const response = await updateOffice(officeId, updatePayload);
     revalidateOfficeViews(officeId);
     return actionSuccessFromFineractCommand(response, { officeId: response.resourceId ?? response.officeId ?? Number(officeId) });
   } catch (error) {

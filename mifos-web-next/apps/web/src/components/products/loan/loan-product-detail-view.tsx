@@ -19,6 +19,7 @@ import {
   Pencil,
   Settings2,
   SlidersHorizontal,
+  Unlock,
   type LucideIcon
 } from 'lucide-react';
 import Link from 'next/link';
@@ -41,6 +42,7 @@ const LOAN_SECTION_ICONS: Record<LoanProductSectionId, LucideIcon> = {
   general: SlidersHorizontal,
   terms: Landmark,
   settings: Settings2,
+  overrideables: Unlock,
   fees: CircleDollarSign,
   penalties: AlertCircle,
   accounting: Calculator,

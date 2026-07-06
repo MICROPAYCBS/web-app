@@ -60,14 +60,15 @@ export function LoanAccountCoreStep({
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField
             label="Loan officer"
-            optional
+            required
             value={draft.loanOfficerId ? String(draft.loanOfficerId) : undefined}
             onValueChange={(value) =>
               onChange({ loanOfficerId: value ? Number(value) : undefined })
             }
             options={officerOptions}
-            placeholder="Optional"
+            placeholder="Select loan officer"
             error={errors.loanOfficerId}
+            emptyMessage="No loan officers available."
           />
           <SelectField
             label="Loan purpose"
