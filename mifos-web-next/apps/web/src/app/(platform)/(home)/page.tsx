@@ -13,9 +13,6 @@ import { DashboardPageContent } from '@/components/dashboard/dashboard-page-cont
 import { mapOrganizationCurrencies } from '@/lib/dashboard/dashboard-currency';
 import type { DashboardCurrencyOption } from '@/lib/dashboard/analytics-types';
 import type { DashboardKpis } from '@/lib/dashboard/dashboard-kpi-types';
-import { fetchDashboardKpis } from '@/lib/fineract/dashboard-kpis';
-import { getBusinessDateContext } from '@/lib/fineract/business-date';
-import { resolveTransactionDate } from '@/lib/fineract/business-date-context';
 import { canOpenCashierDetail } from '@/lib/fineract/cashier-access';
 import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
 import { dateToFineract } from '@/lib/fineract/date-input';
@@ -84,12 +81,7 @@ export default async function DashboardPage() {
     includeCollections ||
     includeCashier;
 
-  const businessDateContext = await getBusinessDateContext().catch(() => null);
-  const today = dateToFineract(new Date()) ?? format(new Date(), FINERACT_DATE_FORMAT);
-  const businessDate = resolveTransactionDate(
-    businessDateContext ?? { enabled: false },
-    today
-  );
+  const businessDate = dateToFineract(new Date()) ?? format(new Date(), FINERACT_DATE_FORMAT);
 
   const offices = showKpis ? await listOffices().catch(() => []) : [];
   const defaultOfficeId =
@@ -103,29 +95,15 @@ export default async function DashboardPage() {
     (await getDefaultOrganizationCurrencyCode().catch(() => undefined)) ??
     null;
 
-  const initialKpis = showKpis
-    ? await fetchDashboardKpis(
-        {
-          officeId: defaultOfficeId,
-          currencyCode: defaultCurrencyCode,
-          businessDate,
-          includeClients,
-          includeLoans,
-          includeSavings,
-          includeReports,
-          includeCollections,
-          includeCheckerInbox,
-          includeCashier,
-          userId: session.userId,
-          userOfficeId: session.officeId
-        },
-        session
-      )
-    : emptyDashboardKpis(defaultOfficeId, defaultCurrencyCode, businessDate);
+  const initialKpis = emptyDashboardKpis(defaultOfficeId, defaultCurrencyCode, businessDate);
 
   return (
     <DashboardPageContent
-      offices={offices.map((office) => ({ id: office.id, name: office.name }))}
+      offices={offices.map((office) => ({
+        id: office.id,
+        name: office.name,
+        nameDecorated: office.nameDecorated
+      }))}
       currencies={selectedCurrencies}
       defaultOfficeId={defaultOfficeId}
       defaultCurrencyCode={defaultCurrencyCode}

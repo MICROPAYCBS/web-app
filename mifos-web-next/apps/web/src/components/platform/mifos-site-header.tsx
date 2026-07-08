@@ -14,6 +14,7 @@ import { usePathname } from 'next/navigation';
 import { CashierHeaderBalance } from '@/components/platform/cashier-header-balance';
 import { useEntitySearch } from '@/components/platform/entity-search-provider';
 import { CheckerInboxHeaderLink } from '@/components/platform/checker-inbox-header-link';
+import { NotificationsHeaderLink } from '@/components/platform/notifications-header-link';
 import { isNavPathActive } from '@/components/platform/navigation-utils';
 import type { CashierNavBalance } from '@/lib/fineract/cashier-display';
 import { Button } from '@/components/ui/button';
@@ -30,11 +31,13 @@ export function MifosSiteHeader({
   businessDateLabel,
   businessDateIsNotToday = false,
   checkerInboxPendingCount,
+  notificationsUnreadCount,
   cashierNavBalance
 }: {
   businessDateLabel?: string | null;
   businessDateIsNotToday?: boolean;
   checkerInboxPendingCount?: number | null;
+  notificationsUnreadCount?: number | null;
   cashierNavBalance?: CashierNavBalance | null;
 }) {
   const pathname = usePathname();
@@ -57,6 +60,7 @@ export function MifosSiteHeader({
                   href="/"
                   aria-label="Dashboard"
                   aria-current={dashboardActive ? 'page' : undefined}
+                  prefetch={!dashboardActive}
                   className={cn(
                     headerChromeControlClass,
                     'inline-flex items-center justify-center',
@@ -115,6 +119,7 @@ export function MifosSiteHeader({
 
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <CheckerInboxHeaderLink initialCount={checkerInboxPendingCount} />
+          <NotificationsHeaderLink initialCount={notificationsUnreadCount} />
 
           <Tooltip>
             <TooltipTrigger

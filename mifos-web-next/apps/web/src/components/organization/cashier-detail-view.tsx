@@ -35,6 +35,7 @@ import { formatFineractDateArray } from '@/lib/fineract/dates';
 import { tellerCashiersPath } from '@/lib/fineract/teller-paths';
 import { cn } from '@/lib/utils';
 import type { SelectOption } from '@/components/composites/select-field';
+import { currencyToSelectOptions } from '@/lib/form/select-options';
 
 function sortTransactions(
   transactions: OrganizationCashierTransaction[]
@@ -83,14 +84,7 @@ export function CashierDetailView({
   }, [initialCurrencyCode, initialSummary]);
 
   const currencyOptions = useMemo<SelectOption[]>(
-    () =>
-      currencies
-        .filter((currency) => currency.code)
-        .map((currency) => ({
-          value: currency.code!,
-          label: currency.name ? `${currency.code} — ${currency.name}` : currency.code!,
-          keywords: [currency.code!, currency.name].filter(Boolean) as string[]
-        })),
+    () => currencyToSelectOptions(currencies),
     [currencies]
   );
 

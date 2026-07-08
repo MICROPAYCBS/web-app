@@ -20,7 +20,7 @@ export function QuickCreate() {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            render={<Link href="/clients/create" />}
+            render={<Link href="/clients/create" prefetch={false} />}
             tooltip="Create customer"
             className="h-8 w-full min-w-0 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
           >

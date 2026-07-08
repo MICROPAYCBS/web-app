@@ -12,8 +12,12 @@ import type { WorkflowDefinition, WorkflowStage } from '@mifos/api-client';
 import { formatMoney } from '@mifos/domain';
 import { Badge } from '@/components/ui/badge';
 import {
+  WorkflowChainBookend,
+  WorkflowChainConnector
+} from '@/components/system/approval-workflows/workflow-chain-bookend';
+import {
+  buildWorkflowChain,
   formatWorkflowExpiry,
-  orderedWorkflowStages,
   transitionAmountBandSummary
 } from '@/lib/fineract/approval-workflow-display';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
@@ -115,7 +119,7 @@ export function ApprovalWorkflowStagesTimeline({
 }: {
   definition: WorkflowDefinition;
 }) {
-  const orderedStages = orderedWorkflowStages(definition.stages, definition.transitions);
+  const chain = buildWorkflowChain(definition.stages, definition.transitions);
   const transitionsByFrom = new Map(
     definition.transitions.map((transition) => [transition.fromStageCode, transition])
   );
@@ -125,21 +129,51 @@ export function ApprovalWorkflowStagesTimeline({
       <div>
         <h3 className="text-base font-semibold">Approval chain</h3>
         <p className="text-sm text-muted-foreground">
-          Stages are shown in transition order from entry to completion.
+          The full path from maker creation through intermediate approvals to checker approval.
         </p>
       </div>
 
       <div>
-        {orderedStages.map((stage, index) => {
-          const transition = transitionsByFrom.get(stage.stageCode);
-          const band = transition ? transitionAmountBandSummary(transition, definition.currencyCode) : null;
+        {chain.map((segment, chainIndex) => {
+          const stepNumber = chainIndex + 1;
+          const hasNext = chainIndex < chain.length - 1;
+          const nextSegment = hasNext ? chain[chainIndex + 1] : null;
+
+          if (segment.kind === 'bookend') {
+            return (
+              <div key={`bookend-${segment.position}`}>
+                <WorkflowChainBookend position={segment.position} stepNumber={stepNumber} />
+                {segment.position === 'start' && hasNext ? (
+                  <div className="pb-2">
+                    <WorkflowChainConnector />
+                  </div>
+                ) : null}
+              </div>
+            );
+          }
+
+          const transition = transitionsByFrom.get(segment.stage.stageCode);
+          const band = transition
+            ? transitionAmountBandSummary(transition, definition.currencyCode)
+            : null;
+          const showAutomaticConnector =
+            hasNext && nextSegment?.kind === 'bookend' && nextSegment.position === 'end';
+
           return (
-            <div key={stage.stageCode}>
-              <StageCard stage={stage} definition={definition} stepNumber={index + 1} />
+            <div key={segment.stage.stageCode}>
+              <StageCard
+                stage={segment.stage}
+                definition={definition}
+                stepNumber={stepNumber}
+              />
               {transition ? (
                 <div className="my-2 ml-6 text-xs text-muted-foreground">
                   Transition to {transition.toStageCode}
                   {band ? ` · ${band}` : null}
+                </div>
+              ) : showAutomaticConnector ? (
+                <div className="pb-2">
+                  <WorkflowChainConnector />
                 </div>
               ) : null}
             </div>

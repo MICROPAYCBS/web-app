@@ -38,6 +38,7 @@ export function PlatformShell({
   serverName,
   businessDateContext,
   checkerInboxPendingCount,
+  notificationsUnreadCount,
   cashierNavBalance,
   children
 }: {
@@ -46,6 +47,7 @@ export function PlatformShell({
   businessDateContext: BusinessDateContextValue;
   /** SSR seed for header badge; null when unavailable. */
   checkerInboxPendingCount?: number | null;
+  notificationsUnreadCount?: number | null;
   /** SSR seed for signed-in teller cashiers; null when not assigned. */
   cashierNavBalance?: CashierNavBalance | null;
   children: ReactNode;
@@ -63,6 +65,7 @@ export function PlatformShell({
                   businessDateLabel={businessDateContext.displayLabel}
                   businessDateIsNotToday={businessDateContext.isNotToday}
                   checkerInboxPendingCount={checkerInboxPendingCount}
+                  notificationsUnreadCount={notificationsUnreadCount}
                   cashierNavBalance={cashierNavBalance}
                 />
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

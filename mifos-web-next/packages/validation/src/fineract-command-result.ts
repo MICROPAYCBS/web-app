@@ -88,7 +88,100 @@ export function readFineractCommandResourceId(
   );
 }
 
-const DEFAULT_PENDING_MESSAGE = 'Submitted for checker approval.';
+const DEFAULT_PENDING_MESSAGE = 'Submitted for approval.';
+
+/** Maker-checker task context for interpreting approve/reject responses. */
+export type MakerCheckerTaskContext = {
+  actionName?: string;
+  entityName?: string;
+};
+
+function normalizeEntityName(value?: string): string {
+  return value?.trim().toUpperCase().replace(/\s+/g, '') ?? '';
+}
+
+/** Whether a command result includes entity outcome fields (terminal approve / business commit). */
+export function hasMakerCheckerEntityOutcome(
+  parsed: FineractCommandProcessingResult,
+  context?: MakerCheckerTaskContext
+): boolean {
+  if (parsed.changes && Object.keys(parsed.changes).length > 0) {
+    return true;
+  }
+
+  const entity = normalizeEntityName(context?.entityName);
+  if (entity === 'LOAN' && parsed.loanId != null) {
+    return true;
+  }
+  if (entity === 'CLIENT' && parsed.clientId != null) {
+    return true;
+  }
+  if (entity === 'SAVINGS' && parsed.savingsId != null) {
+    return true;
+  }
+  if (entity === 'GROUP' && parsed.groupId != null) {
+    return true;
+  }
+  if (entity === 'CENTER' && parsed.groupId != null) {
+    return true;
+  }
+
+  if (parsed.loanId != null || parsed.clientId != null || parsed.savingsId != null) {
+    return true;
+  }
+
+  if (
+    parsed.resourceId != null &&
+    parsed.commandId != null &&
+    parsed.resourceId !== parsed.commandId
+  ) {
+    return true;
+  }
+
+  if (parsed.resourceId != null && parsed.commandId == null && parsed.rollbackTransaction !== true) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * True when POST /makercheckers/{id}?command=approve recorded an intermediate workflow stage.
+ * Response is typically `{ commandId }` only — no loanId/clientId/resourceId entity outcomes.
+ */
+export function isWorkflowStageApprovalResult(
+  raw: unknown,
+  context?: MakerCheckerTaskContext
+): boolean {
+  const parsed = parseFineractCommandResult(raw);
+  if (parsed.rollbackTransaction === true) {
+    return false;
+  }
+  if (parsed.commandId == null) {
+    return false;
+  }
+  return !hasMakerCheckerEntityOutcome(parsed, context);
+}
+
+export type MakerCheckerActionOutcome = 'completed' | 'workflow_stage_recorded' | 'workflow_stage_rejection';
+
+/** Classify a checker approve response. */
+export function classifyMakerCheckerApproveOutcome(
+  raw: unknown,
+  context?: MakerCheckerTaskContext
+): 'completed' | 'workflow_stage_recorded' {
+  if (isWorkflowStageApprovalResult(raw, context)) {
+    return 'workflow_stage_recorded';
+  }
+  return 'completed';
+}
+
+/** Classify a checker reject response; pass whether the command is still pending after reject. */
+export function classifyMakerCheckerRejectOutcome(
+  stillPendingAfterReject: boolean
+): 'completed' | 'workflow_stage_rejection' {
+  return stillPendingAfterReject ? 'workflow_stage_rejection' : 'completed';
+}
 
 /** User-facing toast or banner copy for a committed vs pending checker command. */
 export function commandOutcomeMessage(

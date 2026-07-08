@@ -9,6 +9,8 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { CheckerInboxDetailView } from '@/components/tasks/checker-inbox-detail-view';
+import { enrichCheckerInboxDetail } from '@/lib/checker-inbox/enrich-checker-inbox-items';
+import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
 import { getCheckerInboxDetail } from '@/lib/fineract/checker-inbox';
 import { getServerSession } from '@/lib/session/server';
 
@@ -28,10 +30,21 @@ export default async function CheckerInboxDetailPage({
     notFound();
   }
 
-  const item = await getCheckerInboxDetail(checkerId);
+  const [item, workflowRuntime] = await Promise.all([
+    getCheckerInboxDetail(checkerId),
+    loadApprovalWorkflowRuntimeContext()
+  ]);
   if (!item) {
     notFound();
   }
 
-  return <CheckerInboxDetailView item={item} />;
+  const context = await enrichCheckerInboxDetail(item, workflowRuntime);
+
+  return (
+    <CheckerInboxDetailView
+      item={item}
+      context={context}
+      taskPermissions={workflowRuntime.makerCheckerPermissions}
+    />
+  );
 }

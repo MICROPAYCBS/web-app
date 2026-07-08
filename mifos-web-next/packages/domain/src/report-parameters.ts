@@ -229,6 +229,38 @@ export function isReportParameterSelect(parameter: ReportParameterPresentationHi
   );
 }
 
+/** Value Fineract stretchy SQL treats as “all rows” for SelectAll parameters. */
+export const REPORT_PARAMETER_SELECT_ALL_VALUE = '-1';
+
+export const REPORT_PARAMETER_SELECT_ALL_LABEL = 'All';
+
+function isReportParameterSelectAllOptionId(id: string | number | null | undefined): boolean {
+  return String(id ?? '').trim() === REPORT_PARAMETER_SELECT_ALL_VALUE;
+}
+
+/**
+ * Appends the synthetic `{ id: '-1', name: 'All' }` option for SelectAll parameters.
+ * No-op for plain SelectOne parameters or when `-1` is already present.
+ */
+export function withReportParameterSelectAllOption<T extends { id: string | number; name: string }>(
+  options: T[],
+  selectAll: boolean
+): T[] {
+  if (!selectAll) {
+    return options;
+  }
+  if (options.some((option) => isReportParameterSelectAllOptionId(option.id))) {
+    return options;
+  }
+  return [
+    ...options,
+    {
+      id: REPORT_PARAMETER_SELECT_ALL_VALUE,
+      name: REPORT_PARAMETER_SELECT_ALL_LABEL
+    } as T
+  ];
+}
+
 function reportParameterFormatType(parameter: {
   parameterFormatType?: string;
   parameterType?: string;

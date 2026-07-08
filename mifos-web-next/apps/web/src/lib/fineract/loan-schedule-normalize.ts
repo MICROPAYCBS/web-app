@@ -68,13 +68,20 @@ export function normalizeLoanScheduleData(raw: unknown): LoanScheduleData | null
             interestDue: toNumber(period.interestDue),
             feeChargesDue: toNumber(period.feeChargesDue),
             penaltyChargesDue: toNumber(period.penaltyChargesDue),
+            principalOutstanding: toNumber(period.principalOutstanding),
+            interestOutstanding: toNumber(period.interestOutstanding),
+            feeChargesOutstanding: toNumber(period.feeChargesOutstanding),
+            penaltyChargesOutstanding: toNumber(period.penaltyChargesOutstanding),
             totalDueForPeriod: toNumber(period.totalDueForPeriod),
             totalInstallmentAmountForPeriod: toNumber(
               period.totalInstallmentAmountForPeriod
             ),
+            totalOutstandingForPeriod: toNumber(period.totalOutstandingForPeriod),
+            totalOverdue: toNumber(period.totalOverdue),
             principalLoanBalanceOutstanding: toNumber(
               period.principalLoanBalanceOutstanding
             ),
+            complete: period.complete === true,
             downPaymentPeriod: period.downPaymentPeriod === true
           };
         })

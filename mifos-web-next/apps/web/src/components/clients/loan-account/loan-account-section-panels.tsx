@@ -60,6 +60,7 @@ import {
   isLoanTransactionAccrual,
   loanAccountCurrencyCode,
   loanAccountHasChargebackTransaction,
+  loanAccountHasLoanTerms,
   loanAccountHasPayoutConfiguration,
   loanAccountHasSummary,
   loanAccountLinkedAccountId,
@@ -386,10 +387,7 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
 
       <LoanAccountPayoutSetupSection account={account} />
 
-      {account.transactionProcessingStrategyName ||
-      account.amortizationType ||
-      account.interestType ||
-      account.numberOfRepayments != null ? (
+      {loanAccountHasLoanTerms(account) ? (
         <DetailSection title="Loan terms">
           <DetailFieldGrid>
             {account.transactionProcessingStrategyName ? (
@@ -426,6 +424,26 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
             {account.interestCalculationPeriodType ? (
               <DetailField label="Interest calculation period">
                 {enumOptionLabel(account.interestCalculationPeriodType) ?? '—'}
+              </DetailField>
+            ) : null}
+            {(account.graceOnPrincipalPayment ?? 0) > 0 ? (
+              <DetailField label="Grace on principal">
+                {account.graceOnPrincipalPayment}
+              </DetailField>
+            ) : null}
+            {(account.graceOnInterestPayment ?? 0) > 0 ? (
+              <DetailField label="Grace on interest payment">
+                {account.graceOnInterestPayment}
+              </DetailField>
+            ) : null}
+            {(account.graceOnInterestCharged ?? 0) > 0 ? (
+              <DetailField label="Grace on interest charged">
+                {account.graceOnInterestCharged}
+              </DetailField>
+            ) : null}
+            {(account.graceOnArrearsAgeing ?? 0) > 0 ? (
+              <DetailField label="Grace on arrears ageing">
+                {account.graceOnArrearsAgeing}
               </DetailField>
             ) : null}
           </DetailFieldGrid>

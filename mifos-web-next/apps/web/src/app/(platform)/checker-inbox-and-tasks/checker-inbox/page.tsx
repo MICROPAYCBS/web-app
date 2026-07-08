@@ -9,16 +9,49 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { CheckerInboxPageContent } from '@/components/tasks/checker-inbox-page-content';
+import { enrichCheckerInboxItems } from '@/lib/checker-inbox/enrich-checker-inbox-items';
+import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
 import { listCheckerInboxItems } from '@/lib/fineract/checker-inbox';
+import type { CheckerInboxSearchFilters } from '@/lib/fineract/checker-inbox-query';
 import { getServerSession } from '@/lib/session/server';
 
-export default async function CheckerInboxPage() {
+export default async function CheckerInboxPage({
+  searchParams
+}: {
+  searchParams: Promise<{ loanId?: string; clientId?: string; resourceId?: string }>;
+}) {
   const session = await getServerSession();
   if (!can(session, resolvePermission('checkerInbox'))) {
     notFound();
   }
 
-  const items = await listCheckerInboxItems();
+  const query = await searchParams;
+  const serverFilters: CheckerInboxSearchFilters = {};
+  if (query.loanId?.trim()) {
+    serverFilters.loanId = query.loanId.trim();
+  }
+  if (query.clientId?.trim()) {
+    serverFilters.clientId = query.clientId.trim();
+  }
+  if (query.resourceId?.trim()) {
+    serverFilters.resourceId = query.resourceId.trim();
+  }
 
-  return <CheckerInboxPageContent items={items} />;
+  const [items, workflowRuntime] = await Promise.all([
+    listCheckerInboxItems(serverFilters),
+    loadApprovalWorkflowRuntimeContext()
+  ]);
+
+  const initialClientFilters = {
+    ...(query.resourceId?.trim() ? { resourceId: query.resourceId.trim() } : {})
+  };
+
+  return (
+    <CheckerInboxPageContent
+      items={await enrichCheckerInboxItems(items, workflowRuntime)}
+      taskPermissions={workflowRuntime.makerCheckerPermissions}
+      approvalWorkflowsEnabled={workflowRuntime.workflowsEnabled}
+      initialClientFilters={initialClientFilters}
+    />
+  );
 }

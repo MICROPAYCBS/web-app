@@ -7,8 +7,10 @@
  */
 
 import * as Sentry from '@sentry/nextjs';
-import { sharedSentryInitOptions } from './sentry.shared';
+import { isSentryEnabled, sharedSentryInitOptions } from './sentry.shared';
 
 Sentry.init(sharedSentryInitOptions());
 
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+export const onRouterTransitionStart = isSentryEnabled()
+  ? Sentry.captureRouterTransitionStart
+  : undefined;

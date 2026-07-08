@@ -8,10 +8,7 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { ApprovalWorkflowForm } from '@/components/system/approval-workflows/approval-workflow-form';
-import { DetailBackLink } from '@/components/composites';
-import { ListPage } from '@/components/composites/list-page';
-import { APPROVAL_WORKFLOWS_LIST_PATH } from '@/lib/fineract/approval-workflow-paths';
+import { ApprovalWorkflowWizardPageContent } from '@/components/system/approval-workflows/approval-workflow-wizard-page-content';
 import { defaultWorkflowDefinitionFormValues } from '@/lib/fineract/approval-workflow-display';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
@@ -35,20 +32,12 @@ export default async function CreateApprovalWorkflowPage() {
     taskPermissions[0]?.code;
 
   return (
-    <ListPage
-      backLink={<DetailBackLink href={APPROVAL_WORKFLOWS_LIST_PATH} label="Back to approval workflows" />}
-      title="Create approval workflow"
-      description="Define stages, participants, and transitions. New workflows start in draft status."
-    >
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-        <ApprovalWorkflowForm
-          mode="create"
-          initialValues={defaultWorkflowDefinitionFormValues(preferredTask)}
-          roles={roles}
-          currencies={currencies}
-          taskPermissions={taskPermissions}
-        />
-      </div>
-    </ListPage>
+    <ApprovalWorkflowWizardPageContent
+      mode="create"
+      initialValues={defaultWorkflowDefinitionFormValues(preferredTask)}
+      roles={roles}
+      currencies={currencies}
+      taskPermissions={taskPermissions}
+    />
   );
 }

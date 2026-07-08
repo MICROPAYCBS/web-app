@@ -56,6 +56,9 @@ import { getLoanAccount } from '@/lib/fineract/loan-accounts';
 
 import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashier';
 
+import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
+import { loadLoanAccountPendingCheckerActions, resolveLoanPendingApprovalWorkflowContext } from '@/lib/fineract/loan-account-pending-checker';
+
 import { loadLoanAccountStandingInstructionContext } from '@/lib/fineract/load-loan-account-standing-instruction-context';
 
 import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
@@ -214,20 +217,31 @@ export default async function LoanAccountGeneralPage({
     loadReportOrganisationName(),
     loadLoanAccountStandingInstructionContext(session, clientId, result.data),
     getLoanRepaymentPolicySettings(),
-    canViewAudits
-      ? tryFineractLoad(
-          () => listAuditTrailsForLoanAccount(accountId),
-          'Could not load audit trail.'
-        )
-      : Promise.resolve(null)
+    tryFineractLoad(
+      () => listAuditTrailsForLoanAccount(accountId, { limit: canViewAudits ? 100 : 25 }),
+      'Could not load audit trail.'
+    )
   ]);
 
-  const auditEntries =
+  const auditEntriesForPending =
     auditResult?.ok && auditResult.data ? auditResult.data.pageItems : [];
+  const auditEntries = canViewAudits ? auditEntriesForPending : [];
   const auditTotalRecords =
-    auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
+    canViewAudits && auditResult?.ok && auditResult.data
+      ? auditResult.data.totalFilteredRecords
+      : undefined;
 
+  const pendingCheckerActions = await loadLoanAccountPendingCheckerActions(
+    result.data.id,
+    auditEntriesForPending
+  );
 
+  const workflowRuntime = await loadApprovalWorkflowRuntimeContext();
+  const pendingApprovalWorkflowContext = await resolveLoanPendingApprovalWorkflowContext(
+    pendingCheckerActions[0],
+    result.data,
+    workflowRuntime
+  );
 
   return (
 
@@ -251,9 +265,15 @@ export default async function LoanAccountGeneralPage({
 
       auditEntries={auditEntries}
 
-      auditLoadFailed={auditResult != null && !auditResult.ok}
+      auditLoadFailed={canViewAudits && auditResult != null && !auditResult.ok}
 
       auditTotalRecords={auditTotalRecords}
+
+      pendingCheckerActions={pendingCheckerActions}
+
+      pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}
+
+      makerCheckerTaskPermissions={workflowRuntime.makerCheckerPermissions}
 
     />
 

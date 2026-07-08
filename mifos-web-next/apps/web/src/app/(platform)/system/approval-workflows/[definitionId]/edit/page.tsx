@@ -8,10 +8,7 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { ApprovalWorkflowForm } from '@/components/system/approval-workflows/approval-workflow-form';
-import { DetailBackLink } from '@/components/composites';
-import { ListPage } from '@/components/composites/list-page';
-import { approvalWorkflowDetailPath } from '@/lib/fineract/approval-workflow-paths';
+import { ApprovalWorkflowWizardPageContent } from '@/components/system/approval-workflows/approval-workflow-wizard-page-content';
 import { workflowDefinitionToFormValues } from '@/lib/fineract/approval-workflow-display';
 import { getWorkflowDefinition } from '@/lib/fineract/approval-workflows';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
@@ -47,26 +44,14 @@ export default async function EditApprovalWorkflowPage({
   }
 
   return (
-    <ListPage
-      backLink={
-        <DetailBackLink
-          href={approvalWorkflowDetailPath(definitionId)}
-          label="Back to workflow details"
-        />
-      }
-      title={`Edit ${result.data.name}`}
-      description="Draft workflows can be fully replaced. Activate when the structure is ready."
-    >
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-        <ApprovalWorkflowForm
-          mode="edit"
-          definitionId={result.data.id}
-          initialValues={workflowDefinitionToFormValues(result.data)}
-          roles={roles}
-          currencies={currencies}
-          taskPermissions={taskPermissions}
-        />
-      </div>
-    </ListPage>
+    <ApprovalWorkflowWizardPageContent
+      mode="edit"
+      definitionId={result.data.id}
+      workflowName={result.data.name}
+      initialValues={workflowDefinitionToFormValues(result.data)}
+      roles={roles}
+      currencies={currencies}
+      taskPermissions={taskPermissions}
+    />
   );
 }

@@ -372,6 +372,18 @@ const CORE_APP_ROUTES = {
     requiresAuth: true,
     parity: { status: 'done', webAppRef: 'tasks/checker-inbox-and-tasks' }
   },
+  notifications: {
+    id: 'notifications',
+    path: '/checker-inbox-and-tasks/notifications',
+    kind: 'page',
+    label: 'Notifications',
+    domain: 'tasks',
+    nav: false,
+    keywords: ['notifications', 'alerts', 'activity'],
+    requiresServer: true,
+    requiresAuth: true,
+    parity: { status: 'done', webAppRef: 'tasks/notifications' }
+  },
   collectionSheet: {
     id: 'collectionSheet',
     path: '/collections/collection-sheet',

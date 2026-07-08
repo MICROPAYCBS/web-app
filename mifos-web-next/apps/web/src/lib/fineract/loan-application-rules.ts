@@ -135,7 +135,10 @@ export function loanApplicationInterestRatePeriodUnit(
   if (!label) {
     return undefined;
   }
-  const lower = label.toLowerCase();
+  let lower = label.toLowerCase();
+  if (lower.startsWith('per ')) {
+    lower = lower.slice(4);
+  }
   if (lower.endsWith('s') && lower.length > 1) {
     return lower.slice(0, -1);
   }

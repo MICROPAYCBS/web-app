@@ -16,10 +16,10 @@ import { getGlobalConfigurationByName } from '@/lib/fineract/global-configuratio
 
 export type { LoanRepaymentPolicySettings };
 
-/** Matches Micropay migration default when the configuration row is absent. */
+/** When the configuration row is absent, direct loan repayments are disabled. */
 export async function getLoanRepaymentPolicySettings(): Promise<LoanRepaymentPolicySettings> {
   const config = await getGlobalConfigurationByName(ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME);
   return {
-    allowDirectLoanRepayments: config?.enabled ?? true
+    allowDirectLoanRepayments: config?.enabled === true
   };
 }

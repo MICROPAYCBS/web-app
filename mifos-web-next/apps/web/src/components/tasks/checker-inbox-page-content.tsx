@@ -8,11 +8,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CheckerInboxListItem } from '@mifos/api-client';
 import { Check, Trash2, X } from 'lucide-react';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import { toastFineractError } from '@/lib/toast-fineract-error';
 import {
   bulkDeleteCheckerInboxItemsAction,
@@ -21,6 +19,9 @@ import {
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
 import { CheckerInboxFilterSheet } from '@/components/tasks/checker-inbox-filter-sheet';
+import {
+  CheckerInboxConfirmItemList
+} from '@/components/tasks/checker-inbox-review-summary';
 import { CheckerInboxTable } from '@/components/tasks/checker-inbox-table';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,21 +32,33 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import type { FineractRolePermissionUsage } from '@mifos/api-client';
+import type { CheckerInboxEnrichedItem } from '@/lib/checker-inbox/checker-inbox-item-types';
 import {
   buildCheckerInboxClientFilterOptions,
   countActiveCheckerInboxClientFilters,
   type CheckerInboxClientFilters
 } from '@/lib/checker-inbox/client-filters';
-import { notifyCheckerInboxPendingChanged } from '@/lib/checker-inbox/pending-count';
+import { toastCheckerInboxActionOutcome } from '@/lib/checker-inbox/checker-inbox-outcome';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
 
-export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem[] }) {
+export function CheckerInboxPageContent({
+  items,
+  taskPermissions = [],
+  approvalWorkflowsEnabled = false,
+  initialClientFilters = {}
+}: {
+  items: CheckerInboxEnrichedItem[];
+  taskPermissions?: FineractRolePermissionUsage[];
+  approvalWorkflowsEnabled?: boolean;
+  initialClientFilters?: CheckerInboxClientFilters;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filters, setFilters] = useState<CheckerInboxClientFilters>({});
-  const [selectedItems, setSelectedItems] = useState<CheckerInboxListItem[]>([]);
+  const [filters, setFilters] = useState<CheckerInboxClientFilters>(initialClientFilters);
+  const [selectedItems, setSelectedItems] = useState<CheckerInboxEnrichedItem[]>([]);
   const [selectionEpoch, setSelectionEpoch] = useState(0);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const hasSelection = selectedItems.length > 0;
@@ -54,26 +67,24 @@ export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem
 
   function runBulkAction(action: ConfirmAction) {
     const ids = selectedItems.map((item) => item.id);
+    const itemsById = Object.fromEntries(
+      selectedItems.map((item) => [
+        item.id,
+        { actionName: item.actionName, entityName: item.entityName }
+      ])
+    );
     startTransition(async () => {
       const result =
         action === 'delete'
           ? await bulkDeleteCheckerInboxItemsAction(ids)
-          : await bulkExecuteCheckerInboxActionAction(ids, action);
-      if (!result.ok) {
+          : await bulkExecuteCheckerInboxActionAction(ids, action, itemsById);
+      if (!toastCheckerInboxActionOutcome(action, result)) {
         toastFineractError(result.message);
         return;
       }
-      toast.success(
-        action === 'approve'
-          ? 'Selected items approved.'
-          : action === 'reject'
-            ? 'Selected items rejected.'
-            : 'Selected items deleted.'
-      );
       setConfirmAction(null);
       setSelectedItems([]);
       setSelectionEpoch((epoch) => epoch + 1);
-      notifyCheckerInboxPendingChanged();
       router.refresh();
     });
   }
@@ -82,7 +93,11 @@ export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem
     <>
       <ListPage
         title="Pending tasks"
-        description="Review and approve pending maker-checker requests."
+        description={
+          approvalWorkflowsEnabled
+            ? 'Review and approve pending maker-checker requests. Multi-stage approval workflows use this same inbox.'
+            : 'Review and approve pending maker-checker requests.'
+        }
         actions={
           <>
             <Button
@@ -118,6 +133,8 @@ export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem
           key={selectionEpoch}
           items={items}
           filters={filters}
+          taskPermissions={taskPermissions}
+          approvalWorkflowsEnabled={approvalWorkflowsEnabled}
           onSelectedItemsChange={setSelectedItems}
           toolbar={
             <ListFilterTrigger
@@ -143,23 +160,24 @@ export function CheckerInboxPageContent({ items }: { items: CheckerInboxListItem
         open={confirmAction != null}
         onOpenChange={(open) => !open && setConfirmAction(null)}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {confirmAction === 'approve'
-                ? 'Approve checker'
+                ? `Approve ${selectedItems.length} checker item${selectedItems.length === 1 ? '' : 's'}`
                 : confirmAction === 'reject'
-                  ? 'Reject checker'
-                  : 'Delete checker'}
+                  ? `Reject ${selectedItems.length} checker item${selectedItems.length === 1 ? '' : 's'}`
+                  : `Delete ${selectedItems.length} checker item${selectedItems.length === 1 ? '' : 's'}`}
             </DialogTitle>
             <DialogDescription>
               {confirmAction === 'approve'
-                ? 'Are you sure you want to approve the selected checker items?'
+                ? 'Review the selected requests before approving.'
                 : confirmAction === 'reject'
-                  ? 'Are you sure you want to reject the selected checker items?'
-                  : 'Are you sure you want to delete the selected checker items?'}
+                  ? 'These requests will be rejected and will not be applied.'
+                  : 'These pending requests will be removed from the inbox.'}
             </DialogDescription>
           </DialogHeader>
+          <CheckerInboxConfirmItemList items={selectedItems} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmAction(null)}>
               Cancel

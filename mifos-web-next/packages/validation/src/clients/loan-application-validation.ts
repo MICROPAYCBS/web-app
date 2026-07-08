@@ -243,7 +243,7 @@ export function validateLoanApplicationProductRangeRules(
         errors.interestRateDifferential = `Maximum differential is ${ctx.maxInterestRateDifferential}.`;
       }
     }
-  } else if (input.interestRatePerPeriod > 0) {
+  } else if (input.interestRatePerPeriod != null && input.interestRatePerPeriod >= 0) {
     if (
       ctx?.minInterestRatePerPeriod != null &&
       input.interestRatePerPeriod < ctx.minInterestRatePerPeriod
@@ -284,7 +284,7 @@ export function validateLoanApplicationProductRules(
       errors.interestType = 'Declining balance interest is required for floating-rate products.';
     }
   } else {
-    if (input.interestRatePerPeriod == null || input.interestRatePerPeriod <= 0) {
+    if (input.interestRatePerPeriod == null || input.interestRatePerPeriod < 0) {
       errors.interestRatePerPeriod = 'Interest rate is required.';
     }
   }
@@ -335,7 +335,7 @@ export function loanApplicationHasScheduleMinimumFields(
 ): boolean {
   const hasInterest = linkedToFloatingInterestRates
     ? input.interestRateDifferential != null && input.interestRateDifferential >= 0
-    : (input.interestRatePerPeriod ?? 0) > 0;
+    : input.interestRatePerPeriod != null && input.interestRatePerPeriod >= 0;
 
   return (
     hasInterest &&

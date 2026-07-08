@@ -13,7 +13,7 @@ import { ListFilterSection, ListFilterSheet } from '@/components/composites/list
 import { SelectField } from '@/components/composites/select-field';
 import {
   workflowDefinitionStatusLabel,
-  workflowTaskPermissionSelectOptions
+  workflowTaskPermissionSimpleSelectOptions
 } from '@/lib/fineract/approval-workflow-display';
 import type { ApprovalWorkflowListFilters } from '@/lib/fineract/approval-workflow-list-query';
 
@@ -34,7 +34,7 @@ export function ApprovalWorkflowsFilterFields({
     onDraftChange({ ...draft, ...patch });
   }
 
-  const taskOptions = workflowTaskPermissionSelectOptions(taskPermissions);
+  const taskOptions = workflowTaskPermissionSimpleSelectOptions(taskPermissions);
 
   return (
     <ListFilterSection

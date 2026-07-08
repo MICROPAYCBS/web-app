@@ -21,6 +21,8 @@ import { TransactionDateField } from '@/components/composites/transaction-date-f
 import { TextField } from '@/components/composites/text-field';
 import { DateField } from '@/components/composites/date-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { LOAN_APPROVE_COMMAND_TOAST } from '@/lib/fineract/loan-account-command-toasts';
 import { parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
 
 export function LoanAccountApproveSheet({
@@ -97,7 +99,7 @@ export function LoanAccountApproveSheet({
         note: note.trim() || undefined
       });
 
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, LOAN_APPROVE_COMMAND_TOAST)) {
         setError(formatActionErrorMessage(result.message, result.fieldErrors));
         setFieldErrors(result.fieldErrors ?? {});
         return;

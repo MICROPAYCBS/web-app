@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractCommandActionMeta } from '@mifos/validation';
+
 export type LoanAccountActionResult =
-  | { ok: true; resourceId?: number }
+  | ({ ok: true; resourceId?: number } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };

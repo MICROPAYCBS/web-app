@@ -60,6 +60,21 @@ export function auditTrailResultVariant(
   return 'secondary';
 }
 
+/** True when an audit / checker row is still awaiting checker approval. */
+export function isPendingCheckerAuditResult(result: string | undefined): boolean {
+  if (!result?.trim()) {
+    return false;
+  }
+  const normalized = result.toLowerCase();
+  if (normalized.includes('success') || normalized.includes('processed')) {
+    return false;
+  }
+  if (normalized.includes('fail') || normalized.includes('reject')) {
+    return false;
+  }
+  return true;
+}
+
 export function formatAuditTrailFilterLabel(value: string): string {
   if (!value.trim()) {
     return value;

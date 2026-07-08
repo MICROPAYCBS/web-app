@@ -13,8 +13,10 @@ import type {
   WorkflowStage,
   WorkflowTransition
 } from '@mifos/api-client';
-import type { UpsertWorkflowDefinitionInput } from '@mifos/validation';
+import type { UpsertWorkflowDefinitionInput, WorkflowStageInput, WorkflowTransitionInput } from '@mifos/validation';
+import type { SelectOption } from '@/components/composites/select-field';
 import { formatMoney } from '@mifos/domain';
+import { currencyToSelectOptions, enumToSelectOptions } from '@/lib/form/select-options';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { formatPermissionCode, formatRoleGroupingName } from '@/lib/fineract/role-display';
 
@@ -122,6 +124,69 @@ export function orderedWorkflowStages(
   return ordered;
 }
 
+/** Linear stage chain: first → second → … (matches backend entry-stage rules). */
+export function buildLinearWorkflowTransitions(
+  stages: Pick<WorkflowStageInput, 'stageCode'>[]
+): WorkflowTransitionInput[] {
+  const stageCodes = stages.map((stage) => stage.stageCode.trim()).filter(Boolean);
+  return stageCodes.slice(0, -1).map((fromStageCode, index) => ({
+    fromStageCode,
+    toStageCode: stageCodes[index + 1],
+    sequenceNo: index + 1,
+    minAmount: null,
+    maxAmount: null
+  }));
+}
+
+export interface WorkflowChainBookend {
+  title: string;
+  subtitle: string;
+  description: string;
+}
+
+export const WORKFLOW_MAKER_BOOKEND: WorkflowChainBookend = {
+  title: 'Creation',
+  subtitle: 'Maker',
+  description: 'The maker submits the task for review.'
+};
+
+export const WORKFLOW_CHECKER_BOOKEND: WorkflowChainBookend = {
+  title: 'Approval',
+  subtitle: 'Checker',
+  description: 'The checker completes the task.'
+};
+
+export type WorkflowChainBookendPosition = 'start' | 'end';
+
+export type WorkflowChainSegment<TStage extends Pick<WorkflowStage, 'stageCode'>> =
+  | { kind: 'bookend'; position: WorkflowChainBookendPosition }
+  | { kind: 'stage'; stage: TStage; index: number };
+
+export function workflowChainBookend(position: WorkflowChainBookendPosition): WorkflowChainBookend {
+  return position === 'start' ? WORKFLOW_MAKER_BOOKEND : WORKFLOW_CHECKER_BOOKEND;
+}
+
+export function buildWorkflowChain<TStage extends Pick<WorkflowStage, 'stageCode'>>(
+  stages: TStage[],
+  transitions: WorkflowTransition[] = []
+): WorkflowChainSegment<TStage>[] {
+  const orderedStages = stages.length
+    ? (orderedWorkflowStages(
+        stages as unknown as WorkflowStage[],
+        transitions
+      ) as unknown as TStage[])
+    : [];
+
+  const segments: WorkflowChainSegment<TStage>[] = [{ kind: 'bookend', position: 'start' }];
+
+  orderedStages.forEach((stage, index) => {
+    segments.push({ kind: 'stage', stage, index });
+  });
+
+  segments.push({ kind: 'bookend', position: 'end' });
+  return segments;
+}
+
 export function transitionAmountBandSummary(
   transition: WorkflowTransition,
   currencyCode?: string | null
@@ -153,21 +218,101 @@ export function formatWorkflowTaskSubtitle(permission: FineractRolePermissionUsa
   return parts.length > 0 ? parts.join(' · ') : null;
 }
 
-export function formatWorkflowTaskOptionLabel(permission: FineractRolePermissionUsage): string {
-  const subtitle = formatWorkflowTaskSubtitle(permission);
-  const readable = formatPermissionCode(permission.code, permission.grouping);
-  if (subtitle) {
-    return `${permission.code} — ${subtitle}`;
+function titleCaseAction(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return trimmed;
   }
-  if (readable !== permission.code) {
-    return `${permission.code} — ${readable}`;
-  }
-  return permission.code;
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
 }
 
-export function workflowTaskPermissionSelectOptions(
+function resolveWorkflowTaskActionBadge(
+  permission: FineractRolePermissionUsage
+): SelectOption['badge'] {
+  const action =
+    permission.actionName?.trim() ||
+    permission.code.split('_')[0]?.trim() ||
+    'Task';
+  const text = titleCaseAction(action);
+  const normalized = action.toUpperCase();
+
+  if (normalized === 'DELETE' || normalized === 'REMOVE') {
+    return { text, variant: 'destructive' };
+  }
+  if (normalized === 'CREATE' || normalized === 'ADD') {
+    return { text, variant: 'secondary' };
+  }
+  return { text, variant: 'outline' };
+}
+
+export function formatWorkflowTaskPrimaryLabel(permission: FineractRolePermissionUsage): string {
+  return formatPermissionCode(permission.code, permission.grouping);
+}
+
+export function formatWorkflowTaskOptionDescription(
+  permission: FineractRolePermissionUsage
+): string {
+  const subtitle = formatWorkflowTaskSubtitle(permission);
+  return subtitle ? `${permission.code} · ${subtitle}` : permission.code;
+}
+
+export function formatWorkflowTaskOptionLabel(permission: FineractRolePermissionUsage): string {
+  const readable = formatWorkflowTaskPrimaryLabel(permission);
+  const description = formatWorkflowTaskOptionDescription(permission);
+  if (description !== permission.code) {
+    return `${readable} — ${description}`;
+  }
+  return readable;
+}
+
+export const WORKFLOW_STAGE_TYPE_SELECT_OPTIONS = enumToSelectOptions([
+  'REVIEW',
+  'APPROVAL',
+  'VERIFICATION'
+] as const);
+
+export const WORKFLOW_REJECTION_POLICY_SELECT_OPTIONS = enumToSelectOptions([
+  'ANY',
+  'ALL',
+  'THRESHOLD'
+] as const);
+
+export const WORKFLOW_EXPIRY_UNIT_SELECT_OPTIONS = enumToSelectOptions(['HOURS', 'DAYS'] as const);
+
+export function workflowStageCodeSelectOptions(
+  stages: Array<Pick<WorkflowStageInput, 'stageCode' | 'name'>>,
+  options?: { excludeStageCode?: string }
+): SelectOption[] {
+  return stages
+    .filter((stage) => stage.stageCode !== options?.excludeStageCode)
+    .map((stage) => ({
+      value: stage.stageCode,
+      label: stage.name?.trim() || stage.stageCode,
+      keywords: [stage.stageCode, stage.name].filter(Boolean) as string[]
+    }));
+}
+
+export function workflowCurrencySelectOptions(
+  currencies: { code?: string; name?: string }[]
+): SelectOption[] {
+  return currencyToSelectOptions(currencies);
+}
+
+export function workflowRoleSelectOptions(
+  roles: { id: number; name: string; disabled?: boolean }[]
+): SelectOption[] {
+  return roles
+    .filter((role) => !role.disabled)
+    .map((role) => ({
+      value: String(role.id),
+      label: role.name,
+      keywords: [role.name, String(role.id)]
+    }));
+}
+
+export function workflowTaskPermissionSimpleSelectOptions(
   permissions: FineractRolePermissionUsage[]
-): Array<{ value: string; label: string; keywords?: string[] }> {
+): SelectOption[] {
   return [...permissions]
     .sort((left, right) => {
       const groupCompare = formatRoleGroupingName(left.grouping).localeCompare(
@@ -185,6 +330,33 @@ export function workflowTaskPermissionSelectOptions(
         permission.grouping,
         formatRoleGroupingName(permission.grouping),
         formatPermissionCode(permission.code, permission.grouping)
+      ].filter((value): value is string => Boolean(value?.trim()))
+    }));
+}
+
+export function workflowTaskPermissionSelectOptions(
+  permissions: FineractRolePermissionUsage[]
+): SelectOption[] {
+  return [...permissions]
+    .sort((left, right) => {
+      const groupCompare = formatRoleGroupingName(left.grouping).localeCompare(
+        formatRoleGroupingName(right.grouping)
+      );
+      return groupCompare !== 0 ? groupCompare : left.code.localeCompare(right.code);
+    })
+    .map((permission) => ({
+      value: permission.code,
+      label: formatWorkflowTaskPrimaryLabel(permission),
+      description: formatWorkflowTaskOptionDescription(permission),
+      badge: resolveWorkflowTaskActionBadge(permission),
+      keywords: [
+        permission.code,
+        permission.entityName,
+        permission.actionName,
+        permission.grouping,
+        formatRoleGroupingName(permission.grouping),
+        formatWorkflowTaskPrimaryLabel(permission),
+        formatWorkflowTaskSubtitle(permission)
       ].filter((value): value is string => Boolean(value?.trim()))
     }));
 }

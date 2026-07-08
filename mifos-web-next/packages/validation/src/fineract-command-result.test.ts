@@ -10,8 +10,11 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   actionSuccessFromFineractCommand,
+  classifyMakerCheckerApproveOutcome,
+  classifyMakerCheckerRejectOutcome,
   commandOutcomeMessage,
   isPendingCheckerApproval,
+  isWorkflowStageApprovalResult,
   parseFineractCommandResult,
   readFineractCommandResourceId
 } from './fineract-command-result';
@@ -89,7 +92,7 @@ describe('commandOutcomeMessage', () => {
   it('uses pending copy when checker approval is required', () => {
     assert.equal(
       commandOutcomeMessage('Loan application submitted.', { pendingChecker: true }),
-      'Submitted for checker approval.'
+      'Submitted for approval.'
     );
     assert.equal(
       commandOutcomeMessage('Loan application submitted.', {
@@ -99,5 +102,50 @@ describe('commandOutcomeMessage', () => {
       'Loan application sent for approval.'
     );
     assert.equal(commandOutcomeMessage('Loan application submitted.'), 'Loan application submitted.');
+  });
+});
+
+describe('isWorkflowStageApprovalResult', () => {
+  it('detects commandId-only intermediate workflow approve', () => {
+    assert.equal(
+      isWorkflowStageApprovalResult({ commandId: 1284 }, { actionName: 'APPROVE', entityName: 'LOAN' }),
+      true
+    );
+  });
+
+  it('detects terminal loan approve with loanId', () => {
+    assert.equal(
+      isWorkflowStageApprovalResult(
+        { commandId: 1284, loanId: 15, resourceId: 15 },
+        { actionName: 'APPROVE', entityName: 'LOAN' }
+      ),
+      false
+    );
+  });
+
+  it('ignores maker pending rollback payloads', () => {
+    assert.equal(
+      isWorkflowStageApprovalResult(
+        { commandId: 1284, rollbackTransaction: true },
+        { actionName: 'APPROVE', entityName: 'LOAN' }
+      ),
+      false
+    );
+  });
+});
+
+describe('classifyMakerCheckerApproveOutcome', () => {
+  it('returns workflow_stage_recorded for intermediate stage', () => {
+    assert.equal(
+      classifyMakerCheckerApproveOutcome({ commandId: 99 }, { entityName: 'LOAN', actionName: 'APPROVE' }),
+      'workflow_stage_recorded'
+    );
+  });
+});
+
+describe('classifyMakerCheckerRejectOutcome', () => {
+  it('returns workflow_stage_rejection when item remains pending', () => {
+    assert.equal(classifyMakerCheckerRejectOutcome(true), 'workflow_stage_rejection');
+    assert.equal(classifyMakerCheckerRejectOutcome(false), 'completed');
   });
 });

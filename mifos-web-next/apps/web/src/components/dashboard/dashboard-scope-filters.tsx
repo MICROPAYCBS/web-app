@@ -13,6 +13,7 @@ import type {
   DashboardCurrencyOption,
   DashboardOfficeOption
 } from '@/lib/dashboard/analytics-types';
+import { currencyToSelectOptions, officeToSelectOptions } from '@/lib/form/select-options';
 import { cn } from '@/lib/utils';
 
 export function DashboardScopeFilters({
@@ -44,33 +45,27 @@ export function DashboardScopeFilters({
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       {showBranch ? (
-        <div className="min-w-[12rem]">
+        <div className="min-w-[14rem]">
           <SelectField
             id="dashboard-scope-office"
             label="Branch"
             hideLabel
             value={officeId}
             onValueChange={(value) => value && onOfficeIdChange(value)}
-            options={offices.map((office) => ({
-              value: String(office.id),
-              label: office.name
-            }))}
+            options={officeToSelectOptions(offices)}
             disabled={disabled}
           />
         </div>
       ) : null}
       {showCurrency ? (
-        <div className="min-w-[10rem]">
+        <div className="min-w-[12rem]">
           <SelectField
             id="dashboard-scope-currency"
             label="Currency"
             hideLabel
             value={currencyCode}
             onValueChange={(value) => value && onCurrencyCodeChange(value)}
-            options={currencies.map((currency) => ({
-              value: currency.code,
-              label: currency.name ? `${currency.code} — ${currency.name}` : currency.code
-            }))}
+            options={currencyToSelectOptions(currencies)}
             disabled={disabled}
           />
         </div>

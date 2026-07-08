@@ -28,7 +28,7 @@ import { DataTablePagination } from '@/components/composites/data-table/data-tab
 import { JobErrorLogDialog } from '@/components/system/manage-jobs/job-error-log-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { formatJobDateTime, jobRunSucceeded } from '@/lib/fineract/jobs-display';
+import { formatJobDateTime, formatJobRunDuration, jobRunSucceeded, sortJobRunHistoryNewestFirst } from '@/lib/fineract/jobs-display';
 
 export function SchedulerJobHistoryTable({
   job,
@@ -39,6 +39,8 @@ export function SchedulerJobHistoryTable({
 }) {
   const [versionFilter, setVersionFilter] = useState('');
   const [errorHistory, setErrorHistory] = useState<FineractSchedulerJobRunHistory | null>(null);
+
+  const sortedHistory = useMemo(() => sortJobRunHistoryNewestFirst(history), [history]);
 
   const columns = useMemo<ColumnDef<FineractSchedulerJobRunHistory>[]>(
     () => [
@@ -56,6 +58,11 @@ export function SchedulerJobHistoryTable({
         id: 'jobRunEndTime',
         header: 'End time',
         cell: ({ row }) => formatJobDateTime(row.original.jobRunEndTime)
+      },
+      {
+        id: 'duration',
+        header: 'Duration',
+        cell: ({ row }) => formatJobRunDuration(row.original)
       },
       {
         accessorKey: 'status',
@@ -97,7 +104,7 @@ export function SchedulerJobHistoryTable({
   );
 
   const table = useReactTable({
-    data: history,
+    data: sortedHistory,
     columns,
     state: {
       globalFilter: versionFilter

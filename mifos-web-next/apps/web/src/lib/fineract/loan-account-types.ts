@@ -152,6 +152,10 @@ export interface FineractLoanAccountDetail {
   interestRatePerPeriod?: number;
   interestCalculationPeriodType?: FineractEnumOption;
   annualInterestRate?: number;
+  graceOnPrincipalPayment?: number;
+  graceOnInterestPayment?: number;
+  graceOnInterestCharged?: number;
+  graceOnArrearsAgeing?: number;
   inArrears?: boolean;
   totalOverpaid?: number;
   summary?: FineractLoanAccountSummary;

@@ -383,13 +383,19 @@ export {
 export {
   actionSuccessFromFineractCommand,
   commandOutcomeMessage,
+  classifyMakerCheckerApproveOutcome,
+  classifyMakerCheckerRejectOutcome,
+  hasMakerCheckerEntityOutcome,
   isFineractCommandCommitted,
   isPendingCheckerActionResult,
   isPendingCheckerApproval,
+  isWorkflowStageApprovalResult,
   parseFineractCommandResult,
   readFineractCommandResourceId,
   type FineractCommandActionMeta,
-  type FineractCommandActionSuccess
+  type FineractCommandActionSuccess,
+  type MakerCheckerActionOutcome,
+  type MakerCheckerTaskContext
 } from './fineract-command-result';
 export {
   createEntityDatatableCheckSchema,

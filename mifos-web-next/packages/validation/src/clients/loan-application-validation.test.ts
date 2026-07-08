@@ -98,16 +98,32 @@ describe('validateLoanApplicationProductRules ranges', () => {
 
   it('flags interest rate outside the allowed range', () => {
     const tooLow = validateLoanApplicationProductRules(
-      baseInput({ interestRatePerPeriod: 1 }),
+      baseInput({ interestRatePerPeriod: 1, numberOfRepayments: 12 }),
       ctx
     );
     assert.match(tooLow.interestRatePerPeriod ?? '', /Minimum rate is 2%/);
 
     const tooHigh = validateLoanApplicationProductRules(
-      baseInput({ interestRatePerPeriod: 20 }),
+      baseInput({ interestRatePerPeriod: 20, numberOfRepayments: 12 }),
       ctx
     );
     assert.match(tooHigh.interestRatePerPeriod ?? '', /Maximum rate is 15%/);
+  });
+
+  it('accepts zero interest rate when the product minimum allows it', () => {
+    const errors = validateLoanApplicationProductRules(
+      baseInput({ interestRatePerPeriod: 0, numberOfRepayments: 12 }),
+      { ...ctx, minInterestRatePerPeriod: 0 }
+    );
+    assert.equal(errors.interestRatePerPeriod, undefined);
+  });
+
+  it('flags zero interest rate below a positive product minimum', () => {
+    const errors = validateLoanApplicationProductRules(
+      baseInput({ interestRatePerPeriod: 0, numberOfRepayments: 12 }),
+      ctx
+    );
+    assert.match(errors.interestRatePerPeriod ?? '', /Minimum rate is 2%/);
   });
 });
 

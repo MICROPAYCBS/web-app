@@ -12,6 +12,7 @@ import { PlatformShell } from '@/components/platform/platform-shell';
 import type { PlatformNavStructure } from '@/components/platform/navigation-types';
 import { getBusinessDateContext } from '@/lib/fineract/business-date';
 import { getCheckerInboxPendingCount } from '@/lib/fineract/checker-inbox';
+import { getNotificationsUnreadCount } from '@/lib/fineract/notifications';
 import { loadCashierNavBalanceForSession } from '@/lib/fineract/load-cashier-nav-balance';
 import { EMPTY_BUSINESS_DATE_CONTEXT } from '@/lib/fineract/business-date-context';
 import { enrichSessionUser } from '@/lib/fineract/fetch-user-profile';
@@ -59,6 +60,10 @@ export default async function PlatformLayout({ children }: { children: React.Rea
       ? await getCheckerInboxPendingCount().catch(() => null)
       : null;
 
+  const notificationsUnreadCount = user
+    ? await getNotificationsUnreadCount().catch(() => null)
+    : null;
+
   const cashierNavBalance = session
     ? await loadCashierNavBalanceForSession(session).catch(() => null)
     : null;
@@ -70,6 +75,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
         serverName={activeServer?.name}
         businessDateContext={businessDateContext}
         checkerInboxPendingCount={checkerInboxPendingCount}
+        notificationsUnreadCount={notificationsUnreadCount}
         cashierNavBalance={cashierNavBalance}
       >
         {children}

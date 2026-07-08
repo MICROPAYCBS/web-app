@@ -21,8 +21,9 @@ import {
   UserCheck,
   Wallet
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from 'react';
 import { DashboardStatCard } from '@/components/dashboard/dashboard-stat-card';
+import { DashboardKpiSectionSkeleton } from '@/components/dashboard/dashboard-skeleton';
 import {
   DashboardKpiCustomizeButton,
   DashboardKpiCustomizer,
@@ -84,35 +85,34 @@ export function DashboardKpiSection({
 }) {
   const [kpis, setKpis] = useState(initialKpis);
   const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [hasFetchedKpis, setHasFetchedKpis] = useState(false);
   const [pending, startTransition] = useTransition();
-  const skipInitialFetch = useRef(true);
 
   const loadKpis = useCallback((nextOfficeId: string, nextCurrencyCode: string) => {
     startTransition(async () => {
-      const params = new URLSearchParams();
-      if (nextOfficeId.trim()) {
-        params.set('officeId', nextOfficeId);
+      try {
+        const params = new URLSearchParams();
+        if (nextOfficeId.trim()) {
+          params.set('officeId', nextOfficeId);
+        }
+        if (nextCurrencyCode.trim()) {
+          params.set('currencyCode', nextCurrencyCode);
+        }
+        const query = params.toString();
+        const res = await fetch(query ? `/api/dashboard/kpis?${query}` : '/api/dashboard/kpis', {
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const json = (await res.json()) as DashboardKpis;
+          setKpis(json);
+        }
+      } finally {
+        setHasFetchedKpis(true);
       }
-      if (nextCurrencyCode.trim()) {
-        params.set('currencyCode', nextCurrencyCode);
-      }
-      const query = params.toString();
-      const res = await fetch(query ? `/api/dashboard/kpis?${query}` : '/api/dashboard/kpis', {
-        credentials: 'include'
-      });
-      if (!res.ok) {
-        return;
-      }
-      const json = (await res.json()) as DashboardKpis;
-      setKpis(json);
     });
   }, []);
 
   useEffect(() => {
-    if (skipInitialFetch.current) {
-      skipInitialFetch.current = false;
-      return;
-    }
     loadKpis(officeId, currencyCode);
   }, [currencyCode, loadKpis, officeId]);
 
@@ -162,9 +162,19 @@ export function DashboardKpiSection({
   );
 
   const activeWidgets = availableWidgets.filter((widget) => visibleIds.has(widget.id));
+  const skeletonCardCount = Math.max(defaultVisibleForUser.length, 4);
+  const showSkeleton = !isLoaded || (pending && !hasFetchedKpis);
 
-  if (!isLoaded) {
-    return null;
+  if (showSkeleton) {
+    return (
+      <section
+        className={cn('space-y-4', className)}
+        aria-busy
+        aria-label="Loading dashboard metrics"
+      >
+        <DashboardKpiSectionSkeleton cardCount={skeletonCardCount} />
+      </section>
+    );
   }
 
   return (

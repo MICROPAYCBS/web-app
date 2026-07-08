@@ -91,3 +91,46 @@ export async function deleteCheckerInboxItem(checkerId: number): Promise<Finerac
   const fineract = await createFineractClient();
   return fineract.delete<FineractCommandProcessingResult>(`${MAKER_CHECKERS_PATH}/${checkerId}`);
 }
+
+export type ResourcePendingCheckerAction = {
+  id: number;
+  actionName?: string;
+  entityName?: string;
+  maker?: string;
+  madeOnDate?: CheckerInboxListItem['madeOnDate'];
+};
+
+function toResourcePendingCheckerAction(item: CheckerInboxListItem): ResourcePendingCheckerAction {
+  return {
+    id: item.id,
+    actionName: item.actionName,
+    entityName: item.entityName,
+    maker: item.maker,
+    madeOnDate: item.madeOnDate
+  };
+}
+
+/** Pending maker-checker commands for a Fineract resource id (e.g. loan account id). */
+export async function listPendingCheckerActionsForResource(
+  resourceId: number,
+  options?: { entityName?: string }
+): Promise<ResourcePendingCheckerAction[]> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(MAKER_CHECKERS_PATH, {
+    resourceId: String(resourceId),
+    ...(options?.entityName ? { entityName: options.entityName } : {})
+  });
+  return normalizeCheckerInboxList(raw)
+    .filter((item) => item.resourceId === resourceId)
+    .map(toResourcePendingCheckerAction);
+}
+
+export async function listLoanAccountPendingCheckerActions(
+  loanAccountId: number
+): Promise<ResourcePendingCheckerAction[]> {
+  try {
+    return await listPendingCheckerActionsForResource(loanAccountId, { entityName: 'LOAN' });
+  } catch {
+    return [];
+  }
+}

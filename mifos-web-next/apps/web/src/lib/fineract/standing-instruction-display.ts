@@ -11,7 +11,14 @@ import type {
   StandingInstructionAccountRef,
   StandingInstructionClientRef
 } from '@mifos/api-client';
+import type { SelectOption } from '@/components/composites/select-field';
 import { formatAmount, toDecimal } from '@mifos/domain';
+import {
+  accountToSelectOptions,
+  enumToSelectOptions,
+  fineractEnumToSelectOptions,
+  officeToSelectOptions
+} from '@/lib/form/select-options';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
 
 export function standingInstructionEnumLabel(option?: FineractEnumOption): string {
@@ -19,6 +26,48 @@ export function standingInstructionEnumLabel(option?: FineractEnumOption): strin
     return '—';
   }
   return option.value ?? option.name ?? option.code ?? String(option.id);
+}
+
+export function standingInstructionEnumSelectOptions(
+  options: FineractEnumOption[] | undefined
+): SelectOption[] {
+  return fineractEnumToSelectOptions(options, standingInstructionEnumLabel);
+}
+
+export const standingInstructionDestinationSelectOptions = enumToSelectOptions(['1', '2'], {
+  label: (value) => (value === '1' ? 'Own account' : 'Other customer')
+});
+
+export function standingInstructionOfficeSelectOptions(
+  offices: { id: number; name: string; nameDecorated?: string }[] | undefined
+): SelectOption[] {
+  return officeToSelectOptions(offices);
+}
+
+export function standingInstructionClientSelectOptions(
+  clients: StandingInstructionClientRef[] | undefined
+): SelectOption[] {
+  return clientToSelectOptions(clients);
+}
+
+export function standingInstructionAccountSelectOptions(
+  accounts: StandingInstructionAccountRef[] | undefined
+): SelectOption[] {
+  return accountToSelectOptions(accounts);
+}
+
+function clientToSelectOptions(
+  clients: StandingInstructionClientRef[] | undefined
+): SelectOption[] {
+  if (!clients?.length) {
+    return [];
+  }
+
+  return clients.map((client) => ({
+    value: String(client.id),
+    label: standingInstructionClientLabel(client),
+    keywords: [client.displayName, String(client.id)].filter(Boolean) as string[]
+  }));
 }
 
 export function standingInstructionValidityLabel(

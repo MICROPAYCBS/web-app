@@ -25,26 +25,13 @@ export function isDevInsecureTlsEnabled(): boolean {
 
 /**
  * Node's native `fetch` cannot use a custom undici `Agent` from the npm package — it breaks
- * all HTTPS requests. In dev we relax TLS verification process-wide instead.
+ * all HTTPS requests. In dev, TLS is relaxed process-wide via `next.config.ts` instead.
  */
-function configureDevInsecureTls(): void {
-  if (!isDevInsecureTlsEnabled()) {
-    return;
-  }
-  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
-    return;
-  }
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
-
-configureDevInsecureTls();
-
 /** Server-side fetch to Fineract (TLS relaxed in dev when {@link isDevInsecureTlsEnabled}). */
 export function fineractFetch(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<Response> {
-  configureDevInsecureTls();
   return fetch(input, {
     ...init,
     cache: init?.cache ?? 'no-store'
@@ -54,7 +41,6 @@ export function fineractFetch(
 export async function buildFineractRequestInit(
   init: RequestInit = {}
 ): Promise<{ urlBase: string; init: RequestInit }> {
-  configureDevInsecureTls();
   const { baseUrl, tenantId } = await getFineractServerConfig();
   const session = await getServerSession();
   const headers = new Headers(init.headers);

@@ -14,6 +14,18 @@ import type { NextConfig } from 'next';
 /** `mifos-web-next/` — workspace packages and lockfile live here, not under `apps/web`. */
 const monorepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
+/**
+ * Dev-only: allow self-signed Fineract TLS before the server starts so Node warns once at
+ * startup instead of on the first BFF request (login, dashboard KPIs, etc.).
+ */
+if (process.env.NODE_ENV === 'development') {
+  const strictTls = process.env.FINERACT_STRICT_TLS?.trim().toLowerCase();
+  const allowInsecureTls = strictTls !== '1' && strictTls !== 'true';
+  if (allowInsecureTls && process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0') {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
+}
+
 const sentryTunnelRoute = process.env.SENTRY_TUNNEL_ROUTE ?? '/monitoring';
 
 const nextConfig: NextConfig = {
@@ -34,8 +46,7 @@ const nextConfig: NextConfig = {
     '@mifos/validation'
   ],
   experimental: {
-    strictRouteTypes: true,
-    appNewScrollHandler: true
+    strictRouteTypes: true
   }
 };
 

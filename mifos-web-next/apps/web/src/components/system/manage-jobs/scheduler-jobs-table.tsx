@@ -20,7 +20,7 @@ import {
 } from '@tanstack/react-table';
 import { AlertCircle, CheckCircle2, FileText } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { JobErrorLogDialog } from '@/components/system/manage-jobs/job-error-log-dialog';
@@ -41,6 +41,7 @@ export function SchedulerJobsTable({
   const [filter, setFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [errorJob, setErrorJob] = useState<FineractSchedulerJob | null>(null);
+  const skipInitialSelectionSync = useRef(true);
 
   const selectedJobs = useMemo(
     () =>
@@ -52,8 +53,18 @@ export function SchedulerJobsTable({
   );
 
   useEffect(() => {
+    if (skipInitialSelectionSync.current) {
+      skipInitialSelectionSync.current = false;
+      return;
+    }
     onSelectedJobsChange?.(selectedJobs);
   }, [onSelectedJobsChange, selectedJobs]);
+
+  useEffect(() => {
+    return () => {
+      skipInitialSelectionSync.current = true;
+    };
+  }, []);
 
   const columns = useMemo<ColumnDef<FineractSchedulerJob>[]>(
     () => [

@@ -43,7 +43,9 @@ export function MifosAppSidebar({
               size="lg"
               isActive={dashboardActive}
               tooltip="Dashboard"
-              render={<Link href="/" aria-label="Dashboard" />}
+              render={
+                <Link href="/" aria-label="Dashboard" prefetch={!dashboardActive} />
+              }
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
                 {APP_LOGO_ABBREV}

@@ -13,19 +13,13 @@ import { Search } from 'lucide-react';
 import { useId } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { FormLabel } from '@/components/composites/form-label';
+import { SelectField } from '@/components/composites/select-field';
 import { sanitizeNumericInput } from '@/components/composites/numeric-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldContent, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
@@ -41,6 +35,14 @@ import {
   FUND_MAPPING_LOAN_STATUS_OPTIONS,
   type FundMappingComparisonCondition
 } from '@/lib/fineract/fund-mapping-display';
+import { labeledOptionsToSelectOptions } from '@/lib/form/select-options';
+
+const FUND_MAPPING_COMPARISON_SELECT_OPTIONS = labeledOptionsToSelectOptions(
+  FUND_MAPPING_COMPARISON_CONDITIONS
+);
+const FUND_MAPPING_DATE_SELECT_OPTIONS = labeledOptionsToSelectOptions(
+  FUND_MAPPING_LOAN_DATE_OPTIONS
+);
 
 export type FundMappingSearchForm = {
   loanStatus: string[];
@@ -195,25 +197,17 @@ function ComparisonFields({
 }) {
   return (
     <div className="space-y-4 rounded-lg border border-border p-3">
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-condition`}>Comparison condition</Label>
-        <Select
-          value={condition || undefined}
-          onValueChange={(value) => onConditionChange(value as FundMappingComparisonCondition)}
-        >
-          <SelectTrigger id={`${idPrefix}-condition`} className="w-full">
-            <SelectValue placeholder="Select condition" />
-          </SelectTrigger>
-          <SelectContent>
-            {FUND_MAPPING_COMPARISON_CONDITIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors?.condition ? <FieldError>{errors.condition}</FieldError> : null}
-      </div>
+      <SelectField
+        id={`${idPrefix}-condition`}
+        label="Comparison condition"
+        value={condition || ''}
+        onValueChange={(value) =>
+          value && onConditionChange(value as FundMappingComparisonCondition)
+        }
+        options={FUND_MAPPING_COMPARISON_SELECT_OPTIONS}
+        placeholder="Select condition"
+        error={errors?.condition}
+      />
 
       {condition === 'between' ? (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -328,27 +322,15 @@ export function FundMappingParameterSheet({
               onChange={(value) => onFormChange('offices', value)}
               error={fieldErrors?.offices}
             />
-            <div className="space-y-2">
-              <Label htmlFor="fund-mapping-date-type">Date type</Label>
-              <Select
-                value={form.loanDateOption || undefined}
-                onValueChange={(value) => onFormChange('loanDateOption', value ?? '')}
-              >
-                <SelectTrigger id="fund-mapping-date-type" className="w-full">
-                  <SelectValue placeholder="Select date type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FUND_MAPPING_LOAN_DATE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {fieldErrors?.loanDateOption ? (
-                <FieldError>{fieldErrors.loanDateOption}</FieldError>
-              ) : null}
-            </div>
+            <SelectField
+              id="fund-mapping-date-type"
+              label="Date type"
+              value={form.loanDateOption}
+              onValueChange={(value) => onFormChange('loanDateOption', value ?? '')}
+              options={FUND_MAPPING_DATE_SELECT_OPTIONS}
+              placeholder="Select date type"
+              error={fieldErrors?.loanDateOption}
+            />
             <DateField
               id="fund-mapping-from-date"
               label="From date"

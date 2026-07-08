@@ -10,6 +10,7 @@
 
 import type { ClientLoanAccountTemplate } from '@mifos/api-client';
 import type { LoanAccountTimelineStepInput } from '@mifos/validation';
+import { useEffect, useState } from 'react';
 import { DetailSection } from '@/components/composites';
 import { DateField } from '@/components/composites/date-field';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
@@ -81,6 +82,14 @@ export function LoanAccountTimelineStep({
     loanApplicationAllowedRangeDescription(differentialRange)
   );
   const showCalculationSettings = loanApplicationHasEditableInterestSettings(template);
+  const [interestRateText, setInterestRateText] = useState<string | null>(null);
+
+  useEffect(() => {
+    setInterestRateText(null);
+  }, [draft.productId]);
+
+  const interestRateDisplay =
+    interestRateText ?? String(draft.interestRatePerPeriod ?? '');
 
   return (
     <div className="space-y-6">
@@ -115,12 +124,24 @@ export function LoanAccountTimelineStep({
             id="loan-interest-rate"
             label={loanApplicationInterestRateFieldLabel(template)}
             required
-            value={
-              draft.interestRatePerPeriod >= 0 ? String(draft.interestRatePerPeriod) : ''
-            }
-            onChange={(value) =>
-              onChange({ interestRatePerPeriod: value ? Number(value) : 0 })
-            }
+            value={interestRateDisplay}
+            onChange={(value) => {
+              setInterestRateText(value);
+              if (value !== '' && value !== '-') {
+                const parsed = Number(value);
+                if (!Number.isNaN(parsed)) {
+                  onChange({ interestRatePerPeriod: parsed });
+                }
+              }
+            }}
+            onBlur={() => {
+              const text = interestRateText ?? String(draft.interestRatePerPeriod ?? '');
+              const parsed = text === '' || text === '-' ? 0 : Number(text);
+              if (!Number.isNaN(parsed)) {
+                onChange({ interestRatePerPeriod: parsed });
+              }
+              setInterestRateText(null);
+            }}
             error={errors.interestRatePerPeriod}
             description={interestRangeDescription}
             hint={LOAN_ACCOUNT_INTEREST_RATE_HINT}

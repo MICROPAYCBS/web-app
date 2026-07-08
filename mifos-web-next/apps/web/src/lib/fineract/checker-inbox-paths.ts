@@ -11,3 +11,27 @@ export const CHECKER_INBOX_LIST_PATH = '/checker-inbox-and-tasks/checker-inbox';
 export function checkerInboxDetailPath(id: string | number) {
   return `${CHECKER_INBOX_LIST_PATH}/${id}`;
 }
+
+export function checkerInboxListPath(filters?: {
+  loanId?: number | string;
+  clientId?: number | string;
+  resourceId?: number | string;
+}) {
+  if (!filters) {
+    return CHECKER_INBOX_LIST_PATH;
+  }
+
+  const params = new URLSearchParams();
+  if (filters.loanId != null) {
+    params.set('loanId', String(filters.loanId));
+  }
+  if (filters.clientId != null) {
+    params.set('clientId', String(filters.clientId));
+  }
+  if (filters.resourceId != null) {
+    params.set('resourceId', String(filters.resourceId));
+  }
+
+  const query = params.toString();
+  return query ? `${CHECKER_INBOX_LIST_PATH}?${query}` : CHECKER_INBOX_LIST_PATH;
+}

@@ -55,6 +55,8 @@ import type {
   LoanInboundPaymentMethod,
   LoanRepaymentPolicySettings
 } from '@/lib/fineract/loan-repayment-policy-paths';
+import { hasLoanPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
+import type { LoanAccountPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
 import { loanInboundPaymentEligibility } from '@/lib/fineract/loan-repayment-ui';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 
@@ -94,12 +96,14 @@ export function LoanAccountActions({
   account,
   clientId,
   permissions,
-  repaymentPolicy
+  repaymentPolicy,
+  pendingCheckerActions = []
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
   permissions: LoanAccountActionPermissions;
   repaymentPolicy: LoanRepaymentPolicySettings;
+  pendingCheckerActions?: LoanAccountPendingCheckerAction[];
 }) {
   const visibility = loanAccountActionVisibility(account);
   const currencyCode = loanAccountCurrencyCode(account);
@@ -139,8 +143,12 @@ export function LoanAccountActions({
   const showMakeRepayment = repaymentEligibility.show;
   const showRecoveryPayment = recoveryEligibility.show;
 
-  const showApprove = visibility.approve && permissions.approve;
-  const showDisburse = visibility.disburse && permissions.disburse;
+  const showApprove =
+    visibility.approve && permissions.approve && !hasLoanPendingCheckerAction(pendingCheckerActions, 'APPROVE');
+  const showDisburse =
+    visibility.disburse &&
+    permissions.disburse &&
+    !hasLoanPendingCheckerAction(pendingCheckerActions, 'DISBURSE');
 
   const menuItems: MenuItem[] = [];
 

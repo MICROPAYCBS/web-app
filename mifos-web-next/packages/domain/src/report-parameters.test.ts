@@ -15,9 +15,12 @@ import {
   isReportParameterDate,
   isReportParameterNumeric,
   isReportParameterSelect,
+  REPORT_PARAMETER_SELECT_ALL_LABEL,
+  REPORT_PARAMETER_SELECT_ALL_VALUE,
   reportEngineParameterName,
   reportRunQueryParameterVariable,
-  resolveReportParameterDisplayLabel
+  resolveReportParameterDisplayLabel,
+  withReportParameterSelectAllOption
 } from './report-parameters';
 
 describe('isReportParameterNumeric', () => {
@@ -103,6 +106,30 @@ describe('inferReportParameterPresentation', () => {
 describe('isReportParameterSelect', () => {
   it('treats select-all parameters as select controls', () => {
     assert.equal(isReportParameterSelect({ selectAll: true }), true);
+    assert.equal(isReportParameterSelect({ selectOne: true }), true);
+    assert.equal(isReportParameterSelect({ parameterDisplayType: 'text' }), false);
+  });
+});
+
+describe('withReportParameterSelectAllOption', () => {
+  it('appends All (-1) only for selectAll parameters', () => {
+    const options = [{ id: 1, name: 'USD' }];
+    assert.deepEqual(withReportParameterSelectAllOption(options, false), options);
+    assert.deepEqual(withReportParameterSelectAllOption(options, true), [
+      { id: 1, name: 'USD' },
+      { id: REPORT_PARAMETER_SELECT_ALL_VALUE, name: REPORT_PARAMETER_SELECT_ALL_LABEL }
+    ]);
+  });
+
+  it('does not duplicate an existing -1 option', () => {
+    const withNumeric = [{ id: -1, name: 'All currencies' }, { id: 1, name: 'USD' }];
+    assert.equal(withReportParameterSelectAllOption(withNumeric, true), withNumeric);
+
+    const withString = [
+      { id: '-1', name: 'All' },
+      { id: 'USD', name: 'US Dollar' }
+    ];
+    assert.equal(withReportParameterSelectAllOption(withString, true), withString);
   });
 });
 

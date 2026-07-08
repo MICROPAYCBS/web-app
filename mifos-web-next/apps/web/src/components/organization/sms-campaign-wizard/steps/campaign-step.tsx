@@ -15,17 +15,16 @@ import {
   fetchSmsCampaignTemplateColumnsAction
 } from '@/actions/sms-campaign';
 import { ReportParameterForm } from '@/components/reports/report-parameter-form';
+import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+  enumToSelectOptions,
+  fineractEnumToSelectOptions,
+  labeledOptionsToSelectOptions
+} from '@/lib/form/select-options';
 import {
   filterBusinessRulesForTrigger,
   repetitionIntervalsForFrequency,
@@ -42,7 +41,16 @@ const WEEKDAY_OPTIONS = [
   { value: '5', label: 'Friday' },
   { value: '6', label: 'Saturday' },
   { value: '7', label: 'Sunday' }
-];
+] as const;
+
+const WEEKDAY_SELECT_OPTIONS = labeledOptionsToSelectOptions([...WEEKDAY_OPTIONS]);
+
+const SMS_FREQUENCY_OPTIONS = labeledOptionsToSelectOptions([
+  { value: '1', label: 'Daily' },
+  { value: '2', label: 'Weekly' },
+  { value: '3', label: 'Monthly' },
+  { value: '4', label: 'Yearly' }
+]);
 
 export function CampaignStep({
   template,
@@ -69,8 +77,28 @@ export function CampaignStep({
     if (draft.frequency === '') {
       return [];
     }
-    return repetitionIntervalsForFrequency(Number(draft.frequency));
+    return enumToSelectOptions(
+      repetitionIntervalsForFrequency(Number(draft.frequency)).map(String)
+    );
   }, [draft.frequency]);
+
+  const triggerTypeOptions = useMemo(
+    () => fineractEnumToSelectOptions(template.triggerTypeOptions),
+    [template.triggerTypeOptions]
+  );
+  const providerOptions = useMemo(
+    () => fineractEnumToSelectOptions(template.smsProviderOptions),
+    [template.smsProviderOptions]
+  );
+  const businessRuleOptions = useMemo(
+    () =>
+      businessRules.map((rule) => ({
+        value: String(rule.reportId),
+        label: rule.reportName,
+        keywords: [rule.reportName, String(rule.reportId)]
+      })),
+    [businessRules]
+  );
 
   useEffect(() => {
     if (draft.runReportId === '') {
@@ -142,35 +170,24 @@ export function CampaignStep({
           ) : null}
         </div>
 
-        <div className="space-y-2">
-          <FieldLabel htmlFor="triggerType">Trigger type</FieldLabel>
-          <Select
-            value={draft.triggerType === '' ? undefined : String(draft.triggerType)}
-            onValueChange={(value) =>
-              onChange({
-                triggerType: Number(value),
-                runReportId: '',
-                templateColumns: [],
-                businessRuleMetadata: [],
-                businessRuleValues: {}
-              })
-            }
-          >
-            <SelectTrigger id="triggerType">
-              <SelectValue placeholder="Select trigger type" />
-            </SelectTrigger>
-            <SelectContent>
-              {template.triggerTypeOptions.map((option) => (
-                <SelectItem key={option.id} value={String(option.id)}>
-                  {option.value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.triggerType ? (
-            <p className="text-sm text-destructive">{errors.triggerType}</p>
-          ) : null}
-        </div>
+        <SelectField
+          id="triggerType"
+          label="Trigger type"
+          value={draft.triggerType === '' ? '' : String(draft.triggerType)}
+          onValueChange={(value) =>
+            value &&
+            onChange({
+              triggerType: Number(value),
+              runReportId: '',
+              templateColumns: [],
+              businessRuleMetadata: [],
+              businessRuleValues: {}
+            })
+          }
+          options={triggerTypeOptions}
+          placeholder="Select trigger type"
+          error={errors.triggerType}
+        />
 
         <Field orientation="horizontal" className="items-center gap-3">
           <Checkbox
@@ -189,24 +206,14 @@ export function CampaignStep({
         </Field>
 
         {!draft.isNotification ? (
-          <div className="space-y-2">
-            <FieldLabel htmlFor="providerId">SMS provider</FieldLabel>
-            <Select
-              value={draft.providerId === '' ? undefined : String(draft.providerId)}
-              onValueChange={(value) => onChange({ providerId: Number(value) })}
-            >
-              <SelectTrigger id="providerId">
-                <SelectValue placeholder="Select provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {template.smsProviderOptions.map((option) => (
-                  <SelectItem key={option.id} value={String(option.id)}>
-                    {option.value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            id="providerId"
+            label="SMS provider"
+            value={draft.providerId === '' ? '' : String(draft.providerId)}
+            onValueChange={(value) => value && onChange({ providerId: Number(value) })}
+            options={providerOptions}
+            placeholder="Select provider"
+          />
         ) : null}
 
         {draft.triggerType === SCHEDULED_TRIGGER_TYPE ? (
@@ -224,102 +231,57 @@ export function CampaignStep({
               ) : null}
             </div>
 
-            <div className="space-y-2">
-              <FieldLabel htmlFor="frequency">Repeats</FieldLabel>
-              <Select
-                value={draft.frequency === '' ? undefined : String(draft.frequency)}
-                onValueChange={(value) =>
-                  onChange({
-                    frequency: Number(value),
-                    interval: '',
-                    repeatsOnDay: ''
-                  })
-                }
-              >
-                <SelectTrigger id="frequency">
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Daily</SelectItem>
-                  <SelectItem value="2">Weekly</SelectItem>
-                  <SelectItem value="3">Monthly</SelectItem>
-                  <SelectItem value="4">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.frequency ? (
-                <p className="text-sm text-destructive">{errors.frequency}</p>
-              ) : null}
-            </div>
+            <SelectField
+              id="frequency"
+              label="Repeats"
+              value={draft.frequency === '' ? '' : String(draft.frequency)}
+              onValueChange={(value) =>
+                value &&
+                onChange({
+                  frequency: Number(value),
+                  interval: '',
+                  repeatsOnDay: ''
+                })
+              }
+              options={SMS_FREQUENCY_OPTIONS}
+              placeholder="Select frequency"
+              error={errors.frequency}
+            />
 
-            <div className="space-y-2">
-              <FieldLabel htmlFor="interval">Repetition interval</FieldLabel>
-              <Select
-                value={draft.interval === '' ? undefined : String(draft.interval)}
-                onValueChange={(value) => onChange({ interval: Number(value) })}
-              >
-                <SelectTrigger id="interval">
-                  <SelectValue placeholder="Select interval" />
-                </SelectTrigger>
-                <SelectContent>
-                  {repetitionIntervals.map((interval) => (
-                    <SelectItem key={interval} value={interval}>
-                      {interval}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.interval ? (
-                <p className="text-sm text-destructive">{errors.interval}</p>
-              ) : null}
-            </div>
+            <SelectField
+              id="interval"
+              label="Repetition interval"
+              value={draft.interval === '' ? '' : String(draft.interval)}
+              onValueChange={(value) => value && onChange({ interval: Number(value) })}
+              options={repetitionIntervals}
+              placeholder="Select interval"
+              error={errors.interval}
+            />
 
             {draft.frequency === 2 ? (
-              <div className="space-y-2">
-                <FieldLabel htmlFor="repeatsOnDay">Repeats on day</FieldLabel>
-                <Select
-                  value={draft.repeatsOnDay === '' ? undefined : String(draft.repeatsOnDay)}
-                  onValueChange={(value) => onChange({ repeatsOnDay: Number(value) })}
-                >
-                  <SelectTrigger id="repeatsOnDay">
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {WEEKDAY_OPTIONS.map((day) => (
-                      <SelectItem key={day.value} value={day.value}>
-                        {day.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.repeatsOnDay ? (
-                  <p className="text-sm text-destructive">{errors.repeatsOnDay}</p>
-                ) : null}
-              </div>
+              <SelectField
+                id="repeatsOnDay"
+                label="Repeats on day"
+                value={draft.repeatsOnDay === '' ? '' : String(draft.repeatsOnDay)}
+                onValueChange={(value) => value && onChange({ repeatsOnDay: Number(value) })}
+                options={WEEKDAY_SELECT_OPTIONS}
+                placeholder="Select day"
+                error={errors.repeatsOnDay}
+              />
             ) : null}
           </>
         ) : null}
 
-        <div className="space-y-2 md:col-span-2">
-          <FieldLabel htmlFor="runReportId">Business rule</FieldLabel>
-          <Select
-            value={draft.runReportId === '' ? undefined : String(draft.runReportId)}
-            onValueChange={(value) => onChange({ runReportId: Number(value) })}
-          >
-            <SelectTrigger id="runReportId">
-              <SelectValue placeholder="Select business rule" />
-            </SelectTrigger>
-            <SelectContent>
-              {businessRules.map((rule) => (
-                <SelectItem key={rule.reportId} value={String(rule.reportId)}>
-                  {rule.reportName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.runReportId ? (
-            <p className="text-sm text-destructive">{errors.runReportId}</p>
-          ) : null}
-        </div>
+        <SelectField
+          id="runReportId"
+          label="Business rule"
+          className="md:col-span-2"
+          value={draft.runReportId === '' ? '' : String(draft.runReportId)}
+          onValueChange={(value) => value && onChange({ runReportId: Number(value) })}
+          options={businessRuleOptions}
+          placeholder="Select business rule"
+          error={errors.runReportId}
+        />
       </div>
 
       {draft.businessRuleMetadata.length ? (

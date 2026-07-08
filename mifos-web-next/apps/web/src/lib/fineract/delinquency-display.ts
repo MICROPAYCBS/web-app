@@ -12,6 +12,7 @@ import type {
   DelinquencyRangeListItem,
   DelinquencyStringEnumOption
 } from '@mifos/api-client';
+import type { SelectOption } from '@/components/composites/select-field';
 
 export function formatDelinquencyEnumLabel(
   option?: { code?: string; value?: string; id?: string | number } | null
@@ -72,14 +73,16 @@ export function sortDelinquencyRanges<T extends { minimumAgeDays?: number }>(ran
   return [...ranges].sort((left, right) => (left.minimumAgeDays ?? 0) - (right.minimumAgeDays ?? 0));
 }
 
-export function delinquencyRangeSelectOptions(ranges: DelinquencyRangeListItem[]) {
+export function delinquencyRangeSelectOptions(ranges: DelinquencyRangeListItem[]): SelectOption[] {
   return sortDelinquencyRanges(ranges).map((range) => ({
     value: String(range.id),
     label: range.classification ?? `Range #${range.id}`
   }));
 }
 
-export function delinquencyStringEnumSelectOptions(options: DelinquencyStringEnumOption[]) {
+export function delinquencyStringEnumSelectOptions(
+  options: DelinquencyStringEnumOption[]
+): SelectOption[] {
   return options.map((option) => ({
     value: String(option.id),
     label: formatDelinquencyEnumLabel(option)

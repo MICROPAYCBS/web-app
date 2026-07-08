@@ -11,23 +11,23 @@
 import type { FineractSchedulerJob } from '@mifos/api-client';
 import { validateUpdateSchedulerJob } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useId, useState, useTransition } from 'react';
-import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
+import { useEffect, useId, useState, useTransition } from 'react';
 import { updateSchedulerJobAction } from '@/actions/jobs';
-import {
-  DetailBackLink,
-  DetailField,
-  DetailFieldGrid,
-  DetailHeader,
-  DetailPage
-} from '@/components/composites';
-import { Button } from '@/components/ui/button';
+import { FormSheet } from '@/components/composites/form-sheet';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 
-export function SchedulerJobEditForm({ job }: { job: FineractSchedulerJob }) {
+export function SchedulerJobEditSheet({
+  job,
+  open,
+  onOpenChange
+}: {
+  job: FineractSchedulerJob;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const router = useRouter();
   const formId = useId();
   const [displayName, setDisplayName] = useState(job.displayName);
@@ -35,6 +35,16 @@ export function SchedulerJobEditForm({ job }: { job: FineractSchedulerJob }) {
   const [active, setActive] = useState(job.active);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setDisplayName(job.displayName);
+    setCronExpression(job.cronExpression);
+    setActive(job.active);
+    setFieldErrors({});
+  }, [open, job]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,39 +64,33 @@ export function SchedulerJobEditForm({ job }: { job: FineractSchedulerJob }) {
     startTransition(async () => {
       const result = await updateSchedulerJobAction(job.jobId, parsed.data);
       if (!result.ok) {
-
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
         toastFineractError(result.message);
         return;
       }
-      toastCommandOutcome(result, { completed: 'Scheduler job updated.', pending: 'Scheduler job updated sent for approval.' });
-      router.push(`/system/manage-jobs/${job.jobId}`);
+      toastCommandOutcome(result, {
+        completed: 'Scheduler job updated.',
+        pending: 'Scheduler job update sent for approval.'
+      });
+      onOpenChange(false);
       router.refresh();
     });
   }
 
   return (
-    <DetailPage
-      header={
-        <DetailHeader
-          backLink={
-            <DetailBackLink
-              href={`/system/manage-jobs/${job.jobId}`}
-              label="Back to job details"
-            />
-          }
-          title={`Edit ${job.displayName}`}
-        />
-      }
-      summary={
-        <DetailFieldGrid columns={2}>
-          <DetailField label="Job ID">{job.jobId}</DetailField>
-        </DetailFieldGrid>
-      }
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Edit ${job.displayName}`}
+      description="Update the schedule and activation state for this job."
+      formId={formId}
+      submitLabel="Save changes"
+      submitLoading={pending}
+      submitDisabled={pending}
     >
-      <form id={formId} onSubmit={handleSubmit} className="max-w-xl space-y-6">
+      <form id={formId} onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor={`${formId}-displayName`}>Job name</Label>
           <Input
@@ -110,6 +114,9 @@ export function SchedulerJobEditForm({ job }: { job: FineractSchedulerJob }) {
           {fieldErrors.cronExpression ? (
             <p className="text-sm text-destructive">{fieldErrors.cronExpression}</p>
           ) : null}
+          <p className="text-sm text-muted-foreground">
+            Use a cron expression builder to draft schedules, then paste the expression here.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Checkbox
@@ -119,20 +126,7 @@ export function SchedulerJobEditForm({ job }: { job: FineractSchedulerJob }) {
           />
           <Label htmlFor={`${formId}-active`}>Active job</Label>
         </div>
-        <div className="flex gap-2">
-          <Button type="submit" disabled={pending}>
-            Save changes
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={pending}
-            onClick={() => router.push(`/system/manage-jobs/${job.jobId}`)}
-          >
-            Cancel
-          </Button>
-        </div>
       </form>
-    </DetailPage>
+    </FormSheet>
   );
 }

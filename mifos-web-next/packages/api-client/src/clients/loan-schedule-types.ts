@@ -18,9 +18,16 @@ export interface LoanSchedulePeriod {
   interestDue?: number;
   feeChargesDue?: number;
   penaltyChargesDue?: number;
+  principalOutstanding?: number;
+  interestOutstanding?: number;
+  feeChargesOutstanding?: number;
+  penaltyChargesOutstanding?: number;
   totalDueForPeriod?: number;
   totalInstallmentAmountForPeriod?: number;
+  totalOutstandingForPeriod?: number;
+  totalOverdue?: number;
   principalLoanBalanceOutstanding?: number;
+  complete?: boolean;
   downPaymentPeriod?: boolean;
 }
 

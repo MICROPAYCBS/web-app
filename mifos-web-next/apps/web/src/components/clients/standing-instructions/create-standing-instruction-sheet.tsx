@@ -11,7 +11,7 @@
 import type { StandingInstructionTemplate } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
@@ -22,16 +22,16 @@ import { isStandingInstructionActionError } from '@/lib/fineract/standing-instru
 import { DateField } from '@/components/composites/date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { NumericField } from '@/components/composites/numeric-field';
+import { SelectField } from '@/components/composites/select-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { standingInstructionEnumLabel } from '@/lib/fineract/standing-instruction-display';
+  standingInstructionAccountSelectOptions,
+  standingInstructionClientSelectOptions,
+  standingInstructionDestinationSelectOptions,
+  standingInstructionEnumSelectOptions,
+  standingInstructionOfficeSelectOptions
+} from '@/lib/fineract/standing-instruction-display';
 
 export const CREATE_STANDING_INSTRUCTION_FORM_ID = 'create-standing-instruction-form';
 
@@ -226,15 +226,41 @@ export function CreateStandingInstructionSheet({
     });
   }
 
-  function enumOptions(options: StandingInstructionTemplate[keyof StandingInstructionTemplate]) {
-    if (!Array.isArray(options)) {
-      return [];
-    }
-    return options.map((opt) => ({
-      value: String((opt as { id: number }).id),
-      label: standingInstructionEnumLabel(opt as { id: number; value?: string; code?: string })
-    }));
-  }
+  const templateOptions = useMemo(
+    () => ({
+      transferType: standingInstructionEnumSelectOptions(
+        Array.isArray(template.transferTypeOptions) ? template.transferTypeOptions : undefined
+      ),
+      priority: standingInstructionEnumSelectOptions(
+        Array.isArray(template.priorityOptions) ? template.priorityOptions : undefined
+      ),
+      status: standingInstructionEnumSelectOptions(
+        Array.isArray(template.statusOptions) ? template.statusOptions : undefined
+      ),
+      fromAccountType: standingInstructionEnumSelectOptions(
+        Array.isArray(template.fromAccountTypeOptions) ? template.fromAccountTypeOptions : undefined
+      ),
+      fromAccount: standingInstructionAccountSelectOptions(template.fromAccountOptions),
+      toOffice: standingInstructionOfficeSelectOptions(template.toOfficeOptions),
+      toClient: standingInstructionClientSelectOptions(template.toClientOptions),
+      toAccountType: standingInstructionEnumSelectOptions(
+        Array.isArray(template.toAccountTypeOptions) ? template.toAccountTypeOptions : undefined
+      ),
+      toAccount: standingInstructionAccountSelectOptions(template.toAccountOptions),
+      instructionType: standingInstructionEnumSelectOptions(
+        Array.isArray(template.instructionTypeOptions) ? template.instructionTypeOptions : undefined
+      ),
+      recurrenceType: standingInstructionEnumSelectOptions(
+        Array.isArray(template.recurrenceTypeOptions) ? template.recurrenceTypeOptions : undefined
+      ),
+      recurrenceFrequency: standingInstructionEnumSelectOptions(
+        Array.isArray(template.recurrenceFrequencyOptions)
+          ? template.recurrenceFrequencyOptions
+          : undefined
+      )
+    }),
+    [template]
+  );
 
   const showAmount = form.instructionType === '1';
   const showRecurrenceFields = form.recurrenceType === '1';
@@ -318,235 +344,132 @@ export function CreateStandingInstructionSheet({
             <FieldError message={fieldErrors.name} />
           </div>
 
-          <div className="space-y-2">
-            <Label>Transfer type</Label>
-            <Select
-              value={form.transferType}
-              onValueChange={(v) => patchForm({ transferType: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {enumOptions(template.transferTypeOptions).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.transferType} />
-          </div>
+          <SelectField
+            id="si-transferType"
+            label="Transfer type"
+            value={form.transferType}
+            onValueChange={(value) => value && patchForm({ transferType: value })}
+            options={templateOptions.transferType}
+            placeholder="Select type"
+            disabled={formDisabled}
+            error={fieldErrors.transferType}
+          />
 
-          <div className="space-y-2">
-            <Label>Priority</Label>
-            <Select
-              value={form.priority}
-              onValueChange={(v) => patchForm({ priority: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                {enumOptions(template.priorityOptions).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.priority} />
-          </div>
+          <SelectField
+            id="si-priority"
+            label="Priority"
+            value={form.priority}
+            onValueChange={(value) => value && patchForm({ priority: value })}
+            options={templateOptions.priority}
+            placeholder="Select priority"
+            disabled={formDisabled}
+            error={fieldErrors.priority}
+          />
 
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select
-              value={form.status}
-              onValueChange={(v) => patchForm({ status: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {enumOptions(template.statusOptions).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.status} />
-          </div>
+          <SelectField
+            id="si-status"
+            label="Status"
+            value={form.status}
+            onValueChange={(value) => value && patchForm({ status: value })}
+            options={templateOptions.status}
+            placeholder="Select status"
+            disabled={formDisabled}
+            error={fieldErrors.status}
+          />
 
-          <div className="space-y-2">
-            <Label>From account type</Label>
-            <Select
-              value={form.fromAccountType}
-              onValueChange={(v) => patchForm({ fromAccountType: v ?? '', fromAccountId: '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {enumOptions(template.fromAccountTypeOptions).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.fromAccountType} />
-          </div>
+          <SelectField
+            id="si-fromAccountType"
+            label="From account type"
+            value={form.fromAccountType}
+            onValueChange={(value) =>
+              value && patchForm({ fromAccountType: value, fromAccountId: '' })
+            }
+            options={templateOptions.fromAccountType}
+            placeholder="Select type"
+            disabled={formDisabled}
+            error={fieldErrors.fromAccountType}
+          />
 
-          <div className="space-y-2">
-            <Label>From account</Label>
-            <Select
-              value={form.fromAccountId}
-              onValueChange={(v) => patchForm({ fromAccountId: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {(template.fromAccountOptions ?? []).map((account) => (
-                  <SelectItem key={account.id} value={String(account.id)}>
-                    {[account.productName, account.accountNo].filter(Boolean).join(' — ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.fromAccountId} />
-          </div>
+          <SelectField
+            id="si-fromAccountId"
+            label="From account"
+            value={form.fromAccountId}
+            onValueChange={(value) => value && patchForm({ fromAccountId: value })}
+            options={templateOptions.fromAccount}
+            placeholder="Select account"
+            disabled={formDisabled}
+            error={fieldErrors.fromAccountId}
+          />
 
-          <div className="space-y-2">
-            <Label>Destination</Label>
-            <Select
-              value={form.destination}
-              onValueChange={(v) => patchForm({ destination: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select destination" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Own account</SelectItem>
-                <SelectItem value="2">Other customer</SelectItem>
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.destination} />
-          </div>
+          <SelectField
+            id="si-destination"
+            label="Destination"
+            value={form.destination}
+            onValueChange={(value) => value && patchForm({ destination: value })}
+            options={standingInstructionDestinationSelectOptions}
+            placeholder="Select destination"
+            disabled={formDisabled}
+            error={fieldErrors.destination}
+          />
 
-          <div className="space-y-2">
-            <Label>To branch</Label>
-            <Select
-              value={form.toOfficeId}
-              onValueChange={(v) =>
-                patchForm({ toOfficeId: v ?? '', toClientId: '', toAccountId: '' })
-              }
-              disabled={formDisabled || lockBeneficiary}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select branch" />
-              </SelectTrigger>
-              <SelectContent>
-                {(template.toOfficeOptions ?? []).map((office) => (
-                  <SelectItem key={office.id} value={String(office.id)}>
-                    {office.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.toOfficeId} />
-          </div>
+          <SelectField
+            id="si-toOfficeId"
+            label="To branch"
+            value={form.toOfficeId}
+            onValueChange={(value) =>
+              value && patchForm({ toOfficeId: value, toClientId: '', toAccountId: '' })
+            }
+            options={templateOptions.toOffice}
+            placeholder="Select branch"
+            disabled={formDisabled || lockBeneficiary}
+            error={fieldErrors.toOfficeId}
+          />
 
-          <div className="space-y-2">
-            <Label>Beneficiary</Label>
-            <Select
-              value={form.toClientId}
-              onValueChange={(v) => patchForm({ toClientId: v ?? '', toAccountId: '' })}
-              disabled={formDisabled || lockBeneficiary}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                {(template.toClientOptions ?? []).map((client) => (
-                  <SelectItem key={client.id} value={String(client.id)}>
-                    {client.displayName ?? client.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.toClientId} />
-          </div>
+          <SelectField
+            id="si-toClientId"
+            label="Beneficiary"
+            value={form.toClientId}
+            onValueChange={(value) => value && patchForm({ toClientId: value, toAccountId: '' })}
+            options={templateOptions.toClient}
+            placeholder="Select customer"
+            disabled={formDisabled || lockBeneficiary}
+            error={fieldErrors.toClientId}
+          />
 
-          <div className="space-y-2">
-            <Label>To account type</Label>
-            <Select
-              value={form.toAccountType}
-              onValueChange={(v) => patchForm({ toAccountType: v ?? '', toAccountId: '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {enumOptions(template.toAccountTypeOptions).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.toAccountType} />
-          </div>
+          <SelectField
+            id="si-toAccountType"
+            label="To account type"
+            value={form.toAccountType}
+            onValueChange={(value) =>
+              value && patchForm({ toAccountType: value, toAccountId: '' })
+            }
+            options={templateOptions.toAccountType}
+            placeholder="Select type"
+            disabled={formDisabled}
+            error={fieldErrors.toAccountType}
+          />
 
-          <div className="space-y-2">
-            <Label>To account</Label>
-            <Select
-              value={form.toAccountId}
-              onValueChange={(v) => patchForm({ toAccountId: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {(template.toAccountOptions ?? []).map((account) => (
-                  <SelectItem key={account.id} value={String(account.id)}>
-                    {[account.productName, account.accountNo].filter(Boolean).join(' — ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.toAccountId} />
-          </div>
+          <SelectField
+            id="si-toAccountId"
+            label="To account"
+            value={form.toAccountId}
+            onValueChange={(value) => value && patchForm({ toAccountId: value })}
+            options={templateOptions.toAccount}
+            placeholder="Select account"
+            disabled={formDisabled}
+            error={fieldErrors.toAccountId}
+          />
 
-          <div className="space-y-2">
-            <Label>Instruction type</Label>
-            <Select
-              value={form.instructionType}
-              onValueChange={(v) => patchForm({ instructionType: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {enumOptions(template.instructionTypeOptions).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.instructionType} />
-          </div>
+          <SelectField
+            id="si-instructionType"
+            label="Instruction type"
+            value={form.instructionType}
+            onValueChange={(value) => value && patchForm({ instructionType: value })}
+            options={templateOptions.instructionType}
+            placeholder="Select type"
+            disabled={formDisabled}
+            error={fieldErrors.instructionType}
+          />
 
           {showAmount ? (
             <NumericField
@@ -582,26 +505,16 @@ export function CreateStandingInstructionSheet({
             error={fieldErrors.validTill}
           />
 
-          <div className="space-y-2">
-            <Label>Recurrence type</Label>
-            <Select
-              value={form.recurrenceType}
-              onValueChange={(v) => patchForm({ recurrenceType: v ?? '' })}
-              disabled={formDisabled}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select recurrence" />
-              </SelectTrigger>
-              <SelectContent>
-                {enumOptions(template.recurrenceTypeOptions).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldError message={fieldErrors.recurrenceType} />
-          </div>
+          <SelectField
+            id="si-recurrenceType"
+            label="Recurrence type"
+            value={form.recurrenceType}
+            onValueChange={(value) => value && patchForm({ recurrenceType: value })}
+            options={templateOptions.recurrenceType}
+            placeholder="Select recurrence"
+            disabled={formDisabled}
+            error={fieldErrors.recurrenceType}
+          />
 
           {showRecurrenceFields ? (
             <>
@@ -616,26 +529,16 @@ export function CreateStandingInstructionSheet({
                 error={fieldErrors.recurrenceInterval}
               />
 
-              <div className="space-y-2">
-                <Label>Recurrence frequency</Label>
-                <Select
-                  value={form.recurrenceFrequency}
-                  onValueChange={(v) => patchForm({ recurrenceFrequency: v ?? '' })}
-                  disabled={formDisabled}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {enumOptions(template.recurrenceFrequencyOptions).map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError message={fieldErrors.recurrenceFrequency} />
-              </div>
+              <SelectField
+                id="si-recurrenceFrequency"
+                label="Recurrence frequency"
+                value={form.recurrenceFrequency}
+                onValueChange={(value) => value && patchForm({ recurrenceFrequency: value })}
+                options={templateOptions.recurrenceFrequency}
+                placeholder="Select frequency"
+                disabled={formDisabled}
+                error={fieldErrors.recurrenceFrequency}
+              />
             </>
           ) : null}
 

@@ -86,10 +86,10 @@ function parseFilterDate(value: string | undefined): Date | null {
   return isValid(parsed) ? startOfDay(parsed) : null;
 }
 
-export function applyCheckerInboxClientFilters(
-  items: CheckerInboxListItem[],
+export function applyCheckerInboxClientFilters<T extends CheckerInboxListItem>(
+  items: T[],
   filters: CheckerInboxClientFilters
-): CheckerInboxListItem[] {
+): T[] {
   const maker = filters.maker?.trim();
   const actionName = filters.actionName?.trim();
   const entityName = filters.entityName?.trim();

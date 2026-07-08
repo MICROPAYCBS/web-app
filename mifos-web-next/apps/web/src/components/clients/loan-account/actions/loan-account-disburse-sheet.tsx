@@ -21,6 +21,11 @@ import { TransactionDateField } from '@/components/composites/transaction-date-f
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import {
+  LOAN_DISBURSE_COMMAND_TOAST,
+  LOAN_DISBURSE_TO_SAVINGS_COMMAND_TOAST
+} from '@/lib/fineract/loan-account-command-toasts';
 import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
 
 export type LoanAccountDisburseCommand = 'disburse' | 'disbursetosavings';
@@ -136,7 +141,12 @@ export function LoanAccountDisburseSheet({
         payload
       );
 
-      if (!result.ok) {
+      const toastMessages =
+        activeCommand === 'disburse'
+          ? LOAN_DISBURSE_COMMAND_TOAST
+          : LOAN_DISBURSE_TO_SAVINGS_COMMAND_TOAST;
+
+      if (!toastCommandOutcome(result, toastMessages)) {
         setError(formatActionErrorMessage(result.message, result.fieldErrors));
         setFieldErrors(result.fieldErrors ?? {});
         return;

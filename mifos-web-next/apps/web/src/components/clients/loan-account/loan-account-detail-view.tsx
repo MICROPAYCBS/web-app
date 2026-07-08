@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractRolePermissionUsage } from '@mifos/api-client';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useMemo } from 'react';
@@ -20,6 +20,7 @@ import { AccountDetailActionsBar } from '@/components/clients/accounts/actions/a
 import { AccountOfficerActions } from '@/components/clients/accounts/actions/account-officer-actions';
 import { AccountOfficerMeta } from '@/components/clients/accounts/account-officer-meta';
 import { LoanAccountDetailPanel } from '@/components/clients/loan-account/loan-account-detail-panel';
+import { LoanAccountPendingCheckerBanner } from '@/components/clients/loan-account/loan-account-pending-checker-banner';
 import { LoanAccountDetailSidebar } from '@/components/clients/loan-account/loan-account-detail-sidebar';
 import {
   LoanAccountSectionNavSkeleton,
@@ -46,6 +47,8 @@ import {
 import { loanAccountSectionIds } from '@/components/clients/loan-account/loan-account-detail-sidebar';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
 import type { LoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy-paths';
+import type { LoanAccountPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
+import type { LoanPendingApprovalWorkflowContext } from '@/lib/fineract/loan-account-pending-checker';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 
 export function LoanAccountDetailView({
@@ -59,7 +62,10 @@ export function LoanAccountDetailView({
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
-  auditTotalRecords
+  auditTotalRecords,
+  pendingCheckerActions = [],
+  pendingApprovalWorkflowContext,
+  makerCheckerTaskPermissions = []
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
@@ -72,6 +78,9 @@ export function LoanAccountDetailView({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  pendingCheckerActions?: LoanAccountPendingCheckerAction[];
+  pendingApprovalWorkflowContext?: LoanPendingApprovalWorkflowContext;
+  makerCheckerTaskPermissions?: FineractRolePermissionUsage[];
 }) {
   const currency = loanAccountCurrencyCode(account);
   const summary = account.summary;
@@ -93,6 +102,13 @@ export function LoanAccountDetailView({
       headerClassName="print:hidden"
       header={
         <div className="space-y-4">
+          <LoanAccountPendingCheckerBanner
+            actions={pendingCheckerActions}
+            approvalWorkflowContext={pendingApprovalWorkflowContext}
+            taskPermissions={makerCheckerTaskPermissions}
+            loanAccountId={account.id}
+          />
+
           {delinquencyMessage ? (
             <div
               className="flex items-start gap-3 rounded-md border border-border bg-muted/50 px-4 py-3"
@@ -149,6 +165,7 @@ export function LoanAccountDetailView({
                   clientId={clientId}
                   permissions={permissions}
                   repaymentPolicy={repaymentPolicy}
+                  pendingCheckerActions={pendingCheckerActions}
                 />
               </AccountDetailActionsBar>
             }

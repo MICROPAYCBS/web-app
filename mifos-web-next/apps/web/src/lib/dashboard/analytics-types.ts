@@ -30,6 +30,7 @@ export interface DashboardAnalytics {
 export interface DashboardOfficeOption {
   id: number;
   name: string;
+  nameDecorated?: string;
 }
 
 export interface DashboardCurrencyOption {

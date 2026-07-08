@@ -1,7 +1,12 @@
-import { randomUUID } from 'node:crypto';
-
 import type { FineractServerProfile, ServerCatalog } from './types';
 import type { UpsertServerInput } from './types';
+
+function randomServerSuffix(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 export function normalizeBaseUrl(url: string): string {
   let value = url.trim();
@@ -67,5 +72,5 @@ export function normalizeServerInput(input: UpsertServerInput): UpsertServerInpu
 }
 
 export function createServerId(): string {
-  return `srv_${randomUUID()}`;
+  return `srv_${randomServerSuffix()}`;
 }

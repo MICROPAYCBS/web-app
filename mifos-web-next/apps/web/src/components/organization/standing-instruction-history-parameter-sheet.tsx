@@ -9,21 +9,15 @@
  */
 
 import type { StandingInstructionTemplate } from '@mifos/api-client';
-import { useId } from 'react';
+import { useId, useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
+import { SelectField } from '@/components/composites/select-field';
 import { sanitizeNumericInput } from '@/components/composites/numeric-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { fineractDateToDate, todayStart } from '@/lib/fineract/date-input';
-import { standingInstructionEnumLabel } from '@/lib/fineract/standing-instruction-display';
+import { standingInstructionEnumSelectOptions } from '@/lib/fineract/standing-instruction-display';
 
 export type StandingInstructionHistorySearchForm = {
   clientName: string;
@@ -66,6 +60,14 @@ export function StandingInstructionHistoryParameterSheet({
   onSubmit: () => void;
 }) {
   const formId = useId();
+  const transferTypeOptions = useMemo(
+    () => standingInstructionEnumSelectOptions(template.transferTypeOptions),
+    [template.transferTypeOptions]
+  );
+  const fromAccountTypeOptions = useMemo(
+    () => standingInstructionEnumSelectOptions(template.fromAccountTypeOptions),
+    [template.fromAccountTypeOptions]
+  );
 
   function updateForm<K extends keyof StandingInstructionHistorySearchForm>(
     key: K,
@@ -118,42 +120,24 @@ export function StandingInstructionHistoryParameterSheet({
             }
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="si-transfer-type">Transfer type</Label>
-          <Select
-            value={form.transferType || undefined}
-            onValueChange={(value) => updateForm('transferType', value ?? '')}
-          >
-            <SelectTrigger id="si-transfer-type" className="w-full">
-              <SelectValue placeholder="Any transfer type" />
-            </SelectTrigger>
-            <SelectContent>
-              {(template.transferTypeOptions ?? []).map((option) => (
-                <SelectItem key={option.id} value={String(option.id)}>
-                  {standingInstructionEnumLabel(option)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="si-account-type">Account type</Label>
-          <Select
-            value={form.fromAccountType || undefined}
-            onValueChange={(value) => updateForm('fromAccountType', value ?? '')}
-          >
-            <SelectTrigger id="si-account-type" className="w-full">
-              <SelectValue placeholder="Any account type" />
-            </SelectTrigger>
-            <SelectContent>
-              {(template.fromAccountTypeOptions ?? []).map((option) => (
-                <SelectItem key={option.id} value={String(option.id)}>
-                  {standingInstructionEnumLabel(option)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SelectField
+          id="si-transfer-type"
+          label="Transfer type"
+          optional
+          value={form.transferType}
+          onValueChange={(value) => updateForm('transferType', value ?? '')}
+          options={transferTypeOptions}
+          placeholder="Any transfer type"
+        />
+        <SelectField
+          id="si-account-type"
+          label="Account type"
+          optional
+          value={form.fromAccountType}
+          onValueChange={(value) => updateForm('fromAccountType', value ?? '')}
+          options={fromAccountTypeOptions}
+          placeholder="Any account type"
+        />
         {form.fromAccountType ? (
           <div className="space-y-2">
             <Label htmlFor="si-from-account-id">From account ID</Label>

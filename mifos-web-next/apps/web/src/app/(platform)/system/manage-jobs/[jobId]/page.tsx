@@ -8,6 +8,7 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { SchedulerJobDetailView } from '@/components/system/manage-jobs/scheduler-job-detail-view';
 import { getSchedulerJob } from '@/lib/fineract/jobs';
 import { getServerSession } from '@/lib/session/server';
@@ -33,5 +34,9 @@ export default async function SchedulerJobDetailPage({
     notFound();
   }
 
-  return <SchedulerJobDetailView job={job} canUpdate={can(session, 'UPDATE_SCHEDULER')} />;
+  return (
+    <Suspense>
+      <SchedulerJobDetailView job={job} canUpdate={can(session, 'UPDATE_SCHEDULER')} />
+    </Suspense>
+  );
 }

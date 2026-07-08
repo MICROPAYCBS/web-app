@@ -15,6 +15,8 @@ import { executeLoanAccountLifecycleCommandAction } from '@/actions/loan-account
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { LOAN_LIFECYCLE_COMMAND_TOAST } from '@/lib/fineract/loan-account-command-toasts';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -138,7 +140,7 @@ export function LoanAccountLifecycleDialog({
         payload
       );
 
-      if (!result.ok) {
+      if (!toastCommandOutcome(result, LOAN_LIFECYCLE_COMMAND_TOAST[activeKind])) {
         setError(formatActionErrorMessage(result.message, result.fieldErrors));
         setFieldErrors(result.fieldErrors ?? {});
         return;

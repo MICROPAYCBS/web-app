@@ -407,6 +407,11 @@ export type {
   CheckerInboxSearchTemplate
 } from './tasks/checker-inbox-types';
 export type {
+  FineractNotification,
+  FineractNotificationsPage
+} from './tasks/notification-types';
+export type { WorkflowInstance, WorkflowInstanceStatus } from './tasks/workflow-instance-types';
+export type {
   CenterCreateTemplate,
   CenterDetail,
   CenterEditTemplate,

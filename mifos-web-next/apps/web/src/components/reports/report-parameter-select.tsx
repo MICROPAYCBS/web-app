@@ -9,6 +9,7 @@
  */
 
 import type { FineractReportRunParameterOption } from '@mifos/api-client';
+import { withReportParameterSelectAllOption } from '@mifos/domain';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchReportParameterOptionsAction } from '@/actions/report-run';
 import { SelectField } from '@/components/composites/select-field';
@@ -77,17 +78,18 @@ export function ReportParameterSelect({
     };
   }, [parameterReportName, parentVariable, parentValue, parentBlocked]);
 
-  const selectOptions = useMemo(() => {
-    const mapped = options.map((option) => ({
-      value: String(option.id),
-      label: option.name,
-      keywords: [String(option.id)]
-    }));
-    if (selectAll && !mapped.some((option) => option.value === '-1')) {
-      mapped.push({ value: '-1', label: 'All', keywords: ['-1', 'all'] });
-    }
-    return mapped;
-  }, [options, selectAll]);
+  const selectOptions = useMemo(
+    () =>
+      withReportParameterSelectAllOption(options, selectAll).map((option) => ({
+        value: String(option.id),
+        label: option.name,
+        keywords: [
+          String(option.id),
+          ...(String(option.id).trim() === '-1' ? ['all'] : [])
+        ]
+      })),
+    [options, selectAll]
+  );
 
   const resolvedPlaceholder = parentBlocked
     ? 'Select parent parameter first'

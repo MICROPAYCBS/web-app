@@ -8,10 +8,11 @@
 
 import 'server-only';
 
-import type {
-  FineractGlobalConfiguration,
-  FineractGlobalConfigurationListResponse,
-  FineractGlobalConfigurationUpdateResponse
+import {
+  FineractHttpError,
+  type FineractGlobalConfiguration,
+  type FineractGlobalConfigurationListResponse,
+  type FineractGlobalConfigurationUpdateResponse
 } from '@mifos/api-client';
 import type {
   UpdateGlobalConfigurationEnabledInput,
@@ -72,6 +73,17 @@ export async function listGlobalConfigurations(): Promise<FineractGlobalConfigur
   return normalizeGlobalConfigurationList(raw);
 }
 
+function isMissingGlobalConfigurationError(error: unknown): boolean {
+  if (!(error instanceof FineractHttpError)) {
+    return false;
+  }
+  if (error.status === 404) {
+    return true;
+  }
+  const message = error.message.toLowerCase();
+  return message.includes('does not exist');
+}
+
 export async function getGlobalConfigurationByName(
   name: string
 ): Promise<FineractGlobalConfiguration | null> {
@@ -80,10 +92,17 @@ export async function getGlobalConfigurationByName(
     return null;
   }
   const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>(
-    `${CONFIGURATIONS_PATH}/name/${encodeURIComponent(trimmed)}`
-  );
-  return normalizeGlobalConfiguration(raw);
+  try {
+    const raw = await fineract.get<unknown>(
+      `${CONFIGURATIONS_PATH}/name/${encodeURIComponent(trimmed)}`
+    );
+    return normalizeGlobalConfiguration(raw);
+  } catch (error) {
+    if (isMissingGlobalConfigurationError(error)) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function getGlobalConfiguration(

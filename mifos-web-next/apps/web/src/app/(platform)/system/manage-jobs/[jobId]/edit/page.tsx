@@ -6,32 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can, resolvePermission } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { SchedulerJobEditForm } from '@/components/system/manage-jobs/scheduler-job-edit-form';
-import { getSchedulerJob } from '@/lib/fineract/jobs';
-import { getServerSession } from '@/lib/session/server';
+import { redirect } from 'next/navigation';
 
+/** Edit opens as a side panel on the job detail view (`?edit=1`). */
 export default async function SchedulerJobEditPage({
   params
 }: {
   params: Promise<{ jobId: string }>;
-}) {
+}): Promise<never> {
   const { jobId } = await params;
-  const session = await getServerSession();
-  if (!can(session, resolvePermission('system.jobs')) || !can(session, 'UPDATE_SCHEDULER')) {
-    notFound();
-  }
-
-  const id = Number(jobId);
-  if (!Number.isFinite(id)) {
-    notFound();
-  }
-
-  const job = await getSchedulerJob(id);
-  if (!job) {
-    notFound();
-  }
-
-  return <SchedulerJobEditForm job={job} />;
+  redirect(`/system/manage-jobs/${jobId}?edit=1`);
 }

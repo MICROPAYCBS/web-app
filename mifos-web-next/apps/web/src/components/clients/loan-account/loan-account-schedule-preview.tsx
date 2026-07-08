@@ -9,6 +9,7 @@
  */
 
 import type { LoanScheduleData } from '@mifos/api-client';
+import { format } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import {
   LoanRepaymentScheduleExportActions,
@@ -19,8 +20,18 @@ import {
   scheduleCurrencyCode,
   scheduleHighlights
 } from '@/components/clients/loan-account/schedule/loan-schedule-format';
+import {
+  loanScheduleHasOverduePeriods,
+  loanScheduleOverdueAmountClassName,
+  loanScheduleOverdueDueDateClassName,
+  loanScheduleOverdueRowClassName,
+  loanSchedulePeriodOverdueFlags,
+  loanScheduleOverdueInstallmentCount,
+  loanScheduleTotalOverdueAmount
+} from '@/components/clients/loan-account/schedule/loan-schedule-overdue';
 import { DetailSection } from '@/components/composites';
 import { MoneyValue } from '@/components/composites/detail/money-value';
+import { useBusinessDate } from '@/components/platform/business-date-provider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +43,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
+import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
 import { cn } from '@/lib/utils';
 
 function installmentPeriods(schedule: LoanScheduleData) {
@@ -64,8 +76,14 @@ function ScheduleSummary({
   schedule: LoanScheduleData;
   layout: 'section' | 'page';
 }) {
+  const businessDate = useBusinessDate();
+  const referenceDate =
+    businessDate.date?.trim() || format(new Date(), FINERACT_DATE_FORMAT);
   const currencyCode = scheduleCurrencyCode(schedule);
   const highlights = scheduleHighlights(schedule);
+  const periods = schedule.periods ?? [];
+  const overdueInstallmentCount = loanScheduleOverdueInstallmentCount(periods, referenceDate);
+  const totalOverdue = loanScheduleTotalOverdueAmount(periods, referenceDate);
   const gridClass =
     layout === 'page'
       ? 'grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4'
@@ -123,7 +141,7 @@ function ScheduleSummary({
       </div>
 
       {layout === 'page' ? (
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs text-muted-foreground">First repayment</p>
             <p className="text-sm font-medium">{highlights.firstRepaymentDate ?? '—'}</p>
@@ -140,11 +158,46 @@ function ScheduleSummary({
               className="text-sm font-medium"
             />
           </div>
+          <div
+            className={cn(
+              'rounded-lg border border-border p-3',
+              overdueInstallmentCount > 0 && 'border-destructive/25 bg-destructive/[0.03]'
+            )}
+          >
+            <p className="text-xs text-muted-foreground">Overdue installments</p>
+            {overdueInstallmentCount > 0 ? (
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-destructive/85">
+                  {overdueInstallmentCount} of {highlights.installmentCount || '—'}
+                </p>
+                <MoneyValue
+                  amount={totalOverdue}
+                  currencyCode={currencyCode}
+                  className="text-sm font-medium text-destructive/85"
+                />
+              </div>
+            ) : (
+              <p className="text-sm font-medium">None</p>
+            )}
+          </div>
         </div>
       ) : schedule.loanTermInDays != null ? (
-        <p className="mb-4 text-sm text-muted-foreground">
-          Loan term: {schedule.loanTermInDays} days · {highlights.installmentCount} installments
-        </p>
+        <div className="mb-4 space-y-1 text-sm text-muted-foreground">
+          <p>
+            Loan term: {schedule.loanTermInDays} days · {highlights.installmentCount} installments
+          </p>
+          {overdueInstallmentCount > 0 ? (
+            <p>
+              {overdueInstallmentCount} overdue installment
+              {overdueInstallmentCount === 1 ? '' : 's'} ·{' '}
+              <MoneyValue
+                amount={totalOverdue}
+                currencyCode={currencyCode}
+                className="inline text-destructive/85"
+              />
+            </p>
+          ) : null}
+        </div>
       ) : null}
     </>
   );
@@ -157,98 +210,150 @@ function ScheduleTable({
   schedule: LoanScheduleData;
   layout: 'section' | 'page';
 }) {
+  const businessDate = useBusinessDate();
+  const referenceDate =
+    businessDate.date?.trim() || format(new Date(), FINERACT_DATE_FORMAT);
   const currencyCode = scheduleCurrencyCode(schedule);
   const periods = schedule.periods ?? [];
   const showExtendedColumns = layout === 'page';
+  const hasOverduePeriods = loanScheduleHasOverduePeriods(periods, referenceDate);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border print:overflow-visible print:rounded-none print:border-slate-300">
-      <Table className="print:text-xs">
-        <TableHeader>
-          <TableRow className="print:bg-slate-100">
-            <TableHead>#</TableHead>
-            <TableHead>Due date</TableHead>
-            {showExtendedColumns ? <TableHead className="text-right">Days</TableHead> : null}
-            <TableHead className="text-right">Principal</TableHead>
-            <TableHead className="text-right">Interest</TableHead>
-            <TableHead className="text-right">Fees</TableHead>
-            <TableHead className="text-right">Installment</TableHead>
-            <TableHead className="text-right">Balance</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {periods.map((row, index) => {
-            const isDisbursement = row.period === 0;
-            return (
-              <TableRow
-                key={`schedule-period-${row.period ?? index}`}
-                className={cn(isDisbursement && 'bg-muted/40')}
-              >
-                <TableCell>{row.period ?? '—'}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span>{row.dueDate ?? '—'}</span>
-                    {isDisbursement ? (
-                      <Badge variant="secondary" className="print:hidden">
-                        Disbursement
-                      </Badge>
-                    ) : null}
-                    {row.downPaymentPeriod ? (
-                      <Badge variant="outline" className="print:hidden">
-                        Down payment
-                      </Badge>
-                    ) : null}
-                    {isDisbursement ? (
-                      <span className="hidden text-xs text-muted-foreground print:inline">Disbursement</span>
-                    ) : null}
-                    {row.downPaymentPeriod ? (
-                      <span className="hidden text-xs text-muted-foreground print:inline">Down payment</span>
-                    ) : null}
-                  </div>
-                </TableCell>
-                {showExtendedColumns ? (
-                  <TableCell className="text-right">{row.daysInPeriod ?? '—'}</TableCell>
-                ) : null}
-                <TableCell className="text-right">
-                  {isDisbursement ? (
-                    '—'
-                  ) : (
-                    <MoneyValue amount={row.principalDue} currencyCode={currencyCode} />
+    <>
+      {hasOverduePeriods ? (
+        <p className="mb-3 text-xs text-muted-foreground print:hidden">
+          Overdue installments are highlighted along the left edge; overdue amounts use a muted
+          accent.
+        </p>
+      ) : null}
+      <div className="overflow-x-auto rounded-lg border border-border print:overflow-visible print:rounded-none print:border-slate-300">
+        <Table className="print:text-xs">
+          <TableHeader>
+            <TableRow className="print:bg-slate-100">
+              <TableHead>#</TableHead>
+              <TableHead>Due date</TableHead>
+              {showExtendedColumns ? <TableHead className="text-right">Days</TableHead> : null}
+              <TableHead className="text-right">Principal</TableHead>
+              <TableHead className="text-right">Interest</TableHead>
+              <TableHead className="text-right">Fees</TableHead>
+              <TableHead className="text-right">Installment</TableHead>
+              <TableHead className="text-right">Balance</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {periods.map((row, index) => {
+              const isDisbursement = row.period === 0;
+              const overdue = loanSchedulePeriodOverdueFlags(row, referenceDate);
+              return (
+                <TableRow
+                  key={`schedule-period-${row.period ?? index}`}
+                  className={cn(
+                    isDisbursement && 'bg-muted/40',
+                    loanScheduleOverdueRowClassName(overdue.period)
                   )}
-                </TableCell>
-                <TableCell className="text-right">
-                  {isDisbursement ? (
-                    '—'
-                  ) : (
-                    <MoneyValue amount={row.interestDue} currencyCode={currencyCode} />
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <MoneyValue amount={row.feeChargesDue} currencyCode={currencyCode} />
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  {isDisbursement ? (
-                    row.principalDisbursed != null ? (
-                      <MoneyValue amount={row.principalDisbursed} currencyCode={currencyCode} />
-                    ) : (
+                >
+                  <TableCell>{row.period ?? '—'}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={cn(loanScheduleOverdueDueDateClassName(overdue.period))}>
+                        {row.dueDate ?? '—'}
+                      </span>
+                      {overdue.period ? (
+                        <Badge
+                          variant="outline"
+                          className="border-destructive/25 text-destructive/80 print:hidden"
+                        >
+                          Overdue
+                        </Badge>
+                      ) : null}
+                      {isDisbursement ? (
+                        <Badge variant="secondary" className="print:hidden">
+                          Disbursement
+                        </Badge>
+                      ) : null}
+                      {row.downPaymentPeriod ? (
+                        <Badge variant="outline" className="print:hidden">
+                          Down payment
+                        </Badge>
+                      ) : null}
+                      {isDisbursement ? (
+                        <span className="hidden text-xs text-muted-foreground print:inline">
+                          Disbursement
+                        </span>
+                      ) : null}
+                      {row.downPaymentPeriod ? (
+                        <span className="hidden text-xs text-muted-foreground print:inline">
+                          Down payment
+                        </span>
+                      ) : null}
+                      {overdue.period ? (
+                        <span className="hidden text-xs text-destructive/80 print:inline">
+                          Overdue
+                        </span>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  {showExtendedColumns ? (
+                    <TableCell className="text-right">{row.daysInPeriod ?? '—'}</TableCell>
+                  ) : null}
+                  <TableCell
+                    className={cn(
+                      'text-right',
+                      loanScheduleOverdueAmountClassName(overdue.principal)
+                    )}
+                  >
+                    {isDisbursement ? (
                       '—'
-                    )
-                  ) : (
-                    <MoneyValue amount={installmentAmount(row)} currencyCode={currencyCode} />
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <MoneyValue
-                    amount={row.principalLoanBalanceOutstanding}
-                    currencyCode={currencyCode}
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                    ) : (
+                      <MoneyValue amount={row.principalDue} currencyCode={currencyCode} />
+                    )}
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      'text-right',
+                      loanScheduleOverdueAmountClassName(overdue.interest)
+                    )}
+                  >
+                    {isDisbursement ? (
+                      '—'
+                    ) : (
+                      <MoneyValue amount={row.interestDue} currencyCode={currencyCode} />
+                    )}
+                  </TableCell>
+                  <TableCell
+                    className={cn('text-right', loanScheduleOverdueAmountClassName(overdue.fees))}
+                  >
+                    <MoneyValue amount={row.feeChargesDue} currencyCode={currencyCode} />
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      'text-right font-medium',
+                      loanScheduleOverdueAmountClassName(overdue.installment)
+                    )}
+                  >
+                    {isDisbursement ? (
+                      row.principalDisbursed != null ? (
+                        <MoneyValue amount={row.principalDisbursed} currencyCode={currencyCode} />
+                      ) : (
+                        '—'
+                      )
+                    ) : (
+                      <MoneyValue amount={installmentAmount(row)} currencyCode={currencyCode} />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <MoneyValue
+                      amount={row.principalLoanBalanceOutstanding}
+                      currencyCode={currencyCode}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
 

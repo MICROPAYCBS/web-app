@@ -8,7 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildLoanAccountSummaryMatrix, loanAccountHasPayoutConfiguration, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel } from '@/lib/fineract/loan-account-display';
+import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel } from '@/lib/fineract/loan-account-display';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 
 function sampleAccount(summary: FineractLoanAccountDetail['summary']): FineractLoanAccountDetail {
@@ -114,6 +114,43 @@ describe('loanAccountStandingInstructionAtDisbursementLabel', () => {
         createStandingInstructionAtDisbursement: true
       }),
       'Yes'
+    );
+  });
+});
+
+describe('loanAccountHasGraceComponents', () => {
+  it('is false when grace fields are absent or zero', () => {
+    assert.equal(loanAccountHasGraceComponents(sampleAccount(undefined)), false);
+    assert.equal(
+      loanAccountHasGraceComponents({
+        ...sampleAccount(undefined),
+        graceOnPrincipalPayment: 0,
+        graceOnInterestPayment: 0
+      }),
+      false
+    );
+  });
+
+  it('is true when any grace component is greater than zero', () => {
+    assert.equal(
+      loanAccountHasGraceComponents({
+        ...sampleAccount(undefined),
+        graceOnInterestCharged: 2
+      }),
+      true
+    );
+  });
+});
+
+describe('loanAccountHasLoanTerms', () => {
+  it('includes grace-only loans in loan terms', () => {
+    assert.equal(loanAccountHasLoanTerms(sampleAccount(undefined)), false);
+    assert.equal(
+      loanAccountHasLoanTerms({
+        ...sampleAccount(undefined),
+        graceOnPrincipalPayment: 1
+      }),
+      true
     );
   });
 });

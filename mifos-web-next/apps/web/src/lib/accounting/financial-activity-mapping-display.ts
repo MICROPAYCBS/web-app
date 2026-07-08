@@ -15,6 +15,7 @@ import type {
   FineractFinancialActivityRef
 } from '@mifos/api-client';
 import type { UpsertFinancialActivityMappingFormInput } from '@mifos/validation';
+import type { SelectOption } from '@/components/composites/select-field';
 import { formatGlAccountLabel } from '@/lib/accounting/gl-account-display';
 
 const FINANCIAL_ACTIVITY_LABELS: Record<string, string> = {
@@ -74,7 +75,9 @@ export function glAccountsForFinancialActivity(
   return [];
 }
 
-export function financialActivitySelectOptions(activities: FineractFinancialActivityRef[]) {
+export function financialActivitySelectOptions(
+  activities: FineractFinancialActivityRef[]
+): SelectOption[] {
   return activities.map((activity) => ({
     value: String(activity.id),
     label: formatFinancialActivityLabel(activity),
@@ -103,7 +106,7 @@ export function availableFinancialActivitiesForMapping(
 
 export function financialActivityGlAccountSelectOptions(
   accounts: FineractFinancialActivityGlAccountRef[]
-) {
+): SelectOption[] {
   return accounts.map((account) => ({
     value: String(account.id),
     label: formatFinancialActivityGlAccountLabel(account),

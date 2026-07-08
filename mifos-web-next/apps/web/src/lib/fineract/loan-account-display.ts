@@ -243,6 +243,31 @@ export function loanAccountRepaymentFrequencyLabel(account: FineractLoanAccountD
   return frequency ?? String(every);
 }
 
+/** True when any grace period on the loan is greater than zero. */
+export function loanAccountHasGraceComponents(account: FineractLoanAccountDetail): boolean {
+  return (
+    (account.graceOnPrincipalPayment ?? 0) > 0 ||
+    (account.graceOnInterestPayment ?? 0) > 0 ||
+    (account.graceOnInterestCharged ?? 0) > 0 ||
+    (account.graceOnArrearsAgeing ?? 0) > 0
+  );
+}
+
+export function loanAccountHasLoanTerms(account: FineractLoanAccountDetail): boolean {
+  return Boolean(
+    account.transactionProcessingStrategyName ||
+      account.amortizationType ||
+      account.interestType ||
+      account.numberOfRepayments != null ||
+      account.repaymentEvery != null ||
+      account.repaymentFrequencyType ||
+      account.interestRatePerPeriod != null ||
+      account.annualInterestRate != null ||
+      account.interestCalculationPeriodType ||
+      loanAccountHasGraceComponents(account)
+  );
+}
+
 export function loanAccountHasPayoutConfiguration(account: FineractLoanAccountDetail): boolean {
   return (
     Boolean(account.linkedAccount) ||

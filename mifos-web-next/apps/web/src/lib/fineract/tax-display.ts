@@ -13,7 +13,11 @@ import type {
   TaxComponentOption,
   TaxComponentTemplate
 } from '@mifos/api-client';
-import { formatGlAccountLabel, formatGlAccountTypeLabel } from '@/lib/accounting/gl-account-display';
+import type { SelectOption } from '@/components/composites/select-field';
+import {
+  formatGlAccountLabel,
+  formatGlAccountTypeLabel
+} from '@/lib/accounting/gl-account-display';
 import { fineractApiDateToFormString, formatFineractDateArray } from '@/lib/fineract/dates';
 
 export function formatTaxDate(value: number[] | string | undefined): string {
@@ -55,21 +59,21 @@ export function glAccountsForTaxComponentType(
   }
 }
 
-export function taxComponentTypeSelectOptions(template: TaxComponentTemplate) {
+export function taxComponentTypeSelectOptions(template: TaxComponentTemplate): SelectOption[] {
   return template.glAccountTypeOptions.map((option) => ({
     value: String(option.id),
     label: formatGlAccountTypeLabel(option)
   }));
 }
 
-export function taxGlAccountSelectOptions(accounts: FineractGlAccountRef[]) {
+export function taxGlAccountSelectOptions(accounts: FineractGlAccountRef[]): SelectOption[] {
   return accounts.map((account) => ({
     value: String(account.id),
     label: formatGlAccountLabel(account)
   }));
 }
 
-export function taxComponentSelectOptions(components: TaxComponentOption[]) {
+export function taxComponentSelectOptions(components: TaxComponentOption[]): SelectOption[] {
   return components.map((component) => ({
     value: String(component.id),
     label: component.name ?? `Component #${component.id}`
