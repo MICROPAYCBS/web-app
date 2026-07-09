@@ -100,6 +100,12 @@ describe('inferReportParameterPresentation', () => {
     assert.deepEqual(inferReportParameterPresentation('currencyIdSelectAll'), {
       selectAll: true
     });
+    assert.deepEqual(inferReportParameterPresentation('SelectGLAccountNO'), {
+      selectOne: true
+    });
+    assert.deepEqual(inferReportParameterPresentation('SelectLoanType'), {
+      selectOne: true
+    });
   });
 });
 
@@ -108,6 +114,10 @@ describe('isReportParameterSelect', () => {
     assert.equal(isReportParameterSelect({ selectAll: true }), true);
     assert.equal(isReportParameterSelect({ selectOne: true }), true);
     assert.equal(isReportParameterSelect({ parameterDisplayType: 'text' }), false);
+  });
+
+  it('treats legacy SelectGLAccountNO catalog parameters as select controls', () => {
+    assert.equal(isReportParameterSelect(inferReportParameterPresentation('SelectGLAccountNO')), true);
   });
 });
 

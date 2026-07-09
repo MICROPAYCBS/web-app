@@ -205,6 +205,9 @@ export function inferReportParameterPresentation(
       selectOne = true;
     } else if (/select$/i.test(name)) {
       selectOne = true;
+    } else if (/^Select[A-Z]/.test(name)) {
+      // Legacy Fineract catalog names (SelectGLAccountNO, SelectLoanType) — select without SelectOne suffix.
+      selectOne = true;
     } else if (displayType === 'select') {
       selectOne = true;
     }
