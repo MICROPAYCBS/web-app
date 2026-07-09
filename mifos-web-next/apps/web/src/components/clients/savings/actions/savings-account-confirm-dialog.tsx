@@ -26,6 +26,8 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { SAVINGS_CONFIRM_COMMAND_TOAST } from '@/lib/fineract/savings-account-command-toasts';
 
 export type SavingsAccountConfirmDialogKind =
   | 'calculateInterest'
@@ -92,31 +94,37 @@ export function SavingsAccountConfirmDialog({
   function handleConfirm() {
     setError(null);
     startTransition(async () => {
+      if (!kind) {
+        return;
+      }
+      const activeKind = kind;
       let result;
-      if (kind === 'deleteAccount') {
+      if (activeKind === 'deleteAccount') {
         result = await executeSavingsAccountDeleteAction(clientId, String(accountId));
-      } else if (kind === 'enableWithholdTax' || kind === 'disableWithholdTax') {
+      } else if (activeKind === 'enableWithholdTax' || activeKind === 'disableWithholdTax') {
         result = await executeSavingsAccountWithholdTaxAction(clientId, String(accountId), {
-          withHoldTax: kind === 'enableWithholdTax'
+          withHoldTax: activeKind === 'enableWithholdTax'
         });
-      } else if (kind === 'calculateInterest' || kind === 'postInterest') {
+      } else if (activeKind === 'calculateInterest' || activeKind === 'postInterest') {
         result = await executeSavingsAccountLifecycleCommandAction(
           clientId,
           String(accountId),
-          kind,
+          activeKind,
           {}
         );
       } else {
         return;
       }
 
-      if (!result.ok) {
-        setError(formatActionErrorMessage(result.message, result.fieldErrors));
+      if (!toastCommandOutcome(result, SAVINGS_CONFIRM_COMMAND_TOAST[activeKind])) {
+        if (!result.ok) {
+          setError(formatActionErrorMessage(result.message, result.fieldErrors));
+        }
         return;
       }
 
       onOpenChange(false);
-      if (kind === 'deleteAccount') {
+      if (activeKind === 'deleteAccount') {
         router.push(clientAccountListPath(clientId, 'savings'));
         return;
       }

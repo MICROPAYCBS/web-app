@@ -21,7 +21,8 @@ import {
 import {
   formatJournalEntryAmount,
   formatJournalEntryDate,
-  formatJournalEntryDateTime
+  formatJournalEntryDateTime,
+  formatJournalEntryDepartment
 } from '@/lib/accounting/journal-entry-display';
 
 export function JournalEntryLineDialog({
@@ -38,6 +39,7 @@ export function JournalEntryLineDialog({
   }
 
   const amountLabel = entry.entryType.value === 'CREDIT' ? 'Credit' : 'Debit';
+  const departmentLabel = formatJournalEntryDepartment(entry);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,6 +49,9 @@ export function JournalEntryLineDialog({
         </DialogHeader>
         <DetailFieldGrid columns={1}>
           <DetailField label="Branch">{entry.officeName}</DetailField>
+          {departmentLabel ? (
+            <DetailField label="Department">{departmentLabel}</DetailField>
+          ) : null}
           <DetailField label="Entry ID">{entry.id}</DetailField>
           <DetailField label="Transaction ID">{entry.transactionId}</DetailField>
           <DetailField label="Transaction date">

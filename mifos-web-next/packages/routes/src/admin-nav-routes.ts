@@ -654,6 +654,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'acctDepartments',
+    path: '/accounting/departments',
+    label: 'Departments',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/departments',
+    permissionKey: 'accounting.departments',
+    navOrder: 15,
+    navIcon: 'building-2',
+    keywords: ['department', 'cost center', 'cost centre', 'internal unit', 'pl'],
+    parityStatus: 'done'
+  },
+  {
     id: 'acctJournal',
     path: '/accounting/journal-entries',
     label: 'Journal entries',
@@ -662,18 +674,6 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     permissionKey: 'accounting.journal',
     navOrder: 20,
     navIcon: 'notebook-pen',
-    keywords: [],
-    parityStatus: 'done'
-  },
-  {
-    id: 'acctFrequentPostings',
-    path: '/accounting/journal-entries/frequent-postings',
-    label: 'Frequent postings',
-    navGroup: 'accounting',
-    webAppRef: 'accounting/journal-entries/frequent-postings',
-    permissionKey: 'accounting.frequentPostings',
-    navOrder: 25,
-    navIcon: 'repeat-2',
     keywords: [],
     parityStatus: 'done'
   },

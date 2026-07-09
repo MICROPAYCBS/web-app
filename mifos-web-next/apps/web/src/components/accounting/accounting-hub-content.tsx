@@ -22,12 +22,7 @@ const SECTIONS = [
   {
     href: '/accounting/journal-entries',
     title: 'Journal entries',
-    description: 'Search and create journal entries.'
-  },
-  {
-    href: '/accounting/journal-entries/frequent-postings',
-    title: 'Frequent postings',
-    description: 'Post recurring journal entries quickly.'
+    description: 'Search, create, and post journal entries — manual or from a template.'
   },
   {
     href: '/accounting/financial-activity-mappings',

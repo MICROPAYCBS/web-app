@@ -6,55 +6,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can, resolvePermission } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { FrequentPostingsForm } from '@/components/accounting/frequent-postings/frequent-postings-form';
-import { DetailBackLink } from '@/components/composites';
-import { ListPage } from '@/components/composites/list-page';
-import { defaultFrequentPostingFormValues } from '@/lib/accounting/frequent-posting-display';
-import { listAccountingRulesForFrequentPostings } from '@/lib/fineract/accounting-rules';
-import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
-import { listOfficeOptions } from '@/lib/fineract/offices';
-import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
-import { listPaymentTypes } from '@/lib/fineract/payment-types';
-import { getServerSession } from '@/lib/session/server';
+import { redirect } from 'next/navigation';
 
-export default async function FrequentPostingsPage() {
-  const session = await getServerSession();
-  if (
-    !can(session, resolvePermission('accounting.frequentPostings')) ||
-    !can(session, 'CREATE_JOURNALENTRY')
-  ) {
-    notFound();
-  }
-
-  const [offices, accountingRules, currencies, paymentTypes, transactionDate] = await Promise.all([
-    listOfficeOptions(),
-    listAccountingRulesForFrequentPostings(),
-    getOrganizationSelectedCurrencies(),
-    listPaymentTypes(),
-    getDefaultTransactionDate()
-  ]);
-
-  return (
-    <ListPage
-      backLink={<DetailBackLink href="/accounting/journal-entries" label="Back to journal entries" />}
-      title="Frequent postings"
-      description="Post journal entries using a predefined accounting rule."
-    >
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-        <FrequentPostingsForm
-          initialValues={defaultFrequentPostingFormValues(
-            currencies,
-            offices[0]?.id,
-            transactionDate
-          )}
-          offices={offices}
-          currencies={currencies}
-          paymentTypes={paymentTypes}
-          accountingRules={accountingRules}
-        />
-      </div>
-    </ListPage>
+/** Frequent postings are now part of the unified journal entry create form. */
+export default async function FrequentPostingsPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const rule = typeof params.rule === 'string' ? params.rule.trim() : '';
+  return redirect(
+    rule
+      ? `/accounting/journal-entries/create?rule=${encodeURIComponent(rule)}`
+      : '/accounting/journal-entries/create'
   );
 }

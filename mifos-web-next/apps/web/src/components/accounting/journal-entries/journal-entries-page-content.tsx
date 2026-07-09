@@ -36,18 +36,21 @@ import {
   type JournalEntryListQuery,
   type JournalEntrySearchFilters
 } from '@/lib/fineract/journal-entry-query';
+import type { Department } from '@/lib/fineract/departments';
 import { cn } from '@/lib/utils';
 
 export function JournalEntriesPageContent({
   page,
   query,
   offices,
-  glAccounts
+  glAccounts,
+  departments
 }: {
   page: FineractJournalEntriesPage;
   query: JournalEntryListQuery;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
+  departments: Department[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -161,6 +164,7 @@ export function JournalEntriesPageContent({
         onDraftChange={setDraftFilters}
         offices={offices}
         glAccounts={glAccounts}
+        departments={departments}
         pending={pending}
         onApply={handleApplyFilters}
         onClear={handleClearFilters}

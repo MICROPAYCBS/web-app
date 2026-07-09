@@ -963,6 +963,26 @@
       "READ_GLACCOUNT"
     ]
   },
+  "accounting.departments": {
+    "any": [
+      "READ_DEPARTMENT"
+    ]
+  },
+  "accounting.departments.create": {
+    "any": [
+      "CREATE_DEPARTMENT"
+    ]
+  },
+  "accounting.departments.update": {
+    "any": [
+      "UPDATE_DEPARTMENT"
+    ]
+  },
+  "accounting.departments.delete": {
+    "any": [
+      "DELETE_DEPARTMENT"
+    ]
+  },
   "accounting.journal": {
     "any": [
       "READ_JOURNALENTRY"

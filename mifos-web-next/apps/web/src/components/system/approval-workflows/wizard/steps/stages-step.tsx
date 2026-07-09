@@ -15,17 +15,19 @@ import {
   WorkflowChainBookend,
   WorkflowChainConnector
 } from '@/components/system/approval-workflows/workflow-chain-bookend';
+import { workflowStageCheckerPermissionCode } from '@/lib/fineract/approval-workflow-display';
 import type { WorkflowStageInput } from '@mifos/validation';
 import type { WorkflowStepProps } from '../types';
 
 export function StagesStep({
   draft,
-  roles,
   currencies,
   errors,
   disabled,
   onChange
 }: WorkflowStepProps) {
+  const checkerPermission = workflowStageCheckerPermissionCode(draft.taskPermissionCode);
+
   function patchStage(stageIndex: number, stage: WorkflowStageInput) {
     onChange({
       stages: draft.stages.map((item, index) => (index === stageIndex ? stage : item))
@@ -35,10 +37,20 @@ export function StagesStep({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <p className="text-sm text-muted-foreground">
-          Configure intermediate approval stages between creation (maker) and final approval
-          (checker).
-        </p>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Configure intermediate approval stages between creation (maker) and final approval
+            (checker).
+          </p>
+          <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            Actors at every stage need{' '}
+            <span className="font-medium text-foreground">
+              {checkerPermission || '{task}_CHECKER'}
+            </span>
+            . Grant that permission through roles in user administration — do not configure
+            stage participants here.
+          </p>
+        </div>
         <Button
           type="button"
           variant="outline"
@@ -59,8 +71,8 @@ export function StagesStep({
               stage={stage}
               stageIndex={stageIndex}
               allStages={draft.stages}
-              roles={roles}
               currencies={currencies}
+              taskPermissionCode={draft.taskPermissionCode}
               disabled={disabled ?? false}
               fieldErrors={errors}
               onChange={(nextStage) => patchStage(stageIndex, nextStage)}

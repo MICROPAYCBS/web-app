@@ -45,7 +45,6 @@ export function ApprovalWorkflowWizard({
   definitionId,
   workflowName,
   initialValues,
-  roles,
   currencies,
   taskPermissions
 }: ApprovalWorkflowWizardProps) {
@@ -62,7 +61,7 @@ export function ApprovalWorkflowWizard({
     : 'Create approval workflow';
   const wizardDescription = isEdit
     ? 'Draft workflows can be fully replaced. Activate when the structure is ready.'
-    : 'Define stages, participants, and transitions. New workflows start in draft status.';
+    : 'Define stages and transitions for a maker-checker task. New workflows start in draft status.';
   const [draft, setDraft] = useState(initialValues);
   const [stepId, setStepId] = useState('basics');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
@@ -204,7 +203,6 @@ export function ApprovalWorkflowWizard({
 
   const stepProps = {
     draft,
-    roles,
     currencies,
     taskPermissions,
     errors: stepErrors,

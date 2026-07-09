@@ -58,6 +58,9 @@ const GENERIC_TOP_LEVEL_MESSAGES = new Set([
   'Request was understood but caused a domain rule violation.'
 ]);
 
+/** Fineract sometimes stores the task permission code in defaultUserMessage and the prose in developerMessage. */
+const FINERACT_PERMISSION_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+
 function isGenericFineractValidationMessage(message: string): boolean {
   return (
     GENERIC_TOP_LEVEL_MESSAGES.has(message) || message.startsWith('Failed data validation due to: ')
@@ -68,22 +71,41 @@ function isGenericFineractValidationMessage(message: string): boolean {
  * Resolve the best human-readable message for one Fineract error entry.
  * Prefers `defaultUserMessage`, then `developerMessage`, then a known translation for the code.
  */
+function resolveFineractErrorItemRawMessage(item: FineractErrorItem): string | null {
+  const defaultUserMessage = item.defaultUserMessage
+    ? normalizeFineractMessage(item.defaultUserMessage)
+    : null;
+  const developerMessage = item.developerMessage
+    ? sanitizeRawDatabaseErrorMessage(normalizeFineractMessage(item.developerMessage))
+    : null;
+
+  if (
+    defaultUserMessage &&
+    developerMessage &&
+    FINERACT_PERMISSION_CODE_PATTERN.test(defaultUserMessage) &&
+    developerMessage.length > defaultUserMessage.length
+  ) {
+    return developerMessage;
+  }
+
+  return defaultUserMessage ?? developerMessage;
+}
+
 export function resolveFineractErrorItemMessage(item?: FineractErrorItem | null): string | null {
   if (!item) {
     return null;
   }
 
   const code = item.userMessageGlobalisationCode;
-  const raw = item.defaultUserMessage ?? item.developerMessage;
+  const raw = resolveFineractErrorItemRawMessage(item);
   if (raw) {
-    const normalized = normalizeFineractMessage(raw);
     if (code) {
       const translated = translateFineractCode(code);
-      if (translated !== code && isGenericFineractValidationMessage(normalized)) {
+      if (translated !== code && isGenericFineractValidationMessage(raw)) {
         return translated;
       }
     }
-    return sanitizeRawDatabaseErrorMessage(normalized);
+    return raw;
   }
 
   if (code) {

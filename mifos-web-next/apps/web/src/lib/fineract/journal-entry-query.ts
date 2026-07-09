@@ -13,6 +13,7 @@ export const JOURNAL_ENTRIES_DEFAULT_LIMIT = 50;
 export type JournalEntrySearchFilters = {
   officeId?: string;
   glAccountId?: string;
+  departmentId?: string;
   manualEntriesOnly?: string;
   transactionId?: string;
   fromDate?: string;
@@ -62,6 +63,7 @@ export function parseJournalEntryListQuery(
     sortOrder: readParam(params, 'sortOrder') ?? '',
     officeId: readParam(params, 'officeId'),
     glAccountId: readParam(params, 'glAccountId'),
+    departmentId: readParam(params, 'departmentId'),
     manualEntriesOnly: readParam(params, 'manualEntriesOnly'),
     transactionId: readParam(params, 'transactionId'),
     fromDate: readParam(params, 'fromDate') ?? defaultFilterDate(),
@@ -86,6 +88,7 @@ export function journalEntryFiltersFromQuery(
   return {
     officeId: query.officeId,
     glAccountId: query.glAccountId,
+    departmentId: query.departmentId,
     manualEntriesOnly: query.manualEntriesOnly,
     transactionId: query.transactionId,
     fromDate: query.fromDate,
@@ -115,6 +118,9 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
   if (query.glAccountId) {
     params.glAccountId = query.glAccountId;
   }
+  if (query.departmentId) {
+    params.departmentId = query.departmentId;
+  }
   if (query.manualEntriesOnly) {
     params.manualEntriesOnly = query.manualEntriesOnly;
   }
@@ -139,6 +145,9 @@ export function countActiveJournalEntryFilters(filters: JournalEntrySearchFilter
   if (filters.glAccountId) {
     count += 1;
   }
+  if (filters.departmentId) {
+    count += 1;
+  }
   if (filters.manualEntriesOnly) {
     count += 1;
   }
@@ -158,6 +167,7 @@ export function journalEntryFiltersSignature(filters: JournalEntrySearchFilters)
   return JSON.stringify({
     officeId: filters.officeId ?? '',
     glAccountId: filters.glAccountId ?? '',
+    departmentId: filters.departmentId ?? '',
     manualEntriesOnly: filters.manualEntriesOnly ?? '',
     transactionId: filters.transactionId ?? '',
     fromDate: filters.fromDate ?? '',

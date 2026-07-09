@@ -18,7 +18,8 @@ import {
 import {
   buildWorkflowChain,
   formatWorkflowExpiry,
-  transitionAmountBandSummary
+  transitionAmountBandSummary,
+  workflowStageCheckerPermissionCode
 } from '@/lib/fineract/approval-workflow-display';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 
@@ -31,7 +32,8 @@ function StageCard({
   definition: WorkflowDefinition;
   stepNumber: number;
 }) {
-  const currency = definition.currencyCode ?? 'USD';
+  const currency = definition.currencyCode ?? stage.approvalLimitCurrency ?? 'USD';
+  const checkerPermission = workflowStageCheckerPermissionCode(definition.taskPermissionCode);
 
   return (
     <div className="relative border-l-2 border-primary/30 pl-6 pb-8 last:pb-0">
@@ -74,33 +76,23 @@ function StageCard({
               <dd>{stage.escalationTargetStageCode}</dd>
             </div>
           ) : null}
+          {stage.approvalLimitAmount != null ? (
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground">Approval limit</dt>
+              <dd>
+                {formatMoney(
+                  stage.approvalLimitAmount,
+                  stage.approvalLimitCurrency ?? currency,
+                  FINERACT_LOCALE
+                )}
+              </dd>
+            </div>
+          ) : null}
         </dl>
 
-        <div>
-          <p className="mb-2 text-sm font-medium">Participants</p>
-          {stage.participants.length ? (
-            <ul className="space-y-1 text-sm">
-              {stage.participants.map((participant) => (
-                <li key={`${stage.stageCode}-${participant.roleId}-${participant.id ?? ''}`}>
-                  {participant.roleName ?? `Role #${participant.roleId}`}
-                  {participant.approvalLimitAmount != null ? (
-                    <span className="text-muted-foreground">
-                      {' '}
-                      · limit{' '}
-                      {formatMoney(
-                        participant.approvalLimitAmount,
-                        participant.approvalLimitCurrency ?? currency,
-                        FINERACT_LOCALE
-                      )}
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">No participants configured.</p>
-          )}
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Actors need <span className="font-medium text-foreground">{checkerPermission}</span>.
+        </p>
 
         <div className="flex flex-wrap gap-2">
           {stage.actions.map((action) => (
@@ -115,9 +107,12 @@ function StageCard({
 }
 
 export function ApprovalWorkflowStagesTimeline({
-  definition
+  definition,
+  showIntro = true
 }: {
   definition: WorkflowDefinition;
+  /** When false, omit the section heading (parent DetailSection already provides it). */
+  showIntro?: boolean;
 }) {
   const chain = buildWorkflowChain(definition.stages, definition.transitions);
   const transitionsByFrom = new Map(
@@ -126,12 +121,15 @@ export function ApprovalWorkflowStagesTimeline({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-base font-semibold">Approval chain</h3>
-        <p className="text-sm text-muted-foreground">
-          The full path from maker creation through intermediate approvals to checker approval.
-        </p>
-      </div>
+      {showIntro ? (
+        <div>
+          <h3 className="text-base font-semibold">Approval chain</h3>
+          <p className="text-sm text-muted-foreground">
+            The full path from maker creation through intermediate approvals to checker approval.
+            Stage actors share the task checker permission pool.
+          </p>
+        </div>
+      ) : null}
 
       <div>
         {chain.map((segment, chainIndex) => {

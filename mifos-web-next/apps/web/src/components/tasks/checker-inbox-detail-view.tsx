@@ -9,6 +9,7 @@
  */
 
 import type { FineractAuditTrailDetail, FineractRolePermissionUsage } from '@mifos/api-client';
+import { useSession } from '@mifos/auth';
 import { Check, ExternalLink, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -31,6 +32,8 @@ import {
   CheckerInboxReviewHighlights,
   checkerInboxConfirmDescription
 } from '@/components/tasks/checker-inbox-review-summary';
+import { CheckerInboxWorkflowStageNotice } from '@/components/tasks/checker-inbox-workflow-stage-notice';
+import { CheckerInboxSelfApprovalNotice } from '@/components/tasks/checker-inbox-self-approval-notice';
 import {
   ApprovalWorkflowNoMatchHint,
   MatchedApprovalWorkflowPanel
@@ -58,6 +61,14 @@ import {
   checkerInboxItemRemainsPending,
   toastCheckerInboxActionOutcome
 } from '@/lib/checker-inbox/checker-inbox-outcome';
+import { formatCheckerInboxActionError } from '@/lib/checker-inbox/checker-inbox-action-error';
+import {
+  checkerInboxWorkflowStageActionButtonLabel,
+  checkerInboxWorkflowStageConfirmDescription,
+  resolveCheckerInboxWorkflowStageContext
+} from '@/lib/checker-inbox/checker-inbox-workflow-stage-copy';
+import { formatCheckerInboxWorkflowStageHeadline } from '@/lib/checker-inbox/workflow-stage-progress';
+import { resolveCheckerInboxSelfApprovalBlock } from '@/lib/checker-inbox/checker-inbox-self-approval';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
 
@@ -71,20 +82,37 @@ export function CheckerInboxDetailView({
   taskPermissions?: FineractRolePermissionUsage[];
 }) {
   const router = useRouter();
+  const { user } = useSession();
   const [pending, startTransition] = useTransition();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const workflowStage = resolveCheckerInboxWorkflowStageContext(context);
+  const selfApprovalBlock = resolveCheckerInboxSelfApprovalBlock(item.maker, user, context);
+  const checkerActionsDisabled = pending || selfApprovalBlock.blocked;
 
   function runAction(action: ConfirmAction) {
+    if (selfApprovalBlock.blocked && action !== 'delete') {
+      return;
+    }
     startTransition(async () => {
       const result =
         action === 'delete'
           ? await deleteCheckerInboxItemAction(item.id)
           : await executeCheckerInboxActionAction(item.id, action, {
               actionName: item.actionName,
-              entityName: item.entityName
+              entityName: item.entityName,
+              maker: item.maker
             });
-      if (!toastCheckerInboxActionOutcome(action, result)) {
-        toastFineractError(result.message);
+      const stageLabel =
+        workflowStage && action !== 'delete'
+          ? formatCheckerInboxWorkflowStageHeadline(workflowStage)
+          : undefined;
+      if (!toastCheckerInboxActionOutcome(action, result, { stageLabel })) {
+        toastFineractError(
+          formatCheckerInboxActionError(result.message, {
+            taskPermissionCode: context.taskPermissionCode,
+            taskPermissions
+          })
+        );
         return;
       }
       setConfirmAction(null);
@@ -109,9 +137,13 @@ export function CheckerInboxDetailView({
           {context.hrefLabel ?? 'Open record'}
         </Button>
       ) : null}
-      <Button type="button" disabled={pending} onClick={() => setConfirmAction('approve')}>
+      <Button
+        type="button"
+        disabled={checkerActionsDisabled}
+        onClick={() => setConfirmAction('approve')}
+      >
         <Check className="mr-2 size-4" />
-        Approve
+        {checkerInboxWorkflowStageActionButtonLabel(context, 'approve', 'Approve')}
       </Button>
       <Button
         type="button"
@@ -125,11 +157,11 @@ export function CheckerInboxDetailView({
       <Button
         type="button"
         variant="outline"
-        disabled={pending}
+        disabled={checkerActionsDisabled}
         onClick={() => setConfirmAction('reject')}
       >
         <X className="mr-2 size-4" />
-        Reject
+        {checkerInboxWorkflowStageActionButtonLabel(context, 'reject', 'Reject')}
       </Button>
     </>
   );
@@ -195,12 +227,13 @@ export function CheckerInboxDetailView({
           </DetailFieldGrid>
         }
       >
-        {context.summary || context.commandHighlights?.length ? (
+        {context.summary || context.commandHighlights?.length || selfApprovalBlock.blocked ? (
           <Card className="mb-6">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">What you are reviewing</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              <CheckerInboxSelfApprovalNotice block={selfApprovalBlock} />
               {context.summary ? <p className="text-sm">{context.summary}</p> : null}
               <CheckerInboxReviewDetailsList highlights={context.commandHighlights} />
             </CardContent>
@@ -241,21 +274,38 @@ export function CheckerInboxDetailView({
           <DialogHeader>
             <DialogTitle>
               {confirmAction === 'approve'
-                ? 'Approve checker'
+                ? workflowStage
+                  ? checkerInboxWorkflowStageActionButtonLabel(context, 'approve', 'Approve checker')
+                  : 'Approve checker'
                 : confirmAction === 'reject'
-                  ? 'Reject checker'
+                  ? workflowStage
+                    ? checkerInboxWorkflowStageActionButtonLabel(context, 'reject', 'Reject checker')
+                    : 'Reject checker'
                   : 'Delete checker'}
             </DialogTitle>
             <DialogDescription>
               {confirmAction === 'approve'
-                ? context.matchedWorkflow
-                  ? `${checkerInboxConfirmDescription(context, item.id)} This item is in a multi-stage approval workflow. If you are not on the final stage, the business change will not complete yet.`
-                  : checkerInboxConfirmDescription(context, item.id)
+                ? checkerInboxWorkflowStageConfirmDescription(
+                    context,
+                    'approve',
+                    checkerInboxConfirmDescription(context, item.id)
+                  )
                 : confirmAction === 'reject'
-                  ? `Reject ${checkerInboxConfirmDescription(context, item.id)}`
+                  ? checkerInboxWorkflowStageConfirmDescription(
+                      context,
+                      'reject',
+                      checkerInboxConfirmDescription(context, item.id)
+                    )
                   : `Delete ${checkerInboxConfirmDescription(context, item.id)}`}
             </DialogDescription>
           </DialogHeader>
+          {confirmAction === 'approve' || confirmAction === 'reject' ? (
+            <CheckerInboxWorkflowStageNotice
+              context={context}
+              action={confirmAction}
+              taskPermissions={taskPermissions}
+            />
+          ) : null}
           <CheckerInboxReviewHighlights highlights={context.commandHighlights} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmAction(null)}>
@@ -268,9 +318,9 @@ export function CheckerInboxDetailView({
               onClick={() => confirmAction && runAction(confirmAction)}
             >
               {confirmAction === 'approve'
-                ? 'Approve'
+                ? checkerInboxWorkflowStageActionButtonLabel(context, 'approve', 'Approve')
                 : confirmAction === 'reject'
-                  ? 'Reject'
+                  ? checkerInboxWorkflowStageActionButtonLabel(context, 'reject', 'Reject')
                   : 'Delete'}
             </Button>
           </DialogFooter>

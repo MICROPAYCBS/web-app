@@ -8,7 +8,10 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { validateUpsertWorkflowDefinition } from './workflow-definition.schema';
+import {
+  buildWorkflowDefinitionApiPayload,
+  validateUpsertWorkflowDefinition
+} from './workflow-definition.schema';
 
 function baseStage(overrides: Record<string, unknown> = {}) {
   return {
@@ -19,7 +22,6 @@ function baseStage(overrides: Record<string, unknown> = {}) {
     rejectionPolicy: 'ANY',
     escalationEnabled: false,
     actions: ['APPROVE', 'REJECT'],
-    participants: [{ roleId: 5 }],
     ...overrides
   };
 }
@@ -84,6 +86,22 @@ describe('validateUpsertWorkflowDefinition', () => {
     assert.equal(result.success, false);
   });
 
+  it('requires approval limit currency when a stage limit amount is set', () => {
+    const result = validateUpsertWorkflowDefinition(
+      baseDefinition({
+        stages: [baseStage({ approvalLimitAmount: 50_000_000, approvalLimitCurrency: null })]
+      })
+    );
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.ok(
+        result.error.issues.some((issue) =>
+          issue.path.join('.').endsWith('approvalLimitCurrency')
+        )
+      );
+    }
+  });
+
   it('requires transition stage codes to exist in stages', () => {
     const result = validateUpsertWorkflowDefinition(
       baseDefinition({
@@ -99,7 +117,7 @@ describe('validateUpsertWorkflowDefinition', () => {
     assert.equal(result.success, false);
   });
 
-  it('accepts a valid definition payload', () => {
+  it('accepts a valid definition payload without participants', () => {
     const result = validateUpsertWorkflowDefinition(
       baseDefinition({
         stages: [
@@ -107,7 +125,9 @@ describe('validateUpsertWorkflowDefinition', () => {
             escalationEnabled: true,
             expiryPeriodUnit: 'HOURS',
             expiryPeriodValue: 24,
-            escalationTargetStageCode: 'REGIONAL_MANAGER'
+            escalationTargetStageCode: 'REGIONAL_MANAGER',
+            approvalLimitAmount: 50_000_000,
+            approvalLimitCurrency: 'UGX'
           }),
           baseStage({ stageCode: 'REGIONAL_MANAGER', name: 'Regional Manager' })
         ],
@@ -121,5 +141,12 @@ describe('validateUpsertWorkflowDefinition', () => {
       })
     );
     assert.equal(result.success, true);
+    if (result.success) {
+      const payload = buildWorkflowDefinitionApiPayload(result.data);
+      assert.equal(payload.taskPermissionCode, 'CREATE_LOAN');
+      assert.equal(payload.stages[0].approvalLimitAmount, 50_000_000);
+      assert.equal(payload.stages[0].approvalLimitCurrency, 'UGX');
+      assert.equal('participants' in payload.stages[0], false);
+    }
   });
 });

@@ -7,6 +7,11 @@
  */
 
 import { z } from 'zod';
+import {
+  glAccountCodeMatchesTypePrefix,
+  glAccountParentTypeMatches,
+  glAccountRequiresStatementTag
+} from './gl-account-governance';
 
 const optionalPositiveInt = z.preprocess(
   (value) => {
@@ -30,15 +35,55 @@ export const upsertGlAccountFormSchema = z.object({
   description: z.string().optional()
 });
 
+export type UpsertGlAccountFormInput = z.infer<typeof upsertGlAccountFormSchema>;
+
+export type UpsertGlAccountValidationContext = {
+  parentTypeId?: number;
+};
+
+export function refineUpsertGlAccountForm(
+  data: UpsertGlAccountFormInput,
+  ctx: z.RefinementCtx,
+  validationContext: UpsertGlAccountValidationContext = {}
+) {
+  if (!glAccountCodeMatchesTypePrefix(data.glCode, data.type)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'GL code must start with the digit for this account class (1–5).',
+      path: ['glCode']
+    });
+  }
+
+  if (!glAccountParentTypeMatches(validationContext.parentTypeId, data.type)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Parent account must be the same account class as this account.',
+      path: ['parentId']
+    });
+  }
+
+  if (glAccountRequiresStatementTag(data.type) && data.tagId == null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Statement line tag is required for income and expense accounts.',
+      path: ['tagId']
+    });
+  }
+}
+
 export const toggleGlAccountDisabledSchema = z.object({
   disabled: z.boolean()
 });
 
-export type UpsertGlAccountFormInput = z.infer<typeof upsertGlAccountFormSchema>;
 export type ToggleGlAccountDisabledInput = z.infer<typeof toggleGlAccountDisabledSchema>;
 
-export function validateUpsertGlAccountForm(input: unknown) {
-  return upsertGlAccountFormSchema.safeParse(input);
+export function validateUpsertGlAccountForm(
+  input: unknown,
+  validationContext: UpsertGlAccountValidationContext = {}
+) {
+  return upsertGlAccountFormSchema
+    .superRefine((data, ctx) => refineUpsertGlAccountForm(data, ctx, validationContext))
+    .safeParse(input);
 }
 
 export function validateToggleGlAccountDisabled(input: unknown) {

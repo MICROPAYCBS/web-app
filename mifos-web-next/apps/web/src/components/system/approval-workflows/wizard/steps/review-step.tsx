@@ -129,9 +129,12 @@ export function ReviewStep({
                 <span className="font-medium">{stage.name?.trim() || stage.stageCode}</span>
                 <span className="text-muted-foreground">
                   {' '}
-                  · Intermediate stage {segment.index + 1} · {stage.stageType} ·{' '}
-                  {stage.participants.length} participant
-                  {stage.participants.length === 1 ? '' : 's'}
+                  · Intermediate stage {segment.index + 1} · {stage.stageType}
+                  {stage.approvalLimitAmount != null
+                    ? ` · limit ${stage.approvalLimitAmount}${
+                        stage.approvalLimitCurrency ? ` ${stage.approvalLimitCurrency}` : ''
+                      }`
+                    : ''}
                 </span>
               </li>
             );

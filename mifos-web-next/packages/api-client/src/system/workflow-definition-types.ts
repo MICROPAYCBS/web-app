@@ -16,14 +16,6 @@ export type WorkflowExpiryPeriodUnit = 'HOURS' | 'DAYS';
 
 export type WorkflowApprovalAction = 'APPROVE' | 'REJECT' | 'RETURN' | 'ESCALATE';
 
-export interface WorkflowStageParticipant {
-  id?: number;
-  roleId: number;
-  roleName?: string;
-  approvalLimitAmount?: number | null;
-  approvalLimitCurrency?: string | null;
-}
-
 export interface WorkflowStage {
   id?: number;
   stageCode: string;
@@ -38,8 +30,9 @@ export interface WorkflowStage {
   escalationTargetStageCode?: string | null;
   allowCrossBranchAccess?: boolean;
   requireDistinctApprover?: boolean;
+  approvalLimitAmount?: number | null;
+  approvalLimitCurrency?: string | null;
   actions: WorkflowApprovalAction[];
-  participants: WorkflowStageParticipant[];
 }
 
 export interface WorkflowTransition {
@@ -86,12 +79,9 @@ export interface WorkflowDefinitionWritePayload {
     escalationTargetStageCode?: string | null;
     allowCrossBranchAccess?: boolean;
     requireDistinctApprover?: boolean;
+    approvalLimitAmount?: number | null;
+    approvalLimitCurrency?: string | null;
     actions: WorkflowApprovalAction[];
-    participants: Array<{
-      roleId: number;
-      approvalLimitAmount?: number | null;
-      approvalLimitCurrency?: string | null;
-    }>;
   }>;
   transitions: Array<{
     fromStageCode: string;

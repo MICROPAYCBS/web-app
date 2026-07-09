@@ -36,22 +36,6 @@ const optionalPositiveInt = z.preprocess(
   z.number().int().positive().nullable()
 );
 
-export const workflowParticipantSchema = z
-  .object({
-    roleId: z.number().int().positive('Select a role.'),
-    approvalLimitAmount: optionalPositiveAmount.optional(),
-    approvalLimitCurrency: z.string().trim().max(3).optional().nullable()
-  })
-  .superRefine((participant, ctx) => {
-    if (participant.approvalLimitAmount != null && !participant.approvalLimitCurrency?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Currency is required when an approval limit is set.',
-        path: ['approvalLimitCurrency']
-      });
-    }
-  });
-
 export const workflowStageSchema = z
   .object({
     stageCode: z.string().trim().min(1, 'Stage code is required.').max(100),
@@ -66,8 +50,9 @@ export const workflowStageSchema = z
     escalationTargetStageCode: z.string().trim().max(100).optional().nullable(),
     allowCrossBranchAccess: z.boolean().optional(),
     requireDistinctApprover: z.boolean().optional(),
-    actions: z.array(workflowApprovalActionSchema).min(1, 'Select at least one action.'),
-    participants: z.array(workflowParticipantSchema).min(1, 'Add at least one participant.')
+    approvalLimitAmount: optionalPositiveAmount.optional(),
+    approvalLimitCurrency: z.string().trim().max(3).optional().nullable(),
+    actions: z.array(workflowApprovalActionSchema).min(1, 'Select at least one action.')
   })
   .superRefine((stage, ctx) => {
     if (!stage.actions.includes('APPROVE')) {
@@ -75,6 +60,14 @@ export const workflowStageSchema = z
         code: z.ZodIssueCode.custom,
         message: 'APPROVE must be enabled for each stage.',
         path: ['actions']
+      });
+    }
+
+    if (stage.approvalLimitAmount != null && !stage.approvalLimitCurrency?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Currency is required when an approval limit is set.',
+        path: ['approvalLimitCurrency']
       });
     }
 
@@ -215,7 +208,6 @@ export const upsertWorkflowDefinitionSchema = z
     });
   });
 
-export type WorkflowParticipantInput = z.infer<typeof workflowParticipantSchema>;
 export type WorkflowStageInput = z.infer<typeof workflowStageSchema>;
 export type WorkflowTransitionInput = z.infer<typeof workflowTransitionSchema>;
 export type UpsertWorkflowDefinitionInput = z.infer<typeof upsertWorkflowDefinitionSchema>;
@@ -248,12 +240,9 @@ export function buildWorkflowDefinitionApiPayload(
       escalationTargetStageCode: stage.escalationTargetStageCode?.trim() || undefined,
       allowCrossBranchAccess: stage.allowCrossBranchAccess ?? false,
       requireDistinctApprover: stage.requireDistinctApprover ?? true,
-      actions: stage.actions,
-      participants: stage.participants.map((participant) => ({
-        roleId: participant.roleId,
-        approvalLimitAmount: participant.approvalLimitAmount ?? undefined,
-        approvalLimitCurrency: participant.approvalLimitCurrency?.trim() || undefined
-      }))
+      approvalLimitAmount: stage.approvalLimitAmount ?? undefined,
+      approvalLimitCurrency: stage.approvalLimitCurrency?.trim() || undefined,
+      actions: stage.actions
     })),
     transitions: input.transitions.map((transition) => ({
       fromStageCode: transition.fromStageCode.trim(),

@@ -42,13 +42,14 @@ const CHECKER_INBOX_OUTCOME_TOAST: Record<
 
 export function toastCheckerInboxActionOutcome(
   action: 'approve' | 'reject' | 'delete',
-  result: CheckerInboxMutationResult
+  result: CheckerInboxMutationResult,
+  options?: { stageLabel?: string }
 ): result is CheckerInboxActionSuccess {
   if (!result.ok) {
     return false;
   }
 
-  const copy = CHECKER_INBOX_OUTCOME_TOAST[result.outcome][action];
+  const copy = resolveCheckerInboxOutcomeToastCopy(action, result.outcome, options?.stageLabel);
   const variant = CHECKER_INBOX_OUTCOME_TOAST[result.outcome].variant;
   if (variant === 'info') {
     toast.info(copy);
@@ -62,6 +63,37 @@ export function toastCheckerInboxActionOutcome(
 
   notifyCheckerInboxPendingChanged();
   return true;
+}
+
+function resolveCheckerInboxOutcomeToastCopy(
+  action: 'approve' | 'reject' | 'delete',
+  outcome: MakerCheckerActionOutcome,
+  stageLabel?: string
+): string {
+  const base = CHECKER_INBOX_OUTCOME_TOAST[outcome][action];
+
+  if (!stageLabel) {
+    return base;
+  }
+
+  switch (outcome) {
+    case 'workflow_stage_recorded':
+      return action === 'approve'
+        ? `Approval recorded at ${stageLabel}. Item awaits the next workflow stage.`
+        : base;
+    case 'workflow_stage_rejection':
+      return action === 'reject'
+        ? `Rejection recorded at ${stageLabel}.`
+        : base;
+    case 'completed':
+      return action === 'approve'
+        ? `Approved at ${stageLabel}.`
+        : action === 'reject'
+          ? `Rejected at ${stageLabel}.`
+          : base;
+    default:
+      return base;
+  }
 }
 
 /** Whether the checker item should remain in the inbox after this action. */

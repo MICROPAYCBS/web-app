@@ -47,6 +47,11 @@ function buildColumns(): ColumnDef<FineractJournalEntryListItem>[] {
       cell: ({ row }) => row.original.glAccountName
     },
     {
+      accessorKey: 'departmentName',
+      header: 'Department',
+      cell: ({ row }) => row.original.departmentName ?? '—'
+    },
+    {
       id: 'entryType',
       accessorFn: (row) => row.entryType.value,
       header: () => <span className="block w-full text-right">Entry type</span>,

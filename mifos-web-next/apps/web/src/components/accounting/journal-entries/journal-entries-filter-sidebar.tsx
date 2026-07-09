@@ -17,6 +17,7 @@ import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { formatJournalEntryGlAccountLabel } from '@/lib/accounting/journal-entry-display';
+import type { Department } from '@/lib/fineract/departments';
 import type { JournalEntrySearchFilters } from '@/lib/fineract/journal-entry-query';
 
 const ENTRY_TYPE_OPTIONS = [
@@ -29,12 +30,14 @@ export function JournalEntriesFilterFields({
   onDraftChange,
   offices,
   glAccounts,
+  departments,
   pending = false
 }: {
   draft: JournalEntrySearchFilters;
   onDraftChange: (draft: JournalEntrySearchFilters) => void;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
+  departments: Department[];
   pending?: boolean;
 }) {
   function patchDraft(patch: Partial<JournalEntrySearchFilters>) {
@@ -66,6 +69,27 @@ export function JournalEntriesFilterFields({
           keywords: [account.glCode, account.name]
         }))}
         placeholder="All accounts"
+        disabled={pending}
+      />
+      <SelectField
+        label="Department"
+        optional
+        value={draft.departmentId}
+        onValueChange={(value) => patchDraft({ departmentId: value })}
+        options={departments
+          .filter((department) => department.active !== false)
+          .filter(
+            (department) =>
+              !draft.officeId ||
+              department.officeId == null ||
+              String(department.officeId) === draft.officeId
+          )
+          .map((department) => ({
+            value: String(department.id),
+            label: department.departmentName,
+            keywords: [department.departmentCode]
+          }))}
+        placeholder="All departments"
         disabled={pending}
       />
       <SelectField
@@ -120,6 +144,7 @@ export function JournalEntriesFilterSidebar({
   onDraftChange,
   offices,
   glAccounts,
+  departments,
   pending = false,
   onApply,
   onClear
@@ -130,6 +155,7 @@ export function JournalEntriesFilterSidebar({
   onDraftChange: (draft: JournalEntrySearchFilters) => void;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
+  departments: Department[];
   pending?: boolean;
   onApply: (filters: JournalEntrySearchFilters) => void;
   onClear: () => void;
@@ -154,6 +180,7 @@ export function JournalEntriesFilterSidebar({
           onDraftChange={onDraftChange}
           offices={offices}
           glAccounts={glAccounts}
+          departments={departments}
         pending={pending}
       />
     </ListFilterSheet>

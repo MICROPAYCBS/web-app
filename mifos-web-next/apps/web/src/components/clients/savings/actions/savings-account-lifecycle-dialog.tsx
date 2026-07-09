@@ -15,6 +15,8 @@ import { executeSavingsAccountLifecycleCommandAction } from '@/actions/savings-a
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { SAVINGS_LIFECYCLE_COMMAND_TOAST } from '@/lib/fineract/savings-account-command-toasts';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -143,6 +145,10 @@ export function SavingsAccountLifecycleDialog({
     setFieldErrors({});
 
     startTransition(async () => {
+      if (!kind) {
+        return;
+      }
+      const activeKind = kind;
       const payload: Record<string, unknown> = {};
       if (showDate && dateField) {
         payload[dateField] = date;
@@ -154,13 +160,15 @@ export function SavingsAccountLifecycleDialog({
       const result = await executeSavingsAccountLifecycleCommandAction(
         clientId,
         String(accountId),
-        kind as SavingsAccountLifecycleDialogKind,
+        activeKind,
         payload
       );
 
-      if (!result.ok) {
-        setError(formatActionErrorMessage(result.message, result.fieldErrors));
-        setFieldErrors(result.fieldErrors ?? {});
+      if (!toastCommandOutcome(result, SAVINGS_LIFECYCLE_COMMAND_TOAST[activeKind])) {
+        if (!result.ok) {
+          setError(formatActionErrorMessage(result.message, result.fieldErrors));
+          setFieldErrors(result.fieldErrors ?? {});
+        }
         return;
       }
 

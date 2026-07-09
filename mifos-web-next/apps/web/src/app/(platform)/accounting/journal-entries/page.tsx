@@ -10,6 +10,7 @@ import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { JournalEntriesPageContent } from '@/components/accounting/journal-entries/journal-entries-page-content';
 import { parseJournalEntryListQuery } from '@/lib/fineract/journal-entry-query';
+import { listDepartments } from '@/lib/fineract/departments';
 import { listJournalEntryGlAccounts, listJournalEntries } from '@/lib/fineract/journal-entries';
 import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getServerSession } from '@/lib/session/server';
@@ -26,13 +27,20 @@ export default async function JournalEntriesPage({
 
   const params = await searchParams;
   const query = parseJournalEntryListQuery(params);
-  const [page, offices, glAccounts] = await Promise.all([
+  const [page, offices, glAccounts, departments] = await Promise.all([
     listJournalEntries(query),
     listOfficeOptions(),
-    listJournalEntryGlAccounts()
+    listJournalEntryGlAccounts(),
+    listDepartments()
   ]);
 
   return (
-    <JournalEntriesPageContent page={page} query={query} offices={offices} glAccounts={glAccounts} />
+    <JournalEntriesPageContent
+      page={page}
+      query={query}
+      offices={offices}
+      glAccounts={glAccounts}
+      departments={departments}
+    />
   );
 }

@@ -44,6 +44,19 @@ describe('resolveFineractErrorItemMessage', () => {
       'Validation failed for argument'
     );
   });
+
+  it('prefers developerMessage when defaultUserMessage is only a permission code', () => {
+    assert.equal(
+      resolveFineractErrorItemMessage({
+        parameterName: 'ACTIVATE_SAVINGSACCOUNT',
+        defaultUserMessage: 'ACTIVATE_SAVINGSACCOUNT',
+        developerMessage:
+          'The command ACTIVATE_SAVINGSACCOUNT is not supported. Can not be checked by the same user.',
+        userMessageGlobalisationCode: 'error.msg.command.unsupported'
+      }),
+      'The command ACTIVATE_SAVINGSACCOUNT is not supported. Can not be checked by the same user.'
+    );
+  });
 });
 
 describe('sanitizeRawDatabaseErrorMessage', () => {
@@ -182,6 +195,25 @@ describe('getFineractErrorMessage', () => {
         developerMessage: 'ERROR: syntax error at or near "$4" Position: 177'
       }),
       'The server could not save the denomination breakdown. Confirm Fineract migrations 3063 and 3064 are applied, then check server logs for database errors.'
+    );
+  });
+
+  it('surfaces unsupported checker command details instead of the permission code', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        defaultUserMessage: 'Validation errors exist.',
+        userMessageGlobalisationCode: 'validation.msg.validation.errors.exist',
+        errors: [
+          {
+            parameterName: 'ACTIVATE_SAVINGSACCOUNT',
+            defaultUserMessage: 'ACTIVATE_SAVINGSACCOUNT',
+            developerMessage:
+              'The command ACTIVATE_SAVINGSACCOUNT is not supported. Can not be checked by the same user.',
+            userMessageGlobalisationCode: 'error.msg.command.unsupported'
+          }
+        ]
+      }),
+      'The command ACTIVATE_SAVINGSACCOUNT is not supported. Can not be checked by the same user.'
     );
   });
 });

@@ -6,11 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractCurrencyOption,
-  FineractRoleListItem,
-  FineractRolePermissionUsage
-} from '@mifos/api-client';
+import type { FineractCurrencyOption, FineractRolePermissionUsage } from '@mifos/api-client';
 import type { UpsertWorkflowDefinitionInput } from '@mifos/validation';
 
 export type StepErrors = Record<string, string>;
@@ -23,14 +19,12 @@ export interface ApprovalWorkflowWizardProps {
   /** Used for the edit wizard title when mode is `edit`. */
   workflowName?: string;
   initialValues: UpsertWorkflowDefinitionInput;
-  roles: FineractRoleListItem[];
   currencies: FineractCurrencyOption[];
   taskPermissions: FineractRolePermissionUsage[];
 }
 
 export interface WorkflowStepProps {
   draft: UpsertWorkflowDefinitionInput;
-  roles: FineractRoleListItem[];
   currencies: FineractCurrencyOption[];
   taskPermissions: FineractRolePermissionUsage[];
   errors: StepErrors;

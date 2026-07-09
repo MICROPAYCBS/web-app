@@ -15,12 +15,10 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('Approval workflows', () => {
   let fineract: FineractE2eClient;
-  let roleId: number;
   let runSuffix: string;
 
   test.beforeAll(async () => {
     fineract = await createFineractE2eClient();
-    roleId = await fineract.firstActiveRoleId();
     runSuffix = Date.now().toString(36);
     await fineract.setApprovalWorkflowsEnabled(true);
     await fineract.cleanupE2eWorkflows();
@@ -38,8 +36,8 @@ test.describe('Approval workflows', () => {
   });
 
   test('creates and activates default and large loan workflows', async ({ page }) => {
-    const defaultPayload = fineract.buildDefaultLoanWorkflow(roleId, runSuffix);
-    const largePayload = fineract.buildLargeLoanWorkflow(roleId, runSuffix);
+    const defaultPayload = fineract.buildDefaultLoanWorkflow(runSuffix);
+    const largePayload = fineract.buildLargeLoanWorkflow(runSuffix);
 
     const defaultResult = await fineract.createWorkflowDefinition(defaultPayload);
     const largeResult = await fineract.createWorkflowDefinition(largePayload);
@@ -49,12 +47,14 @@ test.describe('Approval workflows', () => {
     await page.goto(APPROVAL_WORKFLOWS_PATH);
     await expect(page.getByRole('link', { name: defaultPayload.name })).toBeVisible();
     await expect(page.getByRole('link', { name: largePayload.name })).toBeVisible();
+    await expect(page.getByText('CREATE_LOAN').first()).toBeVisible();
     await expect(page.getByText('Default').first()).toBeVisible();
     await expect(page.getByText(/5[,.]?000[,.]?000/).first()).toBeVisible();
 
     await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${defaultResult.resourceId}`);
     await expect(page.getByRole('heading', { name: defaultPayload.name })).toBeVisible();
     await expect(page.getByText('Draft', { exact: true })).toBeVisible();
+    await expect(page.getByText('CREATE_LOAN_CHECKER').first()).toBeVisible();
 
     await fineract.activateWorkflowDefinition(defaultResult.resourceId as number);
     await page.reload();
@@ -71,7 +71,7 @@ test.describe('Approval workflows', () => {
   });
 
   test('rejects activating a cyclic draft via Fineract', async () => {
-    const cyclicPayload = fineract.buildCyclicDraftWorkflow(roleId, runSuffix);
+    const cyclicPayload = fineract.buildCyclicDraftWorkflow(runSuffix);
     const created = await fineract.createWorkflowDefinition(cyclicPayload);
     expect(created.resourceId).toBeTruthy();
 
@@ -94,7 +94,7 @@ test.describe('Approval workflows', () => {
   });
 
   test('shows create form and lists an API-created draft', async ({ page }) => {
-    const payload = fineract.buildDefaultLoanWorkflow(roleId, `${runSuffix}-draft`);
+    const payload = fineract.buildDefaultLoanWorkflow(`${runSuffix}-draft`);
     payload.name = e2eWorkflowName('UI Draft', runSuffix);
     const created = await fineract.createWorkflowDefinition(payload);
     expect(created.resourceId).toBeTruthy();
@@ -103,7 +103,7 @@ test.describe('Approval workflows', () => {
     await waitForPageReady(page);
     await expect(page.getByRole('heading', { name: 'Create approval workflow' })).toBeVisible();
     await expect(page.getByText('CREATE_LOAN').first()).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Stages' })).toBeVisible();
+    await expect(page.getByText('Stages', { exact: true }).first()).toBeVisible();
 
     await page.goto(APPROVAL_WORKFLOWS_PATH);
     await expect(page.getByRole('link', { name: payload.name })).toBeVisible();

@@ -477,7 +477,8 @@ export {
   validateToggleGlAccountDisabled,
   validateUpsertGlAccountForm,
   type ToggleGlAccountDisabledInput,
-  type UpsertGlAccountFormInput
+  type UpsertGlAccountFormInput,
+  type UpsertGlAccountValidationContext
 } from './accounting/gl-account.schema';
 export {
   buildCreateJournalEntryPayload,
@@ -487,6 +488,7 @@ export {
   validateCreateJournalEntryForm,
   validateRevertJournalEntry,
   type CreateJournalEntryFormInput,
+  type CreateJournalEntryValidationContext,
   type JournalEntryLineInput,
   type RevertJournalEntryInput
 } from './accounting/journal-entry.schema';
@@ -498,12 +500,6 @@ export {
   type AccountingRuleSideType,
   type UpsertAccountingRuleFormInput
 } from './accounting/accounting-rule.schema';
-export {
-  buildCreateFrequentPostingPayload,
-  createFrequentPostingFormSchema,
-  validateCreateFrequentPostingForm,
-  type CreateFrequentPostingFormInput
-} from './accounting/frequent-posting.schema';
 export {
   buildUpsertFinancialActivityMappingPayload,
   upsertFinancialActivityMappingFormSchema,
@@ -542,11 +538,9 @@ export {
   buildWorkflowDefinitionApiPayload,
   upsertWorkflowDefinitionSchema,
   validateUpsertWorkflowDefinition,
-  workflowParticipantSchema,
   workflowStageSchema,
   workflowTransitionSchema,
   type UpsertWorkflowDefinitionInput,
-  type WorkflowParticipantInput,
   type WorkflowStageInput,
   type WorkflowTransitionInput
 } from './system/workflow-definition.schema';

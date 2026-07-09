@@ -23,12 +23,6 @@ interface FineractAuthResponse {
   base64EncodedAuthenticationKey?: string;
 }
 
-interface FineractRole {
-  id: number;
-  name: string;
-  disabled?: boolean;
-}
-
 interface WorkflowDefinitionSummary {
   id: number;
   name: string;
@@ -116,19 +110,6 @@ export class FineractE2eClient {
     }
   }
 
-  async listRoles(): Promise<FineractRole[]> {
-    return this.request<FineractRole[]>('GET', '/roles');
-  }
-
-  async firstActiveRoleId(): Promise<number> {
-    const roles = await this.listRoles();
-    const role = roles.find((item) => !item.disabled);
-    if (!role) {
-      throw new Error('No active Fineract role found for workflow participant tests.');
-    }
-    return role.id;
-  }
-
   async listWorkflowDefinitions(): Promise<WorkflowDefinitionSummary[]> {
     return this.request<WorkflowDefinitionSummary[]>('GET', '/workflow-definitions');
   }
@@ -177,7 +158,7 @@ export class FineractE2eClient {
     return { ...config, enabled };
   }
 
-  buildDefaultLoanWorkflow(roleId: number, runSuffix: string) {
+  buildDefaultLoanWorkflow(runSuffix: string) {
     return {
       taskPermissionCode: 'CREATE_LOAN',
       name: e2eWorkflowName('Default Loan Approval', runSuffix),
@@ -193,8 +174,7 @@ export class FineractE2eClient {
           escalationEnabled: false,
           allowCrossBranchAccess: false,
           requireDistinctApprover: true,
-          actions: ['APPROVE', 'REJECT'],
-          participants: [{ roleId }]
+          actions: ['APPROVE', 'REJECT']
         },
         {
           stageCode: 'CREDIT_APPROVAL',
@@ -205,8 +185,7 @@ export class FineractE2eClient {
           escalationEnabled: false,
           allowCrossBranchAccess: false,
           requireDistinctApprover: true,
-          actions: ['APPROVE', 'REJECT'],
-          participants: [{ roleId }]
+          actions: ['APPROVE', 'REJECT']
         }
       ],
       transitions: [
@@ -219,7 +198,7 @@ export class FineractE2eClient {
     };
   }
 
-  buildLargeLoanWorkflow(roleId: number, runSuffix: string, currencyCode = 'UGX') {
+  buildLargeLoanWorkflow(runSuffix: string, currencyCode = 'UGX') {
     return {
       taskPermissionCode: 'CREATE_LOAN',
       name: e2eWorkflowName('Large Loan Approval', runSuffix),
@@ -240,8 +219,9 @@ export class FineractE2eClient {
           escalationTargetStageCode: 'REGIONAL_MANAGER',
           allowCrossBranchAccess: false,
           requireDistinctApprover: true,
-          actions: ['APPROVE', 'REJECT', 'RETURN', 'ESCALATE'],
-          participants: [{ roleId, approvalLimitAmount: 50_000_000, approvalLimitCurrency: currencyCode }]
+          approvalLimitAmount: 50_000_000,
+          approvalLimitCurrency: currencyCode,
+          actions: ['APPROVE', 'REJECT', 'RETURN', 'ESCALATE']
         },
         {
           stageCode: 'REGIONAL_MANAGER',
@@ -252,8 +232,7 @@ export class FineractE2eClient {
           escalationEnabled: false,
           allowCrossBranchAccess: false,
           requireDistinctApprover: true,
-          actions: ['APPROVE', 'REJECT'],
-          participants: [{ roleId }]
+          actions: ['APPROVE', 'REJECT']
         },
         {
           stageCode: 'CREDIT_COMMITTEE',
@@ -264,8 +243,7 @@ export class FineractE2eClient {
           escalationEnabled: false,
           allowCrossBranchAccess: false,
           requireDistinctApprover: true,
-          actions: ['APPROVE', 'REJECT'],
-          participants: [{ roleId }]
+          actions: ['APPROVE', 'REJECT']
         }
       ],
       transitions: [
@@ -283,7 +261,7 @@ export class FineractE2eClient {
     };
   }
 
-  buildCyclicDraftWorkflow(roleId: number, runSuffix: string) {
+  buildCyclicDraftWorkflow(runSuffix: string) {
     return {
       taskPermissionCode: 'CREATE_LOAN',
       name: e2eWorkflowName('Cyclic Draft', runSuffix),
@@ -297,8 +275,7 @@ export class FineractE2eClient {
           requiredApprovals: 1,
           rejectionPolicy: 'ANY',
           escalationEnabled: false,
-          actions: ['APPROVE', 'REJECT'],
-          participants: [{ roleId }]
+          actions: ['APPROVE', 'REJECT']
         },
         {
           stageCode: 'STAGE_B',
@@ -307,8 +284,7 @@ export class FineractE2eClient {
           requiredApprovals: 1,
           rejectionPolicy: 'ANY',
           escalationEnabled: false,
-          actions: ['APPROVE', 'REJECT'],
-          participants: [{ roleId }]
+          actions: ['APPROVE', 'REJECT']
         }
       ],
       transitions: [

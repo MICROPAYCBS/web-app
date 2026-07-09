@@ -14,7 +14,7 @@ export default function CreateApprovalWorkflowLoading() {
     <PlatformRouteLayout>
       <FormWizardSkeleton
         title="Create approval workflow"
-        description="Define stages, participants, and transitions. New workflows start in draft status."
+        description="Define stages and transitions for a maker-checker task. New workflows start in draft status."
         stepCount={5}
       />
     </PlatformRouteLayout>

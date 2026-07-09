@@ -50,6 +50,7 @@ export function MatchedApprovalWorkflowPanel({
   taskPermissions = [],
   compact = false,
   showHeading = true,
+  decisionHint,
   className
 }: {
   matchedWorkflow: CheckerInboxMatchedWorkflow;
@@ -57,6 +58,8 @@ export function MatchedApprovalWorkflowPanel({
   taskPermissions?: FineractRolePermissionUsage[];
   compact?: boolean;
   showHeading?: boolean;
+  /** Overrides the default Approve/Reject placement hint under the current stage. */
+  decisionHint?: string;
   className?: string;
 }) {
   const { definition, taskPermissionCode } = matchedWorkflow;
@@ -80,9 +83,8 @@ export function MatchedApprovalWorkflowPanel({
               <p className="text-sm font-medium">You are acting at: {currentStageLabel}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {positionLabel ? `${positionLabel}. ` : ''}
-                Use <span className="font-medium text-foreground">Approve</span> or{' '}
-                <span className="font-medium text-foreground">Reject</span> above to record your
-                decision for this stage.
+                {decisionHint ??
+                  'Use Approve or Reject above to record your decision for this stage.'}
               </p>
             </div>
           ) : (

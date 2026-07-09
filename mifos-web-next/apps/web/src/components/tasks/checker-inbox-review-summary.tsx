@@ -9,6 +9,8 @@
  */
 
 import type { CheckerInboxEnrichedItem, CheckerInboxItemContext } from '@/lib/checker-inbox/checker-inbox-item-types';
+import { resolveCheckerInboxWorkflowStageContext } from '@/lib/checker-inbox/checker-inbox-workflow-stage-copy';
+import { formatCheckerInboxWorkflowStageHeadline } from '@/lib/checker-inbox/workflow-stage-progress';
 
 const CONFIRM_LIST_LIMIT = 8;
 
@@ -90,15 +92,23 @@ export function CheckerInboxConfirmItemList({
 
   return (
     <ul className="max-h-48 space-y-2 overflow-y-auto rounded-md border border-border bg-muted/30 p-3 text-sm">
-      {visible.map((item) => (
-        <li key={item.id} className="space-y-0.5">
-          <p className="font-medium text-foreground">
-            #{item.id}
-            {item.context.summary ? ` — ${item.context.summary}` : ''}
-          </p>
-          <CheckerInboxReviewHighlights highlights={item.context.commandHighlights} />
-        </li>
-      ))}
+      {visible.map((item) => {
+        const stage = resolveCheckerInboxWorkflowStageContext(item.context);
+        return (
+          <li key={item.id} className="space-y-0.5">
+            <p className="font-medium text-foreground">
+              #{item.id}
+              {item.context.summary ? ` — ${item.context.summary}` : ''}
+            </p>
+            {stage ? (
+              <p className="text-xs text-primary">
+                Stage: {formatCheckerInboxWorkflowStageHeadline(stage)}
+              </p>
+            ) : null}
+            <CheckerInboxReviewHighlights highlights={item.context.commandHighlights} />
+          </li>
+        );
+      })}
       {remaining > 0 ? (
         <li className="text-muted-foreground">+ {remaining} more selected</li>
       ) : null}

@@ -16,7 +16,6 @@ import type {
   WorkflowExpiryPeriodUnit,
   WorkflowRejectionPolicy,
   WorkflowStage,
-  WorkflowStageParticipant,
   WorkflowStageType,
   WorkflowTransition,
   FineractCommandProcessingResult
@@ -24,26 +23,6 @@ import type {
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 const WORKFLOW_DEFINITIONS_PATH = '/workflow-definitions';
-
-function parseWorkflowStageParticipant(raw: unknown): WorkflowStageParticipant | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-  const row = raw as Record<string, unknown>;
-  const roleId = Number(row.roleId);
-  if (!Number.isFinite(roleId)) {
-    return null;
-  }
-  return {
-    id: Number.isFinite(Number(row.id)) ? Number(row.id) : undefined,
-    roleId,
-    roleName: typeof row.roleName === 'string' ? row.roleName : undefined,
-    approvalLimitAmount:
-      row.approvalLimitAmount == null ? null : Number(row.approvalLimitAmount),
-    approvalLimitCurrency:
-      typeof row.approvalLimitCurrency === 'string' ? row.approvalLimitCurrency : null
-  };
-}
 
 function parseWorkflowAction(value: unknown): WorkflowApprovalAction | null {
   if (value === 'APPROVE' || value === 'REJECT' || value === 'RETURN' || value === 'ESCALATE') {
@@ -73,12 +52,6 @@ function parseWorkflowStage(raw: unknown): WorkflowStage | null {
         .filter((item): item is WorkflowApprovalAction => item !== null)
     : [];
 
-  const participants = Array.isArray(row.participants)
-    ? row.participants
-        .map((item) => parseWorkflowStageParticipant(item))
-        .filter((item): item is WorkflowStageParticipant => item !== null)
-    : [];
-
   const rejectionPolicy = row.rejectionPolicy;
   const expiryPeriodUnit = row.expiryPeriodUnit;
 
@@ -104,8 +77,11 @@ function parseWorkflowStage(raw: unknown): WorkflowStage | null {
       typeof row.escalationTargetStageCode === 'string' ? row.escalationTargetStageCode : null,
     allowCrossBranchAccess: row.allowCrossBranchAccess === true,
     requireDistinctApprover: row.requireDistinctApprover !== false,
-    actions,
-    participants
+    approvalLimitAmount:
+      row.approvalLimitAmount == null ? null : Number(row.approvalLimitAmount),
+    approvalLimitCurrency:
+      typeof row.approvalLimitCurrency === 'string' ? row.approvalLimitCurrency : null,
+    actions
   };
 }
 
@@ -137,11 +113,7 @@ function parseWorkflowDefinition(raw: unknown): WorkflowDefinition | null {
   const row = raw as Record<string, unknown>;
   const id = Number(row.id);
   const taskPermissionCode =
-    typeof row.taskPermissionCode === 'string'
-      ? row.taskPermissionCode
-      : typeof row.moduleName === 'string'
-        ? row.moduleName
-        : '';
+    typeof row.taskPermissionCode === 'string' ? row.taskPermissionCode.trim() : '';
   const name = typeof row.name === 'string' ? row.name : '';
   const status = row.status;
   if (!Number.isFinite(id) || !taskPermissionCode || !name) {

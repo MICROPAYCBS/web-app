@@ -13,7 +13,6 @@ import { workflowDefinitionToFormValues } from '@/lib/fineract/approval-workflow
 import { getWorkflowDefinition } from '@/lib/fineract/approval-workflows';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
-import { listRoles } from '@/lib/fineract/system-roles';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -28,9 +27,8 @@ export default async function EditApprovalWorkflowPage({
     notFound();
   }
 
-  const [result, roles, currencies, taskPermissions] = await Promise.all([
+  const [result, currencies, taskPermissions] = await Promise.all([
     tryFineractLoad(() => getWorkflowDefinition(Number(definitionId)), 'Could not load approval workflow.'),
-    listRoles(),
     getOrganizationSelectedCurrencies(),
     listMakerCheckerPermissions()
   ]);
@@ -49,7 +47,6 @@ export default async function EditApprovalWorkflowPage({
       definitionId={result.data.id}
       workflowName={result.data.name}
       initialValues={workflowDefinitionToFormValues(result.data)}
-      roles={roles}
       currencies={currencies}
       taskPermissions={taskPermissions}
     />

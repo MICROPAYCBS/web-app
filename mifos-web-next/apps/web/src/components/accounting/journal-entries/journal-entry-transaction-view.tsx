@@ -38,7 +38,8 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   formatJournalEntryAmount,
   formatJournalEntryDate,
-  formatJournalEntryDateTime
+  formatJournalEntryDateTime,
+  formatJournalEntryDepartment
 } from '@/lib/accounting/journal-entry-display';
 import {
   getCoreRowModel,
@@ -73,6 +74,7 @@ export function JournalEntryTransactionView({
   const summary = entries[0];
   const isManual = summary?.manualEntry === true;
   const isReversed = summary?.reversed === true;
+  const departmentLabel = summary ? formatJournalEntryDepartment(summary) : null;
 
   const columns = useMemo<ColumnDef<FineractJournalEntryListItem>[]>(
     () => [
@@ -203,6 +205,9 @@ export function JournalEntryTransactionView({
         summary={
           <DetailFieldGrid columns={2}>
             <DetailField label="Branch">{summary.officeName}</DetailField>
+            {departmentLabel ? (
+              <DetailField label="Department">{departmentLabel}</DetailField>
+            ) : null}
             <DetailField label="Transaction date">
               {formatJournalEntryDate(summary.transactionDate)}
             </DetailField>

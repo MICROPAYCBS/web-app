@@ -9,6 +9,7 @@
  */
 
 import type { CheckerInboxListItem, FineractRolePermissionUsage } from '@mifos/api-client';
+import { useSession } from '@mifos/auth';
 import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -17,6 +18,7 @@ import {
 } from '@/components/composites/form-sheet';
 import { DetailField, DetailFieldGrid } from '@/components/composites';
 import { CheckerInboxReviewDetailsList } from '@/components/tasks/checker-inbox-review-summary';
+import { CheckerInboxSelfApprovalNotice } from '@/components/tasks/checker-inbox-self-approval-notice';
 import {
   ApprovalWorkflowNoMatchHint,
   MatchedApprovalWorkflowPanel
@@ -39,6 +41,7 @@ import {
   formatAuditTrailFilterLabel
 } from '@/lib/fineract/audit-trail-display';
 import { checkerInboxDetailPath } from '@/lib/fineract/checker-inbox-paths';
+import { resolveCheckerInboxSelfApprovalBlock } from '@/lib/checker-inbox/checker-inbox-self-approval';
 import { cn } from '@/lib/utils';
 
 export function CheckerInboxReviewSheet({
@@ -58,6 +61,9 @@ export function CheckerInboxReviewSheet({
     item != null ? describeCheckerInboxAction(item.actionName, item.entityName) : '';
   const title = context?.subjectLabel ?? (item != null ? `Checker #${item.id}` : 'Review details');
   const hasReviewContent = Boolean(context?.commandHighlights?.length);
+  const { user } = useSession();
+  const selfApprovalBlock =
+    item && context ? resolveCheckerInboxSelfApprovalBlock(item.maker, user, context) : { blocked: false };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -76,6 +82,7 @@ export function CheckerInboxReviewSheet({
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <CheckerInboxSelfApprovalNotice block={selfApprovalBlock} className="mb-6" />
           <DetailFieldGrid columns={1} className="mb-6">
             {context.customerName ? (
               <DetailField label="Customer">{context.customerName}</DetailField>
@@ -127,6 +134,7 @@ export function CheckerInboxReviewSheet({
               workflowInstance={context.workflowInstance}
               taskPermissions={taskPermissions}
               compact
+              decisionHint="Use Approve or Reject in the page header, or open Full review, to record your decision for this stage."
               className="mt-6 rounded-lg border border-border bg-muted/20 p-4"
             />
           ) : context.approvalWorkflowsEnabled ? (

@@ -198,30 +198,42 @@ export function ApprovalWorkflowDetailView({
           </p>
         ) : null}
 
-        <DetailSection title="Overview">
-          <DetailFieldGrid>
-            <DetailField label="Task">
-              <div>
-                <p>{taskDisplay.code}</p>
-                {taskDisplay.subtitle ? (
-                  <p className="text-sm text-muted-foreground">{taskDisplay.subtitle}</p>
-                ) : null}
-              </div>
-            </DetailField>
-            <DetailField label="Priority">{definition.priority ?? '—'}</DetailField>
-            <DetailField label="Selection criteria">
-              {workflowSelectionCriteriaSummary(definition)}
-            </DetailField>
-            <DetailField label="Currency">{definition.currencyCode ?? '—'}</DetailField>
-            <DetailField label="Description" className="sm:col-span-2">
-              {definition.description || '—'}
-            </DetailField>
-          </DetailFieldGrid>
-        </DetailSection>
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <DetailSection title="Overview">
+            <DetailFieldGrid columns={1}>
+              <DetailField label="Task">
+                <div>
+                  <p>{taskDisplay.code}</p>
+                  {taskDisplay.subtitle ? (
+                    <p className="text-sm text-muted-foreground">{taskDisplay.subtitle}</p>
+                  ) : null}
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Actors need{' '}
+                    <span className="font-medium text-foreground">
+                      {taskDisplay.code.endsWith('_CHECKER')
+                        ? taskDisplay.code
+                        : `${taskDisplay.code}_CHECKER`}
+                    </span>
+                    .
+                  </p>
+                </div>
+              </DetailField>
+              <DetailField label="Priority">{definition.priority ?? '—'}</DetailField>
+              <DetailField label="Selection criteria">
+                {workflowSelectionCriteriaSummary(definition)}
+              </DetailField>
+              <DetailField label="Currency">{definition.currencyCode ?? '—'}</DetailField>
+              <DetailField label="Description">{definition.description || '—'}</DetailField>
+            </DetailFieldGrid>
+          </DetailSection>
 
-        <DetailSection title="Approval chain">
-          <ApprovalWorkflowStagesTimeline definition={definition} />
-        </DetailSection>
+          <DetailSection
+            title="Approval chain"
+            description="The full path from maker creation through intermediate approvals to checker approval. Stage actors share the task checker permission pool."
+          >
+            <ApprovalWorkflowStagesTimeline definition={definition} showIntro={false} />
+          </DetailSection>
+        </div>
       </DetailPage>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

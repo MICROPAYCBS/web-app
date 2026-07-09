@@ -33,6 +33,8 @@ export interface FineractJournalEntryListItem {
   comments?: string;
   paymentTypeName?: string;
   externalAssetOwner?: string;
+  departmentId?: number;
+  departmentName?: string;
 }
 
 export interface FineractJournalEntriesPage {
@@ -55,6 +57,7 @@ export interface FineractJournalEntryGlAccountOption {
   id: number;
   name: string;
   glCode: string;
+  typeId?: number;
 }
 
 export interface FineractPaymentTypeOption {

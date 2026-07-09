@@ -86,7 +86,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.legal.tender.duplicate':
     'A denomination with this face value and type already exists for this currency.',
   'error.msg.direct.loan.repayment.not.allowed':
-    "Direct loan repayments are not allowed for this institution. Repay by transferring from the client's savings account."
+    "Direct loan repayments are not allowed for this institution. Repay by transferring from the client's savings account.",
+  'error.msg.workflow.instance.approver.not.authorized':
+    'You are not authorized to act at this workflow stage.',
+  'error.msg.workflow.instance.same.approver.as.maker':
+    'The person who submitted this request cannot approve it at this stage.',
+  'error.msg.workflow.instance.duplicate.approval':
+    'You have already recorded your decision for this workflow stage.',
+  'error.msg.command.unsupported':
+    'This checker action is not allowed.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

@@ -20,11 +20,14 @@ import {
 import { revalidatePath } from 'next/cache';
 import {
   createJournalEntry,
+  listJournalEntryGlAccounts,
   revertJournalEntryTransaction
 } from '@/lib/fineract/journal-entries';
+import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import { getServerSession } from '@/lib/session/server';
 
 const LIST_PATH = '/accounting/journal-entries';
+const REQUIRE_DEPARTMENT_CONFIG = 'enable-require-department-on-manual-journal-pl-lines';
 
 export type JournalEntriesActionResult =
   | { ok: true; transactionId?: string }
@@ -62,7 +65,20 @@ export async function createJournalEntryAction(
     return { ok: false, message: 'You do not have permission to create journal entries.' };
   }
 
-  const parsed = validateCreateJournalEntryForm(input);
+  const [departmentConfig, glAccounts] = await Promise.all([
+    getGlobalConfigurationByName(REQUIRE_DEPARTMENT_CONFIG),
+    listJournalEntryGlAccounts()
+  ]);
+  const glAccountTypesById = Object.fromEntries(
+    glAccounts
+      .filter((account) => account.typeId != null)
+      .map((account) => [account.id, account.typeId as number])
+  );
+
+  const parsed = validateCreateJournalEntryForm(input, {
+    requireDepartmentOnPlLines: departmentConfig?.enabled ?? false,
+    glAccountTypesById
+  });
   if (!parsed.success) {
     return {
       ok: false,

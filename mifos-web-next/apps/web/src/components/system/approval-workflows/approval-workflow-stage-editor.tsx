@@ -8,9 +8,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractCurrencyOption, FineractRoleListItem, WorkflowApprovalAction } from '@mifos/api-client';
+import type { FineractCurrencyOption, WorkflowApprovalAction } from '@mifos/api-client';
 import type { WorkflowStageInput } from '@mifos/validation';
-import { Plus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
@@ -22,7 +22,7 @@ import {
   WORKFLOW_REJECTION_POLICY_SELECT_OPTIONS,
   WORKFLOW_STAGE_TYPE_SELECT_OPTIONS,
   workflowCurrencySelectOptions,
-  workflowRoleSelectOptions,
+  workflowStageCheckerPermissionCode,
   workflowStageCodeSelectOptions
 } from '@/lib/fineract/approval-workflow-display';
 
@@ -42,8 +42,9 @@ export function emptyStage(index: number): WorkflowStageInput {
     escalationTargetStageCode: null,
     allowCrossBranchAccess: false,
     requireDistinctApprover: true,
-    actions: ['APPROVE', 'REJECT'],
-    participants: [{ roleId: 0, approvalLimitAmount: null, approvalLimitCurrency: null }]
+    approvalLimitAmount: null,
+    approvalLimitCurrency: null,
+    actions: ['APPROVE', 'REJECT']
   };
 }
 
@@ -51,8 +52,8 @@ export function StageEditor({
   stage,
   stageIndex,
   allStages,
-  roles,
   currencies,
+  taskPermissionCode,
   disabled,
   fieldErrors,
   onChange,
@@ -62,8 +63,8 @@ export function StageEditor({
   stage: WorkflowStageInput;
   stageIndex: number;
   allStages: WorkflowStageInput[];
-  roles: FineractRoleListItem[];
   currencies: FineractCurrencyOption[];
+  taskPermissionCode?: string;
   disabled: boolean;
   fieldErrors: Record<string, string>;
   onChange: (stage: WorkflowStageInput) => void;
@@ -71,25 +72,15 @@ export function StageEditor({
   canRemove: boolean;
 }) {
   const prefix = `stages.${stageIndex}`;
-  const roleOptions = useMemo(() => workflowRoleSelectOptions(roles), [roles]);
   const currencyOptions = useMemo(() => workflowCurrencySelectOptions(currencies), [currencies]);
   const escalationStageOptions = useMemo(
     () => workflowStageCodeSelectOptions(allStages, { excludeStageCode: stage.stageCode }),
     [allStages, stage.stageCode]
   );
+  const checkerPermission = workflowStageCheckerPermissionCode(taskPermissionCode ?? '');
 
   function patchStage(patch: Partial<WorkflowStageInput>) {
     onChange({ ...stage, ...patch });
-  }
-
-  function patchParticipant(
-    participantIndex: number,
-    patch: Partial<WorkflowStageInput['participants'][number]>
-  ) {
-    const participants = stage.participants.map((participant, index) =>
-      index === participantIndex ? { ...participant, ...patch } : participant
-    );
-    patchStage({ participants });
   }
 
   function toggleAction(action: WorkflowApprovalAction, checked: boolean) {
@@ -252,74 +243,42 @@ export function StageEditor({
       </div>
 
       <div className="space-y-3">
-        <Label>Participants</Label>
-        {stage.participants.map((participant, participantIndex) => (
-          <div
-            key={participantIndex}
-            className="grid gap-3 rounded-md border border-border p-3 md:grid-cols-3"
-          >
-            <SelectField
-              id={`${prefix}-participant-${participantIndex}-role`}
-              label="Role"
-              value={participant.roleId > 0 ? String(participant.roleId) : ''}
-              onValueChange={(value) =>
-                value && patchParticipant(participantIndex, { roleId: Number(value) })
-              }
-              options={roleOptions}
-              placeholder="Select role"
-              disabled={disabled}
-              error={fieldErrors[`${prefix}.participants.${participantIndex}.roleId`]}
-            />
-            <TextField
-              label="Approval limit"
-              type="number"
-              value={
-                participant.approvalLimitAmount == null
-                  ? ''
-                  : String(participant.approvalLimitAmount)
-              }
-              onChange={(value) =>
-                patchParticipant(participantIndex, {
-                  approvalLimitAmount: value === '' ? null : Number(value)
-                })
-              }
-              disabled={disabled}
-            />
-            <SelectField
-              id={`${prefix}-participant-${participantIndex}-currency`}
-              label="Limit currency"
-              optional
-              value={participant.approvalLimitCurrency ?? ''}
-              onValueChange={(value) =>
-                patchParticipant(participantIndex, { approvalLimitCurrency: value || null })
-              }
-              options={currencyOptions}
-              placeholder="Optional"
-              disabled={disabled}
-              error={fieldErrors[`${prefix}.participants.${participantIndex}.approvalLimitCurrency`]}
-            />
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled}
-          onClick={() =>
-            patchStage({
-              participants: [
-                ...stage.participants,
-                { roleId: 0, approvalLimitAmount: null, approvalLimitCurrency: null }
-              ]
-            })
-          }
-        >
-          <Plus className="mr-1 size-4" />
-          Add participant
-        </Button>
-        {fieldErrors[`${prefix}.participants`] ? (
-          <p className="text-sm text-destructive">{fieldErrors[`${prefix}.participants`]}</p>
-        ) : null}
+        <div>
+          <Label>Approval limit</Label>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Optional ceiling for approvals at this stage. Actors are users with{' '}
+            {checkerPermission ? (
+              <span className="font-medium text-foreground">{checkerPermission}</span>
+            ) : (
+              <span className="font-medium text-foreground">{'{task}_CHECKER'}</span>
+            )}
+            , granted through roles in user administration.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <TextField
+            label="Limit amount"
+            optional
+            type="number"
+            value={stage.approvalLimitAmount == null ? '' : String(stage.approvalLimitAmount)}
+            onChange={(value) =>
+              patchStage({ approvalLimitAmount: value === '' ? null : Number(value) })
+            }
+            disabled={disabled}
+            error={fieldErrors[`${prefix}.approvalLimitAmount`]}
+          />
+          <SelectField
+            id={`${prefix}-approvalLimitCurrency`}
+            label="Limit currency"
+            optional
+            value={stage.approvalLimitCurrency ?? ''}
+            onValueChange={(value) => patchStage({ approvalLimitCurrency: value || null })}
+            options={currencyOptions}
+            placeholder="Optional"
+            disabled={disabled}
+            error={fieldErrors[`${prefix}.approvalLimitCurrency`]}
+          />
+        </div>
       </div>
     </div>
   );

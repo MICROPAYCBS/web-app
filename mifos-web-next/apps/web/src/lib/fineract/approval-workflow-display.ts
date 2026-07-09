@@ -298,18 +298,6 @@ export function workflowCurrencySelectOptions(
   return currencyToSelectOptions(currencies);
 }
 
-export function workflowRoleSelectOptions(
-  roles: { id: number; name: string; disabled?: boolean }[]
-): SelectOption[] {
-  return roles
-    .filter((role) => !role.disabled)
-    .map((role) => ({
-      value: String(role.id),
-      label: role.name,
-      keywords: [role.name, String(role.id)]
-    }));
-}
-
 export function workflowTaskPermissionSimpleSelectOptions(
   permissions: FineractRolePermissionUsage[]
 ): SelectOption[] {
@@ -409,8 +397,9 @@ export function defaultWorkflowDefinitionFormValues(
         escalationTargetStageCode: null,
         allowCrossBranchAccess: false,
         requireDistinctApprover: true,
-        actions: ['APPROVE', 'REJECT'],
-        participants: [{ roleId: 0, approvalLimitAmount: null, approvalLimitCurrency: null }]
+        approvalLimitAmount: null,
+        approvalLimitCurrency: null,
+        actions: ['APPROVE', 'REJECT']
       }
     ],
     transitions: []
@@ -441,12 +430,9 @@ export function workflowDefinitionToFormValues(
       escalationTargetStageCode: stage.escalationTargetStageCode ?? null,
       allowCrossBranchAccess: stage.allowCrossBranchAccess ?? false,
       requireDistinctApprover: stage.requireDistinctApprover ?? true,
-      actions: stage.actions.length ? stage.actions : ['APPROVE'],
-      participants: stage.participants.map((participant) => ({
-        roleId: participant.roleId,
-        approvalLimitAmount: participant.approvalLimitAmount ?? null,
-        approvalLimitCurrency: participant.approvalLimitCurrency ?? null
-      }))
+      approvalLimitAmount: stage.approvalLimitAmount ?? null,
+      approvalLimitCurrency: stage.approvalLimitCurrency ?? null,
+      actions: stage.actions.length ? stage.actions : ['APPROVE']
     })),
     transitions: definition.transitions.map((transition) => ({
       fromStageCode: transition.fromStageCode,
@@ -456,6 +442,15 @@ export function workflowDefinitionToFormValues(
       maxAmount: transition.maxAmount ?? null
     }))
   };
+}
+
+/** Checker eligibility implied by the workflow task — not configured per stage. */
+export function workflowStageCheckerPermissionCode(taskPermissionCode: string): string {
+  const code = taskPermissionCode.trim();
+  if (!code) {
+    return '';
+  }
+  return code.endsWith('_CHECKER') ? code : `${code}_CHECKER`;
 }
 
 export function formatWorkflowExpiry(stage: WorkflowStage): string | null {

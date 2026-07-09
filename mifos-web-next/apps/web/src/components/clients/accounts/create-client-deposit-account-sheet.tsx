@@ -25,17 +25,19 @@ import {
   type DepositFormState
 } from '@/components/clients/accounts/create-client-deposit-account-form-state';
 import { CreateClientSavingsAccountAdvancedFields } from '@/components/clients/accounts/create-client-savings-account-advanced-fields';
-import { DateField } from '@/components/composites/date-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isClientDepositAccountTemplate } from '@/lib/fineract/client-account-action-result';
 import { CLIENT_DEPOSIT_ACCOUNT_CONFIG } from '@/lib/fineract/client-deposit-account-config';
-import { FINERACT_DATE_FORMAT, toFineractDate } from '@/lib/fineract/dates';
+import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
+import { SAVINGS_ACCOUNT_CREATE_TOAST } from '@/lib/fineract/savings-account-command-toasts';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 export const CREATE_CLIENT_DEPOSIT_ACCOUNT_FORM_ID = 'create-client-deposit-account-form';
@@ -57,10 +59,11 @@ export function CreateClientDepositAccountSheet({
 }) {
   const router = useRouter();
   const config = CLIENT_DEPOSIT_ACCOUNT_CONFIG[kind];
+  const initialTransactionDate = useInitialTransactionDate();
   const [template, setTemplate] = useState(initialTemplate);
   const [form, setForm] = useState<DepositFormState>(() => ({
     ...emptyDepositForm(),
-    submittedOnDate: toFineractDate()
+    submittedOnDate: initialTransactionDate
   }));
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -120,7 +123,7 @@ export function CreateClientDepositAccountSheet({
       return;
     }
     setTemplate(initialTemplate);
-    setForm({ ...emptyDepositForm(), submittedOnDate: toFineractDate() });
+    setForm({ ...emptyDepositForm(), submittedOnDate: initialTransactionDate });
     setActiveTab('basic');
     setFieldErrors({});
     setSubmitError(null);
@@ -130,7 +133,7 @@ export function CreateClientDepositAccountSheet({
         setTemplate(result);
       }
     });
-  }, [open, initialTemplate, kind, clientId]);
+  }, [open, initialTemplate, kind, clientId, initialTransactionDate]);
 
   function patchForm(patch: Partial<DepositFormState>) {
     setForm((current) => ({ ...current, ...patch }));
@@ -185,10 +188,7 @@ export function CreateClientDepositAccountSheet({
               };
 
       const result = await createClientDepositAccountAction(kind, clientId, payload);
-      if (!toastCommandOutcome(result, {
-        completed: 'Application submitted.',
-        pending: 'Application sent for approval.'
-      })) {
+      if (!toastCommandOutcome(result, SAVINGS_ACCOUNT_CREATE_TOAST)) {
         setSubmitError(result.message);
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
@@ -217,13 +217,13 @@ export function CreateClientDepositAccountSheet({
         emptyMessage="No products available."
       />
 
-      <DateField
+      <TransactionDateField
         id="deposit-submitted-on"
         label="Submitted on"
         required
         dateFormat={FINERACT_DATE_FORMAT}
         value={form.submittedOnDate}
-        onChange={(submittedOnDate) => patchForm({ submittedOnDate: submittedOnDate ?? '' })}
+        onChange={(submittedOnDate) => patchForm({ submittedOnDate })}
         disabled={disabled}
         error={fieldErrors.submittedOnDate}
       />

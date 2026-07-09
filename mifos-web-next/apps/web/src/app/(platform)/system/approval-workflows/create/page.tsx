@@ -12,7 +12,6 @@ import { ApprovalWorkflowWizardPageContent } from '@/components/system/approval-
 import { defaultWorkflowDefinitionFormValues } from '@/lib/fineract/approval-workflow-display';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
-import { listRoles } from '@/lib/fineract/system-roles';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function CreateApprovalWorkflowPage() {
@@ -21,8 +20,7 @@ export default async function CreateApprovalWorkflowPage() {
     notFound();
   }
 
-  const [roles, currencies, taskPermissions] = await Promise.all([
-    listRoles(),
+  const [currencies, taskPermissions] = await Promise.all([
     getOrganizationSelectedCurrencies(),
     listMakerCheckerPermissions()
   ]);
@@ -35,7 +33,6 @@ export default async function CreateApprovalWorkflowPage() {
     <ApprovalWorkflowWizardPageContent
       mode="create"
       initialValues={defaultWorkflowDefinitionFormValues(preferredTask)}
-      roles={roles}
       currencies={currencies}
       taskPermissions={taskPermissions}
     />

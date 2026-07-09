@@ -32,6 +32,7 @@ import {
   checkerInboxDetailPath
 } from '@/lib/fineract/checker-inbox-paths';
 import { getServerSession } from '@/lib/session/server';
+import { resolveCheckerInboxSelfApprovalBlock } from '@/lib/checker-inbox/checker-inbox-self-approval';
 
 export type CheckerInboxActionResult = CheckerInboxMutationResult;
 
@@ -42,7 +43,19 @@ function assertCheckerInboxAccess(session: Awaited<ReturnType<typeof getServerSe
 type MakerCheckerItemContext = {
   actionName?: string;
   entityName?: string;
+  maker?: string;
 };
+
+function rejectSelfCheckerAction(
+  session: Awaited<ReturnType<typeof getServerSession>>,
+  maker?: string
+): { ok: false; message: string } | null {
+  const block = resolveCheckerInboxSelfApprovalBlock(maker, session ?? undefined);
+  if (!block.blocked) {
+    return null;
+  }
+  return { ok: false, message: block.reason ?? 'You cannot approve or reject your own submission.' };
+}
 
 function success(
   outcome: CheckerInboxActionSuccess['outcome'],
@@ -76,6 +89,14 @@ export async function executeCheckerInboxActionAction(
 
   if (!Number.isFinite(checkerId)) {
     return { ok: false, message: 'Invalid checker inbox item.' };
+  }
+
+  const maker =
+    itemContext?.maker ??
+    (await getCheckerInboxDetail(checkerId).catch(() => null))?.maker;
+  const selfCheckerError = rejectSelfCheckerAction(session, maker);
+  if (selfCheckerError) {
+    return selfCheckerError;
   }
 
   try {
@@ -143,6 +164,12 @@ export async function bulkExecuteCheckerInboxActionAction(
   try {
     for (const id of ids) {
       try {
+        const selfCheckerError = rejectSelfCheckerAction(session, itemsById?.[id]?.maker);
+        if (selfCheckerError) {
+          partialFailures.push(`#${id}: ${selfCheckerError.message}`);
+          continue;
+        }
+
         const response = await executeCheckerInboxAction(id, command);
         revalidatePath(checkerInboxDetailPath(id));
 

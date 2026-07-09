@@ -11,6 +11,18 @@ import {
   areJournalEntryTotalsBalanced,
   JOURNAL_ENTRY_UNBALANCED_MESSAGE
 } from '@mifos/domain';
+import { glAccountRequiresStatementTag } from './gl-account-governance';
+
+const optionalPositiveInt = z.preprocess(
+  (value) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : value;
+  },
+  z.number().int().positive().optional()
+);
 
 export const journalEntryLineSchema = z.object({
   glAccountId: z.number().int().positive('Select a GL account.'),
@@ -19,6 +31,7 @@ export const journalEntryLineSchema = z.object({
 
 export const createJournalEntryFormBaseSchema = z.object({
   officeId: z.number().int().positive('Branch is required.'),
+  departmentId: optionalPositiveInt,
   currencyCode: z.string().trim().min(1, 'Currency is required.'),
   transactionDate: z.string().trim().min(1, 'Transaction date is required.'),
   debits: z.array(journalEntryLineSchema).min(1, 'Add at least one debit line.'),
@@ -31,8 +44,14 @@ export const createJournalEntryFormBaseSchema = z.object({
   receiptNumber: z.string().optional(),
   bankNumber: z.string().optional(),
   comments: z.string().optional(),
-  externalAssetOwner: z.string().optional()
+  externalAssetOwner: z.string().optional(),
+  accountingRule: optionalPositiveInt
 });
+
+export type CreateJournalEntryValidationContext = {
+  requireDepartmentOnPlLines?: boolean;
+  glAccountTypesById?: Record<number, number>;
+};
 
 function refineJournalEntryBalance(
   data: Pick<z.infer<typeof createJournalEntryFormBaseSchema>, 'debits' | 'credits'>,
@@ -43,6 +62,37 @@ function refineJournalEntryBalance(
       code: z.ZodIssueCode.custom,
       message: JOURNAL_ENTRY_UNBALANCED_MESSAGE,
       path: ['balance']
+    });
+  }
+}
+
+function journalEntryHasPlAccount(
+  data: Pick<z.infer<typeof createJournalEntryFormBaseSchema>, 'debits' | 'credits'>,
+  glAccountTypesById: Record<number, number>
+) {
+  return [...data.debits, ...data.credits].some((line) => {
+    const typeId = glAccountTypesById[line.glAccountId];
+    return typeId != null && glAccountRequiresStatementTag(typeId);
+  });
+}
+
+export function refineJournalEntryDepartments(
+  data: Pick<
+    z.infer<typeof createJournalEntryFormBaseSchema>,
+    'debits' | 'credits' | 'departmentId'
+  >,
+  ctx: z.RefinementCtx,
+  validationContext: CreateJournalEntryValidationContext = {}
+) {
+  if (!validationContext.requireDepartmentOnPlLines) {
+    return;
+  }
+  const types = validationContext.glAccountTypesById ?? {};
+  if (journalEntryHasPlAccount(data, types) && data.departmentId == null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Department is required when posting to income or expense accounts.',
+      path: ['departmentId']
     });
   }
 }
@@ -61,8 +111,16 @@ export type JournalEntryLineInput = z.infer<typeof journalEntryLineSchema>;
 export type CreateJournalEntryFormInput = z.infer<typeof createJournalEntryFormSchema>;
 export type RevertJournalEntryInput = z.infer<typeof revertJournalEntrySchema>;
 
-export function validateCreateJournalEntryForm(input: unknown) {
-  return createJournalEntryFormSchema.safeParse(input);
+export function validateCreateJournalEntryForm(
+  input: unknown,
+  validationContext: CreateJournalEntryValidationContext = {}
+) {
+  return createJournalEntryFormBaseSchema
+    .superRefine((data, ctx) => {
+      refineJournalEntryBalance(data, ctx);
+      refineJournalEntryDepartments(data, ctx, validationContext);
+    })
+    .safeParse(input);
 }
 
 export function validateRevertJournalEntry(input: unknown) {
@@ -81,11 +139,13 @@ export function buildCreateJournalEntryPayload(
     transactionDate: input.transactionDate,
     debits: input.debits.map((line) => ({
       glAccountId: line.glAccountId,
-      amount: line.amount
+      amount: line.amount,
+      ...(input.departmentId != null ? { departmentId: input.departmentId } : {})
     })),
     credits: input.credits.map((line) => ({
       glAccountId: line.glAccountId,
-      amount: line.amount
+      amount: line.amount,
+      ...(input.departmentId != null ? { departmentId: input.departmentId } : {})
     })),
     referenceNumber: input.referenceNumber?.trim() || undefined,
     paymentTypeId: input.paymentTypeId,
@@ -95,6 +155,7 @@ export function buildCreateJournalEntryPayload(
     receiptNumber: input.receiptNumber?.trim() || undefined,
     bankNumber: input.bankNumber?.trim() || undefined,
     comments: input.comments?.trim() || undefined,
-    externalAssetOwner: input.externalAssetOwner?.trim() || undefined
+    externalAssetOwner: input.externalAssetOwner?.trim() || undefined,
+    ...(input.accountingRule != null ? { accountingRule: input.accountingRule } : {})
   };
 }

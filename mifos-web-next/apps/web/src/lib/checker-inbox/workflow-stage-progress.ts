@@ -98,3 +98,35 @@ export function workflowStagePositionLabel(
   }
   return `Stage ${index + 1} of ${orderedStageCodes.length}`;
 }
+
+export function isFinalWorkflowStage(
+  definition: WorkflowDefinition,
+  currentStageCode: string
+): boolean {
+  const chain = buildWorkflowChain(definition.stages, definition.transitions);
+  const orderedStageCodes = stageCodesInOrder(chain);
+  const index = orderedStageCodes.indexOf(currentStageCode);
+  return index >= 0 && index === orderedStageCodes.length - 1;
+}
+
+export type CheckerInboxWorkflowStageContext = {
+  stageLabel: string;
+  positionLabel?: string;
+  isFinalStage: boolean;
+};
+
+export function formatCheckerInboxWorkflowStageHeadline(
+  stage: CheckerInboxWorkflowStageContext
+): string {
+  return stage.positionLabel
+    ? `${stage.stageLabel} (${stage.positionLabel})`
+    : stage.stageLabel;
+}
+
+export function checkerInboxWorkflowStageActionLabel(
+  stage: CheckerInboxWorkflowStageContext,
+  action: 'approve' | 'reject'
+): string {
+  const headline = formatCheckerInboxWorkflowStageHeadline(stage);
+  return action === 'approve' ? `Approve at ${headline}` : `Reject at ${headline}`;
+}

@@ -29,6 +29,8 @@ import {
   formatGlAccountLabel,
   formatGlAccountTypeLabel,
   GL_ACCOUNT_CODE_NUMBERING_GUIDANCE,
+  GL_ACCOUNT_TYPE_EXPENSE,
+  GL_ACCOUNT_TYPE_INCOME,
   glAccountCodeHintForType,
   headerOptionsForType,
   tagOptionsForType
@@ -64,6 +66,15 @@ export function GlAccountForm({
     [template, form.type]
   );
 
+  const selectedParentTypeId = useMemo(() => {
+    if (form.parentId == null) {
+      return undefined;
+    }
+    return form.type;
+  }, [form.type, form.parentId]);
+
+  const tagRequired = form.type === GL_ACCOUNT_TYPE_INCOME || form.type === GL_ACCOUNT_TYPE_EXPENSE;
+
   const tagOptions = useMemo(
     () =>
       tagOptionsForType(template, form.type).map((tag) => ({
@@ -94,7 +105,9 @@ export function GlAccountForm({
 
   function handleSubmit() {
     setSubmitError(null);
-    const parsed = validateUpsertGlAccountForm(formRef.current);
+    const parsed = validateUpsertGlAccountForm(formRef.current, {
+      parentTypeId: selectedParentTypeId
+    });
     if (!parsed.success) {
       const nextErrors: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -203,13 +216,14 @@ export function GlAccountForm({
         />
         <SelectField
           label="Tag"
-          optional
+          required={tagRequired}
+          optional={!tagRequired}
           value={form.tagId != null ? String(form.tagId) : undefined}
           onValueChange={(value) => patchForm({ tagId: value ? Number(value) : undefined })}
           options={tagOptions}
           disabled={pending || tagOptions.length === 0}
           error={fieldErrors.tagId}
-          placeholder="No tag"
+          placeholder={tagRequired ? 'Select statement line tag' : 'No tag'}
         />
       </div>
 

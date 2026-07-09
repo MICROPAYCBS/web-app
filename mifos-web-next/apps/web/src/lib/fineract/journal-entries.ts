@@ -18,9 +18,7 @@ import type {
 } from '@mifos/api-client';
 import {
   buildCreateJournalEntryPayload,
-  buildCreateFrequentPostingPayload,
   type CreateJournalEntryFormInput,
-  type CreateFrequentPostingFormInput,
   type RevertJournalEntryInput
 } from '@mifos/validation';
 import {
@@ -120,7 +118,9 @@ function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListIt
     comments: typeof row.comments === 'string' ? row.comments : undefined,
     paymentTypeName: typeof row.paymentTypeName === 'string' ? row.paymentTypeName : undefined,
     externalAssetOwner:
-      typeof row.externalAssetOwner === 'string' ? row.externalAssetOwner : undefined
+      typeof row.externalAssetOwner === 'string' ? row.externalAssetOwner : undefined,
+    departmentId: row.departmentId != null ? Number(row.departmentId) : undefined,
+    departmentName: typeof row.departmentName === 'string' ? row.departmentName : undefined
   };
 }
 
@@ -135,7 +135,17 @@ function normalizeGlAccountOption(raw: unknown): FineractJournalEntryGlAccountOp
   if (!Number.isFinite(id) || !name || !glCode) {
     return null;
   }
-  return { id, name, glCode };
+  const typeRaw = row.type;
+  const typeId =
+    typeRaw && typeof typeRaw === 'object' && 'id' in (typeRaw as Record<string, unknown>)
+      ? Number((typeRaw as Record<string, unknown>).id)
+      : undefined;
+  return {
+    id,
+    name,
+    glCode,
+    typeId: Number.isFinite(typeId) ? typeId : undefined
+  };
 }
 
 export async function listJournalEntryGlAccounts(): Promise<FineractJournalEntryGlAccountOption[]> {
@@ -207,22 +217,6 @@ export async function createJournalEntry(
   if (!body.externalAssetOwner) {
     delete body.externalAssetOwner;
   }
-  const raw = await fineract.post<FineractJournalEntryMutationResponse>(JOURNAL_ENTRIES_PATH, body);
-  return {
-    transactionId: String(raw?.transactionId ?? ''),
-    officeId: raw?.officeId,
-    resourceId: raw?.resourceId
-  };
-}
-
-export async function createFrequentPosting(
-  input: CreateFrequentPostingFormInput
-): Promise<FineractJournalEntryMutationResponse> {
-  const fineract = await createFineractClient();
-  const body = buildCreateFrequentPostingPayload(input, {
-    locale: FINERACT_LOCALE,
-    dateFormat: FINERACT_DATE_FORMAT
-  });
   const raw = await fineract.post<FineractJournalEntryMutationResponse>(JOURNAL_ENTRIES_PATH, body);
   return {
     transactionId: String(raw?.transactionId ?? ''),

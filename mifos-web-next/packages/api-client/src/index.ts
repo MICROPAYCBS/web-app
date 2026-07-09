@@ -373,7 +373,6 @@ export type {
   WorkflowExpiryPeriodUnit,
   WorkflowRejectionPolicy,
   WorkflowStage,
-  WorkflowStageParticipant,
   WorkflowStageType,
   WorkflowTransition
 } from './system/workflow-definition-types';

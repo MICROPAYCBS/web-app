@@ -12,6 +12,7 @@ export interface FineractGlAccountRef {
   id: number;
   name: string;
   glCode: string;
+  type?: FineractEnumOption;
 }
 
 export interface FineractGlAccountListItem {
