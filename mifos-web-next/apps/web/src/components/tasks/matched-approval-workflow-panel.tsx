@@ -15,7 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import type { CheckerInboxMatchedWorkflow } from '@/lib/checker-inbox/checker-inbox-item-types';
 import {
   buildWorkflowStageProgress,
-  resolveWorkflowStageLabel,
+  resolveWorkflowActorStepLabel,
+  resolveWorkflowActorStepOptions,
   workflowStagePositionLabel
 } from '@/lib/checker-inbox/workflow-stage-progress';
 import {
@@ -63,15 +64,10 @@ export function MatchedApprovalWorkflowPanel({
   className?: string;
 }) {
   const { definition, taskPermissionCode } = matchedWorkflow;
-  const currentStageCode =
-    workflowInstance?.status === 'IN_PROGRESS' ? workflowInstance.currentStageCode : undefined;
-  const progress = buildWorkflowStageProgress(definition, currentStageCode);
-  const currentStageLabel = currentStageCode
-    ? resolveWorkflowStageLabel(definition, currentStageCode)
-    : undefined;
-  const positionLabel = currentStageCode
-    ? workflowStagePositionLabel(definition, currentStageCode)
-    : undefined;
+  const actorOptions = resolveWorkflowActorStepOptions(workflowInstance ?? undefined);
+  const progress = buildWorkflowStageProgress(definition, actorOptions);
+  const currentStageLabel = resolveWorkflowActorStepLabel(definition, actorOptions);
+  const positionLabel = workflowStagePositionLabel(definition, actorOptions);
 
   return (
     <section className={className}>

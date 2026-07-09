@@ -68,8 +68,8 @@ export function CheckerInboxWorkflowStageNotice({
       ) : null}
       {action === 'approve' && !stage.isFinalStage ? (
         <p className="mt-1 text-muted-foreground">
-          This records your decision for this stage only. The business change completes after the
-          final checker stage.
+          This records your decision for this workflow stage only. The business change completes
+          after the system checker step.
         </p>
       ) : null}
     </div>

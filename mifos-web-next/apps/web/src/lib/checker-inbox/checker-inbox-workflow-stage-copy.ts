@@ -11,28 +11,40 @@ import {
   checkerInboxWorkflowStageActionLabel,
   formatCheckerInboxWorkflowStageHeadline,
   isFinalWorkflowStage,
+  resolveWorkflowActorStepOptions,
   resolveWorkflowStageLabel,
   type CheckerInboxWorkflowStageContext,
   workflowStagePositionLabel
 } from '@/lib/checker-inbox/workflow-stage-progress';
+import { WORKFLOW_CHECKER_BOOKEND } from '@/lib/fineract/approval-workflow-display';
 
 export function resolveCheckerInboxWorkflowStageContext(
   context: CheckerInboxItemContext
 ): CheckerInboxWorkflowStageContext | null {
   const definition = context.matchedWorkflow?.definition;
-  const currentStageCode =
-    context.workflowInstance?.status === 'IN_PROGRESS'
-      ? context.workflowInstance.currentStageCode
-      : undefined;
+  const actorOptions = resolveWorkflowActorStepOptions(context.workflowInstance);
 
-  if (!definition || !currentStageCode) {
+  if (!definition || !actorOptions) {
+    return null;
+  }
+
+  if (actorOptions.status === 'COMPLETED') {
+    const positionLabel = workflowStagePositionLabel(definition, actorOptions);
+    return {
+      stageLabel: WORKFLOW_CHECKER_BOOKEND.subtitle,
+      positionLabel,
+      isFinalStage: true
+    };
+  }
+
+  if (actorOptions.status !== 'IN_PROGRESS' || !actorOptions.currentStageCode) {
     return null;
   }
 
   return {
-    stageLabel: resolveWorkflowStageLabel(definition, currentStageCode),
-    positionLabel: workflowStagePositionLabel(definition, currentStageCode),
-    isFinalStage: isFinalWorkflowStage(definition, currentStageCode)
+    stageLabel: resolveWorkflowStageLabel(definition, actorOptions.currentStageCode),
+    positionLabel: workflowStagePositionLabel(definition, actorOptions),
+    isFinalStage: isFinalWorkflowStage(definition, actorOptions)
   };
 }
 
@@ -51,7 +63,7 @@ export function checkerInboxWorkflowStageConfirmDescription(
   let description = `${itemLabel} You are ${verb} at ${headline}.`;
 
   if (action === 'approve' && !stage.isFinalStage) {
-    description += ' The business change will not complete until the final checker stage.';
+    description += ' The business change will not complete until the system checker step.';
   }
 
   return description;

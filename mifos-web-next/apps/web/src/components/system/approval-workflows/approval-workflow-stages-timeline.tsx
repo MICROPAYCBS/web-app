@@ -125,8 +125,8 @@ export function ApprovalWorkflowStagesTimeline({
         <div>
           <h3 className="text-base font-semibold">Approval chain</h3>
           <p className="text-sm text-muted-foreground">
-            The full path from maker creation through intermediate approvals to checker approval.
-            Stage actors share the task checker permission pool.
+            The full path from maker creation through each configured workflow stage to the
+            system checker step that completes the task.
           </p>
         </div>
       ) : null}

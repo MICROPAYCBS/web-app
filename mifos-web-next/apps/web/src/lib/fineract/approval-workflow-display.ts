@@ -153,7 +153,7 @@ export const WORKFLOW_MAKER_BOOKEND: WorkflowChainBookend = {
 export const WORKFLOW_CHECKER_BOOKEND: WorkflowChainBookend = {
   title: 'Approval',
   subtitle: 'Checker',
-  description: 'The checker completes the task.'
+  description: 'After all configured workflow stages, a checker completes the task in the inbox.'
 };
 
 export type WorkflowChainBookendPosition = 'start' | 'end';

@@ -8,7 +8,7 @@
 
 import type { SessionUser } from '@mifos/auth';
 import type { CheckerInboxItemContext } from '@/lib/checker-inbox/checker-inbox-item-types';
-import { resolveWorkflowStageLabel } from '@/lib/checker-inbox/workflow-stage-progress';
+import { resolveWorkflowActorStepLabel, resolveWorkflowActorStepOptions } from '@/lib/checker-inbox/workflow-stage-progress';
 
 export type CheckerInboxSelfApprovalBlock = {
   blocked: boolean;
@@ -34,16 +34,13 @@ export function isCheckerInboxItemMaker(
 
 function resolveCurrentWorkflowStageLabel(context: CheckerInboxItemContext): string | undefined {
   const definition = context.matchedWorkflow?.definition;
-  const currentStageCode =
-    context.workflowInstance?.status === 'IN_PROGRESS'
-      ? context.workflowInstance.currentStageCode
-      : undefined;
-
-  if (!definition || !currentStageCode) {
+  if (!definition) {
     return undefined;
   }
-
-  return resolveWorkflowStageLabel(definition, currentStageCode);
+  return resolveWorkflowActorStepLabel(
+    definition,
+    resolveWorkflowActorStepOptions(context.workflowInstance)
+  );
 }
 
 export function resolveCheckerInboxSelfApprovalBlock(
