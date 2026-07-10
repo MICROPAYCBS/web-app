@@ -505,6 +505,21 @@ export {
   type RevertJournalEntryInput
 } from './accounting/journal-entry.schema';
 export {
+  BULK_CONSTRUCT_JOURNAL_ENTRIES_MAX_ROWS,
+  bulkConstructJournalEntriesFormSchema,
+  bulkConstructJournalEntriesTemplateSchema,
+  bulkConstructJournalEntryRowSchema,
+  bulkConstructVariationModeSchema,
+  expandBulkConstructJournalEntries,
+  validateBulkConstructJournalEntriesForm,
+  type BulkConstructExpandedEntry,
+  type BulkConstructJournalEntriesFormInput,
+  type BulkConstructJournalEntriesTemplateInput,
+  type BulkConstructJournalEntryRowInput,
+  type BulkConstructJournalEntriesValidationContext,
+  type BulkConstructVariationMode
+} from './accounting/bulk-construct-journal-entries.schema';
+export {
   accountingRuleSideTypeSchema,
   buildUpsertAccountingRulePayload,
   upsertAccountingRuleFormSchema,

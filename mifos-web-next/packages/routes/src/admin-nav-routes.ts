@@ -679,10 +679,10 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
   },
   {
     id: 'acctJournalBulkImport',
-    path: '/organization/bulk-import/Journal%20Entries',
+    path: '/accounting/journal-entries/bulk-operations',
     label: 'Bulk journal operations',
     navGroup: 'accounting',
-    webAppRef: 'organization/bulk-import/Journal Entries',
+    webAppRef: 'accounting/journal-entries/bulk-operations',
     permissionKey: 'accounting.journal',
     navOrder: 25,
     navIcon: 'layers',

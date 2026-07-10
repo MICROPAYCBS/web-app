@@ -10,14 +10,18 @@
 
 import { assertCan } from '@mifos/auth';
 import {
+  actionSuccessFromFineractCommand,
+  expandBulkConstructJournalEntries,
   toFineractActionError,
+  validateBulkConstructJournalEntriesForm,
   validateCreateJournalEntryForm,
   validateRevertJournalEntry,
+  type BulkConstructJournalEntriesFormInput,
   type CreateJournalEntryFormInput,
-  type RevertJournalEntryInput,
-  actionSuccessFromFineractCommand
+  type RevertJournalEntryInput
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 import {
   createJournalEntry,
   listJournalEntryGlAccounts,
@@ -25,24 +29,41 @@ import {
 } from '@/lib/fineract/journal-entries';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import { getServerSession } from '@/lib/session/server';
+import { listAccountingRulesForFrequentPostings } from '@/lib/fineract/accounting-rules';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
+import { expandBulkConstructRowToJournalEntry } from '@/lib/accounting/bulk-journal-construct';
 
 const LIST_PATH = '/accounting/journal-entries';
+const BULK_OPERATIONS_PATH = '/accounting/journal-entries/bulk-operations';
 const REQUIRE_DEPARTMENT_CONFIG = 'enable-require-department-on-manual-journal-pl-lines';
 
 export type JournalEntriesActionResult =
   | { ok: true; transactionId?: string }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
+export type BulkJournalEntriesRowResult =
+  | { rowIndex: number; ok: true; transactionId?: string; pending?: boolean }
+  | { rowIndex: number; ok: false; message: string };
+
+export type BulkJournalEntriesActionResult =
+  | {
+      ok: true;
+      results: BulkJournalEntriesRowResult[];
+      successCount: number;
+      failureCount: number;
+    }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
 function transactionPath(transactionId: string) {
   return `${LIST_PATH}/transactions/${transactionId}`;
 }
 
-function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, string[]> } }) {
-  const flattened = error.flatten().fieldErrors;
+function zodFieldErrors(error: z.ZodError) {
   const fieldErrors: Record<string, string> = {};
-  for (const [key, messages] of Object.entries(flattened)) {
-    if (messages?.[0]) {
-      fieldErrors[key] = messages[0];
+  for (const issue of error.issues) {
+    const key = issue.path.map(String).join('.') || 'form';
+    if (!fieldErrors[key]) {
+      fieldErrors[key] = issue.message;
     }
   }
   return fieldErrors;
@@ -50,9 +71,26 @@ function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, st
 
 function revalidateJournalEntryViews(transactionId?: string) {
   revalidatePath(LIST_PATH);
+  revalidatePath(BULK_OPERATIONS_PATH);
   if (transactionId) {
     revalidatePath(transactionPath(transactionId));
   }
+}
+
+async function loadJournalEntryValidationContext() {
+  const [departmentConfig, glAccounts] = await Promise.all([
+    getGlobalConfigurationByName(REQUIRE_DEPARTMENT_CONFIG),
+    listJournalEntryGlAccounts()
+  ]);
+  const glAccountTypesById = Object.fromEntries(
+    glAccounts
+      .filter((account) => account.typeId != null)
+      .map((account) => [account.id, account.typeId as number])
+  );
+  return {
+    requireDepartmentOnPlLines: departmentConfig?.enabled ?? false,
+    glAccountTypesById
+  };
 }
 
 export async function createJournalEntryAction(
@@ -65,20 +103,9 @@ export async function createJournalEntryAction(
     return { ok: false, message: 'You do not have permission to create journal entries.' };
   }
 
-  const [departmentConfig, glAccounts] = await Promise.all([
-    getGlobalConfigurationByName(REQUIRE_DEPARTMENT_CONFIG),
-    listJournalEntryGlAccounts()
-  ]);
-  const glAccountTypesById = Object.fromEntries(
-    glAccounts
-      .filter((account) => account.typeId != null)
-      .map((account) => [account.id, account.typeId as number])
-  );
+  const validationContext = await loadJournalEntryValidationContext();
 
-  const parsed = validateCreateJournalEntryForm(input, {
-    requireDepartmentOnPlLines: departmentConfig?.enabled ?? false,
-    glAccountTypesById
-  });
+  const parsed = validateCreateJournalEntryForm(input, validationContext);
   if (!parsed.success) {
     return {
       ok: false,
@@ -94,6 +121,98 @@ export async function createJournalEntryAction(
   } catch (error) {
     return toFineractActionError(error, 'Failed to create journal entry.');
   }
+}
+
+export async function createBulkJournalEntriesAction(
+  input: BulkConstructJournalEntriesFormInput
+): Promise<BulkJournalEntriesActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'CREATE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to create journal entries.' };
+  }
+
+  const [validationContext, accountingRules, currencies] = await Promise.all([
+    loadJournalEntryValidationContext(),
+    listAccountingRulesForFrequentPostings(),
+    getOrganizationSelectedCurrencies()
+  ]);
+
+  const ruleById = new Map(accountingRules.map((rule) => [rule.id, rule]));
+
+  const parsed = validateBulkConstructJournalEntriesForm(input, {
+    ...validationContext,
+    expandEntry: (template, row) => {
+      const rule = ruleById.get(template.accountingRuleId);
+      if (!rule) {
+        return null;
+      }
+      return expandBulkConstructRowToJournalEntry(template, row, rule, currencies);
+    }
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  const expanded = expandBulkConstructJournalEntries(parsed.data, (template, row) => {
+    const rule = ruleById.get(template.accountingRuleId);
+    if (!rule) {
+      return null;
+    }
+    return expandBulkConstructRowToJournalEntry(template, row, rule, currencies);
+  });
+
+  const results: BulkJournalEntriesRowResult[] = [];
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const { rowIndex, entry } of expanded) {
+    try {
+      const response = await createJournalEntry(entry);
+      const outcome = actionSuccessFromFineractCommand(response, {
+        transactionId: response.transactionId
+      });
+      if (outcome.ok) {
+        successCount += 1;
+        results.push({
+          rowIndex,
+          ok: true,
+          transactionId: response.transactionId,
+          pending: outcome.pendingChecker === true
+        });
+      } else {
+        failureCount += 1;
+        results.push({
+          rowIndex,
+          ok: false,
+          message: 'Failed to create journal entry.'
+        });
+      }
+    } catch (error) {
+      failureCount += 1;
+      const mapped = toFineractActionError(error, 'Failed to create journal entry.');
+      results.push({
+        rowIndex,
+        ok: false,
+        message: mapped.ok === false ? mapped.message : 'Failed to create journal entry.'
+      });
+    }
+  }
+
+  revalidateJournalEntryViews();
+
+  return {
+    ok: true,
+    results,
+    successCount,
+    failureCount
+  };
 }
 
 export async function revertJournalEntryAction(

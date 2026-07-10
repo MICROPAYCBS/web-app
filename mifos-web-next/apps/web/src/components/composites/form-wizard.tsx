@@ -32,6 +32,8 @@ export interface FormWizardProps {
   onStepClick?: (stepId: string) => void;
   /** Step IDs that failed validation and still need attention */
   invalidStepIds?: readonly string[];
+  /** When true, omit the outer page header (parent supplies title/tabs). */
+  embedded?: boolean;
   className?: string;
 }
 
@@ -83,25 +85,13 @@ export function FormWizard({
   footer,
   onStepClick,
   invalidStepIds,
+  embedded = false,
   className
 }: FormWizardProps) {
   const currentIndex = steps.findIndex((s) => s.id === currentStepId);
 
-  return (
-    <div className={cn(platformPageShell, 'w-full', className)}>
-      <PageHeader>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-            {description ? (
-              <p className="text-sm text-muted-foreground">{description}</p>
-            ) : null}
-          </div>
-          {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
-        </div>
-      </PageHeader>
-
-      <div className={platformSidebarRowLayout}>
+  const wizardBody = (
+    <div className={platformSidebarRowLayout}>
         <nav
           aria-label="Progress"
           className={cn(
@@ -176,6 +166,28 @@ export function FormWizard({
           {footer}
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className={cn('flex min-h-0 w-full flex-1 flex-col', className)}>{wizardBody}</div>
+    );
+  }
+
+  return (
+    <div className={cn(platformPageShell, 'w-full', className)}>
+      <PageHeader>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+            {description ? (
+              <p className="text-sm text-muted-foreground">{description}</p>
+            ) : null}
+          </div>
+          {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+        </div>
+      </PageHeader>
+      {wizardBody}
     </div>
   );
 }

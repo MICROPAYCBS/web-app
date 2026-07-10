@@ -17,12 +17,11 @@ export const JOURNAL_ENTRIES_BULK_IMPORT_NAME = 'Journal Entries';
 
 export const JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL = 'Bulk journal operations';
 
-export const JOURNAL_ENTRIES_BULK_OPERATIONS_PATH = bulkImportDetailPath(
+export const JOURNAL_ENTRIES_BULK_OPERATIONS_PATH = '/accounting/journal-entries/bulk-operations';
+
+export const JOURNAL_ENTRIES_BULK_IMPORT_PATH = bulkImportDetailPath(
   JOURNAL_ENTRIES_BULK_IMPORT_NAME
 );
-
-/** @deprecated Use {@link JOURNAL_ENTRIES_BULK_OPERATIONS_PATH}. */
-export const JOURNAL_ENTRIES_BULK_IMPORT_PATH = JOURNAL_ENTRIES_BULK_OPERATIONS_PATH;
 
 export function bulkImportTemplateApiPath(importName: string) {
   return `/api/organization/bulk-import/template?importName=${encodeURIComponent(importName)}`;

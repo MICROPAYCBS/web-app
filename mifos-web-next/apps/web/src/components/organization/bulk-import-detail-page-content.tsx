@@ -50,12 +50,14 @@ export function BulkImportDetailPageContent({
   definition,
   offices,
   imports: initialImports,
-  canDownload
+  canDownload,
+  embedded = false
 }: {
   definition: BulkImportDefinition;
   offices: FineractOfficeOption[];
   imports: BulkImportHistoryItem[];
   canDownload: boolean;
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<BulkImportFormState>(defaultFormState);
@@ -145,13 +147,8 @@ export function BulkImportDetailPageContent({
     });
   }
 
-  return (
-    <ListPage
-      title={importLabel}
-      description="Download a template, fill it in Excel, then upload the completed file."
-      backLink={<DetailBackLink href={BULK_IMPORT_LIST_PATH} label="Back to bulk import" />}
-    >
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
         <div className="grid gap-4 lg:grid-cols-2">
           <section className="space-y-4 rounded-lg border border-border p-4">
             <h2 className="text-base font-medium">{importLabel} template</h2>
@@ -248,7 +245,20 @@ export function BulkImportDetailPageContent({
           </div>
           <BulkImportImportsTable imports={imports} />
         </section>
-      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <ListPage
+      title={importLabel}
+      description="Download a template, fill it in Excel, then upload the completed file."
+      backLink={<DetailBackLink href={BULK_IMPORT_LIST_PATH} label="Back to bulk import" />}
+    >
+      {content}
     </ListPage>
   );
 }

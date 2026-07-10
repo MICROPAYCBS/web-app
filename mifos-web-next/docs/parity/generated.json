@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T11:15:18.272Z",
+  "generatedAt": "2026-07-10T16:03:58.160Z",
   "summary": {
     "todo": 0,
     "in_progress": 0,
@@ -746,12 +746,12 @@
     },
     {
       "id": "acctJournalBulkImport",
-      "path": "/organization/bulk-import/Journal%20Entries",
-      "domain": "organization",
+      "path": "/accounting/journal-entries/bulk-operations",
+      "domain": "accounting",
       "label": "Bulk journal operations",
       "kind": "page",
       "status": "done",
-      "webAppRef": "organization/bulk-import/Journal Entries"
+      "webAppRef": "accounting/journal-entries/bulk-operations"
     },
     {
       "id": "acctFinancialActivity",
