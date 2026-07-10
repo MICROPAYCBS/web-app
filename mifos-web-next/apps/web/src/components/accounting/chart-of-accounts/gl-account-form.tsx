@@ -32,8 +32,6 @@ import {
   formatGlAccountLabel,
   formatGlAccountTypeLabel,
   GL_ACCOUNT_CODE_NUMBERING_GUIDANCE,
-  GL_ACCOUNT_TYPE_EXPENSE,
-  GL_ACCOUNT_TYPE_INCOME,
   glAccountCodeHintForType,
   headerOptionsForType,
   structuredGlCodeEnforcementBanner,
@@ -185,8 +183,6 @@ export function GlAccountForm({
     ]
   );
 
-  const tagRequired = form.type === GL_ACCOUNT_TYPE_INCOME || form.type === GL_ACCOUNT_TYPE_EXPENSE;
-
   const tagOptions = useMemo(
     () =>
       tagOptionsForType(template, form.type).map((tag) => ({
@@ -220,7 +216,7 @@ export function GlAccountForm({
         parentId: undefined,
         tagId: undefined
       },
-      { validateFields: ['glCode', 'tagId'] }
+      { validateFields: ['glCode'] }
     );
   }
 
@@ -377,14 +373,13 @@ export function GlAccountForm({
         />
         <SelectField
           label="Tag"
-          required={tagRequired}
-          optional={!tagRequired}
+          optional
           value={form.tagId != null ? String(form.tagId) : undefined}
           onValueChange={(value) => patchForm({ tagId: value ? Number(value) : undefined })}
           options={tagOptions}
           disabled={pending || tagOptions.length === 0}
           error={fieldErrors.tagId}
-          placeholder={tagRequired ? 'Select statement line tag' : 'No tag'}
+          placeholder="No tag"
         />
       </div>
 

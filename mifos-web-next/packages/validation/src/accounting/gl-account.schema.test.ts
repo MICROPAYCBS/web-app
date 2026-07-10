@@ -37,19 +37,17 @@ describe('deriveGlAccountHeaderStem', () => {
 });
 
 describe('validateUpsertGlAccountForm', () => {
-  it('requires tagId for income and expense accounts', () => {
-    const result = validateUpsertGlAccountForm(
+  it('allows tagId to be omitted for income and expense accounts', () => {
+    const income = validateUpsertGlAccountForm(
       baseInput({ type: GL_ACCOUNT_TYPE_INCOME, tagId: undefined })
     );
-    assert.equal(result.success, false);
-    if (!result.success) {
-      assert.ok(result.error.issues.some((issue) => issue.path.join('.') === 'tagId'));
-    }
+    assert.equal(income.success, true);
 
     const expense = validateUpsertGlAccountForm(
-      baseInput({ type: GL_ACCOUNT_TYPE_EXPENSE, glCode: '5100', tagId: undefined })
+      baseInput({ type: GL_ACCOUNT_TYPE_EXPENSE, glCode: '5100', tagId: undefined }),
+      { enforceStructured: false }
     );
-    assert.equal(expense.success, false);
+    assert.equal(expense.success, true);
   });
 
   it('allows legacy GL codes when structured enforcement is disabled', () => {

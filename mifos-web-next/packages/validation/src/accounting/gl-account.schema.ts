@@ -16,8 +16,6 @@ import {
   glAccountCodeTypePrefixError,
   glAccountParentTypeError,
   glAccountParentTypeMatches,
-  glAccountRequiresStatementTag,
-  glAccountStatementTagError,
   glAccountStructuredValidationApplies,
   type GlAccountStructuredSnapshot
 } from './gl-account-governance';
@@ -120,14 +118,6 @@ export function refineUpsertGlAccountForm(
       code: z.ZodIssueCode.custom,
       message: glAccountParentTypeError(data.type),
       path: ['parentId']
-    });
-  }
-
-  if (glAccountRequiresStatementTag(data.type) && data.tagId == null) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: glAccountStatementTagError(data.type),
-      path: ['tagId']
     });
   }
 }

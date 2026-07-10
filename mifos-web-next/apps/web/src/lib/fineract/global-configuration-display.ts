@@ -13,11 +13,13 @@ import {
   STRUCTURED_GL_CODE_LENGTH_CONFIG_NAME
 } from '@/lib/fineract/gl-account-code-policy-paths';
 import { ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME } from '@/lib/fineract/loan-repayment-policy-paths';
+import { ENABLE_ORGANIZATION_WIDE_AUDIT_VIEW_CONFIG_NAME } from '@/lib/fineract/organization-wide-audit-policy-paths';
 
 const GLOBAL_CONFIGURATION_DISPLAY_NAMES: Record<string, string> = {
   [ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME]: 'Allow direct loan repayments',
   [ENFORCE_STRUCTURED_GL_CODES_CONFIG_NAME]: 'Enforce structured GL codes',
-  [STRUCTURED_GL_CODE_LENGTH_CONFIG_NAME]: 'Structured GL code length'
+  [STRUCTURED_GL_CODE_LENGTH_CONFIG_NAME]: 'Structured GL code length',
+  [ENABLE_ORGANIZATION_WIDE_AUDIT_VIEW_CONFIG_NAME]: 'Organization-wide audit view'
 };
 
 const GLOBAL_CONFIGURATION_DESCRIPTIONS: Record<string, string> = {
@@ -26,7 +28,9 @@ const GLOBAL_CONFIGURATION_DESCRIPTIONS: Record<string, string> = {
   [ENFORCE_STRUCTURED_GL_CODES_CONFIG_NAME]:
     'When enabled, new and updated GL accounts must use a fixed-length numeric code whose first digit matches the account class (1=Asset through 5=Expense). Existing codes are grandfathered until code or type is changed.',
   [STRUCTURED_GL_CODE_LENGTH_CONFIG_NAME]:
-    'Number of digits required for GL codes when structured enforcement is enabled. The first digit is reserved for the account class; remaining digits are institution-defined.'
+    'Number of digits required for GL codes when structured enforcement is enabled. The first digit is reserved for the account class; remaining digits are institution-defined.',
+  [ENABLE_ORGANIZATION_WIDE_AUDIT_VIEW_CONFIG_NAME]:
+    'When enabled, users with READ_AUDIT and VIEW_ORGANIZATION_AUDIT can browse audit trails across all branches. Maker-checker inbox remains limited to the user branch.'
 };
 
 export function globalConfigurationDisplayName(name: string): string {

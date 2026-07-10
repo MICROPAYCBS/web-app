@@ -66,11 +66,13 @@ function buildAuditTrailUrl(query: AuditTrailListQuery): string {
 export function AuditTrailsPageContent({
   page,
   query,
-  template
+  template,
+  showOrganizationWideAuditNote = false
 }: {
   page: FineractAuditTrailsPage;
   query: AuditTrailListQuery;
   template: FineractAuditTrailSearchTemplate;
+  showOrganizationWideAuditNote?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -159,6 +161,11 @@ export function AuditTrailsPageContent({
           </Button>
         }
       >
+        {showOrganizationWideAuditNote ? (
+          <p className="mb-4 rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+            Organization-wide audit view is enabled for your role. Results include activity from all branches.
+          </p>
+        ) : null}
         <AuditTrailsTable
           page={page}
           pageSize={query.limit}
