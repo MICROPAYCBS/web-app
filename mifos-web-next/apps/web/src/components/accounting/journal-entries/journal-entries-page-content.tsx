@@ -14,7 +14,7 @@ import type {
   FineractOfficeOption
 } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
@@ -37,6 +37,7 @@ import {
   type JournalEntrySearchFilters
 } from '@/lib/fineract/journal-entry-query';
 import type { Department } from '@/lib/fineract/departments';
+import { JOURNAL_ENTRIES_BULK_IMPORT_PATH } from '@/lib/fineract/bulk-import-paths';
 import { cn } from '@/lib/utils';
 
 export function JournalEntriesPageContent({
@@ -128,12 +129,23 @@ export function JournalEntriesPageContent({
         title="Journal entries"
         description="Search manual and system journal entries across branches and GL accounts."
         actions={
-          <Can permission="CREATE_JOURNALENTRY">
-            <Link href="/accounting/journal-entries/create" className={cn(buttonVariants())}>
-              <Plus className="mr-2 size-4" />
-              Create entry
-            </Link>
-          </Can>
+          <div className="flex flex-wrap items-center gap-2">
+            <Can permission="READ_JOURNALENTRY">
+              <Link
+                href={JOURNAL_ENTRIES_BULK_IMPORT_PATH}
+                className={cn(buttonVariants({ variant: 'outline' }))}
+              >
+                <Upload className="mr-2 size-4" />
+                Import
+              </Link>
+            </Can>
+            <Can permission="CREATE_JOURNALENTRY">
+              <Link href="/accounting/journal-entries/create" className={cn(buttonVariants())}>
+                <Plus className="mr-2 size-4" />
+                Create entry
+              </Link>
+            </Can>
+          </div>
         }
       >
         <JournalEntriesTableView

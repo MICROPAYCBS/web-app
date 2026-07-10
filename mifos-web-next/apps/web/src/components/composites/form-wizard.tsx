@@ -23,6 +23,8 @@ export interface FormWizardProps {
   currentStepId: string;
   title: string;
   description?: string;
+  /** Optional header actions (e.g. secondary links beside the title). */
+  actions?: ReactNode;
   children: ReactNode;
   /** Sticky Cancel / Previous / Next (or submit) actions below step content */
   footer?: ReactNode;
@@ -76,6 +78,7 @@ export function FormWizard({
   currentStepId,
   title,
   description,
+  actions,
   children,
   footer,
   onStepClick,
@@ -87,11 +90,14 @@ export function FormWizard({
   return (
     <div className={cn(platformPageShell, 'w-full', className)}>
       <PageHeader>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          {description ? (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          ) : null}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+            {description ? (
+              <p className="text-sm text-muted-foreground">{description}</p>
+            ) : null}
+          </div>
+          {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
         </div>
       </PageHeader>
 

@@ -678,6 +678,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'acctJournalBulkImport',
+    path: '/organization/bulk-import/Journal%20Entries',
+    label: 'Import journal entries',
+    navGroup: 'accounting',
+    webAppRef: 'organization/bulk-import/Journal Entries',
+    permissionKey: 'accounting.journal',
+    navOrder: 25,
+    navIcon: 'upload',
+    keywords: ['bulk import', 'excel', 'journal', 'upload'],
+    parityStatus: 'done'
+  },
+  {
     id: 'acctFinancialActivity',
     path: '/accounting/financial-activity-mappings',
     label: 'Financial activity mappings',

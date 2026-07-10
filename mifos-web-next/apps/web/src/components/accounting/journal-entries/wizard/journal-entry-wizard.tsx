@@ -14,6 +14,9 @@ import {
   validateCreateJournalEntryForm,
   type CreateJournalEntryFormInput
 } from '@mifos/validation';
+import { Can } from '@mifos/auth';
+import { Upload } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 import { createJournalEntryAction } from '@/actions/journal-entries';
@@ -21,7 +24,10 @@ import { emptyJournalEntryLine } from '@/components/accounting/journal-entries/j
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { buttonVariants } from '@/components/ui/button';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
+import { JOURNAL_ENTRIES_BULK_IMPORT_PATH } from '@/lib/fineract/bulk-import-paths';
+import { cn } from '@/lib/utils';
 import { postingTemplateLinesForRule, isManualJournalEntryTemplateValue } from '@/lib/accounting/journal-entry-display';
 import { DetailsStep } from './steps/details-step';
 import { LinesStep } from './steps/lines-step';
@@ -243,6 +249,17 @@ export function JournalEntryWizard({
         currentStepId={stepId}
         title="Create journal entry"
         description="Post a journal entry manually or start from an accounting rule template."
+        actions={
+          <Can permission="READ_JOURNALENTRY">
+            <Link
+              href={JOURNAL_ENTRIES_BULK_IMPORT_PATH}
+              className={cn(buttonVariants({ variant: 'outline' }))}
+            >
+              <Upload className="mr-2 size-4" />
+              Import from Excel
+            </Link>
+          </Can>
+        }
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
         footer={

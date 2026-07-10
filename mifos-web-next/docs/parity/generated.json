@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-04T20:48:16.552Z",
+  "generatedAt": "2026-07-10T10:59:38.129Z",
   "summary": {
     "todo": 0,
     "in_progress": 0,
-    "done": 88,
+    "done": 90,
     "n/a": 0
   },
   "routes": [
@@ -218,6 +218,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "tasks/checker-inbox-and-tasks"
+    },
+    {
+      "id": "notifications",
+      "path": "/checker-inbox-and-tasks/notifications",
+      "domain": "tasks",
+      "label": "Notifications",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "tasks/notifications"
     },
     {
       "id": "collectionSheet",
@@ -718,6 +727,15 @@
       "webAppRef": "accounting/chart-of-accounts"
     },
     {
+      "id": "acctDepartments",
+      "path": "/accounting/departments",
+      "domain": "accounting",
+      "label": "Departments",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "accounting/departments"
+    },
+    {
       "id": "acctJournal",
       "path": "/accounting/journal-entries",
       "domain": "accounting",
@@ -727,13 +745,13 @@
       "webAppRef": "accounting/journal-entries"
     },
     {
-      "id": "acctFrequentPostings",
-      "path": "/accounting/journal-entries/frequent-postings",
-      "domain": "accounting",
-      "label": "Frequent postings",
+      "id": "acctJournalBulkImport",
+      "path": "/organization/bulk-import/Journal%20Entries",
+      "domain": "organization",
+      "label": "Import journal entries",
       "kind": "page",
       "status": "done",
-      "webAppRef": "accounting/journal-entries/frequent-postings"
+      "webAppRef": "organization/bulk-import/Journal Entries"
     },
     {
       "id": "acctFinancialActivity",
