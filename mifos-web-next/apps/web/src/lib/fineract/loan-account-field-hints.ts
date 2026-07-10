@@ -26,6 +26,9 @@ export const LOAN_ACCOUNT_REPAY_EVERY_HINT =
 export const LOAN_ACCOUNT_REPAYMENT_FREQUENCY_TYPE_HINT =
   'Unit for the repayment interval: days, weeks, months, or years.';
 
+export const LOAN_ACCOUNT_ENABLE_DOWN_PAYMENT_HINT =
+  'Keep enabled when this loan includes an upfront down payment installment in the schedule.';
+
 export const LOAN_ACCOUNT_INTEREST_RATE_HINT =
   'Nominal interest rate applied on the outstanding balance for each charging period on this application.';
 

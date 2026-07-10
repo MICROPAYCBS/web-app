@@ -33,7 +33,7 @@ import {
   loanAccountChargeMetadata
 } from '@/lib/fineract/loan-application-charges';
 import { loanApplicationInterestRateFieldLabel } from '@/lib/fineract/loan-application-rules';
-import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
+import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
 
 
 
@@ -100,6 +100,7 @@ export function LoanAccountPreviewStep({
 }) {
 
   const currencyCode = template.currency?.code ?? 'USD';
+  const productSupportsDownPayment = template.enableDownPayment === true;
 
   const productName =
 
@@ -240,6 +241,15 @@ export function LoanAccountPreviewStep({
             </dd>
 
           </div>
+
+          {productSupportsDownPayment ? (
+            <div>
+              <dt className="text-muted-foreground">Down payment</dt>
+              <dd className="font-medium">
+                {formatYesNo(draft.enableDownPayment ?? true)}
+              </dd>
+            </div>
+          ) : null}
 
         </dl>
 

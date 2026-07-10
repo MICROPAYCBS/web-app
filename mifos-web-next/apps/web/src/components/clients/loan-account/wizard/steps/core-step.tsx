@@ -20,12 +20,14 @@ export function LoanAccountCoreStep({
   template,
   draft,
   errors,
-  onChange
+  onChange,
+  productLocked = false
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountCoreStepInput & { productId: number };
   errors: LoanAccountStepErrors;
   onChange: (patch: Partial<LoanAccountCoreStepInput>) => void;
+  productLocked?: boolean;
 }) {
   const productOptions = toSelectOptions(template.productOptions);
   const officerOptions = toSelectOptions(
@@ -46,6 +48,7 @@ export function LoanAccountCoreStep({
         <SelectField
           label="Loan product"
           required
+          disabled={productLocked}
           value={draft.productId > 0 ? String(draft.productId) : undefined}
           onValueChange={(value) =>
             onChange({ productId: value ? Number(value) : undefined })

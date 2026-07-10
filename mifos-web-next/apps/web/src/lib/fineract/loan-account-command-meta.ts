@@ -69,6 +69,7 @@ export interface LoanAccountActionVisibility {
   undoWriteOff: boolean;
   assignOfficer: boolean;
   reassignOfficer: boolean;
+  modifyApplication: boolean;
 }
 
 const LOAN_STATUS = {
@@ -118,7 +119,8 @@ export function loanAccountActionVisibility(account: {
     recoveryPayment: closedWrittenOff,
     undoWriteOff: closedWrittenOff,
     assignOfficer: canManageOfficer && !hasOfficer,
-    reassignOfficer: canManageOfficer && hasOfficer
+    reassignOfficer: canManageOfficer && hasOfficer,
+    modifyApplication: pending
   };
 }
 

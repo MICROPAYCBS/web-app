@@ -16,9 +16,10 @@ import {
   DetailSection,
   MoneyValue
 } from '@/components/composites';
-import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
+import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
 import {
   LOAN_ACCOUNT_AMORTIZATION_HINT,
+  LOAN_ACCOUNT_ENABLE_DOWN_PAYMENT_HINT,
   LOAN_ACCOUNT_INTEREST_CALCULATION_PERIOD_HINT,
   LOAN_ACCOUNT_INTEREST_TYPE_HINT,
   LOAN_ACCOUNT_NUMBER_OF_REPAYMENTS_HINT,
@@ -133,6 +134,14 @@ function ProductTermsSummaryContent({
             >
               {template.transactionProcessingStrategyName ?? '—'}
             </DetailField>
+            {template.enableDownPayment === true ? (
+              <DetailField
+                label="Down payment supported"
+                hint={LOAN_ACCOUNT_ENABLE_DOWN_PAYMENT_HINT}
+              >
+                {formatYesNo(true)}
+              </DetailField>
+            ) : null}
           </DetailFieldGrid>
         </TermsGroup>
 

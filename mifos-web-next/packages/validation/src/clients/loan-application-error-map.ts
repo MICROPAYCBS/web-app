@@ -137,7 +137,8 @@ export function loanApplicationStepForField(field: string): string | undefined {
     'loanTermFrequencyType',
     'numberOfRepayments',
     'repaymentEvery',
-    'repaymentFrequencyType'
+    'repaymentFrequencyType',
+    'enableDownPayment'
   ]);
   const timeline = new Set([
     'interestRatePerPeriod',

@@ -226,6 +226,8 @@ export {
   loanCollateralItemSchema,
   loanGuarantorItemSchema,
   type CreateLoanAccountInput,
+  updateLoanAccountSchema,
+  type UpdateLoanAccountInput,
   type LoanAccountCoreStepInput,
   type LoanAccountFinancialStepInput,
   type LoanAccountTimelineStepInput,

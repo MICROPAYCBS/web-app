@@ -18,10 +18,12 @@ import { DetailSection } from '@/components/composites';
 import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
+import { SwitchField } from '@/components/composites/switch-field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   LOAN_ACCOUNT_LOAN_TERM_HINT,
   LOAN_ACCOUNT_LOAN_TERM_TYPE_HINT,
+  LOAN_ACCOUNT_ENABLE_DOWN_PAYMENT_HINT,
   LOAN_ACCOUNT_NUMBER_OF_REPAYMENTS_HINT,
   LOAN_ACCOUNT_PRINCIPAL_HINT,
   LOAN_ACCOUNT_REPAY_EVERY_HINT,
@@ -81,6 +83,7 @@ function LoanAccountFinancialTermsForm({
   const repaymentHint = LOAN_ACCOUNT_NUMBER_OF_REPAYMENTS_HINT;
   const principalRangeDescription = loanApplicationAllowedRangeDescription(principalRange);
   const repaymentRangeDescription = loanApplicationAllowedRangeDescription(repaymentRange);
+  const productSupportsDownPayment = template.enableDownPayment === true;
 
   return (
     <div className="space-y-6">
@@ -185,6 +188,18 @@ function LoanAccountFinancialTermsForm({
           />
         </div>
       </DetailSection>
+      {productSupportsDownPayment ? (
+        <DetailSection title="Down payment">
+          <SwitchField
+            id="loan-enable-down-payment"
+            label="Enable down payment"
+            checked={draft.enableDownPayment ?? true}
+            onCheckedChange={(enableDownPayment) => onChange({ enableDownPayment })}
+            error={errors.enableDownPayment}
+            description={LOAN_ACCOUNT_ENABLE_DOWN_PAYMENT_HINT}
+          />
+        </DetailSection>
+      ) : null}
     </div>
   );
 }

@@ -21,8 +21,10 @@ import {
   Undo2,
   UserX,
   XCircle,
+  Pencil,
   type LucideIcon
 } from 'lucide-react';
+import Link from 'next/link';
 import { Fragment, useState } from 'react';
 import { LoanAccountAddChargeSheet } from '@/components/clients/loan-account/actions/loan-account-add-charge-sheet';
 import { LoanAccountApproveSheet } from '@/components/clients/loan-account/actions/loan-account-approve-sheet';
@@ -47,6 +49,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { loanAccountActionVisibility } from '@/lib/fineract/loan-account-command-meta';
 import type { LoanAccountTransactionCommand } from '@/lib/fineract/loan-account-command-meta';
+import { clientAccountEditPath } from '@/lib/fineract/client-account-links';
 import {
   loanAccountCurrencyCode
 } from '@/lib/fineract/loan-account-display';
@@ -81,6 +84,7 @@ export interface LoanAccountActionPermissions {
   assignOfficer: boolean;
   reassignOfficer: boolean;
   repayFromSavings: boolean;
+  modifyApplication: boolean;
 }
 
 type MenuItem = {
@@ -149,6 +153,8 @@ export function LoanAccountActions({
     visibility.disburse &&
     permissions.disburse &&
     !hasLoanPendingCheckerAction(pendingCheckerActions, 'DISBURSE');
+  const showModifyApplication =
+    visibility.modifyApplication && permissions.modifyApplication;
 
   const menuItems: MenuItem[] = [];
 
@@ -255,7 +261,7 @@ export function LoanAccountActions({
     });
   }
 
-  const hasPrimary = showApprove || showDisburse || showMakeRepayment;
+  const hasPrimary = showApprove || showDisburse || showMakeRepayment || showModifyApplication;
   const hasMenu = menuItems.length > 0;
 
   if (!hasPrimary && !hasMenu) {
@@ -287,6 +293,12 @@ export function LoanAccountActions({
           <Button type="button" onClick={() => openInboundPayment('repayment')}>
             <HandCoins className="mr-1 size-4" aria-hidden />
             Make repayment
+          </Button>
+        ) : null}
+        {showModifyApplication ? (
+          <Button type="button" nativeButton={false} render={<Link href={clientAccountEditPath(clientId, 'loan', account.id)} />}>
+            <Pencil className="mr-1 size-4" aria-hidden />
+            Modify application
           </Button>
         ) : null}
         {hasMenu ? (

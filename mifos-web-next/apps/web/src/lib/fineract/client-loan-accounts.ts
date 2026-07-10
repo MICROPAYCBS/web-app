@@ -90,6 +90,44 @@ export async function createClientLoanAccountRecord(
   return response;
 }
 
+export async function getClientLoanAccountEditContext(
+  loanId: string | number
+): Promise<{ template: ClientLoanAccountTemplate; raw: unknown }> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`${LOANS_API_PATH}/${loanId}`, {
+    associations: 'charges,collateral,meeting,multiDisburseDetails',
+    staffInSelectedOfficeOnly: 'true',
+    template: 'true'
+  });
+  let template = normalizeClientLoanAccountTemplate(raw);
+  const productId = template.product?.id;
+
+  if (productId != null) {
+    const collateralTemplate = await getLoanCollateralTemplate(productId);
+    template = {
+      ...template,
+      loanCollateralOptions: collateralTemplate.loanCollateralOptions
+    };
+  }
+
+  return { template, raw };
+}
+
+export async function updateClientLoanAccountRecord(
+  loanId: string | number,
+  clientId: string | number,
+  input: CreateLoanAccountInput,
+  options?: { linkedToFloatingInterestRates?: boolean }
+): Promise<CreateClientLoanAccountResponse> {
+  const fineract = await createFineractClient();
+  const payload = buildLoanAccountPayload(input, {
+    clientId,
+    linkedToFloatingInterestRates: options?.linkedToFloatingInterestRates,
+    forUpdate: true
+  });
+  return fineract.put<CreateClientLoanAccountResponse>(`${LOANS_API_PATH}/${loanId}`, payload);
+}
+
 export async function calculateClientLoanSchedule(
   clientId: string | number,
   input: CreateLoanAccountInput,

@@ -94,6 +94,11 @@
       "CREATE_LOAN"
     ]
   },
+  "loans.update": {
+    "any": [
+      "UPDATE_LOAN"
+    ]
+  },
   "products.loan": {
     "any": [
       "READ_LOANPRODUCT"

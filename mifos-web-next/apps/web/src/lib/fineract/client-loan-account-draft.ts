@@ -172,7 +172,10 @@ export function loanAccountDraftFromTemplate(
 
       base.transactionProcessingStrategyCode,
 
-    charges: defaultLoanAccountChargesFromTemplate(template.charges)
+    charges: defaultLoanAccountChargesFromTemplate(template.charges),
+
+    enableDownPayment:
+      template.enableDownPayment === true ? true : undefined
 
   };
 

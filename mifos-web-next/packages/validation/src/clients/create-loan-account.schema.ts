@@ -150,7 +150,9 @@ export const loanAccountFinancialStepSchema = z.object({
 
   repaymentEvery: z.coerce.number().int().positive('Repayment frequency is required.'),
 
-  repaymentFrequencyType: z.coerce.number().int().min(0)
+  repaymentFrequencyType: z.coerce.number().int().min(0),
+
+  enableDownPayment: z.boolean().optional()
 
 });
 
@@ -190,6 +192,8 @@ export const loanAccountTimelineStepSchema = z.object({
 
 
 export const loanAccountChargeItemSchema = z.object({
+
+  id: z.coerce.number().int().positive().optional(),
 
   chargeId: z.coerce.number().int().positive(),
 
@@ -319,4 +323,9 @@ export type LoanAccountTermsStepInput = z.infer<typeof loanAccountTermsStepSchem
 
 
 export type CreateLoanAccountInput = z.infer<typeof createLoanAccountSchema>;
+
+/** Loan application modify uses the same shape as create. */
+export const updateLoanAccountSchema = createLoanAccountSchema;
+
+export type UpdateLoanAccountInput = CreateLoanAccountInput;
 

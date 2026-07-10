@@ -26,7 +26,7 @@ import {
 } from '@mifos/validation';
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
+import { buildFineractCommandBody, buildFineractNoteCommandBody } from '@/lib/fineract/client-command-body';
 import { normalizeFineractDateField, parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import type { LoanAccountActionResult } from '@/lib/fineract/loan-account-action-result';
@@ -264,10 +264,17 @@ export async function executeLoanAccountLifecycleCommandAction(
   }
 
   try {
+    const body =
+      command === 'undoapproval'
+        ? buildFineractNoteCommandBody(parsed.data.note)
+        : command === 'undodisbursal'
+          ? buildFineractNoteCommandBody(parsed.data.note)
+          : buildFineractCommandBody(parsed.data as Record<string, unknown>);
+
     const response = await executeLoanAccountLifecycleCommand(
       accountId,
       command,
-      buildFineractCommandBody(parsed.data as Record<string, unknown>)
+      body
     );
     revalidateLoanAccountPaths(clientId, accountId);
     return actionSuccessFromFineractCommand(response, {});

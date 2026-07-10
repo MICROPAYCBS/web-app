@@ -31,7 +31,7 @@ import {
 } from '@mifos/validation';
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
+import { buildFineractCommandBody, buildFineractNoteCommandBody } from '@/lib/fineract/client-command-body';
 import type { SavingsAccountActionResult } from '@/lib/fineract/savings-account-action-result';
 import {
   createSavingsAccountCharge,
@@ -419,7 +419,7 @@ export async function executeSavingsAccountLifecycleCommandAction(
         if (!parsed.success) {
           return parsed.result;
         }
-        const body = parsed.data.note?.trim() ? { note: parsed.data.note.trim() } : {};
+        const body = buildFineractNoteCommandBody(parsed.data.note);
         response = await executeSavingsAccountCommand(accountId, command, body);
         break;
       }

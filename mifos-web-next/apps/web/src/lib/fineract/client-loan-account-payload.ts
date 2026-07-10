@@ -16,6 +16,8 @@ export interface BuildLoanAccountPayloadOptions {
   linkedToFloatingInterestRates?: boolean;
   /** When true, omit fields not accepted by POST /loans?command=calculateLoanSchedule. */
   forSchedulePreview?: boolean;
+  /** When true, shape the body for PUT /loans/{id} (loan application modify). */
+  forUpdate?: boolean;
 }
 
 /** Fields accepted on loan create but rejected by calculateLoanSchedule. */
@@ -50,15 +52,23 @@ export function buildLoanAccountPayload(
 
   const charges =
     input.charges && input.charges.length > 0
-      ? uniqueLoanAccountCharges(input.charges).map((charge) =>
-          stripEmpty({
+      ? uniqueLoanAccountCharges(input.charges).map((charge) => {
+          const body = stripEmpty({
             chargeId: charge.chargeId,
             amount: charge.amount,
             dueDate: charge.dueDate,
             feeInterval: charge.feeInterval,
             feeOnMonthDay: charge.feeOnMonthDay
-          })
-        )
+          });
+          if (
+            options.forUpdate &&
+            charge.id != null &&
+            charge.id !== charge.chargeId
+          ) {
+            body.id = charge.id;
+          }
+          return body;
+        })
       : undefined;
 
   const payload: Record<string, unknown> = {
@@ -87,6 +97,7 @@ export function buildLoanAccountPayload(
     externalId: input.externalId,
     linkAccountId: input.linkAccountId,
     createStandingInstructionAtDisbursement: input.createStandingInstructionAtDisbursement,
+    enableDownPayment: input.enableDownPayment,
     collateral,
     charges,
     locale: FINERACT_LOCALE,

@@ -30,7 +30,9 @@ import {
 
   createClientLoanAccountAction,
 
-  fetchClientLoanAccountTemplateAction
+  fetchClientLoanAccountTemplateAction,
+
+  updateClientLoanAccountAction
 
 } from '@/actions/client-loan-account';
 
@@ -113,17 +115,27 @@ const WIZARD_STEPS: FormWizardStep[] = [
 
 const SCHEDULE_STEP_INDEX = WIZARD_STEPS.findIndex((step) => step.id === 'schedule');
 
+export type LoanAccountWizardMode = 'create' | 'edit';
 
+export function LoanAccountWizard({
 
-export function CreateLoanAccountWizard({
+  mode = 'create',
+
+  loanId,
 
   clientId,
 
   clientDisplayName,
 
-  initialTemplate
+  initialTemplate,
+
+  initialDraft
 
 }: {
+
+  mode?: LoanAccountWizardMode;
+
+  loanId?: string;
 
   clientId: string;
 
@@ -131,13 +143,19 @@ export function CreateLoanAccountWizard({
 
   initialTemplate: ClientLoanAccountTemplate;
 
+  initialDraft?: LoanAccountDraft;
+
 }) {
+
+  const isEdit = mode === 'edit';
 
   const router = useRouter();
 
   const [template, setTemplate] = useState(initialTemplate);
 
-  const [draft, setDraft] = useState<LoanAccountDraft>(emptyLoanAccountDraft());
+  const [draft, setDraft] = useState<LoanAccountDraft>(
+    initialDraft ?? emptyLoanAccountDraft()
+  );
 
   const [stepId, setStepId] = useState('core');
 
@@ -177,7 +195,10 @@ export function CreateLoanAccountWizard({
 
   const isReviewStep = isSchedule || isPreview;
 
-  const cancelHref = `/clients/${clientId}/loans`;
+  const cancelHref =
+    isEdit && loanId
+      ? clientAccountGeneralPath(clientId, 'loan', loanId)
+      : `/clients/${clientId}/loans`;
 
 
 
@@ -258,7 +279,11 @@ export function CreateLoanAccountWizard({
         linkAccountId: current.linkAccountId,
         charges: seededDraft.charges,
         collateral: current.collateral,
-        guarantors: current.guarantors
+        guarantors: current.guarantors,
+        enableDownPayment:
+          result.enableDownPayment === true
+            ? (seededDraft.enableDownPayment ?? true)
+            : undefined
       }));
     },
     [clientId]
@@ -428,7 +453,7 @@ export function CreateLoanAccountWizard({
       setScheduleStepError(null);
     }
 
-    if (stepId === 'core' && draft.productId > 0) {
+    if (stepId === 'core' && draft.productId > 0 && !isEdit) {
       await loadProductTemplate(draft.productId);
     }
 
@@ -441,7 +466,8 @@ export function CreateLoanAccountWizard({
     template,
     loadProductTemplate,
     goNext,
-    schedulePreview
+    schedulePreview,
+    isEdit
   ]);
 
 
@@ -478,15 +504,25 @@ export function CreateLoanAccountWizard({
 
     startTransition(async () => {
 
-      const result = await createClientLoanAccountAction(
-        clientId,
-        draft,
-        schedulePreview.productContext
-      );
+      const result =
+        isEdit && loanId
+          ? await updateClientLoanAccountAction(
+              clientId,
+              loanId,
+              draft,
+              schedulePreview.productContext
+            )
+          : await createClientLoanAccountAction(
+              clientId,
+              draft,
+              schedulePreview.productContext
+            );
 
       if (!toastCommandOutcome(result, {
-        completed: 'Loan application submitted.',
-        pending: 'Loan application sent for approval.'
+        completed: isEdit ? 'Loan application updated.' : 'Loan application submitted.',
+        pending: isEdit
+          ? 'Loan application update sent for approval.'
+          : 'Loan application sent for approval.'
       })) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
@@ -507,6 +543,10 @@ export function CreateLoanAccountWizard({
 
         router.push(clientAccountGeneralPath(clientId, 'loan', result.resourceId));
 
+      } else if (isEdit && loanId) {
+
+        router.push(clientAccountGeneralPath(clientId, 'loan', loanId));
+
       } else {
 
         router.push(cancelHref);
@@ -525,7 +565,9 @@ export function CreateLoanAccountWizard({
     router,
     cancelHref,
     schedulePreview,
-    serverFieldErrors
+    serverFieldErrors,
+    isEdit,
+    loanId
   ]);
 
 
@@ -556,16 +598,16 @@ export function CreateLoanAccountWizard({
 
         currentStepId={stepId}
 
-        title="Apply for loan"
+        title={isEdit ? 'Modify application' : 'Apply for loan'}
 
         description={
-
-          clientDisplayName
-
-            ? `Complete each step to submit a loan application for ${clientDisplayName}.`
-
-            : 'Complete each step to submit a loan application for this customer.'
-
+          isEdit
+            ? clientDisplayName
+              ? `Update this pending loan application for ${clientDisplayName}.`
+              : 'Update this pending loan application.'
+            : clientDisplayName
+              ? `Complete each step to submit a loan application for ${clientDisplayName}.`
+              : 'Complete each step to submit a loan application for this customer.'
         }
 
         onStepClick={goToStep}
@@ -584,13 +626,13 @@ export function CreateLoanAccountWizard({
 
             backDisabled={pending}
 
-            primaryLabel={isPreview ? 'Submit application' : 'Next'}
+            primaryLabel={isPreview ? (isEdit ? 'Save changes' : 'Submit application') : 'Next'}
 
             onPrimary={isPreview ? handleSubmit : tryNext}
 
             primaryLoading={isPreview && pending}
 
-            primaryLoadingLabel="Submitting…"
+            primaryLoadingLabel={isEdit ? 'Saving…' : 'Submitting…'}
 
             primaryDisabled={
               pending ||
@@ -620,6 +662,8 @@ export function CreateLoanAccountWizard({
             draft={draft}
 
             errors={stepErrors}
+
+            productLocked={isEdit}
 
             onChange={(patch) => {
 
@@ -762,3 +806,21 @@ export function CreateLoanAccountWizard({
 
 }
 
+export function CreateLoanAccountWizard({
+  clientId,
+  clientDisplayName,
+  initialTemplate
+}: {
+  clientId: string;
+  clientDisplayName?: string;
+  initialTemplate: ClientLoanAccountTemplate;
+}) {
+  return (
+    <LoanAccountWizard
+      mode="create"
+      clientId={clientId}
+      clientDisplayName={clientDisplayName}
+      initialTemplate={initialTemplate}
+    />
+  );
+}

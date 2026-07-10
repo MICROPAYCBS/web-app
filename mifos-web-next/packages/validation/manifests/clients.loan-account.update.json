@@ -1,5 +1,5 @@
 {
-  "command": "clients.loan-account.create",
+  "command": "clients.loan-account.update",
   "fineractSources": [
     "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
     "org.apache.fineract.portfolio.loanaccount.data.LoanApplicationDataValidator"
@@ -13,7 +13,7 @@
     "loanTermFrequency": { "required": true },
     "numberOfRepayments": { "required": true },
     "repaymentEvery": { "required": true },
-    "enableDownPayment": { "required": false, "default": true },
+    "enableDownPayment": { "required": false },
     "interestRatePerPeriod": { "required": true, "min": 0 },
     "submittedOnDate": { "required": true },
     "expectedDisbursementDate": { "required": true },
@@ -24,7 +24,6 @@
     "transactionProcessingStrategyCode": { "required": true },
     "collateral": { "required": false },
     "charges": { "required": false },
-    "guarantors": { "required": false },
     "linkAccountId": { "required": false },
     "createStandingInstructionAtDisbursement": { "required": false, "default": false }
   }

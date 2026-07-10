@@ -18,6 +18,12 @@ export function buildFineractCommandBody(
   };
 }
 
+/** Note-only lifecycle commands (e.g. undo approval) reject locale/dateFormat. */
+export function buildFineractNoteCommandBody(note?: string): Record<string, unknown> {
+  const trimmed = note?.trim();
+  return trimmed ? { note: trimmed } : {};
+}
+
 /** @deprecated Prefer buildFineractCommandBody when dates are already Fineract strings. */
 export function withFineractCommandDates(
   fields: Record<string, unknown>,

@@ -143,7 +143,8 @@ export function validateLoanAccountStep(
         'loanTermFrequencyType',
         'numberOfRepayments',
         'repaymentEvery',
-        'repaymentFrequencyType'
+        'repaymentFrequencyType',
+        'enableDownPayment'
       ]),
       extraErrors
     );

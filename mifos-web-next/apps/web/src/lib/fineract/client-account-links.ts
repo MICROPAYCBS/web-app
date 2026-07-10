@@ -117,6 +117,15 @@ export function productKindFromAccountSegment(
   return (entry?.[0] ?? 'loan') as ClientAccountProductKind;
 }
 
+export function clientAccountEditPath(
+  clientId: string | number,
+  kind: ClientAccountProductKind,
+  accountId: string | number
+): string {
+  const segment = CLIENT_ACCOUNT_SEGMENTS[kind];
+  return `/clients/${clientId}/${segment}/${accountId}/edit`;
+}
+
 /** Legacy application URLs under the client detail route. */
 export function clientAccountCreatePath(
   clientId: string | number,

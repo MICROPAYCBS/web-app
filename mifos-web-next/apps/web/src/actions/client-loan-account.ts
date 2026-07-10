@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { assertCan, resolvePermission } from '@mifos/auth';
+import { assertCan, can, resolvePermission } from '@mifos/auth';
 import { FineractHttpError } from '@mifos/api-client';
 import type { LoanScheduleData } from '@mifos/api-client';
 import {
@@ -16,8 +16,10 @@ import {
   mapFineractErrors,
   mapLoanApplicationFineractErrors,
   toFineractActionError,
+  updateLoanAccountSchema,
   validateLoanApplicationProductRules,
   type CreateLoanAccountInput,
+  type UpdateLoanAccountInput,
   actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
@@ -25,11 +27,12 @@ import {
   type ClientLoanAccountActionResult,
   isClientLoanAccountActionError
 } from '@/lib/fineract/client-account-action-result';
-import { clientAccountListPath } from '@/lib/fineract/client-account-links';
+import { clientAccountGeneralPath, clientAccountListPath } from '@/lib/fineract/client-account-links';
 import {
   calculateClientLoanSchedule,
   createClientLoanAccountRecord,
-  getClientLoanAccountTemplate
+  getClientLoanAccountTemplate,
+  updateClientLoanAccountRecord
 } from '@/lib/fineract/client-loan-accounts';
 import { getServerSession } from '@/lib/session/server';
 
@@ -47,12 +50,13 @@ function mapActionFineractFieldErrors(
   return mapLoanApplicationFineractErrors(mapped.fieldErrors, { schedulePreview });
 }
 
-function parseCreateInput(
+function parseLoanAccountInput(
   raw: unknown,
+  schema: typeof createLoanAccountSchema,
   productContext?: Parameters<typeof validateLoanApplicationProductRules>[1],
   options?: Parameters<typeof validateLoanApplicationProductRules>[2]
 ): Extract<ClientLoanAccountActionResult, { ok: false }> | CreateLoanAccountInput {
-  const parsed = createLoanAccountSchema.safeParse(raw);
+  const parsed = schema.safeParse(raw);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
@@ -82,6 +86,22 @@ function parseCreateInput(
   }
 
   return parsed.data;
+}
+
+function parseCreateInput(
+  raw: unknown,
+  productContext?: Parameters<typeof validateLoanApplicationProductRules>[1],
+  options?: Parameters<typeof validateLoanApplicationProductRules>[2]
+) {
+  return parseLoanAccountInput(raw, createLoanAccountSchema, productContext, options);
+}
+
+function parseUpdateInput(
+  raw: unknown,
+  productContext?: Parameters<typeof validateLoanApplicationProductRules>[1],
+  options?: Parameters<typeof validateLoanApplicationProductRules>[2]
+): Extract<ClientLoanAccountActionResult, { ok: false }> | UpdateLoanAccountInput {
+  return parseLoanAccountInput(raw, updateLoanAccountSchema, productContext, options);
 }
 
 export async function fetchClientLoanAccountTemplateAction(
@@ -119,7 +139,12 @@ export async function calculateClientLoanScheduleAction(
   }
 
   try {
-    assertCan(session, resolvePermission('loans.create'));
+    if (
+      !can(session, resolvePermission('loans.create')) &&
+      !can(session, resolvePermission('loans.update'))
+    ) {
+      assertCan(session, resolvePermission('loans.create'));
+    }
     const schedule = await calculateClientLoanSchedule(clientId, parsed, {
       linkedToFloatingInterestRates: productContext?.linkedToFloatingInterestRates
     });
@@ -161,6 +186,42 @@ export async function createClientLoanAccountAction(
     return actionSuccessFromFineractCommand(response, { resourceId });
   } catch (err) {
     const mapped = toFineractActionError(err, 'Could not submit the loan application.');
+    return {
+      ok: false,
+      message: mapped.message,
+      fieldErrors: mapActionFineractFieldErrors(err) ?? mapped.fieldErrors
+    };
+  }
+}
+
+export async function updateClientLoanAccountAction(
+  clientId: string,
+  loanId: string,
+  raw: unknown,
+  productContext?: Parameters<typeof validateLoanApplicationProductRules>[1]
+): Promise<ClientLoanAccountActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+
+  const parsed = parseUpdateInput(raw, productContext);
+  if (isClientLoanAccountActionError(parsed)) {
+    return parsed;
+  }
+
+  try {
+    assertCan(session, resolvePermission('loans.update'));
+    const response = await updateClientLoanAccountRecord(loanId, clientId, parsed, {
+      linkedToFloatingInterestRates: productContext?.linkedToFloatingInterestRates
+    });
+    const resourceId = response.resourceId ?? response.loanId ?? Number(loanId);
+    revalidatePath(clientAccountGeneralPath(clientId, 'loan', loanId));
+    revalidatePath(`/clients/${clientId}/loans-accounts/${loanId}/edit`);
+    revalidatePath(`/clients/${clientId}`);
+    return actionSuccessFromFineractCommand(response, { resourceId });
+  } catch (err) {
+    const mapped = toFineractActionError(err, 'Could not update the loan application.');
     return {
       ok: false,
       message: mapped.message,
