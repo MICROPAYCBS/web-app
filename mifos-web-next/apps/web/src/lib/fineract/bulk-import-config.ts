@@ -164,7 +164,7 @@ export const BULK_IMPORT_DEFINITIONS: BulkImportDefinition[] = [
     formFields: 1,
     listPermission: 'READ_JOURNALENTRY',
     downloadPermission: 'READ_CLIENT',
-    description: 'Download journal entries template and upload Excel files'
+    description: 'Bulk journal operations such as Excel import'
   },
   {
     name: 'Guarantors',
@@ -184,5 +184,11 @@ export function getBulkImportDefinition(name: string): BulkImportDefinition | un
 
 /** User-facing label for bulk import types (API keys such as `Clients` stay unchanged). */
 export function bulkImportDisplayName(name: string): string {
-  return name === 'Clients' ? 'Customers' : name;
+  if (name === 'Clients') {
+    return 'Customers';
+  }
+  if (name === 'Journal Entries') {
+    return 'Bulk journal operations';
+  }
+  return name;
 }

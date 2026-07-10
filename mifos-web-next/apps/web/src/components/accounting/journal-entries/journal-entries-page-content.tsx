@@ -14,7 +14,7 @@ import type {
   FineractOfficeOption
 } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { Plus, Upload } from 'lucide-react';
+import { Layers, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
@@ -37,7 +37,10 @@ import {
   type JournalEntrySearchFilters
 } from '@/lib/fineract/journal-entry-query';
 import type { Department } from '@/lib/fineract/departments';
-import { JOURNAL_ENTRIES_BULK_IMPORT_PATH } from '@/lib/fineract/bulk-import-paths';
+import {
+  JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL,
+  JOURNAL_ENTRIES_BULK_OPERATIONS_PATH
+} from '@/lib/fineract/bulk-import-paths';
 import { cn } from '@/lib/utils';
 
 export function JournalEntriesPageContent({
@@ -132,11 +135,11 @@ export function JournalEntriesPageContent({
           <div className="flex flex-wrap items-center gap-2">
             <Can permission="READ_JOURNALENTRY">
               <Link
-                href={JOURNAL_ENTRIES_BULK_IMPORT_PATH}
+                href={JOURNAL_ENTRIES_BULK_OPERATIONS_PATH}
                 className={cn(buttonVariants({ variant: 'outline' }))}
               >
-                <Upload className="mr-2 size-4" />
-                Import
+                <Layers className="mr-2 size-4" />
+                {JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL}
               </Link>
             </Can>
             <Can permission="CREATE_JOURNALENTRY">

@@ -15,7 +15,7 @@ import {
   type CreateJournalEntryFormInput
 } from '@mifos/validation';
 import { Can } from '@mifos/auth';
-import { Upload } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
@@ -26,7 +26,10 @@ import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { buttonVariants } from '@/components/ui/button';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
-import { JOURNAL_ENTRIES_BULK_IMPORT_PATH } from '@/lib/fineract/bulk-import-paths';
+import {
+  JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL,
+  JOURNAL_ENTRIES_BULK_OPERATIONS_PATH
+} from '@/lib/fineract/bulk-import-paths';
 import { cn } from '@/lib/utils';
 import { postingTemplateLinesForRule, isManualJournalEntryTemplateValue } from '@/lib/accounting/journal-entry-display';
 import { DetailsStep } from './steps/details-step';
@@ -252,11 +255,11 @@ export function JournalEntryWizard({
         actions={
           <Can permission="READ_JOURNALENTRY">
             <Link
-              href={JOURNAL_ENTRIES_BULK_IMPORT_PATH}
+              href={JOURNAL_ENTRIES_BULK_OPERATIONS_PATH}
               className={cn(buttonVariants({ variant: 'outline' }))}
             >
-              <Upload className="mr-2 size-4" />
-              Import from Excel
+              <Layers className="mr-2 size-4" />
+              {JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL}
             </Link>
           </Can>
         }
