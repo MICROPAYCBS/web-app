@@ -115,6 +115,12 @@ export function loanAccountDraftFromTemplate(
 
   const base = emptyLoanAccountDraft();
 
+  const loanTermFrequencyTypeId =
+    template.loanTermFrequencyType?.id ?? base.loanTermFrequencyType;
+
+  const repaymentFrequencyTypeId =
+    template.repaymentFrequencyType?.id ?? loanTermFrequencyTypeId;
+
   return {
 
     ...base,
@@ -125,17 +131,13 @@ export function loanAccountDraftFromTemplate(
 
     loanTermFrequency: template.loanTermFrequency ?? base.loanTermFrequency,
 
-    loanTermFrequencyType:
-
-      template.loanTermFrequencyType?.id ?? base.loanTermFrequencyType,
+    loanTermFrequencyType: loanTermFrequencyTypeId,
 
     numberOfRepayments: template.numberOfRepayments ?? base.numberOfRepayments,
 
     repaymentEvery: template.repaymentEvery ?? base.repaymentEvery,
 
-    repaymentFrequencyType:
-
-      template.repaymentFrequencyType?.id ?? base.repaymentFrequencyType,
+    repaymentFrequencyType: repaymentFrequencyTypeId,
 
     interestRatePerPeriod:
 

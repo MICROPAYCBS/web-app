@@ -83,4 +83,24 @@ describe('normalizeLoanAccountChargeOptions', () => {
     expect(template.charges).toHaveLength(1);
     expect(template.chargeOptions).toHaveLength(1);
   });
+
+  it('maps Fineract termPeriodFrequencyType onto loanTermFrequencyType', () => {
+    const template = normalizeClientLoanAccountTemplate({
+      clientId: 1,
+      product: { id: 2, name: 'Short term loan' },
+      termFrequency: 6,
+      termPeriodFrequencyType: { id: 2, value: 'Months' },
+      repaymentEvery: 1,
+      repaymentFrequencyType: { id: 2, value: 'Months' },
+      numberOfRepayments: 6,
+      termFrequencyTypeOptions: [
+        { id: 0, value: 'Days' },
+        { id: 2, value: 'Months' }
+      ]
+    });
+
+    expect(template.loanTermFrequency).toBe(6);
+    expect(template.loanTermFrequencyType?.id).toBe(2);
+    expect(template.loanTermFrequencyType?.value).toBe('Months');
+  });
 });

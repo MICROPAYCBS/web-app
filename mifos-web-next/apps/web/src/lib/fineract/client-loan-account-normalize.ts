@@ -506,9 +506,10 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     maxPrincipal: toNumber(row.maxPrincipal),
 
-    loanTermFrequency: toNumber(row.loanTermFrequency),
+    loanTermFrequency: toNumber(row.loanTermFrequency) ?? toNumber(row.termFrequency),
 
-    loanTermFrequencyType: asEnumOption(row.loanTermFrequencyType),
+    loanTermFrequencyType:
+      asEnumOption(row.loanTermFrequencyType) ?? asEnumOption(row.termPeriodFrequencyType),
 
     numberOfRepayments: toNumber(row.numberOfRepayments),
 

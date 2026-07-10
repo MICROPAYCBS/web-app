@@ -85,7 +85,6 @@ export function LoanAccountDisburseSheet({
     setLoading(true);
     setError(null);
     setFieldErrors({});
-    setActualDisbursementDate(initialTransactionDate);
     setPaymentTypeId('');
     setNote('');
     void loadLoanAccountDisburseSheetDataAction(
@@ -99,12 +98,14 @@ export function LoanAccountDisburseSheet({
       if (!result.ok) {
         setError(result.message);
         setPaymentTypes([]);
+        setActualDisbursementDate(initialTransactionDate);
         return;
       }
       setPaymentTypes(result.paymentTypeOptions);
       if (result.amount != null) {
         setTransactionAmount(String(result.amount));
       }
+      setActualDisbursementDate(result.transactionDate ?? initialTransactionDate);
     });
     return () => {
       cancelled = true;

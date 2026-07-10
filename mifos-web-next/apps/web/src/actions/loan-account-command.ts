@@ -128,6 +128,7 @@ export async function loadLoanAccountApproveSheetDataAction(
       ok: true;
       approvalAmount?: number;
       expectedDisbursementDate?: string;
+      submittedOnDate?: string;
     }
   | Extract<LoanAccountActionResult, { ok: false }>
 > {
@@ -144,7 +145,8 @@ export async function loadLoanAccountApproveSheetDataAction(
     return {
       ok: true,
       approvalAmount: template.approvalAmount,
-      expectedDisbursementDate: template.expectedDisbursementDate
+      expectedDisbursementDate: template.expectedDisbursementDate,
+      submittedOnDate: template.submittedOnDate
     };
   } catch (error) {
     return toFineractActionError(error, 'Could not load approval details.');
@@ -158,6 +160,7 @@ export async function loadLoanAccountDisburseSheetDataAction(
   | {
       ok: true;
       amount?: number;
+      transactionDate?: string;
       paymentTypeOptions: Awaited<ReturnType<typeof loadCashierAwarePaymentTypeOptions>>;
     }
   | Extract<LoanAccountActionResult, { ok: false }>
@@ -182,6 +185,7 @@ export async function loadLoanAccountDisburseSheetDataAction(
     return {
       ok: true,
       amount: template.amount,
+      transactionDate: template.date,
       paymentTypeOptions
     };
   } catch (error) {

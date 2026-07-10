@@ -155,13 +155,19 @@ export function loanAccountDraftFromEditTemplate(
     fundId: toNumber(row.fundId),
     externalId: typeof row.externalId === 'string' ? row.externalId : '',
     principal: toNumber(row.principal) ?? fromTemplate.principal,
-    loanTermFrequency: toNumber(row.loanTermFrequency) ?? fromTemplate.loanTermFrequency,
+    loanTermFrequency: toNumber(row.loanTermFrequency) ?? toNumber(row.termFrequency) ?? fromTemplate.loanTermFrequency,
     loanTermFrequencyType:
       toNumber(
         typeof row.loanTermFrequencyType === 'object'
           ? (row.loanTermFrequencyType as { id?: number }).id
           : row.loanTermFrequencyType
-      ) ?? fromTemplate.loanTermFrequencyType,
+      ) ??
+      toNumber(
+        typeof row.termPeriodFrequencyType === 'object'
+          ? (row.termPeriodFrequencyType as { id?: number }).id
+          : row.termPeriodFrequencyType
+      ) ??
+      fromTemplate.loanTermFrequencyType,
     numberOfRepayments: toNumber(row.numberOfRepayments) ?? fromTemplate.numberOfRepayments,
     repaymentEvery: toNumber(row.repaymentEvery) ?? fromTemplate.repaymentEvery,
     repaymentFrequencyType:

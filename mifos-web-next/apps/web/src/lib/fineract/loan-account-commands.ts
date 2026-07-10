@@ -30,6 +30,7 @@ export interface LoanAccountWriteOffReasonOption {
 export interface LoanAccountApprovalTemplate {
   approvalAmount?: number;
   expectedDisbursementDate?: string;
+  submittedOnDate?: string;
 }
 
 export interface LoanAccountTransactionTemplate {
@@ -125,14 +126,19 @@ export async function getLoanAccountApprovalTemplate(
     return {};
   }
   const row = raw as Record<string, unknown>;
-  const timelineExpected =
+  const timeline =
     row.timeline && typeof row.timeline === 'object'
-      ? (row.timeline as Record<string, unknown>).expectedDisbursementDate
+      ? (row.timeline as Record<string, unknown>)
       : undefined;
+  const timelineExpected = timeline?.expectedDisbursementDate;
+  const timelineSubmitted = timeline?.submittedOnDate;
   return {
     approvalAmount: toNumber(row.approvalAmount ?? row.proposedPrincipal),
     expectedDisbursementDate: fineractApiDateToFormString(
       (row.expectedDisbursementDate ?? timelineExpected) as number[] | string | undefined
+    ),
+    submittedOnDate: fineractApiDateToFormString(
+      (row.submittedOnDate ?? timelineSubmitted) as number[] | string | undefined
     )
   };
 }

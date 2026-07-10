@@ -76,7 +76,11 @@ function LoanAccountFinancialTermsForm({
 
   const applyLoanTermPatch = (patch: Partial<LoanAccountFinancialStepInput>) => {
     const next = { ...draft, ...patch };
-    onChange({ ...patch, ...syncRepaymentsFromLoanTerm(next) });
+    const syncedRepaymentType =
+      patch.loanTermFrequencyType != null
+        ? { repaymentFrequencyType: patch.loanTermFrequencyType }
+        : {};
+    onChange({ ...patch, ...syncedRepaymentType, ...syncRepaymentsFromLoanTerm(next) });
   };
 
   const principalHint = LOAN_ACCOUNT_PRINCIPAL_HINT;

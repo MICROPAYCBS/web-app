@@ -58,8 +58,6 @@ export function LoanAccountApproveSheet({
     setLoading(true);
     setError(null);
     setFieldErrors({});
-    setApprovedOnDate(initialTransactionDate);
-    setExpectedDisbursementDate('');
     setNote('');
     void loadLoanAccountApproveSheetDataAction(String(accountId)).then((result) => {
       if (cancelled) {
@@ -68,14 +66,15 @@ export function LoanAccountApproveSheet({
       setLoading(false);
       if (!result.ok) {
         setError(result.message);
+        setApprovedOnDate(initialTransactionDate);
+        setExpectedDisbursementDate('');
         return;
       }
       if (result.approvalAmount != null) {
         setApprovedLoanAmount(String(result.approvalAmount));
       }
-      if (result.expectedDisbursementDate) {
-        setExpectedDisbursementDate(result.expectedDisbursementDate);
-      }
+      setApprovedOnDate(result.submittedOnDate ?? initialTransactionDate);
+      setExpectedDisbursementDate(result.expectedDisbursementDate ?? '');
     });
     return () => {
       cancelled = true;
@@ -132,7 +131,7 @@ export function LoanAccountApproveSheet({
         <DateField
           id={`${formId}-expected-disbursement`}
           label="Expected disbursement"
-          optional
+          required
           value={expectedDisbursementDate}
           onChange={(value) => setExpectedDisbursementDate(value ?? '')}
           error={fieldErrors.expectedDisbursementDate}
