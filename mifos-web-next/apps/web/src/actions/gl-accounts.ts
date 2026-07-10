@@ -8,8 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { FineractHttpError } from '@mifos/api-client';
 import { assertCan } from '@mifos/auth';
 import {
+  applyGlAccountFineractFieldErrors,
+  buildUpsertGlAccountValidationContext,
   toFineractActionError,
   validateToggleGlAccountDisabled,
   validateUpsertGlAccountForm,
@@ -21,9 +24,11 @@ import { revalidatePath } from 'next/cache';
 import {
   createGlAccount,
   deleteGlAccount,
+  getGlAccount,
   toggleGlAccountDisabled,
   updateGlAccount
 } from '@/lib/fineract/gl-accounts';
+import { getStructuredGlCodePolicy } from '@/lib/fineract/gl-account-code-policy';
 import { getServerSession } from '@/lib/session/server';
 
 const LIST_PATH = '/accounting/chart-of-accounts';
@@ -55,6 +60,46 @@ function revalidateGlAccountViews(glAccountId?: number) {
   }
 }
 
+async function buildGlAccountValidationContext(
+  input: UpsertGlAccountFormInput,
+  glAccountId?: number
+) {
+  const structuredGlCodePolicy = await getStructuredGlCodePolicy();
+  let parentGlCode: string | undefined;
+  let parentTypeId: number | undefined;
+  if (input.parentId) {
+    const parent = await getGlAccount(input.parentId);
+    parentGlCode = parent?.glCode;
+    parentTypeId = parent?.type?.id;
+  }
+
+  let originalSnapshot;
+  if (glAccountId != null) {
+    const existing = await getGlAccount(glAccountId);
+    if (existing) {
+      originalSnapshot = {
+        glCode: existing.glCode,
+        type: existing.type.id,
+        parentId: existing.parentId
+      };
+    }
+  }
+
+  return buildUpsertGlAccountValidationContext(structuredGlCodePolicy, {
+    parentGlCode,
+    parentTypeId,
+    original: originalSnapshot
+  });
+}
+
+function mapGlAccountActionError(err: unknown, fallback: string) {
+  const result = toFineractActionError(err, fallback);
+  if (err instanceof FineractHttpError) {
+    return applyGlAccountFineractFieldErrors(result, err.body, err.status);
+  }
+  return result;
+}
+
 export async function createGlAccountAction(
   input: UpsertGlAccountFormInput
 ): Promise<GlAccountsActionResult> {
@@ -65,7 +110,7 @@ export async function createGlAccountAction(
     return { ok: false, message: 'You do not have permission to create GL accounts.' };
   }
 
-  const parsed = validateUpsertGlAccountForm(input);
+  const parsed = validateUpsertGlAccountForm(input, await buildGlAccountValidationContext(input));
   if (!parsed.success) {
     return {
       ok: false,
@@ -79,7 +124,7 @@ export async function createGlAccountAction(
     revalidateGlAccountViews(response.resourceId);
     return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
-    return toFineractActionError(error, 'Failed to create GL account.');
+    return mapGlAccountActionError(error, 'Failed to create GL account.');
   }
 }
 
@@ -98,7 +143,10 @@ export async function updateGlAccountAction(
     return { ok: false, message: 'Invalid GL account id.' };
   }
 
-  const parsed = validateUpsertGlAccountForm(input);
+  const parsed = validateUpsertGlAccountForm(
+    input,
+    await buildGlAccountValidationContext(input, glAccountId)
+  );
   if (!parsed.success) {
     return {
       ok: false,
@@ -112,7 +160,7 @@ export async function updateGlAccountAction(
     revalidateGlAccountViews(glAccountId);
     return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (error) {
-    return toFineractActionError(error, 'Failed to update GL account.');
+    return mapGlAccountActionError(error, 'Failed to update GL account.');
   }
 }
 

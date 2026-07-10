@@ -8,15 +8,25 @@
 
 import type { FineractGlobalConfiguration } from '@mifos/api-client';
 import { fineractApiDateToFormString, formatFineractDateArray } from '@/lib/fineract/dates';
+import {
+  ENFORCE_STRUCTURED_GL_CODES_CONFIG_NAME,
+  STRUCTURED_GL_CODE_LENGTH_CONFIG_NAME
+} from '@/lib/fineract/gl-account-code-policy-paths';
 import { ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME } from '@/lib/fineract/loan-repayment-policy-paths';
 
 const GLOBAL_CONFIGURATION_DISPLAY_NAMES: Record<string, string> = {
-  [ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME]: 'Allow direct loan repayments'
+  [ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME]: 'Allow direct loan repayments',
+  [ENFORCE_STRUCTURED_GL_CODES_CONFIG_NAME]: 'Enforce structured GL codes',
+  [STRUCTURED_GL_CODE_LENGTH_CONFIG_NAME]: 'Structured GL code length'
 };
 
 const GLOBAL_CONFIGURATION_DESCRIPTIONS: Record<string, string> = {
   [ALLOW_DIRECT_LOAN_REPAYMENTS_CONFIG_NAME]:
-    'Savings-account transfer is always available and is the preferred way to repay. When this setting is on, staff may also post repayments directly on the loan (cash, bank, etc.). When off, only savings transfer is permitted (direct API calls are rejected).'
+    'Savings-account transfer is always available and is the preferred way to repay. When this setting is on, staff may also post repayments directly on the loan (cash, bank, etc.). When off, only savings transfer is permitted (direct API calls are rejected).',
+  [ENFORCE_STRUCTURED_GL_CODES_CONFIG_NAME]:
+    'When enabled, new and updated GL accounts must use a fixed-length numeric code whose first digit matches the account class (1=Asset through 5=Expense). Existing codes are grandfathered until code or type is changed.',
+  [STRUCTURED_GL_CODE_LENGTH_CONFIG_NAME]:
+    'Number of digits required for GL codes when structured enforcement is enabled. The first digit is reserved for the account class; remaining digits are institution-defined.'
 };
 
 export function globalConfigurationDisplayName(name: string): string {

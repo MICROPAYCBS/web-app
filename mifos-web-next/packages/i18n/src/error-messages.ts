@@ -45,6 +45,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.not.authorized': 'You do not have permission to perform this action.',
   'validation.msg.domain.rule.violation':
     'This change was rejected by a business rule.',
+  'error.msg.glaccount.glcode.invalid.format':
+    'GL code must be the required number of digits and contain numbers only.',
+  'error.msg.glaccount.glcode.category.mismatch':
+    'GL code must start with the digit for the selected account class.',
+  'error.msg.glaccount.glcode.header.mismatch':
+    'GL code must follow the parent header numbering pattern.',
   'validation.msg.ComplianceProfile.otherBankAccounts.cannot.exceed.max.of.two':
     'You can add at most two other bank accounts.',
   'validation.msg.ComplianceProfile.otherBankAccounts.required.when.has.other.bank.accounts.is.true':

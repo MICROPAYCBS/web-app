@@ -472,6 +472,7 @@ export {
 } from './administration/template.schema';
 export {
   buildGlAccountApiPayload,
+  buildUpsertGlAccountValidationContext,
   toggleGlAccountDisabledSchema,
   upsertGlAccountFormSchema,
   validateToggleGlAccountDisabled,
@@ -480,6 +481,15 @@ export {
   type UpsertGlAccountFormInput,
   type UpsertGlAccountValidationContext
 } from './accounting/gl-account.schema';
+export {
+  deriveGlAccountHeaderStem,
+  glAccountCodeMatchesHeaderStem,
+  glAccountCodeMeetsStructuredRules,
+  glAccountStructuredValidationApplies,
+  normalizeStructuredGlCodeInput,
+  type GlAccountStructuredSnapshot
+} from './accounting/gl-account-governance';
+export { applyGlAccountFineractFieldErrors } from './accounting/gl-account-fineract-errors';
 export {
   buildCreateJournalEntryPayload,
   createJournalEntryFormSchema,

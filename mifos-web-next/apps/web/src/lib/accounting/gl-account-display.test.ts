@@ -14,7 +14,9 @@ import {
   GL_ACCOUNT_TYPE_EXPENSE,
   GL_ACCOUNT_TYPE_INCOME,
   GL_ACCOUNT_TYPE_LIABILITY,
-  glAccountCodeHintForType
+  glAccountCodeHintForType,
+  structuredGlCodeEnforcementBanner,
+  structuredGlCodeLegacyAccountNotice
 } from './gl-account-display';
 
 describe('glAccountCodeHintForType', () => {
@@ -31,5 +33,24 @@ describe('glAccountCodeHintForType', () => {
     );
     assert.match(glAccountCodeHintForType(GL_ACCOUNT_TYPE_INCOME), /^Income accounts typically start with 4/);
     assert.match(glAccountCodeHintForType(GL_ACCOUNT_TYPE_EXPENSE), /^Expense accounts typically start with 5/);
+  });
+
+  it('returns parent-aware stem hints when structured enforcement is on', () => {
+    const hint = glAccountCodeHintForType(GL_ACCOUNT_TYPE_ASSET, {
+      enforceStructured: true,
+      codeLength: 6,
+      parentGlCode: '110000',
+      parentName: 'Cash and Banks'
+    });
+    assert.match(hint, /Under \(110000\) Cash and Banks/);
+    assert.match(hint, /starting with 110/);
+    assert.match(hint, /110001/);
+  });
+});
+
+describe('structured GL code banners', () => {
+  it('describes enforcement and legacy grandfathering', () => {
+    assert.match(structuredGlCodeEnforcementBanner(6), /Asset 1, Liability 2/);
+    assert.match(structuredGlCodeLegacyAccountNotice(), /keeps its existing GL code/);
   });
 });

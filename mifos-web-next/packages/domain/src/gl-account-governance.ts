@@ -40,3 +40,42 @@ export function glAccountParentTypeMatches(typeId: number, parentTypeId: number 
   }
   return typeId === parentTypeId;
 }
+
+export function deriveGlAccountHeaderStem(parentGlCode: string): string {
+  const normalized = parentGlCode.trim();
+  if (!normalized) {
+    return normalized;
+  }
+  let lastNonZeroIndex = -1;
+  for (let index = normalized.length - 1; index >= 0; index -= 1) {
+    if (normalized.charAt(index) !== '0') {
+      lastNonZeroIndex = index;
+      break;
+    }
+  }
+  if (lastNonZeroIndex <= 0) {
+    return normalized.slice(0, 1);
+  }
+  let trailingZeros = 0;
+  for (let index = normalized.length - 1; index >= 0 && normalized.charAt(index) === '0'; index -= 1) {
+    trailingZeros += 1;
+  }
+  const stemEnd = trailingZeros >= 3 ? normalized.length - 3 : normalized.length - trailingZeros;
+  return normalized.slice(0, Math.max(stemEnd, 1));
+}
+
+export function glAccountCodeMatchesHeaderStem(
+  glCode: string,
+  parentGlCode: string | undefined
+): boolean {
+  if (!parentGlCode?.trim()) {
+    return true;
+  }
+  const normalizedChild = glCode.trim();
+  const normalizedParent = parentGlCode.trim();
+  if (!normalizedChild) {
+    return true;
+  }
+  const headerStem = deriveGlAccountHeaderStem(normalizedParent);
+  return normalizedChild !== normalizedParent && normalizedChild.startsWith(headerStem);
+}

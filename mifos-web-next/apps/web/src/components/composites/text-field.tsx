@@ -31,6 +31,9 @@ export interface TextFieldProps {
   hintAriaLabel?: string;
   contextHelpSectionId?: string;
   disabled?: boolean;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  maxLength?: number;
+  onBlur?: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
 }
 
 export function TextField({
@@ -50,7 +53,10 @@ export function TextField({
   hint,
   hintAriaLabel,
   contextHelpSectionId,
-  disabled = false
+  disabled = false,
+  inputMode,
+  maxLength,
+  onBlur
 }: TextFieldProps) {
   return (
     <Field className={className} data-invalid={!!error}>
@@ -73,6 +79,7 @@ export function TextField({
             placeholder={placeholder}
             aria-invalid={!!error}
             disabled={disabled}
+            onBlur={onBlur}
             onChange={(e) => onChange(e.target.value)}
           />
         ) : (
@@ -84,6 +91,9 @@ export function TextField({
             placeholder={placeholder}
             aria-invalid={!!error}
             disabled={disabled}
+            inputMode={inputMode}
+            maxLength={maxLength}
+            onBlur={onBlur}
             onChange={(e) => onChange(e.target.value)}
           />
         )}

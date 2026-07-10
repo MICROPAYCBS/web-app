@@ -24,6 +24,7 @@ export { FormErrorAlert, type FormErrorAlertProps } from './form-error-alert';
 export { FormWizard, type FormWizardProps, type FormWizardStep } from './form-wizard';
 export { FormWizardSkeleton, type FormWizardSkeletonProps } from './form-wizard-skeleton';
 export { FormPageSkeleton, type FormPageSkeletonProps } from './form-page-skeleton';
+export { FormPageFooter, type FormPageFooterProps } from './form-page-footer';
 export {
   ListPageTableSkeleton,
   type ListPageTableSkeletonProps

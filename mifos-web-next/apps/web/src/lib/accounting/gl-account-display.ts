@@ -13,6 +13,7 @@ import type {
   FineractGlAccountRef
 } from '@mifos/api-client';
 import type { UpsertGlAccountFormInput } from '@mifos/validation';
+import { deriveGlAccountHeaderStem } from '@mifos/validation';
 
 export const GL_ACCOUNT_TYPE_ASSET = 1;
 export const GL_ACCOUNT_TYPE_LIABILITY = 2;
@@ -40,14 +41,53 @@ export const GL_ACCOUNT_CODE_CLASS_PREFIX: Record<number, string> = {
 export const GL_ACCOUNT_CODE_NUMBERING_GUIDANCE =
   'Number GL codes by account class: Assets start with 1, Liabilities with 2, Equity with 3, Income with 4, and Expense with 5.';
 
-export function glAccountCodeHintForType(typeId: number | undefined): string {
+export function structuredGlCodeEnforcementBanner(codeLength: number): string {
+  return `Structured GL codes are enabled. Use exactly ${codeLength} digits — Asset 1, Liability 2, Equity 3, Income 4, Expense 5. When a parent is selected, the code must follow that header’s numbering pattern.`;
+}
+
+export function structuredGlCodeLegacyAccountNotice(): string {
+  return 'This account keeps its existing GL code until you change the code, account class, or parent. Structured rules then apply.';
+}
+
+export function glAccountCodeHintForType(
+  typeId: number | undefined,
+  options?: {
+    enforceStructured?: boolean;
+    codeLength?: number;
+    parentGlCode?: string;
+    parentName?: string;
+  }
+): string {
+  const enforceStructured = options?.enforceStructured === true;
+  const codeLength = options?.codeLength ?? 6;
+  const parentGlCode = options?.parentGlCode?.trim();
+
+  if (enforceStructured && parentGlCode) {
+    const headerStem = deriveGlAccountHeaderStem(parentGlCode);
+    const suffixLength = Math.max(codeLength - headerStem.length, 0);
+    const example =
+      suffixLength > 0
+        ? `${headerStem}${'0'.repeat(Math.max(suffixLength - 1, 0))}1`
+        : `${headerStem}1`;
+    const parentLabel = options?.parentName?.trim()
+      ? `(${parentGlCode}) ${options.parentName.trim()}`
+      : `(${parentGlCode})`;
+    return `Under ${parentLabel}, use ${codeLength}-digit codes starting with ${headerStem} (for example, ${example}).`;
+  }
+
   if (typeId == null) {
-    return GL_ACCOUNT_CODE_NUMBERING_GUIDANCE;
+    return enforceStructured
+      ? `${GL_ACCOUNT_CODE_NUMBERING_GUIDANCE} When structured enforcement is enabled, codes must be exactly ${codeLength} numeric digits.`
+      : GL_ACCOUNT_CODE_NUMBERING_GUIDANCE;
   }
   const prefix = GL_ACCOUNT_CODE_CLASS_PREFIX[typeId];
   const label = TYPE_ID_LABELS[typeId];
   if (!prefix || !label) {
     return GL_ACCOUNT_CODE_NUMBERING_GUIDANCE;
+  }
+  if (enforceStructured) {
+    const example = `${prefix}${'0'.repeat(Math.max(codeLength - 1, 0))}`;
+    return `${label} accounts must use a ${codeLength}-digit numeric code starting with ${prefix} (for example, ${example}).`;
   }
   return `${label} accounts typically start with ${prefix} (for example, ${prefix}000).`;
 }

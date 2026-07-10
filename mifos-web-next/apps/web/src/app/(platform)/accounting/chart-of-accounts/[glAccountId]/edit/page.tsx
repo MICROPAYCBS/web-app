@@ -12,6 +12,7 @@ import { DetailBackLink } from '@/components/composites';
 import { ListPage } from '@/components/composites/list-page';
 import { GlAccountForm } from '@/components/accounting/chart-of-accounts/gl-account-form';
 import { glAccountToFormValues } from '@/lib/accounting/gl-account-display';
+import { getStructuredGlCodePolicy } from '@/lib/fineract/gl-account-code-policy';
 import { getGlAccount } from '@/lib/fineract/gl-accounts';
 import { getServerSession } from '@/lib/session/server';
 
@@ -36,6 +37,8 @@ export default async function EditGlAccountPage({
     notFound();
   }
 
+  const structuredGlCodePolicy = await getStructuredGlCodePolicy();
+
   return (
     <ListPage
       backLink={
@@ -47,14 +50,13 @@ export default async function EditGlAccountPage({
       title={`Edit account: ${account.name}`}
       description="Update account metadata, parent, and posting rules."
     >
-      <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-        <GlAccountForm
+      <GlAccountForm
           mode="edit"
           glAccountId={account.id}
           initialValues={glAccountToFormValues(account)}
           template={account}
+          structuredGlCodePolicy={structuredGlCodePolicy}
         />
-      </div>
     </ListPage>
   );
 }

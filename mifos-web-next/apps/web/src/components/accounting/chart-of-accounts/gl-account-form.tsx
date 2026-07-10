@@ -11,18 +11,21 @@
 import type { FineractGlAccountFormTemplate } from '@mifos/api-client';
 import {
   formatActionErrorMessage,
+  buildUpsertGlAccountValidationContext,
+  glAccountCodeMeetsStructuredRules,
+  glAccountStructuredValidationApplies,
+  normalizeStructuredGlCodeInput,
   validateUpsertGlAccountForm,
   type UpsertGlAccountFormInput
 } from '@mifos/validation';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { createGlAccountAction, updateGlAccountAction } from '@/actions/gl-accounts';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
+import { FormPageFooter } from '@/components/composites/form-page-footer';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field';
 import {
@@ -33,45 +36,154 @@ import {
   GL_ACCOUNT_TYPE_INCOME,
   glAccountCodeHintForType,
   headerOptionsForType,
+  structuredGlCodeEnforcementBanner,
+  structuredGlCodeLegacyAccountNotice,
   tagOptionsForType
 } from '@/lib/accounting/gl-account-display';
+import type { StructuredGlCodePolicy } from '@/lib/fineract/gl-account-code-policy-paths';
 import { cn } from '@/lib/utils';
 
 export function GlAccountForm({
   mode,
   glAccountId,
   initialValues,
-  template
+  template,
+  structuredGlCodePolicy
 }: {
   mode: 'create' | 'edit';
   glAccountId?: number;
   initialValues: UpsertGlAccountFormInput;
   template: FineractGlAccountFormTemplate;
+  structuredGlCodePolicy: StructuredGlCodePolicy;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<UpsertGlAccountFormInput>(initialValues);
   const formRef = useRef(form);
   formRef.current = form;
+  const originalValuesRef = useRef({
+    glCode: initialValues.glCode,
+    type: initialValues.type,
+    parentId: initialValues.parentId
+  });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const parentAccounts = useMemo(
+    () => headerOptionsForType(template, form.type),
+    [template, form.type]
+  );
+
   const parentOptions = useMemo(
     () =>
-      headerOptionsForType(template, form.type).map((account) => ({
+      parentAccounts.map((account) => ({
         value: String(account.id),
         label: formatGlAccountLabel(account),
         keywords: [account.glCode, account.name]
       })),
-    [template, form.type]
+    [parentAccounts]
   );
 
-  const selectedParentTypeId = useMemo(() => {
+  const selectedParent = useMemo(() => {
     if (form.parentId == null) {
       return undefined;
     }
-    return form.type;
-  }, [form.type, form.parentId]);
+    return parentAccounts.find((account) => account.id === form.parentId);
+  }, [form.parentId, parentAccounts]);
+
+  const selectedParentGlCode = selectedParent?.glCode;
+  const selectedParentName = selectedParent?.name;
+  const selectedParentTypeId = selectedParent?.type?.id;
+
+  const structuredValidationActive = useMemo(() => {
+    if (!structuredGlCodePolicy.enforceStructured) {
+      return false;
+    }
+    if (mode === 'create') {
+      return true;
+    }
+    return glAccountStructuredValidationApplies(form, originalValuesRef.current);
+  }, [form, mode, structuredGlCodePolicy.enforceStructured]);
+
+  const validationContext = useMemo(
+    () =>
+      buildUpsertGlAccountValidationContext(structuredGlCodePolicy, {
+        parentGlCode: selectedParentGlCode,
+        parentTypeId: selectedParentTypeId,
+        original: mode === 'edit' ? originalValuesRef.current : undefined
+      }),
+    [mode, selectedParentGlCode, selectedParentTypeId, structuredGlCodePolicy]
+  );
+
+  const showLegacyGlCodeNotice = useMemo(() => {
+    if (mode !== 'edit' || !structuredGlCodePolicy.enforceStructured || structuredValidationActive) {
+      return false;
+    }
+    return !glAccountCodeMeetsStructuredRules(form.glCode, form.type, {
+      codeLength: structuredGlCodePolicy.codeLength,
+      parentGlCode: selectedParentGlCode
+    });
+  }, [
+    form.glCode,
+    form.type,
+    mode,
+    selectedParentGlCode,
+    structuredGlCodePolicy.codeLength,
+    structuredGlCodePolicy.enforceStructured,
+    structuredValidationActive
+  ]);
+
+  const syncFieldErrors = useCallback(
+    (nextForm: UpsertGlAccountFormInput, fields: Array<'glCode' | 'parentId' | 'tagId'>) => {
+      const parsed = validateUpsertGlAccountForm(nextForm, validationContext);
+      if (parsed.success) {
+        setFieldErrors((current) => {
+          const next = { ...current };
+          for (const field of fields) {
+            delete next[field];
+          }
+          return next;
+        });
+        return;
+      }
+
+      const nextFieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path.join('.') || 'form';
+        if (fields.includes(key as (typeof fields)[number]) && !nextFieldErrors[key]) {
+          nextFieldErrors[key] = issue.message;
+        }
+      }
+
+      setFieldErrors((current) => {
+        const next = { ...current };
+        for (const field of fields) {
+          if (nextFieldErrors[field]) {
+            next[field] = nextFieldErrors[field];
+          } else {
+            delete next[field];
+          }
+        }
+        return next;
+      });
+    },
+    [validationContext]
+  );
+
+  const glCodeHintOptions = useMemo(
+    () => ({
+      enforceStructured: structuredGlCodePolicy.enforceStructured && structuredValidationActive,
+      codeLength: structuredGlCodePolicy.codeLength,
+      parentGlCode: selectedParentGlCode,
+      parentName: selectedParentName
+    }),
+    [
+      structuredGlCodePolicy,
+      structuredValidationActive,
+      selectedParentGlCode,
+      selectedParentName
+    ]
+  );
 
   const tagRequired = form.type === GL_ACCOUNT_TYPE_INCOME || form.type === GL_ACCOUNT_TYPE_EXPENSE;
 
@@ -84,10 +196,16 @@ export function GlAccountForm({
     [template, form.type]
   );
 
-  function patchForm(patch: Partial<UpsertGlAccountFormInput>) {
+  function patchForm(
+    patch: Partial<UpsertGlAccountFormInput>,
+    options?: { validateFields?: Array<'glCode' | 'parentId' | 'tagId'> }
+  ) {
     setForm((current) => {
       const next = { ...current, ...patch } as UpsertGlAccountFormInput;
       formRef.current = next;
+      if (options?.validateFields?.length) {
+        syncFieldErrors(next, options.validateFields);
+      }
       return next;
     });
   }
@@ -96,18 +214,38 @@ export function GlAccountForm({
     if (!value) {
       return;
     }
-    patchForm({
-      type: Number(value),
-      parentId: undefined,
-      tagId: undefined
-    });
+    patchForm(
+      {
+        type: Number(value),
+        parentId: undefined,
+        tagId: undefined
+      },
+      { validateFields: ['glCode', 'tagId'] }
+    );
+  }
+
+  function handleGlCodeChange(value: string) {
+    const nextValue =
+      structuredValidationActive
+        ? normalizeStructuredGlCodeInput(value, structuredGlCodePolicy.codeLength)
+        : value;
+    patchForm({ glCode: nextValue });
+  }
+
+  function handleGlCodeBlur() {
+    syncFieldErrors(formRef.current, ['glCode']);
+  }
+
+  function handleParentChange(value: string | undefined) {
+    patchForm(
+      { parentId: value ? Number(value) : undefined },
+      { validateFields: ['glCode', 'parentId'] }
+    );
   }
 
   function handleSubmit() {
     setSubmitError(null);
-    const parsed = validateUpsertGlAccountForm(formRef.current, {
-      parentTypeId: selectedParentTypeId
-    });
+    const parsed = validateUpsertGlAccountForm(formRef.current, validationContext);
     if (!parsed.success) {
       const nextErrors: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -144,21 +282,41 @@ export function GlAccountForm({
     });
   }
 
+  const cancelHref =
+    mode === 'edit' && glAccountId != null
+      ? `/accounting/chart-of-accounts/${glAccountId}`
+      : '/accounting/chart-of-accounts';
+
   return (
     <form
-      className="space-y-8"
+      className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm"
       onSubmit={(event) => {
         event.preventDefault();
         handleSubmit();
       }}
     >
-      {mode === 'create' ? (
-        <p className="rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-          {GL_ACCOUNT_CODE_NUMBERING_GUIDANCE}
-        </p>
-      ) : null}
+      <div className="space-y-8 p-6">
+        {structuredGlCodePolicy.enforceStructured && structuredValidationActive ? (
+          <p className="rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+            {structuredGlCodeEnforcementBanner(structuredGlCodePolicy.codeLength)}
+          </p>
+        ) : mode === 'create' ? (
+          <p className="rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+            {GL_ACCOUNT_CODE_NUMBERING_GUIDANCE}
+          </p>
+        ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
+        {showLegacyGlCodeNotice ? (
+          <p
+            className={cn(
+              'rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning-foreground'
+            )}
+          >
+            {structuredGlCodeLegacyAccountNotice()}
+          </p>
+        ) : null}
+
+        <div className="grid gap-4 md:grid-cols-2">
         <SelectField
           label="Account type"
           required
@@ -199,16 +357,19 @@ export function GlAccountForm({
           label="GL code"
           required
           value={form.glCode}
-          onChange={(value) => patchForm({ glCode: value })}
+          onChange={handleGlCodeChange}
+          onBlur={handleGlCodeBlur}
           disabled={pending}
           error={fieldErrors.glCode}
-          hint={glAccountCodeHintForType(form.type)}
+          hint={glAccountCodeHintForType(form.type, glCodeHintOptions)}
+          inputMode={structuredValidationActive ? 'numeric' : undefined}
+          maxLength={structuredValidationActive ? structuredGlCodePolicy.codeLength : undefined}
         />
         <SelectField
           label="Parent"
           optional
           value={form.parentId != null ? String(form.parentId) : undefined}
-          onValueChange={(value) => patchForm({ parentId: value ? Number(value) : undefined })}
+          onValueChange={handleParentChange}
           options={parentOptions}
           disabled={pending || parentOptions.length === 0}
           error={fieldErrors.parentId}
@@ -258,22 +419,14 @@ export function GlAccountForm({
           <FineractErrorAlert message={submitError} />
         )
       ) : null}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : mode === 'create' ? 'Create account' : 'Save changes'}
-        </Button>
-        <Link
-          href={
-            mode === 'edit' && glAccountId != null
-              ? `/accounting/chart-of-accounts/${glAccountId}`
-              : '/accounting/chart-of-accounts'
-          }
-          className={cn(buttonVariants({ variant: 'outline' }))}
-        >
-          Cancel
-        </Link>
       </div>
+
+      <FormPageFooter
+        cancelHref={cancelHref}
+        submitLabel={mode === 'create' ? 'Create account' : 'Save changes'}
+        submitLoading={pending}
+        submitLoadingLabel="Saving…"
+      />
     </form>
   );
 }
