@@ -11,7 +11,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import {
   EMPTY_BUSINESS_DATE_CONTEXT,
-  isTransactionDateLocked,
+  hasConfiguredBusinessDate,
   resolveTransactionDate,
   type BusinessDateContextValue
 } from '@/lib/fineract/business-date-context';
@@ -43,6 +43,12 @@ export function useInitialTransactionDate(): string {
   );
 }
 
+/** True when transaction dates default to and are capped at the organisation business date. */
+export function useTransactionDateBoundedByBusinessDate(): boolean {
+  return hasConfiguredBusinessDate(useBusinessDate());
+}
+
+/** @deprecated Use {@link useTransactionDateBoundedByBusinessDate}. Dates are not read-only. */
 export function useTransactionDateLocked(): boolean {
-  return isTransactionDateLocked(useBusinessDate());
+  return useTransactionDateBoundedByBusinessDate();
 }

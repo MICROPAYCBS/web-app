@@ -42,7 +42,7 @@ export function ClosingEntriesTable({ closures }: { closures: FineractGlClosureL
       {
         id: 'officeName',
         accessorKey: 'officeName',
-        header: 'Office',
+        header: 'Branch',
         cell: ({ row }) => (
           <Link
             href={`/accounting/closing-entries/${row.original.id}`}
@@ -86,20 +86,20 @@ export function ClosingEntriesTable({ closures }: { closures: FineractGlClosureL
   return (
     <div className="space-y-4">
       <Input
-        placeholder="Filter by office…"
+        placeholder="Filter by branch…"
         value={officeFilter}
         onChange={(event) => {
           setOfficeFilter(event.target.value);
           setPagination((current) => ({ ...current, pageIndex: 0 }));
         }}
         className="max-w-sm"
-        aria-label="Filter closures by office"
+        aria-label="Filter closures by branch"
       />
       <DataTable
         table={table}
         stickyHeader={false}
         emptyMessage="No closures found"
-        emptyDescription="Create a closure to lock accounting for an office."
+        emptyDescription="Create a closure to lock accounting for a branch."
       />
       <DataTablePagination table={table} totalRecords={filteredClosures.length} />
     </div>

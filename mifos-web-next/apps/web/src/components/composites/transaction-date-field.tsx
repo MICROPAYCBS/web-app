@@ -8,29 +8,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useBusinessDate } from '@/components/platform/business-date-provider';
 import { DateField, type DateFieldProps } from '@/components/composites/date-field';
-import { FormLabel } from '@/components/composites/form-label';
-import { Field, FieldContent, FieldError } from '@/components/ui/field';
-import { isTransactionDateLocked, businessDateLockedHint } from '@/lib/fineract/business-date-context';
+import {
+  businessDateBackdatedEntryHint,
+  businessDateTransactionHint,
+  hasConfiguredBusinessDate,
+  isTransactionDateBackdated
+} from '@/lib/fineract/business-date-context';
 import { fineractDateToDate } from '@/lib/fineract/date-input';
-import { cn } from '@/lib/utils';
-
-const readOnlyTriggerClassName = cn(
-  'flex h-8 w-full min-w-0 items-center justify-start gap-2 rounded-lg border border-input bg-muted/40 px-2.5 py-1 text-sm font-normal shadow-none',
-  'cursor-default text-foreground'
-);
 
 export type TransactionDateFieldProps = Omit<DateFieldProps, 'onChange'> & {
   onChange: (value: string) => void;
 };
 
 /**
- * Transaction / posting date — uses the organisation business date when configured (read-only),
- * otherwise a normal editable date field capped at today.
+ * Transaction / posting date — defaults to the organisation business date when
+ * configured, editable for backdated entries, capped at the business date (or today).
  */
 export function TransactionDateField({
   id,
@@ -48,67 +43,32 @@ export function TransactionDateField({
   contextHelpSectionId
 }: TransactionDateFieldProps) {
   const businessDate = useBusinessDate();
-  const locked = isTransactionDateLocked(businessDate);
+  const hasBusinessDate = hasConfiguredBusinessDate(businessDate);
   const isNotToday = businessDate.isNotToday === true;
 
-  useEffect(() => {
-    if (locked && businessDate.date && value !== businessDate.date) {
-      onChange(businessDate.date);
-    }
-  }, [businessDate.date, locked, onChange, value]);
+  const maxDate = useMemo(
+    () => fineractDateToDate(businessDate.date, dateFormat),
+    [businessDate.date, dateFormat]
+  );
 
-  const display = useMemo(() => {
-    if (businessDate.displayLabel) {
-      return businessDate.displayLabel;
-    }
-    const selected = fineractDateToDate(value, dateFormat);
-    return selected ? format(selected, 'PPP') : null;
-  }, [businessDate.displayLabel, value, dateFormat]);
+  const isBackdated = useMemo(
+    () => isTransactionDateBackdated(value, businessDate.date, dateFormat),
+    [value, businessDate.date, dateFormat]
+  );
 
-  if (locked) {
-    return (
-      <Field className={className} data-invalid={!!error}>
-        <FormLabel
-          htmlFor={id}
-          required={required}
-          optional={optional ?? !required}
-          hint={hint}
-          hintAriaLabel={hintAriaLabel}
-          contextHelpSectionId={contextHelpSectionId}
-        >
-          {label}
-        </FormLabel>
-        <FieldContent>
-          <div
-            id={id}
-            aria-invalid={!!error}
-            className={cn(
-              readOnlyTriggerClassName,
-              isNotToday && 'border-warning/40 bg-warning/10',
-              disabled && 'opacity-50'
-            )}
-          >
-            <CalendarIcon
-              className={cn('size-4 shrink-0', isNotToday ? 'text-warning' : 'opacity-60')}
-              aria-hidden
-            />
-            <span className={cn('truncate', isNotToday && 'text-warning-foreground')}>
-              {display ?? '—'}
-            </span>
-          </div>
-          <p
-            className={cn(
-              'text-xs',
-              isNotToday ? 'text-warning-foreground' : 'text-muted-foreground'
-            )}
-          >
-            {businessDateLockedHint(isNotToday)}
-          </p>
-          <FieldError>{error}</FieldError>
-        </FieldContent>
-      </Field>
-    );
-  }
+  const resolvedHint = useMemo(() => {
+    if (hint) {
+      return hint;
+    }
+    if (!hasBusinessDate) {
+      return undefined;
+    }
+    const parts = [businessDateTransactionHint(isNotToday)];
+    if (isBackdated) {
+      parts.push(businessDateBackdatedEntryHint());
+    }
+    return parts.join(' ');
+  }, [hasBusinessDate, hint, isBackdated, isNotToday]);
 
   return (
     <DateField
@@ -122,7 +82,8 @@ export function TransactionDateField({
       disabled={disabled}
       className={className}
       dateFormat={dateFormat}
-      hint={hint}
+      toDate={hasBusinessDate ? maxDate : undefined}
+      hint={resolvedHint}
       hintAriaLabel={hintAriaLabel}
       contextHelpSectionId={contextHelpSectionId}
     />

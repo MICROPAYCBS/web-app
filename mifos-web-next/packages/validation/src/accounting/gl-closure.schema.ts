@@ -15,7 +15,7 @@ const fineractDateContextSchema = z.object({
 
 export const createGlClosureSchema = z
   .object({
-    officeId: z.coerce.number().int().positive('Office is required.'),
+    officeId: z.coerce.number().int().positive('Branch is required.'),
     closingDate: z.string().min(1, 'Closing date is required.'),
     comments: z.string().optional()
   })

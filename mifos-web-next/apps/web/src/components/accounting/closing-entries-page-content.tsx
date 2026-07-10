@@ -24,7 +24,7 @@ export function ClosingEntriesPageContent({
   return (
     <ListPage
       title="Closing entries"
-      description="Manage accounting closures by office and closing date."
+      description="Manage accounting closures by branch and closing date."
       actions={
         <Can permission="CREATE_GLCLOSURE">
           <Link href="/accounting/closing-entries?create=1" className={cn(buttonVariants())}>

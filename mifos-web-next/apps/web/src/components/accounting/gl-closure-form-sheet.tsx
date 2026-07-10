@@ -38,7 +38,7 @@ function defaultCreateValues(): CreateGlClosureInput {
 }
 
 function officeLabel(office: FineractOfficeOption): string {
-  return office.nameDecorated?.trim() || office.name?.trim() || `Office #${office.id}`;
+  return office.nameDecorated?.trim() || office.name?.trim() || `Branch #${office.id}`;
 }
 
 export function GlClosureFormSheet({
@@ -182,7 +182,7 @@ export function GlClosureFormSheet({
       title={mode === 'create' ? 'Create closure' : 'Edit closure'}
       description={
         mode === 'create'
-          ? 'Close accounting for an office as of a specific date.'
+          ? 'Close accounting for a branch as of a specific date.'
           : 'Update comments on this accounting closure.'
       }
       formId={formId}
@@ -201,14 +201,14 @@ export function GlClosureFormSheet({
         }}
       >
         <SelectField
-          label="Office"
+          label="Branch"
           required
           value={officeId}
           onValueChange={setOfficeId}
           options={officeOptions}
           disabled={pending || mode === 'edit'}
           error={fieldErrors.officeId}
-          placeholder="Select office"
+          placeholder="Select branch"
         />
 
         <DateField

@@ -7,6 +7,7 @@
  */
 
 import { parseFineractDateString, toLocalCalendarDate } from '@/lib/fineract/dates';
+import { fineractDateToDate, startOfDay } from '@/lib/fineract/date-input';
 
 /** Serializable business date state for client providers and server pages. */
 export type BusinessDateContextValue = {
@@ -40,11 +41,26 @@ export function isBusinessDateNotToday(
   return parsedBusinessDate.getTime() !== toLocalCalendarDate(referenceDate).getTime();
 }
 
-/** Helper copy for locked transaction date fields. */
-export function businessDateLockedHint(isNotToday: boolean): string {
+/** True when the organisation business date feature is enabled and a date is set. */
+export function hasConfiguredBusinessDate(ctx: BusinessDateContextValue): boolean {
+  return ctx.enabled && Boolean(ctx.date?.trim());
+}
+
+/** Helper copy for transaction date fields when capped at the organisation business date. */
+export function businessDateTransactionHint(isNotToday: boolean): string {
   return isNotToday
-    ? 'Uses the organisation business date, which differs from today.'
-    : 'Uses the organisation business date.';
+    ? 'Defaults to the organisation business date, which differs from today. You can choose an earlier date for backdated entries.'
+    : 'Defaults to the organisation business date. You can choose an earlier date for backdated entries.';
+}
+
+/** Shown when the selected transaction date is before the organisation business date. */
+export function businessDateBackdatedEntryHint(): string {
+  return 'Backdated — this date is before the organisation business date.';
+}
+
+/** @deprecated Use {@link businessDateTransactionHint}. */
+export function businessDateLockedHint(isNotToday: boolean): string {
+  return businessDateTransactionHint(isNotToday);
 }
 
 /** Short label for badges and compact UI. */
@@ -54,15 +70,37 @@ export function businessDateNotTodayBadgeLabel(): string {
 
 /** Longer explanation for admin surfaces and banners. */
 export function businessDateNotTodayDescription(): string {
-  return 'The organisation business date is not the current calendar day. Transaction dates use this day until it is updated.';
+  return 'The organisation business date is not the current calendar day. New transaction dates default to this day; earlier dates are allowed for backdated entries.';
 }
 
-/** True when transaction dates must match the configured organisation business date. */
-export function isTransactionDateLocked(ctx: BusinessDateContextValue): boolean {
-  return ctx.enabled && Boolean(ctx.date?.trim());
+/**
+ * @deprecated Transaction dates are editable for backdating. Use
+ * {@link hasConfiguredBusinessDate} to detect business-date defaults and caps.
+ */
+export function isTransactionDateLocked(_ctx: BusinessDateContextValue): boolean {
+  return false;
 }
 
-/** Default posting date: business date when locked, otherwise caller fallback (usually today). */
+/** True when the selected date is strictly before the organisation business date. */
+export function isTransactionDateBackdated(
+  transactionDate: string | undefined,
+  businessDate: string | undefined,
+  dateFormat?: string
+): boolean {
+  if (!transactionDate?.trim() || !businessDate?.trim()) {
+    return false;
+  }
+
+  const selected = fineractDateToDate(transactionDate, dateFormat);
+  const cap = fineractDateToDate(businessDate, dateFormat);
+  if (!selected || !cap) {
+    return false;
+  }
+
+  return startOfDay(selected).getTime() < startOfDay(cap).getTime();
+}
+
+/** Default posting date: business date when configured, otherwise caller fallback (usually today). */
 export function resolveTransactionDate(
   ctx: BusinessDateContextValue,
   fallback: string
