@@ -9,7 +9,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { sumCollectionSheetExpected } from '@/lib/fineract/collection-sheet-sum';
-import { sumDisbursedAmountFromReportRows } from '@/lib/dashboard/dashboard-kpi-parse';
+import {
+  countReportDetailRows,
+  parseActiveLoansSummaryCounts,
+  sumDisbursedAmountFromReportRows
+} from '@/lib/dashboard/dashboard-kpi-parse';
 
 describe('sumCollectionSheetExpected', () => {
   it('totals loan and savings dues across nested groups', () => {
@@ -41,5 +45,40 @@ describe('sumDisbursedAmountFromReportRows', () => {
     ]);
 
     assert.equal(total, 1250.5);
+  });
+});
+
+describe('parseActiveLoansSummaryCounts', () => {
+  it('aggregates active loans and arrears across branch rows', () => {
+    const result = parseActiveLoansSummaryCounts([
+      {
+        'No. Active Loans': 5,
+        'No. of Loans in Arrears': 2,
+        'Principal Outstanding': 1000,
+        'Principal Overdue': 100
+      },
+      {
+        'No. Active Loans': 3,
+        'No. of Loans in Arrears': 1,
+        'Principal Outstanding': 500,
+        'Principal Overdue': 50
+      }
+    ]);
+
+    assert.equal(result.active, 8);
+    assert.equal(result.inArrears, 3);
+    assert.equal(result.portfolioAtRiskPercent, 10);
+  });
+});
+
+describe('countReportDetailRows', () => {
+  it('returns the number of report rows', () => {
+    assert.equal(
+      countReportDetailRows([
+        { 'Loan Account No.': '0001' },
+        { 'Loan Account No.': '0002' }
+      ]),
+      2
+    );
   });
 });

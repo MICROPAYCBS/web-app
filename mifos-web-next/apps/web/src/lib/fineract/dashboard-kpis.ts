@@ -10,6 +10,8 @@ import 'server-only';
 
 import { format, startOfMonth } from 'date-fns';
 import {
+  countReportDetailRows,
+  parseActiveLoansSummaryCounts,
   parseActiveLoansSummaryHealth,
   parseBranchLoanHealthFromReportRows,
   parsePortfolioAtRiskPercent,
@@ -17,12 +19,17 @@ import {
 } from '@/lib/dashboard/dashboard-kpi-parse';
 import type { DashboardKpiFetchOptions, DashboardKpis } from '@/lib/dashboard/dashboard-kpi-types';
 import { resolveDashboardReportCurrencyId } from '@/lib/dashboard/dashboard-currency';
+import {
+  clientListParamsForOfficeScope,
+  resolveOfficeHierarchy
+} from '@/lib/dashboard/office-scope';
 import { formatCashierNavBalanceLabel } from '@/lib/fineract/cashier-display';
 import { loadCashierNavBalanceForSession } from '@/lib/fineract/load-cashier-nav-balance';
 import { fetchExpectedCollectionsToday } from '@/lib/fineract/collection-sheet';
 import { getCheckerInboxPendingCount } from '@/lib/fineract/checker-inbox';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { FINERACT_DATE_FORMAT, parseFineractDateString } from '@/lib/fineract/dates';
+import { listOffices } from '@/lib/fineract/offices';
 import { buildReportRunQueryParams } from '@/lib/fineract/report-run-display';
 import { runReport, tryRunReport } from '@/lib/fineract/run-reports';
 import type { ServerSession } from '@/lib/session/types';
@@ -50,11 +57,26 @@ async function fetchPagedTotal(
   }
 }
 
-function clientOfficeParams(officeId: number | null): Record<string, string> {
-  if (officeId == null) {
-    return {};
-  }
-  return { officeId: String(officeId) };
+function clientOfficeParams(
+  officeId: number | null,
+  hierarchy: string | null
+): Record<string, string> {
+  return clientListParamsForOfficeScope(officeId, hierarchy);
+}
+
+function buildOfficeLoanReportParams(
+  officeId: number,
+  currencyCode: string | null
+): Record<string, string> {
+  return buildReportRunQueryParams({
+    officeId: String(officeId),
+    parType: '1',
+    currencyId: resolveDashboardReportCurrencyId(currencyCode),
+    loanProductId: '-1',
+    loanOfficerId: '-1',
+    fundId: '-1',
+    loanPurposeId: '-1'
+  });
 }
 
 function toIsoDate(businessDate: string): string | null {
@@ -74,9 +96,10 @@ function monthStartIsoDate(businessDate: string): string | null {
 }
 
 async function fetchClientCounts(
-  officeId: number | null
+  officeId: number | null,
+  hierarchy: string | null
 ): Promise<DashboardKpis['customers']> {
-  const officeParams = clientOfficeParams(officeId);
+  const officeParams = clientOfficeParams(officeId, hierarchy);
   const [total, active] = await Promise.all([
     fetchPagedTotal('/clients', officeParams),
     fetchPagedTotal('/clients', { ...officeParams, status: 'active' })
@@ -86,6 +109,41 @@ async function fetchClientCounts(
 
 async function fetchLoanStatusCount(status: string): Promise<number | null> {
   return fetchPagedTotal('/loans', { status });
+}
+
+async function fetchLoanCountsForOffice(
+  officeId: number,
+  currencyCode: string | null
+): Promise<
+  Pick<
+    DashboardKpis['loans'],
+    'active' | 'pendingApproval' | 'pendingDisbursal' | 'inArrears' | 'portfolioAtRiskPercent'
+  >
+> {
+  const reportParams = buildOfficeLoanReportParams(officeId, currencyCode);
+  const [activeSummary, pendingApproval, pendingDisbursal] = await Promise.all([
+    tryRunReport('Active Loans - Summary', {
+      ...reportParams,
+      genericResultSet: 'false'
+    }),
+    tryRunReport('Loans Pending Approval', {
+      ...reportParams,
+      genericResultSet: 'false'
+    }),
+    tryRunReport('Loans Awaiting Disbursal', {
+      ...reportParams,
+      genericResultSet: 'false'
+    })
+  ]);
+
+  const fromSummary = parseActiveLoansSummaryCounts(activeSummary);
+  return {
+    active: fromSummary.active,
+    pendingApproval: countReportDetailRows(pendingApproval),
+    pendingDisbursal: countReportDetailRows(pendingDisbursal),
+    inArrears: fromSummary.inArrears,
+    portfolioAtRiskPercent: fromSummary.portfolioAtRiskPercent
+  };
 }
 
 async function fetchLoanCounts(): Promise<
@@ -111,18 +169,9 @@ async function fetchLoanHealthFromReports(
     return { inArrears: null, portfolioAtRiskPercent: null };
   }
 
-  const reportCurrencyId = resolveDashboardReportCurrencyId(currencyCode);
-  const activeLoansParams = buildReportRunQueryParams({
-    officeId: String(officeId),
-    parType: '1',
-    currencyId: reportCurrencyId,
-    loanProductId: '-1',
-    loanOfficerId: '-1',
-    fundId: '-1',
-    loanPurposeId: '-1'
-  });
+  const reportParams = buildOfficeLoanReportParams(officeId, currencyCode);
   const activeLoansSummary = await tryRunReport('Active Loans - Summary', {
-    ...activeLoansParams,
+    ...reportParams,
     genericResultSet: 'false'
   });
   if (activeLoansSummary) {
@@ -255,24 +304,34 @@ export async function fetchDashboardKpis(
     includeCashier
   } = options;
 
+  const offices = officeId != null ? await listOffices().catch(() => []) : [];
+  const hierarchy = officeId != null ? resolveOfficeHierarchy(officeId, offices) : null;
+  const usesScopedLoanReports = includeLoans && officeId != null && includeReports;
+
   const [
     customers,
-    loanCounts,
-    savingsTotal,
+    scopedLoanMetrics,
+    globalLoanCounts,
     loanHealth,
+    savingsTotal,
     disbursements,
     collections,
     checkerInboxPending,
     cashier
   ] = await Promise.all([
-    includeClients ? fetchClientCounts(officeId) : Promise.resolve({ total: null, active: null }),
-    includeLoans
+    includeClients
+      ? fetchClientCounts(officeId, hierarchy)
+      : Promise.resolve({ total: null, active: null }),
+    usesScopedLoanReports
+      ? fetchLoanCountsForOffice(officeId, currencyCode)
+      : Promise.resolve(null),
+    includeLoans && !usesScopedLoanReports
       ? fetchLoanCounts()
       : Promise.resolve({ active: null, pendingApproval: null, pendingDisbursal: null }),
-    includeSavings ? fetchSavingsCount() : Promise.resolve(null),
-    includeLoans && includeReports
+    includeLoans && includeReports && !usesScopedLoanReports
       ? fetchLoanHealthFromReports(officeId, currencyCode)
       : Promise.resolve({ inArrears: null, portfolioAtRiskPercent: null }),
+    includeSavings ? fetchSavingsCount() : Promise.resolve(null),
     includeLoans && includeReports
       ? fetchDisbursementTotals({ officeId, businessDate, currencyCode })
       : Promise.resolve({ disbursedTodayAmount: null, disbursedMonthAmount: null }),
@@ -289,14 +348,22 @@ export async function fetchDashboardKpis(
     includeCashier ? fetchCashierKpi(session, currencyCode) : Promise.resolve(null)
   ]);
 
+  const loanStatusCounts = scopedLoanMetrics ?? globalLoanCounts;
+  const loanHealthMetrics = scopedLoanMetrics
+    ? {
+        inArrears: scopedLoanMetrics.inArrears,
+        portfolioAtRiskPercent: scopedLoanMetrics.portfolioAtRiskPercent
+      }
+    : loanHealth;
+
   return {
     officeId,
     currencyCode,
     businessDate,
     customers,
     loans: {
-      ...loanCounts,
-      ...loanHealth,
+      ...loanStatusCounts,
+      ...loanHealthMetrics,
       disbursedTodayAmount: disbursements.disbursedTodayAmount,
       disbursedMonthAmount: disbursements.disbursedMonthAmount
     },

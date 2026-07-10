@@ -58,19 +58,30 @@ export function parseBranchLoanHealthFromReportRows(
   };
 }
 
-export function parseActiveLoansSummaryHealth(
+export function parseActiveLoansSummaryCounts(
   rows: unknown
-): Pick<DashboardKpis['loans'], 'inArrears' | 'portfolioAtRiskPercent'> {
+): Pick<DashboardKpis['loans'], 'active' | 'inArrears' | 'portfolioAtRiskPercent'> {
   const normalized = normalizeDashboardReportRows(rows);
   if (normalized.length === 0) {
-    return { inArrears: null, portfolioAtRiskPercent: null };
+    return { active: null, inArrears: null, portfolioAtRiskPercent: null };
   }
 
+  let activeTotal = 0;
+  let foundActive = false;
   let inArrearsTotal = 0;
   let foundArrears = false;
-  let portfolioAtRiskPercent: number | null = null;
+  let principalOutstanding = 0;
+  let principalOverdue = 0;
 
   for (const row of normalized) {
+    const active =
+      readNumericField(row, ['noactiveloans', 'activeloancount']) ??
+      readNumericField(row, ['no active loans']);
+    if (active != null) {
+      activeTotal += active;
+      foundActive = true;
+    }
+
     const arrears =
       readNumericField(row, ['noofloansinarrears', 'loansinarrears']) ??
       readNumericField(row, ['no of loans in arrears']);
@@ -79,18 +90,43 @@ export function parseActiveLoansSummaryHealth(
       foundArrears = true;
     }
 
-    const par =
-      readNumericField(row, ['portfolioatrisk']) ??
-      readNumericField(row, ['portfolio at risk']);
-    if (par != null && portfolioAtRiskPercent == null) {
-      portfolioAtRiskPercent = Math.max(0, par);
+    const outstanding =
+      readNumericField(row, ['principaloutstanding']) ??
+      readNumericField(row, ['principal outstanding']);
+    if (outstanding != null) {
+      principalOutstanding += outstanding;
+    }
+
+    const overdue =
+      readNumericField(row, ['principaloverdue']) ??
+      readNumericField(row, ['principal overdue']);
+    if (overdue != null) {
+      principalOverdue += overdue;
     }
   }
 
+  const portfolioAtRiskPercent =
+    principalOutstanding > 0
+      ? Math.max(0, (principalOverdue / principalOutstanding) * 100)
+      : null;
+
   return {
+    active: foundActive ? Math.max(0, Math.round(activeTotal)) : null,
     inArrears: foundArrears ? Math.max(0, Math.round(inArrearsTotal)) : null,
     portfolioAtRiskPercent
   };
+}
+
+export function parseActiveLoansSummaryHealth(
+  rows: unknown
+): Pick<DashboardKpis['loans'], 'inArrears' | 'portfolioAtRiskPercent'> {
+  const { inArrears, portfolioAtRiskPercent } = parseActiveLoansSummaryCounts(rows);
+  return { inArrears, portfolioAtRiskPercent };
+}
+
+export function countReportDetailRows(rows: unknown): number | null {
+  const normalized = normalizeDashboardReportRows(rows);
+  return normalized.length > 0 ? normalized.length : null;
 }
 
 export function parsePortfolioAtRiskPercent(rows: unknown): number | null {

@@ -71,7 +71,7 @@ export function DashboardPageContent({
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Welcome to {APP_NAME}.</p>
           <p className="text-sm text-muted-foreground">
-            Portfolio KPIs for the selected branch
+            Portfolio KPIs for the selected branch and its sub-branches
             {currencyCode ? ` in ${currencyCode}` : ''}. Select a card to open the related screen.
           </p>
         </div>

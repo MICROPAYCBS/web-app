@@ -18,7 +18,7 @@ export const DASHBOARD_KPI_WIDGETS: DashboardKpiWidgetDefinition[] = [
   {
     id: 'all_customers',
     title: 'Customers',
-    description: 'Customers in this branch',
+    description: 'Customers in this branch and sub-branches',
     category: 'customers',
     variant: 'default',
     href: '/clients',
