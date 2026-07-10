@@ -42,13 +42,18 @@ function readParam(
   return undefined;
 }
 
-function defaultFilterDate() {
+function resolveDefaultFilterDate(defaultTransactionDate?: string) {
+  if (defaultTransactionDate?.trim()) {
+    return defaultTransactionDate.trim();
+  }
   return toFineractDate(new Date());
 }
 
 export function parseJournalEntryListQuery(
-  params: Record<string, string | string[] | undefined>
+  params: Record<string, string | string[] | undefined>,
+  defaultTransactionDate?: string
 ): JournalEntryListQuery {
+  const defaultDate = resolveDefaultFilterDate(defaultTransactionDate);
   const pageIndex = Math.max(0, Number(readParam(params, 'page') ?? '0') || 0);
   const limit = Math.max(
     1,
@@ -66,8 +71,8 @@ export function parseJournalEntryListQuery(
     departmentId: readParam(params, 'departmentId'),
     manualEntriesOnly: readParam(params, 'manualEntriesOnly'),
     transactionId: readParam(params, 'transactionId'),
-    fromDate: readParam(params, 'fromDate') ?? defaultFilterDate(),
-    toDate: readParam(params, 'toDate') ?? defaultFilterDate(),
+    fromDate: readParam(params, 'fromDate') ?? defaultDate,
+    toDate: readParam(params, 'toDate') ?? defaultDate,
     submittedOnDateFrom: readParam(params, 'submittedOnDateFrom'),
     submittedOnDateTo: readParam(params, 'submittedOnDateTo'),
     dateFormat: FINERACT_DATE_FORMAT,
@@ -108,8 +113,8 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
     orderBy: journalEntryOrderByForApi(query.orderBy),
     dateFormat: query.dateFormat,
     locale: query.locale,
-    fromDate: query.fromDate ?? defaultFilterDate(),
-    toDate: query.toDate ?? defaultFilterDate()
+    fromDate: query.fromDate ?? toFineractDate(new Date()),
+    toDate: query.toDate ?? toFineractDate(new Date())
   };
 
   if (query.officeId) {

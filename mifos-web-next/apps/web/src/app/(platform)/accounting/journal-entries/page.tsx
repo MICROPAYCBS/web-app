@@ -9,6 +9,7 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { JournalEntriesPageContent } from '@/components/accounting/journal-entries/journal-entries-page-content';
+import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
 import { parseJournalEntryListQuery } from '@/lib/fineract/journal-entry-query';
 import { listDepartments } from '@/lib/fineract/departments';
 import { listJournalEntryGlAccounts, listJournalEntries } from '@/lib/fineract/journal-entries';
@@ -26,7 +27,8 @@ export default async function JournalEntriesPage({
   }
 
   const params = await searchParams;
-  const query = parseJournalEntryListQuery(params);
+  const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
+  const query = parseJournalEntryListQuery(params, defaultTransactionDate);
   const [page, offices, glAccounts, departments] = await Promise.all([
     listJournalEntries(query),
     listOfficeOptions(),

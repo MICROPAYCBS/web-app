@@ -10,6 +10,10 @@ import 'server-only';
 
 import type { FineractCommandProcessingResult, FineractOfficeOption } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import {
+  DEFAULT_DEPARTMENT_ACTIVE_OPTIONS,
+  normalizeDepartmentActiveOption
+} from '@/lib/fineract/department-options';
 
 const BASE_PATH = '/departments';
 
@@ -77,37 +81,24 @@ function normalizeOfficeOption(raw: unknown): FineractOfficeOption | null {
 
 function normalizeTemplate(raw: unknown): DepartmentTemplate {
   if (!raw || typeof raw !== 'object') {
-    return { activeOptions: [], officeOptions: [] };
+    return { activeOptions: DEFAULT_DEPARTMENT_ACTIVE_OPTIONS, officeOptions: [] };
   }
   const row = raw as Record<string, unknown>;
   const activeOptions = Array.isArray(row.activeOptions)
     ? row.activeOptions
-        .map((item) => {
-          if (!item || typeof item !== 'object') {
-            return null;
-          }
-          const option = item as Record<string, unknown>;
-          const value = typeof option.value === 'string' ? option.value : String(option.id ?? '');
-          const label = typeof option.value === 'string' ? option.value : String(option.id ?? '');
-          if (!value) {
-            return null;
-          }
-          return {
-            value,
-            label: value === 'true' ? 'Active' : value === 'false' ? 'Inactive' : label
-          };
-        })
+        .map((item) => normalizeDepartmentActiveOption(item))
         .filter((item): item is { value: string; label: string } => item !== null)
-    : [
-        { value: 'true', label: 'Active' },
-        { value: 'false', label: 'Inactive' }
-      ];
+    : [];
   const officeOptions = Array.isArray(row.officeOptions)
     ? row.officeOptions
         .map((item) => normalizeOfficeOption(item))
         .filter((item): item is FineractOfficeOption => item !== null)
     : [];
-  return { activeOptions, officeOptions };
+  return {
+    activeOptions:
+      activeOptions.length > 0 ? activeOptions : DEFAULT_DEPARTMENT_ACTIVE_OPTIONS,
+    officeOptions
+  };
 }
 
 export async function listDepartments(): Promise<Department[]> {

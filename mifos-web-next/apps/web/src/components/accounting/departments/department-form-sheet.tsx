@@ -18,6 +18,10 @@ import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import type { Department, DepartmentTemplate } from '@/lib/fineract/departments';
+import {
+  departmentActiveFormValue,
+  departmentActiveFromFormValue
+} from '@/lib/fineract/department-options';
 
 type DepartmentFormState = {
   departmentCode: string;
@@ -40,7 +44,7 @@ function formStateFromDepartment(department: Department): DepartmentFormState {
     departmentCode: department.departmentCode,
     departmentName: department.departmentName,
     officeId: department.officeId != null ? String(department.officeId) : '',
-    active: department.active === false ? 'false' : 'true'
+    active: departmentActiveFormValue(department.active)
   };
 }
 
@@ -86,7 +90,7 @@ export function DepartmentFormSheet({
       departmentCode: form.departmentCode.trim(),
       departmentName: form.departmentName.trim(),
       officeId: form.officeId ? Number(form.officeId) : undefined,
-      active: form.active === 'true'
+      active: departmentActiveFromFormValue(form.active)
     };
 
     const validationErrors: Record<string, string> = {};
@@ -171,6 +175,7 @@ export function DepartmentFormSheet({
                   { value: 'false', label: 'Inactive' }
                 ]
           }
+          required
         />
       </div>
     </FormSheet>
