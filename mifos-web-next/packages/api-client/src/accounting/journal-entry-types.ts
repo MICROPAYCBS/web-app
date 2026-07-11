@@ -35,6 +35,9 @@ export interface FineractJournalEntryListItem {
   externalAssetOwner?: string;
   departmentId?: number;
   departmentName?: string;
+  organizationRunningBalance?: number;
+  officeRunningBalance?: number;
+  runningBalanceComputed?: boolean;
 }
 
 export interface FineractJournalEntriesPage {

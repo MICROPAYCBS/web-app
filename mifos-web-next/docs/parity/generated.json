@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-10T16:03:58.160Z",
+  "generatedAt": "2026-07-11T03:12:49.652Z",
   "summary": {
     "todo": 0,
     "in_progress": 0,
-    "done": 90,
+    "done": 91,
     "n/a": 0
   },
   "routes": [
@@ -743,6 +743,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "accounting/journal-entries"
+    },
+    {
+      "id": "acctGlAccountEnquiry",
+      "path": "/accounting/gl-account-enquiry",
+      "domain": "accounting",
+      "label": "GL account enquiry",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "accounting/gl-account-enquiry"
     },
     {
       "id": "acctJournalBulkImport",

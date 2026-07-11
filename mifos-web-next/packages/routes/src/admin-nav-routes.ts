@@ -678,6 +678,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'acctGlAccountEnquiry',
+    path: '/accounting/gl-account-enquiry',
+    label: 'GL account enquiry',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/gl-account-enquiry',
+    permissionKey: 'accounting.journal',
+    navOrder: 22,
+    navIcon: 'search',
+    keywords: ['gl', 'account', 'enquiry', 'running balance', 'ledger'],
+    parityStatus: 'done'
+  },
+  {
     id: 'acctJournalBulkImport',
     path: '/accounting/journal-entries/bulk-operations',
     label: 'Bulk journal operations',

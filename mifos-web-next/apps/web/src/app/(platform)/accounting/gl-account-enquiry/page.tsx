@@ -1,0 +1,53 @@
+/**
+ * Copyright since 2026 MicroPay
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { can, resolvePermission } from '@mifos/auth';
+import { notFound } from 'next/navigation';
+import { GlAccountEnquiryPageContent } from '@/components/accounting/gl-account-enquiry/gl-account-enquiry-page-content';
+import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
+import { listDepartments } from '@/lib/fineract/departments';
+import {
+  fetchGlAccountEnquiry,
+  listGlAccountEnquiryOptions
+} from '@/lib/fineract/gl-account-enquiry';
+import { parseGlAccountEnquiryListQuery } from '@/lib/fineract/gl-account-enquiry-query';
+import { listOfficeOptions } from '@/lib/fineract/offices';
+import { getServerSession } from '@/lib/session/server';
+
+export default async function GlAccountEnquiryPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const session = await getServerSession();
+  if (!can(session, resolvePermission('accounting.journal'))) {
+    notFound();
+  }
+
+  const params = await searchParams;
+  const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
+  const query = parseGlAccountEnquiryListQuery(params, defaultTransactionDate);
+  const [result, offices, glAccounts, departments] = await Promise.all([
+    fetchGlAccountEnquiry(query),
+    listOfficeOptions(),
+    listGlAccountEnquiryOptions(),
+    listDepartments()
+  ]);
+
+  return (
+    <GlAccountEnquiryPageContent
+      page={result.page}
+      query={query}
+      summary={result.summary}
+      glAccount={result.glAccount}
+      offices={offices}
+      glAccounts={glAccounts}
+      departments={departments}
+    />
+  );
+}
