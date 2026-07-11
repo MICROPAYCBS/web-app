@@ -308,15 +308,3 @@ export async function fetchGlAccountEnquiry(
 
   return { page, summary, glAccount };
 }
-
-export function formatGlAccountEnquiryPeriodLabel(fromDate?: string, toDate?: string): string {
-  if (!fromDate && !toDate) {
-    return 'All dates';
-  }
-  if (fromDate && toDate && fromDate === toDate) {
-    return fromDate;
-  }
-  return [fromDate, toDate].filter(Boolean).join(' – ');
-}
-
-export { FINERACT_DATE_FORMAT };

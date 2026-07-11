@@ -37,3 +37,13 @@ export function glAccountEnquiryBalanceScopeLabel(
 export function glAccountEnquiryBalanceNatureLabel(glAccountTypeId?: number) {
   return glAccountTypeId != null ? glAccountBalanceLabel(glAccountTypeId) : 'Balance';
 }
+
+export function formatGlAccountEnquiryPeriodLabel(fromDate?: string, toDate?: string): string {
+  if (!fromDate && !toDate) {
+    return 'All dates';
+  }
+  if (fromDate && toDate && fromDate === toDate) {
+    return fromDate;
+  }
+  return [fromDate, toDate].filter(Boolean).join(' – ');
+}

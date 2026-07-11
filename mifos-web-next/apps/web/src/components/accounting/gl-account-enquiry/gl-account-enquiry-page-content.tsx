@@ -29,7 +29,7 @@ import { EmptyState } from '@/components/composites/empty-state';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
 import { Button } from '@/components/ui/button';
-import { formatGlAccountEnquiryAccountHeading } from '@/lib/accounting/gl-account-enquiry-display';
+import { formatGlAccountEnquiryAccountHeading, formatGlAccountEnquiryPeriodLabel } from '@/lib/accounting/gl-account-enquiry-display';
 import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
 import type { Department } from '@/lib/fineract/departments';
 import {
@@ -43,7 +43,6 @@ import {
   type GlAccountEnquiryListQuery,
   type GlAccountEnquirySearchFilters
 } from '@/lib/fineract/gl-account-enquiry-query';
-import { formatGlAccountEnquiryPeriodLabel } from '@/lib/fineract/gl-account-enquiry';
 
 export function GlAccountEnquiryPageContent({
   page,
