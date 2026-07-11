@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 import { createJournalEntryAction } from '@/actions/journal-entries';
 import { emptyJournalEntryLine } from '@/components/accounting/journal-entries/journal-entry-lines-editor';
+import { useJournalEntryTransactionPanel } from '@/components/accounting/journal-entries/journal-entry-transaction-panel';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
@@ -61,6 +62,7 @@ export function JournalEntryWizard({
   validationContext
 }: JournalEntryWizardProps) {
   const router = useRouter();
+  const journalPanel = useJournalEntryTransactionPanel();
   const [form, setForm] = useState<CreateJournalEntryFormInput>(initialValues);
   const formRef = useRef(form);
   formRef.current = form;
@@ -217,7 +219,8 @@ export function JournalEntryWizard({
         return;
       }
       if (result.transactionId) {
-        router.push(`/accounting/journal-entries/transactions/${result.transactionId}`);
+        router.push(JOURNAL_ENTRIES_LIST_PATH);
+        journalPanel.openJournalTransaction(result.transactionId);
       } else {
         router.push(JOURNAL_ENTRIES_LIST_PATH);
         return;

@@ -18,7 +18,7 @@ import {
   type VisibilityState
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import Link from 'next/link';
+import { JournalEntryTransactionLink } from '@/components/accounting/journal-entries/journal-entry-transaction-panel';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
@@ -162,12 +162,7 @@ export function useJournalEntriesTable({
         meta: { label: 'Transaction ID' },
         header: 'Transaction ID',
         cell: ({ row }) => (
-          <Link
-            href={`/accounting/journal-entries/transactions/${row.original.transactionId}`}
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {row.original.transactionId}
-          </Link>
+          <JournalEntryTransactionLink transactionId={row.original.transactionId} />
         )
       },
       {

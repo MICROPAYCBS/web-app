@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractJournalEntryListItem } from '@mifos/api-client';
 import { assertCan } from '@mifos/auth';
 import {
   actionSuccessFromFineractCommand,
@@ -24,6 +25,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import {
   createJournalEntry,
+  getJournalEntryTransaction,
   listJournalEntryGlAccounts,
   revertJournalEntryTransaction
 } from '@/lib/fineract/journal-entries';
@@ -38,8 +40,12 @@ const BULK_OPERATIONS_PATH = '/accounting/journal-entries/bulk-operations';
 const REQUIRE_DEPARTMENT_CONFIG = 'enable-require-department-on-manual-journal-pl-lines';
 
 export type JournalEntriesActionResult =
-  | { ok: true; transactionId?: string }
+  | { ok: true; transactionId?: string; pendingChecker?: boolean }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+export type GetJournalEntryTransactionResult =
+  | { ok: true; entries: FineractJournalEntryListItem[] }
+  | { ok: false; message: string };
 
 export type BulkJournalEntriesRowResult =
   | { rowIndex: number; ok: true; transactionId?: string; pending?: boolean }
@@ -213,6 +219,28 @@ export async function createBulkJournalEntriesAction(
     successCount,
     failureCount
   };
+}
+
+export async function getJournalEntryTransactionAction(
+  transactionId: string
+): Promise<GetJournalEntryTransactionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'READ_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to view journal entries.' };
+  }
+
+  if (!transactionId.trim()) {
+    return { ok: false, message: 'Invalid transaction id.' };
+  }
+
+  try {
+    const page = await getJournalEntryTransaction(transactionId);
+    return { ok: true, entries: page.pageItems };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to load journal transaction.');
+  }
 }
 
 export async function revertJournalEntryAction(

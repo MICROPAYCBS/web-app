@@ -9,10 +9,9 @@
  */
 
 import type { FineractJournalEntryListItem } from '@mifos/api-client';
-import Link from 'next/link';
 import { JournalEntryLinesTable } from '@/components/accounting/journal-entries/journal-entry-lines-table';
+import { JournalEntryTransactionLink } from '@/components/accounting/journal-entries/journal-entry-transaction-panel';
 import { DetailSection } from '@/components/composites';
-import { journalEntryTransactionPath } from '@/lib/accounting/journal-entry-links';
 
 export function LoanTransactionJournalSection({
   journalTransactionId,
@@ -48,12 +47,13 @@ export function LoanTransactionJournalSection({
     <DetailSection
       title="Ledger entries"
       actions={
-        <Link
-          href={journalEntryTransactionPath(journalTransactionId)}
-          className="text-sm text-primary underline-offset-4 hover:underline"
+        <JournalEntryTransactionLink
+          transactionId={journalTransactionId}
+          entries={entries}
+          className="text-sm"
         >
-          Open in accounting
-        </Link>
+          View transaction
+        </JournalEntryTransactionLink>
       }
     >
       <JournalEntryLinesTable entries={entries} />

@@ -21,6 +21,7 @@ import { PlatformContentArea } from '@/components/platform/platform-content-area
 import { ErrorBoundary } from '@/components/composites/error-boundary';
 import { InactivityTimeout } from '@/components/auth/inactivity-timeout';
 import { AuditTrailPanelProvider } from '@/components/audit';
+import { JournalEntryTransactionPanelProvider } from '@/components/accounting/journal-entries/journal-entry-transaction-panel';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 const shellStyle = {
@@ -58,26 +59,28 @@ export function PlatformShell({
       <NavigationProvider nav={nav}>
         <EntitySearchProvider>
           <AuditTrailPanelProvider>
-            <SidebarProvider style={shellStyle}>
-              <MifosAppSidebar serverName={serverName} />
-              <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
-                <MifosSiteHeader
-                  businessDateLabel={businessDateContext.displayLabel}
-                  businessDateIsNotToday={businessDateContext.isNotToday}
-                  checkerInboxPendingCount={checkerInboxPendingCount}
-                  notificationsUnreadCount={notificationsUnreadCount}
-                  cashierNavBalance={cashierNavBalance}
-                />
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                  <ErrorBoundary
-                    title="This section failed to load"
-                    description="An unexpected error occurred while rendering this page. Fineract request failures are shown as notifications instead."
-                  >
-                    <PlatformContentArea>{children}</PlatformContentArea>
-                  </ErrorBoundary>
-                </div>
-              </SidebarInset>
-            </SidebarProvider>
+            <JournalEntryTransactionPanelProvider>
+              <SidebarProvider style={shellStyle}>
+                <MifosAppSidebar serverName={serverName} />
+                <SidebarInset className="flex max-h-svh min-h-svh flex-col overflow-hidden">
+                  <MifosSiteHeader
+                    businessDateLabel={businessDateContext.displayLabel}
+                    businessDateIsNotToday={businessDateContext.isNotToday}
+                    checkerInboxPendingCount={checkerInboxPendingCount}
+                    notificationsUnreadCount={notificationsUnreadCount}
+                    cashierNavBalance={cashierNavBalance}
+                  />
+                  <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    <ErrorBoundary
+                      title="This section failed to load"
+                      description="An unexpected error occurred while rendering this page. Fineract request failures are shown as notifications instead."
+                    >
+                      <PlatformContentArea>{children}</PlatformContentArea>
+                    </ErrorBoundary>
+                  </div>
+                </SidebarInset>
+              </SidebarProvider>
+            </JournalEntryTransactionPanelProvider>
           </AuditTrailPanelProvider>
         </EntitySearchProvider>
       </NavigationProvider>
