@@ -1,0 +1,21 @@
+{
+  "command": "accounting.central-branch-expense-payment",
+  "fineractSources": [
+    "org.apache.fineract.accounting.journalentry.api.JournalEntriesApiResource"
+  ],
+  "fields": {
+    "fundingOfficeId": { "required": true },
+    "bankGlAccountId": { "required": true },
+    "currencyCode": { "required": true },
+    "transactionDate": { "required": true },
+    "referenceNumber": { "required": true },
+    "comments": { "required": false },
+    "expenseLines": { "required": true },
+    "paymentTypeId": { "required": false },
+    "accountNumber": { "required": false },
+    "checkNumber": { "required": false },
+    "routingCode": { "required": false },
+    "receiptNumber": { "required": false },
+    "bankNumber": { "required": false }
+  }
+}

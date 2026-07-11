@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-11T03:12:49.652Z",
+  "generatedAt": "2026-07-11T11:13:20.842Z",
   "summary": {
     "todo": 0,
     "in_progress": 0,
-    "done": 91,
+    "done": 92,
     "n/a": 0
   },
   "routes": [
@@ -743,6 +743,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "accounting/journal-entries"
+    },
+    {
+      "id": "acctCentralBranchPayment",
+      "path": "/accounting/journal-entries/central-branch-payment",
+      "domain": "accounting",
+      "label": "Cross-branch",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "accounting/journal-entries/central-branch-payment"
     },
     {
       "id": "acctGlAccountEnquiry",

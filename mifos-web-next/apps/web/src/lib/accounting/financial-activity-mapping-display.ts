@@ -24,6 +24,7 @@ const FINANCIAL_ACTIVITY_LABELS: Record<string, string> = {
   cashAtTeller: 'Cash at teller',
   fundSource: 'Fund source',
   liabilityTransfer: 'Liability transfer',
+  interBranchRecon: 'Inter-branch reconciliation',
   openingBalancesTransferContra: 'Opening balances transfer contra',
   payableDividends: 'Payable dividends'
 };
@@ -66,7 +67,7 @@ export function glAccountsForFinancialActivity(
   if ([100, 101, 102, 103].includes(financialActivityId)) {
     return glAccountOptions.assetAccountOptions;
   }
-  if ([200, 201].includes(financialActivityId)) {
+  if ([200, 201, 203].includes(financialActivityId)) {
     return glAccountOptions.liabilityAccountOptions;
   }
   if (financialActivityId === 300) {

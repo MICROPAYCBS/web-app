@@ -19,11 +19,11 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 ---
 
-## Scorecard (11 routes)
+## Scorecard (12 routes)
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|   11 |       0 |       0 |
+|   12 |       0 |       0 |
 
 ---
 
@@ -35,6 +35,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 | ACCT-015 | `/accounting/departments`                      | Departments                  | **Done** | List, create, edit cost centers              |
 | ACCT-018 | `/accounting/gl-account-enquiry`               | GL account enquiry           | **Done** | Required GL account search, balances, running balance column |
 | ACCT-020 | `/accounting/journal-entries`                   | Journal entries              | **Done** | Search, create, transaction view, reverse  |
+| ACCT-022 | `/accounting/journal-entries/central-branch-payment` | Cross-branch | **Done** | Multi-office journal entries via inter-branch clearing (N+1 JEs) |
 | ACCT-025 | `/accounting/journal-entries/frequent-postings` | Frequent postings            | **Done** | Shortcut journal form with accounting rules |
 | ACCT-030 | `/accounting/financial-activity-mappings`       | Financial activity mappings  | **Done** | List, create, edit via FormSheet           |
 | ACCT-040 | `/accounting/migrate-opening-balances`          | Migrate opening balances     | **Done** | Retrieve by office, define balanced entry  |

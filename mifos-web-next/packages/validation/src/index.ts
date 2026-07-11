@@ -505,6 +505,14 @@ export {
   type RevertJournalEntryInput
 } from './accounting/journal-entry.schema';
 export {
+  centralBranchExpenseLineSchema,
+  centralBranchExpensePaymentFormSchema,
+  validateCentralBranchExpensePaymentForm,
+  type CentralBranchExpenseLineInput,
+  type CentralBranchExpensePaymentFormInput,
+  type CentralBranchExpensePaymentValidationContext
+} from './accounting/central-branch-expense-payment.schema';
+export {
   BULK_CONSTRUCT_JOURNAL_ENTRIES_MAX_ROWS,
   bulkConstructJournalEntriesFormSchema,
   bulkConstructJournalEntriesTemplateSchema,

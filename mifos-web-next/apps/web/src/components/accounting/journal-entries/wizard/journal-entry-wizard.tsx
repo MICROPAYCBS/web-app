@@ -15,7 +15,7 @@ import {
   type CreateJournalEntryFormInput
 } from '@mifos/validation';
 import { Can } from '@mifos/auth';
-import { Layers } from 'lucide-react';
+import { Building2, Layers } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
@@ -256,15 +256,26 @@ export function JournalEntryWizard({
         title="Create journal entry"
         description="Post a journal entry manually or start from an accounting rule template."
         actions={
-          <Can permission="READ_JOURNALENTRY">
-            <Link
-              href={JOURNAL_ENTRIES_BULK_OPERATIONS_PATH}
-              className={cn(buttonVariants({ variant: 'outline' }))}
-            >
-              <Layers className="mr-2 size-4" />
-              {JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL}
-            </Link>
-          </Can>
+          <div className="flex flex-wrap items-center gap-2">
+            <Can permission="READ_JOURNALENTRY">
+              <Link
+                href={JOURNAL_ENTRIES_BULK_OPERATIONS_PATH}
+                className={cn(buttonVariants({ variant: 'outline' }))}
+              >
+                <Layers className="mr-2 size-4" />
+                {JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL}
+              </Link>
+            </Can>
+            <Can permission="CREATE_JOURNALENTRY">
+              <Link
+                href="/accounting/journal-entries/central-branch-payment"
+                className={cn(buttonVariants({ variant: 'outline' }))}
+              >
+                <Building2 className="mr-2 size-4" />
+                Cross-branch
+              </Link>
+            </Can>
+          </div>
         }
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
