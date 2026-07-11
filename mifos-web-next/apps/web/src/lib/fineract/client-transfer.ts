@@ -31,6 +31,7 @@ import {
 } from '@/lib/fineract/client-account-links';
 import { getClient } from '@/lib/fineract/clients';
 import { clientStatusKind, type ClientStatusKind } from '@/lib/fineract/client-status';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { formatFineractDateArray, fromFineractDateArray } from '@/lib/fineract/dates';
 import { getOffice, listOfficeOptions } from '@/lib/fineract/offices';
@@ -149,17 +150,9 @@ function formatOnHoldDate(raw: number[] | string | undefined): string {
 
 function formatOnHoldAmount(
   amount: number | undefined,
-  currency?: { code?: string; displaySymbol?: string }
+  currency?: { code?: string }
 ): string {
-  if (amount == null || Number.isNaN(amount)) {
-    return '—';
-  }
-  const symbol = currency?.displaySymbol ?? currency?.code ?? '';
-  const formatted = new Intl.NumberFormat('en', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
-  return symbol ? `${symbol} ${formatted}` : formatted;
+  return formatAccountMoney(amount, currency?.code);
 }
 
 export async function listSavingsOnHoldTransactions(

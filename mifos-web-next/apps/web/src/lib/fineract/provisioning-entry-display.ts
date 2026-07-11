@@ -37,11 +37,7 @@ export function formatJournalDebitCredit(entry: FineractProvisioningJournalEntry
   debit: string;
   credit: string;
 } {
-  const symbol = entry.currency.displaySymbol || entry.currency.code;
-  const formatted = `${symbol} ${new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(entry.amount)}`;
+  const formatted = formatAccountMoney(entry.amount, entry.currency.code);
   if (entry.entryType.value === 'DEBIT') {
     return { debit: formatted, credit: '' };
   }

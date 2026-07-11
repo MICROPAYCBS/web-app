@@ -7,6 +7,7 @@
  */
 
 /** Display helper until @mifos/domain formatMoney is wired for detail tables. */
+/** Always prefix with ISO currency **code** (e.g. `UGX 1,234.00`) — never `displaySymbol`. */
 export function formatAccountMoney(amount: number | undefined, currencyCode?: string): string {
   if (amount == null || Number.isNaN(amount)) {
     return '—';

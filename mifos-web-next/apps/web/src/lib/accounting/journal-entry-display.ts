@@ -66,8 +66,7 @@ export function formatJournalEntrySideLabel(entry: FineractJournalEntryListItem)
 }
 
 export function formatJournalEntryLineAmount(entry: FineractJournalEntryListItem) {
-  const symbol = entry.currency.displaySymbol || entry.currency.code;
-  return `${symbol} ${formatAccountMoney(entry.amount).replace(/^[^ ]+\s/, '')}`;
+  return formatAccountMoney(entry.amount, entry.currency.code);
 }
 
 export function formatJournalEntryAmount(entry: FineractJournalEntryListItem, side: 'DEBIT' | 'CREDIT') {

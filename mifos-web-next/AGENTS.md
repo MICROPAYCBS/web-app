@@ -29,14 +29,15 @@ Instructions for AI agents working in this repository.
 3. **Validate on server** (Server Actions) with the same Zod schema as the client.
 4. **Map Fineract API errors** via `mapFineractErrors` + `translateFineractCode`.
 5. Use **decimal.js** (via `@mifos/domain`) for money — never JavaScript `number` for amounts.
-6. **Simple forms (1–7 fields)** use `FormSheet` (shadcn Sheet) with Cancel/Submit in the footer — see `docs/COMPONENTS.md` and ADR-006.
-7. Add new pages to `packages/routes/src/app-routes.ts` and run `pnpm run routes:parity`.
-8. **RBAC:** register permissions in `@mifos/auth`; use `<Can>` + `assertCan()` — see `docs/RBAC.md`.
-9. Update **parity matrix** (`docs/parity/`) when shipping a route.
-10. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md and `docs/SERVERS.md``).
-11. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
-12. **User-facing copy** must not mention Fineract, APIs, or backend product names unless unavoidable (e.g. a technical settings field). Prefer domain language users know: “Customer addresses”, “Family members”, “Servers”, “Sign in”. Code, comments, and docs for developers may still reference Fineract.
-13. **Business date on transaction forms** — posting and operation dates (deposits, transfers, journal entries, lifecycle commands, etc.) must use `TransactionDateField` and the shared business-date context — see `docs/COMPONENTS.md` § Business date & transaction dates. Do **not** use plain `DateField` or `new Date()` for those fields. Search/filter date ranges and profile or planning dates (DOB, expected disbursement, holidays) stay editable `DateField`s.
+6. **Currency display** — always use the ISO **code** (`UGX`, `USD`, …) via `formatAccountMoney`; never Fineract `displaySymbol` or locale symbols in UI copy.
+7. **Simple forms (1–7 fields)** use `FormSheet` (shadcn Sheet) with Cancel/Submit in the footer — see `docs/COMPONENTS.md` and ADR-006.
+8. Add new pages to `packages/routes/src/app-routes.ts` and run `pnpm run routes:parity`.
+9. **RBAC:** register permissions in `@mifos/auth`; use `<Can>` + `assertCan()` — see `docs/RBAC.md`.
+10. Update **parity matrix** (`docs/parity/`) when shipping a route.
+11. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md and `docs/SERVERS.md``).
+12. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
+13. **User-facing copy** must not mention Fineract, APIs, or backend product names unless unavoidable (e.g. a technical settings field). Prefer domain language users know: “Customer addresses”, “Family members”, “Servers”, “Sign in”. Code, comments, and docs for developers may still reference Fineract.
+14. **Business date on transaction forms** — posting and operation dates (deposits, transfers, journal entries, lifecycle commands, etc.) must use `TransactionDateField` and the shared business-date context — see `docs/COMPONENTS.md` § Business date & transaction dates. Do **not** use plain `DateField` or `new Date()` for those fields. Search/filter date ranges and profile or planning dates (DOB, expected disbursement, holidays) stay editable `DateField`s.
 
 ## Reference repos
 

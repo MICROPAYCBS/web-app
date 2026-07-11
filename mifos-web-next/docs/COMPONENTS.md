@@ -165,7 +165,7 @@ DetailPage
 | Rule | Detail |
 |------|--------|
 | Formatting | `Decimal` + `@mifos/domain` — **never** `toFixed` or raw `number` math |
-| Currency | Always show code or symbol from Fineract `currency.code` on the account/resource |
+| Currency | Always show ISO **code** from `currency.code` (e.g. `UGX 1,234.00`) — never `displaySymbol` |
 | Alignment | `tabular-nums text-right` for money in grids |
 | Zero vs missing | `0.00` vs em dash (—) |
 | Rates | `PercentValue` with `%` — do not format as currency |
