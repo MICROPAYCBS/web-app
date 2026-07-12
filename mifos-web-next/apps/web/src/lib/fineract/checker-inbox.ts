@@ -19,6 +19,7 @@ import { getAuditTrail } from '@/lib/fineract/audit-trails';
 import { coerceFineractDateTime } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { buildCheckerInboxSearchParams } from '@/lib/fineract/checker-inbox-query';
+import { filterCheckerInboxItemsForLoanAccount } from '@/lib/fineract/loan-account-pending-checker-filters';
 
 const MAKER_CHECKERS_PATH = '/makercheckers';
 
@@ -118,10 +119,20 @@ export async function listPendingCheckerActionsForResource(
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(MAKER_CHECKERS_PATH, {
     resourceId: String(resourceId),
+    loanId: String(resourceId),
     ...(options?.entityName ? { entityName: options.entityName } : {})
   });
+  const entityNeedle = options?.entityName?.trim().toUpperCase();
   return normalizeCheckerInboxList(raw)
-    .filter((item) => item.resourceId === resourceId)
+    .filter((item) => {
+      if (entityNeedle === 'LOAN') {
+        return filterCheckerInboxItemsForLoanAccount([item], resourceId).length > 0;
+      }
+      return (
+        item.resourceId === resourceId &&
+        (!entityNeedle || item.entityName?.trim().toUpperCase() === entityNeedle)
+      );
+    })
     .map(toResourcePendingCheckerAction);
 }
 

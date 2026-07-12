@@ -107,6 +107,7 @@ export function LoanAccountDetailView({
             approvalWorkflowContext={pendingApprovalWorkflowContext}
             taskPermissions={makerCheckerTaskPermissions}
             loanAccountId={account.id}
+            loanStatus={account.status}
           />
 
           {delinquencyMessage ? (

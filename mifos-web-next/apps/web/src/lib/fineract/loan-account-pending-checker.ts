@@ -15,9 +15,13 @@ import {
   type ApprovalWorkflowRuntimeContext
 } from '@/lib/checker-inbox/approval-workflow-match';
 import type { CheckerInboxMatchedWorkflow } from '@/lib/checker-inbox/checker-inbox-item-types';
-import { isPendingCheckerAuditResult } from '@/lib/fineract/audit-trail-display';
 import { listLoanAccountPendingCheckerActions } from '@/lib/fineract/checker-inbox';
+import {
+  loanPendingCheckerActionsFromAudits,
+  mergeLoanPendingCheckerActions
+} from '@/lib/fineract/loan-account-pending-checker-filters';
 import type { LoanAccountPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
+import { resolvePrimaryLoanPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
 import { getWorkflowInstanceByCommandSourceId } from '@/lib/fineract/workflow-instances';
 
 export type LoanPendingApprovalWorkflowContext = {
@@ -27,34 +31,7 @@ export type LoanPendingApprovalWorkflowContext = {
   workflowInstance?: WorkflowInstance | null;
 };
 
-function pendingFromAuditEntry(audit: FineractAuditTrailListItem): LoanAccountPendingCheckerAction {
-  return {
-    id: audit.id,
-    actionName: audit.actionName,
-    entityName: audit.entityName,
-    maker: audit.maker,
-    madeOnDate: audit.madeOnDate
-  };
-}
-
-export function loanPendingCheckerActionsFromAudits(
-  audits: FineractAuditTrailListItem[]
-): LoanAccountPendingCheckerAction[] {
-  return audits
-    .filter((audit) => isPendingCheckerAuditResult(audit.processingResult))
-    .map(pendingFromAuditEntry);
-}
-
-export function mergeLoanPendingCheckerActions(
-  inbox: LoanAccountPendingCheckerAction[],
-  audits: LoanAccountPendingCheckerAction[]
-): LoanAccountPendingCheckerAction[] {
-  const byId = new Map<number, LoanAccountPendingCheckerAction>();
-  for (const item of [...inbox, ...audits]) {
-    byId.set(item.id, item);
-  }
-  return [...byId.values()].sort((a, b) => b.id - a.id);
-}
+export { loanPendingCheckerActionsFromAudits, mergeLoanPendingCheckerActions } from '@/lib/fineract/loan-account-pending-checker-filters';
 
 export async function loadLoanAccountPendingCheckerActions(
   loanAccountId: number,
@@ -62,14 +39,15 @@ export async function loadLoanAccountPendingCheckerActions(
 ): Promise<LoanAccountPendingCheckerAction[]> {
   const [inbox, audits] = await Promise.all([
     listLoanAccountPendingCheckerActions(loanAccountId),
-    Promise.resolve(loanPendingCheckerActionsFromAudits(auditEntries))
+    Promise.resolve(loanPendingCheckerActionsFromAudits(auditEntries, loanAccountId))
   ]);
   return mergeLoanPendingCheckerActions(inbox, audits);
 }
 
 export async function resolveLoanPendingApprovalWorkflowContext(
-  action: LoanAccountPendingCheckerAction | undefined,
+  actions: LoanAccountPendingCheckerAction[],
   loan: {
+    status?: { code?: string; value?: string };
     approvedPrincipal?: number;
     proposedPrincipal?: number;
     principal?: number;
@@ -77,11 +55,36 @@ export async function resolveLoanPendingApprovalWorkflowContext(
   },
   runtime: ApprovalWorkflowRuntimeContext
 ): Promise<LoanPendingApprovalWorkflowContext | undefined> {
-  if (!action || !runtime.workflowsEnabled) {
+  if (actions.length === 0) {
     return runtime.workflowsEnabled ? { approvalWorkflowsEnabled: true } : undefined;
   }
+  if (!runtime.workflowsEnabled) {
+    return { approvalWorkflowsEnabled: true };
+  }
 
-  const workflowInstance = await getWorkflowInstanceByCommandSourceId(action.id).catch(() => null);
+  const workflowRows = await Promise.all(
+    actions.map(async (action) => ({
+      action,
+      workflowInstance: await getWorkflowInstanceByCommandSourceId(action.id).catch(() => null)
+    }))
+  );
+
+  const inProgressRow = workflowRows.find(
+    (row) => row.workflowInstance?.status === 'IN_PROGRESS'
+  );
+  const action =
+    inProgressRow?.action ??
+    resolvePrimaryLoanPendingCheckerAction(actions, loan.status) ??
+    actions[0];
+  const workflowInstance =
+    inProgressRow?.workflowInstance ??
+    workflowRows.find((row) => row.action.id === action?.id)?.workflowInstance ??
+    null;
+
+  if (!action) {
+    return { approvalWorkflowsEnabled: true };
+  }
+
   const amount = loan.approvedPrincipal ?? loan.proposedPrincipal ?? loan.principal;
   const currencyCode = loan.currency?.code;
   const matchedWorkflow = matchApprovalWorkflowForCheckerItem(

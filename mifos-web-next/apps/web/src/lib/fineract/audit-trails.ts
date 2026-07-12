@@ -21,6 +21,7 @@ import {
 } from '@/lib/fineract/audit-trail-query';
 import { coerceFineractDateTime, FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { filterAuditTrailsForLoanAccount } from '@/lib/fineract/loan-account-pending-checker-filters';
 
 const AUDITS_PATH = '/audits';
 
@@ -240,6 +241,8 @@ export async function listAuditTrailsForClient(
 /** Fineract audit entity for loan account commands (including transactions). */
 export const LOAN_ACCOUNT_AUDIT_ENTITY = 'LOAN';
 
+export { filterAuditTrailsForLoanAccount } from '@/lib/fineract/loan-account-pending-checker-filters';
+
 export function filterAuditTrailsForLoanTransaction(
   audits: FineractAuditTrailListItem[],
   transactionId: string | number
@@ -277,15 +280,21 @@ export async function listAuditTrailsForLoanAccount(
   accountId: string | number,
   options?: { limit?: number; offset?: number }
 ): Promise<FineractAuditTrailsPage> {
-  return listAuditTrails({
+  const page = await listAuditTrails({
     offset: options?.offset ?? 0,
     limit: options?.limit ?? 100,
     orderBy: 'id',
     sortOrder: 'desc',
     entityName: LOAN_ACCOUNT_AUDIT_ENTITY,
     loanId: String(accountId),
+    resourceId: String(accountId),
     includeJson: true,
     dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE
   });
+  const pageItems = filterAuditTrailsForLoanAccount(page.pageItems, accountId);
+  return {
+    pageItems,
+    totalFilteredRecords: pageItems.length
+  };
 }

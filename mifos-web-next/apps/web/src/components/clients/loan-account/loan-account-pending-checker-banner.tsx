@@ -21,6 +21,7 @@ import { formatAuditTrailDateTime } from '@/lib/fineract/audit-trail-display';
 import { checkerInboxDetailPath, checkerInboxListPath } from '@/lib/fineract/checker-inbox-paths';
 import {
   describeLoanPendingCheckerAction,
+  resolvePrimaryLoanPendingCheckerAction,
   type LoanAccountPendingCheckerAction
 } from '@/lib/fineract/loan-account-pending-checker-display';
 import type { LoanPendingApprovalWorkflowContext } from '@/lib/fineract/loan-account-pending-checker';
@@ -29,12 +30,14 @@ export function LoanAccountPendingCheckerBanner({
   actions,
   approvalWorkflowContext,
   taskPermissions = [],
-  loanAccountId
+  loanAccountId,
+  loanStatus
 }: {
   actions: LoanAccountPendingCheckerAction[];
   approvalWorkflowContext?: LoanPendingApprovalWorkflowContext;
   taskPermissions?: FineractRolePermissionUsage[];
   loanAccountId?: number;
+  loanStatus?: { code?: string; value?: string };
 }) {
   const canOpenCheckerInbox = useCan(resolvePermission('checkerInbox'));
 
@@ -42,7 +45,8 @@ export function LoanAccountPendingCheckerBanner({
     return null;
   }
 
-  const primary = actions[0]!;
+  const primary =
+    resolvePrimaryLoanPendingCheckerAction(actions, loanStatus) ?? actions[0]!;
   const title =
     actions.length === 1
       ? describeLoanPendingCheckerAction(primary)

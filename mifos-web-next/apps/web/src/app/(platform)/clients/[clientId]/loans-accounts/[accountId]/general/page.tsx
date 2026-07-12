@@ -240,7 +240,7 @@ export default async function LoanAccountGeneralPage({
 
   const workflowRuntime = await loadApprovalWorkflowRuntimeContext();
   const pendingApprovalWorkflowContext = await resolveLoanPendingApprovalWorkflowContext(
-    pendingCheckerActions[0],
+    pendingCheckerActions,
     result.data,
     workflowRuntime
   );
