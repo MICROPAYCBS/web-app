@@ -19,7 +19,8 @@ import { getAuditTrail } from '@/lib/fineract/audit-trails';
 import { coerceFineractDateTime } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { buildCheckerInboxSearchParams } from '@/lib/fineract/checker-inbox-query';
-import { filterCheckerInboxItemsForLoanAccount } from '@/lib/fineract/loan-account-pending-checker-filters';
+import { filterCheckerInboxItemsForResource } from '@/lib/fineract/resource-pending-checker-filters';
+import type { ResourcePendingCheckerScope } from '@/lib/fineract/resource-pending-checker-display';
 
 const MAKER_CHECKERS_PATH = '/makercheckers';
 
@@ -111,37 +112,83 @@ function toResourcePendingCheckerAction(item: CheckerInboxListItem): ResourcePen
   };
 }
 
-/** Pending maker-checker commands for a Fineract resource id (e.g. loan account id). */
+/** Pending maker-checker commands for a Fineract resource scoped to one entity. */
+export async function listPendingCheckerActionsForScope(
+  scope: ResourcePendingCheckerScope
+): Promise<ResourcePendingCheckerAction[]> {
+  try {
+    const fineract = await createFineractClient();
+    const { inboxFilters, entityName } = scope;
+    const raw = await fineract.get<unknown>(MAKER_CHECKERS_PATH, {
+      resourceId: String(inboxFilters.resourceId),
+      entityName,
+      ...(inboxFilters.clientId != null ? { clientId: String(inboxFilters.clientId) } : {}),
+      ...(inboxFilters.loanId != null ? { loanId: String(inboxFilters.loanId) } : {}),
+      ...(inboxFilters.savingsAccountId != null
+        ? { savingsAccountId: String(inboxFilters.savingsAccountId) }
+        : {})
+    });
+
+    return filterCheckerInboxItemsForResource(normalizeCheckerInboxList(raw), scope).map(
+      toResourcePendingCheckerAction
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** @deprecated Use {@link listPendingCheckerActionsForScope}. */
 export async function listPendingCheckerActionsForResource(
   resourceId: number,
   options?: { entityName?: string }
 ): Promise<ResourcePendingCheckerAction[]> {
+  const entityName = options?.entityName?.trim().toUpperCase();
+  if (entityName === 'LOAN') {
+    return listPendingCheckerActionsForScope({
+      entityName: 'LOAN',
+      resourceId,
+      inboxFilters: { resourceId, loanId: resourceId },
+      resourceLabel: 'loan'
+    });
+  }
+  if (entityName === 'SAVINGSACCOUNT') {
+    return listPendingCheckerActionsForScope({
+      entityName: 'SAVINGSACCOUNT',
+      resourceId,
+      inboxFilters: { resourceId, savingsAccountId: resourceId },
+      resourceLabel: 'savings account'
+    });
+  }
+  if (entityName === 'CLIENT') {
+    return listPendingCheckerActionsForScope({
+      entityName: 'CLIENT',
+      resourceId,
+      inboxFilters: { resourceId, clientId: resourceId },
+      resourceLabel: 'customer'
+    });
+  }
+
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(MAKER_CHECKERS_PATH, {
     resourceId: String(resourceId),
-    loanId: String(resourceId),
     ...(options?.entityName ? { entityName: options.entityName } : {})
   });
-  const entityNeedle = options?.entityName?.trim().toUpperCase();
   return normalizeCheckerInboxList(raw)
-    .filter((item) => {
-      if (entityNeedle === 'LOAN') {
-        return filterCheckerInboxItemsForLoanAccount([item], resourceId).length > 0;
-      }
-      return (
+    .filter(
+      (item) =>
         item.resourceId === resourceId &&
-        (!entityNeedle || item.entityName?.trim().toUpperCase() === entityNeedle)
-      );
-    })
+        (!entityName || item.entityName?.trim().toUpperCase() === entityName)
+    )
     .map(toResourcePendingCheckerAction);
 }
 
 export async function listLoanAccountPendingCheckerActions(
   loanAccountId: number
 ): Promise<ResourcePendingCheckerAction[]> {
-  try {
-    return await listPendingCheckerActionsForResource(loanAccountId, { entityName: 'LOAN' });
-  } catch {
-    return [];
-  }
+  return listPendingCheckerActionsForScope({
+    entityName: 'LOAN',
+    resourceId: loanAccountId,
+    inboxFilters: { resourceId: loanAccountId, loanId: loanAccountId },
+    resourceLabel: 'loan'
+  });
 }

@@ -64,6 +64,7 @@ import {
   savingsAccountActionVisibility,
   savingsAccountCurrencyCode
 } from '@/lib/fineract/savings-account-display';
+import { hasPendingCheckerAction, type ResourcePendingCheckerAction } from '@/lib/fineract/resource-pending-checker-display';
 
 export interface SavingsAccountActionPermissions {
   approve: boolean;
@@ -100,12 +101,14 @@ export function SavingsAccountActions({
   account,
   clientId,
   reportOrgName,
-  permissions
+  permissions,
+  pendingCheckerActions = []
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
   reportOrgName: string;
   permissions: SavingsAccountActionPermissions;
+  pendingCheckerActions?: ResourcePendingCheckerAction[];
 }) {
   const visibility = savingsAccountActionVisibility(account);
   const currencyCode = savingsAccountCurrencyCode(account);
@@ -125,8 +128,14 @@ export function SavingsAccountActions({
   const [applyAnnualFeesOpen, setApplyAnnualFeesOpen] = useState(false);
   const [transferFundsOpen, setTransferFundsOpen] = useState(false);
 
-  const showApprove = visibility.approve && permissions.approve;
-  const showActivate = visibility.activate && permissions.activate;
+  const showApprove =
+    visibility.approve &&
+    permissions.approve &&
+    !hasPendingCheckerAction(pendingCheckerActions, 'APPROVE');
+  const showActivate =
+    visibility.activate &&
+    permissions.activate &&
+    !hasPendingCheckerAction(pendingCheckerActions, 'ACTIVATE');
   const showDeposit = visibility.deposit && permissions.deposit;
   const showWithdraw = visibility.withdraw && permissions.withdraw;
 

@@ -35,6 +35,10 @@ import {
   type ClientActionsMenuLink,
   type ClientActionsMenuSheet
 } from '@/lib/clients/client-actions-menu-config';
+import {
+  hasPendingCheckerAction,
+  type ResourcePendingCheckerAction
+} from '@/lib/fineract/resource-pending-checker-display';
 import type {
   ClientActionDialogId,
   ClientActionSheetId
@@ -187,11 +191,13 @@ function MenuEntry({
 export function ClientDetailActionsMenu({
   client,
   hasSignature = false,
-  signatureDocumentId
+  signatureDocumentId,
+  pendingCheckerActions = []
 }: {
   client: Pick<FineractClientDetail, 'id' | 'status' | 'staffId'>;
   hasSignature?: boolean;
   signatureDocumentId?: number;
+  pendingCheckerActions?: ResourcePendingCheckerAction[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -202,7 +208,16 @@ export function ClientDetailActionsMenu({
   const [confirmTarget, setConfirmTarget] = useState<ClientActionsMenuCommand | null>(
     null
   );
-  const menuItems = buildClientActionsMenuItems(client, { hasSignature });
+  const menuItems = buildClientActionsMenuItems(client, { hasSignature }).filter((entry) => {
+    if (
+      hasPendingCheckerAction(pendingCheckerActions, 'ACTIVATE') &&
+      entry.kind === 'sheet' &&
+      entry.id === 'activate'
+    ) {
+      return false;
+    }
+    return true;
+  });
   const clientId = String(client.id);
 
   function refreshClient() {

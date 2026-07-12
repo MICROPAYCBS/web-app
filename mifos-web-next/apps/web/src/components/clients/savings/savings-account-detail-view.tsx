@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractRolePermissionUsage, FineractSavingsAccountDetail } from '@mifos/api-client';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -16,6 +16,7 @@ import {
   DetailPage,
   MoneyValue
 } from '@/components/composites';
+import { ResourcePendingCheckerBanner } from '@/components/composites/resource-pending-checker-banner';
 import {
   SavingsAccountActions,
   type SavingsAccountActionPermissions
@@ -39,6 +40,11 @@ import {
   savingsAccountStatusVariant
 } from '@/lib/fineract/savings-account-display';
 import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
+import type { ResourcePendingWorkflowContext } from '@/lib/fineract/resource-pending-checker';
+import {
+  savingsAccountPendingCheckerScope,
+  type ResourcePendingCheckerAction
+} from '@/lib/fineract/resource-pending-checker-display';
 
 export function SavingsAccountDetailView({
   account,
@@ -54,7 +60,10 @@ export function SavingsAccountDetailView({
     undoTransfer: false,
     modifyTransaction: false,
     viewJournal: false
-  }
+  },
+  pendingCheckerActions = [],
+  pendingApprovalWorkflowContext,
+  makerCheckerTaskPermissions = []
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -65,6 +74,9 @@ export function SavingsAccountDetailView({
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
+  pendingCheckerActions?: ResourcePendingCheckerAction[];
+  pendingApprovalWorkflowContext?: ResourcePendingWorkflowContext;
+  makerCheckerTaskPermissions?: FineractRolePermissionUsage[];
 }) {
   const currency = savingsAccountCurrencyCode(account);
   const blockedMessage = savingsAccountBlockedMessage(account);
@@ -86,6 +98,14 @@ export function SavingsAccountDetailView({
               </div>
             </div>
           ) : null}
+
+          <ResourcePendingCheckerBanner
+            scope={savingsAccountPendingCheckerScope(account.id)}
+            actions={pendingCheckerActions}
+            approvalWorkflowContext={pendingApprovalWorkflowContext}
+            taskPermissions={makerCheckerTaskPermissions}
+            status={account.status}
+          />
 
           <DetailHeader
             backLink={
@@ -130,6 +150,7 @@ export function SavingsAccountDetailView({
                   clientId={clientId}
                   reportOrgName={reportOrgName}
                   permissions={permissions}
+                  pendingCheckerActions={pendingCheckerActions}
                 />
               </AccountDetailActionsBar>
             }

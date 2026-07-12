@@ -18,6 +18,10 @@ import { enumOptionLabel, isClientEntity } from '@/lib/fineract/client-detail-la
 import { formatCustomerClassLabel } from '@/lib/fineract/customer-class-eligibility';
 import { clientDisplayName } from '@/lib/fineract/clients-display';
 import { ageFromFineractDateOfBirth, formatAgeYearsLabel, formatFineractDateArray } from '@/lib/fineract/dates';
+import {
+  hasPendingCheckerAction,
+  type ResourcePendingCheckerAction
+} from '@/lib/fineract/resource-pending-checker-display';
 
 function ClientHeaderDates({
   submittedOn,
@@ -191,6 +195,7 @@ export function ClientDetailTop({
   canDeleteImage,
   hasSignature = false,
   signatureDocumentId,
+  pendingCheckerActions = [],
   summary
 }: {
   client: FineractClientDetail;
@@ -199,6 +204,7 @@ export function ClientDetailTop({
   canDeleteImage: boolean;
   hasSignature?: boolean;
   signatureDocumentId?: number;
+  pendingCheckerActions?: ResourcePendingCheckerAction[];
   summary?: ReactNode;
 }) {
   const name = clientDisplayName(client);
@@ -277,6 +283,7 @@ export function ClientDetailTop({
                 client={client}
                 hasSignature={hasSignature}
                 signatureDocumentId={signatureDocumentId}
+                pendingCheckerActions={pendingCheckerActions}
               />
             }
           />

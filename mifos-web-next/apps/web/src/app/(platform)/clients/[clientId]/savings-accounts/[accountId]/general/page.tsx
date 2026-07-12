@@ -13,6 +13,7 @@ import type { SavingsAccountActionPermissions } from '@/components/clients/savin
 import { DetailBackLink } from '@/components/composites';
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
+import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
 import {
   CLIENT_ACCOUNT_RESERVED_IDS,
   clientGeneralPath
@@ -21,6 +22,11 @@ import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForSavingsAccount } from '@/lib/fineract/audit-trails';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
+import {
+  loadResourcePendingCheckerActions,
+  resolveResourcePendingWorkflowContext
+} from '@/lib/fineract/resource-pending-checker';
+import { savingsAccountPendingCheckerScope } from '@/lib/fineract/resource-pending-checker-display';
 import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
@@ -73,12 +79,10 @@ export default async function SavingsAccountGeneralPage({
 
   const [result, auditResult, reportOrgName] = await Promise.all([
     tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
-    canViewAudits
-      ? tryFineractLoad(
-          () => listAuditTrailsForSavingsAccount(accountId),
-          'Could not load audit trail.'
-        )
-      : Promise.resolve(null),
+    tryFineractLoad(
+      () => listAuditTrailsForSavingsAccount(accountId, { limit: canViewAudits ? 100 : 25 }),
+      'Could not load audit trail.'
+    ),
     loadReportOrganisationName()
   ]);
 
@@ -108,10 +112,27 @@ export default async function SavingsAccountGeneralPage({
     notFound();
   }
 
-  const auditEntries =
+  const auditEntriesForPending =
     auditResult?.ok && auditResult.data ? auditResult.data.pageItems : [];
+  const auditEntries = canViewAudits ? auditEntriesForPending : [];
   const auditTotalRecords =
     auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
+
+  const workflowRuntime = await loadApprovalWorkflowRuntimeContext();
+  const pendingCheckerActions = await loadResourcePendingCheckerActions(
+    savingsAccountPendingCheckerScope(result.data.id),
+    auditEntriesForPending
+  );
+  const pendingApprovalWorkflowContext = await resolveResourcePendingWorkflowContext(
+    pendingCheckerActions,
+    savingsAccountPendingCheckerScope(result.data.id),
+    {
+      status: result.data.status,
+      amount: result.data.summary?.accountBalance,
+      currencyCode: result.data.currency?.code
+    },
+    workflowRuntime
+  );
 
   return (
     <SavingsAccountDetailView
@@ -121,9 +142,12 @@ export default async function SavingsAccountGeneralPage({
       permissions={savingsAccountPermissions(session)}
       canViewAudits={canViewAudits}
       auditEntries={auditEntries}
-      auditLoadFailed={auditResult != null && !auditResult.ok}
+      auditLoadFailed={canViewAudits && auditResult != null && !auditResult.ok}
       auditTotalRecords={auditTotalRecords}
       transactionActionPermissions={savingsTransactionActionPermissions(session)}
+      pendingCheckerActions={pendingCheckerActions}
+      pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}
+      makerCheckerTaskPermissions={workflowRuntime.makerCheckerPermissions}
     />
   );
 }

@@ -21,7 +21,12 @@ import {
 } from '@/lib/fineract/audit-trail-query';
 import { coerceFineractDateTime, FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { filterAuditTrailsForResource } from '@/lib/fineract/resource-pending-checker-filters';
 import { filterAuditTrailsForLoanAccount } from '@/lib/fineract/loan-account-pending-checker-filters';
+import {
+  clientPendingCheckerScope,
+  savingsAccountPendingCheckerScope
+} from '@/lib/fineract/resource-pending-checker-display';
 
 const AUDITS_PATH = '/audits';
 
@@ -209,33 +214,51 @@ export async function listAuditTrailsForSavingsAccount(
   accountId: string | number,
   options?: { limit?: number; offset?: number }
 ): Promise<FineractAuditTrailsPage> {
-  return listAuditTrails({
+  const page = await listAuditTrails({
     offset: options?.offset ?? 0,
     limit: options?.limit ?? 100,
     orderBy: 'id',
     sortOrder: 'desc',
     entityName: SAVINGS_ACCOUNT_AUDIT_ENTITY,
     savingsAccountId: String(accountId),
+    resourceId: String(accountId),
     includeJson: true,
     dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE
   });
+  const pageItems = filterAuditTrailsForResource(
+    page.pageItems,
+    savingsAccountPendingCheckerScope(Number(accountId))
+  );
+  return {
+    pageItems,
+    totalFilteredRecords: pageItems.length
+  };
 }
 
 export async function listAuditTrailsForClient(
   clientId: string | number,
   options?: { limit?: number; offset?: number }
 ): Promise<FineractAuditTrailsPage> {
-  return listAuditTrails({
+  const page = await listAuditTrails({
     offset: options?.offset ?? 0,
     limit: options?.limit ?? 100,
     orderBy: 'id',
     sortOrder: 'desc',
     clientId: String(clientId),
+    resourceId: String(clientId),
     includeJson: true,
     dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE
   });
+  const pageItems = filterAuditTrailsForResource(
+    page.pageItems,
+    clientPendingCheckerScope(Number(clientId))
+  );
+  return {
+    pageItems,
+    totalFilteredRecords: pageItems.length
+  };
 }
 
 /** Fineract audit entity for loan account commands (including transactions). */
