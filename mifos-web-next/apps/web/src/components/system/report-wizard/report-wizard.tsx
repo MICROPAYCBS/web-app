@@ -31,6 +31,7 @@ import { ReportQueryStep } from './steps/query-step';
 import type { ReportWizardDraft, ReportWizardProps, StepErrors } from './types';
 import {
   draftToPayload,
+  reportDraftHasUnsavedChanges,
   stepForField,
   validateCoreReportDraft,
   validateReportDraft,
@@ -39,6 +40,7 @@ import {
 
 const CORE_WIZARD_STEPS: FormWizardStep[] = [
   { id: 'settings', label: 'Settings' },
+  { id: 'query', label: 'Query' },
   { id: 'review', label: 'Review' }
 ];
 
@@ -69,14 +71,33 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const showQueryStep = !coreReport && !isSqlDisabledForReportType(draft.form.reportType);
-  const wizardSteps = useMemo(
-    () => (coreReport ? CORE_WIZARD_STEPS : buildCustomWizardSteps(showQueryStep)),
-    [coreReport, showQueryStep]
-  );
+  const customShowQueryStep =
+    !coreReport && !isSqlDisabledForReportType(draft.form.reportType);
+  const coreShowQueryStep = coreReport && Boolean(draft.form.reportSql?.trim());
+  const wizardSteps = useMemo(() => {
+    if (coreReport) {
+      return coreShowQueryStep
+        ? CORE_WIZARD_STEPS
+        : CORE_WIZARD_STEPS.filter((step) => step.id !== 'query');
+    }
+    return buildCustomWizardSteps(customShowQueryStep);
+  }, [coreReport, coreShowQueryStep, customShowQueryStep]);
 
   const currentIndex = wizardSteps.findIndex((step) => step.id === stepId);
   const isReview = stepId === 'review';
+
+  const hasUnsavedChanges = useMemo(
+    () => reportDraftHasUnsavedChanges(draft, initialDraft, { coreReport }),
+    [draft, initialDraft, coreReport]
+  );
+
+  const canSave = useMemo(() => {
+    if (!hasUnsavedChanges) {
+      return false;
+    }
+    const errors = coreReport ? validateCoreReportDraft(draft) : validateReportDraft(draft);
+    return Object.keys(errors).length === 0;
+  }, [coreReport, draft, hasUnsavedChanges]);
 
   useEffect(() => {
     if (!wizardSteps.some((step) => step.id === stepId)) {
@@ -98,21 +119,31 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
     });
   }, []);
 
+  const validateCurrentStep = useCallback(
+    (id: string) => {
+      if (coreReport && id === 'query') {
+        return {};
+      }
+      return validateReportStep(id, draft);
+    },
+    [coreReport, draft]
+  );
+
   const invalidStepIdsForRail = useMemo(() => {
     return [...validationAttemptedStepIds].filter((id) => {
       if (id === 'review') {
         return false;
       }
-      return Object.keys(validateReportStep(id, draft)).length > 0;
+      return Object.keys(validateCurrentStep(id)).length > 0;
     });
-  }, [validationAttemptedStepIds, draft]);
+  }, [validationAttemptedStepIds, validateCurrentStep]);
 
   const stepErrors = useMemo((): StepErrors => {
     if (isReview || !validationAttemptedStepIds.has(stepId)) {
       return {};
     }
-    return validateReportStep(stepId, draft);
-  }, [validationAttemptedStepIds, stepId, draft, isReview]);
+    return validateCurrentStep(stepId);
+  }, [validationAttemptedStepIds, stepId, validateCurrentStep, isReview]);
 
   const goNext = useCallback(() => {
     const next = wizardSteps[currentIndex + 1];
@@ -132,13 +163,13 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
     if (isReview) {
       return;
     }
-    const errors = validateReportStep(stepId, draft);
+    const errors = validateCurrentStep(stepId);
     if (Object.keys(errors).length > 0) {
       markValidationAttempted(stepId);
       return;
     }
     goNext();
-  }, [isReview, stepId, draft, goNext, markValidationAttempted]);
+  }, [isReview, stepId, draft, goNext, markValidationAttempted, validateCurrentStep]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -154,7 +185,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
 
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = wizardSteps[i].id;
-        const errors = validateReportStep(stepToValidate, draft);
+        const errors = validateCurrentStep(stepToValidate);
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
           setStepId(stepToValidate);
@@ -164,7 +195,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
 
       setStepId(targetStepId);
     },
-    [wizardSteps, currentIndex, draft, markValidationAttempted]
+    [wizardSteps, currentIndex, draft, markValidationAttempted, validateCurrentStep]
   );
 
   function patchForm(patch: Partial<UpsertReportFormInput>) {
@@ -194,15 +225,18 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
 
   function handleSubmit() {
     setSubmitError(null);
+    if (!hasUnsavedChanges) {
+      return;
+    }
     const errors = coreReport ? validateCoreReportDraft(draft) : validateReportDraft(draft);
     if (Object.keys(errors).length > 0) {
       const firstKey = Object.keys(errors)[0];
       if (firstKey && !coreReport) {
-        setStepId(stepForField(firstKey, showQueryStep));
+        setStepId(stepForField(firstKey, customShowQueryStep));
       } else if (coreReport) {
         setStepId('settings');
       }
-      markValidationAttempted(stepForField(firstKey ?? 'review', showQueryStep));
+      markValidationAttempted(stepForField(firstKey ?? 'review', customShowQueryStep));
       setSubmitError('Please fix the highlighted fields.');
       return;
     }
@@ -229,7 +263,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
 
   const title = mode === 'create' ? 'Create report' : `Edit ${report?.reportName ?? 'report'}`;
   const description = coreReport
-    ? 'Core reports only allow updating the user menu flag and description.'
+    ? 'Update menu visibility and description. Report SQL is shown read-only when available.'
     : mode === 'create'
       ? 'Define report parameters, query, and menu visibility.'
       : 'Update report parameters, query, and visibility.';
@@ -266,6 +300,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
               isReview ? (mode === 'create' ? 'Create report' : 'Save changes') : 'Next'
             }
             onPrimary={isReview ? handleSubmit : tryNext}
+            primaryDisabled={isReview && !canSave}
             primaryLoading={isReview && pending}
             primaryLoadingLabel={mode === 'create' ? 'Creating…' : 'Saving…'}
           />
@@ -279,9 +314,12 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
           />
         ) : null}
 
+        {stepId === 'query' && (coreReport ? coreShowQueryStep : customShowQueryStep) ? (
+          <ReportQueryStep {...stepProps} readOnly={coreReport} />
+        ) : null}
+
         {!coreReport && stepId === 'details' ? <ReportDetailsStep {...stepProps} /> : null}
         {!coreReport && stepId === 'parameters' ? <ReportParametersStep {...stepProps} /> : null}
-        {!coreReport && stepId === 'query' && showQueryStep ? <ReportQueryStep {...stepProps} /> : null}
 
         {isReview ? (
           <ReportPreviewStep
@@ -289,6 +327,8 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
             submitError={submitError}
             mode={mode}
             coreReport={coreReport}
+            saveDisabled={!canSave}
+            hasUnsavedChanges={hasUnsavedChanges}
           />
         ) : null}
       </FormWizard>

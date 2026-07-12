@@ -8,32 +8,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { TextField } from '@/components/composites/text-field';
+import { ReportSqlField } from '@/components/system/report-wizard/report-sql-field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ReportStepProps } from '../types';
 
-export function ReportQueryStep({ draft, errors, disabled, onFormChange }: ReportStepProps) {
+export function ReportQueryStep({
+  draft,
+  errors,
+  disabled,
+  onFormChange,
+  readOnly = false
+}: ReportStepProps & { readOnly?: boolean }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Query configuration</CardTitle>
         <CardDescription>
-          SQL executed when the report runs. Reference parameters with their catalog placeholder,
-          for example <code className="text-xs">${'{officeId}'}</code>.
+          {readOnly
+            ? 'SQL executed when the report runs. Core reports cannot be edited here.'
+            : (
+                <>
+                  SQL executed when the report runs. Reference parameters with their catalog
+                  placeholder, for example <code className="text-xs">${'{officeId}'}</code>.
+                </>
+              )}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <TextField
-          label="Report SQL"
-          required
-          multiline
-          rows={14}
+        <ReportSqlField
           value={draft.form.reportSql ?? ''}
-          onChange={(value) => onFormChange({ reportSql: value })}
+          onChange={readOnly ? undefined : (value) => onFormChange({ reportSql: value })}
+          readOnly={readOnly}
           disabled={disabled}
           error={errors.reportSql}
-          placeholder="SELECT … FROM … WHERE …"
-          className="font-mono text-xs"
         />
       </CardContent>
     </Card>

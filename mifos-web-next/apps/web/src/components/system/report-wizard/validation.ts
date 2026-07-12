@@ -34,6 +34,59 @@ export function draftToPayload(draft: ReportWizardDraft): UpsertReportFormInput 
   };
 }
 
+function normalizeReportParameters(parameters: ReportParameterRow[]) {
+  return parameters
+    .filter((parameter) => parameter.parameterId > 0)
+    .map((parameter) => ({
+      id: parameter.id ?? undefined,
+      parameterId: parameter.parameterId,
+      reportParameterName: parameter.reportParameterName?.trim() || undefined
+    }))
+    .sort((left, right) => left.parameterId - right.parameterId);
+}
+
+function normalizeCoreReportDraftForm(form: UpsertReportFormInput) {
+  return {
+    useReport: form.useReport ?? false,
+    description: form.description?.trim() ?? ''
+  };
+}
+
+function normalizeCustomReportDraftForm(form: UpsertReportFormInput) {
+  return {
+    reportName: form.reportName.trim(),
+    reportType: form.reportType,
+    reportSubType: form.reportSubType?.trim() ?? '',
+    reportCategory: form.reportCategory ?? '',
+    description: form.description?.trim() ?? '',
+    useReport: form.useReport ?? false,
+    reportSql: form.reportSql?.trim() ?? ''
+  };
+}
+
+export function reportDraftHasUnsavedChanges(
+  current: ReportWizardDraft,
+  baseline: ReportWizardDraft,
+  options: { coreReport: boolean }
+): boolean {
+  if (options.coreReport) {
+    return (
+      JSON.stringify(normalizeCoreReportDraftForm(current.form)) !==
+      JSON.stringify(normalizeCoreReportDraftForm(baseline.form))
+    );
+  }
+
+  const currentSnapshot = {
+    ...normalizeCustomReportDraftForm(current.form),
+    reportParameters: normalizeReportParameters(current.parameters)
+  };
+  const baselineSnapshot = {
+    ...normalizeCustomReportDraftForm(baseline.form),
+    reportParameters: normalizeReportParameters(baseline.parameters)
+  };
+  return JSON.stringify(currentSnapshot) !== JSON.stringify(baselineSnapshot);
+}
+
 function errorsForFields(
   parsed: ReturnType<typeof validateUpsertReportForm>,
   fields: readonly string[]

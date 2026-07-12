@@ -25,22 +25,40 @@ export function ReportPreviewStep({
   draft,
   submitError,
   mode,
-  coreReport = false
+  coreReport = false,
+  saveDisabled = false,
+  hasUnsavedChanges = true
 }: {
   draft: ReportStepProps['draft'];
   submitError: string | null;
   mode: 'create' | 'edit';
   coreReport?: boolean;
+  saveDisabled?: boolean;
+  hasUnsavedChanges?: boolean;
 }) {
   const { form, parameters } = draft;
   const configuredParameters = parameters.filter((parameter) => parameter.parameterId > 0);
-  const showSql = !coreReport && !isSqlDisabledForReportType(form.reportType);
+  const showSql =
+    Boolean(form.reportSql?.trim()) ||
+    (!coreReport && !isSqlDisabledForReportType(form.reportType));
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         Review the report before {mode === 'create' ? 'creating' : 'saving'}.
       </p>
+
+      {mode === 'edit' && !hasUnsavedChanges ? (
+        <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          No changes to save. Update a field to enable save.
+        </p>
+      ) : null}
+
+      {saveDisabled && hasUnsavedChanges ? (
+        <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          Fix validation issues on earlier steps before saving.
+        </p>
+      ) : null}
 
       {submitError ? (
         <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -91,6 +109,9 @@ export function ReportPreviewStep({
 
       {showSql ? (
         <DetailSection title="Query">
+          {coreReport ? (
+            <p className="mb-3 text-xs text-muted-foreground">Read-only for core reports.</p>
+          ) : null}
           <pre className="max-h-64 overflow-auto rounded-md border border-border bg-muted/40 p-4 font-mono text-xs whitespace-pre-wrap">
             {form.reportSql?.trim() || '—'}
           </pre>
