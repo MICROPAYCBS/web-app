@@ -9,10 +9,11 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
-import { Can } from '@mifos/auth';
+import { useSession } from '@mifos/auth';
 
-import { Menu } from 'lucide-react';
+import { CheckCircle, Menu, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toastCommandOutcome, toastActionError } from '@/lib/command-outcome-toast';
@@ -35,14 +36,13 @@ import {
   type ClientActionsMenuLink,
   type ClientActionsMenuSheet
 } from '@/lib/clients/client-actions-menu-config';
-import {
-  hasPendingCheckerAction,
-  type ResourcePendingCheckerAction
-} from '@/lib/fineract/resource-pending-checker-display';
+import { filterClientActionsMenuItems, collapseMenuSeparators } from '@/lib/clients/filter-client-actions-menu';
 import type {
   ClientActionDialogId,
   ClientActionSheetId
 } from '@/lib/clients/client-action-types';
+import type { ResourcePendingCheckerAction } from '@/lib/fineract/resource-pending-checker-display';
+import { clientStatusKind } from '@/lib/fineract/client-status';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -68,30 +68,22 @@ function MenuEditPanelItem({
   onOpen: () => void;
 }) {
   const Icon = item.icon;
-  const entry = (
+  return (
     <DropdownMenuItem onClick={onOpen}>
       <Icon className="size-4" aria-hidden />
       {item.label}
     </DropdownMenuItem>
   );
-  if (!item.permission) {
-    return entry;
-  }
-  return <Can permission={item.permission}>{entry}</Can>;
 }
 
 function MenuLinkItem({ item }: { item: ClientActionsMenuLink }) {
   const Icon = item.icon;
-  const link = (
+  return (
     <DropdownMenuItem render={<Link href={item.href} />}>
       <Icon className="size-4" aria-hidden />
       {item.label}
     </DropdownMenuItem>
   );
-  if (!item.permission) {
-    return link;
-  }
-  return <Can permission={item.permission}>{link}</Can>;
 }
 
 function MenuSheetItem({
@@ -102,16 +94,12 @@ function MenuSheetItem({
   onSelect: (sheetId: ClientActionSheetId) => void;
 }) {
   const Icon = item.icon;
-  const entry = (
+  return (
     <DropdownMenuItem onClick={() => onSelect(item.sheetId)}>
       <Icon className="size-4" aria-hidden />
       {item.label}
     </DropdownMenuItem>
   );
-  if (!item.permission) {
-    return entry;
-  }
-  return <Can permission={item.permission}>{entry}</Can>;
 }
 
 function MenuDialogItem({
@@ -122,16 +110,12 @@ function MenuDialogItem({
   onSelect: (dialogId: ClientActionDialogId) => void;
 }) {
   const Icon = item.icon;
-  const entry = (
+  return (
     <DropdownMenuItem onClick={() => onSelect(item.dialogId)}>
       <Icon className="size-4" aria-hidden />
       {item.label}
     </DropdownMenuItem>
   );
-  if (!item.permission) {
-    return entry;
-  }
-  return <Can permission={item.permission}>{entry}</Can>;
 }
 
 function MenuCommandItem({
@@ -142,7 +126,7 @@ function MenuCommandItem({
   onSelect: (item: ClientActionsMenuCommand) => void;
 }) {
   const Icon = item.icon;
-  const entry = (
+  return (
     <DropdownMenuItem
       variant={item.destructive ? 'destructive' : 'default'}
       onClick={() => onSelect(item)}
@@ -151,10 +135,6 @@ function MenuCommandItem({
       {item.label}
     </DropdownMenuItem>
   );
-  if (!item.permission) {
-    return entry;
-  }
-  return <Can permission={item.permission}>{entry}</Can>;
 }
 
 function MenuEntry({
@@ -202,22 +182,41 @@ export function ClientDetailActionsMenu({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user, rbacEnabled } = useSession();
   const [pending, startTransition] = useTransition();
   const [activeSheet, setActiveSheet] = useState<ClientActionSheetId | null>(null);
   const [activeDialog, setActiveDialog] = useState<ClientActionDialogId | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<ClientActionsMenuCommand | null>(
     null
   );
-  const menuItems = buildClientActionsMenuItems(client, { hasSignature }).filter((entry) => {
-    if (
-      hasPendingCheckerAction(pendingCheckerActions, 'ACTIVATE') &&
-      entry.kind === 'sheet' &&
-      entry.id === 'activate'
-    ) {
-      return false;
+
+  const status = clientStatusKind(client);
+
+  const visibleItems = useMemo(
+    () =>
+      filterClientActionsMenuItems(buildClientActionsMenuItems(client, { hasSignature }), {
+        user,
+        rbacEnabled,
+        pendingCheckerActions
+      }),
+    [client, hasSignature, pendingCheckerActions, rbacEnabled, user]
+  );
+
+  const showPrimaryActivateButton =
+    status === 'pending' &&
+    visibleItems.some((entry) => entry.kind === 'sheet' && entry.sheetId === 'activate');
+
+  const menuItems = useMemo(() => {
+    if (!showPrimaryActivateButton) {
+      return visibleItems;
     }
-    return true;
-  });
+    return collapseMenuSeparators(
+      visibleItems.filter((entry) => !(entry.kind === 'sheet' && entry.sheetId === 'activate'))
+    );
+  }, [showPrimaryActivateButton, visibleItems]);
+
+  const hasMenu = menuItems.length > 0;
+
   const clientId = String(client.id);
 
   function refreshClient() {
@@ -256,30 +255,70 @@ export function ClientDetailActionsMenu({
     runCommand(target);
   }
 
+  if (!showPrimaryActivateButton && !hasMenu) {
+    return null;
+  }
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button type="button" variant="outline" disabled={pending} aria-label="Customer actions">
-              <Menu className="size-4" aria-hidden />
-              Actions
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-56">
-          {menuItems.map((entry) => (
-            <MenuEntry
-              key={entry.id}
-              entry={entry}
-              onEditOpen={openEditPanel}
-              onSheetSelect={setActiveSheet}
-              onDialogSelect={setActiveDialog}
-              onCommandSelect={setConfirmTarget}
-            />
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {showPrimaryActivateButton ? (
+          <Button
+            type="button"
+            size="sm"
+            disabled={pending}
+            onClick={() => setActiveSheet('activate')}
+          >
+            <CheckCircle className="size-4" aria-hidden />
+            Activate
+          </Button>
+        ) : null}
+        {hasMenu ? (
+          <DropdownMenu>
+            {showPrimaryActivateButton ? (
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    disabled={pending}
+                    aria-label="More customer actions"
+                  />
+                }
+              >
+                <MoreHorizontal className="size-4" aria-hidden />
+              </DropdownMenuTrigger>
+            ) : (
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={pending}
+                    aria-label="Customer actions"
+                  />
+                }
+              >
+                <Menu className="size-4" aria-hidden />
+                Actions
+              </DropdownMenuTrigger>
+            )}
+            <DropdownMenuContent align="end" className="w-56">
+              {menuItems.map((entry) => (
+                <MenuEntry
+                  key={entry.id}
+                  entry={entry}
+                  onEditOpen={openEditPanel}
+                  onSheetSelect={setActiveSheet}
+                  onDialogSelect={setActiveDialog}
+                  onCommandSelect={setConfirmTarget}
+                />
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+      </div>
 
       <ClientActionSheet
         clientId={clientId}
