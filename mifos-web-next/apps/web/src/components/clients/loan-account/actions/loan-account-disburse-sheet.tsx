@@ -20,8 +20,9 @@ import { MoneyField } from '@/components/composites/money-field';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { useInitialTransactionDate, useBusinessDate } from '@/components/platform/business-date-provider';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { resolveLoanDisbursementDefaultDate } from '@/lib/fineract/business-date-context';
 import {
   LOAN_DISBURSE_COMMAND_TOAST,
   LOAN_DISBURSE_TO_SAVINGS_COMMAND_TOAST
@@ -66,6 +67,7 @@ export function LoanAccountDisburseSheet({
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const initialTransactionDate = useInitialTransactionDate();
+  const businessDate = useBusinessDate();
   const [actualDisbursementDate, setActualDisbursementDate] = useState(initialTransactionDate);
   const [transactionAmount, setTransactionAmount] = useState('');
   const [paymentTypeId, setPaymentTypeId] = useState('');
@@ -105,12 +107,17 @@ export function LoanAccountDisburseSheet({
       if (result.amount != null) {
         setTransactionAmount(String(result.amount));
       }
-      setActualDisbursementDate(result.transactionDate ?? initialTransactionDate);
+      setActualDisbursementDate(
+        resolveLoanDisbursementDefaultDate(
+          businessDate,
+          result.approvedOnDate ?? initialTransactionDate
+        )
+      );
     });
     return () => {
       cancelled = true;
     };
-  }, [accountId, command, initialTransactionDate, open]);
+  }, [accountId, businessDate, command, initialTransactionDate, open]);
 
   if (!command) {
     return null;

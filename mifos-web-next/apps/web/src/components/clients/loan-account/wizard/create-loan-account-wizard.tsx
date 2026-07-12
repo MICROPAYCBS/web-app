@@ -809,11 +809,13 @@ export function LoanAccountWizard({
 export function CreateLoanAccountWizard({
   clientId,
   clientDisplayName,
-  initialTemplate
+  initialTemplate,
+  initialDraft
 }: {
   clientId: string;
   clientDisplayName?: string;
   initialTemplate: ClientLoanAccountTemplate;
+  initialDraft?: LoanAccountDraft;
 }) {
   return (
     <LoanAccountWizard
@@ -821,6 +823,7 @@ export function CreateLoanAccountWizard({
       clientId={clientId}
       clientDisplayName={clientDisplayName}
       initialTemplate={initialTemplate}
+      initialDraft={initialDraft}
     />
   );
 }

@@ -43,9 +43,9 @@ export type LoanAccountDraft = CreateLoanAccountInput;
 
 
 
-export function emptyLoanAccountDraft(): LoanAccountDraft {
+export function emptyLoanAccountDraft(defaultTransactionDate?: string): LoanAccountDraft {
 
-  const today = toFineractDate();
+  const today = defaultTransactionDate?.trim() || toFineractDate();
 
   return {
 

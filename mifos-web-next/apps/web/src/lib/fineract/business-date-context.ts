@@ -110,3 +110,19 @@ export function resolveTransactionDate(
   }
   return fallback;
 }
+
+/** Loan approval default: organisation business date when configured, otherwise submitted date. */
+export function resolveLoanApprovalDefaultDate(
+  ctx: BusinessDateContextValue,
+  submittedOnDate: string
+): string {
+  return resolveTransactionDate(ctx, submittedOnDate);
+}
+
+/** Loan disbursement default: organisation business date when configured, otherwise approval date. */
+export function resolveLoanDisbursementDefaultDate(
+  ctx: BusinessDateContextValue,
+  approvedOnDate: string
+): string {
+  return resolveTransactionDate(ctx, approvedOnDate);
+}

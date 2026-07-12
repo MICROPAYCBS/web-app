@@ -31,6 +31,8 @@ import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { getClient } from '@/lib/fineract/clients';
 
 import { getClientLoanAccountTemplate } from '@/lib/fineract/client-loan-accounts';
+import { emptyLoanAccountDraft } from '@/lib/fineract/client-loan-account-draft';
+import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
 
 import { platformInset, platformScrollRegion } from '@/lib/platform-layout';
 
@@ -133,6 +135,8 @@ export default async function NewLoanAccountPage({
 
 
 
+  const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
+
   return (
 
     <CreateLoanAccountWizard
@@ -142,6 +146,8 @@ export default async function NewLoanAccountPage({
       clientDisplayName={clientDisplayName}
 
       initialTemplate={template}
+
+      initialDraft={emptyLoanAccountDraft(defaultTransactionDate)}
 
     />
 

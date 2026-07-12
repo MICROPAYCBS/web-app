@@ -27,7 +27,7 @@ import {
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { buildFineractCommandBody, buildFineractNoteCommandBody } from '@/lib/fineract/client-command-body';
-import { normalizeFineractDateField, parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
+import { normalizeFineractDateField, parseFineractDateString, toFineractDate, fineractApiDateToFormString } from '@/lib/fineract/dates';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import type { LoanAccountActionResult } from '@/lib/fineract/loan-account-action-result';
 import {
@@ -47,6 +47,7 @@ import {
   getLoanAccountApprovalTemplate,
   getLoanAccountTransactionTemplate
 } from '@/lib/fineract/loan-account-commands';
+import { getLoanAccount } from '@/lib/fineract/loan-accounts';
 import { loadCashierAwarePaymentTypeOptions } from '@/lib/fineract/cashier-cash-transaction-guard';
 import { chargeExpectsDueDate } from '@/lib/fineract/loan-application-charges';
 import { getServerSession } from '@/lib/session/server';
@@ -161,6 +162,7 @@ export async function loadLoanAccountDisburseSheetDataAction(
       ok: true;
       amount?: number;
       transactionDate?: string;
+      approvedOnDate?: string;
       paymentTypeOptions: Awaited<ReturnType<typeof loadCashierAwarePaymentTypeOptions>>;
     }
   | Extract<LoanAccountActionResult, { ok: false }>
@@ -175,10 +177,13 @@ export async function loadLoanAccountDisburseSheetDataAction(
   }
 
   try {
-    const template = await getLoanAccountTransactionTemplate(
-      accountId,
-      command === 'disburse' ? 'disburse' : 'disburseToSavings'
-    );
+    const [template, account] = await Promise.all([
+      getLoanAccountTransactionTemplate(
+        accountId,
+        command === 'disburse' ? 'disburse' : 'disburseToSavings'
+      ),
+      getLoanAccount(accountId)
+    ]);
     const paymentTypeOptions = await loadCashierAwarePaymentTypeOptions(
       template.paymentTypeOptions ?? []
     );
@@ -186,6 +191,7 @@ export async function loadLoanAccountDisburseSheetDataAction(
       ok: true,
       amount: template.amount,
       transactionDate: template.date,
+      approvedOnDate: fineractApiDateToFormString(account?.timeline?.approvedOnDate),
       paymentTypeOptions
     };
   } catch (error) {

@@ -20,8 +20,9 @@ import { MoneyField } from '@/components/composites/money-field';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { TextField } from '@/components/composites/text-field';
 import { DateField } from '@/components/composites/date-field';
-import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { useInitialTransactionDate, useBusinessDate } from '@/components/platform/business-date-provider';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { resolveLoanApprovalDefaultDate } from '@/lib/fineract/business-date-context';
 import { LOAN_APPROVE_COMMAND_TOAST } from '@/lib/fineract/loan-account-command-toasts';
 import { parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
 
@@ -43,6 +44,7 @@ export function LoanAccountApproveSheet({
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const initialTransactionDate = useInitialTransactionDate();
+  const businessDate = useBusinessDate();
   const [approvedOnDate, setApprovedOnDate] = useState(initialTransactionDate);
   const [expectedDisbursementDate, setExpectedDisbursementDate] = useState('');
   const [approvedLoanAmount, setApprovedLoanAmount] = useState('');
@@ -73,13 +75,18 @@ export function LoanAccountApproveSheet({
       if (result.approvalAmount != null) {
         setApprovedLoanAmount(String(result.approvalAmount));
       }
-      setApprovedOnDate(result.submittedOnDate ?? initialTransactionDate);
+      setApprovedOnDate(
+        resolveLoanApprovalDefaultDate(
+          businessDate,
+          result.submittedOnDate ?? initialTransactionDate
+        )
+      );
       setExpectedDisbursementDate(result.expectedDisbursementDate ?? '');
     });
     return () => {
       cancelled = true;
     };
-  }, [accountId, initialTransactionDate, open]);
+  }, [accountId, businessDate, initialTransactionDate, open]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();

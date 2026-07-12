@@ -12,6 +12,8 @@ import {
   hasConfiguredBusinessDate,
   isTransactionDateBackdated,
   isTransactionDateLocked,
+  resolveLoanApprovalDefaultDate,
+  resolveLoanDisbursementDefaultDate,
   resolveTransactionDate
 } from './business-date-context';
 
@@ -50,5 +52,43 @@ describe('resolveTransactionDate', () => {
 
   it('falls back when no business date is set', () => {
     assert.equal(resolveTransactionDate({ enabled: true }, '9 July 2026'), '9 July 2026');
+  });
+});
+
+describe('resolveLoanApprovalDefaultDate', () => {
+  it('prefers business date over submitted date', () => {
+    assert.equal(
+      resolveLoanApprovalDefaultDate(
+        { enabled: true, date: '10 July 2026' },
+        '5 July 2026'
+      ),
+      '10 July 2026'
+    );
+  });
+
+  it('uses submitted date when business date is not configured', () => {
+    assert.equal(
+      resolveLoanApprovalDefaultDate({ enabled: true }, '5 July 2026'),
+      '5 July 2026'
+    );
+  });
+});
+
+describe('resolveLoanDisbursementDefaultDate', () => {
+  it('prefers business date over approval date', () => {
+    assert.equal(
+      resolveLoanDisbursementDefaultDate(
+        { enabled: true, date: '10 July 2026' },
+        '8 July 2026'
+      ),
+      '10 July 2026'
+    );
+  });
+
+  it('uses approval date when business date is not configured', () => {
+    assert.equal(
+      resolveLoanDisbursementDefaultDate({ enabled: true }, '8 July 2026'),
+      '8 July 2026'
+    );
   });
 });
