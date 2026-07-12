@@ -14,6 +14,56 @@
       "UPDATE_CLIENT"
     ]
   },
+  "clients.activate": {
+    "any": [
+      "ACTIVATE_CLIENT"
+    ]
+  },
+  "clients.close": {
+    "any": [
+      "CLOSE_CLIENT"
+    ]
+  },
+  "clients.withdraw": {
+    "any": [
+      "WITHDRAW_CLIENT"
+    ]
+  },
+  "clients.reject": {
+    "any": [
+      "REJECT_CLIENT"
+    ]
+  },
+  "clients.reactivate": {
+    "any": [
+      "REACTIVATE_CLIENT"
+    ]
+  },
+  "clients.undoRejection": {
+    "any": [
+      "UNDOREJECT_CLIENT"
+    ]
+  },
+  "clients.proposeTransfer": {
+    "any": [
+      "PROPOSETRANSFER_CLIENT"
+    ]
+  },
+  "clients.acceptTransfer": {
+    "any": [
+      "ACCEPTTRANSFER_CLIENT"
+    ]
+  },
+  "clients.rejectTransfer": {
+    "any": [
+      "REJECTTRANSFER_CLIENT"
+    ]
+  },
+  "clients.withdrawTransfer": {
+    "any": [
+      "WITHDRAWTRANSFER_CLIENT"
+    ]
+  },
   "clients.compliance-profile": {
     "any": [
       "READ_COMPLIANCEPROFILE"

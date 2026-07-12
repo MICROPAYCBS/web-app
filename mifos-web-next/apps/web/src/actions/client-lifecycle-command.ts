@@ -26,6 +26,7 @@ import {
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import type { ClientActionSheetId } from '@/lib/clients/client-action-types';
+import { clientLifecyclePermissionKey } from '@/lib/clients/client-action-permissions';
 import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
 import { executeClientCommand } from '@/lib/fineract/client-commands';
 import { getCustomerClassActivationIssuesForClient } from '@/lib/fineract/customer-class-activation-context';
@@ -34,15 +35,22 @@ import { getClient } from '@/lib/fineract/clients';
 import { getServerSession } from '@/lib/session/server';
 import type { ClientCommandActionResult } from '@/actions/client-command';
 
-async function requireClientUpdate(): Promise<ClientCommandActionResult | null> {
+async function requireClientLifecyclePermission(
+  sheetId: ClientActionSheetId
+): Promise<ClientCommandActionResult | null> {
+  const permissionKey = clientLifecyclePermissionKey(sheetId);
+  if (!permissionKey) {
+    return null;
+  }
+
   const session = await getServerSession();
   if (!session) {
     return { ok: false, message: 'You must be signed in.' };
   }
   try {
-    assertCan(session, resolvePermission('clients.update'));
+    assertCan(session, resolvePermission(permissionKey));
   } catch {
-    return { ok: false, message: 'You do not have permission to update customers.' };
+    return { ok: false, message: 'You do not have permission to perform this action.' };
   }
   return null;
 }
@@ -82,9 +90,11 @@ export async function executeClientActionCommand(
   sheetId: ClientActionSheetId,
   raw: unknown
 ): Promise<ClientCommandActionResult> {
-  const denied = await requireClientUpdate();
-  if (denied) {
-    return denied;
+  if (clientLifecyclePermissionKey(sheetId)) {
+    const denied = await requireClientLifecyclePermission(sheetId);
+    if (denied) {
+      return denied;
+    }
   }
 
   try {

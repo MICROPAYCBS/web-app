@@ -8,6 +8,7 @@
 
 import type { FineractClientDetail } from '@mifos/api-client';
 import type { PermissionInput, PermissionRule } from '@mifos/auth';
+import { resolvePermission } from '@mifos/auth';
 import {
   ArrowRightLeft,
   Ban,
@@ -30,6 +31,7 @@ import type {
   ClientActionDialogId,
   ClientActionSheetId
 } from '@/lib/clients/client-action-types';
+import { clientLifecyclePermissionKey } from '@/lib/clients/client-action-permissions';
 import { clientStatusKind, isClientUnderTransfer } from '@/lib/fineract/client-status';
 
 export type ClientActionsMenuLink = {
@@ -116,6 +118,20 @@ function separator(id: string): ClientActionsMenuSeparator {
   return { kind: 'separator', id };
 }
 
+function lifecycleSheet(
+  id: ClientActionSheetId,
+  label: string,
+  icon: LucideIcon
+): ClientActionsMenuSheet {
+  const permissionKey = clientLifecyclePermissionKey(id);
+  return sheetAction(
+    id,
+    label,
+    icon,
+    permissionKey ? resolvePermission(permissionKey) : undefined
+  );
+}
+
 export function buildClientActionsMenuItems(
   client: Pick<FineractClientDetail, 'id' | 'status' | 'staffId'>,
   options?: { hasSignature?: boolean }
@@ -137,18 +153,18 @@ export function buildClientActionsMenuItems(
   const underTransfer = isClientUnderTransfer(status);
 
   const lifecycle: (ClientActionsMenuSheet | ClientActionsMenuCommand)[] = [
-    sheetAction('close', 'Close', XCircle)
+    lifecycleSheet('close', 'Close', XCircle)
   ];
 
   if (!underTransfer) {
-    lifecycle.push(sheetAction('transfer', 'Transfer customer', ArrowRightLeft));
+    lifecycle.push(lifecycleSheet('transfer', 'Transfer customer', ArrowRightLeft));
   }
 
   if (status === 'pending') {
     lifecycle.push(
-      sheetAction('activate', 'Activate', CheckCircle),
-      sheetAction('withdraw', 'Withdraw', Undo2),
-      sheetAction('reject', 'Reject', Ban),
+      lifecycleSheet('activate', 'Activate', CheckCircle),
+      lifecycleSheet('withdraw', 'Withdraw', Undo2),
+      lifecycleSheet('reject', 'Reject', Ban),
       {
         kind: 'command',
         id: 'delete',
@@ -166,23 +182,23 @@ export function buildClientActionsMenuItems(
   }
 
   if (status === 'closed') {
-    lifecycle.push(sheetAction('reactivate', 'Reactivate', RotateCcw));
+    lifecycle.push(lifecycleSheet('reactivate', 'Reactivate', RotateCcw));
   }
 
   if (status === 'rejected') {
-    lifecycle.push(sheetAction('undo-rejection', 'Undo rejection', RotateCcw));
+    lifecycle.push(lifecycleSheet('undo-rejection', 'Undo rejection', RotateCcw));
   }
 
   if (status === 'transferInProgress') {
     lifecycle.push(
-      sheetAction('undo-transfer', 'Undo transfer', Undo2),
-      sheetAction('accept-transfer', 'Accept transfer', Check),
-      sheetAction('reject-transfer', 'Reject transfer', X)
+      lifecycleSheet('undo-transfer', 'Undo transfer', Undo2),
+      lifecycleSheet('accept-transfer', 'Accept transfer', Check),
+      lifecycleSheet('reject-transfer', 'Reject transfer', X)
     );
   }
 
   if (status === 'transferOnHold') {
-    lifecycle.push(sheetAction('undo-transfer', 'Undo transfer', Undo2));
+    lifecycle.push(lifecycleSheet('undo-transfer', 'Undo transfer', Undo2));
   }
 
   if (lifecycle.length > 0) {
