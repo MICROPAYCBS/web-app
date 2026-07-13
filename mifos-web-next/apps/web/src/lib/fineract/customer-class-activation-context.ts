@@ -18,6 +18,8 @@ import { getCustomerClass } from '@/lib/fineract/customer-classes';
 import { normalizeOtherBankAccounts } from '@/lib/fineract/compliance-profile-normalize';
 import {
   getCustomerClassActivationIssues,
+  isCustomerClassAssigned,
+  customerClassMissingActivationIssue,
   type CustomerClassActivationClientState,
   type CustomerClassActivationIssue
 } from '@/lib/fineract/customer-class-eligibility';
@@ -111,6 +113,10 @@ export async function getCustomerClassActivationIssuesForClient(
   clientId: string | number
 ): Promise<CustomerClassActivationIssue[]> {
   const client = await getClient(clientId);
+  if (!isCustomerClassAssigned(client)) {
+    return [customerClassMissingActivationIssue()];
+  }
+
   const [customerClass, identifiers, signatureInfo, complianceProfile] = await Promise.all([
     resolveCustomerClassForActivation(client),
     getClientIdentifiers(clientId).catch(() => []),

@@ -2,7 +2,10 @@
   "command": "products.loan.create",
   "fineractSources": [
     "org.apache.fineract.portfolio.loanproduct.api.LoanProductsApiResource",
-    "org.apache.fineract.portfolio.loanproduct.serialization.LoanProductDataValidator"
+    "org.apache.fineract.portfolio.loanproduct.serialization.LoanProductDataValidator",
+    "org.apache.fineract.portfolio.common.domain.PeriodFrequencyType",
+    "org.apache.fineract.portfolio.common.domain.DaysInYearType",
+    "org.apache.fineract.portfolio.common.domain.DaysInMonthType"
   ],
   "fields": {
     "name": { "required": true, "maxLength": 100 },
@@ -13,15 +16,15 @@
     "principal": { "required": true, "min": 0 },
     "numberOfRepayments": { "required": true, "min": 1 },
     "repaymentEvery": { "required": true, "min": 1 },
-    "repaymentFrequencyType": { "required": true },
+    "repaymentFrequencyType": { "required": true, "min": 0, "max": 3 },
     "interestRatePerPeriod": { "requiredWhen": "fixedInterest" },
-    "interestRateFrequencyType": { "requiredWhen": "fixedInterest" },
-    "amortizationType": { "required": true },
-    "interestType": { "required": true },
-    "interestCalculationPeriodType": { "required": true },
+    "interestRateFrequencyType": { "requiredWhen": "fixedInterest", "min": 0, "max": 4 },
+    "amortizationType": { "required": true, "min": 0, "max": 1 },
+    "interestType": { "required": true, "min": 0, "max": 1 },
+    "interestCalculationPeriodType": { "required": true, "min": 0, "max": 1 },
     "transactionProcessingStrategyCode": { "required": true },
-    "daysInYearType": { "required": true },
-    "daysInMonthType": { "required": true },
+    "daysInYearType": { "required": true, "allowedValues": [1, 360, 364, 365] },
+    "daysInMonthType": { "required": true, "allowedValues": [1, 30] },
     "loanScheduleType": { "required": true },
     "accountingRule": { "required": true }
   }

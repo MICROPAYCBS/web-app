@@ -43,6 +43,7 @@ import type {
 } from '@/lib/clients/client-action-types';
 import type { ResourcePendingCheckerAction } from '@/lib/fineract/resource-pending-checker-display';
 import { clientStatusKind } from '@/lib/fineract/client-status';
+import { isCustomerClassAssigned } from '@/lib/fineract/customer-class-eligibility';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -174,7 +175,7 @@ export function ClientDetailActionsMenu({
   signatureDocumentId,
   pendingCheckerActions = []
 }: {
-  client: Pick<FineractClientDetail, 'id' | 'status' | 'staffId'>;
+  client: Pick<FineractClientDetail, 'id' | 'status' | 'staffId' | 'customerClassId' | 'customerClass'>;
   hasSignature?: boolean;
   signatureDocumentId?: number;
   pendingCheckerActions?: ResourcePendingCheckerAction[];
@@ -191,15 +192,17 @@ export function ClientDetailActionsMenu({
   );
 
   const status = clientStatusKind(client);
+  const canActivateCustomer = isCustomerClassAssigned(client);
 
   const visibleItems = useMemo(
     () =>
       filterClientActionsMenuItems(buildClientActionsMenuItems(client, { hasSignature }), {
         user,
         rbacEnabled,
-        pendingCheckerActions
+        pendingCheckerActions,
+        excludeSheetIds: canActivateCustomer ? undefined : ['activate']
       }),
-    [client, hasSignature, pendingCheckerActions, rbacEnabled, user]
+    [canActivateCustomer, client, hasSignature, pendingCheckerActions, rbacEnabled, user]
   );
 
   const showPrimaryActivateButton =

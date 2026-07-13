@@ -9,6 +9,7 @@
  */
 
 import { formatActionErrorMessage } from '@mifos/validation';
+import Link from 'next/link';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { executeClientActionCommand } from '@/actions/client-lifecycle-command';
 import { loadClientActionSheetDataAction } from '@/actions/client-action-sheet-data';
@@ -16,7 +17,14 @@ import { TransactionDateField } from '@/components/composites/transaction-date-f
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { buttonVariants } from '@/components/ui/button';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { cn } from '@/lib/utils';
+import {
+  activationBlockerActionHref,
+  activationBlockerActionLabel,
+  humanizeActivationBlockerMessage
+} from '@/lib/clients/client-activation-blockers';
 import type { ClientActionSheetData, ClientActionSheetId } from '@/lib/clients/client-action-types';
 import { CLIENT_ACTION_SHEET_OUTCOME_MESSAGES, CLIENT_ACTION_SHEET_TITLES } from '@/lib/clients/client-actions-menu-config';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
@@ -178,7 +186,6 @@ export function ClientActionSheet({
       return;
     }
     if (sheetId === 'activate' && activationBlockers.length > 0) {
-      setError(activationBlockers.join('\n'));
       return;
     }
     setError(null);
@@ -186,9 +193,17 @@ export function ClientActionSheet({
     startTransition(async () => {
       const result = await executeClientActionCommand(clientId, sheetId, buildPayload());
       if (!result.ok) {
-        setError(formatActionErrorMessage(result.message, result.fieldErrors));
-        if (result.fieldErrors) {
-          setFieldErrors(result.fieldErrors);
+        const fieldErrors = result.fieldErrors
+          ? Object.fromEntries(
+              Object.entries(result.fieldErrors).map(([field, fieldMessage]) => [
+                field,
+                humanizeActivationBlockerMessage(fieldMessage)
+              ])
+            )
+          : undefined;
+        setError(formatActionErrorMessage(result.message, fieldErrors));
+        if (fieldErrors) {
+          setFieldErrors(fieldErrors);
         }
         return;
       }
@@ -240,19 +255,25 @@ export function ClientActionSheet({
 
   const activationBlockers =
     sheetData?.sheetId === 'activate' ? sheetData.activationBlockers : [];
+  const hasActivationBlockers = sheetId === 'activate' && activationBlockers.length > 0;
 
   return (
     <FormSheet
       open={open}
       onOpenChange={handleOpenChange}
       title={title}
+      description={
+        hasActivationBlockers
+          ? 'Complete the missing requirements below, then return to activate this customer.'
+          : undefined
+      }
       formId={formId}
       submitLabel="Confirm"
       submitLoading={pending}
       submitDisabled={
         loading ||
         !sheetId ||
-        (sheetId === 'activate' && activationBlockers.length > 0) ||
+        hasActivationBlockers ||
         (sheetId === 'update-default-savings' && savingsOptions.length === 0) ||
         (sheetId === 'transfer' && officeOptions.length === 0) ||
         (sheetId === 'reassign-staff' && staffOptions.length === 0)
@@ -286,30 +307,47 @@ export function ClientActionSheet({
       >
       {sheetId === 'activate' ? (
         <>
-          {activationBlockers.length > 0 ? (
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              <p className="font-medium">Complete these requirements before activation:</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                {activationBlockers.map((blocker) => (
-                  <li key={blocker}>{blocker}</li>
+          {hasActivationBlockers ? (
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-3 text-sm">
+              <p className="font-medium text-foreground">Before you can activate</p>
+              <ul className="mt-3 space-y-4">
+                {activationBlockers.map((blocker, index) => (
+                  <li key={`${blocker.message}-${index}`} className="space-y-2">
+                    <p className="text-foreground">{blocker.message}</p>
+                    {blocker.hint ? (
+                      <p className="text-muted-foreground">{blocker.hint}</p>
+                    ) : null}
+                    {blocker.action ? (
+                      <Link
+                        href={activationBlockerActionHref(clientId, blocker.action)}
+                        className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
+                        onClick={() => handleOpenChange(false)}
+                      >
+                        {activationBlockerActionLabel(blocker.action)}
+                      </Link>
+                    ) : null}
+                  </li>
                 ))}
               </ul>
             </div>
-          ) : null}
-          <TransactionDateField
-            id={`${formId}-activationDate`}
-            label="Activation date"
-            required
-            value={form.activationDate}
-            onChange={(d) => patchForm({ activationDate: d })}
-            error={fieldErrors.activationDate}
-          />
-          {sheetData?.sheetId === 'activate' && sheetData.savingsProductName ? (
-            <p className="text-sm text-muted-foreground">
-              Savings product on activation:{' '}
-              <span className="text-foreground">{sheetData.savingsProductName}</span>
-            </p>
-          ) : null}
+          ) : (
+            <>
+              <TransactionDateField
+                id={`${formId}-activationDate`}
+                label="Activation date"
+                required
+                value={form.activationDate}
+                onChange={(d) => patchForm({ activationDate: d })}
+                error={fieldErrors.activationDate}
+              />
+              {sheetData?.sheetId === 'activate' && sheetData.savingsProductName ? (
+                <p className="text-sm text-muted-foreground">
+                  Savings product on activation:{' '}
+                  <span className="text-foreground">{sheetData.savingsProductName}</span>
+                </p>
+              ) : null}
+            </>
+          )}
         </>
       ) : null}
 

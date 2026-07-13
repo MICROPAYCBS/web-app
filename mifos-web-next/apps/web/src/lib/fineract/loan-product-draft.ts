@@ -172,7 +172,7 @@ export function loanProductDraftFromTemplate(
       loanScheduleType:
         resolveEnumOptionId(template.loanScheduleType, template.loanScheduleTypeOptions) ??
         enumIdFromOptions(template.loanScheduleTypeOptions) ??
-        0,
+        1,
       loanScheduleProcessingType: resolveEnumOptionId(
         template.loanScheduleProcessingType,
         template.loanScheduleProcessingTypeOptions

@@ -16,6 +16,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   'validation.msg.validation.errors.exist': 'Please correct the validation errors.',
   'validation.msg.client.customerClass.requirements.not.met':
     'This customer does not meet the assigned customer class requirements.',
+  'validation.msg.client.customerClassId.required':
+    'Assign a customer class before you can activate this customer.',
   'validation.msg.client.customerClassId.photo.required':
     'A profile photo is required for the assigned customer class.',
   'validation.msg.client.customerClassId.signature.required':

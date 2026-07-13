@@ -9,6 +9,7 @@
  */
 
 import { toFineractActionError } from '@mifos/validation';
+import { toClientActivationBlocker } from '@/lib/clients/client-activation-blockers';
 import type { ClientActionSheetData, ClientActionSheetId } from '@/lib/clients/client-action-types';
 import {
   getClientCommandTemplate,
@@ -140,7 +141,7 @@ export async function loadClientActionSheetDataAction(
           data: {
             sheetId,
             savingsProductName: template.savingsProductName,
-            activationBlockers: activationIssues.map((issue) => issue.message)
+            activationBlockers: activationIssues.map(toClientActivationBlocker)
           }
         };
       }

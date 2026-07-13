@@ -143,7 +143,7 @@ export function formatCustomerClassEligibilityHint(customerClass: CustomerClass)
 
 /** Display label for a customer's assigned class (prefers class name). */
 export function formatCustomerClassLabel(
-  customerClass?: Pick<CustomerClass, 'classCode' | 'className'> | null
+  customerClass?: Pick<CustomerClass, 'classCode' | 'className' | 'id'> | null
 ): string | undefined {
   if (!customerClass) {
     return undefined;
@@ -151,7 +151,39 @@ export function formatCustomerClassLabel(
   if (customerClass.className?.trim()) {
     return customerClass.className.trim();
   }
-  return customerClass.classCode?.trim() || undefined;
+  if (customerClass.classCode?.trim()) {
+    return customerClass.classCode.trim();
+  }
+  if (customerClass.id != null) {
+    return `Class ${customerClass.id}`;
+  }
+  return undefined;
+}
+
+export function resolveClientCustomerClassId(
+  client: Pick<{ customerClassId?: number; customerClass?: { id?: number } | null }, 'customerClassId' | 'customerClass'>
+): number | undefined {
+  const raw = client.customerClassId ?? client.customerClass?.id;
+  const id = raw != null ? Number(raw) : NaN;
+  return Number.isFinite(id) && id > 0 ? id : undefined;
+}
+
+export function isCustomerClassAssigned(
+  client: Pick<{ customerClassId?: number; customerClass?: { id?: number } | null }, 'customerClassId' | 'customerClass'>
+): boolean {
+  return resolveClientCustomerClassId(client) != null;
+}
+
+export function customerClassMissingActivationIssue(): CustomerClassActivationIssue {
+  return {
+    code: 'validation.msg.client.customerClassId.required',
+    message: translateFineractCode(
+      'validation.msg.client.customerClassId.required',
+      'Assign a customer class before you can activate this customer.'
+    ),
+    hint: 'Open Edit on the customer profile, choose Customer class, save your changes, then return here to activate.',
+    action: 'edit-customer'
+  };
 }
 
 export type CustomerClassActivationClientState = {
@@ -164,9 +196,16 @@ export type CustomerClassActivationClientState = {
   complianceProfile?: ComplianceProfileInput | null;
 };
 
+export type ClientActivationBlockerAction =
+  | 'edit-customer'
+  | 'manage-identifiers'
+  | 'compliance-profile';
+
 export type CustomerClassActivationIssue = {
   code: string;
   message: string;
+  hint?: string;
+  action?: ClientActivationBlockerAction;
 };
 
 function customerClassLabelForMessage(customerClass: CustomerClass): string {

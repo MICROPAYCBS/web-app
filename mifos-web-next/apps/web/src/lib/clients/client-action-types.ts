@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { ClientActivationBlocker } from '@/lib/clients/client-activation-blockers';
+
 export type ClientActionSheetId =
   | 'assign-staff'
   | 'reassign-staff'
@@ -45,6 +47,6 @@ export type ClientActionSheetData =
   | {
       sheetId: 'activate';
       savingsProductName?: string;
-      activationBlockers: string[];
+      activationBlockers: ClientActivationBlocker[];
     }
   | { sheetId: 'reactivate' | 'undo-rejection' };

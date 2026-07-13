@@ -10,7 +10,9 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { LEGAL_FORM_PERSON } from '@mifos/validation';
 import {
+  customerClassMissingActivationIssue,
   getCustomerClassActivationIssues,
+  isCustomerClassAssigned,
   type CustomerClassActivationClientState
 } from './customer-class-eligibility';
 
@@ -34,6 +36,36 @@ const completeClient: CustomerClassActivationClientState = {
     dpfAlternativeBankName: 'Not applicable'
   }
 };
+
+describe('isCustomerClassAssigned', () => {
+  it('returns false when no class id is present', () => {
+    assert.equal(isCustomerClassAssigned({}), false);
+  });
+
+  it('returns true when customerClassId is set', () => {
+    assert.equal(isCustomerClassAssigned({ customerClassId: 3 }), true);
+  });
+
+  it('returns true when customerClassId is a numeric string', () => {
+    assert.equal(isCustomerClassAssigned({ customerClassId: '3' as unknown as number }), true);
+  });
+
+  it('returns true when nested customerClass id is a numeric string', () => {
+    assert.equal(
+      isCustomerClassAssigned({ customerClass: { id: '3' as unknown as number } }),
+      true
+    );
+  });
+});
+
+describe('customerClassMissingActivationIssue', () => {
+  it('describes the missing class requirement with next steps', () => {
+    const issue = customerClassMissingActivationIssue();
+    assert.match(issue.message, /customer class/i);
+    assert.match(issue.hint ?? '', /edit/i);
+    assert.equal(issue.action, 'edit-customer');
+  });
+});
 
 describe('getCustomerClassActivationIssues', () => {
   it('returns no issues when class has no enforcement rules', () => {

@@ -20,7 +20,7 @@ import {
 } from '@/lib/fineract/client-detail-labels';
 import type { ClientFinancialSummary } from '@/lib/fineract/client-financial-summary';
 import { formatFineractDateArray } from '@/lib/fineract/dates';
-import { formatCustomerClassLabel } from '@/lib/fineract/customer-class-eligibility';
+import { formatCustomerClassLabel, isCustomerClassAssigned } from '@/lib/fineract/customer-class-eligibility';
 import { normalizeOtherBankAccounts } from '@/lib/fineract/compliance-profile-normalize';
 
 function ClientInformationSection({ client }: { client: FineractClientDetail }) {
@@ -137,9 +137,11 @@ function ClientInformationSection({ client }: { client: FineractClientDetail }) 
         <DetailField label="Customer type">
           <TextValue value={enumOptionLabel(client.clientType)} />
         </DetailField>
-        <DetailField label="Customer class">
-          <TextValue value={formatCustomerClassLabel(client.customerClass) ?? 'Not assigned'} />
-        </DetailField>
+        {isCustomerClassAssigned(client) ? (
+          <DetailField label="Customer class">
+            <TextValue value={formatCustomerClassLabel(client.customerClass)} />
+          </DetailField>
+        ) : null}
       </DetailFieldGrid>
     </DetailSection>
   );

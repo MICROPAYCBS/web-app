@@ -14,7 +14,8 @@ import {
   loanProductDetailsStepSchema,
   loanProductMappingsStepSchema,
   loanProductSettingsStepSchema,
-  loanProductTermsStepSchema
+  loanProductTermsStepSchema,
+  upsertLoanProductSchema
 } from '@mifos/validation';
 import type { ZodTypeAny } from 'zod';
 import type { StepErrors } from './types';
@@ -74,7 +75,18 @@ function flattenZodErrors(stepId: string, issues: { path: PropertyKey[]; message
 
 export function validateLoanProductStep(stepId: string, draft: UpsertLoanProductInput): StepErrors {
   if (stepId === 'preview') {
-    return {};
+    const result = upsertLoanProductSchema.safeParse(draft);
+    if (result.success) {
+      return {};
+    }
+    const errors: StepErrors = {};
+    for (const issue of result.error.issues) {
+      const key = issue.path.map(String).join('.');
+      if (key && !errors[key]) {
+        errors[key] = issue.message;
+      }
+    }
+    return errors;
   }
 
   const schema = STEP_SCHEMAS[stepId];
