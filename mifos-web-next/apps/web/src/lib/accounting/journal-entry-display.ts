@@ -81,8 +81,10 @@ export function defaultCreateJournalEntryFormValues(
   officeId?: number,
   transactionDate?: string
 ): CreateJournalEntryFormInput {
+  const branchId = officeId ?? 0;
   return {
-    officeId: officeId ?? 0,
+    debitOfficeId: branchId,
+    creditOfficeId: branchId,
     currencyCode: currencies[0]?.code ?? '',
     transactionDate: transactionDate ?? toFineractDate(new Date()),
     debits: [{ glAccountId: 0, amount: 0 }],

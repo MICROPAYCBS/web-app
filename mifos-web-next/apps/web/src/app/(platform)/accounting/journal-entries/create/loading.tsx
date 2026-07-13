@@ -6,16 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { FormWizardSkeleton } from '@/components/composites/form-wizard-skeleton';
+import { FormPageSkeleton } from '@/components/composites/form-page-skeleton';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 
 export default function CreateJournalEntryLoading() {
   return (
     <PlatformRouteLayout>
-      <FormWizardSkeleton
+      <FormPageSkeleton
         title="Create journal entry"
-        description="Post a journal entry manually or start from an accounting rule template."
-        stepCount={3}
+        description="Post a manual journal entry with debit and credit lines."
+        fieldCount={8}
       />
     </PlatformRouteLayout>
   );

@@ -14,7 +14,7 @@ import type {
   FineractOfficeOption
 } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { Building2, Layers, Plus } from 'lucide-react';
+import { Layers, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
@@ -143,13 +143,6 @@ export function JournalEntriesPageContent({
               </Link>
             </Can>
             <Can permission="CREATE_JOURNALENTRY">
-              <Link
-                href="/accounting/journal-entries/central-branch-payment"
-                className={cn(buttonVariants({ variant: 'outline' }))}
-              >
-                <Building2 className="mr-2 size-4" />
-                Cross-branch
-              </Link>
               <Link href="/accounting/journal-entries/create" className={cn(buttonVariants())}>
                 <Plus className="mr-2 size-4" />
                 Create entry

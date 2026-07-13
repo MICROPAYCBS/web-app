@@ -4,7 +4,10 @@
     "org.apache.fineract.accounting.journalentry.api.JournalEntriesApiResource"
   ],
   "fields": {
-    "officeId": { "required": true },
+    "debitOfficeId": { "required": true },
+    "debitDepartmentId": { "required": false },
+    "creditOfficeId": { "required": true },
+    "creditDepartmentId": { "required": false },
     "currencyCode": { "required": true },
     "transactionDate": { "required": true },
     "debits": { "required": true },

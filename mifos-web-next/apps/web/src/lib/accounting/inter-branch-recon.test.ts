@@ -12,9 +12,9 @@ import type { FineractFinancialActivityMappingListItem } from '@mifos/api-client
 import {
   findInterBranchReconGlAccountId,
   INTER_BRANCH_RECON_FINANCIAL_ACTIVITY_NAME,
+  DEFAULT_CLEARING_GL_CODE,
   resolveCentralBranchClearingGlAccount
 } from '@/lib/accounting/inter-branch-recon';
-import { DEFAULT_CLEARING_GL_CODE } from '@/lib/accounting/central-branch-expense-payment';
 
 function mapping(
   activityName: string,

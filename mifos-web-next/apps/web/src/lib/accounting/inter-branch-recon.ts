@@ -7,10 +7,9 @@
  */
 
 import type { FineractFinancialActivityMappingListItem } from '@mifos/api-client';
-import {
-  DEFAULT_CLEARING_GL_CODE,
-  findDefaultClearingGlAccountId
-} from '@/lib/accounting/central-branch-expense-payment';
+
+/** Fallback when interBranchRecon financial activity mapping is absent. */
+export const DEFAULT_CLEARING_GL_CODE = 'MP-20010';
 
 /** Fineract financial activity for inter-branch clearing (Micropay: maps to MP-20010). */
 export const INTER_BRANCH_RECON_FINANCIAL_ACTIVITY_NAME = 'interBranchRecon';
@@ -20,11 +19,24 @@ export const INTER_BRANCH_RECON_FINANCIAL_ACTIVITY_ID = 203;
 export const CENTRAL_BRANCH_CLEARING_NOT_CONFIGURED_MESSAGE =
   'Inter-branch reconciliation is not configured. Define the interBranchRecon financial activity mapping under Accounting → Financial activity mappings (typically MP-20010) before posting.';
 
-export type CentralBranchClearingResolution = {
+export type InterBranchClearingResolution = {
   clearingGlAccountId: number | null;
   usedFinancialActivityMapping: boolean;
   warning?: string;
 };
+
+/** @deprecated Use {@link InterBranchClearingResolution}. */
+export type CentralBranchClearingResolution = InterBranchClearingResolution;
+
+export function findDefaultClearingGlAccountId(
+  glAccounts: { id: number; glCode: string }[],
+  preferredCode = DEFAULT_CLEARING_GL_CODE
+): number | null {
+  const match = glAccounts.find(
+    (account) => account.glCode.trim().toUpperCase() === preferredCode.toUpperCase()
+  );
+  return match?.id ?? null;
+}
 
 export function findInterBranchReconGlAccountId(
   mappings: FineractFinancialActivityMappingListItem[]
@@ -50,7 +62,7 @@ export function findInterBranchReconMapping(
 export function resolveCentralBranchClearingGlAccount(
   mappings: FineractFinancialActivityMappingListItem[],
   glAccounts: { id: number; glCode: string }[]
-): CentralBranchClearingResolution {
+): InterBranchClearingResolution {
   const mappedId = findInterBranchReconGlAccountId(mappings);
   const fallbackId = findDefaultClearingGlAccountId(glAccounts, DEFAULT_CLEARING_GL_CODE);
   const clearingGlAccountId = mappedId ?? fallbackId;

@@ -495,6 +495,7 @@ export { applyGlAccountFineractFieldErrors } from './accounting/gl-account-finer
 export {
   buildCreateJournalEntryPayload,
   createJournalEntryFormSchema,
+  isSameOfficeJournalEntry,
   journalEntryLineSchema,
   revertJournalEntrySchema,
   validateCreateJournalEntryForm,
@@ -505,13 +506,14 @@ export {
   type RevertJournalEntryInput
 } from './accounting/journal-entry.schema';
 export {
-  centralBranchExpenseLineSchema,
-  centralBranchExpensePaymentFormSchema,
-  validateCentralBranchExpensePaymentForm,
-  type CentralBranchExpenseLineInput,
-  type CentralBranchExpensePaymentFormInput,
-  type CentralBranchExpensePaymentValidationContext
-} from './accounting/central-branch-expense-payment.schema';
+  expandInterBranchJournalEntry,
+  formatInterBranchJournalEntryComments,
+  INTER_BRANCH_JOURNAL_ENTRY_COMMENT_PREFIX,
+  isInterBranchJournalEntry,
+  journalEntryLinesTotal,
+  type ExpandedInterBranchJournalEntry,
+  type InterBranchJournalEntryExpandInput
+} from './accounting/inter-branch-journal-entry';
 export {
   BULK_CONSTRUCT_JOURNAL_ENTRIES_MAX_ROWS,
   bulkConstructJournalEntriesFormSchema,

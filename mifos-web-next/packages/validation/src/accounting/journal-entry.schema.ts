@@ -30,8 +30,10 @@ export const journalEntryLineSchema = z.object({
 });
 
 export const createJournalEntryFormBaseSchema = z.object({
-  officeId: z.number().int().positive('Branch is required.'),
-  departmentId: optionalPositiveInt,
+  debitOfficeId: z.number().int().positive('Debit branch is required.'),
+  debitDepartmentId: optionalPositiveInt,
+  creditOfficeId: z.number().int().positive('Credit branch is required.'),
+  creditDepartmentId: optionalPositiveInt,
   currencyCode: z.string().trim().min(1, 'Currency is required.'),
   transactionDate: z.string().trim().min(1, 'Transaction date is required.'),
   debits: z.array(journalEntryLineSchema).min(1, 'Add at least one debit line.'),
@@ -66,11 +68,11 @@ function refineJournalEntryBalance(
   }
 }
 
-function journalEntryHasPlAccount(
-  data: Pick<z.infer<typeof createJournalEntryFormBaseSchema>, 'debits' | 'credits'>,
+function journalSideHasPlAccount(
+  lines: z.infer<typeof journalEntryLineSchema>[],
   glAccountTypesById: Record<number, number>
 ) {
-  return [...data.debits, ...data.credits].some((line) => {
+  return lines.some((line) => {
     const typeId = glAccountTypesById[line.glAccountId];
     return typeId != null && glAccountRequiresStatementTag(typeId);
   });
@@ -79,7 +81,7 @@ function journalEntryHasPlAccount(
 export function refineJournalEntryDepartments(
   data: Pick<
     z.infer<typeof createJournalEntryFormBaseSchema>,
-    'debits' | 'credits' | 'departmentId'
+    'debits' | 'credits' | 'debitDepartmentId' | 'creditDepartmentId'
   >,
   ctx: z.RefinementCtx,
   validationContext: CreateJournalEntryValidationContext = {}
@@ -88,11 +90,18 @@ export function refineJournalEntryDepartments(
     return;
   }
   const types = validationContext.glAccountTypesById ?? {};
-  if (journalEntryHasPlAccount(data, types) && data.departmentId == null) {
+  if (journalSideHasPlAccount(data.debits, types) && data.debitDepartmentId == null) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Department is required when posting to income or expense accounts.',
-      path: ['departmentId']
+      message: 'Department is required when posting debits to income or expense accounts.',
+      path: ['debitDepartmentId']
+    });
+  }
+  if (journalSideHasPlAccount(data.credits, types) && data.creditDepartmentId == null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Department is required when posting credits to income or expense accounts.',
+      path: ['creditDepartmentId']
     });
   }
 }
@@ -110,6 +119,12 @@ export const revertJournalEntrySchema = z.object({
 export type JournalEntryLineInput = z.infer<typeof journalEntryLineSchema>;
 export type CreateJournalEntryFormInput = z.infer<typeof createJournalEntryFormSchema>;
 export type RevertJournalEntryInput = z.infer<typeof revertJournalEntrySchema>;
+
+export function isSameOfficeJournalEntry(
+  input: Pick<CreateJournalEntryFormInput, 'debitOfficeId' | 'creditOfficeId'>
+) {
+  return input.debitOfficeId === input.creditOfficeId;
+}
 
 export function validateCreateJournalEntryForm(
   input: unknown,
@@ -131,21 +146,25 @@ export function buildCreateJournalEntryPayload(
   input: CreateJournalEntryFormInput,
   options: { locale: string; dateFormat: string }
 ) {
+  if (!isSameOfficeJournalEntry(input)) {
+    throw new Error('Cannot build a single journal entry payload for inter-branch offices.');
+  }
+
   return {
     locale: options.locale,
     dateFormat: options.dateFormat,
-    officeId: input.officeId,
+    officeId: input.debitOfficeId,
     currencyCode: input.currencyCode,
     transactionDate: input.transactionDate,
     debits: input.debits.map((line) => ({
       glAccountId: line.glAccountId,
       amount: line.amount,
-      ...(input.departmentId != null ? { departmentId: input.departmentId } : {})
+      ...(input.debitDepartmentId != null ? { departmentId: input.debitDepartmentId } : {})
     })),
     credits: input.credits.map((line) => ({
       glAccountId: line.glAccountId,
       amount: line.amount,
-      ...(input.departmentId != null ? { departmentId: input.departmentId } : {})
+      ...(input.creditDepartmentId != null ? { departmentId: input.creditDepartmentId } : {})
     })),
     referenceNumber: input.referenceNumber?.trim() || undefined,
     paymentTypeId: input.paymentTypeId,

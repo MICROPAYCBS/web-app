@@ -156,8 +156,10 @@ export function expandBulkConstructRowToJournalEntry(
   const amount = row.amount;
   return {
     ...base,
-    officeId,
-    departmentId,
+    debitOfficeId: officeId,
+    creditOfficeId: officeId,
+    debitDepartmentId: departmentId,
+    creditDepartmentId: departmentId,
     currencyCode: template.currencyCode,
     transactionDate: template.transactionDate,
     referenceNumber: template.referenceNumber,

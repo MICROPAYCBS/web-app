@@ -6,6 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export { JournalEntryWizard } from './wizard/journal-entry-wizard';
-export { JournalEntryWizard as JournalEntryForm } from './wizard/journal-entry-wizard';
-export type { JournalEntryWizardProps } from './wizard/types';
+export { JournalEntryCreateForm } from './journal-entry-create-form';
+export { JournalEntryCreateForm as JournalEntryForm } from './journal-entry-create-form';
+export type { JournalEntryCreateFormProps as JournalEntryFormProps } from './journal-entry-create-form';

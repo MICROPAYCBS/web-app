@@ -13,6 +13,8 @@ import { assertCan } from '@mifos/auth';
 import {
   actionSuccessFromFineractCommand,
   expandBulkConstructJournalEntries,
+  expandInterBranchJournalEntry,
+  isInterBranchJournalEntry,
   toFineractActionError,
   validateBulkConstructJournalEntriesForm,
   validateCreateJournalEntryForm,
@@ -23,6 +25,7 @@ import {
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { resolveCentralBranchClearingGlAccount } from '@/lib/accounting/inter-branch-recon';
 import {
   createJournalEntry,
   getJournalEntryTransaction,
@@ -30,6 +33,8 @@ import {
   revertJournalEntryTransaction
 } from '@/lib/fineract/journal-entries';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
+import { listFinancialActivityMappings } from '@/lib/fineract/financial-activity-mappings';
+import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getServerSession } from '@/lib/session/server';
 import { listAccountingRulesForFrequentPostings } from '@/lib/fineract/accounting-rules';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
@@ -40,7 +45,13 @@ const BULK_OPERATIONS_PATH = '/accounting/journal-entries/bulk-operations';
 const REQUIRE_DEPARTMENT_CONFIG = 'enable-require-department-on-manual-journal-pl-lines';
 
 export type JournalEntriesActionResult =
-  | { ok: true; transactionId?: string; pendingChecker?: boolean }
+  | {
+      ok: true;
+      transactionId?: string;
+      transactionIds?: string[];
+      interBranch?: boolean;
+      pendingChecker?: boolean;
+    }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export type GetJournalEntryTransactionResult =
@@ -84,9 +95,10 @@ function revalidateJournalEntryViews(transactionId?: string) {
 }
 
 async function loadJournalEntryValidationContext() {
-  const [departmentConfig, glAccounts] = await Promise.all([
+  const [departmentConfig, glAccounts, financialActivityMappings] = await Promise.all([
     getGlobalConfigurationByName(REQUIRE_DEPARTMENT_CONFIG),
-    listJournalEntryGlAccounts()
+    listJournalEntryGlAccounts(),
+    listFinancialActivityMappings()
   ]);
   const glAccountTypesById = Object.fromEntries(
     glAccounts
@@ -95,7 +107,77 @@ async function loadJournalEntryValidationContext() {
   );
   return {
     requireDepartmentOnPlLines: departmentConfig?.enabled ?? false,
-    glAccountTypesById
+    glAccountTypesById,
+    glAccounts,
+    financialActivityMappings
+  };
+}
+
+async function createInterBranchJournalEntries(
+  input: CreateJournalEntryFormInput,
+  validationContext: Awaited<ReturnType<typeof loadJournalEntryValidationContext>>
+): Promise<JournalEntriesActionResult> {
+  const clearing = resolveCentralBranchClearingGlAccount(
+    validationContext.financialActivityMappings,
+    validationContext.glAccounts
+  );
+  if (clearing.clearingGlAccountId == null) {
+    return {
+      ok: false,
+      message: clearing.warning ?? 'Inter-branch reconciliation is not configured.'
+    };
+  }
+
+  const offices = await listOfficeOptions();
+  const officeNamesById = Object.fromEntries(
+    offices.map((office) => [office.id, office.name ?? office.nameDecorated ?? String(office.id)])
+  );
+
+  const expanded = expandInterBranchJournalEntry({
+    ...input,
+    clearingGlAccountId: clearing.clearingGlAccountId,
+    officeNamesById
+  });
+
+  const transactionIds: string[] = [];
+  let pendingChecker = false;
+
+  for (const entry of expanded) {
+    const validated = validateCreateJournalEntryForm(entry.input, validationContext);
+    if (!validated.success) {
+      return {
+        ok: false,
+        message: 'Generated journal entry failed validation.'
+      };
+    }
+
+    try {
+      const response = await createJournalEntry(validated.data);
+      const outcome = actionSuccessFromFineractCommand(response, {
+        transactionId: response.transactionId
+      });
+      if (!outcome.ok) {
+        return { ok: false, message: 'Failed to create journal entry.' };
+      }
+      if (response.transactionId) {
+        transactionIds.push(response.transactionId);
+      }
+      pendingChecker = pendingChecker || outcome.pendingChecker === true;
+    } catch (error) {
+      return toFineractActionError(error, 'Failed to create journal entry.');
+    }
+  }
+
+  for (const transactionId of transactionIds) {
+    revalidateJournalEntryViews(transactionId);
+  }
+
+  return {
+    ok: true,
+    transactionId: transactionIds[0],
+    transactionIds,
+    interBranch: true,
+    pendingChecker
   };
 }
 
@@ -118,6 +200,10 @@ export async function createJournalEntryAction(
       message: 'Fix the highlighted fields.',
       fieldErrors: zodFieldErrors(parsed.error)
     };
+  }
+
+  if (isInterBranchJournalEntry(parsed.data)) {
+    return createInterBranchJournalEntries(parsed.data, validationContext);
   }
 
   try {

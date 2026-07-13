@@ -8,17 +8,7 @@
 
 import { redirect } from 'next/navigation';
 
-/** Frequent postings are now part of the unified journal entry create form. */
-export default async function FrequentPostingsPage({
-  searchParams
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const rule = typeof params.rule === 'string' ? params.rule.trim() : '';
-  return redirect(
-    rule
-      ? `/accounting/journal-entries/create?rule=${encodeURIComponent(rule)}`
-      : '/accounting/journal-entries/create'
-  );
+/** Legacy frequent postings route — journal entry create is a single manual form. */
+export default async function FrequentPostingsPage() {
+  return redirect('/accounting/journal-entries/create');
 }

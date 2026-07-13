@@ -678,18 +678,6 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
-    id: 'acctCentralBranchPayment',
-    path: '/accounting/journal-entries/central-branch-payment',
-    label: 'Cross-branch',
-    navGroup: 'accounting',
-    webAppRef: 'accounting/journal-entries/central-branch-payment',
-    permissionKey: 'accounting.journal',
-    navOrder: 21,
-    navIcon: 'building-2',
-    keywords: ['cross-branch', 'inter-branch', 'branch', 'clearing'],
-    parityStatus: 'done'
-  },
-  {
     id: 'acctGlAccountEnquiry',
     path: '/accounting/gl-account-enquiry',
     label: 'GL account enquiry',
