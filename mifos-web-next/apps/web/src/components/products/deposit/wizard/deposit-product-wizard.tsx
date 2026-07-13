@@ -25,7 +25,7 @@ import { depositProductDetailPath } from '@/lib/fineract/deposit-product-config'
 import {
   depositProductDraftHasUnsavedChanges,
   sanitizeDepositProductDraftForSubmit
-} from '@/lib/fineract/deposit-product-draft';
+} from '@/lib/fineract/product-wizard-draft-compare';
 import { isProductShortNameLocked } from '@/lib/fineract/product-short-name';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';

@@ -10,11 +10,11 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { LoanProductTemplate } from '@mifos/api-client';
 import type { UpsertLoanProductInput } from '@mifos/validation';
+import { loanProductDraftFromTemplate } from './loan-product-draft';
 import {
-  loanProductDraftFromTemplate,
   loanProductDraftHasUnsavedChanges,
   sanitizeLoanProductDraftForSubmit
-} from './loan-product-draft';
+} from './product-wizard-draft-compare';
 
 function minimalTemplate(overrides: Partial<LoanProductTemplate> = {}): LoanProductTemplate {
   return {

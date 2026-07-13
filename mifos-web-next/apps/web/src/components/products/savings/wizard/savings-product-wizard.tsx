@@ -28,7 +28,7 @@ import {
 import {
   savingsProductDraftHasUnsavedChanges,
   sanitizeSavingsProductDraftForSubmit
-} from '@/lib/fineract/savings-product-draft';
+} from '@/lib/fineract/product-wizard-draft-compare';
 import { isProductShortNameLocked } from '@/lib/fineract/product-short-name';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';

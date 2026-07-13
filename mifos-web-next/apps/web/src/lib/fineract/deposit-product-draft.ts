@@ -20,10 +20,6 @@ import {
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
 import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import {
-  productDraftHasUnsavedChanges,
-  sanitizeProductDraftAccountingMappings
-} from '@/lib/fineract/product-draft-compare';
-import {
   asAccountingMappings,
   asChargeIncomeMappings,
   asCurrency,
@@ -289,24 +285,4 @@ export function normalizeDepositProductTemplate(raw: unknown): DepositProductTem
     taxGroup: asEnumOption(row.taxGroup),
     activeChart: normalizeCharts(row.activeChart)
   };
-}
-
-export function sanitizeDepositProductDraftForSubmit(
-  draft: UpsertDepositProductInput,
-  lockedShortName?: string
-): UpsertDepositProductInput {
-  return sanitizeProductDraftAccountingMappings(draft, lockedShortName);
-}
-
-export function depositProductDraftHasUnsavedChanges(
-  current: UpsertDepositProductInput,
-  baseline: UpsertDepositProductInput,
-  lockedShortName?: string
-): boolean {
-  return productDraftHasUnsavedChanges(
-    current,
-    baseline,
-    sanitizeDepositProductDraftForSubmit,
-    lockedShortName
-  );
 }

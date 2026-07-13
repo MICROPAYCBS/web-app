@@ -16,10 +16,6 @@ import { resolveLoanProductAttributeOverrideSettings } from '@/lib/fineract/loan
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
 import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import {
-  productDraftHasUnsavedChanges,
-  sanitizeProductDraftAccountingMappings
-} from '@/lib/fineract/product-draft-compare';
-import {
   asAccountingMappings,
   asChargeIncomeMappings,
   asCurrency,
@@ -69,27 +65,6 @@ function optionalNumber(value: unknown): number | undefined {
     return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;
-}
-
-/** Normalize wizard draft the same way as submit (drop empty mapping rows, lock short name). */
-export function sanitizeLoanProductDraftForSubmit(
-  draft: UpsertLoanProductInput,
-  lockedShortName?: string
-): UpsertLoanProductInput {
-  return sanitizeProductDraftAccountingMappings(draft, lockedShortName);
-}
-
-export function loanProductDraftHasUnsavedChanges(
-  current: UpsertLoanProductInput,
-  baseline: UpsertLoanProductInput,
-  lockedShortName?: string
-): boolean {
-  return productDraftHasUnsavedChanges(
-    current,
-    baseline,
-    sanitizeLoanProductDraftForSubmit,
-    lockedShortName
-  );
 }
 
 export function loanProductDraftFromTemplate(

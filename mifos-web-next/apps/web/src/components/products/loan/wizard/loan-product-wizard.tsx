@@ -28,7 +28,7 @@ import {
 import {
   loanProductDraftHasUnsavedChanges,
   sanitizeLoanProductDraftForSubmit
-} from '@/lib/fineract/loan-product-draft';
+} from '@/lib/fineract/product-wizard-draft-compare';
 import {
   isProductShortNameLocked
 } from '@/lib/fineract/product-short-name';
