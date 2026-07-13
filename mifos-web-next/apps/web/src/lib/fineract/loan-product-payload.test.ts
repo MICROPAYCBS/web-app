@@ -133,4 +133,34 @@ describe('buildLoanProductPayload', () => {
 
     assert.equal(payload.enableAccrualActivityPosting, true);
   });
+
+  it('omits down payment fields when down payment is disabled', () => {
+    const payload = buildLoanProductPayload(
+      minimalDraft({
+        settings: {
+          enableDownPayment: false,
+          disbursedAmountPercentageForDownPayment: 25,
+          enableAutoRepaymentForDownPayment: true
+        }
+      })
+    );
+
+    assert.equal('disbursedAmountPercentageForDownPayment' in payload, false);
+    assert.equal('enableAutoRepaymentForDownPayment' in payload, false);
+  });
+
+  it('includes down payment fields when down payment is enabled', () => {
+    const payload = buildLoanProductPayload(
+      minimalDraft({
+        settings: {
+          enableDownPayment: true,
+          disbursedAmountPercentageForDownPayment: 25,
+          enableAutoRepaymentForDownPayment: true
+        }
+      })
+    );
+
+    assert.equal(payload.disbursedAmountPercentageForDownPayment, 25);
+    assert.equal(payload.enableAutoRepaymentForDownPayment, true);
+  });
 });

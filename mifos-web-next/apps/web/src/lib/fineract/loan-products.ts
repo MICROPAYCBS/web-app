@@ -113,6 +113,14 @@ function normalizeDetail(raw: unknown): LoanProductDetail | null {
     daysInYearType: asEnumOption(row.daysInYearType),
     enableDownPayment:
       typeof row.enableDownPayment === 'boolean' ? row.enableDownPayment : undefined,
+    disbursedAmountPercentageForDownPayment:
+      typeof row.disbursedAmountPercentageForDownPayment === 'number'
+        ? row.disbursedAmountPercentageForDownPayment
+        : undefined,
+    enableAutoRepaymentForDownPayment:
+      typeof row.enableAutoRepaymentForDownPayment === 'boolean'
+        ? row.enableAutoRepaymentForDownPayment
+        : undefined,
     isInterestRecalculationEnabled:
       typeof row.isInterestRecalculationEnabled === 'boolean'
         ? row.isInterestRecalculationEnabled

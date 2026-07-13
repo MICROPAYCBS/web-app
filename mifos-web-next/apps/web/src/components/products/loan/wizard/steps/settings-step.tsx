@@ -370,7 +370,7 @@ export function SettingsStep({
               <NumericField
                 id="settings.disbursedAmountPercentageForDownPayment"
                 label="Disbursed amount percentage for down payment"
-                optional
+                required
                 value={
                   settings.disbursedAmountPercentageForDownPayment != null
                     ? String(settings.disbursedAmountPercentageForDownPayment)

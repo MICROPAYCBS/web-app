@@ -56,6 +56,17 @@ function optionalAccountId(value: unknown): number | undefined {
   return Number.isFinite(id) ? id : undefined;
 }
 
+function optionalNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
 export function loanProductDraftFromTemplate(
   template: LoanProductTemplate,
   productKind: LoanProductKind
@@ -164,6 +175,10 @@ export function loanProductDraftFromTemplate(
       multiDisburseLoan: Boolean(template.multiDisburseLoan),
       allowFullTermForTranche: Boolean(template.allowFullTermForTranche),
       enableDownPayment: Boolean(template.enableDownPayment),
+      disbursedAmountPercentageForDownPayment: optionalNumber(
+        template.disbursedAmountPercentageForDownPayment
+      ),
+      enableAutoRepaymentForDownPayment: Boolean(template.enableAutoRepaymentForDownPayment),
       enableInstallmentLevelDelinquency: Boolean(template.enableInstallmentLevelDelinquency),
       delinquencyBucketId: enumId(template.delinquencyBucket),
       useDueForRepaymentsConfigurations: false,

@@ -151,6 +151,11 @@ export function buildLoanProductPayload(input: UpsertLoanProductInput): Record<s
     delete payload.loanScheduleProcessingType;
   }
 
+  if (!settings.enableDownPayment) {
+    delete payload.disbursedAmountPercentageForDownPayment;
+    delete payload.enableAutoRepaymentForDownPayment;
+  }
+
   for (const key of Object.keys(payload)) {
     if (payload[key] === '' || payload[key] === undefined) {
       delete payload[key];

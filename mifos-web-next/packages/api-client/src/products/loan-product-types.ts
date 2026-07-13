@@ -82,6 +82,8 @@ export interface LoanProductDetail extends LoanProductListItem {
   daysInMonthType?: FineractEnumOption;
   daysInYearType?: FineractEnumOption;
   enableDownPayment?: boolean;
+  disbursedAmountPercentageForDownPayment?: number;
+  enableAutoRepaymentForDownPayment?: boolean;
   isInterestRecalculationEnabled?: boolean;
   multiDisburseLoan?: boolean;
   canUseForTopup?: boolean;

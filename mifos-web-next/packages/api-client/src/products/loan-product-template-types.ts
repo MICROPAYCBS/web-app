@@ -93,6 +93,9 @@ export interface LoanProductTemplate {
   allowAttributeOverrides?: LoanProductAttributeOverrides;
   dueDaysForRepaymentEvent?: number;
   overDueDaysForRepaymentEvent?: number;
+  enableDownPayment?: boolean;
+  disbursedAmountPercentageForDownPayment?: number;
+  enableAutoRepaymentForDownPayment?: boolean;
   [key: string]: unknown;
 }
 

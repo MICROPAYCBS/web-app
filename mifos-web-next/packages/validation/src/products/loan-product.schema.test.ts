@@ -99,6 +99,15 @@ describe('loanProductSettingsStepSchema', () => {
     });
     assert.equal(parsed.success, false);
   });
+
+  it('accepts down payment percentage when down payment is enabled', () => {
+    const parsed = loanProductSettingsStepSchema.safeParse({
+      ...baseSettings,
+      enableDownPayment: true,
+      disbursedAmountPercentageForDownPayment: 25
+    });
+    assert.equal(parsed.success, true);
+  });
 });
 
 describe('upsertLoanProductSchema', () => {

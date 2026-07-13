@@ -26,6 +26,13 @@
     "daysInYearType": { "required": true, "allowedValues": [1, 360, 364, 365] },
     "daysInMonthType": { "required": true, "allowedValues": [1, 30] },
     "loanScheduleType": { "required": true },
-    "accountingRule": { "required": true }
+    "accountingRule": { "required": true },
+    "enableDownPayment": { "required": false },
+    "disbursedAmountPercentageForDownPayment": {
+      "requiredWhen": "enableDownPayment",
+      "min": 1,
+      "max": 100
+    },
+    "enableAutoRepaymentForDownPayment": { "required": false }
   }
 }
