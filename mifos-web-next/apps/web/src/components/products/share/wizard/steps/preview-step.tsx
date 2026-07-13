@@ -19,7 +19,7 @@ import { formatFineractDateArray } from '@/lib/fineract/dates';
 import { productChargeLabelById } from '@/lib/fineract/charge-display';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
 import { fineractOptionLabel } from '@/lib/form/select-options';
-import type { ShareProductStepProps } from '../types';
+import type { ShareProductStepProps, WizardMode } from '../types';
 
 function optionLabelById(
   options: { id: number; name?: string; value?: string }[] | undefined,
@@ -46,9 +46,13 @@ function glLabelFromOptions(
 export function PreviewStep({
   template,
   draft,
-  submitError
+  submitError,
+  mode,
+  hasUnsavedChanges = true
 }: ShareProductStepProps & {
   submitError: string | null;
+  mode: WizardMode;
+  hasUnsavedChanges?: boolean;
 }) {
   const { details, currency, terms, settings, marketPrice, charges, accounting } = draft;
   const currencyCode = currency.currencyCode || 'USD';
@@ -70,8 +74,14 @@ export function PreviewStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Review the product configuration before saving.
+        Review the product configuration before {mode === 'create' ? 'creating' : 'saving'}.
       </p>
+
+      {mode === 'edit' && !hasUnsavedChanges ? (
+        <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          No changes to save. Update a field to enable save.
+        </p>
+      ) : null}
 
       {submitError ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">

@@ -26,9 +26,10 @@ import {
   SHARE_PRODUCTS_LIST_PATH
 } from '@/lib/fineract/share-product-paths';
 import {
-  isProductShortNameLocked,
-  preserveEstablishedProductShortName
-} from '@/lib/fineract/product-short-name';
+  shareProductDraftHasUnsavedChanges,
+  sanitizeShareProductDraftForSubmit
+} from '@/lib/fineract/share-product-draft';
+import { isProductShortNameLocked } from '@/lib/fineract/product-short-name';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';
 import { CurrencyStep } from './steps/currency-step';
@@ -52,23 +53,6 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'accounting', label: 'Accounting' },
   { id: 'preview', label: 'Preview' }
 ];
-
-function sanitizeDraftForSubmit(
-  draft: UpsertShareProductInput,
-  lockedShortName?: string
-): UpsertShareProductInput {
-  const marketPricePeriods = (draft.marketPrice.marketPricePeriods ?? []).filter(
-    (row) => row.fromDate?.trim() && row.shareValue > 0
-  );
-
-  return preserveEstablishedProductShortName(
-    {
-      ...draft,
-      marketPrice: { marketPricePeriods }
-    },
-    lockedShortName
-  );
-}
 
 export function ShareProductWizard({
   mode,
@@ -102,6 +86,11 @@ export function ShareProductWizard({
     const name = initialDraft.details.shortName?.trim();
     return isProductShortNameLocked(name) ? name : undefined;
   }, [mode, initialDraft.details.shortName]);
+
+  const hasUnsavedChanges = useMemo(
+    () => shareProductDraftHasUnsavedChanges(draft, initialDraft, lockedShortName),
+    [draft, initialDraft, lockedShortName]
+  );
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
@@ -187,8 +176,12 @@ export function ShareProductWizard({
   );
 
   function handleSubmit() {
+    if (mode === 'edit' && !hasUnsavedChanges) {
+      return;
+    }
+
     setSubmitError(null);
-    const payload = sanitizeDraftForSubmit(draft, lockedShortName);
+    const payload = sanitizeShareProductDraftForSubmit(draft, lockedShortName);
 
     startTransition(async () => {
       const result =
@@ -232,6 +225,7 @@ export function ShareProductWizard({
               isPreview ? (mode === 'create' ? 'Create product' : 'Save changes') : 'Next'
             }
             onPrimary={isPreview ? handleSubmit : tryNext}
+            primaryDisabled={pending || (isPreview && mode === 'edit' && !hasUnsavedChanges)}
             primaryLoading={isPreview && pending}
             primaryLoadingLabel={mode === 'create' ? 'Creating…' : 'Saving…'}
           />
@@ -326,6 +320,8 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={{}}
+            mode={mode}
+            hasUnsavedChanges={hasUnsavedChanges}
             submitError={submitError}
           />
         ) : null}

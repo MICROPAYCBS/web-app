@@ -26,9 +26,10 @@ import {
   SAVINGS_PRODUCTS_LIST_PATH
 } from '@/lib/fineract/savings-product-paths';
 import {
-  isProductShortNameLocked,
-  preserveEstablishedProductShortName
-} from '@/lib/fineract/product-short-name';
+  savingsProductDraftHasUnsavedChanges,
+  sanitizeSavingsProductDraftForSubmit
+} from '@/lib/fineract/savings-product-draft';
+import { isProductShortNameLocked } from '@/lib/fineract/product-short-name';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';
 import { CurrencyStep } from './steps/currency-step';
@@ -52,39 +53,6 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'mappings', label: 'Mappings' },
   { id: 'preview', label: 'Preview' }
 ];
-
-function sanitizeDraftForSubmit(
-  draft: UpsertSavingsProductInput,
-  lockedShortName?: string
-): UpsertSavingsProductInput {
-  const accounting = draft.accounting;
-  const filterMappings = <T extends Record<string, number>>(
-    rows: T[] | undefined,
-    keys: [keyof T, keyof T]
-  ) => (rows ?? []).filter((row) => row[keys[0]] > 0 && row[keys[1]] > 0);
-
-  return preserveEstablishedProductShortName(
-    {
-      ...draft,
-      accounting: {
-        ...accounting,
-        paymentChannelToFundSourceMappings: filterMappings(
-          accounting.paymentChannelToFundSourceMappings,
-          ['paymentTypeId', 'fundSourceAccountId']
-        ),
-        feeToIncomeAccountMappings: filterMappings(accounting.feeToIncomeAccountMappings, [
-          'chargeId',
-          'incomeAccountId'
-        ]),
-        penaltyToIncomeAccountMappings: filterMappings(
-          accounting.penaltyToIncomeAccountMappings,
-          ['chargeId', 'incomeAccountId']
-        )
-      }
-    },
-    lockedShortName
-  );
-}
 
 export function SavingsProductWizard({
   mode,
@@ -118,6 +86,11 @@ export function SavingsProductWizard({
     const name = initialDraft.details.shortName?.trim();
     return isProductShortNameLocked(name) ? name : undefined;
   }, [mode, initialDraft.details.shortName]);
+
+  const hasUnsavedChanges = useMemo(
+    () => savingsProductDraftHasUnsavedChanges(draft, initialDraft, lockedShortName),
+    [draft, initialDraft, lockedShortName]
+  );
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
@@ -203,8 +176,12 @@ export function SavingsProductWizard({
   );
 
   function handleSubmit() {
+    if (mode === 'edit' && !hasUnsavedChanges) {
+      return;
+    }
+
     setSubmitError(null);
-    const payload = sanitizeDraftForSubmit(draft, lockedShortName);
+    const payload = sanitizeSavingsProductDraftForSubmit(draft, lockedShortName);
 
     startTransition(async () => {
       const result =
@@ -248,6 +225,7 @@ export function SavingsProductWizard({
               isPreview ? (mode === 'create' ? 'Create product' : 'Save changes') : 'Next'
             }
             onPrimary={isPreview ? handleSubmit : tryNext}
+            primaryDisabled={pending || (isPreview && mode === 'edit' && !hasUnsavedChanges)}
             primaryLoading={isPreview && pending}
             primaryLoadingLabel={mode === 'create' ? 'Creating…' : 'Saving…'}
           />
@@ -342,6 +320,8 @@ export function SavingsProductWizard({
             template={template}
             draft={draft}
             errors={{}}
+            mode={mode}
+            hasUnsavedChanges={hasUnsavedChanges}
             submitError={submitError}
           />
         ) : null}

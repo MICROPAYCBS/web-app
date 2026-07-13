@@ -15,6 +15,10 @@ import {
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
 import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import {
+  productDraftHasUnsavedChanges,
+  sanitizeProductDraftAccountingMappings
+} from '@/lib/fineract/product-draft-compare';
+import {
   asAccountingMappings,
   asChargeIncomeMappings,
   asCurrency,
@@ -195,4 +199,24 @@ export function normalizeSavingsProductTemplate(raw: unknown): SavingsProductTem
     lockinPeriodFrequencyType: asEnumOption(row.lockinPeriodFrequencyType),
     taxGroup: asEnumOption(row.taxGroup)
   };
+}
+
+export function sanitizeSavingsProductDraftForSubmit(
+  draft: UpsertSavingsProductInput,
+  lockedShortName?: string
+): UpsertSavingsProductInput {
+  return sanitizeProductDraftAccountingMappings(draft, lockedShortName);
+}
+
+export function savingsProductDraftHasUnsavedChanges(
+  current: UpsertSavingsProductInput,
+  baseline: UpsertSavingsProductInput,
+  lockedShortName?: string
+): boolean {
+  return productDraftHasUnsavedChanges(
+    current,
+    baseline,
+    sanitizeSavingsProductDraftForSubmit,
+    lockedShortName
+  );
 }

@@ -16,6 +16,8 @@ import {
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
 import { SHARE_PRODUCT_ACCOUNTING_RULE_OPTIONS } from '@/lib/fineract/share-product-accounting';
 import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
+import { preserveEstablishedProductShortName } from '@/lib/fineract/product-short-name';
+import { productDraftHasUnsavedChanges } from '@/lib/fineract/product-draft-compare';
 import { asAccountingMappings, asCurrency, asEnumOption } from '@/lib/fineract/product-normalize';
 import { fineractApiDateToFormString } from '@/lib/fineract/dates';
 
@@ -195,4 +197,34 @@ export function normalizeShareProductTemplate(raw: unknown): ShareProductTemplat
     ),
     lockPeriodTypeEnum: asEnumOption(row.lockPeriodTypeEnum)
   };
+}
+
+export function sanitizeShareProductDraftForSubmit(
+  draft: UpsertShareProductInput,
+  lockedShortName?: string
+): UpsertShareProductInput {
+  const marketPricePeriods = (draft.marketPrice.marketPricePeriods ?? []).filter(
+    (row) => row.fromDate?.trim() && row.shareValue > 0
+  );
+
+  return preserveEstablishedProductShortName(
+    {
+      ...draft,
+      marketPrice: { marketPricePeriods }
+    },
+    lockedShortName
+  );
+}
+
+export function shareProductDraftHasUnsavedChanges(
+  current: UpsertShareProductInput,
+  baseline: UpsertShareProductInput,
+  lockedShortName?: string
+): boolean {
+  return productDraftHasUnsavedChanges(
+    current,
+    baseline,
+    sanitizeShareProductDraftForSubmit,
+    lockedShortName
+  );
 }
