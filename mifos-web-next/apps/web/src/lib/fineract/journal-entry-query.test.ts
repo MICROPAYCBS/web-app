@@ -8,7 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { parseJournalEntryListQuery } from './journal-entry-query';
+import { journalEntryOrderByForApi, parseJournalEntryListQuery } from './journal-entry-query';
 
 describe('parseJournalEntryListQuery', () => {
   it('defaults transaction date range to the organisation business date', () => {
@@ -29,5 +29,18 @@ describe('parseJournalEntryListQuery', () => {
 
     assert.equal(query.fromDate, '01 July 2026');
     assert.equal(query.toDate, '05 July 2026');
+  });
+});
+
+describe('journalEntryOrderByForApi', () => {
+  it('maps debit/credit to amount', () => {
+    assert.equal(journalEntryOrderByForApi('debit'), 'amount');
+    assert.equal(journalEntryOrderByForApi('credit', 'desc'), 'amount');
+  });
+
+  it('tie-breaks transaction date with id using the same direction', () => {
+    assert.equal(journalEntryOrderByForApi('transactionDate', 'desc'), 'transactionDate DESC, id');
+    assert.equal(journalEntryOrderByForApi('transactionDate', 'asc'), 'transactionDate ASC, id');
+    assert.equal(journalEntryOrderByForApi('submittedOnDate', 'desc'), 'submittedOnDate DESC, id');
   });
 });

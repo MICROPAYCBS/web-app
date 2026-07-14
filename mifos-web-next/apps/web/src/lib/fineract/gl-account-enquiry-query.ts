@@ -132,10 +132,7 @@ export function buildGlAccountEnquirySearchParams(
   query: GlAccountEnquiryListQuery,
   options: { runningBalance?: boolean; summaryFetch?: boolean } = {}
 ): Record<string, string> {
-  const params = buildJournalEntrySearchParams({
-    ...query,
-    orderBy: journalEntryOrderByForApi(query.orderBy)
-  });
+  const params = buildJournalEntrySearchParams(query);
 
   if (query.currencyCode?.trim()) {
     params.currencyCode = query.currencyCode.trim().toUpperCase();
@@ -148,7 +145,10 @@ export function buildGlAccountEnquirySearchParams(
   if (options.summaryFetch) {
     params.offset = '0';
     params.limit = String(GL_ACCOUNT_ENQUIRY_SUMMARY_FETCH_LIMIT);
-    params.orderBy = journalEntryOrderByForApi(GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY);
+    params.orderBy = journalEntryOrderByForApi(
+      GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY,
+      GL_ACCOUNT_ENQUIRY_SUMMARY_SORT_ORDER
+    );
     params.sortOrder = GL_ACCOUNT_ENQUIRY_SUMMARY_SORT_ORDER;
   }
 

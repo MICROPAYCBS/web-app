@@ -80,11 +80,18 @@ export function parseJournalEntryListQuery(
   };
 }
 
-export function journalEntryOrderByForApi(orderBy: string) {
-  if (orderBy === 'debit' || orderBy === 'credit') {
-    return 'amount';
+/**
+ * Map UI sort columns to Fineract `orderBy`.
+ * Date columns embed the primary direction and a trailing `id` so
+ * `sortOrder` applies to the secondary key (same-day ties → higher id first when DESC).
+ */
+export function journalEntryOrderByForApi(orderBy: string, sortOrder?: string) {
+  const mapped = orderBy === 'debit' || orderBy === 'credit' ? 'amount' : orderBy;
+  if (mapped === 'transactionDate' || mapped === 'submittedOnDate') {
+    const direction = sortOrder?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+    return `${mapped} ${direction}, id`;
   }
-  return orderBy;
+  return mapped;
 }
 
 export function journalEntryFiltersFromQuery(
@@ -110,7 +117,7 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
     offset: String(query.offset),
     limit: String(query.limit),
     sortOrder: query.sortOrder,
-    orderBy: journalEntryOrderByForApi(query.orderBy),
+    orderBy: journalEntryOrderByForApi(query.orderBy, query.sortOrder),
     dateFormat: query.dateFormat,
     locale: query.locale,
     fromDate: query.fromDate ?? toFineractDate(new Date()),
