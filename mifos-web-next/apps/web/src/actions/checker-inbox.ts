@@ -26,7 +26,10 @@ import {
   executeCheckerInboxAction,
   getCheckerInboxDetail
 } from '@/lib/fineract/checker-inbox';
-import { isPendingCheckerAuditResult } from '@/lib/fineract/audit-trail-display';
+import {
+  isAwaitingApprovalAuditResult,
+  isPendingCheckerAuditResult
+} from '@/lib/fineract/audit-trail-display';
 import {
   CHECKER_INBOX_LIST_PATH,
   checkerInboxDetailPath
@@ -35,6 +38,9 @@ import { getServerSession } from '@/lib/session/server';
 import { resolveCheckerInboxSelfApprovalBlock } from '@/lib/checker-inbox/checker-inbox-self-approval';
 
 export type CheckerInboxActionResult = CheckerInboxMutationResult;
+
+const NOT_AWAITING_APPROVAL_MESSAGE =
+  'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.';
 
 function assertCheckerInboxAccess(session: Awaited<ReturnType<typeof getServerSession>>) {
   assertCan(session, resolvePermission('checkerInbox'));
@@ -55,6 +61,19 @@ function rejectSelfCheckerAction(
     return null;
   }
   return { ok: false, message: block.reason ?? 'You cannot approve or reject your own submission.' };
+}
+
+async function rejectIfNotAwaitingApproval(
+  checkerId: number
+): Promise<{ ok: false; message: string } | null> {
+  const detail = await getCheckerInboxDetail(checkerId).catch(() => null);
+  if (detail == null) {
+    return { ok: false, message: 'Checker inbox item was not found.' };
+  }
+  if (!isAwaitingApprovalAuditResult(detail.processingResult)) {
+    return { ok: false, message: NOT_AWAITING_APPROVAL_MESSAGE };
+  }
+  return null;
 }
 
 function success(
@@ -89,6 +108,11 @@ export async function executeCheckerInboxActionAction(
 
   if (!Number.isFinite(checkerId)) {
     return { ok: false, message: 'Invalid checker inbox item.' };
+  }
+
+  const notAwaiting = await rejectIfNotAwaitingApproval(checkerId);
+  if (notAwaiting) {
+    return notAwaiting;
   }
 
   const maker =
@@ -130,6 +154,11 @@ export async function deleteCheckerInboxItemAction(
 
   if (!Number.isFinite(checkerId)) {
     return { ok: false, message: 'Invalid checker inbox item.' };
+  }
+
+  const notAwaiting = await rejectIfNotAwaitingApproval(checkerId);
+  if (notAwaiting) {
+    return notAwaiting;
   }
 
   try {

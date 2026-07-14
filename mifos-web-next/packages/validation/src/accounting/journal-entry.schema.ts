@@ -26,7 +26,8 @@ const optionalPositiveInt = z.preprocess(
 
 export const journalEntryLineSchema = z.object({
   glAccountId: z.number().int().positive('Select a GL account.'),
-  amount: z.coerce.number().min(1, 'Amount must be at least 1.')
+  amount: z.coerce.number().min(1, 'Amount must be at least 1.'),
+  departmentId: optionalPositiveInt
 });
 
 export const createJournalEntryFormBaseSchema = z.object({
@@ -68,13 +69,17 @@ function refineJournalEntryBalance(
   }
 }
 
-function journalSideHasPlAccount(
+function journalSidePlLinesMissingDepartment(
   lines: z.infer<typeof journalEntryLineSchema>[],
+  sideDepartmentId: number | undefined,
   glAccountTypesById: Record<number, number>
 ) {
   return lines.some((line) => {
     const typeId = glAccountTypesById[line.glAccountId];
-    return typeId != null && glAccountRequiresStatementTag(typeId);
+    if (typeId == null || !glAccountRequiresStatementTag(typeId)) {
+      return false;
+    }
+    return line.departmentId == null && sideDepartmentId == null;
   });
 }
 
@@ -90,14 +95,14 @@ export function refineJournalEntryDepartments(
     return;
   }
   const types = validationContext.glAccountTypesById ?? {};
-  if (journalSideHasPlAccount(data.debits, types) && data.debitDepartmentId == null) {
+  if (journalSidePlLinesMissingDepartment(data.debits, data.debitDepartmentId, types)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Department is required when posting debits to income or expense accounts.',
       path: ['debitDepartmentId']
     });
   }
-  if (journalSideHasPlAccount(data.credits, types) && data.creditDepartmentId == null) {
+  if (journalSidePlLinesMissingDepartment(data.credits, data.creditDepartmentId, types)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Department is required when posting credits to income or expense accounts.',
@@ -159,12 +164,20 @@ export function buildCreateJournalEntryPayload(
     debits: input.debits.map((line) => ({
       glAccountId: line.glAccountId,
       amount: line.amount,
-      ...(input.debitDepartmentId != null ? { departmentId: input.debitDepartmentId } : {})
+      ...(line.departmentId != null
+        ? { departmentId: line.departmentId }
+        : input.debitDepartmentId != null
+          ? { departmentId: input.debitDepartmentId }
+          : {})
     })),
     credits: input.credits.map((line) => ({
       glAccountId: line.glAccountId,
       amount: line.amount,
-      ...(input.creditDepartmentId != null ? { departmentId: input.creditDepartmentId } : {})
+      ...(line.departmentId != null
+        ? { departmentId: line.departmentId }
+        : input.creditDepartmentId != null
+          ? { departmentId: input.creditDepartmentId }
+          : {})
     })),
     referenceNumber: input.referenceNumber?.trim() || undefined,
     paymentTypeId: input.paymentTypeId,

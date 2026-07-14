@@ -178,7 +178,7 @@ export function ChangePasswordDialog({
           <DialogTitle>Change password</DialogTitle>
           <DialogDescription>{policy.hint}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} method="post" noValidate>
           <FieldGroup className="gap-4">
             <Field data-invalid={fieldErrors.currentPassword ? true : undefined}>
               <FieldLabel htmlFor="current-password">Current password</FieldLabel>

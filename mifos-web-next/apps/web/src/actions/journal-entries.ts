@@ -18,14 +18,17 @@ import {
   toFineractActionError,
   validateBulkConstructJournalEntriesForm,
   validateCreateJournalEntryForm,
+  validatePostLegacyJournalEntriesForm,
   validateRevertJournalEntry,
   type BulkConstructJournalEntriesFormInput,
   type CreateJournalEntryFormInput,
+  type PostLegacyJournalEntriesFormInput,
   type RevertJournalEntryInput
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { resolveCentralBranchClearingGlAccount } from '@/lib/accounting/inter-branch-recon';
+import { legacyPostGroupToCreateJournalEntryForm } from '@/lib/accounting/legacy-journal-entries-post';
 import {
   createJournalEntry,
   getJournalEntryTransaction,
@@ -66,6 +69,32 @@ export type BulkJournalEntriesActionResult =
   | {
       ok: true;
       results: BulkJournalEntriesRowResult[];
+      successCount: number;
+      failureCount: number;
+    }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+export type LegacyJournalEntriesPostGroupResult =
+  | {
+      groupKey: string;
+      effectiveDate: string;
+      reference: string;
+      ok: true;
+      transactionId?: string;
+      pending?: boolean;
+    }
+  | {
+      groupKey: string;
+      effectiveDate: string;
+      reference: string;
+      ok: false;
+      message: string;
+    };
+
+export type LegacyJournalEntriesPostActionResult =
+  | {
+      ok: true;
+      results: LegacyJournalEntriesPostGroupResult[];
       successCount: number;
       failureCount: number;
     }
@@ -291,6 +320,112 @@ export async function createBulkJournalEntriesAction(
       const mapped = toFineractActionError(error, 'Failed to create journal entry.');
       results.push({
         rowIndex,
+        ok: false,
+        message: mapped.ok === false ? mapped.message : 'Failed to create journal entry.'
+      });
+    }
+  }
+
+  revalidateJournalEntryViews();
+
+  return {
+    ok: true,
+    results,
+    successCount,
+    failureCount
+  };
+}
+
+export async function createLegacyJournalEntriesAction(
+  input: PostLegacyJournalEntriesFormInput
+): Promise<LegacyJournalEntriesPostActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'CREATE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to create journal entries.' };
+  }
+
+  const parsed = validatePostLegacyJournalEntriesForm(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  const [validationContext, currencies] = await Promise.all([
+    loadJournalEntryValidationContext(),
+    getOrganizationSelectedCurrencies()
+  ]);
+
+  const currencyAllowed = currencies.some(
+    (currency) => currency.code === parsed.data.currencyCode
+  );
+  if (!currencyAllowed) {
+    return {
+      ok: false,
+      message: 'Select a currency enabled for this organization.',
+      fieldErrors: { currencyCode: 'Select a supported currency.' }
+    };
+  }
+
+  const results: LegacyJournalEntriesPostGroupResult[] = [];
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const group of parsed.data.groups) {
+    const entry = legacyPostGroupToCreateJournalEntryForm(group, parsed.data.currencyCode);
+    const validated = validateCreateJournalEntryForm(entry, validationContext);
+    if (!validated.success) {
+      failureCount += 1;
+      const firstIssue = validated.error.issues[0];
+      results.push({
+        groupKey: group.groupKey,
+        effectiveDate: group.effectiveDate,
+        reference: group.reference,
+        ok: false,
+        message: firstIssue?.message ?? 'Journal entry failed validation.'
+      });
+      continue;
+    }
+
+    try {
+      const response = await createJournalEntry(validated.data);
+      const outcome = actionSuccessFromFineractCommand(response, {
+        transactionId: response.transactionId
+      });
+      if (outcome.ok) {
+        successCount += 1;
+        results.push({
+          groupKey: group.groupKey,
+          effectiveDate: group.effectiveDate,
+          reference: group.reference,
+          ok: true,
+          transactionId: response.transactionId,
+          pending: outcome.pendingChecker === true
+        });
+        if (response.transactionId) {
+          revalidateJournalEntryViews(response.transactionId);
+        }
+      } else {
+        failureCount += 1;
+        results.push({
+          groupKey: group.groupKey,
+          effectiveDate: group.effectiveDate,
+          reference: group.reference,
+          ok: false,
+          message: 'Failed to create journal entry.'
+        });
+      }
+    } catch (error) {
+      failureCount += 1;
+      const mapped = toFineractActionError(error, 'Failed to create journal entry.');
+      results.push({
+        groupKey: group.groupKey,
+        effectiveDate: group.effectiveDate,
+        reference: group.reference,
         ok: false,
         message: mapped.ok === false ? mapped.message : 'Failed to create journal entry.'
       });

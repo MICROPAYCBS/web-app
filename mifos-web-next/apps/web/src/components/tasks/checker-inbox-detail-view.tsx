@@ -54,7 +54,8 @@ import { describeCheckerInboxAction } from '@/lib/checker-inbox/checker-inbox-co
 import {
   auditTrailResultVariant,
   formatAuditTrailDateTime,
-  formatAuditTrailFilterLabel
+  formatAuditTrailFilterLabel,
+  isAwaitingApprovalAuditResult
 } from '@/lib/fineract/audit-trail-display';
 import { CHECKER_INBOX_LIST_PATH } from '@/lib/fineract/checker-inbox-paths';
 import {
@@ -72,6 +73,16 @@ import { resolveCheckerInboxSelfApprovalBlock } from '@/lib/checker-inbox/checke
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
 
+function checkerInboxNonActionableMessage(processingResult: string | undefined): string {
+  const label = processingResult
+    ? formatAuditTrailFilterLabel(processingResult)
+    : 'this status';
+  if (processingResult?.toLowerCase().includes('error')) {
+    return `This task ended in ${label} and is not awaiting approval. Approve, reject, and delete are only available for items awaiting approval. Fix the approval-workflow configuration if needed, then submit the action again.`;
+  }
+  return `This task is ${label} and is not awaiting approval. Approve, reject, and delete are only available for items awaiting approval.`;
+}
+
 export function CheckerInboxDetailView({
   item,
   context,
@@ -87,7 +98,8 @@ export function CheckerInboxDetailView({
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const workflowStage = resolveCheckerInboxWorkflowStageContext(context);
   const selfApprovalBlock = resolveCheckerInboxSelfApprovalBlock(item.maker, user, context);
-  const checkerActionsDisabled = pending || selfApprovalBlock.blocked;
+  const canActOnCheckerItem = isAwaitingApprovalAuditResult(item.processingResult);
+  const checkerActionsDisabled = pending || selfApprovalBlock.blocked || !canActOnCheckerItem;
 
   function runAction(action: ConfirmAction) {
     if (selfApprovalBlock.blocked && action !== 'delete') {
@@ -137,32 +149,36 @@ export function CheckerInboxDetailView({
           {context.hrefLabel ?? 'Open record'}
         </Button>
       ) : null}
-      <Button
-        type="button"
-        disabled={checkerActionsDisabled}
-        onClick={() => setConfirmAction('approve')}
-      >
-        <Check className="mr-2 size-4" />
-        {checkerInboxWorkflowStageActionButtonLabel(context, 'approve', 'Approve')}
-      </Button>
-      <Button
-        type="button"
-        variant="destructive"
-        disabled={pending}
-        onClick={() => setConfirmAction('delete')}
-      >
-        <Trash2 className="mr-2 size-4" />
-        Delete
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        disabled={checkerActionsDisabled}
-        onClick={() => setConfirmAction('reject')}
-      >
-        <X className="mr-2 size-4" />
-        {checkerInboxWorkflowStageActionButtonLabel(context, 'reject', 'Reject')}
-      </Button>
+      {canActOnCheckerItem ? (
+        <>
+          <Button
+            type="button"
+            disabled={checkerActionsDisabled}
+            onClick={() => setConfirmAction('approve')}
+          >
+            <Check className="mr-2 size-4" />
+            {checkerInboxWorkflowStageActionButtonLabel(context, 'approve', 'Approve')}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={pending}
+            onClick={() => setConfirmAction('delete')}
+          >
+            <Trash2 className="mr-2 size-4" />
+            Delete
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={checkerActionsDisabled}
+            onClick={() => setConfirmAction('reject')}
+          >
+            <X className="mr-2 size-4" />
+            {checkerInboxWorkflowStageActionButtonLabel(context, 'reject', 'Reject')}
+          </Button>
+        </>
+      ) : null}
     </>
   );
 
@@ -227,6 +243,18 @@ export function CheckerInboxDetailView({
           </DetailFieldGrid>
         }
       >
+        {!canActOnCheckerItem ? (
+          <Card className="mb-6 border-destructive/30 bg-destructive/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base text-destructive">Cannot act on this task</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {checkerInboxNonActionableMessage(item.processingResult)}
+              </p>
+            </CardContent>
+          </Card>
+        ) : null}
         {context.summary || context.commandHighlights?.length || selfApprovalBlock.blocked ? (
           <Card className="mb-6">
             <CardHeader className="pb-3">

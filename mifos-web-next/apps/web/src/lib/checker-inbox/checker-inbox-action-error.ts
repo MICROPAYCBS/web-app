@@ -13,6 +13,7 @@ import {
 } from '@/lib/fineract/approval-workflow-display';
 
 const SAME_MAKER_CHECKER_PATTERN = /can\s*not\s*be\s*checked\s*by\s*the\s*same\s*user/i;
+const NOT_AWAITING_APPROVAL_PATTERN = /not\s+awaiting\s+approval/i;
 const WORKFLOW_CHECKER_PERMISSION_PATTERN =
   /requires\s+([A-Z][A-Z0-9_]*_CHECKER)\)/i;
 const WORKFLOW_STAGE_PATTERN = /workflow stage\s+([A-Z0-9_]+)/i;
@@ -52,6 +53,10 @@ export function formatCheckerInboxActionError(
 
   if (SAME_MAKER_CHECKER_PATTERN.test(text)) {
     return 'You cannot approve or reject your own submission. Ask another checker to act on this item.';
+  }
+
+  if (NOT_AWAITING_APPROVAL_PATTERN.test(text)) {
+    return 'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.';
   }
 
   const workflowCheckerMatch = text.match(WORKFLOW_CHECKER_PERMISSION_PATTERN);

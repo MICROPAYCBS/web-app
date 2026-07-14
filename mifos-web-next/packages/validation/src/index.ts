@@ -530,6 +530,16 @@ export {
   type BulkConstructVariationMode
 } from './accounting/bulk-construct-journal-entries.schema';
 export {
+  LEGACY_JOURNAL_ENTRIES_POST_MAX_GROUPS,
+  legacyJournalEntryPostGroupSchema,
+  legacyJournalEntryPostLineSchema,
+  postLegacyJournalEntriesFormSchema,
+  validatePostLegacyJournalEntriesForm,
+  type LegacyJournalEntryPostGroupInput,
+  type LegacyJournalEntryPostLineInput,
+  type PostLegacyJournalEntriesFormInput
+} from './accounting/legacy-journal-entries-post.schema';
+export {
   accountingRuleSideTypeSchema,
   buildUpsertAccountingRulePayload,
   upsertAccountingRuleFormSchema,

@@ -102,7 +102,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.workflow.instance.duplicate.approval':
     'You have already recorded your decision for this workflow stage.',
   'error.msg.command.unsupported':
-    'This checker action is not allowed.'
+    'This checker action is not allowed.',
+  'error.msg.entry.is.not.waiting.for.approval':
+    'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.',
+  'error.msg.command.not.waiting.for.approval':
+    'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

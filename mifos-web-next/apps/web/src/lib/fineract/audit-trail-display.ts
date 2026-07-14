@@ -54,13 +54,21 @@ export function auditTrailResultVariant(
   if (normalized.includes('success') || normalized.includes('processed')) {
     return 'default';
   }
-  if (normalized.includes('fail') || normalized.includes('reject')) {
+  if (
+    normalized.includes('fail') ||
+    normalized.includes('reject') ||
+    normalized.includes('error')
+  ) {
     return 'destructive';
   }
   return 'secondary';
 }
 
-/** True when an audit / checker row is still awaiting checker approval. */
+/**
+ * True when an audit is still held for checker review (Awaiting Approval /
+ * Under Processing). Terminal outcomes like Processed, Rejected, and Error
+ * are not pending — Fineract rejects approve/reject/delete for those ids.
+ */
 export function isPendingCheckerAuditResult(result: string | undefined): boolean {
   if (!result?.trim()) {
     return false;
@@ -69,10 +77,23 @@ export function isPendingCheckerAuditResult(result: string | undefined): boolean
   if (normalized.includes('success') || normalized.includes('processed')) {
     return false;
   }
-  if (normalized.includes('fail') || normalized.includes('reject')) {
+  if (
+    normalized.includes('fail') ||
+    normalized.includes('reject') ||
+    normalized.includes('error')
+  ) {
     return false;
   }
   return true;
+}
+
+/** True only when Fineract will accept maker-checker approve / reject / delete. */
+export function isAwaitingApprovalAuditResult(result: string | undefined): boolean {
+  if (!result?.trim()) {
+    return false;
+  }
+  const normalized = result.toLowerCase().replace(/\s+/g, ' ');
+  return normalized.includes('awaiting approval');
 }
 
 export function formatAuditTrailFilterLabel(value: string): string {

@@ -12,12 +12,25 @@ import {
   computeChangedAuditFieldKeys,
   formatAuditTrailDateTime,
   formatAuditTrailFieldLabel,
+  auditTrailResultVariant,
+  isAwaitingApprovalAuditResult,
+  isPendingCheckerAuditResult,
   parseAuditTrailCommandFields,
   parseAuditTrailCommandFieldsWithDiff,
   sortAuditTrailsChronologically,
   sortAuditTrailsNewestFirst
 } from './audit-trail-display';
 import { coerceFineractDateTime } from './dates';
+
+describe('audit trail result helpers', () => {
+  it('treats Error as a terminal non-pending status', () => {
+    assert.equal(isPendingCheckerAuditResult('Error'), false);
+    assert.equal(isPendingCheckerAuditResult('Awaiting Approval'), true);
+    assert.equal(isAwaitingApprovalAuditResult('Error'), false);
+    assert.equal(isAwaitingApprovalAuditResult('Awaiting Approval'), true);
+    assert.equal(auditTrailResultVariant('Error'), 'destructive');
+  });
+});
 
 describe('audit trail datetime display', () => {
   it('formats ZonedDateTime epoch millis from Fineract audits API', () => {

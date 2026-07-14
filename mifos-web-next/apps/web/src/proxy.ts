@@ -14,6 +14,36 @@ const LOGIN_ERROR_FLASH_PATH = '/api/auth/login-error-flash';
 const SERVER_HEALTH_PATH = '/api/servers/health';
 const SENTRY_TUNNEL_PATH = process.env.SENTRY_TUNNEL_ROUTE ?? '/monitoring';
 
+/** Query keys that must never appear on /login (e.g. accidental form GET). */
+const LOGIN_SENSITIVE_QUERY_KEYS = [
+  'username',
+  'password',
+  'user',
+  'pass',
+  'pwd',
+  'passwd',
+  'secret'
+] as const;
+
+function stripSensitiveLoginQuery(request: NextRequest): NextResponse | null {
+  if (request.nextUrl.pathname !== LOGIN_PATH) {
+    return null;
+  }
+  const url = request.nextUrl.clone();
+  let changed = false;
+  for (const key of LOGIN_SENSITIVE_QUERY_KEYS) {
+    if (url.searchParams.has(key)) {
+      url.searchParams.delete(key);
+      changed = true;
+    }
+  }
+  if (!changed) {
+    return null;
+  }
+  // Replace so credentials never linger in browser history from this hop.
+  return NextResponse.redirect(url, 303);
+}
+
 function readCatalog(request: NextRequest): ServerCatalog | null {
   const raw = request.cookies.get(SERVER_CATALOG_COOKIE)?.value;
   if (!raw) {
@@ -56,6 +86,11 @@ function loginUrl(request: NextRequest, options?: { from?: string; servers?: boo
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const sanitizedLogin = stripSensitiveLoginQuery(request);
+  if (sanitizedLogin) {
+    return sanitizedLogin;
+  }
 
   if (
     pathname.startsWith('/forbidden') ||

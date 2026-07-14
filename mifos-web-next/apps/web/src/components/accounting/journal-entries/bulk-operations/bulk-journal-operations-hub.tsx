@@ -9,17 +9,23 @@
  */
 
 import type { BulkImportHistoryItem } from '@mifos/api-client';
-import type { FineractOfficeOption } from '@mifos/api-client';
+import type { FineractCurrencyOption, FineractOfficeOption } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import { useState } from 'react';
 import { BulkJournalConstructWizard } from '@/components/accounting/journal-entries/bulk-construct/bulk-journal-construct-wizard';
 import type { BulkConstructWizardProps } from '@/components/accounting/journal-entries/bulk-construct/types';
+import { LegacyJournalEntriesImportPanel } from '@/components/accounting/journal-entries/bulk-operations/legacy-journal-entries-import-panel';
 import { BulkImportDetailPageContent } from '@/components/organization/bulk-import-detail-page-content';
 import { DetailBackLink } from '@/components/composites';
 import { PageHeader } from '@/components/composites/page-header';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { BulkImportDefinition } from '@/lib/fineract/bulk-import-config';
+import type {
+  LegacyImportLookupDepartment,
+  LegacyImportLookupGlAccount,
+  LegacyImportLookupOffice
+} from '@/lib/accounting/legacy-journal-entries-import';
 import {
   pageHeaderContentSpacing,
   platformInset,
@@ -33,7 +39,11 @@ export function BulkJournalOperationsHub({
   importDefinition,
   importOffices,
   importHistory,
-  canDownloadImport
+  canDownloadImport,
+  legacyOffices,
+  legacyDepartments,
+  legacyGlAccounts,
+  legacyCurrencies
 }: {
   canConstruct: boolean;
   constructProps: BulkConstructWizardProps;
@@ -41,6 +51,10 @@ export function BulkJournalOperationsHub({
   importOffices: FineractOfficeOption[];
   importHistory: BulkImportHistoryItem[];
   canDownloadImport: boolean;
+  legacyOffices: LegacyImportLookupOffice[];
+  legacyDepartments: LegacyImportLookupDepartment[];
+  legacyGlAccounts: LegacyImportLookupGlAccount[];
+  legacyCurrencies: FineractCurrencyOption[];
 }) {
   const [activeTab, setActiveTab] = useState('construct');
 
@@ -58,14 +72,15 @@ export function BulkJournalOperationsHub({
                 <DetailBackLink href="/accounting/journal-entries" label="Back to journal entries" />
                 <h1 className="text-2xl font-semibold tracking-tight">Bulk journal operations</h1>
                 <p className="text-sm text-muted-foreground">
-                  Construct similar journal entries for multiple branches or departments, or import
-                  from Excel.
+                  Construct similar journal entries for multiple branches or departments, import from
+                  Excel, or bring in legacy journal entries.
                 </p>
               </div>
               <div className="flex shrink-0 items-center self-start sm:self-center">
                 <TabsList>
                   <TabsTrigger value="construct">Construct entries</TabsTrigger>
                   <TabsTrigger value="import">Import from Excel</TabsTrigger>
+                  <TabsTrigger value="legacy-import">Import legacy entries</TabsTrigger>
                 </TabsList>
               </div>
             </div>
@@ -103,6 +118,28 @@ export function BulkJournalOperationsHub({
                 imports={importHistory}
                 canDownload={canDownloadImport}
                 embedded
+              />
+            </Can>
+          </div>
+        </TabsContent>
+
+        <TabsContent
+          value="legacy-import"
+          className="mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain data-[hidden]:hidden"
+        >
+          <div className={cn(platformInset, 'space-y-4 py-4')}>
+            <p className="text-sm text-muted-foreground">
+              Download the legacy Excel template, complete it offline, then analyze the file to
+              review matched branches, departments, and GL accounts before posting.
+            </p>
+            <Can permission="READ_JOURNALENTRY">
+              <LegacyJournalEntriesImportPanel
+                canDownload={canDownloadImport}
+                canPost={canConstruct}
+                offices={legacyOffices}
+                departments={legacyDepartments}
+                glAccounts={legacyGlAccounts}
+                currencies={legacyCurrencies}
               />
             </Can>
           </div>

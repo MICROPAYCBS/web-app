@@ -17,6 +17,7 @@ import {
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import { addClientDatatableRowAction } from '@/actions/client-datatable';
 import { createClientAction } from '@/actions/clients';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
@@ -310,6 +311,9 @@ export function CreateClientWizard({
       }
 
       const clientId = String(result.clientId);
+      if (result.contactSeedWarning) {
+        toast.message(result.contactSeedWarning);
+      }
       for (const dt of multiRowDatatablesForLegalForm(template, legalFormId)) {
         const rows = draft.multiRowDatatables[dt.registeredTableName] ?? [];
         for (const row of rows.slice(1)) {

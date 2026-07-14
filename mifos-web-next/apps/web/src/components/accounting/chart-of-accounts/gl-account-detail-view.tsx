@@ -190,9 +190,7 @@ export function GlAccountDetailView({
             {account.tagId?.name || account.tagId?.value ? (
               <DetailField label="Tag">{account.tagId.name ?? account.tagId.value}</DetailField>
             ) : null}
-            {account.description ? (
-              <DetailField label="Description">{account.description}</DetailField>
-            ) : null}
+            <DetailField label="Description">{account.description?.trim() || '—'}</DetailField>
           </DetailFieldGrid>
         </div>
 

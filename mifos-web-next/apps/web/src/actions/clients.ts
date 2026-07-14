@@ -20,10 +20,15 @@ import {
 import { revalidatePath } from 'next/cache';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { createClient } from '@/lib/fineract/clients';
+import { seedOnboardingClientContacts } from '@/lib/fineract/seed-onboarding-client-contacts';
 import { getServerSession } from '@/lib/session/server';
 
 export type ClientActionResult =
-  | ({ ok: true; clientId?: number } & FineractCommandActionMeta)
+  | ({
+      ok: true;
+      clientId?: number;
+      contactSeedWarning?: string;
+    } & FineractCommandActionMeta)
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 export async function createClientAction(
@@ -83,6 +88,16 @@ export async function createClientAction(
     revalidatePath('/clients');
     if (clientId != null) {
       revalidatePath(`/clients/${clientId}`);
+      revalidatePath(`/clients/${clientId}/contacts`);
+      const seeded = await seedOnboardingClientContacts(clientId, parsed.data);
+      const success = actionSuccessFromFineractCommand(result, { clientId });
+      if (!seeded.ok) {
+        return {
+          ...success,
+          contactSeedWarning: seeded.message
+        };
+      }
+      return success;
     }
     return actionSuccessFromFineractCommand(result, { clientId });
   } catch (err) {

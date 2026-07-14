@@ -104,6 +104,10 @@ export default async function BulkJournalOperationsPage() {
       importOffices={importOffices}
       importHistory={importHistory}
       canDownloadImport={canDownloadImport}
+      legacyOffices={offices}
+      legacyDepartments={departments}
+      legacyGlAccounts={glAccounts}
+      legacyCurrencies={currencies}
     />
   );
 }

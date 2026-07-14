@@ -112,6 +112,9 @@ export function LoginForm({
 
               {canSignIn ? (
                 <form
+                  // Progressive enhancement: default HTML GET would put credentials in the URL.
+                  method="post"
+                  action="/api/auth/login"
                   onSubmit={handleSubmit}
                   className={cn('space-y-4', activeServer ? 'mt-5' : 'mt-0')}
                   aria-busy={isSubmitting}

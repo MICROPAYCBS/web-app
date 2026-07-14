@@ -43,6 +43,7 @@ function zodFieldErrors(error: { issues: { path: (string | number)[]; message: s
 
 function revalidateClientContactViews(clientId: string) {
   revalidatePath(`/clients/${clientId}/general`);
+  revalidatePath(`/clients/${clientId}/contacts`);
 }
 
 type ParseClientContactResult = ClientContactActionResult | ClientContactInput;
