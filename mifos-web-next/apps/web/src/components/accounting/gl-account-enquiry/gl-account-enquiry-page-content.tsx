@@ -9,6 +9,7 @@
  */
 
 import type {
+  FineractCurrencyOption,
   FineractGlAccountDetail,
   FineractJournalEntriesPage,
   FineractJournalEntryGlAccountOption,
@@ -39,7 +40,7 @@ import {
   GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER,
   glAccountEnquiryFiltersFromQuery,
   glAccountEnquiryFiltersSignature,
-  glAccountEnquiryHasRequiredAccount,
+  glAccountEnquiryHasRequiredFilters,
   type GlAccountEnquiryListQuery,
   type GlAccountEnquirySearchFilters
 } from '@/lib/fineract/gl-account-enquiry-query';
@@ -51,7 +52,9 @@ export function GlAccountEnquiryPageContent({
   glAccount,
   offices,
   glAccounts,
-  departments
+  departments,
+  currencies,
+  defaultCurrencyCode
 }: {
   page: FineractJournalEntriesPage;
   query: GlAccountEnquiryListQuery;
@@ -60,17 +63,19 @@ export function GlAccountEnquiryPageContent({
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currencies: FineractCurrencyOption[];
+  defaultCurrencyCode: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const hasSearch = glAccountEnquiryHasRequiredAccount(query);
+  const hasSearch = glAccountEnquiryHasRequiredFilters(query);
   const [filterOpen, setFilterOpen] = useState(!hasSearch);
   const filters = glAccountEnquiryFiltersFromQuery(query);
   const [draftFilters, setDraftFilters] = useState(filters);
   const appliedFiltersSignature = useMemo(() => glAccountEnquiryFiltersSignature(filters), [filters]);
   const activeFilterCount = countActiveGlAccountEnquiryFilters(filters);
   const balanceScope = query.officeId ? 'office' : 'organization';
-  const currencyCode = page.pageItems[0]?.currency.code;
+  const currencyCode = query.currencyCode || defaultCurrencyCode;
   const periodLabel = formatGlAccountEnquiryPeriodLabel(query.fromDate, query.toDate);
   const accountHeading = formatGlAccountEnquiryAccountHeading(glAccount);
 
@@ -88,7 +93,7 @@ export function GlAccountEnquiryPageContent({
   );
 
   function handleApplyFilters(nextFilters: GlAccountEnquirySearchFilters) {
-    if (!nextFilters.glAccountId?.trim()) {
+    if (!nextFilters.glAccountId?.trim() || !nextFilters.currencyCode?.trim()) {
       return;
     }
     navigate({
@@ -106,6 +111,7 @@ export function GlAccountEnquiryPageContent({
       orderBy: GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY,
       sortOrder: GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER,
       glAccountId: '',
+      currencyCode: defaultCurrencyCode,
       dateFormat: query.dateFormat,
       locale: query.locale
     });
@@ -151,8 +157,8 @@ export function GlAccountEnquiryPageContent({
         {!hasSearch ? (
           <EmptyState
             icon={Search}
-            title="Select a GL account to begin"
-            description="Open search filters, choose the account you want to review, then run the enquiry."
+            title="Select a GL account and currency to begin"
+            description="Open search filters, choose the account and currency you want to review, then run the enquiry."
             action={
               <Button type="button" onClick={() => setFilterOpen(true)}>
                 Open search
@@ -199,6 +205,7 @@ export function GlAccountEnquiryPageContent({
         offices={offices}
         glAccounts={glAccounts}
         departments={departments}
+        currencies={currencies}
         pending={pending}
         onApply={handleApplyFilters}
         onClear={handleClearFilters}

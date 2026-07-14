@@ -17,6 +17,7 @@ import {
 } from '@/lib/fineract/gl-account-enquiry';
 import { parseGlAccountEnquiryListQuery } from '@/lib/fineract/gl-account-enquiry-query';
 import { listOfficeOptions } from '@/lib/fineract/offices';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function GlAccountEnquiryPage({
@@ -30,8 +31,15 @@ export default async function GlAccountEnquiryPage({
   }
 
   const params = await searchParams;
-  const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
-  const query = parseGlAccountEnquiryListQuery(params, defaultTransactionDate);
+  const [defaultTransactionDate, currencies] = await Promise.all([
+    getDefaultTransactionDate().catch(() => undefined),
+    getOrganizationSelectedCurrencies()
+  ]);
+  const defaultCurrencyCode = currencies.find((currency) => currency.code?.trim())?.code?.trim() ?? '';
+  const query = parseGlAccountEnquiryListQuery(params, {
+    defaultTransactionDate,
+    defaultCurrencyCode
+  });
   const [result, offices, glAccounts, departments] = await Promise.all([
     fetchGlAccountEnquiry(query),
     listOfficeOptions(),
@@ -48,6 +56,8 @@ export default async function GlAccountEnquiryPage({
       offices={offices}
       glAccounts={glAccounts}
       departments={departments}
+      currencies={currencies}
+      defaultCurrencyCode={defaultCurrencyCode}
     />
   );
 }

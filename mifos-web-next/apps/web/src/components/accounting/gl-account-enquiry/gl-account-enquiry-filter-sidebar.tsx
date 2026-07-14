@@ -9,6 +9,7 @@
  */
 
 import type {
+  FineractCurrencyOption,
   FineractJournalEntryGlAccountOption,
   FineractOfficeOption
 } from '@mifos/api-client';
@@ -16,7 +17,10 @@ import { ListFilterSheet } from '@/components/composites/list-filter-sheet';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { formatJournalEntryGlAccountLabel } from '@/lib/accounting/journal-entry-display';
+import {
+  currencySelectOptions,
+  formatJournalEntryGlAccountLabel
+} from '@/lib/accounting/journal-entry-display';
 import type { Department } from '@/lib/fineract/departments';
 import type { GlAccountEnquirySearchFilters } from '@/lib/fineract/gl-account-enquiry-query';
 
@@ -31,6 +35,7 @@ export function GlAccountEnquiryFilterFields({
   offices,
   glAccounts,
   departments,
+  currencies,
   pending = false
 }: {
   draft: GlAccountEnquirySearchFilters;
@@ -38,6 +43,7 @@ export function GlAccountEnquiryFilterFields({
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currencies: FineractCurrencyOption[];
   pending?: boolean;
 }) {
   function patchDraft(patch: Partial<GlAccountEnquirySearchFilters>) {
@@ -58,6 +64,15 @@ export function GlAccountEnquiryFilterFields({
         }))}
         placeholder="Select an account"
         disabled={pending}
+      />
+      <SelectField
+        label="Currency"
+        required
+        value={draft.currencyCode || undefined}
+        onValueChange={(value) => patchDraft({ currencyCode: value ?? '' })}
+        options={currencySelectOptions(currencies)}
+        placeholder="Select currency"
+        disabled={pending || currencies.length === 0}
       />
       <SelectField
         label="Branch"
@@ -145,6 +160,7 @@ export function GlAccountEnquiryFilterSidebar({
   offices,
   glAccounts,
   departments,
+  currencies,
   pending = false,
   onApply,
   onClear
@@ -156,11 +172,12 @@ export function GlAccountEnquiryFilterSidebar({
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currencies: FineractCurrencyOption[];
   pending?: boolean;
   onApply: (filters: GlAccountEnquirySearchFilters) => void;
   onClear: () => void;
 }) {
-  const canApply = Boolean(draft.glAccountId?.trim());
+  const canApply = Boolean(draft.glAccountId?.trim() && draft.currencyCode?.trim());
 
   function handleApply() {
     if (!canApply) {
@@ -174,7 +191,7 @@ export function GlAccountEnquiryFilterSidebar({
       open={open}
       onOpenChange={onOpenChange}
       title="GL account enquiry"
-      description="Select a GL account and optional filters. Running balances reflect the selected branch scope."
+      description="Select a GL account, currency, and optional filters. Running balances reflect the selected branch scope."
       applyLabel={pending ? 'Searching…' : 'Search'}
       onApply={handleApply}
       onClear={onClear}
@@ -187,6 +204,7 @@ export function GlAccountEnquiryFilterSidebar({
         offices={offices}
         glAccounts={glAccounts}
         departments={departments}
+        currencies={currencies}
         pending={pending}
       />
     </ListFilterSheet>

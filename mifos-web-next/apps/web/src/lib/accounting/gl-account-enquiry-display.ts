@@ -19,6 +19,11 @@ export function formatGlAccountEnquiryMoney(
   return formatAccountMoney(amount ?? undefined, currencyCode);
 }
 
+/** Amount for enquiry figures when currency is shown once in the page header. */
+export function formatGlAccountEnquiryAmountOnly(amount: number | null | undefined): string {
+  return formatAccountMoney(amount ?? undefined);
+}
+
 export function formatGlAccountEnquiryAccountHeading(account: FineractGlAccountDetail | null) {
   if (!account) {
     return 'GL account';

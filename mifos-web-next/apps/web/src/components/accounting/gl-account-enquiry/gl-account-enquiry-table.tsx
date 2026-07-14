@@ -25,16 +25,22 @@ import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Button } from '@/components/ui/button';
 import {
-  formatJournalEntryAmount,
   formatJournalEntryDate,
   formatJournalEntryDateTime,
   formatJournalEntryDepartment
 } from '@/lib/accounting/journal-entry-display';
-import { formatGlAccountEnquiryMoney } from '@/lib/accounting/gl-account-enquiry-display';
+import { formatGlAccountEnquiryAmountOnly } from '@/lib/accounting/gl-account-enquiry-display';
 import {
   readStoredColumnVisibility,
   writeStoredColumnVisibility
 } from '@/lib/data-table/column-visibility';
+
+function formatEnquirySideAmount(entry: FineractJournalEntryListItem, side: 'DEBIT' | 'CREDIT') {
+  if (entry.entryType.value !== side) {
+    return '—';
+  }
+  return formatGlAccountEnquiryAmountOnly(entry.amount);
+}
 
 const SORTABLE_COLUMNS = [
   'id',
@@ -274,7 +280,7 @@ export function useGlAccountEnquiryTable({
             onSort={onSort}
           />
         ),
-        cell: ({ row }) => formatJournalEntryAmount(row.original, 'DEBIT')
+        cell: ({ row }) => formatEnquirySideAmount(row.original, 'DEBIT')
       },
       {
         id: 'credit',
@@ -288,7 +294,7 @@ export function useGlAccountEnquiryTable({
             onSort={onSort}
           />
         ),
-        cell: ({ row }) => formatJournalEntryAmount(row.original, 'CREDIT')
+        cell: ({ row }) => formatEnquirySideAmount(row.original, 'CREDIT')
       },
       {
         id: 'runningBalance',
@@ -298,10 +304,7 @@ export function useGlAccountEnquiryTable({
         },
         header: balanceScope === 'office' ? 'Branch balance' : 'Organization balance',
         cell: ({ row }) =>
-          formatGlAccountEnquiryMoney(
-            readRunningBalance(row.original, balanceScope),
-            row.original.currency.code
-          )
+          formatGlAccountEnquiryAmountOnly(readRunningBalance(row.original, balanceScope))
       }
     ],
     [balanceScope, onSort, orderBy, sortOrder]

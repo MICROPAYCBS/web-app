@@ -11,7 +11,7 @@
 import { AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  formatGlAccountEnquiryMoney,
+  formatGlAccountEnquiryAmountOnly,
   glAccountEnquiryBalanceNatureLabel,
   glAccountEnquiryBalanceScopeLabel
 } from '@/lib/accounting/gl-account-enquiry-display';
@@ -65,6 +65,12 @@ export function GlAccountEnquirySummaryPanel({
       {accountHeading ? (
         <div className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{accountHeading}</span>
+          {currencyCode ? (
+            <>
+              <span className="mx-2 text-border">·</span>
+              <span className="font-medium text-foreground">{currencyCode}</span>
+            </>
+          ) : null}
           <span className="mx-2 text-border">·</span>
           <span>{periodLabel}</span>
         </div>
@@ -90,26 +96,26 @@ export function GlAccountEnquirySummaryPanel({
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <SummaryStat
           label="Opening balance"
-          value={formatGlAccountEnquiryMoney(summary.openingBalance, currencyCode)}
+          value={formatGlAccountEnquiryAmountOnly(summary.openingBalance)}
           description={`${balanceNature} · ${balanceScope}`}
         />
         <SummaryStat
           label="Total debits"
-          value={formatGlAccountEnquiryMoney(summary.totalDebits, currencyCode)}
+          value={formatGlAccountEnquiryAmountOnly(summary.totalDebits)}
           description={`${summary.entryCount.toLocaleString()} entries`}
         />
         <SummaryStat
           label="Total credits"
-          value={formatGlAccountEnquiryMoney(summary.totalCredits, currencyCode)}
+          value={formatGlAccountEnquiryAmountOnly(summary.totalCredits)}
         />
         <SummaryStat
           label="Net movement"
-          value={formatGlAccountEnquiryMoney(summary.netMovement, currencyCode)}
+          value={formatGlAccountEnquiryAmountOnly(summary.netMovement)}
           description={balanceNature}
         />
         <SummaryStat
           label="Closing balance"
-          value={formatGlAccountEnquiryMoney(summary.closingBalance, currencyCode)}
+          value={formatGlAccountEnquiryAmountOnly(summary.closingBalance)}
           description={`${balanceNature} · ${balanceScope}`}
         />
         <SummaryStat

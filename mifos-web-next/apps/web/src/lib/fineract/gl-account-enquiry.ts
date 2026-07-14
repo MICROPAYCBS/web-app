@@ -18,7 +18,7 @@ import { subDays } from 'date-fns';
 import { buildGlAccountEnquirySummary, type GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
 import {
   buildGlAccountEnquirySearchParams,
-  glAccountEnquiryHasRequiredAccount,
+  glAccountEnquiryHasRequiredFilters,
   type GlAccountEnquiryListQuery
 } from '@/lib/fineract/gl-account-enquiry-query';
 import { FINERACT_DATE_FORMAT, parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
@@ -251,7 +251,7 @@ export async function listGlAccountEnquiryOptions(): Promise<FineractJournalEntr
 export async function listGlAccountEnquiryEntries(
   query: GlAccountEnquiryListQuery
 ): Promise<FineractJournalEntriesPage> {
-  if (!glAccountEnquiryHasRequiredAccount(query)) {
+  if (!glAccountEnquiryHasRequiredFilters(query)) {
     return { pageItems: [], totalFilteredRecords: 0 };
   }
 
@@ -268,7 +268,7 @@ export type GlAccountEnquiryResult = {
 export async function fetchGlAccountEnquiry(
   query: GlAccountEnquiryListQuery
 ): Promise<GlAccountEnquiryResult> {
-  if (!glAccountEnquiryHasRequiredAccount(query)) {
+  if (!glAccountEnquiryHasRequiredFilters(query)) {
     return {
       page: { pageItems: [], totalFilteredRecords: 0 },
       summary: null,
