@@ -30,6 +30,7 @@ function entry(
   }> = {}
 ) {
   const entryTypeValue = overrides.entryType ?? 'DEBIT';
+  // Fineract JournalEntryType: CREDIT=1, DEBIT=2
   return {
     id: overrides.id ?? 1,
     officeName: 'Head Office',
@@ -39,7 +40,7 @@ function entry(
     glAccountCode: '110001',
     glAccountName: 'Cash',
     currency: { code: 'UGX', displaySymbol: 'UGX' },
-    entryType: { id: entryTypeValue === 'DEBIT' ? 1 : 2, value: entryTypeValue },
+    entryType: { id: entryTypeValue === 'DEBIT' ? 2 : 1, value: entryTypeValue },
     amount: overrides.amount ?? 100,
     organizationRunningBalance: overrides.organizationRunningBalance,
     reversed: overrides.reversed
@@ -97,6 +98,26 @@ describe('buildGlAccountEnquirySummary', () => {
     assert.equal(summary.closingBalance, 60);
     assert.equal(summary.entryCount, 2);
     assert.equal(summary.truncated, false);
+  });
+
+  it('classifies Fineract CREDIT id=1 as a credit (not a debit)', () => {
+    const summary = buildGlAccountEnquirySummary({
+      glAccountTypeId: GL_ACCOUNT_TYPE_ASSET,
+      balanceScope: 'organization',
+      entries: [
+        entry({ id: 60, amount: 30_000, entryType: 'DEBIT', organizationRunningBalance: 3_000 }),
+        entry({
+          id: 30,
+          amount: 5_027_000,
+          entryType: 'CREDIT',
+          organizationRunningBalance: -27_000
+        })
+      ]
+    });
+
+    assert.equal(summary.totalDebits, 30_000);
+    assert.equal(summary.totalCredits, 5_027_000);
+    assert.equal(summary.netMovement, 30_000 - 5_027_000);
   });
 
   it('uses a supplied opening balance when the period starts after prior activity', () => {

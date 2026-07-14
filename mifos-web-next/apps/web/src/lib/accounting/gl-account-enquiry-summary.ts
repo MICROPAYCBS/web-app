@@ -26,8 +26,19 @@ export type GlAccountEnquirySummary = {
   truncated: boolean;
 };
 
+/** Fineract `JournalEntryType`: CREDIT=1, DEBIT=2 (not the reverse). */
+const JOURNAL_ENTRY_TYPE_CREDIT = 1;
+const JOURNAL_ENTRY_TYPE_DEBIT = 2;
+
 function isDebitEntry(entry: Pick<FineractJournalEntryListItem, 'entryType'>): boolean {
-  return entry.entryType.value === 'DEBIT' || entry.entryType.id === 1;
+  const value = entry.entryType.value?.trim().toUpperCase();
+  if (value === 'DEBIT') {
+    return true;
+  }
+  if (value === 'CREDIT') {
+    return false;
+  }
+  return entry.entryType.id === JOURNAL_ENTRY_TYPE_DEBIT;
 }
 
 export function glAccountEntryIncreasesBalance(

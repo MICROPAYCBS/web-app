@@ -10,6 +10,7 @@
 
 import { AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   formatGlAccountEnquiryAmountOnly,
   glAccountEnquiryBalanceNatureLabel,
@@ -17,6 +18,7 @@ import {
 } from '@/lib/accounting/gl-account-enquiry-display';
 import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
 import { GL_ACCOUNT_ENQUIRY_SUMMARY_FETCH_LIMIT } from '@/lib/fineract/gl-account-enquiry-query';
+import { cn } from '@/lib/utils';
 
 function SummaryStat({
   label,
@@ -40,28 +42,88 @@ function SummaryStat({
   );
 }
 
+export function GlAccountEnquirySummarySkeleton({
+  accountHeading,
+  currencyCode,
+  periodLabel
+}: {
+  accountHeading?: string;
+  currencyCode?: string;
+  periodLabel?: string;
+}) {
+  return (
+    <div className="space-y-3" aria-busy aria-label="Loading account enquiry summary">
+      {accountHeading || periodLabel ? (
+        <div className="text-sm text-muted-foreground">
+          {accountHeading ? <span className="font-medium text-foreground">{accountHeading}</span> : null}
+          {accountHeading && currencyCode ? (
+            <>
+              <span className="mx-2 text-border">·</span>
+              <span className="font-medium text-foreground">{currencyCode}</span>
+            </>
+          ) : null}
+          {periodLabel ? (
+            <>
+              {(accountHeading || currencyCode) && <span className="mx-2 text-border">·</span>}
+              <span>{periodLabel}</span>
+            </>
+          ) : (
+            <Skeleton className="inline-block h-4 w-48" />
+          )}
+        </div>
+      ) : (
+        <Skeleton className="h-4 w-72" />
+      )}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} className="gap-0 py-0 shadow-sm">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent className="space-y-2 pb-4">
+              <Skeleton className="h-7 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function GlAccountEnquirySummaryPanel({
   summary,
   currencyCode,
   glAccountTypeId,
   periodLabel,
-  accountHeading
+  accountHeading,
+  pending = false
 }: {
   summary: GlAccountEnquirySummary | null;
   currencyCode?: string;
   glAccountTypeId?: number;
   periodLabel: string;
   accountHeading?: string;
+  pending?: boolean;
 }) {
   if (!summary) {
-    return null;
+    return pending ? (
+      <GlAccountEnquirySummarySkeleton
+        accountHeading={accountHeading}
+        currencyCode={currencyCode}
+        periodLabel={periodLabel}
+      />
+    ) : null;
   }
 
   const balanceNature = glAccountEnquiryBalanceNatureLabel(glAccountTypeId);
   const balanceScope = glAccountEnquiryBalanceScopeLabel(summary);
 
   return (
-    <div className="space-y-3">
+    <div
+      className={cn('space-y-3', pending && 'pointer-events-none opacity-60')}
+      aria-busy={pending || undefined}
+    >
       {accountHeading ? (
         <div className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{accountHeading}</span>
@@ -102,7 +164,6 @@ export function GlAccountEnquirySummaryPanel({
         <SummaryStat
           label="Total debits"
           value={formatGlAccountEnquiryAmountOnly(summary.totalDebits)}
-          description={`${summary.entryCount.toLocaleString()} entries`}
         />
         <SummaryStat
           label="Total credits"

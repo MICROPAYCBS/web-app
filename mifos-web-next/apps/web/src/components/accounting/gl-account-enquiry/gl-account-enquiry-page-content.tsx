@@ -167,32 +167,35 @@ export function GlAccountEnquiryPageContent({
           />
         ) : (
           <>
-            <GlAccountEnquirySummaryPanel
-              summary={summary}
-              currencyCode={currencyCode}
-              glAccountTypeId={glAccount?.type?.id}
-              periodLabel={periodLabel}
-              accountHeading={accountHeading}
-            />
-            <GlAccountEnquiryTableView
-              table={table}
-              page={page}
-              pending={pending}
-              toolbar={
-                <>
-                  <ListFilterTrigger
-                    activeCount={activeFilterCount}
-                    onClick={() => setFilterOpen(true)}
-                    disabled={pending}
-                  />
-                  <DataTableColumnVisibility
-                    table={table}
-                    disabled={pending}
-                    onReset={resetColumnVisibility}
-                  />
-                </>
-              }
-            />
+            <div className="space-y-4" aria-busy={pending || undefined}>
+              <GlAccountEnquirySummaryPanel
+                summary={summary}
+                currencyCode={currencyCode}
+                glAccountTypeId={glAccount?.type?.id}
+                periodLabel={periodLabel}
+                accountHeading={accountHeading}
+                pending={pending}
+              />
+              <GlAccountEnquiryTableView
+                table={table}
+                page={page}
+                pending={pending}
+                toolbar={
+                  <>
+                    <ListFilterTrigger
+                      activeCount={activeFilterCount}
+                      onClick={() => setFilterOpen(true)}
+                      disabled={pending}
+                    />
+                    <DataTableColumnVisibility
+                      table={table}
+                      disabled={pending}
+                      onReset={resetColumnVisibility}
+                    />
+                  </>
+                }
+              />
+            </div>
           </>
         )}
       </ListPage>

@@ -350,7 +350,8 @@ export function GlAccountEnquiryTableView({
       <DataTable
         table={table}
         stickyHeader={false}
-        emptyMessage={pending ? 'Loading entries…' : 'No journal entries found'}
+        isLoading={pending}
+        emptyMessage="No journal entries found"
         emptyDescription="Try adjusting your filters or date range."
       />
       <DataTablePagination table={table} totalRecords={page.totalFilteredRecords} />
