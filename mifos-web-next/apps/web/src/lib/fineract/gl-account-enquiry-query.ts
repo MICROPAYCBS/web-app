@@ -19,8 +19,11 @@ import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fin
 
 export const GL_ACCOUNT_ENQUIRY_DEFAULT_LIMIT = 50;
 export const GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY = 'transactionDate';
-export const GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER = 'asc';
+/** List shows the latest matching entry first. */
+export const GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER = 'desc';
 export const GL_ACCOUNT_ENQUIRY_SUMMARY_FETCH_LIMIT = 10_000;
+/** Summary totals walk the period oldest→newest (independent of list sort). */
+const GL_ACCOUNT_ENQUIRY_SUMMARY_SORT_ORDER = 'asc';
 
 export type GlAccountEnquirySearchFilters = JournalEntrySearchFilters & {
   glAccountId: string;
@@ -146,7 +149,7 @@ export function buildGlAccountEnquirySearchParams(
     params.offset = '0';
     params.limit = String(GL_ACCOUNT_ENQUIRY_SUMMARY_FETCH_LIMIT);
     params.orderBy = journalEntryOrderByForApi(GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY);
-    params.sortOrder = GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER;
+    params.sortOrder = GL_ACCOUNT_ENQUIRY_SUMMARY_SORT_ORDER;
   }
 
   return params;
