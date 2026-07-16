@@ -225,7 +225,8 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
 type TransactionRow = NonNullable<FineractSavingsAccountDetail['transactions']>[number];
 
 const DEFAULT_TRANSACTION_COLUMN_VISIBILITY: VisibilityState = {
-  externalId: false
+  externalId: false,
+  user: false
 };
 
 function SavingsTransactionAmountDisplay({ transaction }: { transaction: TransactionRow }) {
@@ -352,6 +353,15 @@ function buildTransactionColumns(
         ) : (
           <Badge variant="secondary">Posted</Badge>
         )
+    },
+    {
+      id: 'user',
+      header: 'User',
+      cell: ({ row }) => (
+        <TransactionCell transaction={row.original}>
+          {row.original.submittedByUsername?.trim() || '—'}
+        </TransactionCell>
+      )
     },
     {
       id: 'actions',
