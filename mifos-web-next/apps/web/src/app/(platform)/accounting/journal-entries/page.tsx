@@ -22,7 +22,7 @@ export default async function JournalEntriesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await getServerSession();
-  if (!can(session, resolvePermission('accounting.journal'))) {
+  if (!session || !can(session, resolvePermission('accounting.journal'))) {
     notFound();
   }
 
