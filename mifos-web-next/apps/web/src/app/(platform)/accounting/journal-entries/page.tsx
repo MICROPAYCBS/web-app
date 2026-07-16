@@ -29,6 +29,11 @@ export default async function JournalEntriesPage({
   const params = await searchParams;
   const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
   const query = parseJournalEntryListQuery(params, defaultTransactionDate);
+  const openTransactionRaw = params.openTransaction;
+  const openTransactionId =
+    typeof openTransactionRaw === 'string' && openTransactionRaw.trim()
+      ? openTransactionRaw.trim()
+      : undefined;
   const [page, offices, glAccounts, departments] = await Promise.all([
     listJournalEntries(query),
     listOfficeOptions(),
@@ -43,6 +48,7 @@ export default async function JournalEntriesPage({
       offices={offices}
       glAccounts={glAccounts}
       departments={departments}
+      openTransactionId={openTransactionId}
     />
   );
 }

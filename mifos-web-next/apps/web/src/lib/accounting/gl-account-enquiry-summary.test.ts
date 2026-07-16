@@ -8,142 +8,60 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import {
-  GL_ACCOUNT_TYPE_ASSET,
-  GL_ACCOUNT_TYPE_INCOME
-} from '@/lib/accounting/gl-account-display';
-import {
-  buildGlAccountEnquirySummary,
-  glAccountEntryIncreasesBalance,
-  glAccountEntrySignedAmount,
-  openingBalanceBeforeEntry
-} from '@/lib/accounting/gl-account-enquiry-summary';
+import { GL_ACCOUNT_TYPE_ASSET } from '@/lib/accounting/gl-account-display';
+import { buildGlAccountEnquirySummaryFromReport } from '@/lib/accounting/gl-account-enquiry-summary';
+import type { GlAccountEnquiryLine } from '@/lib/fineract/gl-account-enquiry-query';
 
-function entry(
-  overrides: Partial<{
-    id: number;
-    amount: number;
-    entryType: 'DEBIT' | 'CREDIT';
-    transactionDate: string;
-    organizationRunningBalance: number;
-    reversed: boolean;
-  }> = {}
-) {
-  const entryTypeValue = overrides.entryType ?? 'DEBIT';
-  // Fineract JournalEntryType: CREDIT=1, DEBIT=2
+function line(overrides: Partial<GlAccountEnquiryLine> = {}): GlAccountEnquiryLine {
   return {
-    id: overrides.id ?? 1,
-    officeName: 'Head Office',
-    transactionId: 'J1',
-    transactionDate: overrides.transactionDate ?? '01 July 2026',
-    glAccountType: { id: GL_ACCOUNT_TYPE_ASSET, value: 'ASSET' },
-    glAccountCode: '110001',
-    glAccountName: 'Cash',
-    currency: { code: 'UGX', displaySymbol: 'UGX' },
-    entryType: { id: entryTypeValue === 'DEBIT' ? 2 : 1, value: entryTypeValue },
-    amount: overrides.amount ?? 100,
-    organizationRunningBalance: overrides.organizationRunningBalance,
-    reversed: overrides.reversed
+    entryDate: '2026-07-04',
+    debitAmount: 0,
+    creditAmount: 0,
+    openingBalance: 5_000_000,
+    source: 'Manual',
+    transactionId: 'abc',
+    cumulativeSum: 5_000_000,
+    ...overrides
   };
 }
 
-describe('glAccountEntrySignedAmount', () => {
-  it('treats debits as positive for asset accounts', () => {
-    assert.equal(
-      glAccountEntrySignedAmount(GL_ACCOUNT_TYPE_ASSET, entry({ entryType: 'DEBIT', amount: 50 })),
-      50
-    );
-    assert.equal(
-      glAccountEntrySignedAmount(GL_ACCOUNT_TYPE_ASSET, entry({ entryType: 'CREDIT', amount: 50 })),
-      -50
-    );
-  });
-
-  it('treats credits as positive for income accounts', () => {
-    assert.equal(
-      glAccountEntrySignedAmount(GL_ACCOUNT_TYPE_INCOME, entry({ entryType: 'CREDIT', amount: 75 })),
-      75
-    );
-  });
-});
-
-describe('buildGlAccountEnquirySummary', () => {
-  it('computes totals and opening/closing balances from running balances', () => {
-    const summary = buildGlAccountEnquirySummary({
+describe('buildGlAccountEnquirySummaryFromReport', () => {
+  it('sums debits/credits and uses newest-row balances', () => {
+    const summary = buildGlAccountEnquirySummaryFromReport({
       glAccountTypeId: GL_ACCOUNT_TYPE_ASSET,
-      balanceScope: 'organization',
-      entries: [
-        entry({
-          id: 1,
-          amount: 100,
-          entryType: 'DEBIT',
-          transactionDate: '01 July 2026',
-          organizationRunningBalance: 100
+      lines: [
+        line({
+          transactionId: 'newer',
+          debitAmount: 30_000,
+          cumulativeSum: 3_000
         }),
-        entry({
-          id: 2,
-          amount: 40,
-          entryType: 'CREDIT',
-          transactionDate: '02 July 2026',
-          organizationRunningBalance: 60
-        })
-      ],
-      totalFilteredRecords: 2
-    });
-
-    assert.equal(summary.totalDebits, 100);
-    assert.equal(summary.totalCredits, 40);
-    assert.equal(summary.netMovement, 60);
-    assert.equal(summary.openingBalance, 0);
-    assert.equal(summary.closingBalance, 60);
-    assert.equal(summary.entryCount, 2);
-    assert.equal(summary.truncated, false);
-  });
-
-  it('classifies Fineract CREDIT id=1 as a credit (not a debit)', () => {
-    const summary = buildGlAccountEnquirySummary({
-      glAccountTypeId: GL_ACCOUNT_TYPE_ASSET,
-      balanceScope: 'organization',
-      entries: [
-        entry({ id: 60, amount: 30_000, entryType: 'DEBIT', organizationRunningBalance: 3_000 }),
-        entry({
-          id: 30,
-          amount: 5_027_000,
-          entryType: 'CREDIT',
-          organizationRunningBalance: -27_000
+        line({
+          transactionId: 'older',
+          creditAmount: 5_027_000,
+          cumulativeSum: -27_000
         })
       ]
     });
 
     assert.equal(summary.totalDebits, 30_000);
     assert.equal(summary.totalCredits, 5_027_000);
-    assert.equal(summary.netMovement, 30_000 - 5_027_000);
+    assert.equal(summary.openingBalance, 5_000_000);
+    assert.equal(summary.closingBalance, 3_000);
+    assert.equal(summary.netMovement, 3_000 - 5_000_000);
+    assert.equal(summary.entryCount, 2);
+    assert.equal(summary.truncated, false);
+    assert.equal(summary.balanceScope, 'office');
   });
 
-  it('uses a supplied opening balance when the period starts after prior activity', () => {
-    const summary = buildGlAccountEnquirySummary({
+  it('returns empty totals when there are no lines', () => {
+    const summary = buildGlAccountEnquirySummaryFromReport({
       glAccountTypeId: GL_ACCOUNT_TYPE_ASSET,
-      balanceScope: 'organization',
-      openingBalanceBeforePeriod: 250,
-      entries: [
-        entry({
-          id: 3,
-          amount: 50,
-          entryType: 'DEBIT',
-          organizationRunningBalance: 300
-        })
-      ]
+      lines: []
     });
-
-    assert.equal(summary.openingBalance, 250);
-    assert.equal(summary.closingBalance, 300);
-  });
-});
-
-describe('openingBalanceBeforeEntry', () => {
-  it('backs out the first entry amount from the running balance', () => {
-    const first = entry({ amount: 100, organizationRunningBalance: 100 });
-    assert.equal(openingBalanceBeforeEntry(GL_ACCOUNT_TYPE_ASSET, first, 'organization'), 0);
-    assert.equal(glAccountEntryIncreasesBalance(GL_ACCOUNT_TYPE_ASSET, first), true);
+    assert.equal(summary.entryCount, 0);
+    assert.equal(summary.totalDebits, 0);
+    assert.equal(summary.totalCredits, 0);
+    assert.equal(summary.openingBalance, null);
+    assert.equal(summary.closingBalance, null);
   });
 });

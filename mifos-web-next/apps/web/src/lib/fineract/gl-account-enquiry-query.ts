@@ -6,36 +6,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { toFineractDate } from '@/lib/fineract/dates';
 import {
-  buildJournalEntrySearchParams,
-  countActiveJournalEntryFilters,
-  journalEntryFiltersFromQuery,
-  journalEntryFiltersSignature,
-  journalEntryOrderByForApi,
-  JOURNAL_ENTRIES_DEFAULT_LIMIT,
-  type JournalEntrySearchFilters
-} from '@/lib/fineract/journal-entry-query';
-import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fineract/dates';
+  buildReportRunQueryParams,
+  formatReportRunDateValue
+} from '@/lib/fineract/report-run-display';
 
-export const GL_ACCOUNT_ENQUIRY_DEFAULT_LIMIT = 50;
-export const GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY = 'transactionDate';
-/** List shows the latest matching entry first. */
-export const GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER = 'desc';
-export const GL_ACCOUNT_ENQUIRY_SUMMARY_FETCH_LIMIT = 10_000;
-/** Summary totals walk the period oldest→newest (independent of list sort). */
-const GL_ACCOUNT_ENQUIRY_SUMMARY_SORT_ORDER = 'asc';
+/** Stretchy table report powered by m_gl_balance_snapshot + period journal lines. */
+export const GL_ACCOUNT_ENQUIRY_REPORT_NAME = 'GeneralLedgerReport Table';
 
-export type GlAccountEnquirySearchFilters = JournalEntrySearchFilters & {
+export type GlAccountEnquirySearchFilters = {
   glAccountId: string;
-  /** Required ISO currency code for the enquiry (e.g. UGX). */
+  /** Required ISO currency code (e.g. UGX). */
   currencyCode: string;
+  /** Required branch — report scopes by office hierarchy. */
+  officeId: string;
+  fromDate?: string;
+  toDate?: string;
 };
 
-export type GlAccountEnquiryListQuery = GlAccountEnquirySearchFilters & {
-  offset: number;
-  limit: number;
-  orderBy: string;
-  sortOrder: string;
+export type GlAccountEnquiryListQuery = GlAccountEnquirySearchFilters;
+
+export type GlAccountEnquiryLine = {
+  entryDate: string;
+  debitAmount: number;
+  creditAmount: number;
+  description?: string;
+  openingBalance: number;
+  source: string;
+  transactionId: string;
+  cumulativeSum: number;
 };
 
 function readParam(
@@ -61,34 +61,19 @@ export function parseGlAccountEnquiryListQuery(
   options?: {
     defaultTransactionDate?: string;
     defaultCurrencyCode?: string;
+    defaultOfficeId?: string;
   }
 ): GlAccountEnquiryListQuery {
   const defaultDate = resolveDefaultFilterDate(options?.defaultTransactionDate);
   const defaultCurrency = options?.defaultCurrencyCode?.trim().toUpperCase() ?? '';
-  const pageIndex = Math.max(0, Number(readParam(params, 'page') ?? '0') || 0);
-  const limit = Math.max(
-    1,
-    Number(readParam(params, 'limit') ?? String(GL_ACCOUNT_ENQUIRY_DEFAULT_LIMIT)) ||
-      GL_ACCOUNT_ENQUIRY_DEFAULT_LIMIT
-  );
+  const defaultOffice = options?.defaultOfficeId?.trim() ?? '';
 
   return {
-    offset: pageIndex * limit,
-    limit,
-    orderBy: readParam(params, 'orderBy') ?? GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY,
-    sortOrder: readParam(params, 'sortOrder') ?? GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER,
     glAccountId: readParam(params, 'glAccountId') ?? '',
     currencyCode: (readParam(params, 'currencyCode') ?? defaultCurrency).toUpperCase(),
-    officeId: readParam(params, 'officeId'),
-    departmentId: readParam(params, 'departmentId'),
-    manualEntriesOnly: readParam(params, 'manualEntriesOnly'),
-    transactionId: readParam(params, 'transactionId'),
+    officeId: readParam(params, 'officeId') ?? defaultOffice,
     fromDate: readParam(params, 'fromDate') ?? defaultDate,
-    toDate: readParam(params, 'toDate') ?? defaultDate,
-    submittedOnDateFrom: readParam(params, 'submittedOnDateFrom'),
-    submittedOnDateTo: readParam(params, 'submittedOnDateTo'),
-    dateFormat: FINERACT_DATE_FORMAT,
-    locale: FINERACT_LOCALE
+    toDate: readParam(params, 'toDate') ?? defaultDate
   };
 }
 
@@ -98,89 +83,72 @@ export function glAccountEnquiryHasRequiredAccount(query: GlAccountEnquiryListQu
 }
 
 export function glAccountEnquiryHasRequiredFilters(query: GlAccountEnquiryListQuery): boolean {
-  return glAccountEnquiryHasRequiredAccount(query) && Boolean(query.currencyCode?.trim());
+  const officeId = Number(query.officeId);
+  return (
+    glAccountEnquiryHasRequiredAccount(query) &&
+    Boolean(query.currencyCode?.trim()) &&
+    Number.isFinite(officeId) &&
+    officeId > 0 &&
+    Boolean(query.fromDate?.trim()) &&
+    Boolean(query.toDate?.trim())
+  );
 }
 
 export function glAccountEnquiryFiltersFromQuery(
   query: GlAccountEnquiryListQuery
 ): GlAccountEnquirySearchFilters {
   return {
-    ...journalEntryFiltersFromQuery(query),
     glAccountId: query.glAccountId,
-    currencyCode: query.currencyCode
+    currencyCode: query.currencyCode,
+    officeId: query.officeId,
+    fromDate: query.fromDate,
+    toDate: query.toDate
   };
 }
 
 export function countActiveGlAccountEnquiryFilters(
   filters: GlAccountEnquirySearchFilters
 ): number {
-  let count = countActiveJournalEntryFilters(filters);
-  if (filters.currencyCode?.trim()) {
-    count += 1;
-  }
+  let count = 0;
+  if (filters.glAccountId?.trim()) count += 1;
+  if (filters.currencyCode?.trim()) count += 1;
+  if (filters.officeId?.trim()) count += 1;
+  if (filters.fromDate?.trim()) count += 1;
+  if (filters.toDate?.trim()) count += 1;
   return count;
 }
 
 export function glAccountEnquiryFiltersSignature(filters: GlAccountEnquirySearchFilters): string {
   return JSON.stringify({
-    ...JSON.parse(journalEntryFiltersSignature(filters)),
-    currencyCode: filters.currencyCode ?? ''
+    glAccountId: filters.glAccountId ?? '',
+    currencyCode: filters.currencyCode ?? '',
+    officeId: filters.officeId ?? '',
+    fromDate: filters.fromDate ?? '',
+    toDate: filters.toDate ?? ''
   });
-}
-
-export function buildGlAccountEnquirySearchParams(
-  query: GlAccountEnquiryListQuery,
-  options: { runningBalance?: boolean; summaryFetch?: boolean } = {}
-): Record<string, string> {
-  const params = buildJournalEntrySearchParams(query);
-
-  if (query.currencyCode?.trim()) {
-    params.currencyCode = query.currencyCode.trim().toUpperCase();
-  }
-
-  if (options.runningBalance) {
-    params.runningBalance = 'true';
-  }
-
-  if (options.summaryFetch) {
-    params.offset = '0';
-    params.limit = String(GL_ACCOUNT_ENQUIRY_SUMMARY_FETCH_LIMIT);
-    params.orderBy = journalEntryOrderByForApi(
-      GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY,
-      GL_ACCOUNT_ENQUIRY_SUMMARY_SORT_ORDER
-    );
-    params.sortOrder = GL_ACCOUNT_ENQUIRY_SUMMARY_SORT_ORDER;
-  }
-
-  return params;
 }
 
 export function buildGlAccountEnquiryUrl(query: GlAccountEnquiryListQuery): string {
   const params = new URLSearchParams();
-  const page = Math.floor(query.offset / query.limit);
-  if (page > 0) {
-    params.set('page', String(page));
-  }
-  if (query.limit !== GL_ACCOUNT_ENQUIRY_DEFAULT_LIMIT) {
-    params.set('limit', String(query.limit));
-  }
-  if (query.orderBy && query.orderBy !== GL_ACCOUNT_ENQUIRY_DEFAULT_ORDER_BY) {
-    params.set('orderBy', query.orderBy);
-  }
-  if (query.sortOrder && query.sortOrder !== GL_ACCOUNT_ENQUIRY_DEFAULT_SORT_ORDER) {
-    params.set('sortOrder', query.sortOrder);
-  }
-
   const filters = glAccountEnquiryFiltersFromQuery(query);
   for (const [key, value] of Object.entries(filters)) {
-    if (key === 'dateFormat' || key === 'locale') {
-      continue;
-    }
     if (value) {
       params.set(key, value);
     }
   }
-
   const qs = params.toString();
   return qs ? `/accounting/gl-account-enquiry?${qs}` : '/accounting/gl-account-enquiry';
+}
+
+/** Query params for `GET /runreports/GeneralLedgerReport Table`. */
+export function buildGlAccountEnquiryReportParams(
+  query: GlAccountEnquiryListQuery
+): Record<string, string> {
+  return buildReportRunQueryParams({
+    officeId: query.officeId,
+    GLAccountNO: query.glAccountId,
+    currencyId: query.currencyCode.trim().toUpperCase(),
+    startDate: formatReportRunDateValue(query.fromDate ?? ''),
+    endDate: formatReportRunDateValue(query.toDate ?? '')
+  });
 }

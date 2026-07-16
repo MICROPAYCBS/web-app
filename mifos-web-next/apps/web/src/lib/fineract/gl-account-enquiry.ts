@@ -8,128 +8,20 @@ import 'server-only';
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractGlAccountDetail,
-  FineractJournalEntriesPage,
-  FineractJournalEntryGlAccountOption,
-  FineractJournalEntryListItem
-} from '@mifos/api-client';
-import { subDays } from 'date-fns';
-import { buildGlAccountEnquirySummary, type GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
+import type { FineractGlAccountDetail, FineractJournalEntryGlAccountOption } from '@mifos/api-client';
+import { buildGlAccountEnquirySummaryFromReport } from '@/lib/accounting/gl-account-enquiry-summary';
+import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
 import {
-  buildGlAccountEnquirySearchParams,
+  GL_ACCOUNT_ENQUIRY_REPORT_NAME,
+  buildGlAccountEnquiryReportParams,
   glAccountEnquiryHasRequiredFilters,
+  type GlAccountEnquiryLine,
   type GlAccountEnquiryListQuery
 } from '@/lib/fineract/gl-account-enquiry-query';
-import { FINERACT_DATE_FORMAT, parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
-import { getGlAccount } from '@/lib/fineract/gl-accounts';
 import { createFineractClient } from '@/lib/fineract/create-client';
-
-const JOURNAL_ENTRIES_PATH = '/journalentries';
-
-function normalizeEnumOption(raw: unknown): { id: number; value: string } | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-  const row = raw as Record<string, unknown>;
-  const id = Number(row.id);
-  const value = typeof row.value === 'string' ? row.value : '';
-  if (!Number.isFinite(id) || !value) {
-    return null;
-  }
-  return { id, value };
-}
-
-function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListItem | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-  const row = raw as Record<string, unknown>;
-  const id = Number(row.id);
-  const officeName = typeof row.officeName === 'string' ? row.officeName : '';
-  const transactionId = typeof row.transactionId === 'string' ? row.transactionId : '';
-  const glAccountCode = typeof row.glAccountCode === 'string' ? row.glAccountCode : '';
-  const glAccountName = typeof row.glAccountName === 'string' ? row.glAccountName : '';
-  const glAccountType = normalizeEnumOption(row.glAccountType);
-  const entryType = normalizeEnumOption(row.entryType);
-  const amount = Number(row.amount);
-  if (
-    !Number.isFinite(id) ||
-    !officeName ||
-    !transactionId ||
-    !glAccountCode ||
-    !glAccountName ||
-    !glAccountType ||
-    !entryType ||
-    !Number.isFinite(amount)
-  ) {
-    return null;
-  }
-
-  const currencyRaw = row.currency;
-  const currency =
-    currencyRaw && typeof currencyRaw === 'object'
-      ? {
-          code:
-            typeof (currencyRaw as Record<string, unknown>).code === 'string'
-              ? ((currencyRaw as Record<string, unknown>).code as string)
-              : '',
-          displaySymbol:
-            typeof (currencyRaw as Record<string, unknown>).displaySymbol === 'string'
-              ? ((currencyRaw as Record<string, unknown>).displaySymbol as string)
-              : undefined,
-          name:
-            typeof (currencyRaw as Record<string, unknown>).name === 'string'
-              ? ((currencyRaw as Record<string, unknown>).name as string)
-              : undefined
-        }
-      : { code: '' };
-
-  if (!currency.code) {
-    return null;
-  }
-
-  const organizationRunningBalance =
-    row.organizationRunningBalance != null ? Number(row.organizationRunningBalance) : undefined;
-  const officeRunningBalance =
-    row.officeRunningBalance != null ? Number(row.officeRunningBalance) : undefined;
-
-  return {
-    id,
-    officeName,
-    transactionId,
-    transactionDate:
-      typeof row.transactionDate === 'string' || Array.isArray(row.transactionDate)
-        ? (row.transactionDate as string | number[])
-        : '',
-    glAccountType,
-    createdByUserName:
-      typeof row.createdByUserName === 'string' ? row.createdByUserName : undefined,
-    submittedOnDate:
-      typeof row.submittedOnDate === 'string' || Array.isArray(row.submittedOnDate)
-        ? (row.submittedOnDate as string | number[])
-        : undefined,
-    glAccountCode,
-    glAccountName,
-    currency,
-    entryType,
-    amount,
-    manualEntry: row.manualEntry === true,
-    reversed: row.reversed === true,
-    referenceNumber: typeof row.referenceNumber === 'string' ? row.referenceNumber : undefined,
-    comments: typeof row.comments === 'string' ? row.comments : undefined,
-    paymentTypeName: typeof row.paymentTypeName === 'string' ? row.paymentTypeName : undefined,
-    externalAssetOwner:
-      typeof row.externalAssetOwner === 'string' ? row.externalAssetOwner : undefined,
-    departmentId: row.departmentId != null ? Number(row.departmentId) : undefined,
-    departmentName: typeof row.departmentName === 'string' ? row.departmentName : undefined,
-    organizationRunningBalance: Number.isFinite(organizationRunningBalance)
-      ? organizationRunningBalance
-      : undefined,
-    officeRunningBalance: Number.isFinite(officeRunningBalance) ? officeRunningBalance : undefined,
-    runningBalanceComputed: row.runningBalanceComputed === true
-  };
-}
+import { getGlAccount } from '@/lib/fineract/gl-accounts';
+import { sanitizeReportRunRows } from '@/lib/fineract/report-run-display';
+import { runReport } from '@/lib/fineract/run-reports';
 
 function normalizeGlAccountOption(raw: unknown): FineractJournalEntryGlAccountOption | null {
   if (!raw || typeof raw !== 'object') {
@@ -155,82 +47,62 @@ function normalizeGlAccountOption(raw: unknown): FineractJournalEntryGlAccountOp
   };
 }
 
-async function fetchJournalEntriesPage(
-  params: Record<string, string>
-): Promise<FineractJournalEntriesPage> {
-  const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>(JOURNAL_ENTRIES_PATH, params);
-  if (!raw || typeof raw !== 'object') {
-    return { pageItems: [], totalFilteredRecords: 0 };
-  }
-  const row = raw as Record<string, unknown>;
-  const pageItems = Array.isArray(row.pageItems)
-    ? row.pageItems
-        .map((item) => normalizeJournalEntryListItem(item))
-        .filter((item): item is FineractJournalEntryListItem => item !== null)
-    : [];
-  return {
-    pageItems,
-    totalFilteredRecords: Number(row.totalFilteredRecords) || pageItems.length
-  };
-}
-
-function balanceScopeForQuery(query: GlAccountEnquiryListQuery): 'office' | 'organization' {
-  return query.officeId ? 'office' : 'organization';
-}
-
-function dayBeforeFineractDate(value: string): string | null {
-  const parsed = parseFineractDateString(value);
-  if (!parsed) {
-    return null;
-  }
-  return toFineractDate(subDays(parsed, 1));
-}
-
-async function fetchOpeningBalanceBeforePeriod(
-  query: GlAccountEnquiryListQuery,
-  glAccountTypeId: number,
-  balanceScope: 'office' | 'organization'
-): Promise<number | null> {
-  if (!query.fromDate) {
-    return null;
-  }
-
-  const priorToDate = dayBeforeFineractDate(query.fromDate);
-  if (!priorToDate) {
-    return null;
-  }
-
-  const params = buildGlAccountEnquirySearchParams(
-    {
-      ...query,
-      toDate: priorToDate
-    },
-    { runningBalance: true, summaryFetch: true }
-  );
-  delete params.fromDate;
-
-  const page = await fetchJournalEntriesPage(params);
-  const entries = page.pageItems.filter((entry) => entry.reversed !== true);
-  if (entries.length === 0) {
-    return 0;
-  }
-
-  const lastEntry = [...entries].sort((left, right) => {
-    const leftDate = String(left.transactionDate);
-    const rightDate = String(right.transactionDate);
-    if (leftDate !== rightDate) {
-      return rightDate.localeCompare(leftDate);
+function readRowNumber(row: Record<string, unknown>, keys: string[]): number {
+  for (const key of keys) {
+    const direct = row[key];
+    if (direct != null && Number.isFinite(Number(direct))) {
+      return Number(direct);
     }
-    return right.id - left.id;
-  })[0];
+    const lower = row[key.toLowerCase()];
+    if (lower != null && Number.isFinite(Number(lower))) {
+      return Number(lower);
+    }
+  }
+  return 0;
+}
 
-  const runningBalance =
-    balanceScope === 'office'
-      ? lastEntry.officeRunningBalance
-      : lastEntry.organizationRunningBalance;
+function readRowString(row: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const direct = row[key];
+    if (typeof direct === 'string' && direct.trim()) {
+      return direct.trim();
+    }
+    if (Array.isArray(direct) && direct.length >= 3) {
+      const [year, month, day] = direct.map(Number);
+      if (year && month && day) {
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+    const lower = row[key.toLowerCase()];
+    if (typeof lower === 'string' && lower.trim()) {
+      return lower.trim();
+    }
+    if (Array.isArray(lower) && lower.length >= 3) {
+      const [year, month, day] = lower.map(Number);
+      if (year && month && day) {
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+  }
+  return '';
+}
 
-  return runningBalance != null && Number.isFinite(runningBalance) ? runningBalance : null;
+function normalizeEnquiryLine(row: Record<string, unknown>): GlAccountEnquiryLine | null {
+  const transactionId = readRowString(row, ['transaction_id', 'transactionId']);
+  const entryDate = readRowString(row, ['entry_date', 'entryDate']);
+  if (!transactionId && !entryDate) {
+    return null;
+  }
+  return {
+    entryDate,
+    debitAmount: readRowNumber(row, ['debit_amount', 'debitAmount']),
+    creditAmount: readRowNumber(row, ['credit_amount', 'creditAmount']),
+    description: readRowString(row, ['description']) || undefined,
+    openingBalance: readRowNumber(row, ['openingbalance', 'openingBalance']),
+    source: readRowString(row, ['source']) || '—',
+    transactionId: transactionId || '—',
+    cumulativeSum: readRowNumber(row, ['cumulative_sum', 'cumulativeSum'])
+  };
 }
 
 export async function listGlAccountEnquiryOptions(): Promise<FineractJournalEntryGlAccountOption[]> {
@@ -248,19 +120,8 @@ export async function listGlAccountEnquiryOptions(): Promise<FineractJournalEntr
     .sort((left, right) => left.glCode.localeCompare(right.glCode));
 }
 
-export async function listGlAccountEnquiryEntries(
-  query: GlAccountEnquiryListQuery
-): Promise<FineractJournalEntriesPage> {
-  if (!glAccountEnquiryHasRequiredFilters(query)) {
-    return { pageItems: [], totalFilteredRecords: 0 };
-  }
-
-  const params = buildGlAccountEnquirySearchParams(query, { runningBalance: true });
-  return fetchJournalEntriesPage(params);
-}
-
 export type GlAccountEnquiryResult = {
-  page: FineractJournalEntriesPage;
+  lines: GlAccountEnquiryLine[];
   summary: GlAccountEnquirySummary | null;
   glAccount: FineractGlAccountDetail | null;
 };
@@ -270,41 +131,30 @@ export async function fetchGlAccountEnquiry(
 ): Promise<GlAccountEnquiryResult> {
   if (!glAccountEnquiryHasRequiredFilters(query)) {
     return {
-      page: { pageItems: [], totalFilteredRecords: 0 },
+      lines: [],
       summary: null,
       glAccount: null
     };
   }
 
   const glAccountId = Number(query.glAccountId);
-  const balanceScope = balanceScopeForQuery(query);
-
-  const [page, summaryPage, glAccount] = await Promise.all([
-    listGlAccountEnquiryEntries(query),
-    fetchJournalEntriesPage(
-      buildGlAccountEnquirySearchParams(query, { runningBalance: true, summaryFetch: true })
-    ),
+  const [report, glAccount] = await Promise.all([
+    runReport(GL_ACCOUNT_ENQUIRY_REPORT_NAME, buildGlAccountEnquiryReportParams(query)),
     getGlAccount(glAccountId).catch(() => null)
   ]);
 
+  const lines = sanitizeReportRunRows(report)
+    .map((row) => normalizeEnquiryLine(row))
+    .filter((line): line is GlAccountEnquiryLine => line !== null);
+
   const glAccountTypeId = glAccount?.type?.id;
-  if (glAccountTypeId == null) {
-    return { page, summary: null, glAccount };
-  }
+  const summary =
+    glAccountTypeId == null
+      ? null
+      : buildGlAccountEnquirySummaryFromReport({
+          lines,
+          glAccountTypeId
+        });
 
-  const openingBalanceBeforePeriod = await fetchOpeningBalanceBeforePeriod(
-    query,
-    glAccountTypeId,
-    balanceScope
-  );
-
-  const summary = buildGlAccountEnquirySummary({
-    entries: summaryPage.pageItems,
-    glAccountTypeId,
-    balanceScope,
-    openingBalanceBeforePeriod,
-    totalFilteredRecords: summaryPage.totalFilteredRecords
-  });
-
-  return { page, summary, glAccount };
+  return { lines, summary, glAccount };
 }

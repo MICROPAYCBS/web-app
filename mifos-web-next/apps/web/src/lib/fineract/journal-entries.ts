@@ -188,7 +188,10 @@ export async function getJournalEntryTransaction(
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(JOURNAL_ENTRIES_PATH, {
     transactionId,
-    transactionDetails: 'true'
+    transactionDetails: 'true',
+    // Bound the association query — a transaction is a small set of lines.
+    limit: '200',
+    offset: '0'
   });
   if (!raw || typeof raw !== 'object') {
     return { pageItems: [], totalFilteredRecords: 0 };

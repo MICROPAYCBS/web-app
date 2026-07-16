@@ -10,7 +10,6 @@ import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { GlAccountEnquiryPageContent } from '@/components/accounting/gl-account-enquiry/gl-account-enquiry-page-content';
 import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
-import { listDepartments } from '@/lib/fineract/departments';
 import {
   fetchGlAccountEnquiry,
   listGlAccountEnquiryOptions
@@ -31,33 +30,35 @@ export default async function GlAccountEnquiryPage({
   }
 
   const params = await searchParams;
-  const [defaultTransactionDate, currencies] = await Promise.all([
+  const [defaultTransactionDate, currencies, offices] = await Promise.all([
     getDefaultTransactionDate().catch(() => undefined),
-    getOrganizationSelectedCurrencies()
+    getOrganizationSelectedCurrencies(),
+    listOfficeOptions()
   ]);
-  const defaultCurrencyCode = currencies.find((currency) => currency.code?.trim())?.code?.trim() ?? '';
+  const defaultCurrencyCode =
+    currencies.find((currency) => currency.code?.trim())?.code?.trim() ?? '';
+  const defaultOfficeId = offices[0] ? String(offices[0].id) : '';
   const query = parseGlAccountEnquiryListQuery(params, {
     defaultTransactionDate,
-    defaultCurrencyCode
+    defaultCurrencyCode,
+    defaultOfficeId
   });
-  const [result, offices, glAccounts, departments] = await Promise.all([
+  const [result, glAccounts] = await Promise.all([
     fetchGlAccountEnquiry(query),
-    listOfficeOptions(),
-    listGlAccountEnquiryOptions(),
-    listDepartments()
+    listGlAccountEnquiryOptions()
   ]);
 
   return (
     <GlAccountEnquiryPageContent
-      page={result.page}
+      lines={result.lines}
       query={query}
       summary={result.summary}
       glAccount={result.glAccount}
       offices={offices}
       glAccounts={glAccounts}
-      departments={departments}
       currencies={currencies}
       defaultCurrencyCode={defaultCurrencyCode}
+      defaultOfficeId={defaultOfficeId}
     />
   );
 }

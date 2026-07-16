@@ -20,3 +20,13 @@ export function loanJournalTransactionId(transactionId: string | number): string
 export function journalEntryTransactionPath(transactionId: string): string {
   return `/accounting/journal-entries/transactions/${encodeURIComponent(transactionId)}`;
 }
+
+/** Journal entries list URL that opens the transaction sheet after navigation. */
+export function journalEntriesListPathWithOpenTransaction(transactionId: string): string {
+  const params = new URLSearchParams();
+  params.set('openTransaction', transactionId.trim());
+  return `/accounting/journal-entries?${params.toString()}`;
+}
+
+/** Query key used after create to open the docked transaction sheet. */
+export const JOURNAL_ENTRIES_OPEN_TRANSACTION_PARAM = 'openTransaction';

@@ -16,6 +16,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode
 } from 'react';
@@ -62,13 +63,21 @@ function loadTransaction(
   }) => void
 ) {
   onComplete({ entries: [], error: null, loading: true });
-  void getJournalEntryTransactionAction(transactionId).then((result) => {
-    if (!result.ok) {
-      onComplete({ entries: [], error: result.message, loading: false });
-      return;
-    }
-    onComplete({ entries: result.entries, error: null, loading: false });
-  });
+  void getJournalEntryTransactionAction(transactionId)
+    .then((result) => {
+      if (!result.ok) {
+        onComplete({ entries: [], error: result.message, loading: false });
+        return;
+      }
+      onComplete({ entries: result.entries, error: null, loading: false });
+    })
+    .catch(() => {
+      onComplete({
+        entries: [],
+        error: 'Failed to load journal transaction.',
+        loading: false
+      });
+    });
 }
 
 export function JournalEntryTransactionPanelProvider({ children }: { children: ReactNode }) {
@@ -78,10 +87,30 @@ export function JournalEntryTransactionPanelProvider({ children }: { children: R
   const [entries, setEntries] = useState<FineractJournalEntryListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadGenerationRef = useRef(0);
 
   const closeJournalTransaction = useCallback(() => {
     setOpen(false);
   }, []);
+
+  const applyLoadResult = useCallback(
+    (
+      generation: number,
+      result: {
+        entries: FineractJournalEntryListItem[];
+        error: string | null;
+        loading: boolean;
+      }
+    ) => {
+      if (generation !== loadGenerationRef.current) {
+        return;
+      }
+      setLoading(result.loading);
+      setError(result.error);
+      setEntries(result.entries);
+    },
+    []
+  );
 
   const openJournalTransaction = useCallback(
     (input: JournalEntryTransactionOpenInput) => {
@@ -94,6 +123,7 @@ export function JournalEntryTransactionPanelProvider({ children }: { children: R
         return;
       }
 
+      const generation = ++loadGenerationRef.current;
       setOpen(true);
       setTransactionId(request.transactionId);
       setError(null);
@@ -105,39 +135,23 @@ export function JournalEntryTransactionPanelProvider({ children }: { children: R
       }
 
       setEntries([]);
-      loadTransaction(request.transactionId, ({ entries: nextEntries, error: nextError, loading: nextLoading }) => {
-        setLoading(nextLoading);
-        setError(nextError);
-        setEntries(nextEntries);
-      });
+      loadTransaction(request.transactionId, (result) => applyLoadResult(generation, result));
     },
-    [canView]
+    [applyLoadResult, canView]
   );
 
   const handleReverted = useCallback(
     (result: { transactionId?: string }) => {
-      const nextTransactionId = result.transactionId?.trim();
-      if (nextTransactionId && nextTransactionId !== transactionId) {
-        setTransactionId(nextTransactionId);
-        setEntries([]);
-        loadTransaction(nextTransactionId, ({ entries: nextEntries, error: nextError, loading: nextLoading }) => {
-          setLoading(nextLoading);
-          setError(nextError);
-          setEntries(nextEntries);
-        });
+      const nextTransactionId = result.transactionId?.trim() || transactionId;
+      if (!nextTransactionId) {
         return;
       }
-
-      if (transactionId) {
-        setEntries([]);
-        loadTransaction(transactionId, ({ entries: nextEntries, error: nextError, loading: nextLoading }) => {
-          setLoading(nextLoading);
-          setError(nextError);
-          setEntries(nextEntries);
-        });
-      }
+      const generation = ++loadGenerationRef.current;
+      setTransactionId(nextTransactionId);
+      setEntries([]);
+      loadTransaction(nextTransactionId, (next) => applyLoadResult(generation, next));
     },
-    [transactionId]
+    [applyLoadResult, transactionId]
   );
 
   const value = useMemo(

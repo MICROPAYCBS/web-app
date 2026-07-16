@@ -29,7 +29,6 @@ import { createJournalEntryAction } from '@/actions/journal-entries';
 import { JournalEntryLinesEditor } from '@/components/accounting/journal-entries/journal-entry-lines-editor';
 import { validateJournalEntryForm } from '@/components/accounting/journal-entries/journal-entry-form-validation';
 import { JournalEntryTotalsSummary } from '@/components/accounting/journal-entry-totals-summary';
-import { useJournalEntryTransactionPanel } from '@/components/accounting/journal-entries/journal-entry-transaction-panel';
 import { DetailSection } from '@/components/composites';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormPageFooter } from '@/components/composites/form-page-footer';
@@ -38,6 +37,7 @@ import { TextField } from '@/components/composites/text-field';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CENTRAL_BRANCH_CLEARING_NOT_CONFIGURED_MESSAGE } from '@/lib/accounting/inter-branch-recon';
+import { journalEntriesListPathWithOpenTransaction } from '@/lib/accounting/journal-entry-links';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { currencySelectOptions } from '@/lib/accounting/journal-entry-display';
 import type { Department } from '@/lib/fineract/departments';
@@ -120,7 +120,6 @@ export function JournalEntryCreateForm({
   clearingConfigured = true
 }: JournalEntryCreateFormProps) {
   const router = useRouter();
-  const journalPanel = useJournalEntryTransactionPanel();
   const [form, setForm] = useState<CreateJournalEntryFormInput>(initialValues);
   const formRef = useRef(form);
   formRef.current = form;
@@ -226,8 +225,9 @@ export function JournalEntryCreateForm({
         return;
       }
       if (result.transactionId) {
-        router.push(JOURNAL_ENTRIES_LIST_PATH);
-        journalPanel.openJournalTransaction(result.transactionId);
+        // Open the sheet from the list page after navigation — starting the fetch on the
+        // create page can leave loading stuck when the route transition aborts the action.
+        router.push(journalEntriesListPathWithOpenTransaction(result.transactionId));
       } else {
         router.push(JOURNAL_ENTRIES_LIST_PATH);
         return;

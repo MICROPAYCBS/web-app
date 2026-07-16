@@ -24,6 +24,7 @@ import {
   useJournalEntriesTable,
   type JournalEntrySortColumn
 } from '@/components/accounting/journal-entries/journal-entries-table';
+import { useJournalEntryTransactionPanel } from '@/components/accounting/journal-entries/journal-entry-transaction-panel';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
@@ -48,15 +49,18 @@ export function JournalEntriesPageContent({
   query,
   offices,
   glAccounts,
-  departments
+  departments,
+  openTransactionId
 }: {
   page: FineractJournalEntriesPage;
   query: JournalEntryListQuery;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  openTransactionId?: string;
 }) {
   const router = useRouter();
+  const journalPanel = useJournalEntryTransactionPanel();
   const [pending, startTransition] = useTransition();
   const [filterOpen, setFilterOpen] = useState(false);
   const filters = journalEntryFiltersFromQuery(query);
@@ -67,6 +71,18 @@ export function JournalEntriesPageContent({
   useEffect(() => {
     setDraftFilters(filters);
   }, [appliedFiltersSignature]);
+
+  useEffect(() => {
+    const transactionId = openTransactionId?.trim();
+    if (!transactionId || !journalPanel.canView) {
+      return;
+    }
+    journalPanel.openJournalTransaction(transactionId);
+    // Drop the one-shot deep-link param so refresh/back does not reopen forever.
+    startTransition(() => {
+      router.replace(buildJournalEntriesUrl(query));
+    });
+  }, [openTransactionId]);
 
   const navigate = useCallback(
     (next: JournalEntryListQuery) => {

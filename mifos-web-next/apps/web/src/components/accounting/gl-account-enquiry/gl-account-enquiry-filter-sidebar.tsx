@@ -16,25 +16,17 @@ import type {
 import { ListFilterSheet } from '@/components/composites/list-filter-sheet';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
-import { TextField } from '@/components/composites/text-field';
 import {
   currencySelectOptions,
   formatJournalEntryGlAccountLabel
 } from '@/lib/accounting/journal-entry-display';
-import type { Department } from '@/lib/fineract/departments';
 import type { GlAccountEnquirySearchFilters } from '@/lib/fineract/gl-account-enquiry-query';
-
-const ENTRY_TYPE_OPTIONS = [
-  { value: '', label: 'All entries' },
-  { value: 'true', label: 'Manual entries' }
-];
 
 export function GlAccountEnquiryFilterFields({
   draft,
   onDraftChange,
   offices,
   glAccounts,
-  departments,
   currencies,
   pending = false
 }: {
@@ -42,7 +34,6 @@ export function GlAccountEnquiryFilterFields({
   onDraftChange: (draft: GlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
-  departments: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
 }) {
@@ -66,6 +57,18 @@ export function GlAccountEnquiryFilterFields({
         disabled={pending}
       />
       <SelectField
+        label="Branch"
+        required
+        value={draft.officeId || undefined}
+        onValueChange={(value) => patchDraft({ officeId: value ?? '' })}
+        options={offices.map((office) => ({
+          value: String(office.id),
+          label: office.name ?? office.nameDecorated ?? String(office.id)
+        }))}
+        placeholder="Select a branch"
+        disabled={pending}
+      />
+      <SelectField
         label="Currency"
         required
         value={draft.currencyCode || undefined}
@@ -73,47 +76,6 @@ export function GlAccountEnquiryFilterFields({
         options={currencySelectOptions(currencies)}
         placeholder="Select currency"
         disabled={pending || currencies.length === 0}
-      />
-      <SelectField
-        label="Branch"
-        optional
-        value={draft.officeId}
-        onValueChange={(value) => patchDraft({ officeId: value })}
-        options={offices.map((office) => ({
-          value: String(office.id),
-          label: office.name ?? office.nameDecorated ?? String(office.id)
-        }))}
-        placeholder="All branches"
-        disabled={pending}
-      />
-      <SelectField
-        label="Department"
-        optional
-        value={draft.departmentId}
-        onValueChange={(value) => patchDraft({ departmentId: value })}
-        options={departments
-          .filter((department) => department.active !== false)
-          .filter(
-            (department) =>
-              !draft.officeId ||
-              department.officeId == null ||
-              String(department.officeId) === draft.officeId
-          )
-          .map((department) => ({
-            value: String(department.id),
-            label: department.departmentName,
-            keywords: [department.departmentCode]
-          }))}
-        placeholder="All departments"
-        disabled={pending}
-      />
-      <SelectField
-        label="Entry type"
-        optional
-        value={draft.manualEntriesOnly ?? ''}
-        onValueChange={(value) => patchDraft({ manualEntriesOnly: value ?? '' })}
-        options={ENTRY_TYPE_OPTIONS}
-        disabled={pending}
       />
       <DateField
         label="Transaction date from"
@@ -127,27 +89,6 @@ export function GlAccountEnquiryFilterFields({
         onChange={(value) => patchDraft({ toDate: value })}
         disabled={pending}
       />
-      <TextField
-        label="Transaction ID"
-        optional
-        value={draft.transactionId ?? ''}
-        onChange={(value) => patchDraft({ transactionId: value })}
-        disabled={pending}
-      />
-      <DateField
-        label="Submitted on from"
-        optional
-        value={draft.submittedOnDateFrom}
-        onChange={(value) => patchDraft({ submittedOnDateFrom: value })}
-        disabled={pending}
-      />
-      <DateField
-        label="Submitted on to"
-        optional
-        value={draft.submittedOnDateTo}
-        onChange={(value) => patchDraft({ submittedOnDateTo: value })}
-        disabled={pending}
-      />
     </div>
   );
 }
@@ -159,7 +100,6 @@ export function GlAccountEnquiryFilterSidebar({
   onDraftChange,
   offices,
   glAccounts,
-  departments,
   currencies,
   pending = false,
   onApply,
@@ -171,13 +111,14 @@ export function GlAccountEnquiryFilterSidebar({
   onDraftChange: (draft: GlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
-  departments: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
   onApply: (filters: GlAccountEnquirySearchFilters) => void;
   onClear: () => void;
 }) {
-  const canApply = Boolean(draft.glAccountId?.trim() && draft.currencyCode?.trim());
+  const canApply = Boolean(
+    draft.glAccountId?.trim() && draft.currencyCode?.trim() && draft.officeId?.trim()
+  );
 
   function handleApply() {
     if (!canApply) {
@@ -191,7 +132,7 @@ export function GlAccountEnquiryFilterSidebar({
       open={open}
       onOpenChange={onOpenChange}
       title="GL account enquiry"
-      description="Select a GL account, currency, and optional filters. Running balances reflect the selected branch scope."
+      description="Select a GL account, branch, currency, and date range. Balances use the ledger snapshot plus period activity."
       applyLabel={pending ? 'Searching…' : 'Search'}
       onApply={handleApply}
       onClear={onClear}
@@ -203,7 +144,6 @@ export function GlAccountEnquiryFilterSidebar({
         onDraftChange={onDraftChange}
         offices={offices}
         glAccounts={glAccounts}
-        departments={departments}
         currencies={currencies}
         pending={pending}
       />
