@@ -94,13 +94,7 @@ export function CheckerInboxTable({
     () => [
       {
         id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected()}
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(value === true)}
-            aria-label="Select all items on this page"
-          />
-        ),
+        header: () => null,
         cell: ({ row }) => (
           <Checkbox
             checked={row.getIsSelected()}
@@ -269,6 +263,7 @@ export function CheckerInboxTable({
       rowSelection,
       pagination
     },
+    enableMultiRowSelection: false,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
     getRowId: (row) => String(row.id),
