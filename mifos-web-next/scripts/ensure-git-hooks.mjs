@@ -18,6 +18,38 @@ try {
   process.exit(0);
 }
 
+function gitConfig(key) {
+  try {
+    return execSync(`git config --get ${key}`, {
+      encoding: 'utf8',
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+  } catch {
+    return '';
+  }
+}
+
+/** Husky 9 sets hooksPath to `.husky/_`; older setups use `.husky`. */
+function hooksPathLooksLikeHusky(hooksPath) {
+  const normalized = hooksPath.replace(/\\/g, '/');
+  return (
+    normalized === '.husky' ||
+    normalized === '.husky/_' ||
+    normalized.endsWith('/.husky') ||
+    normalized.endsWith('/.husky/_')
+  );
+}
+
+const hooksPath = gitConfig('core.hooksPath');
+if (!hooksPath || !hooksPathLooksLikeHusky(hooksPath)) {
+  console.warn(
+    `\nmifos-web-next: Git hooks are not active (core.hooksPath=${hooksPath || 'unset'}).\n` +
+      'Commits and pushes can reach Vercel without local typecheck/build.\n' +
+      'From the repository root run: npm install\n'
+  );
+}
+
 function warnMissingHook(hookName, scriptName) {
   const hookPath = join(root, `.husky/${hookName}`);
   if (!existsSync(hookPath)) {
