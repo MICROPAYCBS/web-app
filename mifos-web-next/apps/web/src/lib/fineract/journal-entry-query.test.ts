@@ -8,14 +8,23 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { journalEntryOrderByForApi, parseJournalEntryListQuery } from './journal-entry-query';
+import {
+  JOURNAL_ENTRIES_CREATED_BY_ALL,
+  buildJournalEntrySearchParams,
+  journalEntryOrderByForApi,
+  parseJournalEntryListQuery
+} from './journal-entry-query';
 
 describe('parseJournalEntryListQuery', () => {
   it('defaults transaction date range to the organisation business date', () => {
-    const query = parseJournalEntryListQuery({}, '07 July 2026');
+    const query = parseJournalEntryListQuery(
+      {},
+      { defaultTransactionDate: '07 July 2026', defaultCreatedByUserId: '42' }
+    );
 
     assert.equal(query.fromDate, '07 July 2026');
     assert.equal(query.toDate, '07 July 2026');
+    assert.equal(query.createdByUserId, '42');
   });
 
   it('keeps explicit transaction dates from the URL', () => {
@@ -24,11 +33,21 @@ describe('parseJournalEntryListQuery', () => {
         fromDate: '01 July 2026',
         toDate: '05 July 2026'
       },
-      '07 July 2026'
+      { defaultTransactionDate: '07 July 2026', defaultCreatedByUserId: '42' }
     );
 
     assert.equal(query.fromDate, '01 July 2026');
     assert.equal(query.toDate, '05 July 2026');
+  });
+
+  it('allows createdByUserId=all to mean every user', () => {
+    const query = parseJournalEntryListQuery(
+      { createdByUserId: JOURNAL_ENTRIES_CREATED_BY_ALL },
+      { defaultCreatedByUserId: '42' }
+    );
+    assert.equal(query.createdByUserId, JOURNAL_ENTRIES_CREATED_BY_ALL);
+    const params = buildJournalEntrySearchParams(query);
+    assert.equal(params.createdByUserId, undefined);
   });
 });
 

@@ -9,8 +9,8 @@
  */
 
 import { Check, Trash2, X } from 'lucide-react';
-import { useMemo, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '@mifos/auth';
 import { toastFineractError } from '@/lib/toast-fineract-error';
 import {
@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { FineractRolePermissionUsage } from '@mifos/api-client';
 import type { CheckerInboxEnrichedItem } from '@/lib/checker-inbox/checker-inbox-item-types';
 import {
@@ -52,24 +53,47 @@ import {
 import { CheckerInboxWorkflowStageNotice } from '@/components/tasks/checker-inbox-workflow-stage-notice';
 import { CheckerInboxSelfApprovalNotice } from '@/components/tasks/checker-inbox-self-approval-notice';
 import { formatCheckerInboxWorkflowStageHeadline } from '@/lib/checker-inbox/workflow-stage-progress';
-import { resolveCheckerInboxSelfApprovalBlock } from '@/lib/checker-inbox/checker-inbox-self-approval';
+import {
+  isCheckerInboxItemMaker,
+  resolveCheckerInboxSelfApprovalBlock
+} from '@/lib/checker-inbox/checker-inbox-self-approval';
+import {
+  CHECKER_INBOX_LIST_PATH,
+  CHECKER_INBOX_TAB_MY_SUBMISSIONS,
+  CHECKER_INBOX_TAB_TO_REVIEW,
+  type CheckerInboxTab
+} from '@/lib/fineract/checker-inbox-paths';
 
 type ConfirmAction = 'approve' | 'reject' | 'delete';
+
+function pageDescription(tab: CheckerInboxTab, approvalWorkflowsEnabled: boolean): string {
+  if (tab === CHECKER_INBOX_TAB_MY_SUBMISSIONS) {
+    return 'Requests you submitted. Track status here — another checker must approve or reject them.';
+  }
+  return approvalWorkflowsEnabled
+    ? 'Requests from others that need your review. Multi-stage approval workflows use this same inbox.'
+    : 'Requests from others that need your review.';
+}
 
 export function CheckerInboxPageContent({
   items,
   taskPermissions = [],
   approvalWorkflowsEnabled = false,
-  initialClientFilters = {}
+  initialClientFilters = {},
+  tab
 }: {
   items: CheckerInboxEnrichedItem[];
   taskPermissions?: FineractRolePermissionUsage[];
   approvalWorkflowsEnabled?: boolean;
   initialClientFilters?: CheckerInboxClientFilters;
+  tab: CheckerInboxTab;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useSession();
   const [pending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<CheckerInboxTab>(tab);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<CheckerInboxClientFilters>(initialClientFilters);
   const [selectedItems, setSelectedItems] = useState<CheckerInboxEnrichedItem[]>([]);
@@ -77,6 +101,7 @@ export function CheckerInboxPageContent({
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const hasSelection = selectedItems.length > 0;
   const singleSelectedItem = selectedItems.length === 1 ? selectedItems[0] : null;
+  const isMySubmissionsTab = activeTab === CHECKER_INBOX_TAB_MY_SUBMISSIONS;
   const bulkWorkflowStageDescription =
     confirmAction === 'approve' || confirmAction === 'reject'
       ? checkerInboxBulkWorkflowStageConfirmDescription(
@@ -84,7 +109,26 @@ export function CheckerInboxPageContent({
           selectedItems.map((item) => ({ context: item.context }))
         )
       : null;
-  const filterOptions = useMemo(() => buildCheckerInboxClientFilterOptions(items), [items]);
+
+  useEffect(() => {
+    setActiveTab(tab);
+  }, [tab]);
+
+  const { toReviewItems, mySubmissionItems } = useMemo(() => {
+    const mine: CheckerInboxEnrichedItem[] = [];
+    const others: CheckerInboxEnrichedItem[] = [];
+    for (const item of items) {
+      if (isCheckerInboxItemMaker(item.maker, user)) {
+        mine.push(item);
+      } else {
+        others.push(item);
+      }
+    }
+    return { toReviewItems: others, mySubmissionItems: mine };
+  }, [items, user]);
+
+  const tabItems = isMySubmissionsTab ? mySubmissionItems : toReviewItems;
+  const filterOptions = useMemo(() => buildCheckerInboxClientFilterOptions(tabItems), [tabItems]);
   const activeFilterCount = countActiveCheckerInboxClientFilters(filters);
   const selfBlockedSelectedItems = useMemo(
     () =>
@@ -94,7 +138,8 @@ export function CheckerInboxPageContent({
     [selectedItems, user]
   );
   const hasSelfBlockedSelection = selfBlockedSelectedItems.length > 0;
-  const checkerActionsDisabled = pending || !hasSelection || hasSelfBlockedSelection;
+  const checkerActionsDisabled =
+    pending || !hasSelection || hasSelfBlockedSelection || isMySubmissionsTab;
   const bulkSelfApprovalBlock = useMemo(() => {
     if (!hasSelfBlockedSelection) {
       return { blocked: false };
@@ -112,8 +157,31 @@ export function CheckerInboxPageContent({
     };
   }, [hasSelfBlockedSelection, selfBlockedSelectedItems, user]);
 
+  const navigateTab = useCallback(
+    (nextTab: CheckerInboxTab) => {
+      setActiveTab(nextTab);
+      setSelectedItems([]);
+      setSelectionEpoch((epoch) => epoch + 1);
+      setConfirmAction(null);
+      const params = new URLSearchParams(searchParams.toString());
+      if (nextTab === CHECKER_INBOX_TAB_TO_REVIEW) {
+        params.delete('tab');
+      } else {
+        params.set('tab', nextTab);
+      }
+      const query = params.toString();
+      const href = query
+        ? `${pathname || CHECKER_INBOX_LIST_PATH}?${query}`
+        : pathname || CHECKER_INBOX_LIST_PATH;
+      startTransition(() => {
+        router.replace(href, { scroll: false });
+      });
+    },
+    [pathname, router, searchParams]
+  );
+
   function runBulkAction(action: ConfirmAction) {
-    if (hasSelfBlockedSelection && action !== 'delete') {
+    if ((hasSelfBlockedSelection || isMySubmissionsTab) && action !== 'delete') {
       return;
     }
     const ids = selectedItems.map((item) => item.id);
@@ -156,21 +224,19 @@ export function CheckerInboxPageContent({
     <>
       <ListPage
         title="Pending tasks"
-        description={
-          approvalWorkflowsEnabled
-            ? 'Review and approve pending maker-checker requests. Multi-stage approval workflows use this same inbox.'
-            : 'Review and approve pending maker-checker requests.'
-        }
+        description={pageDescription(activeTab, approvalWorkflowsEnabled)}
         actions={
           <>
-            <Button
-              type="button"
-              disabled={checkerActionsDisabled}
-              onClick={() => setConfirmAction('approve')}
-            >
-              <Check className="mr-2 size-4" />
-              Approve
-            </Button>
+            {!isMySubmissionsTab ? (
+              <Button
+                type="button"
+                disabled={checkerActionsDisabled}
+                onClick={() => setConfirmAction('approve')}
+              >
+                <Check className="mr-2 size-4" />
+                Approve
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="destructive"
@@ -180,36 +246,54 @@ export function CheckerInboxPageContent({
               <Trash2 className="mr-2 size-4" />
               Delete
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={checkerActionsDisabled}
-              onClick={() => setConfirmAction('reject')}
-            >
-              <X className="mr-2 size-4" />
-              Reject
-            </Button>
+            {!isMySubmissionsTab ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={checkerActionsDisabled}
+                onClick={() => setConfirmAction('reject')}
+              >
+                <X className="mr-2 size-4" />
+                Reject
+              </Button>
+            ) : null}
           </>
         }
       >
-        <CheckerInboxTable
-          key={selectionEpoch}
-          items={items}
-          filters={filters}
-          taskPermissions={taskPermissions}
-          approvalWorkflowsEnabled={approvalWorkflowsEnabled}
-          onSelectedItemsChange={setSelectedItems}
-          toolbar={
-            <ListFilterTrigger
-              activeCount={activeFilterCount}
-              onClick={() => setFilterOpen(true)}
-              disabled={pending}
-            />
-          }
-        />
-        {hasSelfBlockedSelection ? (
-          <CheckerInboxSelfApprovalNotice block={bulkSelfApprovalBlock} className="mt-4" />
-        ) : null}
+        <div className="space-y-4">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => navigateTab(value as CheckerInboxTab)}
+          >
+            <TabsList>
+              <TabsTrigger value={CHECKER_INBOX_TAB_TO_REVIEW} disabled={pending}>
+                To review ({toReviewItems.length})
+              </TabsTrigger>
+              <TabsTrigger value={CHECKER_INBOX_TAB_MY_SUBMISSIONS} disabled={pending}>
+                My submissions ({mySubmissionItems.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <CheckerInboxTable
+            key={`${activeTab}-${selectionEpoch}`}
+            items={tabItems}
+            filters={filters}
+            taskPermissions={taskPermissions}
+            approvalWorkflowsEnabled={approvalWorkflowsEnabled}
+            onSelectedItemsChange={setSelectedItems}
+            toolbar={
+              <ListFilterTrigger
+                activeCount={activeFilterCount}
+                onClick={() => setFilterOpen(true)}
+                disabled={pending}
+              />
+            }
+          />
+          {hasSelfBlockedSelection && !isMySubmissionsTab ? (
+            <CheckerInboxSelfApprovalNotice block={bulkSelfApprovalBlock} className="mt-4" />
+          ) : null}
+        </div>
       </ListPage>
 
       <CheckerInboxFilterSheet

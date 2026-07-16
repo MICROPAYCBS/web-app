@@ -19,11 +19,19 @@ import { TextField } from '@/components/composites/text-field';
 import { formatJournalEntryGlAccountLabel } from '@/lib/accounting/journal-entry-display';
 import type { Department } from '@/lib/fineract/departments';
 import type { JournalEntrySearchFilters } from '@/lib/fineract/journal-entry-query';
+import { JOURNAL_ENTRIES_CREATED_BY_ALL } from '@/lib/fineract/journal-entry-query';
 
 const ENTRY_TYPE_OPTIONS = [
   { value: '', label: 'All entries' },
   { value: 'true', label: 'Manual entries' }
 ];
+
+function createdByOptions(currentUserId: string) {
+  return [
+    { value: currentUserId, label: 'My entries' },
+    { value: JOURNAL_ENTRIES_CREATED_BY_ALL, label: 'Everyone' }
+  ];
+}
 
 export function JournalEntriesFilterFields({
   draft,
@@ -31,6 +39,7 @@ export function JournalEntriesFilterFields({
   offices,
   glAccounts,
   departments,
+  currentUserId,
   pending = false
 }: {
   draft: JournalEntrySearchFilters;
@@ -38,6 +47,7 @@ export function JournalEntriesFilterFields({
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currentUserId: string;
   pending?: boolean;
 }) {
   function patchDraft(patch: Partial<JournalEntrySearchFilters>) {
@@ -46,6 +56,15 @@ export function JournalEntriesFilterFields({
 
   return (
     <div className="space-y-4">
+      <SelectField
+        label="Created by"
+        value={draft.createdByUserId || currentUserId}
+        onValueChange={(value) =>
+          patchDraft({ createdByUserId: value || currentUserId })
+        }
+        options={createdByOptions(currentUserId)}
+        disabled={pending}
+      />
       <SelectField
         label="Branch"
         optional
@@ -145,6 +164,7 @@ export function JournalEntriesFilterSidebar({
   offices,
   glAccounts,
   departments,
+  currentUserId,
   pending = false,
   onApply,
   onClear
@@ -156,6 +176,7 @@ export function JournalEntriesFilterSidebar({
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currentUserId: string;
   pending?: boolean;
   onApply: (filters: JournalEntrySearchFilters) => void;
   onClear: () => void;
@@ -169,18 +190,19 @@ export function JournalEntriesFilterSidebar({
       open={open}
       onOpenChange={onOpenChange}
       title="Filter journal entries"
-      description="Narrow results by branch, account, dates, or transaction ID."
+      description="By default only your entries are shown. Switch Created by to Everyone to see all."
       applyLabel={pending ? 'Searching…' : 'Search'}
       onApply={handleApply}
       onClear={onClear}
       pending={pending}
     >
       <JournalEntriesFilterFields
-          draft={draft}
-          onDraftChange={onDraftChange}
-          offices={offices}
-          glAccounts={glAccounts}
-          departments={departments}
+        draft={draft}
+        onDraftChange={onDraftChange}
+        offices={offices}
+        glAccounts={glAccounts}
+        departments={departments}
+        currentUserId={currentUserId}
         pending={pending}
       />
     </ListFilterSheet>

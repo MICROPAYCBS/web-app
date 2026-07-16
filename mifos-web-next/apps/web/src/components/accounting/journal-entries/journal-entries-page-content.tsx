@@ -50,7 +50,8 @@ export function JournalEntriesPageContent({
   offices,
   glAccounts,
   departments,
-  openTransactionId
+  openTransactionId,
+  currentUserId
 }: {
   page: FineractJournalEntriesPage;
   query: JournalEntryListQuery;
@@ -58,6 +59,7 @@ export function JournalEntriesPageContent({
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
   openTransactionId?: string;
+  currentUserId: string;
 }) {
   const router = useRouter();
   const journalPanel = useJournalEntryTransactionPanel();
@@ -66,7 +68,7 @@ export function JournalEntriesPageContent({
   const filters = journalEntryFiltersFromQuery(query);
   const [draftFilters, setDraftFilters] = useState(filters);
   const appliedFiltersSignature = useMemo(() => journalEntryFiltersSignature(filters), [filters]);
-  const activeFilterCount = countActiveJournalEntryFilters(filters);
+  const activeFilterCount = countActiveJournalEntryFilters(filters, { currentUserId });
 
   useEffect(() => {
     setDraftFilters(filters);
@@ -107,6 +109,7 @@ export function JournalEntriesPageContent({
       limit: query.limit,
       orderBy: '',
       sortOrder: '',
+      createdByUserId: currentUserId,
       dateFormat: query.dateFormat,
       locale: query.locale
     });
@@ -196,6 +199,7 @@ export function JournalEntriesPageContent({
         offices={offices}
         glAccounts={glAccounts}
         departments={departments}
+        currentUserId={currentUserId}
         pending={pending}
         onApply={handleApplyFilters}
         onClear={handleClearFilters}

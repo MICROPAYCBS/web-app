@@ -13,12 +13,18 @@ import { enrichCheckerInboxItems } from '@/lib/checker-inbox/enrich-checker-inbo
 import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
 import { listCheckerInboxItems } from '@/lib/fineract/checker-inbox';
 import type { CheckerInboxSearchFilters } from '@/lib/fineract/checker-inbox-query';
+import { parseCheckerInboxTab } from '@/lib/fineract/checker-inbox-paths';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function CheckerInboxPage({
   searchParams
 }: {
-  searchParams: Promise<{ loanId?: string; clientId?: string; resourceId?: string }>;
+  searchParams: Promise<{
+    loanId?: string;
+    clientId?: string;
+    resourceId?: string;
+    tab?: string;
+  }>;
 }) {
   const session = await getServerSession();
   if (!can(session, resolvePermission('checkerInbox'))) {
@@ -26,6 +32,7 @@ export default async function CheckerInboxPage({
   }
 
   const query = await searchParams;
+  const tab = parseCheckerInboxTab(query.tab);
   const serverFilters: CheckerInboxSearchFilters = {};
   if (query.loanId?.trim()) {
     serverFilters.loanId = query.loanId.trim();
@@ -52,6 +59,7 @@ export default async function CheckerInboxPage({
       taskPermissions={workflowRuntime.makerCheckerPermissions}
       approvalWorkflowsEnabled={workflowRuntime.workflowsEnabled}
       initialClientFilters={initialClientFilters}
+      tab={tab}
     />
   );
 }

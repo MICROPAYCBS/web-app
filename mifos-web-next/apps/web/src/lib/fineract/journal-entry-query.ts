@@ -10,11 +10,16 @@ import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fin
 
 export const JOURNAL_ENTRIES_DEFAULT_LIMIT = 50;
 
+/** URL/API value meaning “do not filter by creator”. */
+export const JOURNAL_ENTRIES_CREATED_BY_ALL = 'all';
+
 export type JournalEntrySearchFilters = {
   officeId?: string;
   glAccountId?: string;
   departmentId?: string;
   manualEntriesOnly?: string;
+  /** Current user id, or {@link JOURNAL_ENTRIES_CREATED_BY_ALL}. Defaults to the signed-in user. */
+  createdByUserId?: string;
   transactionId?: string;
   fromDate?: string;
   toDate?: string;
@@ -49,11 +54,31 @@ function resolveDefaultFilterDate(defaultTransactionDate?: string) {
   return toFineractDate(new Date());
 }
 
+function resolveCreatedByUserId(
+  params: Record<string, string | string[] | undefined>,
+  defaultCreatedByUserId?: string
+): string | undefined {
+  const raw = readParam(params, 'createdByUserId');
+  if (raw === JOURNAL_ENTRIES_CREATED_BY_ALL) {
+    return JOURNAL_ENTRIES_CREATED_BY_ALL;
+  }
+  if (raw) {
+    return raw;
+  }
+  if (defaultCreatedByUserId?.trim()) {
+    return defaultCreatedByUserId.trim();
+  }
+  return undefined;
+}
+
 export function parseJournalEntryListQuery(
   params: Record<string, string | string[] | undefined>,
-  defaultTransactionDate?: string
+  options?: {
+    defaultTransactionDate?: string;
+    defaultCreatedByUserId?: string;
+  }
 ): JournalEntryListQuery {
-  const defaultDate = resolveDefaultFilterDate(defaultTransactionDate);
+  const defaultDate = resolveDefaultFilterDate(options?.defaultTransactionDate);
   const pageIndex = Math.max(0, Number(readParam(params, 'page') ?? '0') || 0);
   const limit = Math.max(
     1,
@@ -70,6 +95,7 @@ export function parseJournalEntryListQuery(
     glAccountId: readParam(params, 'glAccountId'),
     departmentId: readParam(params, 'departmentId'),
     manualEntriesOnly: readParam(params, 'manualEntriesOnly'),
+    createdByUserId: resolveCreatedByUserId(params, options?.defaultCreatedByUserId),
     transactionId: readParam(params, 'transactionId'),
     fromDate: readParam(params, 'fromDate') ?? defaultDate,
     toDate: readParam(params, 'toDate') ?? defaultDate,
@@ -102,6 +128,7 @@ export function journalEntryFiltersFromQuery(
     glAccountId: query.glAccountId,
     departmentId: query.departmentId,
     manualEntriesOnly: query.manualEntriesOnly,
+    createdByUserId: query.createdByUserId,
     transactionId: query.transactionId,
     fromDate: query.fromDate,
     toDate: query.toDate,
@@ -136,6 +163,12 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
   if (query.manualEntriesOnly) {
     params.manualEntriesOnly = query.manualEntriesOnly;
   }
+  if (
+    query.createdByUserId &&
+    query.createdByUserId !== JOURNAL_ENTRIES_CREATED_BY_ALL
+  ) {
+    params.createdByUserId = query.createdByUserId;
+  }
   if (query.transactionId) {
     params.transactionId = query.transactionId;
   }
@@ -149,7 +182,10 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
   return params;
 }
 
-export function countActiveJournalEntryFilters(filters: JournalEntrySearchFilters): number {
+export function countActiveJournalEntryFilters(
+  filters: JournalEntrySearchFilters,
+  options?: { currentUserId?: string }
+): number {
   let count = 0;
   if (filters.officeId) {
     count += 1;
@@ -161,6 +197,15 @@ export function countActiveJournalEntryFilters(filters: JournalEntrySearchFilter
     count += 1;
   }
   if (filters.manualEntriesOnly) {
+    count += 1;
+  }
+  // Default is "my entries" — only count when the user opted into everyone (or another user).
+  if (
+    filters.createdByUserId === JOURNAL_ENTRIES_CREATED_BY_ALL ||
+    (filters.createdByUserId &&
+      options?.currentUserId &&
+      filters.createdByUserId !== options.currentUserId)
+  ) {
     count += 1;
   }
   if (filters.transactionId?.trim()) {
@@ -181,6 +226,7 @@ export function journalEntryFiltersSignature(filters: JournalEntrySearchFilters)
     glAccountId: filters.glAccountId ?? '',
     departmentId: filters.departmentId ?? '',
     manualEntriesOnly: filters.manualEntriesOnly ?? '',
+    createdByUserId: filters.createdByUserId ?? '',
     transactionId: filters.transactionId ?? '',
     fromDate: filters.fromDate ?? '',
     toDate: filters.toDate ?? '',

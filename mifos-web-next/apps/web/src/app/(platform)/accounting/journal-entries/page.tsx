@@ -28,7 +28,11 @@ export default async function JournalEntriesPage({
 
   const params = await searchParams;
   const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
-  const query = parseJournalEntryListQuery(params, defaultTransactionDate);
+  const currentUserId = String(session.userId);
+  const query = parseJournalEntryListQuery(params, {
+    defaultTransactionDate,
+    defaultCreatedByUserId: currentUserId
+  });
   const openTransactionRaw = params.openTransaction;
   const openTransactionId =
     typeof openTransactionRaw === 'string' && openTransactionRaw.trim()
@@ -38,7 +42,7 @@ export default async function JournalEntriesPage({
     listJournalEntries(query),
     listOfficeOptions(),
     listJournalEntryGlAccounts(),
-    listDepartments()
+    listDepartments().catch(() => [])
   ]);
 
   return (
@@ -49,6 +53,7 @@ export default async function JournalEntriesPage({
       glAccounts={glAccounts}
       departments={departments}
       openTransactionId={openTransactionId}
+      currentUserId={currentUserId}
     />
   );
 }
