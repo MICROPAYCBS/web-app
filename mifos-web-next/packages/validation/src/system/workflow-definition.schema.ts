@@ -14,17 +14,6 @@ export const workflowRejectionPolicySchema = z.enum(['ANY', 'ALL', 'THRESHOLD'])
 export const workflowExpiryPeriodUnitSchema = z.enum(['HOURS', 'DAYS']);
 export const workflowApprovalActionSchema = z.enum(['APPROVE', 'REJECT', 'RETURN', 'ESCALATE']);
 
-const optionalPositiveAmount = z.preprocess(
-  (value) => {
-    if (value === '' || value === null || value === undefined) {
-      return null;
-    }
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : value;
-  },
-  z.number().positive('Amount must be greater than zero.').nullable()
-);
-
 const optionalPositiveInt = z.preprocess(
   (value) => {
     if (value === '' || value === null || value === undefined) {
@@ -50,8 +39,7 @@ export const workflowStageSchema = z
     escalationTargetStageCode: z.string().trim().max(100).optional().nullable(),
     allowCrossBranchAccess: z.boolean().optional(),
     requireDistinctApprover: z.boolean().optional(),
-    approvalLimitAmount: optionalPositiveAmount.optional(),
-    approvalLimitCurrency: z.string().trim().max(3).optional().nullable(),
+    roleId: optionalPositiveInt.optional(),
     actions: z.array(workflowApprovalActionSchema).min(1, 'Select at least one action.')
   })
   .superRefine((stage, ctx) => {
@@ -60,14 +48,6 @@ export const workflowStageSchema = z
         code: z.ZodIssueCode.custom,
         message: 'APPROVE must be enabled for each stage.',
         path: ['actions']
-      });
-    }
-
-    if (stage.approvalLimitAmount != null && !stage.approvalLimitCurrency?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Currency is required when an approval limit is set.',
-        path: ['approvalLimitCurrency']
       });
     }
 
@@ -112,27 +92,11 @@ export const workflowStageSchema = z
     }
   });
 
-export const workflowTransitionSchema = z
-  .object({
-    fromStageCode: z.string().trim().min(1, 'From stage is required.'),
-    toStageCode: z.string().trim().min(1, 'To stage is required.'),
-    sequenceNo: z.number().int().positive('Sequence must be at least 1.'),
-    minAmount: optionalPositiveAmount.optional(),
-    maxAmount: optionalPositiveAmount.optional()
-  })
-  .superRefine((transition, ctx) => {
-    if (
-      transition.minAmount != null &&
-      transition.maxAmount != null &&
-      transition.minAmount > transition.maxAmount
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Minimum amount cannot exceed maximum amount.',
-        path: ['minAmount']
-      });
-    }
-  });
+export const workflowTransitionSchema = z.object({
+  fromStageCode: z.string().trim().min(1, 'From stage is required.'),
+  toStageCode: z.string().trim().min(1, 'To stage is required.'),
+  sequenceNo: z.number().int().positive('Sequence must be at least 1.')
+});
 
 export const upsertWorkflowDefinitionSchema = z
   .object({
@@ -149,34 +113,10 @@ export const upsertWorkflowDefinitionSchema = z
       },
       z.number().int().min(0).nullable().optional()
     ),
-    currencyCode: z.string().trim().max(3).optional().nullable(),
-    minAmount: optionalPositiveAmount.optional(),
-    maxAmount: optionalPositiveAmount.optional(),
     stages: z.array(workflowStageSchema).min(1, 'Add at least one stage.'),
     transitions: z.array(workflowTransitionSchema)
   })
   .superRefine((definition, ctx) => {
-    const hasAmountCriteria = definition.minAmount != null || definition.maxAmount != null;
-    if (hasAmountCriteria && !definition.currencyCode?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Currency is required when amount criteria are set.',
-        path: ['currencyCode']
-      });
-    }
-
-    if (
-      definition.minAmount != null &&
-      definition.maxAmount != null &&
-      definition.minAmount > definition.maxAmount
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Minimum amount cannot exceed maximum amount.',
-        path: ['minAmount']
-      });
-    }
-
     const stageCodes = new Set(definition.stages.map((stage) => stage.stageCode.trim()));
     definition.transitions.forEach((transition, index) => {
       if (!stageCodes.has(transition.fromStageCode.trim())) {
@@ -224,9 +164,6 @@ export function buildWorkflowDefinitionApiPayload(
     name: input.name.trim(),
     description: input.description?.trim() || undefined,
     priority: input.priority ?? undefined,
-    currencyCode: input.currencyCode?.trim() || undefined,
-    minAmount: input.minAmount ?? undefined,
-    maxAmount: input.maxAmount ?? undefined,
     stages: input.stages.map((stage) => ({
       stageCode: stage.stageCode.trim(),
       name: stage.name?.trim() || undefined,
@@ -240,16 +177,13 @@ export function buildWorkflowDefinitionApiPayload(
       escalationTargetStageCode: stage.escalationTargetStageCode?.trim() || undefined,
       allowCrossBranchAccess: stage.allowCrossBranchAccess ?? false,
       requireDistinctApprover: stage.requireDistinctApprover ?? true,
-      approvalLimitAmount: stage.approvalLimitAmount ?? undefined,
-      approvalLimitCurrency: stage.approvalLimitCurrency?.trim() || undefined,
+      roleId: stage.roleId ?? undefined,
       actions: stage.actions
     })),
     transitions: input.transitions.map((transition) => ({
       fromStageCode: transition.fromStageCode.trim(),
       toStageCode: transition.toStageCode.trim(),
-      sequenceNo: transition.sequenceNo,
-      minAmount: transition.minAmount ?? undefined,
-      maxAmount: transition.maxAmount ?? undefined
+      sequenceNo: transition.sequenceNo
     }))
   };
 }

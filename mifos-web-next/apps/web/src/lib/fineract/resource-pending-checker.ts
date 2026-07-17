@@ -50,8 +50,6 @@ export async function resolveResourcePendingWorkflowContext(
   scope: ResourcePendingCheckerScope,
   context: {
     status?: { code?: string; value?: string };
-    amount?: number;
-    currencyCode?: string;
   },
   runtime: ApprovalWorkflowRuntimeContext
 ): Promise<ResourcePendingWorkflowContext | undefined> {
@@ -88,9 +86,7 @@ export async function resolveResourcePendingWorkflowContext(
   const matchedWorkflow = matchApprovalWorkflowForCheckerItem(
     {
       actionName: action.actionName,
-      entityName: action.entityName ?? scope.entityName,
-      amount: context.amount,
-      currencyCode: context.currencyCode
+      entityName: action.entityName ?? scope.entityName
     },
     runtime
   );

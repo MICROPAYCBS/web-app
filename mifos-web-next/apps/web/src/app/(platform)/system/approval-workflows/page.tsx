@@ -44,6 +44,8 @@ export default async function ApprovalWorkflowsPage() {
       taskPermissions={taskPermissions}
       engineConfiguration={engineConfiguration}
       canUpdateConfiguration={can(session, 'UPDATE_CONFIGURATION')}
+      canUpdate={can(session, 'UPDATE_WORKFLOW_DEFINITION')}
+      canDelete={can(session, 'DELETE_WORKFLOW_DEFINITION')}
     />
   );
 }

@@ -51,125 +51,28 @@ export function resolveMakerCheckerTaskPermissionCode(
   return undefined;
 }
 
-export function workflowDefinitionHasSelectionCriteria(definition: WorkflowDefinition): boolean {
-  return (
-    definition.currencyCode != null ||
-    definition.minAmount != null ||
-    definition.maxAmount != null
-  );
-}
-
-/** Mirrors {@code WorkflowDefinition.matches} in the Fineract workflow module. */
-export function workflowDefinitionMatchesTransaction(
-  definition: WorkflowDefinition,
-  amount: number | undefined,
-  currencyCode: string | undefined
-): boolean {
-  if (definition.currencyCode == null) {
-    return definition.minAmount == null && definition.maxAmount == null;
-  }
-  if (currencyCode == null || definition.currencyCode !== currencyCode) {
-    return false;
-  }
-  if (amount == null) {
-    return definition.minAmount == null && definition.maxAmount == null;
-  }
-  if (definition.minAmount != null && amount < definition.minAmount) {
-    return false;
-  }
-  return definition.maxAmount == null || amount <= definition.maxAmount;
-}
-
-/** Mirrors {@code WorkflowSelectionServiceImpl.selectWorkflow}. */
+/** Highest-priority ACTIVE definition for the task (amount criteria removed). */
 export function selectApprovalWorkflowDefinition(
   definitions: WorkflowDefinition[],
   taskPermissionCode: string,
-  amount: number | undefined,
-  currencyCode: string | undefined,
   workflowsEnabled: boolean
 ): WorkflowDefinition | undefined {
   if (!workflowsEnabled) {
     return undefined;
   }
 
-  const activeDefinitions = definitions
+  return definitions
     .filter(
       (definition) =>
         definition.status === 'ACTIVE' && definition.taskPermissionCode === taskPermissionCode
     )
-    .sort((left, right) => (right.priority ?? 0) - (left.priority ?? 0));
-
-  const criteriaMatch = activeDefinitions.find(
-    (definition) =>
-      workflowDefinitionHasSelectionCriteria(definition) &&
-      workflowDefinitionMatchesTransaction(definition, amount, currencyCode)
-  );
-  if (criteriaMatch) {
-    return criteriaMatch;
-  }
-
-  return activeDefinitions.find((definition) => !workflowDefinitionHasSelectionCriteria(definition));
-}
-
-export function extractCheckerCommandAmountAndCurrency(commandAsJson?: string): {
-  amount?: number;
-  currencyCode?: string;
-} {
-  if (!commandAsJson?.trim()) {
-    return {};
-  }
-
-  try {
-    const parsed = JSON.parse(commandAsJson) as Record<string, unknown>;
-    const amountKeys = [
-      'approvedLoanAmount',
-      'transactionAmount',
-      'amount',
-      'principal',
-      'proposedPrincipal'
-    ] as const;
-
-    let amount: number | undefined;
-    for (const key of amountKeys) {
-      const value = parsed[key];
-      if (typeof value === 'number' && Number.isFinite(value)) {
-        amount = value;
-        break;
-      }
-      if (typeof value === 'string' && value.trim()) {
-        const parsedAmount = Number(value);
-        if (Number.isFinite(parsedAmount)) {
-          amount = parsedAmount;
-          break;
-        }
-      }
-    }
-
-    const currencyValue = parsed.currency;
-    const currencyCode =
-      typeof currencyValue === 'string'
-        ? currencyValue
-        : currencyValue &&
-            typeof currencyValue === 'object' &&
-            typeof (currencyValue as { code?: string }).code === 'string'
-          ? (currencyValue as { code: string }).code
-          : typeof parsed.currencyCode === 'string'
-            ? parsed.currencyCode
-            : undefined;
-
-    return { amount, currencyCode };
-  } catch {
-    return {};
-  }
+    .sort((left, right) => (right.priority ?? 0) - (left.priority ?? 0))[0];
 }
 
 export function matchApprovalWorkflowForCheckerItem(
   options: {
     actionName?: string;
     entityName?: string;
-    commandAsJson?: string;
-    amount?: number;
-    currencyCode?: string;
   },
   runtime: ApprovalWorkflowRuntimeContext
 ): CheckerInboxMatchedWorkflow | undefined {
@@ -182,15 +85,9 @@ export function matchApprovalWorkflowForCheckerItem(
     return undefined;
   }
 
-  const fromCommand = extractCheckerCommandAmountAndCurrency(options.commandAsJson);
-  const amount = options.amount ?? fromCommand.amount;
-  const currencyCode = options.currencyCode ?? fromCommand.currencyCode;
-
   const definition = selectApprovalWorkflowDefinition(
     runtime.activeDefinitions,
     taskPermissionCode,
-    amount,
-    currencyCode,
     runtime.workflowsEnabled
   );
   if (!definition) {

@@ -39,22 +39,6 @@ function validateBasicsStep(draft: UpsertWorkflowDefinitionInput): StepErrors {
   return errors;
 }
 
-function validateCriteriaStep(draft: UpsertWorkflowDefinitionInput): StepErrors {
-  const errors: StepErrors = {};
-  const hasAmountCriteria = draft.minAmount != null || draft.maxAmount != null;
-  if (hasAmountCriteria && !draft.currencyCode?.trim()) {
-    errors.currencyCode = 'Currency is required when amount criteria are set.';
-  }
-  if (
-    draft.minAmount != null &&
-    draft.maxAmount != null &&
-    draft.minAmount > draft.maxAmount
-  ) {
-    errors.minAmount = 'Minimum amount cannot exceed maximum amount.';
-  }
-  return errors;
-}
-
 function validateStagesStep(draft: UpsertWorkflowDefinitionInput): StepErrors {
   const errors: StepErrors = {};
   if (!draft.stages.length) {
@@ -115,8 +99,6 @@ export function validateWorkflowWizardStep(
   switch (stepId) {
     case 'basics':
       return validateBasicsStep(draft);
-    case 'criteria':
-      return validateCriteriaStep(draft);
     case 'stages':
       return validateStagesStep(draft);
     case 'transitions':
@@ -142,9 +124,6 @@ export function stepForField(fieldKey: string): string {
   }
   if (fieldKey.startsWith('transitions')) {
     return 'transitions';
-  }
-  if (['currencyCode', 'minAmount', 'maxAmount'].includes(fieldKey)) {
-    return 'criteria';
   }
   return 'basics';
 }

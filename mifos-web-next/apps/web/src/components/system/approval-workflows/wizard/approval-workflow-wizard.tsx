@@ -21,7 +21,6 @@ import {
   approvalWorkflowDetailPath
 } from '@/lib/fineract/approval-workflow-paths';
 import { BasicsStep } from './steps/basics-step';
-import { CriteriaStep } from './steps/criteria-step';
 import { ReviewStep } from './steps/review-step';
 import { StagesStep } from './steps/stages-step';
 import { TransitionsStep } from './steps/transitions-step';
@@ -34,7 +33,6 @@ import {
 
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'basics', label: 'Basics' },
-  { id: 'criteria', label: 'Selection criteria' },
   { id: 'stages', label: 'Stages' },
   { id: 'transitions', label: 'Transitions' },
   { id: 'review', label: 'Review' }
@@ -45,8 +43,8 @@ export function ApprovalWorkflowWizard({
   definitionId,
   workflowName,
   initialValues,
-  currencies,
-  taskPermissions
+  taskPermissions,
+  roles
 }: ApprovalWorkflowWizardProps) {
   const router = useRouter();
   const isEdit = mode === 'edit';
@@ -203,8 +201,8 @@ export function ApprovalWorkflowWizard({
 
   const stepProps = {
     draft,
-    currencies,
     taskPermissions,
+    roles,
     errors: stepErrors,
     disabled: pending,
     onChange: (patch: Partial<typeof draft>) => setDraft((current) => ({ ...current, ...patch }))
@@ -233,7 +231,6 @@ export function ApprovalWorkflowWizard({
         }
       >
         {stepId === 'basics' ? <BasicsStep {...stepProps} /> : null}
-        {stepId === 'criteria' ? <CriteriaStep {...stepProps} /> : null}
         {stepId === 'stages' ? <StagesStep {...stepProps} /> : null}
         {stepId === 'transitions' ? <TransitionsStep {...stepProps} /> : null}
         {stepId === 'review' ? (

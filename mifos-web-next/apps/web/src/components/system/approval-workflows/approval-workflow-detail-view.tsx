@@ -42,8 +42,7 @@ import {
   formatWorkflowTaskDisplay,
   isWorkflowActivationMcDisabledError,
   workflowDefinitionStatusLabel,
-  workflowDefinitionStatusVariant,
-  workflowSelectionCriteriaSummary
+  workflowDefinitionStatusVariant
 } from '@/lib/fineract/approval-workflow-display';
 import {
   APPROVAL_WORKFLOWS_LIST_PATH,
@@ -120,6 +119,7 @@ export function ApprovalWorkflowDetailView({
           return;
         }
         setDeleteOpen(false);
+        toast.success('Workflow deleted.');
         router.push(APPROVAL_WORKFLOWS_LIST_PATH);
         router.refresh();
       });
@@ -219,17 +219,13 @@ export function ApprovalWorkflowDetailView({
                 </div>
               </DetailField>
               <DetailField label="Priority">{definition.priority ?? '—'}</DetailField>
-              <DetailField label="Selection criteria">
-                {workflowSelectionCriteriaSummary(definition)}
-              </DetailField>
-              <DetailField label="Currency">{definition.currencyCode ?? '—'}</DetailField>
               <DetailField label="Description">{definition.description || '—'}</DetailField>
             </DetailFieldGrid>
           </DetailSection>
 
           <DetailSection
             title="Approval chain"
-            description="The full path from maker creation through intermediate approvals to checker approval. Stage actors share the task checker permission pool."
+            description="The full path from maker creation through intermediate approvals to checker approval. Actors need the task checker permission; a stage role further narrows who may act."
           >
             <ApprovalWorkflowStagesTimeline definition={definition} showIntro={false} />
           </DetailSection>

@@ -127,9 +127,7 @@ export default async function SavingsAccountGeneralPage({
     pendingCheckerActions,
     savingsAccountPendingCheckerScope(result.data.id),
     {
-      status: result.data.status,
-      amount: result.data.summary?.accountBalance,
-      currencyCode: result.data.currency?.code
+      status: result.data.status
     },
     workflowRuntime
   );

@@ -19,14 +19,15 @@ import {
   findWorkflowTaskPermission,
   formatWorkflowTaskPrimaryLabel,
   formatWorkflowTaskOptionDescription,
-  workflowChainBookend,
-  workflowSelectionCriteriaSummary
+  resolveWorkflowStageRoleName,
+  workflowChainBookend
 } from '@/lib/fineract/approval-workflow-display';
 import type { WorkflowStepProps } from '../types';
 
 export function ReviewStep({
   draft,
   taskPermissions,
+  roles,
   mode = 'create',
   submitError
 }: WorkflowStepProps & { mode?: 'create' | 'edit'; submitError: string | null }) {
@@ -70,25 +71,6 @@ export function ReviewStep({
         </DetailFieldGrid>
       </DetailSection>
 
-      <DetailSection title="Selection criteria">
-        <DetailFieldGrid columns={3}>
-          <DetailField label="Currency">{draft.currencyCode ?? 'Any'}</DetailField>
-          <DetailField label="Minimum amount">
-            {draft.minAmount ?? '—'}
-          </DetailField>
-          <DetailField label="Maximum amount">
-            {draft.maxAmount ?? '—'}
-          </DetailField>
-          <DetailField label="Summary" className="md:col-span-3">
-            {workflowSelectionCriteriaSummary({
-              currencyCode: draft.currencyCode,
-              minAmount: draft.minAmount,
-              maxAmount: draft.maxAmount
-            })}
-          </DetailField>
-        </DetailFieldGrid>
-      </DetailSection>
-
       <DetailSection title="Approval chain">
         <DetailFieldGrid columns={1}>
           <DetailField label="Intermediate stages">{draft.stages.length}</DetailField>
@@ -121,6 +103,7 @@ export function ReviewStep({
             }
 
             const stage = segment.stage;
+            const roleName = resolveWorkflowStageRoleName(stage.roleId, roles);
             return (
               <li
                 key={stage.stageCode}
@@ -130,11 +113,7 @@ export function ReviewStep({
                 <span className="text-muted-foreground">
                   {' '}
                   · Intermediate stage {segment.index + 1} · {stage.stageType}
-                  {stage.approvalLimitAmount != null
-                    ? ` · limit ${stage.approvalLimitAmount}${
-                        stage.approvalLimitCurrency ? ` ${stage.approvalLimitCurrency}` : ''
-                      }`
-                    : ''}
+                  {roleName ? ` · ${roleName}` : ' · Any checker'}
                 </span>
               </li>
             );

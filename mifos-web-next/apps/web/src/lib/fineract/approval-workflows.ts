@@ -77,10 +77,8 @@ function parseWorkflowStage(raw: unknown): WorkflowStage | null {
       typeof row.escalationTargetStageCode === 'string' ? row.escalationTargetStageCode : null,
     allowCrossBranchAccess: row.allowCrossBranchAccess === true,
     requireDistinctApprover: row.requireDistinctApprover !== false,
-    approvalLimitAmount:
-      row.approvalLimitAmount == null ? null : Number(row.approvalLimitAmount),
-    approvalLimitCurrency:
-      typeof row.approvalLimitCurrency === 'string' ? row.approvalLimitCurrency : null,
+    roleId: row.roleId == null || !Number.isFinite(Number(row.roleId)) ? null : Number(row.roleId),
+    roleName: typeof row.roleName === 'string' ? row.roleName : null,
     actions
   };
 }
@@ -100,9 +98,7 @@ function parseWorkflowTransition(raw: unknown): WorkflowTransition | null {
     id: Number.isFinite(Number(row.id)) ? Number(row.id) : undefined,
     fromStageCode,
     toStageCode,
-    sequenceNo,
-    minAmount: row.minAmount == null ? null : Number(row.minAmount),
-    maxAmount: row.maxAmount == null ? null : Number(row.maxAmount)
+    sequenceNo
   };
 }
 
@@ -143,9 +139,6 @@ function parseWorkflowDefinition(raw: unknown): WorkflowDefinition | null {
     description: typeof row.description === 'string' ? row.description : undefined,
     status: status as WorkflowDefinitionStatus,
     priority: row.priority == null ? null : Number(row.priority),
-    currencyCode: typeof row.currencyCode === 'string' ? row.currencyCode : null,
-    minAmount: row.minAmount == null ? null : Number(row.minAmount),
-    maxAmount: row.maxAmount == null ? null : Number(row.maxAmount),
     stages,
     transitions
   };

@@ -198,14 +198,12 @@ export class FineractE2eClient {
     };
   }
 
-  buildLargeLoanWorkflow(runSuffix: string, currencyCode = 'UGX') {
+  buildLargeLoanWorkflow(runSuffix: string) {
     return {
       taskPermissionCode: 'CREATE_LOAN',
       name: e2eWorkflowName('Large Loan Approval', runSuffix),
-      description: 'Loans of 5M and above require three approval levels',
+      description: 'Three-level approval chain for loan applications',
       priority: 20,
-      currencyCode,
-      minAmount: 5_000_000,
       stages: [
         {
           stageCode: 'BRANCH_MANAGER',
@@ -219,8 +217,6 @@ export class FineractE2eClient {
           escalationTargetStageCode: 'REGIONAL_MANAGER',
           allowCrossBranchAccess: false,
           requireDistinctApprover: true,
-          approvalLimitAmount: 50_000_000,
-          approvalLimitCurrency: currencyCode,
           actions: ['APPROVE', 'REJECT', 'RETURN', 'ESCALATE']
         },
         {

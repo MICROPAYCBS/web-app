@@ -15,9 +15,7 @@ import type {
 } from '@mifos/api-client';
 import type { UpsertWorkflowDefinitionInput, WorkflowStageInput, WorkflowTransitionInput } from '@mifos/validation';
 import type { SelectOption } from '@/components/composites/select-field';
-import { formatMoney } from '@mifos/domain';
-import { currencyToSelectOptions, enumToSelectOptions } from '@/lib/form/select-options';
-import { FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { enumToSelectOptions } from '@/lib/form/select-options';
 import { formatPermissionCode, formatRoleGroupingName } from '@/lib/fineract/role-display';
 
 export const CONFIGURE_MC_TASKS_PATH = '/system/configure-mc-tasks';
@@ -48,41 +46,6 @@ export function workflowDefinitionStatusVariant(
     default:
       return 'secondary';
   }
-}
-
-function formatCriteriaAmount(amount: number, currencyCode: string): string {
-  return formatMoney(amount, currencyCode, FINERACT_LOCALE) ?? String(amount);
-}
-
-export function workflowSelectionCriteriaSummary(definition: Pick<
-  WorkflowDefinition,
-  'currencyCode' | 'minAmount' | 'maxAmount'
->): string {
-  const currency = definition.currencyCode?.trim();
-  const min = definition.minAmount;
-  const max = definition.maxAmount;
-
-  if (min == null && max == null) {
-    return 'Default';
-  }
-
-  if (!currency) {
-    if (min != null && max != null) {
-      return `${min.toLocaleString()}–${max.toLocaleString()}`;
-    }
-    if (min != null) {
-      return `≥ ${min.toLocaleString()}`;
-    }
-    return `≤ ${max?.toLocaleString()}`;
-  }
-
-  if (min != null && max != null) {
-    return `${formatCriteriaAmount(min, currency)}–${formatCriteriaAmount(max, currency)}`;
-  }
-  if (min != null) {
-    return `≥ ${formatCriteriaAmount(min, currency)}`;
-  }
-  return `≤ ${formatCriteriaAmount(max as number, currency)}`;
 }
 
 export function orderedWorkflowStages(
@@ -132,9 +95,7 @@ export function buildLinearWorkflowTransitions(
   return stageCodes.slice(0, -1).map((fromStageCode, index) => ({
     fromStageCode,
     toStageCode: stageCodes[index + 1],
-    sequenceNo: index + 1,
-    minAmount: null,
-    maxAmount: null
+    sequenceNo: index + 1
   }));
 }
 
@@ -185,24 +146,6 @@ export function buildWorkflowChain<TStage extends Pick<WorkflowStage, 'stageCode
 
   segments.push({ kind: 'bookend', position: 'end' });
   return segments;
-}
-
-export function transitionAmountBandSummary(
-  transition: WorkflowTransition,
-  currencyCode?: string | null
-): string | null {
-  if (transition.minAmount == null && transition.maxAmount == null) {
-    return null;
-  }
-
-  const currency = currencyCode?.trim() || 'USD';
-  if (transition.minAmount != null && transition.maxAmount != null) {
-    return `${formatCriteriaAmount(transition.minAmount, currency)}–${formatCriteriaAmount(transition.maxAmount, currency)}`;
-  }
-  if (transition.minAmount != null) {
-    return `≥ ${formatCriteriaAmount(transition.minAmount, currency)}`;
-  }
-  return `≤ ${formatCriteriaAmount(transition.maxAmount as number, currency)}`;
 }
 
 export function findWorkflowTaskPermission(
@@ -292,12 +235,6 @@ export function workflowStageCodeSelectOptions(
     }));
 }
 
-export function workflowCurrencySelectOptions(
-  currencies: { code?: string; name?: string }[]
-): SelectOption[] {
-  return currencyToSelectOptions(currencies);
-}
-
 export function workflowTaskPermissionSimpleSelectOptions(
   permissions: FineractRolePermissionUsage[]
 ): SelectOption[] {
@@ -380,9 +317,6 @@ export function defaultWorkflowDefinitionFormValues(
     name: '',
     description: '',
     priority: 10,
-    currencyCode: null,
-    minAmount: null,
-    maxAmount: null,
     stages: [
       {
         stageCode: 'STAGE_1',
@@ -397,8 +331,7 @@ export function defaultWorkflowDefinitionFormValues(
         escalationTargetStageCode: null,
         allowCrossBranchAccess: false,
         requireDistinctApprover: true,
-        approvalLimitAmount: null,
-        approvalLimitCurrency: null,
+        roleId: null,
         actions: ['APPROVE', 'REJECT']
       }
     ],
@@ -414,9 +347,6 @@ export function workflowDefinitionToFormValues(
     name: definition.name,
     description: definition.description ?? '',
     priority: definition.priority ?? null,
-    currencyCode: definition.currencyCode ?? null,
-    minAmount: definition.minAmount ?? null,
-    maxAmount: definition.maxAmount ?? null,
     stages: definition.stages.map((stage) => ({
       stageCode: stage.stageCode,
       name: stage.name ?? '',
@@ -430,16 +360,13 @@ export function workflowDefinitionToFormValues(
       escalationTargetStageCode: stage.escalationTargetStageCode ?? null,
       allowCrossBranchAccess: stage.allowCrossBranchAccess ?? false,
       requireDistinctApprover: stage.requireDistinctApprover ?? true,
-      approvalLimitAmount: stage.approvalLimitAmount ?? null,
-      approvalLimitCurrency: stage.approvalLimitCurrency ?? null,
+      roleId: stage.roleId ?? null,
       actions: stage.actions.length ? stage.actions : ['APPROVE']
     })),
     transitions: definition.transitions.map((transition) => ({
       fromStageCode: transition.fromStageCode,
       toStageCode: transition.toStageCode,
-      sequenceNo: transition.sequenceNo,
-      minAmount: transition.minAmount ?? null,
-      maxAmount: transition.maxAmount ?? null
+      sequenceNo: transition.sequenceNo
     }))
   };
 }
@@ -451,6 +378,30 @@ export function workflowStageCheckerPermissionCode(taskPermissionCode: string): 
     return '';
   }
   return code.endsWith('_CHECKER') ? code : `${code}_CHECKER`;
+}
+
+export function workflowRoleSelectOptions(
+  roles: Array<{ id: number; name: string; disabled?: boolean }>
+): SelectOption[] {
+  return roles
+    .filter((role) => !role.disabled)
+    .map((role) => ({
+      value: String(role.id),
+      label: role.name,
+      keywords: [role.name, String(role.id)]
+    }));
+}
+
+export function resolveWorkflowStageRoleName(
+  roleId: number | null | undefined,
+  roles: Array<{ id: number; name: string }>,
+  roleNameFallback?: string | null
+): string | null {
+  if (roleId == null) {
+    return null;
+  }
+  const match = roles.find((role) => role.id === roleId);
+  return match?.name ?? roleNameFallback?.trim() ?? `Role #${roleId}`;
 }
 
 export function formatWorkflowExpiry(stage: WorkflowStage): string | null {

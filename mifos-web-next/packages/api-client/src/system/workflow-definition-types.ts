@@ -30,8 +30,9 @@ export interface WorkflowStage {
   escalationTargetStageCode?: string | null;
   allowCrossBranchAccess?: boolean;
   requireDistinctApprover?: boolean;
-  approvalLimitAmount?: number | null;
-  approvalLimitCurrency?: string | null;
+  /** When set, only members of this role (who also hold the task checker permission) may act. */
+  roleId?: number | null;
+  roleName?: string | null;
   actions: WorkflowApprovalAction[];
 }
 
@@ -40,8 +41,6 @@ export interface WorkflowTransition {
   fromStageCode: string;
   toStageCode: string;
   sequenceNo: number;
-  minAmount?: number | null;
-  maxAmount?: number | null;
 }
 
 export interface WorkflowDefinition {
@@ -51,9 +50,6 @@ export interface WorkflowDefinition {
   description?: string;
   status: WorkflowDefinitionStatus;
   priority?: number | null;
-  currencyCode?: string | null;
-  minAmount?: number | null;
-  maxAmount?: number | null;
   stages: WorkflowStage[];
   transitions: WorkflowTransition[];
 }
@@ -63,9 +59,6 @@ export interface WorkflowDefinitionWritePayload {
   name: string;
   description?: string;
   priority?: number | null;
-  currencyCode?: string | null;
-  minAmount?: number | null;
-  maxAmount?: number | null;
   stages: Array<{
     stageCode: string;
     name?: string;
@@ -79,15 +72,12 @@ export interface WorkflowDefinitionWritePayload {
     escalationTargetStageCode?: string | null;
     allowCrossBranchAccess?: boolean;
     requireDistinctApprover?: boolean;
-    approvalLimitAmount?: number | null;
-    approvalLimitCurrency?: string | null;
+    roleId?: number | null;
     actions: WorkflowApprovalAction[];
   }>;
   transitions: Array<{
     fromStageCode: string;
     toStageCode: string;
     sequenceNo: number;
-    minAmount?: number | null;
-    maxAmount?: number | null;
   }>;
 }

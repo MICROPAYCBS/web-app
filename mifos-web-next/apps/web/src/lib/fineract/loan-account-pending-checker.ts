@@ -49,10 +49,6 @@ export async function resolveLoanPendingApprovalWorkflowContext(
   loan: {
     id: number;
     status?: { code?: string; value?: string };
-    approvedPrincipal?: number;
-    proposedPrincipal?: number;
-    principal?: number;
-    currency?: { code?: string };
   },
   runtime: ApprovalWorkflowRuntimeContext
 ): Promise<LoanPendingApprovalWorkflowContext | undefined> {
@@ -60,9 +56,7 @@ export async function resolveLoanPendingApprovalWorkflowContext(
     actions,
     loanAccountPendingCheckerScope(loan.id),
     {
-      status: loan.status,
-      amount: loan.approvedPrincipal ?? loan.proposedPrincipal ?? loan.principal,
-      currencyCode: loan.currency?.code
+      status: loan.status
     },
     runtime
   );

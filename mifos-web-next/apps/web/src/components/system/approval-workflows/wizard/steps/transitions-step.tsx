@@ -10,7 +10,6 @@
 
 import { Plus, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
-import { MoneyField } from '@/components/composites/money-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,6 @@ export function TransitionsStep({ draft, errors, disabled, onChange }: WorkflowS
   const stageCodes = draft.stages.map((stage) => stage.stageCode.trim()).filter(Boolean);
   const stageCount = stageCodes.length;
   const needsTransitions = stageCount >= 2;
-  const currencyCode = draft.currencyCode?.trim() || undefined;
 
   return (
     <div className="space-y-4">
@@ -41,8 +39,7 @@ export function TransitionsStep({ draft, errors, disabled, onChange }: WorkflowS
           {needsTransitions ? (
             <p>
               With {stageCount} stages, the backend requires transitions so exactly one stage is
-              the entry point and every stage is reachable. Use amount bands only when the path
-              should branch by value.
+              the entry point and every stage is reachable.
             </p>
           ) : (
             <p>
@@ -79,9 +76,7 @@ export function TransitionsStep({ draft, errors, disabled, onChange }: WorkflowS
                   {
                     fromStageCode: stageCodes[0] ?? '',
                     toStageCode: stageCodes[1] ?? '',
-                    sequenceNo: draft.transitions.length + 1,
-                    minAmount: null,
-                    maxAmount: null
+                    sequenceNo: draft.transitions.length + 1
                   }
                 ]
               })
@@ -102,7 +97,7 @@ export function TransitionsStep({ draft, errors, disabled, onChange }: WorkflowS
       {draft.transitions.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
           {needsTransitions
-            ? 'No transitions yet. Use “Connect in order” for a simple chain, or add transitions manually for branching.'
+            ? 'No transitions yet. Use “Connect in order” for a simple chain, or add transitions manually.'
             : 'No transitions needed for a single-stage workflow.'}
         </p>
       ) : (
@@ -110,7 +105,7 @@ export function TransitionsStep({ draft, errors, disabled, onChange }: WorkflowS
           {draft.transitions.map((transition, transitionIndex) => (
             <div
               key={transitionIndex}
-              className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-5"
+              className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-4"
             >
               <SelectField
                 id={`transition-${transitionIndex}-from`}
@@ -164,43 +159,7 @@ export function TransitionsStep({ draft, errors, disabled, onChange }: WorkflowS
                 disabled={disabled}
                 error={errors[`transitions.${transitionIndex}.sequenceNo`]}
               />
-              <MoneyField
-                id={`transition-${transitionIndex}-minAmount`}
-                label="Min amount"
-                optional
-                currencyCode={currencyCode}
-                value={transition.minAmount == null ? '' : String(transition.minAmount)}
-                onChange={(value) =>
-                  onChange({
-                    transitions: draft.transitions.map((item, index) =>
-                      index === transitionIndex
-                        ? { ...item, minAmount: value === '' ? null : Number(value) }
-                        : item
-                    )
-                  })
-                }
-                disabled={disabled}
-                error={errors[`transitions.${transitionIndex}.minAmount`]}
-              />
-              <div className="flex items-end gap-2">
-                <MoneyField
-                  id={`transition-${transitionIndex}-maxAmount`}
-                  label="Max amount"
-                  optional
-                  currencyCode={currencyCode}
-                  value={transition.maxAmount == null ? '' : String(transition.maxAmount)}
-                  onChange={(value) =>
-                    onChange({
-                      transitions: draft.transitions.map((item, index) =>
-                        index === transitionIndex
-                          ? { ...item, maxAmount: value === '' ? null : Number(value) }
-                          : item
-                      )
-                    })
-                  }
-                  disabled={disabled}
-                  error={errors[`transitions.${transitionIndex}.maxAmount`]}
-                />
+              <div className="flex items-end">
                 <Button
                   type="button"
                   variant="ghost"

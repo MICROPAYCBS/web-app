@@ -29,10 +29,8 @@ function baseStage(overrides: Record<string, unknown> = {}) {
 function baseDefinition(overrides: Record<string, unknown> = {}) {
   return {
     taskPermissionCode: 'CREATE_LOAN',
-    name: 'Large Loan Approval',
+    name: 'Loan Application Approval',
     priority: 20,
-    currencyCode: 'UGX',
-    minAmount: 5_000_000,
     stages: [baseStage()],
     transitions: [],
     ...overrides
@@ -40,23 +38,6 @@ function baseDefinition(overrides: Record<string, unknown> = {}) {
 }
 
 describe('validateUpsertWorkflowDefinition', () => {
-  it('requires currency when amount criteria are set', () => {
-    const result = validateUpsertWorkflowDefinition(
-      baseDefinition({ currencyCode: null, minAmount: 1000 })
-    );
-    assert.equal(result.success, false);
-    if (!result.success) {
-      assert.ok(result.error.issues.some((issue) => issue.path.join('.') === 'currencyCode'));
-    }
-  });
-
-  it('rejects min amount greater than max amount', () => {
-    const result = validateUpsertWorkflowDefinition(
-      baseDefinition({ minAmount: 10, maxAmount: 5, currencyCode: 'UGX' })
-    );
-    assert.equal(result.success, false);
-  });
-
   it('requires rejection threshold for THRESHOLD policy', () => {
     const result = validateUpsertWorkflowDefinition(
       baseDefinition({
@@ -86,22 +67,6 @@ describe('validateUpsertWorkflowDefinition', () => {
     assert.equal(result.success, false);
   });
 
-  it('requires approval limit currency when a stage limit amount is set', () => {
-    const result = validateUpsertWorkflowDefinition(
-      baseDefinition({
-        stages: [baseStage({ approvalLimitAmount: 50_000_000, approvalLimitCurrency: null })]
-      })
-    );
-    assert.equal(result.success, false);
-    if (!result.success) {
-      assert.ok(
-        result.error.issues.some((issue) =>
-          issue.path.join('.').endsWith('approvalLimitCurrency')
-        )
-      );
-    }
-  });
-
   it('requires transition stage codes to exist in stages', () => {
     const result = validateUpsertWorkflowDefinition(
       baseDefinition({
@@ -117,7 +82,21 @@ describe('validateUpsertWorkflowDefinition', () => {
     assert.equal(result.success, false);
   });
 
-  it('accepts a valid definition payload without participants', () => {
+  it('includes optional stage roleId in the API payload', () => {
+    const result = validateUpsertWorkflowDefinition(
+      baseDefinition({
+        stages: [baseStage({ roleId: 5 }), baseStage({ stageCode: 'REGIONAL_MANAGER', roleId: null })]
+      })
+    );
+    assert.equal(result.success, true);
+    if (result.success) {
+      const payload = buildWorkflowDefinitionApiPayload(result.data);
+      assert.equal(payload.stages[0].roleId, 5);
+      assert.equal(payload.stages[1].roleId, undefined);
+    }
+  });
+
+  it('accepts a valid definition payload without amount criteria', () => {
     const result = validateUpsertWorkflowDefinition(
       baseDefinition({
         stages: [
@@ -125,9 +104,7 @@ describe('validateUpsertWorkflowDefinition', () => {
             escalationEnabled: true,
             expiryPeriodUnit: 'HOURS',
             expiryPeriodValue: 24,
-            escalationTargetStageCode: 'REGIONAL_MANAGER',
-            approvalLimitAmount: 50_000_000,
-            approvalLimitCurrency: 'UGX'
+            escalationTargetStageCode: 'REGIONAL_MANAGER'
           }),
           baseStage({ stageCode: 'REGIONAL_MANAGER', name: 'Regional Manager' })
         ],
@@ -144,9 +121,12 @@ describe('validateUpsertWorkflowDefinition', () => {
     if (result.success) {
       const payload = buildWorkflowDefinitionApiPayload(result.data);
       assert.equal(payload.taskPermissionCode, 'CREATE_LOAN');
-      assert.equal(payload.stages[0].approvalLimitAmount, 50_000_000);
-      assert.equal(payload.stages[0].approvalLimitCurrency, 'UGX');
+      assert.equal('currencyCode' in payload, false);
+      assert.equal('minAmount' in payload, false);
+      assert.equal('maxAmount' in payload, false);
+      assert.equal('approvalLimitAmount' in payload.stages[0], false);
       assert.equal('participants' in payload.stages[0], false);
+      assert.equal('minAmount' in payload.transitions[0], false);
     }
   });
 });

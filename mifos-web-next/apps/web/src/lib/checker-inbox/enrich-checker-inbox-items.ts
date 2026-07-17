@@ -34,15 +34,10 @@ import { getLoanAccount } from '@/lib/fineract/loan-accounts';
 import { loanAccountProductName } from '@/lib/fineract/loan-account-display';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
 
-type LoanAmountContext = {
-  amount?: number;
-  currencyCode?: string;
-};
-
 async function resolveLoanAccountContext(
   loanAccountId: number,
   audit: FineractAuditTrailDetail | null
-): Promise<CheckerInboxItemContext & LoanAmountContext> {
+): Promise<CheckerInboxItemContext> {
   const loan = await getLoanAccount(loanAccountId).catch(() => null);
   const customerName = loan?.clientName?.trim() || audit?.clientName?.trim();
   const productName = loan ? loanAccountProductName(loan) : undefined;
@@ -75,8 +70,6 @@ async function resolveLoanAccountContext(
     subjectLabel,
     customerName,
     commandHighlights,
-    amount: loanAmount,
-    currencyCode: loanCurrency,
     summary: buildCheckerInboxSummary({
       actionName: audit?.actionName,
       entityName: audit?.entityName ?? 'LOAN',
@@ -209,12 +202,11 @@ function fallbackContext(
 }
 
 async function attachApprovalWorkflowContext(
-  context: CheckerInboxItemContext & Partial<LoanAmountContext>,
+  context: CheckerInboxItemContext,
   item: CheckerInboxListItem,
   audit: FineractAuditTrailDetail | null,
   runtime: ApprovalWorkflowRuntimeContext
 ): Promise<CheckerInboxItemContext> {
-  const { amount, currencyCode, ...rest } = context;
   const actionName = item.actionName ?? audit?.actionName;
   const entityName = item.entityName ?? audit?.entityName;
   const taskPermissionCode = resolveMakerCheckerTaskPermissionCode(
@@ -229,23 +221,20 @@ async function attachApprovalWorkflowContext(
       : null;
 
   if (!runtime.workflowsEnabled) {
-    return { ...rest, approvalWorkflowsEnabled: false, taskPermissionCode, workflowInstance };
+    return { ...context, approvalWorkflowsEnabled: false, taskPermissionCode, workflowInstance };
   }
 
   const matchedWorkflow = matchApprovalWorkflowForCheckerItem(
     {
       actionName,
-      entityName,
-      commandAsJson: audit?.commandAsJson,
-      amount,
-      currencyCode
+      entityName
     },
     runtime
   );
 
   if (matchedWorkflow) {
     return {
-      ...rest,
+      ...context,
       approvalWorkflowsEnabled: true,
       matchedWorkflow,
       taskPermissionCode,
@@ -254,7 +243,7 @@ async function attachApprovalWorkflowContext(
   }
 
   return {
-    ...rest,
+    ...context,
     approvalWorkflowsEnabled: true,
     unresolvedTaskPermissionCode: taskPermissionCode,
     taskPermissionCode,
@@ -265,7 +254,7 @@ async function attachApprovalWorkflowContext(
 async function resolveEntityContext(
   item: CheckerInboxListItem,
   audit: FineractAuditTrailDetail | null
-): Promise<CheckerInboxItemContext & Partial<LoanAmountContext>> {
+): Promise<CheckerInboxItemContext> {
   const resourceId = item.resourceId ?? audit?.resourceId;
   const entity = item.entityName?.trim().toUpperCase() ?? audit?.entityName?.trim().toUpperCase();
 

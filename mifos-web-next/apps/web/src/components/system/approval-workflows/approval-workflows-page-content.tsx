@@ -33,12 +33,16 @@ export function ApprovalWorkflowsPageContent({
   definitions,
   taskPermissions,
   engineConfiguration,
-  canUpdateConfiguration
+  canUpdateConfiguration,
+  canUpdate,
+  canDelete
 }: {
   definitions: WorkflowDefinition[];
   taskPermissions: FineractRolePermissionUsage[];
   engineConfiguration: FineractGlobalConfiguration | null;
   canUpdateConfiguration: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<ApprovalWorkflowListFilters>({});
@@ -66,7 +70,7 @@ export function ApprovalWorkflowsPageContent({
     <>
       <ListPage
         title="Approval workflows"
-        description="Define multi-stage approval chains with amount-based selection criteria per maker-checker task."
+        description="Define multi-stage approval chains for maker-checker tasks. Higher priority wins when multiple active workflows share a task."
         actions={
           <Can permission="CREATE_WORKFLOW_DEFINITION">
             <Link href={approvalWorkflowCreatePath()} className={cn(buttonVariants())}>
@@ -84,6 +88,8 @@ export function ApprovalWorkflowsPageContent({
             definitions={definitions}
             appliedFilters={appliedFilters}
             taskPermissions={taskPermissions}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
             filterTrigger={
               <ListFilterTrigger
                 activeCount={activeFilterCount}

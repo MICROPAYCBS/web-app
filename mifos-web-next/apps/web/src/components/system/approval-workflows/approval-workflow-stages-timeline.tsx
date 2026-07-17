@@ -9,7 +9,6 @@
  */
 
 import type { WorkflowDefinition, WorkflowStage } from '@mifos/api-client';
-import { formatMoney } from '@mifos/domain';
 import { Badge } from '@/components/ui/badge';
 import {
   WorkflowChainBookend,
@@ -18,10 +17,8 @@ import {
 import {
   buildWorkflowChain,
   formatWorkflowExpiry,
-  transitionAmountBandSummary,
   workflowStageCheckerPermissionCode
 } from '@/lib/fineract/approval-workflow-display';
-import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 
 function StageCard({
   stage,
@@ -32,7 +29,6 @@ function StageCard({
   definition: WorkflowDefinition;
   stepNumber: number;
 }) {
-  const currency = definition.currencyCode ?? stage.approvalLimitCurrency ?? 'USD';
   const checkerPermission = workflowStageCheckerPermissionCode(definition.taskPermissionCode);
 
   return (
@@ -76,22 +72,18 @@ function StageCard({
               <dd>{stage.escalationTargetStageCode}</dd>
             </div>
           ) : null}
-          {stage.approvalLimitAmount != null ? (
-            <div className="sm:col-span-2">
-              <dt className="text-muted-foreground">Approval limit</dt>
-              <dd>
-                {formatMoney(
-                  stage.approvalLimitAmount,
-                  stage.approvalLimitCurrency ?? currency,
-                  FINERACT_LOCALE
-                )}
-              </dd>
-            </div>
-          ) : null}
+          <div className="sm:col-span-2">
+            <dt className="text-muted-foreground">Restricting role</dt>
+            <dd>{stage.roleName?.trim() || (stage.roleId != null ? `Role #${stage.roleId}` : 'Any checker')}</dd>
+          </div>
         </dl>
 
         <p className="text-sm text-muted-foreground">
-          Actors need <span className="font-medium text-foreground">{checkerPermission}</span>.
+          Actors need <span className="font-medium text-foreground">{checkerPermission}</span>
+          {stage.roleName?.trim() || stage.roleId != null
+            ? <> and the stage role{stage.roleName?.trim() ? <> (<span className="font-medium text-foreground">{stage.roleName}</span>)</> : null}</>
+            : null}
+          .
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -151,9 +143,6 @@ export function ApprovalWorkflowStagesTimeline({
           }
 
           const transition = transitionsByFrom.get(segment.stage.stageCode);
-          const band = transition
-            ? transitionAmountBandSummary(transition, definition.currencyCode)
-            : null;
           const showAutomaticConnector =
             hasNext && nextSegment?.kind === 'bookend' && nextSegment.position === 'end';
 
@@ -167,7 +156,6 @@ export function ApprovalWorkflowStagesTimeline({
               {transition ? (
                 <div className="my-2 ml-6 text-xs text-muted-foreground">
                   Transition to {transition.toStageCode}
-                  {band ? ` · ${band}` : null}
                 </div>
               ) : showAutomaticConnector ? (
                 <div className="pb-2">
@@ -186,9 +174,6 @@ export function ApprovalWorkflowStagesTimeline({
             {definition.transitions.map((transition) => (
               <li key={`${transition.fromStageCode}-${transition.toStageCode}-${transition.sequenceNo}`}>
                 {transition.fromStageCode} → {transition.toStageCode} (sequence {transition.sequenceNo})
-                {transitionAmountBandSummary(transition, definition.currencyCode)
-                  ? ` · ${transitionAmountBandSummary(transition, definition.currencyCode)}`
-                  : null}
               </li>
             ))}
           </ul>

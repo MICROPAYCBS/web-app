@@ -12,7 +12,7 @@ import { ApprovalWorkflowWizardPageContent } from '@/components/system/approval-
 import { workflowDefinitionToFormValues } from '@/lib/fineract/approval-workflow-display';
 import { getWorkflowDefinition } from '@/lib/fineract/approval-workflows';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
-import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
+import { listRoles } from '@/lib/fineract/system-roles';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -27,10 +27,10 @@ export default async function EditApprovalWorkflowPage({
     notFound();
   }
 
-  const [result, currencies, taskPermissions] = await Promise.all([
+  const [result, taskPermissions, roles] = await Promise.all([
     tryFineractLoad(() => getWorkflowDefinition(Number(definitionId)), 'Could not load approval workflow.'),
-    getOrganizationSelectedCurrencies(),
-    listMakerCheckerPermissions()
+    listMakerCheckerPermissions(),
+    listRoles().catch(() => [])
   ]);
 
   if (!result.ok || !result.data) {
@@ -47,8 +47,8 @@ export default async function EditApprovalWorkflowPage({
       definitionId={result.data.id}
       workflowName={result.data.name}
       initialValues={workflowDefinitionToFormValues(result.data)}
-      currencies={currencies}
       taskPermissions={taskPermissions}
+      roles={roles}
     />
   );
 }
