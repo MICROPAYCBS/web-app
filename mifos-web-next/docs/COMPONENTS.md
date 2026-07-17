@@ -277,6 +277,7 @@ For any form field that records **when a financial transaction or command is pos
 - Savings deposits, withdrawals, holds, transfers, charges (due date when posting)
 - Customer lifecycle commands (activate, close, transfer, reject, …)
 - Loan **submitted on** (application date)
+- Customer onboarding **submitted on** (create client)
 
 ```tsx
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
@@ -317,7 +318,6 @@ Reset form state on open with `initialTransactionDate`, not `dateToFineract(new 
 - **Search and filter** date ranges (journal entry filters, audit trails, list query `fromDate` / `toDate`)
 - **Profile and planning** dates: date of birth, incorporation, holidays, expected future disbursement (`allowFuture`)
 - **Business date administration** (`/system/business-date` — dates are edited there intentionally)
-- Customer onboarding biodata (submitted on may stay `DateField` until explicitly aligned)
 
 New transaction forms **must** follow this pattern. Prefer extending existing sheets rather than introducing new `DateField` + `new Date()` defaults.
 

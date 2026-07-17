@@ -11,6 +11,7 @@ import {
   buildReportRunQueryParams,
   formatReportRunDateValue
 } from '@/lib/fineract/report-run-display';
+import { REPORT_PARAMETER_SELECT_ALL_VALUE } from '@mifos/domain';
 
 /** Stretchy table report powered by m_gl_balance_snapshot + period journal lines. */
 export const GL_ACCOUNT_ENQUIRY_REPORT_NAME = 'GeneralLedgerReport Table';
@@ -21,6 +22,8 @@ export type GlAccountEnquirySearchFilters = {
   currencyCode: string;
   /** Required branch — report scopes by office hierarchy. */
   officeId: string;
+  /** Optional department filter; empty means all departments. */
+  departmentId?: string;
   fromDate?: string;
   toDate?: string;
 };
@@ -72,6 +75,7 @@ export function parseGlAccountEnquiryListQuery(
     glAccountId: readParam(params, 'glAccountId') ?? '',
     currencyCode: (readParam(params, 'currencyCode') ?? defaultCurrency).toUpperCase(),
     officeId: readParam(params, 'officeId') ?? defaultOffice,
+    departmentId: readParam(params, 'departmentId'),
     fromDate: readParam(params, 'fromDate') ?? defaultDate,
     toDate: readParam(params, 'toDate') ?? defaultDate
   };
@@ -101,6 +105,7 @@ export function glAccountEnquiryFiltersFromQuery(
     glAccountId: query.glAccountId,
     currencyCode: query.currencyCode,
     officeId: query.officeId,
+    departmentId: query.departmentId,
     fromDate: query.fromDate,
     toDate: query.toDate
   };
@@ -113,6 +118,7 @@ export function countActiveGlAccountEnquiryFilters(
   if (filters.glAccountId?.trim()) count += 1;
   if (filters.currencyCode?.trim()) count += 1;
   if (filters.officeId?.trim()) count += 1;
+  if (filters.departmentId?.trim()) count += 1;
   if (filters.fromDate?.trim()) count += 1;
   if (filters.toDate?.trim()) count += 1;
   return count;
@@ -123,6 +129,7 @@ export function glAccountEnquiryFiltersSignature(filters: GlAccountEnquirySearch
     glAccountId: filters.glAccountId ?? '',
     currencyCode: filters.currencyCode ?? '',
     officeId: filters.officeId ?? '',
+    departmentId: filters.departmentId ?? '',
     fromDate: filters.fromDate ?? '',
     toDate: filters.toDate ?? ''
   });
@@ -148,6 +155,7 @@ export function buildGlAccountEnquiryReportParams(
     officeId: query.officeId,
     GLAccountNO: query.glAccountId,
     currencyId: query.currencyCode.trim().toUpperCase(),
+    departmentId: query.departmentId?.trim() || REPORT_PARAMETER_SELECT_ALL_VALUE,
     startDate: formatReportRunDateValue(query.fromDate ?? ''),
     endDate: formatReportRunDateValue(query.toDate ?? '')
   });

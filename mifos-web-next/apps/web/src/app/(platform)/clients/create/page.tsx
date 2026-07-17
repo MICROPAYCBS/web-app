@@ -13,6 +13,7 @@ import type { FineractClientIdentifierTemplate } from '@mifos/api-client';
 import { getClientIncomeSourceTemplate } from '@/lib/fineract/client-income-source';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { getAddressFieldConfiguration, getClientTemplate } from '@/lib/fineract/clients';
+import { listContactTypes } from '@/lib/fineract/contact-types';
 import { listEntityDatatableChecks } from '@/lib/fineract/entity-datatable-checks';
 import { getServerSession } from '@/lib/session/server';
 
@@ -30,7 +31,7 @@ export default async function CreateClientPage() {
 
   const defaultOfficeId = session.officeId > 0 ? session.officeId : undefined;
 
-  const [template, addressFieldConfig, entityDatatableChecks, incomeSourceOptions, identifierTemplate] =
+  const [template, addressFieldConfig, entityDatatableChecks, incomeSourceOptions, identifierTemplate, contactTypeOptions] =
     await Promise.all([
     getClientTemplate(defaultOfficeId),
     getAddressFieldConfiguration().catch(() => [] as Awaited<ReturnType<typeof getAddressFieldConfiguration>>),
@@ -40,7 +41,8 @@ export default async function CreateClientPage() {
     getClientIncomeSourceTemplate(1).catch(() => ({})),
     getClientIdentifierTemplate(1).catch(
       (): FineractClientIdentifierTemplate => ({ allowedDocumentTypes: [], identityTypeOptions: [] })
-    )
+    ),
+    listContactTypes().catch(() => [])
   ]);
 
   const identifierDocumentTypes =
@@ -69,6 +71,7 @@ export default async function CreateClientPage() {
       incomeSourceOptions={incomeSourceOptions}
       identifierDocumentTypes={identifierDocumentTypes}
       identifierIdentityTypeOptions={identifierIdentityTypeOptions}
+      contactTypeOptions={contactTypeOptions}
     />
   );
 }

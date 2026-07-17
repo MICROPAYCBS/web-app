@@ -12,6 +12,7 @@ import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 import { incomeSourceSchema } from './income-source.schema';
 import { clientIdentifierSchema, countValidClientIdentifiers, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE } from './client-identifier.schema';
 import { complianceProfileSchema } from './compliance-profile.schema';
+import { clientContactSchema } from './client-contact.schema';
 import { ugandaMobileInternationalSchema, optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 
 const namePattern = /^[A-Za-z].*/;
@@ -101,6 +102,7 @@ const clientBaseSchema = z.object({
   clientIdentifiers: z.array(clientIdentifierSchema).optional(),
   complianceProfile: complianceProfileSchema.optional(),
   address: z.array(clientAddressEntrySchema).optional(),
+  contacts: z.array(clientContactSchema).optional(),
   datatables: z.array(datatablePayloadSchema).optional()
 });
 

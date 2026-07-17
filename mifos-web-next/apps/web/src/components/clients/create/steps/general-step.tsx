@@ -10,10 +10,11 @@
 
 import type { FineractClientTemplate } from '@mifos/api-client';
 import { LEGAL_FORM_PERSON } from '@mifos/validation';
-import { DateField } from '@/components/composites/date-field';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
+import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { ClientGeneralFormState, CreateClientDraft } from '../types';
 import type { StepErrors } from '../validation';
@@ -73,10 +74,11 @@ export function GeneralStep({
           />
         ) : null}
 
-        <DateField
+        <TransactionDateField
           id="submittedOnDate"
           label="Submitted on"
           required
+          dateFormat={FINERACT_DATE_FORMAT}
           value={g.submittedOnDate}
           onChange={(v) => onDraftChange({ submittedOnDate: v ?? '' })}
           error={errors.submittedOnDate}

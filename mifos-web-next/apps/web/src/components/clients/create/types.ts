@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAddressFieldConfig, FineractClientTemplate, FineractEntityDatatableCheck, FineractIncomeSourceOptions } from '@mifos/api-client';
-import type { ClientAddressEntry, ClientIdentifierIdentityTypeOption, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
+import type { FineractAddressFieldConfig, FineractClientTemplate, FineractEntityDatatableCheck, FineractIncomeSourceOptions, ContactType } from '@mifos/api-client';
+import type { ClientAddressEntry, ClientContactInput, ClientIdentifierIdentityTypeOption, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
 
 export type DatatableFormValues = Record<string, Record<string, unknown>>;
 export type MultiRowDatatableDraft = Record<string, Record<string, unknown>[]>;
@@ -55,6 +55,7 @@ export interface CreateClientDraft {
   clientIdentifiers: ClientIdentifierInput[];
   familyMembers: FamilyMemberInput[];
   incomeSources: IncomeSourceInput[];
+  contacts: ClientContactInput[];
   complianceProfile: ComplianceProfileInput;
   addresses: ClientAddressEntry[];
   datatables: DatatableFormValues;
@@ -70,4 +71,5 @@ export interface CreateClientWizardProps {
   incomeSourceOptions?: FineractIncomeSourceOptions;
   identifierDocumentTypes?: { id: number; name: string }[];
   identifierIdentityTypeOptions?: ClientIdentifierIdentityTypeOption[];
+  contactTypeOptions?: ContactType[];
 }

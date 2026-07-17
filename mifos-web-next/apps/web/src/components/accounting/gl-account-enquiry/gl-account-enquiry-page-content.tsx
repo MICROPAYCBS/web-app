@@ -43,6 +43,7 @@ import {
   type GlAccountEnquiryListQuery,
   type GlAccountEnquirySearchFilters
 } from '@/lib/fineract/gl-account-enquiry-query';
+import type { Department } from '@/lib/fineract/departments';
 
 export function GlAccountEnquiryPageContent({
   lines,
@@ -51,6 +52,7 @@ export function GlAccountEnquiryPageContent({
   glAccount,
   offices,
   glAccounts,
+  departments,
   currencies,
   defaultCurrencyCode,
   defaultOfficeId
@@ -61,6 +63,7 @@ export function GlAccountEnquiryPageContent({
   glAccount: FineractGlAccountDetail | null;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
+  departments: Department[];
   currencies: FineractCurrencyOption[];
   defaultCurrencyCode: string;
   defaultOfficeId: string;
@@ -110,6 +113,7 @@ export function GlAccountEnquiryPageContent({
       glAccountId: '',
       currencyCode: defaultCurrencyCode,
       officeId: defaultOfficeId,
+      departmentId: '',
       fromDate: query.fromDate,
       toDate: query.toDate
     });
@@ -173,6 +177,7 @@ export function GlAccountEnquiryPageContent({
         onDraftChange={setDraftFilters}
         offices={offices}
         glAccounts={glAccounts}
+        departments={departments}
         currencies={currencies}
         pending={pending}
         onApply={handleApplyFilters}

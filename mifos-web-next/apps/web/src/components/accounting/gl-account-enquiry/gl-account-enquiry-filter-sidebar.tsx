@@ -20,6 +20,7 @@ import {
   currencySelectOptions,
   formatJournalEntryGlAccountLabel
 } from '@/lib/accounting/journal-entry-display';
+import type { Department } from '@/lib/fineract/departments';
 import type { GlAccountEnquirySearchFilters } from '@/lib/fineract/gl-account-enquiry-query';
 
 export function GlAccountEnquiryFilterFields({
@@ -27,6 +28,7 @@ export function GlAccountEnquiryFilterFields({
   onDraftChange,
   offices,
   glAccounts,
+  departments,
   currencies,
   pending = false
 }: {
@@ -34,6 +36,7 @@ export function GlAccountEnquiryFilterFields({
   onDraftChange: (draft: GlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
+  departments: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
 }) {
@@ -69,6 +72,21 @@ export function GlAccountEnquiryFilterFields({
         disabled={pending}
       />
       <SelectField
+        label="Department"
+        value={draft.departmentId || undefined}
+        onValueChange={(value) => patchDraft({ departmentId: value === 'all' ? '' : value })}
+        options={[
+          { value: 'all', label: 'All departments' },
+          ...departments.map((department) => ({
+            value: String(department.id),
+            label: department.departmentName,
+            keywords: [department.departmentCode, department.officeName ?? '']
+          }))
+        ]}
+        placeholder="All departments"
+        disabled={pending || departments.length === 0}
+      />
+      <SelectField
         label="Currency"
         required
         value={draft.currencyCode || undefined}
@@ -100,6 +118,7 @@ export function GlAccountEnquiryFilterSidebar({
   onDraftChange,
   offices,
   glAccounts,
+  departments,
   currencies,
   pending = false,
   onApply,
@@ -111,6 +130,7 @@ export function GlAccountEnquiryFilterSidebar({
   onDraftChange: (draft: GlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
+  departments: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
   onApply: (filters: GlAccountEnquirySearchFilters) => void;
@@ -144,6 +164,7 @@ export function GlAccountEnquiryFilterSidebar({
         onDraftChange={onDraftChange}
         offices={offices}
         glAccounts={glAccounts}
+        departments={departments}
         currencies={currencies}
         pending={pending}
       />

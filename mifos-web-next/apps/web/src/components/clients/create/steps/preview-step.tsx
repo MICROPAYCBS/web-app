@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientTemplate, FineractIncomeSourceOptions } from '@mifos/api-client';
+import type { ContactType, FineractClientTemplate, FineractIncomeSourceOptions } from '@mifos/api-client';
 import { isComplianceProfileEmpty, LEGAL_FORM_PERSON } from '@mifos/validation';
 import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
 import { incomeSourceInputDisplayName } from '@/components/clients/detail/client-income-source-sections';
@@ -34,7 +34,8 @@ export function PreviewStep({
   submitError,
   validationIssues = [],
   incomeSourceOptions,
-  identifierDocumentTypes = []
+  identifierDocumentTypes = [],
+  contactTypeOptions = []
 }: {
   template: FineractClientTemplate;
   draft: CreateClientDraft;
@@ -42,6 +43,7 @@ export function PreviewStep({
   validationIssues?: string[];
   incomeSourceOptions?: FineractIncomeSourceOptions;
   identifierDocumentTypes?: { id: number; name: string }[];
+  contactTypeOptions?: ContactType[];
 }) {
   const g = draft.general;
   const legalForm = template.clientLegalFormOptions?.find((o) => o.id === g.legalFormId);
@@ -125,6 +127,21 @@ export function PreviewStep({
         <Field label="Alternative phone number" value={g.alternativeMobileNo} />
         <Field label="Email" value={g.emailAddress} />
         <Field label="Alternative email" value={g.alternativeEmailAddress} />
+        {draft.contacts.length > 0 ? (
+          <ul className="list-disc pl-5 text-sm">
+            {draft.contacts.map((contact, index) => {
+              const typeName =
+                contactTypeOptions.find((option) => option.id === contact.contactTypeId)?.typeName ??
+                `Type #${contact.contactTypeId}`;
+              return (
+                <li key={`${contact.contactTypeId}-${contact.contactValue}-${index}`}>
+                  {typeName}: {contact.contactValue}
+                  {contact.primary ? ' (primary)' : ''}
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
       </section>
 
       <Separator />

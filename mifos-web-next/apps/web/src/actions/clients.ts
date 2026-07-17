@@ -89,15 +89,19 @@ export async function createClientAction(
     if (clientId != null) {
       revalidatePath(`/clients/${clientId}`);
       revalidatePath(`/clients/${clientId}/contacts`);
-      const seeded = await seedOnboardingClientContacts(clientId, parsed.data);
-      const success = actionSuccessFromFineractCommand(result, { clientId });
-      if (!seeded.ok) {
-        return {
-          ...success,
-          contactSeedWarning: seeded.message
-        };
+      // Contacts embedded on create are persisted by the backend; only seed when absent.
+      if (!parsed.data.contacts?.length) {
+        const seeded = await seedOnboardingClientContacts(clientId, parsed.data);
+        const success = actionSuccessFromFineractCommand(result, { clientId });
+        if (!seeded.ok) {
+          return {
+            ...success,
+            contactSeedWarning: seeded.message
+          };
+        }
+        return success;
       }
-      return success;
+      return actionSuccessFromFineractCommand(result, { clientId });
     }
     return actionSuccessFromFineractCommand(result, { clientId });
   } catch (err) {

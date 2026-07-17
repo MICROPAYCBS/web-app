@@ -14,6 +14,7 @@ import { usePathname } from 'next/navigation';
 import { CashierHeaderBalance } from '@/components/platform/cashier-header-balance';
 import { useEntitySearch } from '@/components/platform/entity-search-provider';
 import { CheckerInboxHeaderLink } from '@/components/platform/checker-inbox-header-link';
+import { MifosNavUser } from '@/components/platform/mifos-nav-user';
 import { NotificationsHeaderLink } from '@/components/platform/notifications-header-link';
 import { isNavPathActive } from '@/components/platform/navigation-utils';
 import type { CashierNavBalance } from '@/lib/fineract/cashier-display';
@@ -75,7 +76,7 @@ export function MifosSiteHeader({
           </Tooltip>
         </div>
       </div>
-      <div className="flex min-w-0 flex-1 items-center gap-3 px-4 lg:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-3 pl-4 pr-0 lg:pl-6">
         {showBusinessDate ? (
           <Tooltip>
             <TooltipTrigger
@@ -117,7 +118,7 @@ export function MifosSiteHeader({
 
         {cashierNavBalance ? <CashierHeaderBalance balance={cashierNavBalance} /> : null}
 
-        <div className="ml-auto flex shrink-0 items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1 self-stretch">
           <CheckerInboxHeaderLink initialCount={checkerInboxPendingCount} />
           <NotificationsHeaderLink initialCount={notificationsUnreadCount} />
 
@@ -144,6 +145,10 @@ export function MifosSiteHeader({
               </span>
             </TooltipContent>
           </Tooltip>
+
+          <div className="ml-1 flex self-stretch items-center border-l border-border pl-2 pr-2 sm:pr-3">
+            <MifosNavUser />
+          </div>
         </div>
       </div>
     </header>

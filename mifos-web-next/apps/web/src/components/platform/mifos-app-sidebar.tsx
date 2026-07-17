@@ -11,7 +11,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { APP_LOGO_ABBREV, APP_NAME } from '@/lib/branding';
-import { MifosNavUser } from '@/components/platform/mifos-nav-user';
 import { isNavPathActive } from '@/components/platform/navigation-utils';
 import { QuickCreate } from '@/components/platform/quick-create';
 import { SidebarNavFind } from '@/components/platform/sidebar-nav-find';
@@ -19,7 +18,6 @@ import { SidebarNavPanel } from '@/components/platform/sidebar-nav-panel';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -69,10 +67,6 @@ export function MifosAppSidebar({
       <SidebarContent>
         <SidebarNavPanel />
       </SidebarContent>
-
-      <SidebarFooter>
-        <MifosNavUser />
-      </SidebarFooter>
     </Sidebar>
   );
 }

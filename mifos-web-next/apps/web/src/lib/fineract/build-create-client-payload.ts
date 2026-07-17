@@ -70,6 +70,12 @@ export function buildCreateClientPayload(input: CreateClientPayload): Record<str
     delete base.clientIdentifiers;
   }
 
+  if (input.contacts?.length) {
+    base.contacts = input.contacts.map((contact) => stripEmpty({ ...contact }));
+  } else {
+    delete base.contacts;
+  }
+
   if (input.complianceProfile) {
     const profile = input.complianceProfile;
     const accounts = profile.hasOtherBankAccounts

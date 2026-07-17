@@ -21,11 +21,12 @@ import { toast } from 'sonner';
 import { addClientDatatableRowAction } from '@/actions/client-datatable';
 import { createClientAction } from '@/actions/clients';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
-import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fineract/dates';
+import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { mandatoryClientDatatableNames } from '@/lib/fineract/mandatory-client-datatables';
 import { AddressStep } from './steps/address-step';
 import { DatatableStep } from './steps/datatable-step';
@@ -87,18 +88,22 @@ function buildSteps(
   return steps;
 }
 
-function emptyDraft(defaultOfficeId?: number): CreateClientDraft {
+function emptyDraft(
+  defaultOfficeId: number | undefined,
+  initialSubmittedOnDate: string
+): CreateClientDraft {
   return {
     general: {
       officeId: defaultOfficeId,
       legalFormId: LEGAL_FORM_PERSON,
-      submittedOnDate: toFineractDate(),
+      submittedOnDate: initialSubmittedOnDate,
       dateFormat: FINERACT_DATE_FORMAT,
       locale: FINERACT_LOCALE
     },
     familyMembers: [],
     clientIdentifiers: [],
     incomeSources: [],
+    contacts: [],
     complianceProfile: emptyComplianceProfile(),
     addresses: [],
     datatables: {},
@@ -113,11 +118,15 @@ export function CreateClientWizard({
   entityDatatableChecks = [],
   incomeSourceOptions,
   identifierDocumentTypes = [],
-  identifierIdentityTypeOptions = []
+  identifierIdentityTypeOptions = [],
+  contactTypeOptions = []
 }: CreateClientWizardProps) {
   const router = useRouter();
+  const initialSubmittedOnDate = useInitialTransactionDate();
   const [template] = useState(initialTemplate);
-  const [draft, setDraft] = useState<CreateClientDraft>(() => emptyDraft(defaultOfficeId));
+  const [draft, setDraft] = useState<CreateClientDraft>(() =>
+    emptyDraft(defaultOfficeId, initialSubmittedOnDate)
+  );
   const [stepId, setStepId] = useState('biodata');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
     () => new Set()
@@ -258,7 +267,7 @@ export function CreateClientWizard({
   }
 
   function buildPayload(): CreateClientPayload | null {
-    const parsed = parseCreateClientPayload(draft, template, legalFormId);
+    const parsed = parseCreateClientPayload(draft, template, legalFormId, contactTypeOptions);
     if (!parsed.ok) {
       const message = formatZodIssuesMessage(parsed.issues);
       setSubmitError(message);
@@ -372,7 +381,7 @@ export function CreateClientWizard({
     if (invalidStep) {
       return Object.values(invalidStep.errors);
     }
-    const parsed = parseCreateClientPayload(draft, template, legalFormId);
+    const parsed = parseCreateClientPayload(draft, template, legalFormId, contactTypeOptions);
     if (!parsed.ok) {
       return formatZodIssuesForDisplay(parsed.issues);
     }
@@ -413,7 +422,13 @@ export function CreateClientWizard({
       ) : null}
 
       {resolvedStepId === 'contact' ? (
-        <ContactStep draft={draft} errors={stepErrors} onDraftChange={patchGeneral} />
+        <ContactStep
+          draft={draft}
+          errors={stepErrors}
+          contactTypeOptions={contactTypeOptions}
+          onDraftChange={patchGeneral}
+          onContactsChange={(contacts) => setDraft((d) => ({ ...d, contacts }))}
+        />
       ) : null}
 
       {resolvedStepId === 'identifiers' ? (
@@ -525,6 +540,7 @@ export function CreateClientWizard({
           validationIssues={previewValidationIssues}
           incomeSourceOptions={incomeSourceOptions}
           identifierDocumentTypes={identifierDocumentTypes}
+          contactTypeOptions={contactTypeOptions}
         />
       ) : null}
     </FormWizard>

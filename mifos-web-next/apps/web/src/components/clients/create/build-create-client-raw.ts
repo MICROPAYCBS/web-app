@@ -13,6 +13,7 @@ import {
   sanitizeComplianceProfileForSubmit,
   type CreateClientPayload
 } from '@mifos/validation';
+import { buildOnboardingCreateClientContacts } from '@/lib/clients/onboarding-client-contacts';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { buildCreateClientDatatablePayloads } from './datatable-payloads';
 import type { CreateClientDraft } from './types';
@@ -20,10 +21,20 @@ import type { CreateClientDraft } from './types';
 export function buildCreateClientRaw(
   draft: CreateClientDraft,
   template: FineractClientTemplate,
-  legalFormId: number
+  legalFormId: number,
+  contactTypeOptions: Array<{ id: number; typeCode: string; typeName: string }> = []
 ): Record<string, unknown> {
-  const { general, familyMembers, clientIdentifiers, incomeSources, complianceProfile, addresses, datatables, multiRowDatatables } =
-    draft;
+  const {
+    general,
+    familyMembers,
+    clientIdentifiers,
+    incomeSources,
+    contacts,
+    complianceProfile,
+    addresses,
+    datatables,
+    multiRowDatatables
+  } = draft;
 
   const dateFormat = general.dateFormat ?? FINERACT_DATE_FORMAT;
   const locale = general.locale ?? FINERACT_LOCALE;
@@ -34,6 +45,17 @@ export function buildCreateClientRaw(
     multiRowDatatables,
     dateFormat,
     locale
+  );
+
+  const contactsPayload = buildOnboardingCreateClientContacts(
+    {
+      mobileNo: general.mobileNo,
+      alternativeMobileNo: general.alternativeMobileNo,
+      emailAddress: general.emailAddress,
+      alternativeEmailAddress: general.alternativeEmailAddress
+    },
+    contacts,
+    contactTypeOptions
   );
 
   return {
@@ -68,6 +90,7 @@ export function buildCreateClientRaw(
     familyMembers: familyMembers.length ? familyMembers : undefined,
     clientIdentifiers: clientIdentifiers.length ? clientIdentifiers : undefined,
     incomeSources: incomeSources.length ? incomeSources : undefined,
+    contacts: contactsPayload.length ? contactsPayload : undefined,
     complianceProfile: sanitizeComplianceProfileForSubmit(complianceProfile),
     address: template.isAddressEnabled && addresses.length ? addresses : undefined,
     datatables: datatablePayloads.length ? datatablePayloads : undefined
@@ -77,9 +100,12 @@ export function buildCreateClientRaw(
 export function parseCreateClientPayload(
   draft: CreateClientDraft,
   template: FineractClientTemplate,
-  legalFormId: number = draft.general.legalFormId ?? LEGAL_FORM_PERSON
+  legalFormId: number = draft.general.legalFormId ?? LEGAL_FORM_PERSON,
+  contactTypeOptions: Array<{ id: number; typeCode: string; typeName: string }> = []
 ): { ok: true; data: CreateClientPayload } | { ok: false; issues: import('zod').ZodIssue[] } {
-  const parsed = createClientSchema.safeParse(buildCreateClientRaw(draft, template, legalFormId));
+  const parsed = createClientSchema.safeParse(
+    buildCreateClientRaw(draft, template, legalFormId, contactTypeOptions)
+  );
   if (!parsed.success) {
     return { ok: false, issues: parsed.error.issues };
   }
@@ -108,7 +134,8 @@ export function createClientIssueStepId(path: (string | number)[]): string {
     'mobileNo',
     'alternativeMobileNo',
     'emailAddress',
-    'alternativeEmailAddress'
+    'alternativeEmailAddress',
+    'contacts'
   ]);
   const profilingFields = new Set([
     'clientTypeId',
@@ -139,6 +166,9 @@ export function createClientIssueStepId(path: (string | number)[]): string {
   }
   if (root === 'familyMembers') {
     return 'family';
+  }
+  if (root === 'contacts') {
+    return 'contact';
   }
   if (biodataFields.has(root)) {
     return 'biodata';

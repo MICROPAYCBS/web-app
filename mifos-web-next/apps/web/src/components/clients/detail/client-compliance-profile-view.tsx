@@ -69,6 +69,7 @@ export function ClientComplianceProfileView({
     clientIdentifiers: [],
     familyMembers: [],
     incomeSources: [],
+    contacts: [],
     complianceProfile: mapProfileToInput(initialProfile),
     addresses: [],
     datatables: {},

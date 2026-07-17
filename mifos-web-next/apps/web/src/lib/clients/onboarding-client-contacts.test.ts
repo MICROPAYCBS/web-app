@@ -8,7 +8,10 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { mapOnboardingFieldsToClientContacts } from './onboarding-client-contacts';
+import {
+  buildOnboardingCreateClientContacts,
+  mapOnboardingFieldsToClientContacts
+} from './onboarding-client-contacts';
 
 describe('mapOnboardingFieldsToClientContacts', () => {
   const options = [
@@ -96,5 +99,33 @@ describe('mapOnboardingFieldsToClientContacts', () => {
 
     assert.equal(mapped[0]?.contactTypeId, 10);
     assert.equal(mapped[1]?.contactTypeId, 11);
+  });
+});
+
+describe('buildOnboardingCreateClientContacts', () => {
+  const options = [
+    { id: 1, typeCode: 'MOBILE', typeName: 'Mobile' },
+    { id: 2, typeCode: 'EMAIL', typeName: 'Email' },
+    { id: 5, typeCode: 'WHATSAPP', typeName: 'WhatsApp' }
+  ];
+
+  it('merges mapped primary fields with additional typed contacts and skips duplicates', () => {
+    const contacts = buildOnboardingCreateClientContacts(
+      {
+        mobileNo: '+256700000000',
+        emailAddress: 'customer@example.com'
+      },
+      [
+        { contactTypeId: 5, contactValue: '+256711111111', primary: true },
+        { contactTypeId: 1, contactValue: '+256700000000', primary: false }
+      ],
+      options
+    );
+
+    assert.deepEqual(contacts, [
+      { contactTypeId: 1, contactValue: '+256700000000', primary: true },
+      { contactTypeId: 2, contactValue: 'customer@example.com', primary: true },
+      { contactTypeId: 5, contactValue: '+256711111111', primary: true }
+    ]);
   });
 });

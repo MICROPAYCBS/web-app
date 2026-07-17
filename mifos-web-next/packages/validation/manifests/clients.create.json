@@ -28,6 +28,7 @@
     "activationDate": { "requiredWhen": "active=true" },
     "savingsProductId": { "requiredWhen": "openSavingsOnCreate=true" },
     "familyMembers": { "required": false },
+    "contacts": { "required": false },
     "address": { "requiredWhen": "isAddressEnabled=true" },
     "datatables": { "required": false }
   }

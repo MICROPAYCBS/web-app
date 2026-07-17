@@ -128,3 +128,46 @@ export function mapOnboardingFieldsToClientContacts(
 
   return mapped;
 }
+
+function contactKey(contact: Pick<ClientContactInput, 'contactTypeId' | 'contactValue'>): string {
+  return `${contact.contactTypeId}:${contact.contactValue.trim().toLowerCase()}`;
+}
+
+/**
+ * Builds the create-client `contacts` array: mapped primary/alternative fields first,
+ * then any additional typed contacts that are not duplicates.
+ */
+export function buildOnboardingCreateClientContacts(
+  fields: OnboardingContactFields,
+  additionalContacts: ClientContactInput[],
+  options: OnboardingContactTypeOption[]
+): ClientContactInput[] {
+  const contacts: ClientContactInput[] = mapOnboardingFieldsToClientContacts(fields, options).map(
+    (row) => ({
+      contactTypeId: row.contactTypeId,
+      contactValue: row.contactValue,
+      primary: row.primary
+    })
+  );
+  const seen = new Set(contacts.map(contactKey));
+
+  for (const contact of additionalContacts) {
+    const value = contact.contactValue?.trim();
+    if (!value || !Number.isFinite(contact.contactTypeId) || contact.contactTypeId <= 0) {
+      continue;
+    }
+    const normalized: ClientContactInput = {
+      contactTypeId: contact.contactTypeId,
+      contactValue: value,
+      ...(contact.primary != null ? { primary: contact.primary } : {})
+    };
+    const key = contactKey(normalized);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    contacts.push(normalized);
+  }
+
+  return contacts;
+}
