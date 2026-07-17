@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE, complianceProfileSchema, countValidClientIdentifiers, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE, complianceProfileSchema, countValidClientIdentifiers, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
@@ -151,8 +151,12 @@ export function validateIncomeSourcesStep(draft: CreateClientDraft): StepErrors 
   return errors;
 }
 
-/** Next of kin entries are optional. */
-export function validateFamilyStep(): StepErrors {
+/** Next of kin is required for individual customers. */
+export function validateFamilyStep(draft: CreateClientDraft): StepErrors {
+  const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
+  if (legalFormId === LEGAL_FORM_PERSON && draft.familyMembers.length < 1) {
+    return { familyMembers: CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE };
+  }
   return {};
 }
 
@@ -302,7 +306,7 @@ export function validateStep(
     return validateIdentifiersStep(draft, context);
   }
   if (stepId === 'family') {
-    return validateFamilyStep();
+    return validateFamilyStep(draft);
   }
   if (stepId === 'income-sources') {
     return validateIncomeSourcesStep(draft);

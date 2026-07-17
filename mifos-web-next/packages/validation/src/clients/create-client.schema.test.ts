@@ -12,6 +12,13 @@ import { createClientSchema } from './create-client.schema';
 import { GENDER_FEMALE } from './gender';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 
+const personFamilyMember = {
+  firstName: 'John',
+  lastName: 'Doe',
+  relationshipId: 1,
+  genderId: GENDER_FEMALE
+};
+
 describe('createClientSchema clientIdentifiers', () => {
   const personBase = {
     officeId: 1,
@@ -27,7 +34,8 @@ describe('createClientSchema clientIdentifiers', () => {
     dateOfBirth: '01 January 1990',
     submittedOnDate: '01 July 2026',
     dateFormat: 'dd MMMM yyyy',
-    locale: 'en'
+    locale: 'en',
+    familyMembers: [personFamilyMember]
   };
 
   it('requires at least one identifier for individual customers', () => {
@@ -45,7 +53,25 @@ describe('createClientSchema clientIdentifiers', () => {
     }
   });
 
-  it('accepts individual customers with one valid identifier', () => {
+  it('requires at least one next of kin for individual customers', () => {
+    const result = createClientSchema.safeParse({
+      ...personBase,
+      familyMembers: [],
+      clientIdentifiers: [
+        { documentTypeId: 1, documentKey: 'CM123456', status: 'Active' as const }
+      ]
+    });
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.ok(
+        result.error.issues.some(
+          (issue) => issue.path[0] === 'familyMembers' && issue.message.includes('next of kin')
+        )
+      );
+    }
+  });
+
+  it('accepts individual customers with one valid identifier and next of kin', () => {
     const result = createClientSchema.safeParse({
       ...personBase,
       clientIdentifiers: [
@@ -55,7 +81,7 @@ describe('createClientSchema clientIdentifiers', () => {
     assert.equal(result.success, true);
   });
 
-  it('does not require identifiers for entity customers', () => {
+  it('does not require identifiers or next of kin for entity customers', () => {
     const result = createClientSchema.safeParse({
       officeId: 1,
       staffId: 1,
@@ -70,7 +96,8 @@ describe('createClientSchema clientIdentifiers', () => {
       clientNonPersonDetails: {
         constitutionId: 1
       },
-      clientIdentifiers: []
+      clientIdentifiers: [],
+      familyMembers: []
     });
     assert.equal(result.success, true);
   });

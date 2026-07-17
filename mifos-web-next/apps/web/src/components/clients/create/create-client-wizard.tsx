@@ -466,6 +466,7 @@ export function CreateClientWizard({
         <FamilyStep
           template={template}
           draft={draft}
+          errors={stepErrors}
           onFamilyChange={(familyMembers) => setDraft((d) => ({ ...d, familyMembers }))}
         />
       ) : null}

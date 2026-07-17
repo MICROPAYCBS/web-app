@@ -48,6 +48,9 @@ export const familyMemberSchema = z.object({
   locale: z.string().optional()
 });
 
+export const CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE =
+  'Add at least one next of kin for individual customers';
+
 export const clientAddressEntrySchema = z.object({
   addressTypeId: z.coerce.number().int().positive().optional(),
   postalCode: z.string().trim().max(20).optional(),
@@ -179,6 +182,13 @@ export const createClientSchema = z
           code: z.ZodIssueCode.custom,
           message: CLIENT_IDENTIFIERS_REQUIRED_MESSAGE,
           path: ['clientIdentifiers']
+        });
+      }
+      if (!data.familyMembers?.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE,
+          path: ['familyMembers']
         });
       }
     }

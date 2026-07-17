@@ -51,6 +51,7 @@ export {
   createClientSheetSchema,
   datatablePayloadSchema,
   familyMemberSchema,
+  CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE,
   type ClientAddressEntry,
   type CreateClientInput,
   type CreateClientPayload,

@@ -9,7 +9,7 @@
  */
 
 import type { FineractClientTemplate } from '@mifos/api-client';
-import type { FamilyMemberInput } from '@mifos/validation';
+import { LEGAL_FORM_PERSON, type FamilyMemberInput } from '@mifos/validation';
 import { Plus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { FamilyMemberFormSheet } from '@/components/clients/shared/family-member-form-sheet';
@@ -21,6 +21,7 @@ import {
 } from '@/components/clients/detail/client-family-sections';
 import { DraftCollectionView } from '@/components/clients/shared/draft-collection-view';
 import type { CreateClientDraft } from '../types';
+import type { StepErrors } from '../validation';
 import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
 
@@ -37,16 +38,19 @@ function relationshipLabel(
 export function FamilyStep({
   template,
   draft,
+  errors = {},
   onFamilyChange
 }: {
   template: FineractClientTemplate;
   draft: CreateClientDraft;
+  errors?: StepErrors;
   onFamilyChange: (members: FamilyMemberInput[]) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const members = draft.familyMembers;
+  const required = (draft.general.legalFormId ?? LEGAL_FORM_PERSON) === LEGAL_FORM_PERSON;
 
   function openAdd() {
     setEditIndex(null);
@@ -65,8 +69,14 @@ export function FamilyStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Add next of kin linked to this customer (optional). You can skip this step.
+        {required
+          ? 'Add at least one next of kin linked to this customer.'
+          : 'Add next of kin linked to this customer (optional). You can skip this step.'}
       </p>
+
+      {errors.familyMembers ? (
+        <p className="text-sm text-destructive">{errors.familyMembers}</p>
+      ) : null}
 
       <Button type="button" variant="outline" size="sm" onClick={openAdd}>
         <Plus className="mr-2 size-4" />
@@ -77,7 +87,11 @@ export function FamilyStep({
         <EmptyState
           icon={Users}
           title="No next of kin added yet"
-          description="This step is optional. Add household or emergency contacts if needed."
+          description={
+            required
+              ? 'Individual customers need at least one household or emergency contact.'
+              : 'This step is optional. Add household or emergency contacts if needed.'
+          }
           action={
             <Button type="button" variant="outline" size="sm" onClick={openAdd}>
               <Plus className="mr-2 size-4" />
