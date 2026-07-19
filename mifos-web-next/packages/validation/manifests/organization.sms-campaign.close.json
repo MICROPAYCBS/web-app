@@ -1,0 +1,9 @@
+{
+  "schemaId": "organization.sms-campaign.close",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.campaigns.sms.api.SmsCampaignApiResource"
+  ],
+  "fields": {
+    "closureDate": { "required": true, "type": "date" }
+  }
+}

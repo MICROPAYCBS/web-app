@@ -15,7 +15,7 @@ Maintain **`APP_ROUTES`** in `@mifos/routes` as the canonical registry. Each ent
 - `@mifos/auth` derives nav and route permission manifests from `@mifos/routes/server`.
 - Client code imports only `@mifos/routes` (paths/registry); server code uses `@mifos/routes/server`.
 - `AppLink` / `routePath()` provide stable ids for navigation in app code.
-- `npm run routes:parity` exports `docs/parity/generated.json`.
+- `pnpm run routes:parity` exports `docs/parity/generated.json`.
 - Next.js `strictRouteTypes` remains enabled for filesystem-generated `AppRoutes`.
 
 ## Consequences

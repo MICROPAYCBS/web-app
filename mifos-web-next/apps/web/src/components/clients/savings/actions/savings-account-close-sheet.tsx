@@ -1,0 +1,214 @@
+'use client';
+
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { formatActionErrorMessage } from '@mifos/validation';
+import { useRouter } from 'next/navigation';
+import { useEffect, useId, useMemo, useState, useTransition } from 'react';
+import {
+  executeSavingsAccountLifecycleCommandAction,
+  loadSavingsAccountTransactionSheetDataAction
+} from '@/actions/savings-account-command';
+import { CashierSessionRequiredAlert } from '@/components/accounts/cashier-session-required-alert';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
+import { FormSheet } from '@/components/composites/form-sheet';
+import { SelectField } from '@/components/composites/select-field';
+import { TextField } from '@/components/composites/text-field';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
+import type { CashierPolicySettings } from '@/lib/fineract/cashier-policy-paths';
+
+export function SavingsAccountCloseSheet({
+  clientId,
+  accountId,
+  currencyCode,
+  open,
+  onOpenChange
+}: {
+  clientId: string;
+  accountId: number;
+  currencyCode: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const formId = useId();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
+  const [paymentTypes, setPaymentTypes] = useState<CashierAwarePaymentTypeOption[]>([]);
+  const [cashierPolicy, setCashierPolicy] = useState<CashierPolicySettings>({
+    preventCashierOverdraw: true,
+    requireCashierForCashTransactions: true,
+    captureLegalTenderForCashTransactions: 'OPTIONAL'
+  });
+  const [activeCashierSession, setActiveCashierSession] = useState(false);
+  const [cashierSessionLink, setCashierSessionLink] = useState<{
+    tellerId: number;
+    cashierId: number;
+    canOpenCashierDetail: boolean;
+  } | null>(null);
+  const initialTransactionDate = useInitialTransactionDate();
+  const [closedOnDate, setClosedOnDate] = useState(initialTransactionDate);
+  const [withdrawBalance, setWithdrawBalance] = useState(false);
+  const [paymentTypeId, setPaymentTypeId] = useState('');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setFieldErrors({});
+    setClosedOnDate(initialTransactionDate);
+    setWithdrawBalance(false);
+    setPaymentTypeId('');
+    setNote('');
+    void loadSavingsAccountTransactionSheetDataAction(
+      String(accountId),
+      'deposit',
+      currencyCode
+    ).then(
+      (result) => {
+        if (cancelled) {
+          return;
+        }
+        setLoading(false);
+        if (!result.ok) {
+          setError(result.message);
+          setPaymentTypes([]);
+          return;
+        }
+        setPaymentTypes(result.paymentTypeOptions);
+        setCashierPolicy(result.cashierPolicy);
+        setActiveCashierSession(result.activeCashierSession);
+        setCashierSessionLink(result.cashierSessionLink);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [open, accountId, currencyCode, initialTransactionDate]);
+
+  const selectedPaymentType = useMemo(
+    () => paymentTypes.find((row) => String(row.id) === paymentTypeId),
+    [paymentTypeId, paymentTypes]
+  );
+  const requiresActiveCashier =
+    withdrawBalance &&
+    cashierPolicy.requireCashierForCashTransactions &&
+    selectedPaymentType?.isCashPayment === true;
+  const blockedByCashierSession = requiresActiveCashier && !activeCashierSession;
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setFieldErrors({});
+
+    startTransition(async () => {
+      const result = await executeSavingsAccountLifecycleCommandAction(
+        clientId,
+        String(accountId),
+        'close',
+        {
+          closedOnDate,
+          note: note.trim() || undefined,
+          withdrawBalance,
+          paymentTypeId: withdrawBalance ? paymentTypeId : undefined
+        }
+      );
+
+      if (!result.ok) {
+        setError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setFieldErrors(result.fieldErrors ?? {});
+        return;
+      }
+
+      onOpenChange(false);
+      router.refresh();
+    });
+  }
+
+  return (
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Close account"
+      description="Close this savings account. You can optionally withdraw the remaining balance."
+      formId={formId}
+      submitLabel="Close account"
+      submitLoading={pending}
+      submitDisabled={loading || blockedByCashierSession}
+      className="data-[side=right]:sm:max-w-lg"
+    >
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (
+        <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+          <TransactionDateField
+            id={`${formId}-closed-on`}
+            label="Closed on"
+            value={closedOnDate}
+            onChange={setClosedOnDate}
+            error={fieldErrors.closedOnDate}
+            required
+          />
+          <div className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
+            <div className="space-y-0.5">
+              <Label htmlFor={`${formId}-withdraw-balance`}>Withdraw balance</Label>
+              <p className="text-xs text-muted-foreground">
+                Pay out the remaining balance when closing.
+              </p>
+            </div>
+            <Switch
+              id={`${formId}-withdraw-balance`}
+              checked={withdrawBalance}
+              onCheckedChange={setWithdrawBalance}
+            />
+          </div>
+          {withdrawBalance ? (
+            <>
+              <SelectField
+                id={`${formId}-payment-type`}
+                label="Payment type"
+                value={paymentTypeId}
+                onValueChange={(value) => setPaymentTypeId(value ?? '')}
+                options={paymentTypes.map((row) => ({ value: String(row.id), label: row.name }))}
+                placeholder="Select payment type"
+                error={fieldErrors.paymentTypeId}
+                required
+              />
+              {blockedByCashierSession ? (
+                <CashierSessionRequiredAlert
+                  tellerId={cashierSessionLink?.tellerId}
+                  cashierId={cashierSessionLink?.cashierId}
+                  canOpenCashierDetail={cashierSessionLink?.canOpenCashierDetail}
+                />
+              ) : null}
+            </>
+          ) : null}
+          <TextField
+            id={`${formId}-note`}
+            label="Note"
+            value={note}
+            onChange={setNote}
+            error={fieldErrors.note}
+            multiline
+          />
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        </form>
+      )}
+    </FormSheet>
+  );
+}

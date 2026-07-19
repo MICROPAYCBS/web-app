@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Copyright since 2025 Mifos Initiative
+ * Copyright since 2026 MicroPay
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,7 @@ const path = require('path');
 // Headers to add based on file type
 const HEADERS = {
   code: `/**
- * Copyright since 2025 Mifos Initiative
+ * Copyright since 2026 MicroPay
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,7 +23,7 @@ const HEADERS = {
 
 `,
   html: `<!--
-  Copyright since 2025 Mifos Initiative
+  Copyright since 2026 MicroPay
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -99,12 +99,12 @@ function getHeaderType(filePath) {
  * Check if file already has a header
  */
 function hasHeader(content, headerType) {
-  if (headerType === 'code') {
-    return content.includes('Copyright since 2025 Mifos Initiative') && content.includes('Mozilla Public License');
-  }
+  const hasCopyright =
+    /Copyright since 20\d{2} MicroPay/.test(content) ||
+    /Copyright since 20\d{2} Mifos Initiative/.test(content);
 
-  if (headerType === 'html') {
-    return content.includes('Copyright since 2025 Mifos Initiative') && content.includes('Mozilla Public License');
+  if (headerType === 'code' || headerType === 'html') {
+    return hasCopyright && content.includes('Mozilla Public License');
   }
 
   return false;
@@ -148,7 +148,10 @@ function addHeaderToFile(filePath, dryRun = false) {
   }
 
   const header = HEADERS[headerType];
-  const newContent = header + content;
+  const directiveMatch = content.match(/^(['"])use (server|client)\1;\s*\r?\n/);
+  const newContent = directiveMatch
+    ? directiveMatch[0] + header + content.slice(directiveMatch[0].length)
+    : header + content;
 
   if (dryRun) {
     console.log(`🔍 Would add header to: ${filePath}`);

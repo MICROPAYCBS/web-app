@@ -1,5 +1,12 @@
 export type { FineractServerProfile, ServerCatalog, UpsertServerInput } from './types';
-export { normalizeBaseUrl, normalizeServerInput, createServerId } from './normalize';
+export {
+  normalizeBaseUrl,
+  normalizeServerInput,
+  createServerId,
+  resolveFineractApiBaseUrl,
+  normalizeServerProfile,
+  normalizeCatalog
+} from './normalize';
 export {
   emptyCatalog,
   getActiveServer,
@@ -7,3 +14,8 @@ export {
   removeServer,
   setActiveServerId
 } from './catalog';
+export {
+  getFineractApiHost,
+  isDeprecatedDemoFineractHost,
+  deprecatedDemoFineractHint
+} from './fineract-host';

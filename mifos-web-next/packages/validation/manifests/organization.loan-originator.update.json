@@ -1,0 +1,13 @@
+{
+  "schemaId": "organization.loan-originator.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.originator.api.LoanOriginatorApiResource",
+    "org.apache.fineract.portfolio.loanaccount.originator.data.LoanOriginatorDataValidator"
+  ],
+  "fields": {
+    "name": { "required": true, "type": "string" },
+    "status": { "required": true, "type": "string" },
+    "originatorTypeId": { "required": false, "type": "number" },
+    "channelTypeId": { "required": false, "type": "number" }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "command": "clients.loan-account.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
+    "org.apache.fineract.portfolio.loanaccount.data.LoanApplicationDataValidator"
+  ],
+  "fields": {
+    "productId": { "required": true },
+    "loanOfficerId": { "required": true },
+    "loanPurposeId": { "required": false },
+    "fundId": { "required": false },
+    "principal": { "required": true, "min": 0 },
+    "loanTermFrequency": { "required": true },
+    "numberOfRepayments": { "required": true },
+    "repaymentEvery": { "required": true },
+    "enableDownPayment": { "required": false },
+    "interestRatePerPeriod": { "required": true, "min": 0 },
+    "submittedOnDate": { "required": true },
+    "expectedDisbursementDate": { "required": true },
+    "repaymentsStartingFromDate": { "required": false },
+    "graceOnPrincipalPayment": { "required": false, "default": 0 },
+    "graceOnInterestPayment": { "required": false, "default": 0 },
+    "graceOnInterestCharged": { "required": false, "default": 0 },
+    "transactionProcessingStrategyCode": { "required": true },
+    "collateral": { "required": false },
+    "charges": { "required": false },
+    "linkAccountId": { "required": false },
+    "createStandingInstructionAtDisbursement": { "required": false, "default": false }
+  }
+}

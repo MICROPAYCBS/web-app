@@ -1,0 +1,494 @@
+'use server';
+
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import type { FineractJournalEntryListItem } from '@mifos/api-client';
+import { assertCan } from '@mifos/auth';
+import {
+  actionSuccessFromFineractCommand,
+  expandBulkConstructJournalEntries,
+  expandInterBranchJournalEntry,
+  isInterBranchJournalEntry,
+  toFineractActionError,
+  validateBulkConstructJournalEntriesForm,
+  validateCreateJournalEntryForm,
+  validatePostLegacyJournalEntriesForm,
+  validateRevertJournalEntry,
+  type BulkConstructJournalEntriesFormInput,
+  type CreateJournalEntryFormInput,
+  type PostLegacyJournalEntriesFormInput,
+  type RevertJournalEntryInput
+} from '@mifos/validation';
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { resolveCentralBranchClearingGlAccount } from '@/lib/accounting/inter-branch-recon';
+import { legacyPostGroupToCreateJournalEntryForm } from '@/lib/accounting/legacy-journal-entries-post';
+import {
+  createJournalEntry,
+  getJournalEntryTransaction,
+  listJournalEntryGlAccounts,
+  revertJournalEntryTransaction
+} from '@/lib/fineract/journal-entries';
+import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
+import { listFinancialActivityMappings } from '@/lib/fineract/financial-activity-mappings';
+import { listOfficeOptions } from '@/lib/fineract/offices';
+import { getServerSession } from '@/lib/session/server';
+import { listAccountingRulesForFrequentPostings } from '@/lib/fineract/accounting-rules';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
+import { expandBulkConstructRowToJournalEntry } from '@/lib/accounting/bulk-journal-construct';
+
+const LIST_PATH = '/accounting/journal-entries';
+const BULK_OPERATIONS_PATH = '/accounting/journal-entries/bulk-operations';
+const REQUIRE_DEPARTMENT_CONFIG = 'enable-require-department-on-manual-journal-pl-lines';
+
+export type JournalEntriesActionResult =
+  | {
+      ok: true;
+      transactionId?: string;
+      transactionIds?: string[];
+      interBranch?: boolean;
+      pendingChecker?: boolean;
+    }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+export type GetJournalEntryTransactionResult =
+  | { ok: true; entries: FineractJournalEntryListItem[] }
+  | { ok: false; message: string };
+
+export type BulkJournalEntriesRowResult =
+  | { rowIndex: number; ok: true; transactionId?: string; pending?: boolean }
+  | { rowIndex: number; ok: false; message: string };
+
+export type BulkJournalEntriesActionResult =
+  | {
+      ok: true;
+      results: BulkJournalEntriesRowResult[];
+      successCount: number;
+      failureCount: number;
+    }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+export type LegacyJournalEntriesPostGroupResult =
+  | {
+      groupKey: string;
+      effectiveDate: string;
+      reference: string;
+      ok: true;
+      transactionId?: string;
+      pending?: boolean;
+    }
+  | {
+      groupKey: string;
+      effectiveDate: string;
+      reference: string;
+      ok: false;
+      message: string;
+    };
+
+export type LegacyJournalEntriesPostActionResult =
+  | {
+      ok: true;
+      results: LegacyJournalEntriesPostGroupResult[];
+      successCount: number;
+      failureCount: number;
+    }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+function transactionPath(transactionId: string) {
+  return `${LIST_PATH}/transactions/${transactionId}`;
+}
+
+function zodFieldErrors(error: z.ZodError) {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = issue.path.map(String).join('.') || 'form';
+    if (!fieldErrors[key]) {
+      fieldErrors[key] = issue.message;
+    }
+  }
+  return fieldErrors;
+}
+
+function revalidateJournalEntryViews(transactionId?: string) {
+  revalidatePath(LIST_PATH);
+  revalidatePath(BULK_OPERATIONS_PATH);
+  if (transactionId) {
+    revalidatePath(transactionPath(transactionId));
+  }
+}
+
+async function loadJournalEntryValidationContext() {
+  const [departmentConfig, glAccounts, financialActivityMappings] = await Promise.all([
+    getGlobalConfigurationByName(REQUIRE_DEPARTMENT_CONFIG),
+    listJournalEntryGlAccounts(),
+    listFinancialActivityMappings()
+  ]);
+  const glAccountTypesById = Object.fromEntries(
+    glAccounts
+      .filter((account) => account.typeId != null)
+      .map((account) => [account.id, account.typeId as number])
+  );
+  return {
+    requireDepartmentOnPlLines: departmentConfig?.enabled ?? false,
+    glAccountTypesById,
+    glAccounts,
+    financialActivityMappings
+  };
+}
+
+async function createInterBranchJournalEntries(
+  input: CreateJournalEntryFormInput,
+  validationContext: Awaited<ReturnType<typeof loadJournalEntryValidationContext>>
+): Promise<JournalEntriesActionResult> {
+  const clearing = resolveCentralBranchClearingGlAccount(
+    validationContext.financialActivityMappings,
+    validationContext.glAccounts
+  );
+  if (clearing.clearingGlAccountId == null) {
+    return {
+      ok: false,
+      message: clearing.warning ?? 'Inter-branch reconciliation is not configured.'
+    };
+  }
+
+  const offices = await listOfficeOptions();
+  const officeNamesById = Object.fromEntries(
+    offices.map((office) => [office.id, office.name ?? office.nameDecorated ?? String(office.id)])
+  );
+
+  const expanded = expandInterBranchJournalEntry({
+    ...input,
+    clearingGlAccountId: clearing.clearingGlAccountId,
+    officeNamesById
+  });
+
+  const transactionIds: string[] = [];
+  let pendingChecker = false;
+
+  for (const entry of expanded) {
+    const validated = validateCreateJournalEntryForm(entry.input, validationContext);
+    if (!validated.success) {
+      return {
+        ok: false,
+        message: 'Generated journal entry failed validation.'
+      };
+    }
+
+    try {
+      const response = await createJournalEntry(validated.data);
+      const outcome = actionSuccessFromFineractCommand(response, {
+        transactionId: response.transactionId
+      });
+      if (!outcome.ok) {
+        return { ok: false, message: 'Failed to create journal entry.' };
+      }
+      if (response.transactionId) {
+        transactionIds.push(response.transactionId);
+      }
+      pendingChecker = pendingChecker || outcome.pendingChecker === true;
+    } catch (error) {
+      return toFineractActionError(error, 'Failed to create journal entry.');
+    }
+  }
+
+  for (const transactionId of transactionIds) {
+    revalidateJournalEntryViews(transactionId);
+  }
+
+  return {
+    ok: true,
+    transactionId: transactionIds[0],
+    transactionIds,
+    interBranch: true,
+    pendingChecker
+  };
+}
+
+export async function createJournalEntryAction(
+  input: CreateJournalEntryFormInput
+): Promise<JournalEntriesActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'CREATE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to create journal entries.' };
+  }
+
+  const validationContext = await loadJournalEntryValidationContext();
+
+  const parsed = validateCreateJournalEntryForm(input, validationContext);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  if (isInterBranchJournalEntry(parsed.data)) {
+    return createInterBranchJournalEntries(parsed.data, validationContext);
+  }
+
+  try {
+    const response = await createJournalEntry(parsed.data);
+    revalidateJournalEntryViews(response.transactionId);
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to create journal entry.');
+  }
+}
+
+export async function createBulkJournalEntriesAction(
+  input: BulkConstructJournalEntriesFormInput
+): Promise<BulkJournalEntriesActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'CREATE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to create journal entries.' };
+  }
+
+  const [validationContext, accountingRules, currencies] = await Promise.all([
+    loadJournalEntryValidationContext(),
+    listAccountingRulesForFrequentPostings(),
+    getOrganizationSelectedCurrencies()
+  ]);
+
+  const ruleById = new Map(accountingRules.map((rule) => [rule.id, rule]));
+
+  const parsed = validateBulkConstructJournalEntriesForm(input, {
+    ...validationContext,
+    expandEntry: (template, row) => {
+      const rule = ruleById.get(template.accountingRuleId);
+      if (!rule) {
+        return null;
+      }
+      return expandBulkConstructRowToJournalEntry(template, row, rule, currencies);
+    }
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  const expanded = expandBulkConstructJournalEntries(parsed.data, (template, row) => {
+    const rule = ruleById.get(template.accountingRuleId);
+    if (!rule) {
+      return null;
+    }
+    return expandBulkConstructRowToJournalEntry(template, row, rule, currencies);
+  });
+
+  const results: BulkJournalEntriesRowResult[] = [];
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const { rowIndex, entry } of expanded) {
+    try {
+      const response = await createJournalEntry(entry);
+      const outcome = actionSuccessFromFineractCommand(response, {
+        transactionId: response.transactionId
+      });
+      if (outcome.ok) {
+        successCount += 1;
+        results.push({
+          rowIndex,
+          ok: true,
+          transactionId: response.transactionId,
+          pending: outcome.pendingChecker === true
+        });
+      } else {
+        failureCount += 1;
+        results.push({
+          rowIndex,
+          ok: false,
+          message: 'Failed to create journal entry.'
+        });
+      }
+    } catch (error) {
+      failureCount += 1;
+      const mapped = toFineractActionError(error, 'Failed to create journal entry.');
+      results.push({
+        rowIndex,
+        ok: false,
+        message: mapped.ok === false ? mapped.message : 'Failed to create journal entry.'
+      });
+    }
+  }
+
+  revalidateJournalEntryViews();
+
+  return {
+    ok: true,
+    results,
+    successCount,
+    failureCount
+  };
+}
+
+export async function createLegacyJournalEntriesAction(
+  input: PostLegacyJournalEntriesFormInput
+): Promise<LegacyJournalEntriesPostActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'CREATE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to create journal entries.' };
+  }
+
+  const parsed = validatePostLegacyJournalEntriesForm(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: zodFieldErrors(parsed.error)
+    };
+  }
+
+  const [validationContext, currencies] = await Promise.all([
+    loadJournalEntryValidationContext(),
+    getOrganizationSelectedCurrencies()
+  ]);
+
+  const currencyAllowed = currencies.some(
+    (currency) => currency.code === parsed.data.currencyCode
+  );
+  if (!currencyAllowed) {
+    return {
+      ok: false,
+      message: 'Select a currency enabled for this organization.',
+      fieldErrors: { currencyCode: 'Select a supported currency.' }
+    };
+  }
+
+  const results: LegacyJournalEntriesPostGroupResult[] = [];
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const group of parsed.data.groups) {
+    const entry = legacyPostGroupToCreateJournalEntryForm(group, parsed.data.currencyCode);
+    const validated = validateCreateJournalEntryForm(entry, validationContext);
+    if (!validated.success) {
+      failureCount += 1;
+      const firstIssue = validated.error.issues[0];
+      results.push({
+        groupKey: group.groupKey,
+        effectiveDate: group.effectiveDate,
+        reference: group.reference,
+        ok: false,
+        message: firstIssue?.message ?? 'Journal entry failed validation.'
+      });
+      continue;
+    }
+
+    try {
+      const response = await createJournalEntry(validated.data);
+      const outcome = actionSuccessFromFineractCommand(response, {
+        transactionId: response.transactionId
+      });
+      if (outcome.ok) {
+        successCount += 1;
+        results.push({
+          groupKey: group.groupKey,
+          effectiveDate: group.effectiveDate,
+          reference: group.reference,
+          ok: true,
+          transactionId: response.transactionId,
+          pending: outcome.pendingChecker === true
+        });
+        if (response.transactionId) {
+          revalidateJournalEntryViews(response.transactionId);
+        }
+      } else {
+        failureCount += 1;
+        results.push({
+          groupKey: group.groupKey,
+          effectiveDate: group.effectiveDate,
+          reference: group.reference,
+          ok: false,
+          message: 'Failed to create journal entry.'
+        });
+      }
+    } catch (error) {
+      failureCount += 1;
+      const mapped = toFineractActionError(error, 'Failed to create journal entry.');
+      results.push({
+        groupKey: group.groupKey,
+        effectiveDate: group.effectiveDate,
+        reference: group.reference,
+        ok: false,
+        message: mapped.ok === false ? mapped.message : 'Failed to create journal entry.'
+      });
+    }
+  }
+
+  revalidateJournalEntryViews();
+
+  return {
+    ok: true,
+    results,
+    successCount,
+    failureCount
+  };
+}
+
+export async function getJournalEntryTransactionAction(
+  transactionId: string
+): Promise<GetJournalEntryTransactionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'READ_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to view journal entries.' };
+  }
+
+  if (!transactionId.trim()) {
+    return { ok: false, message: 'Invalid transaction id.' };
+  }
+
+  try {
+    const page = await getJournalEntryTransaction(transactionId);
+    return { ok: true, entries: page.pageItems };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to load journal transaction.');
+  }
+}
+
+export async function revertJournalEntryAction(
+  transactionId: string,
+  input: RevertJournalEntryInput
+): Promise<JournalEntriesActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'REVERSE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to reverse journal entries.' };
+  }
+
+  if (!transactionId.trim()) {
+    return { ok: false, message: 'Invalid transaction id.' };
+  }
+
+  const parsed = validateRevertJournalEntry(input);
+  if (!parsed.success) {
+    return { ok: false, message: 'Invalid request.' };
+  }
+
+  try {
+    const response = await revertJournalEntryTransaction(transactionId, parsed.data);
+    revalidateJournalEntryViews(response.transactionId);
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to reverse journal entry.');
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schemaId": "organization.currency.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.monetary.api.CurrenciesApiResource"
+  ],
+  "fields": {
+    "currencies": { "required": true, "type": "array" }
+  }
+}

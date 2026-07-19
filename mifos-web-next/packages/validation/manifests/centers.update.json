@@ -1,0 +1,7 @@
+{
+  "command": "centers.update",
+  "fineract": {
+    "method": "PUT",
+    "path": "/groups/{centerId}"
+  }
+}

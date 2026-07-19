@@ -51,8 +51,8 @@ export class DisburseComponent extends LoanAccountActionsBaseComponent implement
   /** Maximum Date allowed. */
   maxDate = new Date();
   /** Disbursement Loan Form */
-  disbursementLoanForm: UntypedFormGroup;
-  currency: Currency;
+  disbursementLoanForm!: UntypedFormGroup;
+  currency!: Currency;
 
   constructor() {
     super();

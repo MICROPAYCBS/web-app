@@ -39,9 +39,22 @@ export interface FormSheetProps {
   submitLoading?: boolean;
   /** Optional form id — wires footer Submit to <form id={formId}> */
   formId?: string;
+  /** Form-level error shown above children on its own row (not inside field grids). */
+  error?: ReactNode;
   side?: 'left' | 'right';
+  /** Panel width at `sm+`. Must use `data-[side=*]:` variants to override Sheet defaults. */
   className?: string;
 }
+
+const formSheetSideMaxWidth: Record<NonNullable<FormSheetProps['side']>, string> = {
+  right: 'data-[side=right]:w-full data-[side=right]:sm:max-w-md',
+  left: 'data-[side=left]:w-full data-[side=left]:sm:max-w-md'
+};
+
+/** Full-height docked panel layout shared by FormSheet and ListFilterSheet. */
+export const DOCKED_SHEET_LAYOUT_CLASSNAME = 'flex flex-col gap-0 p-0';
+
+export const dockedSheetSideMaxWidth = formSheetSideMaxWidth;
 
 /**
  * Standard side panel for simple forms (1–7 logical fields).
@@ -60,6 +73,7 @@ export function FormSheet({
   submitDisabled = false,
   submitLoading = false,
   formId,
+  error,
   side = 'right',
   className
 }: FormSheetProps) {
@@ -68,29 +82,46 @@ export function FormSheet({
     onOpenChange(false);
   }
 
+  function handleFooterSubmit() {
+    if (formId) {
+      const form = document.getElementById(formId) as HTMLFormElement | null;
+      if (form) {
+        form.requestSubmit();
+        return;
+      }
+    }
+    onSubmit?.();
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side={side}
         showCloseButton
-        className={cn('flex w-full flex-col gap-0 p-0 sm:max-w-md', className)}
+        className={cn(
+          DOCKED_SHEET_LAYOUT_CLASSNAME,
+          formSheetSideMaxWidth[side],
+          className
+        )}
       >
         <SheetHeader className="shrink-0 border-b border-border">
           <SheetTitle>{title}</SheetTitle>
           {description ? <SheetDescription>{description}</SheetDescription> : null}
         </SheetHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          {error ? <div className="mb-4 flex justify-center">{error}</div> : null}
+          {children}
+        </div>
 
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background">
           <Button type="button" variant="outline" onClick={handleCancel} disabled={submitLoading}>
             {cancelLabel}
           </Button>
           <Button
-            type={formId ? 'submit' : 'button'}
-            form={formId}
+            type="button"
             disabled={submitDisabled || submitLoading}
-            onClick={formId ? undefined : onSubmit}
+            onClick={handleFooterSubmit}
           >
             {submitLoading ? 'Saving…' : submitLabel}
           </Button>

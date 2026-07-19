@@ -7,13 +7,17 @@
  */
 
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono, Inter } from 'next/font/google';
+import { ThemeProvider } from '@/components/theme/theme-provider';
 import { AppProviders } from '@/providers/app-providers';
+import { APP_DESCRIPTION, APP_NAME } from '@/lib/branding';
+import { SHADCN_PRESET_CODE } from '@/lib/theme-config';
+import { cn } from '@/lib/utils';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin']
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans'
 });
 
 const geistMono = Geist_Mono({
@@ -22,8 +26,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Mifos Web',
-  description: 'Apache Fineract web client built with Next.js and shadcn/ui'
+  title: {
+    default: APP_NAME,
+    template: `%s | ${APP_NAME}`
+  },
+  description: APP_DESCRIPTION
 };
 
 export default function RootLayout({
@@ -34,12 +41,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      data-preset="default"
+      className={cn('h-svh overflow-hidden antialiased font-sans', inter.variable, geistMono.variable)}
+      data-shadcn-preset={SHADCN_PRESET_CODE}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">
-        <AppProviders>{children}</AppProviders>
+      <body className="flex h-svh flex-col overflow-hidden">
+        <ThemeProvider defaultTheme="system" enableSystem>
+          <AppProviders>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+          </AppProviders>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,0 +1,10 @@
+{
+  "schemaId": "organization.payment-type.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.paymenttype.api.PaymentTypeApiResource",
+    "org.apache.fineract.portfolio.paymenttype.data.PaymentTypeDataValidator"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 200 }
+  }
+}

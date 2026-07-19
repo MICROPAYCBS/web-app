@@ -1,6 +1,6 @@
 /**
  * Writes docs/parity/generated.json from @mifos/routes.
- * Run: npm run routes:parity
+ * Run: pnpm run routes:parity
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';

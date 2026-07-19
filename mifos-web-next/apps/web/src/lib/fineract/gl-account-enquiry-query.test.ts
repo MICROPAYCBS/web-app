@@ -1,0 +1,121 @@
+/**
+ * Copyright since 2026 MicroPay
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import {
+  buildGlAccountEnquiryReportParams,
+  buildGlAccountEnquiryUrl,
+  buildGlAccountHistoryUrl,
+  glAccountEnquiryHasRequiredFilters,
+  parseGlAccountDetailReturnTo,
+  parseGlAccountDetailTab,
+  parseGlAccountEnquiryListQuery,
+  parseGlAccountHistoryQuery
+} from './gl-account-enquiry-query';
+
+describe('parseGlAccountEnquiryListQuery', () => {
+  it('requires account, branch, and currency', () => {
+    const incomplete = parseGlAccountEnquiryListQuery(
+      {},
+      { defaultCurrencyCode: 'UGX', defaultOfficeId: '1', defaultTransactionDate: '01 July 2026' }
+    );
+    assert.equal(incomplete.currencyCode, 'UGX');
+    assert.equal(incomplete.officeId, '1');
+    assert.equal(glAccountEnquiryHasRequiredFilters(incomplete), false);
+
+    const complete = parseGlAccountEnquiryListQuery(
+      { glAccountId: '55', officeId: '2', currencyCode: 'USD', departmentId: '7' },
+      { defaultCurrencyCode: 'UGX', defaultOfficeId: '1', defaultTransactionDate: '01 July 2026' }
+    );
+    assert.equal(complete.departmentId, '7');
+    assert.equal(glAccountEnquiryHasRequiredFilters(complete), true);
+    assert.match(buildGlAccountEnquiryUrl(complete), /chart-of-accounts\/55/);
+    assert.match(buildGlAccountEnquiryUrl(complete), /tab=history/);
+    assert.match(buildGlAccountEnquiryUrl(complete), /departmentId=7/);
+    assert.doesNotMatch(buildGlAccountEnquiryUrl(complete), /page=/);
+  });
+});
+
+describe('parseGlAccountHistoryQuery', () => {
+  it('locks account from path and does not default branch or currency', () => {
+    const query = parseGlAccountHistoryQuery(
+      {},
+      42,
+      { defaultTransactionDate: '01 July 2026' }
+    );
+    assert.equal(query.glAccountId, '42');
+    assert.equal(query.officeId, '');
+    assert.equal(query.currencyCode, '');
+    assert.equal(query.fromDate, '01 July 2026');
+    assert.equal(glAccountEnquiryHasRequiredFilters(query), false);
+    assert.equal(parseGlAccountDetailTab({ tab: 'history' }), 'history');
+    assert.equal(parseGlAccountDetailTab({}), 'summary');
+  });
+
+  it('builds history tab URLs without repeating glAccountId in the query', () => {
+    const url = buildGlAccountHistoryUrl(15, {
+      officeId: '1',
+      currencyCode: 'UGX'
+    });
+    assert.match(url, /\/accounting\/chart-of-accounts\/15\?/);
+    assert.match(url, /tab=history/);
+    assert.match(url, /officeId=1/);
+    assert.match(url, /currencyCode=UGX/);
+    assert.doesNotMatch(url, /glAccountId=/);
+  });
+
+  it('attaches a safe returnTo for enquiry back links', () => {
+    const url = buildGlAccountHistoryUrl(
+      15,
+      { officeId: '1', currencyCode: 'UGX' },
+      { returnTo: '/accounting/gl-account-enquiry?glPrefix=1' }
+    );
+    assert.match(url, /returnTo=/);
+    assert.match(decodeURIComponent(url), /\/accounting\/gl-account-enquiry\?glPrefix=1/);
+    assert.equal(
+      parseGlAccountDetailReturnTo({
+        returnTo: '/accounting/gl-account-enquiry?officeId=2'
+      }),
+      '/accounting/gl-account-enquiry?officeId=2'
+    );
+    assert.equal(parseGlAccountDetailReturnTo({ returnTo: 'https://evil.example/' }), null);
+  });
+});
+
+describe('buildGlAccountEnquiryReportParams', () => {
+  it('maps enquiry filters to General Ledger report R_ params', () => {
+    const params = buildGlAccountEnquiryReportParams({
+      glAccountId: '12',
+      officeId: '1',
+      departmentId: '7',
+      currencyCode: 'UGX',
+      fromDate: '01 July 2026',
+      toDate: '15 July 2026'
+    });
+    assert.equal(params.R_officeId, '1');
+    assert.equal(params.R_GLAccountNO, '12');
+    assert.equal(params.R_departmentId, '7');
+    assert.equal(params.R_currencyId, 'UGX');
+    assert.equal(params.R_startDate, '2026-07-01');
+    assert.equal(params.R_endDate, '2026-07-15');
+    assert.equal(params.dateFormat, 'yyyy-MM-dd');
+  });
+
+  it('sends the SelectAll value when department is not filtered', () => {
+    const params = buildGlAccountEnquiryReportParams({
+      glAccountId: '12',
+      officeId: '1',
+      currencyCode: 'UGX',
+      fromDate: '01 July 2026',
+      toDate: '15 July 2026'
+    });
+
+    assert.equal(params.R_departmentId, '-1');
+  });
+});

@@ -1,0 +1,10 @@
+{
+  "schemaId": "system.code.create",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.codes.api.CodesApiResource",
+    "org.apache.fineract.infrastructure.codes.domain.Code"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 100 }
+  }
+}

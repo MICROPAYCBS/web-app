@@ -1,0 +1,13 @@
+{
+  "command": "accounting.gl-closure.create",
+  "fineractSources": [
+    "org.apache.fineract.accounting.closure.api.GLClosuresApiResource"
+  ],
+  "fields": {
+    "officeId": { "required": true },
+    "closingDate": { "required": true },
+    "comments": { "required": false },
+    "dateFormat": { "required": true },
+    "locale": { "required": true }
+  }
+}

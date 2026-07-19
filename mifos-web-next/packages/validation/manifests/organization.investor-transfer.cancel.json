@@ -1,0 +1,11 @@
+{
+  "schemaId": "organization.investor-transfer.cancel",
+  "fineractSources": [
+    "org.apache.fineract.investor.api.ExternalAssetOwnersApiResource",
+    "org.apache.fineract.investor.service.ExternalAssetOwnersWriteServiceImpl"
+  ],
+  "fields": {
+    "transferId": { "required": true, "type": "number" },
+    "transferExternalId": { "required": true, "type": "string" }
+  }
+}

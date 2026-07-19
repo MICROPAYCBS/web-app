@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Copyright since 2025 Mifos Initiative
+ * Copyright since 2026 MicroPay
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,11 +11,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Expected header patterns for different file types
+// Expected header patterns for different file types (copyright year line validated separately)
 const HEADERS = {
   mpl: [
     '/**',
-    ' * Copyright since 2025 Mifos Initiative',
+    ' * Copyright since 2026 MicroPay',
     ' *',
     ' * This Source Code Form is subject to the terms of the Mozilla Public',
     ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
@@ -24,7 +24,7 @@ const HEADERS = {
   ],
   html: [
     '<!--',
-    '  Copyright since 2025 Mifos Initiative',
+    '  Copyright since 2026 MicroPay',
     '',
     '  This Source Code Form is subject to the terms of the Mozilla Public',
     '  License, v. 2.0. If a copy of the MPL was not distributed with this',
@@ -32,6 +32,9 @@ const HEADERS = {
     '-->'
   ]
 };
+
+const COPYRIGHT_LINE_PATTERN =
+  /^\s*\*?\s*Copyright since 20\d{2} (MicroPay|Mifos Initiative)\s*$/;
 
 // File extensions that should have headers
 const FILE_EXTENSIONS = {
@@ -104,6 +107,36 @@ function getExpectedHeader(filePath) {
 }
 
 /**
+ * Resolve where the license block starts (after shebang or Next.js directives).
+ */
+function getHeaderStartLine(lines) {
+  let startLine = 0;
+
+  if (lines[0] && lines[0].startsWith('#!')) {
+    startLine = 1;
+    if (lines[1] !== undefined && lines[1].trim() === '') {
+      startLine = 2;
+    }
+    return startLine;
+  }
+
+  const firstLine = lines[0]?.trim();
+  if (
+    firstLine === "'use server';" ||
+    firstLine === '"use server";' ||
+    firstLine === "'use client';" ||
+    firstLine === '"use client";'
+  ) {
+    startLine = 1;
+    if (lines[1] !== undefined && lines[1].trim() === '') {
+      startLine = 2;
+    }
+  }
+
+  return startLine;
+}
+
+/**
  * Normalize whitespace for comparison
  */
 function normalizeWhitespace(str) {
@@ -138,26 +171,33 @@ function hasValidHeader(filePath) {
 
   const lines = content.split(/\r?\n/);
   const headerLineCount = expectedHeader.length;
-
-  let startLine = 0;
-  if (lines[0] && lines[0].startsWith('#!')) {
-    startLine = 1;
-    if (lines[1] !== undefined && lines[1].trim() === '') {
-      startLine = 2;
-    }
-  }
+  const startLine = getHeaderStartLine(lines);
 
   // Check if file has enough lines
   if (lines.length < startLine + headerLineCount) {
     return false;
   }
 
-  // Compare header lines
+  // Compare header lines (copyright line accepts MicroPay or legacy Mifos Initiative)
   for (let i = 0; i < headerLineCount; i++) {
-    const actualLine = normalizeWhitespace(lines[startLine + i]);
-    const expectedLine = normalizeWhitespace(expectedHeader[i]);
+    const actualLine = lines[startLine + i];
+    const expectedLine = expectedHeader[i];
 
-    if (actualLine !== expectedLine) {
+    if (i === 1 && expectedHeader === HEADERS.mpl) {
+      if (!COPYRIGHT_LINE_PATTERN.test(normalizeWhitespace(actualLine))) {
+        return false;
+      }
+      continue;
+    }
+
+    if (i === 1 && expectedHeader === HEADERS.html) {
+      if (!/Copyright since 20\d{2} (MicroPay|Mifos Initiative)/.test(actualLine)) {
+        return false;
+      }
+      continue;
+    }
+
+    if (normalizeWhitespace(actualLine) !== normalizeWhitespace(expectedLine)) {
       return false;
     }
   }

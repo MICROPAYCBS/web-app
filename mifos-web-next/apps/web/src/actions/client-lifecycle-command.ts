@@ -1,0 +1,312 @@
+'use server';
+
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { assertCan, resolvePermission } from '@mifos/auth';
+import type { z } from 'zod';
+import {
+  clientActivateCommandSchema,
+  clientAssignStaffCommandSchema,
+  clientCloseCommandSchema,
+  clientReactivateCommandSchema,
+  clientRejectCommandSchema,
+  clientTransferCommandSchema,
+  clientTransferNoteCommandSchema,
+  clientUndoRejectionCommandSchema,
+  clientUpdateSavingsCommandSchema,
+  clientWithdrawCommandSchema,
+  toFineractActionError,
+  actionSuccessFromFineractCommand
+} from '@mifos/validation';
+import { revalidatePath } from 'next/cache';
+import type { ClientActionSheetId } from '@/lib/clients/client-action-types';
+import { clientLifecyclePermissionKey } from '@/lib/clients/client-action-permissions';
+import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
+import { executeClientCommand } from '@/lib/fineract/client-commands';
+import { getCustomerClassActivationIssuesForClient } from '@/lib/fineract/customer-class-activation-context';
+import { formatCustomerClassActivationIssues } from '@/lib/fineract/customer-class-eligibility';
+import { getClient } from '@/lib/fineract/clients';
+import { getServerSession } from '@/lib/session/server';
+import type { ClientCommandActionResult } from '@/actions/client-command';
+
+async function requireClientLifecyclePermission(
+  sheetId: ClientActionSheetId
+): Promise<ClientCommandActionResult | null> {
+  const permissionKey = clientLifecyclePermissionKey(sheetId);
+  if (!permissionKey) {
+    return null;
+  }
+
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission(permissionKey));
+  } catch {
+    return { ok: false, message: 'You do not have permission to perform this action.' };
+  }
+  return null;
+}
+
+function fieldErrorsFromZod(
+  issues: { path: (string | number)[]; message: string }[]
+): Record<string, string> {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of issues) {
+    const key = issue.path[0];
+    if (typeof key === 'string' && !fieldErrors[key]) {
+      fieldErrors[key] = issue.message;
+    }
+  }
+  return fieldErrors;
+}
+
+type ParsedResult<T> = { success: true; data: T } | { success: false; result: ClientCommandActionResult };
+
+function parseOrError<T>(schema: z.ZodType<T>, raw: unknown): ParsedResult<T> {
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      success: false,
+      result: {
+        ok: false,
+        message: 'Please fix the highlighted fields.',
+        fieldErrors: fieldErrorsFromZod(parsed.error.issues)
+      }
+    };
+  }
+  return { success: true, data: parsed.data };
+}
+
+export async function executeClientActionCommand(
+  clientId: string,
+  sheetId: ClientActionSheetId,
+  raw: unknown
+): Promise<ClientCommandActionResult> {
+  if (clientLifecyclePermissionKey(sheetId)) {
+    const denied = await requireClientLifecyclePermission(sheetId);
+    if (denied) {
+      return denied;
+    }
+  }
+
+  try {
+    let response: unknown;
+    switch (sheetId) {
+      case 'activate': {
+        const parsed = parseOrError(clientActivateCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        const activationIssues = await getCustomerClassActivationIssuesForClient(clientId);
+        const activationMessage = formatCustomerClassActivationIssues(activationIssues);
+        if (activationMessage) {
+          return {
+            ok: false,
+            message: activationMessage
+          };
+        }
+        response = await executeClientCommand(
+          clientId,
+          'activate',
+          buildFineractCommandBody({ activationDate: parsed.data.activationDate })
+        );
+        break;
+      }
+      case 'close': {
+        const parsed = parseOrError(clientCloseCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        response = await executeClientCommand(
+          clientId,
+          'close',
+          buildFineractCommandBody({
+            closureDate: parsed.data.closureDate,
+            closureReasonId: parsed.data.closureReasonId
+          })
+        );
+        break;
+      }
+      case 'withdraw': {
+        const parsed = parseOrError(clientWithdrawCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        response = await executeClientCommand(
+          clientId,
+          'withdraw',
+          buildFineractCommandBody({
+            withdrawalDate: parsed.data.withdrawalDate,
+            withdrawalReasonId: parsed.data.withdrawalReasonId
+          })
+        );
+        break;
+      }
+      case 'reject': {
+        const parsed = parseOrError(clientRejectCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        response = await executeClientCommand(
+          clientId,
+          'reject',
+          buildFineractCommandBody({
+            rejectionDate: parsed.data.rejectionDate,
+            rejectionReasonId: parsed.data.rejectionReasonId
+          })
+        );
+        break;
+      }
+      case 'reactivate': {
+        const parsed = parseOrError(clientReactivateCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        response = await executeClientCommand(
+          clientId,
+          'reactivate',
+          buildFineractCommandBody({ reactivationDate: parsed.data.reactivationDate })
+        );
+        break;
+      }
+      case 'undo-rejection': {
+        const parsed = parseOrError(clientUndoRejectionCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        response = await executeClientCommand(
+          clientId,
+          'undoRejection',
+          buildFineractCommandBody({ reopenedDate: parsed.data.reopenedDate })
+        );
+        break;
+      }
+      case 'transfer': {
+        const parsed = parseOrError(clientTransferCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        const { note, ...rest } = parsed.data;
+        response = await executeClientCommand(
+          clientId,
+          'proposeTransfer',
+          buildFineractCommandBody({
+            destinationOfficeId: rest.destinationOfficeId,
+            transferDate: rest.transferDate,
+            ...(note ? { note } : {})
+          })
+        );
+        break;
+      }
+      case 'accept-transfer':
+      case 'reject-transfer':
+      case 'undo-transfer': {
+        const parsed = parseOrError(clientTransferNoteCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        // Fineract accept/reject/withdraw transfer accept optional note only — not transferDate.
+        const body: Record<string, unknown> = {};
+        if (parsed.data.note?.trim()) {
+          body.note = parsed.data.note.trim();
+        }
+        const command =
+          sheetId === 'accept-transfer'
+            ? 'acceptTransfer'
+            : sheetId === 'reject-transfer'
+              ? 'rejectTransfer'
+              : 'withdrawTransfer';
+        response = await executeClientCommand(clientId, command, body);
+        break;
+      }
+      case 'assign-staff': {
+        const session = await getServerSession();
+        try {
+          assertCan(session, 'ASSIGNSTAFF_CLIENT');
+        } catch {
+          return { ok: false, message: 'You do not have permission to assign staff.' };
+        }
+        const parsed = parseOrError(clientAssignStaffCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        response = await executeClientCommand(clientId, 'assignStaff', {
+          staffId: parsed.data.staffId
+        });
+        break;
+      }
+      case 'reassign-staff': {
+        const session = await getServerSession();
+        try {
+          assertCan(session, { all: ['ASSIGNSTAFF_CLIENT', 'UNASSIGNSTAFF_CLIENT'] });
+        } catch {
+          return {
+            ok: false,
+            message:
+              'You need permission to assign and unassign relationship officers to reassign.'
+          };
+        }
+        const parsed = parseOrError(clientAssignStaffCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        const client = await getClient(clientId);
+        const currentStaffId = client.staffId;
+        if (typeof currentStaffId !== 'number' || currentStaffId <= 0) {
+          return { ok: false, message: 'No relationship officer is assigned.' };
+        }
+        if (parsed.data.staffId === currentStaffId) {
+          return {
+            ok: false,
+            message: 'Please fix the highlighted fields.',
+            fieldErrors: {
+              staffId: 'Select a different relationship officer.'
+            }
+          };
+        }
+        response = await executeClientCommand(clientId, 'unassignStaff', { staffId: currentStaffId });
+        response = await executeClientCommand(clientId, 'assignStaff', {
+          staffId: parsed.data.staffId
+        });
+        break;
+      }
+      case 'update-default-savings': {
+        const session = await getServerSession();
+        try {
+          assertCan(session, 'UPDATESAVINGSACCOUNT_CLIENT');
+        } catch {
+          return {
+            ok: false,
+            message: 'You do not have permission to update the default savings account.'
+          };
+        }
+        const parsed = parseOrError(clientUpdateSavingsCommandSchema, raw);
+        if (!parsed.success) {
+          return parsed.result;
+        }
+        response = await executeClientCommand(clientId, 'updateSavingsAccount', {
+          savingsAccountId: parsed.data.savingsAccountId
+        });
+        break;
+      }
+      default: {
+        const _exhaustive: never = sheetId;
+        return _exhaustive;
+      }
+    }
+
+    revalidatePath(`/clients/${clientId}`, 'layout');
+    return actionSuccessFromFineractCommand(response, {});
+  } catch (err) {
+    return toFineractActionError(err, 'Request failed.');
+  }
+}
+

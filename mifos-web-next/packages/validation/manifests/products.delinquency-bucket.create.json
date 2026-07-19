@@ -1,0 +1,12 @@
+{
+  "command": "products.delinquency-bucket.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.delinquency.api.DelinquencyApiResource",
+    "org.apache.fineract.portfolio.delinquency.api.DelinquencyBucketRequest"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "bucketType": { "required": true },
+    "ranges": { "required": true }
+  }
+}

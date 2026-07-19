@@ -1,0 +1,9 @@
+{
+  "command": "system.role.update",
+  "fineractSources": [
+    "org.apache.fineract.useradministration.api.RolesApiResource"
+  ],
+  "fields": {
+    "description": { "required": true }
+  }
+}

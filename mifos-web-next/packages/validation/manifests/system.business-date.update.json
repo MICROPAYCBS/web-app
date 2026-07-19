@@ -1,0 +1,12 @@
+{
+  "command": "system.business-date.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.businessdate.api.BusinessDateApiResource"
+  ],
+  "fields": {
+    "type": { "required": true },
+    "date": { "required": true },
+    "dateFormat": { "required": true },
+    "locale": { "required": true }
+  }
+}

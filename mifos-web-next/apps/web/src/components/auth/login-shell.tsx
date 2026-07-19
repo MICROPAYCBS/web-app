@@ -1,0 +1,84 @@
+'use client';
+
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import type { ServerCatalog } from '@mifos/servers';
+import { LoginForm } from '@/components/auth/login-form';
+import { ServerManagerSheet } from '@/components/servers/server-manager-sheet';
+
+export function LoginShell({
+  catalog,
+  redirectTo,
+  demoEnabled,
+  loginError = null,
+  loginSuccess = null,
+  hadFlashError = false,
+  initialServersOpen = false
+}: {
+  catalog: ServerCatalog;
+  redirectTo: string;
+  demoEnabled: boolean;
+  loginError?: string | null;
+  loginSuccess?: string | null;
+  /** True when loginError body was loaded from the one-time flash cookie. */
+  hadFlashError?: boolean;
+  /** Only true when URL has ?servers=1 and no active server (see login page). */
+  initialServersOpen?: boolean;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [serversOpen, setServersOpen] = useState(initialServersOpen);
+  const active = catalog.servers.find((s) => s.id === catalog.activeServerId);
+
+  useEffect(() => {
+    if (!hadFlashError) {
+      return;
+    }
+    void fetch('/api/auth/login-error-flash', { method: 'POST' });
+  }, [hadFlashError]);
+
+  function stripServersQueryParam() {
+    if (searchParams.get('servers') !== '1') {
+      return;
+    }
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete('servers');
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
+
+  function handleServersOpenChange(open: boolean) {
+    if (!open) {
+      stripServersQueryParam();
+    }
+    setServersOpen(open);
+  }
+
+  return (
+    <>
+      <LoginForm
+        redirectTo={redirectTo}
+        demoEnabled={demoEnabled}
+        loginError={loginError}
+        loginSuccess={loginSuccess}
+        canSignIn={Boolean(active)}
+        activeServer={active}
+        onManageServers={() => setServersOpen(true)}
+      />
+      <ServerManagerSheet
+        catalog={catalog}
+        open={serversOpen}
+        onOpenChange={handleServersOpenChange}
+      />
+    </>
+  );
+}

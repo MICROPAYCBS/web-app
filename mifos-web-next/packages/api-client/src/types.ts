@@ -14,8 +14,16 @@ export interface FineractApiError {
   errors?: Array<{
     parameterName?: string;
     defaultUserMessage?: string;
+    developerMessage?: string;
     userMessageGlobalisationCode?: string;
   }>;
+}
+
+/** Identifies which Fineract REST call failed (for logs and support). */
+export interface FineractRequestInfo {
+  method: string;
+  path: string;
+  searchParams?: Record<string, string>;
 }
 
 export interface FineractClientConfig {
@@ -23,14 +31,6 @@ export interface FineractClientConfig {
   tenantId: string;
   /** Basic auth or bearer token — set by session layer in apps/web */
   getAuthHeader: () => Promise<string | null>;
-}
-
-/** Report parameter from GET /reports/{id}?fields=reportParameters */
-export interface FineractReportParameter {
-  id?: number;
-  parameterId?: number;
-  parameterName?: string;
-  reportParameterName?: string;
-  parameterLabel?: string;
-  displayLabel?: string;
+  /** Optional fetch override (e.g. dev self-signed TLS in apps/web). */
+  fetch?: typeof fetch;
 }

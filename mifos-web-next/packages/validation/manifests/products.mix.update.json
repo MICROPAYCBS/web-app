@@ -1,0 +1,9 @@
+{
+  "command": "products.mix.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanproduct.productmix.api.ProductMixApiResource"
+  ],
+  "fields": {
+    "restrictedProducts": { "required": true }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "command": "system.external-events.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.event.externalevent.api.ExternalEventConfigurationApiResource"
+  ],
+  "fields": {
+    "externalEventConfigurations": { "required": true }
+  }
+}

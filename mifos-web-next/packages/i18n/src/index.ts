@@ -7,3 +7,10 @@
  */
 
 export { translateFineractCode } from './error-messages';
+export {
+  getFineractErrorMessage,
+  normalizeFineractMessage,
+  resolveFineractErrorItemMessage,
+  type FineractErrorBody,
+  type FineractErrorItem
+} from './fineract-error-message';

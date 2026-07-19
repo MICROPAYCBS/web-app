@@ -6,14 +6,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractApiError, FineractClientConfig } from './types';
+import { getFineractErrorMessage } from '@mifos/i18n';
+import type { FineractApiError, FineractClientConfig, FineractRequestInfo } from './types';
+
+function resolveNetworkErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      return 'The server did not respond in time.';
+    }
+    if (error.message === 'fetch failed') {
+      return 'Could not reach the server. Check that it is running and your network connection.';
+    }
+    if (error.message) {
+      return `Could not reach the server (${error.message}).`;
+    }
+  }
+  return 'Could not reach the server.';
+}
 
 export class FineractHttpError extends Error {
   constructor(
     public readonly status: number,
-    public readonly body: FineractApiError | null
+    public readonly body: FineractApiError | null,
+    public readonly request?: FineractRequestInfo
   ) {
-    super(body?.defaultUserMessage ?? body?.developerMessage ?? `HTTP ${status}`);
+    super(getFineractErrorMessage(body, status));
     this.name = 'FineractHttpError';
   }
 }
@@ -36,45 +53,95 @@ export class FineractClient {
     }
 
     const auth = await this.config.getAuthHeader();
+    const hasBody = options?.body !== undefined;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'Fineract-Platform-TenantId': this.config.tenantId
     };
+    if (hasBody) {
+      headers['Content-Type'] = 'application/json';
+    }
     if (auth) {
       headers['Authorization'] = auth;
     }
 
-    const res = await fetch(url, {
+    let res: Response;
+    const fetchFn = this.config.fetch ?? fetch;
+    const requestInfo: FineractRequestInfo = {
       method,
-      headers,
-      body: options?.body !== undefined ? JSON.stringify(options.body) : undefined
-    });
+      path,
+      searchParams: options?.searchParams
+    };
+    try {
+      res = await fetchFn(url, {
+        method,
+        headers,
+        body: hasBody ? JSON.stringify(options.body) : undefined
+      });
+    } catch (error) {
+      throw new FineractHttpError(
+        0,
+        { defaultUserMessage: resolveNetworkErrorMessage(error) },
+        requestInfo
+      );
+    }
+
+    let raw: string;
+    try {
+      raw = await res.text();
+    } catch (error) {
+      throw new FineractHttpError(
+        0,
+        { defaultUserMessage: resolveNetworkErrorMessage(error) },
+        requestInfo
+      );
+    }
 
     if (!res.ok) {
       let body: FineractApiError | null = null;
-      try {
-        body = (await res.json()) as FineractApiError;
-      } catch {
-        body = null;
+      if (raw) {
+        try {
+          body = JSON.parse(raw) as FineractApiError;
+        } catch {
+          body = { defaultUserMessage: raw };
+        }
       }
-      throw new FineractHttpError(res.status, body);
+      if (res.status >= 500) {
+        console.error(
+          JSON.stringify({
+            tag: 'fineract-http',
+            timestamp: new Date().toISOString(),
+            fineractStatus: res.status,
+            fineractMethod: method,
+            fineractPath: path,
+            fineractSearchParams: options?.searchParams,
+            message: body?.developerMessage ?? body?.defaultUserMessage ?? raw.slice(0, 500)
+          })
+        );
+      }
+      throw new FineractHttpError(res.status, body, requestInfo);
     }
 
-    if (res.status === 204) {
+    if (res.status === 204 || !raw.trim()) {
       return undefined as T;
     }
-    return (await res.json()) as T;
+
+    return JSON.parse(raw) as T;
   }
 
   get<T>(path: string, searchParams?: Record<string, string>): Promise<T> {
     return this.request<T>('GET', path, { searchParams });
   }
 
-  post<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>('POST', path, { body });
+  post<T>(path: string, body: unknown, searchParams?: Record<string, string>): Promise<T> {
+    return this.request<T>('POST', path, { body, searchParams });
   }
 
-  put<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>('PUT', path, { body });
+  put<T>(path: string, body: unknown, searchParams?: Record<string, string>): Promise<T> {
+    return this.request<T>('PUT', path, { body, searchParams });
+  }
+
+  delete<T = void>(path: string, searchParams?: Record<string, string>): Promise<T> {
+    // Fineract DELETE endpoints declare @Consumes(APPLICATION_JSON).
+    return this.request<T>('DELETE', path, { body: {}, searchParams });
   }
 }

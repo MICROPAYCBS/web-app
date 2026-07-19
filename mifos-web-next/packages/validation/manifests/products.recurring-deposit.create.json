@@ -1,0 +1,22 @@
+{
+  "command": "products.recurringDeposit.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.RecurringDepositProductsApiResource",
+    "org.apache.fineract.portfolio.savings.data.RecurringDepositProductDataValidator"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 100 },
+    "shortName": { "required": true, "maxLength": 4 },
+    "description": { "required": true, "maxLength": 500 },
+    "currencyCode": { "required": true, "maxLength": 3 },
+    "digitsAfterDecimal": { "required": true, "min": 0, "max": 6 },
+    "depositAmount": { "required": true, "min": 0 },
+    "interestCompoundingPeriodType": { "required": true },
+    "interestPostingPeriodType": { "required": true },
+    "interestCalculationType": { "required": true },
+    "interestCalculationDaysInYearType": { "required": true },
+    "minDepositTerm": { "required": true, "min": 0 },
+    "minDepositTermTypeId": { "required": true },
+    "accountingRule": { "required": true }
+  }
+}

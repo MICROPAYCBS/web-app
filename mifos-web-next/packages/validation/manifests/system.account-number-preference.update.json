@@ -1,0 +1,14 @@
+{
+  "command": "system.account-number-preference.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.accountnumberformat.api.AccountNumberFormatsApiResource"
+  ],
+  "fields": {
+    "prefixType": { "required": false },
+    "prefixCharacter": { "required": false },
+    "formatPattern": { "required": false },
+    "sequenceScope": { "required": false },
+    "checkDigitAlgorithm": { "required": false },
+    "structuredEnabled": { "required": false }
+  }
+}

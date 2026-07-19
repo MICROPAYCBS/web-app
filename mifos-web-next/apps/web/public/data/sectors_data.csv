@@ -1,0 +1,58 @@
+Sector,Industry,Sub Industry
+Agriculture,Crop Farming,Coffee Farming
+Agriculture,Crop Farming,Tea Farming
+Agriculture,Crop Farming,Maize Farming
+Agriculture,Crop Farming,Horticulture
+Agriculture,Livestock Farming,Dairy Farming
+Agriculture,Livestock Farming,Pig Farming
+Agriculture,Livestock Farming,Poultry Farming
+Agriculture,Fisheries,Fish Farming
+Manufacturing,Food Processing,Dairy Products
+Manufacturing,Food Processing,Grain Milling
+Manufacturing,Food Processing,Beverage Production
+Manufacturing,Textile Manufacturing,Garment Production
+Manufacturing,Chemical Manufacturing,Fertilizer Production
+Manufacturing,Construction Materials,Cement Production
+Trade & Commerce,Wholesale Trade,Agricultural Inputs
+Trade & Commerce,Wholesale Trade,Consumer Goods
+Trade & Commerce,Retail Trade,Supermarkets
+Trade & Commerce,Retail Trade,Hardware Stores
+Trade & Commerce,Retail Trade,Pharmacies
+Financial Services,Banking,Commercial Banking
+Financial Services,Banking,Microfinance
+Financial Services,Insurance,Life Insurance
+Financial Services,Insurance,General Insurance
+Financial Services,FinTech,Mobile Money Services
+Financial Services,FinTech,Payment Processing
+Information Technology,Software Development,Banking Software
+Information Technology,Software Development,Mobile Applications
+Information Technology,IT Services,Cloud Services
+Information Technology,IT Services,Cybersecurity
+Telecommunications,Mobile Services,Mobile Network Operations
+Telecommunications,Internet Services,Internet Service Providers
+Healthcare,Medical Services,Hospitals
+Healthcare,Medical Services,Clinics
+Healthcare,Pharmaceutical,Drug Manufacturing
+Education,Primary Education,Private Schools
+Education,Secondary Education,Boarding Schools
+Education,Higher Education,Universities
+Construction,Building Construction,Residential Buildings
+Construction,Building Construction,Commercial Buildings
+Construction,Civil Engineering,Roads & Bridges
+Transport & Logistics,Road Transport,Passenger Transport
+Transport & Logistics,Road Transport,Freight Transport
+Transport & Logistics,Warehousing,Storage Facilities
+Hospitality & Tourism,Accommodation,Hotels
+Hospitality & Tourism,Accommodation,Guest Houses
+Hospitality & Tourism,Food Services,Restaurants
+Hospitality & Tourism,Tourism Services,Tour Operators
+Energy & Utilities,Energy Generation,Solar Energy
+Energy & Utilities,Energy Generation,Hydropower
+Energy & Utilities,Utilities,Water Supply
+Mining & Quarrying,Mining,Gold Mining
+Mining & Quarrying,Mining,Limestone Mining
+Real Estate,Property Development,Residential Estates
+Real Estate,Property Management,Rental Property Management
+Professional Services,Consulting,Management Consulting
+Professional Services,Legal Services,Law Firms
+Professional Services,Accounting,Audit Services

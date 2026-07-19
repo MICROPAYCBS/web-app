@@ -1,0 +1,12 @@
+{
+  "schemaId": "organization.entityDatatableCheck",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.dataqueries.api.EntityDatatableChecksApiResource"
+  ],
+  "fields": {
+    "entity": { "required": true, "type": "string" },
+    "status": { "required": true, "type": "integer" },
+    "datatableName": { "required": true, "type": "string" },
+    "productId": { "required": false, "type": "integer" }
+  }
+}

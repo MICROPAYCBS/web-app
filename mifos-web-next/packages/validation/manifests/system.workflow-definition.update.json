@@ -1,0 +1,12 @@
+{
+  "command": "system.workflow-definition.update",
+  "fineractSources": [
+    "org.apache.fineract.workflow.api.WorkflowDefinitionApiResource",
+    "org.apache.fineract.workflow.serialization.WorkflowDefinitionDataValidator"
+  ],
+  "fields": {
+    "taskPermissionCode": { "required": true },
+    "name": { "required": true },
+    "stages": { "required": true }
+  }
+}

@@ -9,9 +9,11 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/fineract-error-message.test.ts"
   },
   "devDependencies": {
+    "tsx": "^4.22.4",
     "typescript": "^5.8.3"
   }
 }

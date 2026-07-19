@@ -1,0 +1,13 @@
+{
+  "schemaId": "system.codeValue",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.codes.api.CodeValuesApiResource",
+    "org.apache.fineract.infrastructure.codes.domain.CodeValue"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 100 },
+    "description": { "required": false, "maxLength": 500 },
+    "position": { "required": true, "type": "integer", "min": 0 },
+    "isActive": { "required": false, "type": "boolean" }
+  }
+}

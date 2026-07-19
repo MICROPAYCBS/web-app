@@ -1,0 +1,187 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import type {
+  FineractEnumOption,
+  FineractGlAccountDetail,
+  FineractGlAccountFormTemplate,
+  FineractGlAccountRef
+} from '@mifos/api-client';
+import type { UpsertGlAccountFormInput } from '@mifos/validation';
+import { deriveGlAccountHeaderStem } from '@mifos/validation';
+
+export const GL_ACCOUNT_TYPE_ASSET = 1;
+export const GL_ACCOUNT_TYPE_LIABILITY = 2;
+export const GL_ACCOUNT_TYPE_EQUITY = 3;
+export const GL_ACCOUNT_TYPE_INCOME = 4;
+export const GL_ACCOUNT_TYPE_EXPENSE = 5;
+
+const TYPE_ID_LABELS: Record<number, string> = {
+  [GL_ACCOUNT_TYPE_ASSET]: 'Asset',
+  [GL_ACCOUNT_TYPE_LIABILITY]: 'Liability',
+  [GL_ACCOUNT_TYPE_EQUITY]: 'Equity',
+  [GL_ACCOUNT_TYPE_INCOME]: 'Income',
+  [GL_ACCOUNT_TYPE_EXPENSE]: 'Expense'
+};
+
+/** First digit convention for chart-of-accounts GL codes. */
+export const GL_ACCOUNT_CODE_CLASS_PREFIX: Record<number, string> = {
+  [GL_ACCOUNT_TYPE_ASSET]: '1',
+  [GL_ACCOUNT_TYPE_LIABILITY]: '2',
+  [GL_ACCOUNT_TYPE_EQUITY]: '3',
+  [GL_ACCOUNT_TYPE_INCOME]: '4',
+  [GL_ACCOUNT_TYPE_EXPENSE]: '5'
+};
+
+export const GL_ACCOUNT_CODE_NUMBERING_GUIDANCE =
+  'Number GL codes by account class: Assets start with 1, Liabilities with 2, Equity with 3, Income with 4, and Expense with 5.';
+
+export function structuredGlCodeEnforcementBanner(codeLength: number): string {
+  return `Structured GL codes are enabled. Use exactly ${codeLength} digits — Asset 1, Liability 2, Equity 3, Income 4, Expense 5. When a parent is selected, the code must follow that header’s numbering pattern.`;
+}
+
+export function structuredGlCodeLegacyAccountNotice(): string {
+  return 'This account keeps its existing GL code until you change the code, account class, or parent. Structured rules then apply.';
+}
+
+export function glAccountCodeHintForType(
+  typeId: number | undefined,
+  options?: {
+    enforceStructured?: boolean;
+    codeLength?: number;
+    parentGlCode?: string;
+    parentName?: string;
+  }
+): string {
+  const enforceStructured = options?.enforceStructured === true;
+  const codeLength = options?.codeLength ?? 6;
+  const parentGlCode = options?.parentGlCode?.trim();
+
+  if (enforceStructured && parentGlCode) {
+    const headerStem = deriveGlAccountHeaderStem(parentGlCode);
+    const suffixLength = Math.max(codeLength - headerStem.length, 0);
+    const example =
+      suffixLength > 0
+        ? `${headerStem}${'0'.repeat(Math.max(suffixLength - 1, 0))}1`
+        : `${headerStem}1`;
+    const parentLabel = options?.parentName?.trim()
+      ? `(${parentGlCode}) ${options.parentName.trim()}`
+      : `(${parentGlCode})`;
+    return `Under ${parentLabel}, use ${codeLength}-digit codes starting with ${headerStem} (for example, ${example}).`;
+  }
+
+  if (typeId == null) {
+    return enforceStructured
+      ? `${GL_ACCOUNT_CODE_NUMBERING_GUIDANCE} When structured enforcement is enabled, codes must be exactly ${codeLength} numeric digits.`
+      : GL_ACCOUNT_CODE_NUMBERING_GUIDANCE;
+  }
+  const prefix = GL_ACCOUNT_CODE_CLASS_PREFIX[typeId];
+  const label = TYPE_ID_LABELS[typeId];
+  if (!prefix || !label) {
+    return GL_ACCOUNT_CODE_NUMBERING_GUIDANCE;
+  }
+  if (enforceStructured) {
+    const example = `${prefix}${'0'.repeat(Math.max(codeLength - 1, 0))}`;
+    return `${label} accounts must use a ${codeLength}-digit numeric code starting with ${prefix} (for example, ${example}).`;
+  }
+  return `${label} accounts typically start with ${prefix} (for example, ${prefix}000).`;
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  ASSET: 'Asset',
+  LIABILITY: 'Liability',
+  EQUITY: 'Equity',
+  INCOME: 'Income',
+  EXPENSE: 'Expense'
+};
+
+export function formatGlAccountTypeLabel(option: FineractEnumOption | undefined) {
+  if (!option?.value) {
+    return '—';
+  }
+  return TYPE_LABELS[option.value] ?? option.value;
+}
+
+export function formatGlAccountLabel(account: Pick<FineractGlAccountRef, 'glCode' | 'name'>) {
+  return `(${account.glCode}) ${account.name}`;
+}
+
+export function headerOptionsForType(
+  template: FineractGlAccountFormTemplate,
+  typeId: number | undefined
+): FineractGlAccountRef[] {
+  switch (typeId) {
+    case GL_ACCOUNT_TYPE_ASSET:
+      return template.assetHeaderAccountOptions ?? [];
+    case GL_ACCOUNT_TYPE_LIABILITY:
+      return template.liabilityHeaderAccountOptions ?? [];
+    case GL_ACCOUNT_TYPE_EQUITY:
+      return template.equityHeaderAccountOptions ?? [];
+    case GL_ACCOUNT_TYPE_INCOME:
+      return template.incomeHeaderAccountOptions ?? [];
+    case GL_ACCOUNT_TYPE_EXPENSE:
+      return template.expenseHeaderAccountOptions ?? [];
+    default:
+      return [];
+  }
+}
+
+export function tagOptionsForType(
+  template: FineractGlAccountFormTemplate,
+  typeId: number | undefined
+): FineractEnumOption[] {
+  switch (typeId) {
+    case GL_ACCOUNT_TYPE_ASSET:
+      return template.allowedAssetsTagOptions ?? [];
+    case GL_ACCOUNT_TYPE_LIABILITY:
+      return template.allowedLiabilitiesTagOptions ?? [];
+    case GL_ACCOUNT_TYPE_EQUITY:
+      return template.allowedEquityTagOptions ?? [];
+    case GL_ACCOUNT_TYPE_INCOME:
+      return template.allowedIncomeTagOptions ?? [];
+    case GL_ACCOUNT_TYPE_EXPENSE:
+      return template.allowedExpensesTagOptions ?? [];
+    default:
+      return [];
+  }
+}
+
+export function defaultGlAccountFormValues(
+  template: FineractGlAccountFormTemplate,
+  options?: { parentId?: number; accountType?: number }
+): UpsertGlAccountFormInput {
+  const type =
+    options?.accountType ??
+    template.accountTypeOptions[0]?.id ??
+    GL_ACCOUNT_TYPE_ASSET;
+  const usage = template.usageOptions[0]?.id ?? 1;
+
+  return {
+    type,
+    name: '',
+    usage,
+    glCode: '',
+    parentId: options?.parentId,
+    tagId: undefined,
+    manualEntriesAllowed: true,
+    description: ''
+  };
+}
+
+export function glAccountToFormValues(account: FineractGlAccountDetail): UpsertGlAccountFormInput {
+  return {
+    type: account.type.id,
+    name: account.name,
+    usage: account.usage.id,
+    glCode: account.glCode,
+    parentId: account.parentId,
+    tagId: account.tagId?.id,
+    manualEntriesAllowed: account.manualEntriesAllowed,
+    description: account.description ?? ''
+  };
+}

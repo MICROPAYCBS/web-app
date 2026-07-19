@@ -1,0 +1,13 @@
+{
+  "command": "system.survey.create",
+  "fineractSources": [
+    "org.apache.fineract.spm.api.SpmApiResource"
+  ],
+  "fields": {
+    "key": { "required": true },
+    "name": { "required": true },
+    "countryCode": { "required": true },
+    "description": { "required": false },
+    "questionDatas": { "required": true }
+  }
+}

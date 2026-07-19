@@ -36,7 +36,7 @@ clientsCreate: {
 }
 ```
 
-3. Run `npm run build` (updates Next `AppRoutes`) and `npm run routes:parity`
+3. Run `pnpm run build` (updates Next `AppRoutes`) and `pnpm run routes:parity`
 4. Use in code:
 
 ```tsx
@@ -50,7 +50,7 @@ redirect(routePath('login'));
 ## Parity export
 
 ```bash
-npm run routes:parity
+pnpm run routes:parity
 ```
 
 Writes `docs/parity/generated.json` with status counts and per-route metadata.
@@ -71,6 +71,6 @@ Register BFF handlers in `APP_ROUTES` with `kind: 'api'` and `permissionKey` so 
 |--------|--------|
 | `@mifos/routes` | Client components — `routePath`, `AppLink`, `APP_ROUTES` |
 | `@mifos/routes/server` | Server, middleware, auth — RBAC/nav derivation |
-| `@mifos/routes/parity` | Tooling — `npm run routes:parity` |
+| `@mifos/routes/parity` | Tooling — `pnpm run routes:parity` |
 
 Do not import `@mifos/routes/server` from client components (pulls derivation logic into the browser bundle).

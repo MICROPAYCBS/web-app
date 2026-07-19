@@ -1,0 +1,14 @@
+{
+  "command": "clients.fixed-deposit-account.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.FixedDepositAccountsApiResource",
+    "org.apache.fineract.portfolio.savings.data.DepositAccountDataValidator"
+  ],
+  "fields": {
+    "productId": { "required": true },
+    "submittedOnDate": { "required": true },
+    "depositAmount": { "required": true, "min": 0 },
+    "depositPeriod": { "required": true, "min": 1 },
+    "depositPeriodFrequencyId": { "required": true }
+  }
+}

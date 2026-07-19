@@ -1,0 +1,26 @@
+{
+  "command": "clients.loan-account.commands",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
+    "org.apache.fineract.portfolio.loanaccount.api.LoanChargesApiResource",
+    "org.apache.fineract.portfolio.loanaccount.api.LoanTransactionsApiResource",
+    "org.apache.fineract.portfolio.loanaccount.command.LoanApplicationApprovalCommandHandler",
+    "org.apache.fineract.portfolio.loanaccount.command.LoanApplicationDisbursementCommandHandler"
+  ],
+  "fields": {
+    "approvedOnDate": { "required": true },
+    "expectedDisbursementDate": { "required": false },
+    "approvedLoanAmount": { "required": true, "min": 0 },
+    "rejectedOnDate": { "required": true },
+    "withdrawnOnDate": { "required": true },
+    "actualDisbursementDate": { "required": true },
+    "transactionAmount": { "required": true, "min": 0 },
+    "transactionDate": { "required": true },
+    "paymentTypeId": { "required": false },
+    "writeoffReasonId": { "required": false },
+    "note": { "required": false },
+    "chargeId": { "required": true },
+    "amount": { "required": true, "min": 0 },
+    "dueDate": { "required": false }
+  }
+}

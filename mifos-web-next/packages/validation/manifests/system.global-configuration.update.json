@@ -1,0 +1,14 @@
+{
+  "command": "system.global-configuration.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.configuration.api.GlobalConfigurationApiResource"
+  ],
+  "fields": {
+    "id": { "required": true },
+    "value": { "required": false },
+    "stringValue": { "required": false },
+    "dateValue": { "required": false },
+    "dateFormat": { "required": false },
+    "locale": { "required": false }
+  }
+}

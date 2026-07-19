@@ -1,0 +1,16 @@
+{
+  "command": "organization.identity-type.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.client.api.IdentityTypeApiResource",
+    "org.apache.fineract.portfolio.client.data.IdentityTypeRequest"
+  ],
+  "fields": {
+    "codeValueId": { "required": true },
+    "example": { "required": false, "maxLength": 255 },
+    "formatDescription": { "required": false, "maxLength": 500 },
+    "validationMessage": { "required": false, "maxLength": 500 },
+    "validationRegex": { "required": false, "maxLength": 500 },
+    "displayOrder": { "required": false },
+    "status": { "required": true, "values": ["ACTIVE", "INACTIVE"] }
+  }
+}

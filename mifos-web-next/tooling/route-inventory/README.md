@@ -4,5 +4,5 @@ Future script: scan `reference/web-app` `*-routing.module.ts` files and emit `do
 
 ```bash
 # Planned
-npm run routes:inventory
+pnpm run routes:inventory
 ```

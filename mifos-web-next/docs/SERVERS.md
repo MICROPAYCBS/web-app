@@ -5,17 +5,17 @@ Users work with a **named list** of Fineract backends (URL + tenant). The active
 ## UX flow
 
 ```text
-First visit → /connect (empty state → add server)
+First visit → /login (Manage Fineract servers sheet)
            → select server → /login
            → (future) authenticate → app
 
 Signed in  → header shows server name → /settings/servers
-Sign out   → /login (same server pre-selected) → Change server → /connect
+Sign out   → /login (same server pre-selected) → Manage servers sheet
 ```
 
 | Screen | Purpose |
 |--------|---------|
-| `/connect` | Empty state + list + add server (required before first login) |
+| `/login?servers=1` | Opens server manager sheet (add / edit / delete) |
 | `/login` | Sign in to **active** server; link to change server |
 | `/settings/servers` | Add / edit / remove / switch active; sign out |
 
@@ -30,15 +30,17 @@ Fineract URLs are stored server-side in this cookie. The browser never calls Fin
 ## Seed servers (optional)
 
 ```bash
-FINERACT_SERVERS='[{"id":"demo","name":"Mifos Demo","baseUrl":"https://demo.mifos.community/fineract-provider/api/v1","tenantId":"default"}]'
+FINERACT_SERVERS='[{"id":"sandbox","name":"Mifos Sandbox","baseUrl":"https://sandbox.mifos.community","tenantId":"default"}]'
 ```
+
+Host-only URLs are expanded to `/fineract-provider/api/v1` automatically (legacy web-app behaviour). Use **sandbox.mifos.community** for the public demo; **demo.mifos.community** no longer accepts mifos/password.
 
 Used only when the catalog cookie is empty (first visit).
 
 ## Middleware
 
-1. No active server → redirect `/connect` (except `/connect`, `/login` checks)
-2. `/login` without active server → `/connect`
+1. No active server → redirect `/login?servers=1`
+2. `/connect` → `/login?servers=1` (legacy URL)
 3. No auth session → `/login`
 4. Otherwise → app + RBAC
 
@@ -50,3 +52,13 @@ Server mutations use **Server Actions** in `apps/web/src/actions/servers.ts` (no
 
 - [BFF.md](BFF.md) — server-to-server Fineract calls
 - `@mifos/servers` — catalog types and helpers
+
+
+## Health status
+
+The app probes each server via Fineract Spring Actuator (BFF-only):
+
+- `GET {provider}/actuator/health` — must return `"status":"UP"`
+- `GET {provider}/actuator/info` — release and 7-character build commit from `git.build.version` / `git.commit.id`
+
+Status lights: **amber** (checking), **green** (healthy + version), **red** (unreachable).

@@ -1,0 +1,22 @@
+{
+  "schemaId": "organization.cashier.allocate",
+  "fineractSources": [
+    "org.apache.fineract.organisation.teller.api.TellerApiResource",
+    "org.apache.fineract.organisation.teller.data.CashierTransactionDataValidator"
+  ],
+  "fields": {
+    "currencyCode": { "required": true, "type": "string" },
+    "txnAmount": { "required": true, "type": "decimal" },
+    "txnDate": { "required": true, "type": "date" },
+    "txnNote": { "required": false, "type": "string", "maxLength": 200 },
+    "legalTenderLines": {
+      "required": true,
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "legalTenderId": { "required": true, "type": "integer" },
+        "quantity": { "required": true, "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

@@ -32,3 +32,76 @@ export function formatAmount(amount: Decimal, locale = 'en'): string {
     maximumFractionDigits: AMOUNT_MAX_DECIMAL_PLACES
   }).format(amount.toNumber());
 }
+
+/** Coerce Fineract API numeric values for display formatting. */
+export function toDecimal(
+  value: Decimal | string | number | null | undefined
+): Decimal | null {
+  if (value == null || value === '') {
+    return null;
+  }
+  if (value instanceof Decimal) {
+    return value;
+  }
+  try {
+    return new Decimal(value);
+  } catch {
+    return null;
+  }
+}
+
+export const JOURNAL_ENTRY_UNBALANCED_MESSAGE =
+  'Total debits must equal total credits.';
+
+export function sumJournalEntryLineAmounts(
+  lines: ReadonlyArray<{ amount: number }>
+): Decimal {
+  return lines.reduce((total, line) => {
+    const amount = toDecimal(line.amount);
+    return amount ? total.plus(amount) : total;
+  }, new Decimal(0));
+}
+
+export function areJournalEntryTotalsBalanced(
+  debits: ReadonlyArray<{ amount: number }>,
+  credits: ReadonlyArray<{ amount: number }>
+): boolean {
+  return sumJournalEntryLineAmounts(debits).equals(sumJournalEntryLineAmounts(credits));
+}
+
+export function journalEntryBalanceDifference(
+  debits: ReadonlyArray<{ amount: number }>,
+  credits: ReadonlyArray<{ amount: number }>
+): Decimal {
+  return sumJournalEntryLineAmounts(debits).minus(sumJournalEntryLineAmounts(credits));
+}
+
+/**
+ * Display money with ISO 4217 currency code (e.g. `UGX 1,234.00`, `USD 1,234.00`).
+ * Always uses the 3-letter code — never the locale currency symbol.
+ */
+export function formatMoney(
+  amount: Decimal | string | number | null | undefined,
+  currencyCode: string,
+  locale = 'en'
+): string | null {
+  const decimal = toDecimal(amount);
+  if (!decimal) {
+    return null;
+  }
+  const code = currencyCode.trim().toUpperCase();
+  if (!code) {
+    return formatAmount(decimal, locale);
+  }
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: code,
+      currencyDisplay: 'code',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: AMOUNT_MAX_DECIMAL_PLACES
+    }).format(decimal.toNumber());
+  } catch {
+    return `${code} ${formatAmount(decimal, locale)}`;
+  }
+}

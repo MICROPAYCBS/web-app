@@ -42,9 +42,15 @@ Client Components use **TanStack Query** (or `fetch`) against **`/api/...`** or 
 ```bash
 FINERACT_API_URL=https://localhost:8443/fineract-provider/api/v1
 FINERACT_TENANT_ID=default
+# Dev only: self-signed TLS is allowed when NODE_ENV=development (sets NODE_TLS_REJECT_UNAUTHORIZED).
+# FINERACT_STRICT_TLS=1   # require valid certificates even in dev
 ```
 
 Do **not** use `NEXT_PUBLIC_FINERACT_*`.
+
+## Partial PUT updates
+
+Fineract `PUT` bodies are patch-style: send only fields that changed (see [ADR-014](adr/014-partial-put-updates.md)). Diff builders live in `@mifos/validation` or `apps/web/src/lib/fineract/`; reference implementations: customer edit (`build-update-client-payload.ts`), customer class (`customer-class.schema.ts`).
 
 ## Adding an endpoint
 

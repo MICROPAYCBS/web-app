@@ -1,0 +1,108 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import type { FineractClientEditData } from '@mifos/api-client';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, normalizeUgandaMobileInternational, type UpdateClientInput } from '@mifos/validation';
+import { clientStatusKind } from '@/lib/fineract/client-status';
+import {
+  fineractApiDateToFormString,
+  resolveFineractDateContext
+} from '@/lib/fineract/fineract-date-context';
+
+type ClientGenderId = NonNullable<UpdateClientInput['genderId']>;
+
+function mapClientGenderId(id: number | undefined): ClientGenderId | undefined {
+  if (id === 1 || id === 2) {
+    return id;
+  }
+  return undefined;
+}
+
+function resolveClientActive(data: FineractClientEditData): boolean {
+  if (typeof data.active === 'boolean') {
+    return data.active;
+  }
+  return clientStatusKind(data) === 'active';
+}
+
+function resolveActivationDate(
+  data: FineractClientEditData,
+  dateCtx: ReturnType<typeof resolveFineractDateContext>
+): string | undefined {
+  return (
+    fineractApiDateToFormString(data.timeline?.activatedOnDate, dateCtx) ??
+    fineractApiDateToFormString(data.activationDate, dateCtx)
+  );
+}
+
+/** Map Fineract edit template response to validated form input. */
+export function mapClientToEditFormInput(data: FineractClientEditData): UpdateClientInput {
+  const dateCtx = resolveFineractDateContext(data);
+  const legalFormId = data.legalForm?.id ?? LEGAL_FORM_PERSON;
+  const details = data.clientNonPersonDetails;
+
+  const submittedOnDate = fineractApiDateToFormString(data.timeline?.submittedOnDate, dateCtx) ?? '';
+  const active = resolveClientActive(data);
+  const activationDate =
+    resolveActivationDate(data, dateCtx) ?? (active && submittedOnDate ? submittedOnDate : undefined);
+
+  const base = {
+    staffId: data.staffId,
+    legalFormId,
+    externalId: data.externalId ?? '',
+    mobileNo: normalizeUgandaMobileInternational(data.mobileNo),
+    emailAddress: data.emailAddress ?? '',
+    taxIdentificationNumber: data.taxIdentificationNumber ?? '',
+    alternativeMobileNo: normalizeUgandaMobileInternational(data.alternativeMobileNo),
+    alternativeEmailAddress: data.alternativeEmailAddress ?? '',
+    subIndustryId: data.subIndustryId,
+    customerClassId: data.customerClassId ?? data.customerClass?.id,
+    titleId: data.title?.id,
+    nationalityCountryId: data.nationality?.id,
+    maritalStatusId: data.maritalStatus?.id,
+    customerRiskProfileId: data.customerRiskProfile?.id,
+    dateOfBirth: fineractApiDateToFormString(data.dateOfBirth, dateCtx),
+    genderId: mapClientGenderId(data.gender?.id),
+    isStaff: data.isStaff ?? false,
+    clientTypeId: data.clientType?.id,
+    submittedOnDate,
+    active,
+    activationDate,
+    dateFormat: dateCtx.dateFormat,
+    locale: dateCtx.locale
+  };
+
+  if (legalFormId === LEGAL_FORM_ENTITY) {
+    return {
+      ...base,
+      legalFormId: LEGAL_FORM_ENTITY,
+      fullname: data.fullname ?? data.displayName ?? '',
+      clientNonPersonDetails: {
+        constitutionId:
+          details?.constitution?.id ??
+          data.clientNonPersonConstitutionOptions?.[0]?.id ??
+          1,
+        incorpValidityTillDate: fineractApiDateToFormString(
+          details?.incorpValidityTillDate,
+          dateCtx
+        ),
+        incorpNumber: details?.incorpNumber ?? '',
+        mainBusinessLineId: details?.mainBusinessLine?.id,
+        remarks: details?.remarks ?? ''
+      }
+    };
+  }
+
+  return {
+    ...base,
+    legalFormId: LEGAL_FORM_PERSON,
+    firstname: data.firstname ?? '',
+    middlename: data.middlename ?? '',
+    lastname: data.lastname ?? ''
+  };
+}

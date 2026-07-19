@@ -1,0 +1,11 @@
+{
+  "schemaId": "organization.payment-type.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.paymenttype.api.PaymentTypeApiResource",
+    "org.apache.fineract.portfolio.paymenttype.data.PaymentTypeDataValidator"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 200 },
+    "position": { "required": true, "min": 1 }
+  }
+}

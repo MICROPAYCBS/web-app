@@ -1,0 +1,32 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+/** Fineract journal lookup id for a savings (or RD/FD) portfolio transaction. */
+export function savingsJournalTransactionId(transactionId: string | number): string {
+  return `S${transactionId}`;
+}
+
+/** Fineract journal lookup id for a loan portfolio transaction. */
+export function loanJournalTransactionId(transactionId: string | number): string {
+  return `L${transactionId}`;
+}
+
+/** Full-page journal entry transaction view in accounting. */
+export function journalEntryTransactionPath(transactionId: string): string {
+  return `/accounting/journal-entries/transactions/${encodeURIComponent(transactionId)}`;
+}
+
+/** Journal entries list URL that opens the transaction sheet after navigation. */
+export function journalEntriesListPathWithOpenTransaction(transactionId: string): string {
+  const params = new URLSearchParams();
+  params.set('openTransaction', transactionId.trim());
+  return `/accounting/journal-entries?${params.toString()}`;
+}
+
+/** Query key used after create to open the docked transaction sheet. */
+export const JOURNAL_ENTRIES_OPEN_TRANSACTION_PARAM = 'openTransaction';

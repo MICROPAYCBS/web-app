@@ -1,0 +1,10 @@
+{
+  "command": "system.role.create",
+  "fineractSources": [
+    "org.apache.fineract.useradministration.api.RolesApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "description": { "required": true }
+  }
+}

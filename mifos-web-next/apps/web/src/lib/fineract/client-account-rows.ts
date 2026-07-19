@@ -1,0 +1,72 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import type {
+  FineractClientLoanAccount,
+  FineractClientSavingsAccount,
+  FineractClientShareAccount
+} from '@mifos/api-client';
+import type { ClientAccountRow } from '@/components/clients/detail/client-accounts-table';
+import {
+  clientAccountGeneralPath,
+  type ClientAccountProductKind
+} from '@/lib/fineract/client-account-links';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
+
+export function toLoanAccountRows(
+  accounts: FineractClientLoanAccount[],
+  clientId: string | number
+): ClientAccountRow[] {
+  return accounts.map((account) => ({
+    id: account.id,
+    accountNo: account.accountNo,
+    productName: account.productName,
+    statusLabel: account.status?.value,
+    statusCode: account.status?.code,
+    balanceLabel: formatAccountMoney(account.loanBalance, account.currency?.code),
+    extraLabel: account.inArrears ? 'In arrears' : account.productType === 'working-capital' ? 'Working capital' : undefined,
+    href: clientAccountGeneralPath(clientId, 'loan', account.id)
+  }));
+}
+
+export function toSavingsAccountRows(
+  accounts: FineractClientSavingsAccount[],
+  clientId: string | number,
+  kind: Extract<ClientAccountProductKind, 'savings' | 'fixedDeposit' | 'recurringDeposit'>
+): ClientAccountRow[] {
+  return accounts.map((account) => ({
+    id: account.id,
+    accountNo: account.accountNo,
+    productName: account.productName,
+    statusLabel: account.status?.value,
+    statusCode: account.status?.code,
+    balanceLabel: formatAccountMoney(account.accountBalance, account.currency?.code),
+    href: clientAccountGeneralPath(clientId, kind, account.id)
+  }));
+}
+
+export function toShareAccountRows(
+  accounts: FineractClientShareAccount[],
+  clientId: string | number
+): ClientAccountRow[] {
+  return accounts.map((account) => ({
+    id: account.id,
+    accountNo: account.accountNo,
+    productName: account.productName,
+    statusLabel: account.status?.value,
+    statusCode: account.status?.code,
+    balanceLabel:
+      account.totalApprovedShares != null ? String(account.totalApprovedShares) : undefined,
+    extraLabel:
+      account.totalPendingForApprovalShares != null &&
+      account.totalPendingForApprovalShares > 0
+        ? `${account.totalPendingForApprovalShares} pending approval`
+        : undefined,
+    href: clientAccountGeneralPath(clientId, 'share', account.id)
+  }));
+}

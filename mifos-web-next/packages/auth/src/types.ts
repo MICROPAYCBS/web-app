@@ -7,9 +7,19 @@ export interface SessionUser {
   username: string;
   officeId: number;
   officeName?: string;
+  /** First name from Fineract user profile (when loaded). */
+  firstName?: string;
+  /** Last name from Fineract user profile (when loaded). */
+  lastName?: string;
+  /** Full name for display; falls back to username when not set. */
+  displayName?: string;
   permissions: string[];
   roles?: unknown;
   authenticated?: boolean;
+  /** Minutes until idle sign-out (from login / userdetails). */
+  sessionIdleTimeoutMinutes?: number;
+  /** Warning period before idle sign-out, in seconds. */
+  sessionIdleWarningSeconds?: number;
 }
 
 export type PermissionInput = string | string[];

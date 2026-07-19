@@ -1,17 +1,1132 @@
 {
-  "clients.list": { "any": ["READ_CLIENT"] },
-  "clients.create": { "any": ["CREATE_CLIENT"] },
-  "clients.update": { "any": ["UPDATE_CLIENT"] },
-  "navigation": { "any": ["READ_CLIENT"] },
-  "checkerInbox": {
-    "any": ["ALL_FUNCTIONS_READ", "READ_MAKERCHECKER", "APPROVE_LOAN", "APPROVE_LOAN_CHECKER"]
+  "clients.list": {
+    "any": [
+      "READ_CLIENT"
+    ]
   },
-  "collections": { "any": ["READ_COLLECTIONSHEET"] },
-  "accounting": { "any": ["READ_ACCOUNTING"] },
-  "loans.list": { "any": ["READ_LOAN"] },
-  "loans.create": { "any": ["CREATE_LOAN"] },
-  "products.loan": { "any": ["READ_LOANPRODUCT"] },
-  "products.savings": { "any": ["READ_SAVINGSPRODUCT"] },
-  "organization": { "any": ["READ_OFFICE"] },
-  "system": { "any": ["READ_ROLE", "READ_USER"] }
+  "clients.create": {
+    "any": [
+      "CREATE_CLIENT"
+    ]
+  },
+  "clients.update": {
+    "any": [
+      "UPDATE_CLIENT"
+    ]
+  },
+  "clients.activate": {
+    "any": [
+      "ACTIVATE_CLIENT"
+    ]
+  },
+  "clients.close": {
+    "any": [
+      "CLOSE_CLIENT"
+    ]
+  },
+  "clients.withdraw": {
+    "any": [
+      "WITHDRAW_CLIENT"
+    ]
+  },
+  "clients.reject": {
+    "any": [
+      "REJECT_CLIENT"
+    ]
+  },
+  "clients.reactivate": {
+    "any": [
+      "REACTIVATE_CLIENT"
+    ]
+  },
+  "clients.undoRejection": {
+    "any": [
+      "UNDOREJECT_CLIENT"
+    ]
+  },
+  "clients.proposeTransfer": {
+    "any": [
+      "PROPOSETRANSFER_CLIENT"
+    ]
+  },
+  "clients.acceptTransfer": {
+    "any": [
+      "ACCEPTTRANSFER_CLIENT"
+    ]
+  },
+  "clients.rejectTransfer": {
+    "any": [
+      "REJECTTRANSFER_CLIENT"
+    ]
+  },
+  "clients.withdrawTransfer": {
+    "any": [
+      "WITHDRAWTRANSFER_CLIENT"
+    ]
+  },
+  "clients.compliance-profile": {
+    "any": [
+      "READ_COMPLIANCEPROFILE"
+    ]
+  },
+  "clients.compliance-profile.update": {
+    "any": [
+      "UPDATE_COMPLIANCEPROFILE"
+    ]
+  },
+  "clients.identifiers": {
+    "any": [
+      "READ_CLIENTIDENTIFIER"
+    ]
+  },
+  "clients.contacts": {
+    "any": [
+      "READ_CLIENT"
+    ]
+  },
+  "clients.documents": {
+    "any": [
+      "READ_DOCUMENT"
+    ]
+  },
+  "clients.notes": {
+    "any": [
+      "READ_CLIENTNOTE"
+    ]
+  },
+  "clients.collateral": {
+    "any": [
+      "READ_CLIENTCOLLATERAL"
+    ]
+  },
+  "clients.collateral.create": {
+    "any": [
+      "CREATE_CLIENTCOLLATERAL"
+    ]
+  },
+  "clients.collateral.delete": {
+    "any": [
+      "DELETE_CLIENTCOLLATERAL"
+    ]
+  },
+  "navigation": {
+    "any": [
+      "READ_CLIENT"
+    ]
+  },
+  "checkerInbox": {
+    "any": [
+      "ALL_FUNCTIONS_READ",
+      "READ_MAKERCHECKER",
+      "APPROVE_LOAN",
+      "APPROVE_LOAN_CHECKER"
+    ]
+  },
+  "collections": {
+    "any": [
+      "READ_COLLECTIONSHEET"
+    ]
+  },
+  "accounting": {
+    "any": [
+      "READ_GLACCOUNT",
+      "READ_JOURNALENTRY",
+      "READ_ACCOUNTING"
+    ]
+  },
+  "loans.list": {
+    "any": [
+      "READ_LOAN"
+    ]
+  },
+  "loans.create": {
+    "any": [
+      "CREATE_LOAN"
+    ]
+  },
+  "loans.update": {
+    "any": [
+      "UPDATE_LOAN"
+    ]
+  },
+  "products.loan": {
+    "any": [
+      "READ_LOANPRODUCT"
+    ]
+  },
+  "products.loan.create": {
+    "any": [
+      "CREATE_LOANPRODUCT"
+    ]
+  },
+  "products.loan.update": {
+    "any": [
+      "UPDATE_LOANPRODUCT"
+    ]
+  },
+  "products.savings": {
+    "any": [
+      "READ_SAVINGSPRODUCT"
+    ]
+  },
+  "products.savings.create": {
+    "any": [
+      "CREATE_SAVINGSPRODUCT"
+    ]
+  },
+  "products.savings.update": {
+    "any": [
+      "UPDATE_SAVINGSPRODUCT"
+    ]
+  },
+  "organization": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "system": {
+    "any": [
+      "READ_ROLE",
+      "READ_USER"
+    ]
+  },
+  "savings.list": {
+    "any": [
+      "READ_SAVINGSACCOUNT"
+    ]
+  },
+  "organization.offices": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "organization.offices.create": {
+    "any": [
+      "CREATE_OFFICE"
+    ]
+  },
+  "organization.offices.update": {
+    "any": [
+      "UPDATE_OFFICE"
+    ]
+  },
+  "organization.employees": {
+    "any": [
+      "READ_STAFF"
+    ]
+  },
+  "organization.provisioning": {
+    "any": [
+      "READ_PROVISIONINGCRITERIA",
+      "READ_PROVISIONINGENTRY"
+    ]
+  },
+  "organization.provisioning.create": {
+    "any": [
+      "CREATE_PROVISIONING_CRITERIA"
+    ]
+  },
+  "organization.provisioning.update": {
+    "any": [
+      "UPDATE_CRITERIA"
+    ]
+  },
+  "organization.provisioning.delete": {
+    "any": [
+      "DELETE_CRITERIA"
+    ]
+  },
+  "organization.currencies": {
+    "any": [
+      "READ_CURRENCY"
+    ]
+  },
+  "organization.currencies.update": {
+    "any": [
+      "UPDATE_CURRENCY"
+    ]
+  },
+  "organization.legalTenders": {
+    "any": [
+      "READ_LEGAL_TENDER"
+    ]
+  },
+  "organization.legalTenders.create": {
+    "any": [
+      "CREATE_LEGAL_TENDER"
+    ]
+  },
+  "organization.legalTenders.update": {
+    "any": [
+      "UPDATE_LEGAL_TENDER"
+    ]
+  },
+  "organization.legalTenders.delete": {
+    "any": [
+      "DELETE_LEGAL_TENDER"
+    ]
+  },
+  "organization.smsCampaigns": {
+    "any": [
+      "READ_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.create": {
+    "any": [
+      "CREATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.update": {
+    "any": [
+      "UPDATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.activate": {
+    "any": [
+      "ACTIVATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.close": {
+    "any": [
+      "CLOSE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.reactivate": {
+    "any": [
+      "REACTIVATE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.smsCampaigns.delete": {
+    "any": [
+      "DELETE_SMSCAMPAIGN"
+    ]
+  },
+  "organization.standingInstructions": {
+    "any": [
+      "READ_STANDINGINSTRUCTION"
+    ]
+  },
+  "organization.fundMapping": {
+    "any": [
+      "READ_OFFICE",
+      "READ_FUND"
+    ]
+  },
+  "organization.investors": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "organization.adhocQuery": {
+    "any": [
+      "READ_ADHOC"
+    ]
+  },
+  "organization.adhocQuery.create": {
+    "any": [
+      "CREATE_ADHOC"
+    ]
+  },
+  "organization.adhocQuery.update": {
+    "any": [
+      "UPDATE_ADHOC"
+    ]
+  },
+  "organization.adhocQuery.delete": {
+    "any": [
+      "DELETE_ADHOC"
+    ]
+  },
+  "organization.tellers": {
+    "any": [
+      "READ_TELLER"
+    ]
+  },
+  "organization.cashiers.readSelf": {
+    "any": [
+      "READ_MY_CASHIER"
+    ]
+  },
+  "organization.cashiers.view": {
+    "any": [
+      "READ_MY_CASHIER",
+      "READ_TELLER"
+    ]
+  },
+  "organization.tellers.create": {
+    "any": [
+      "CREATE_TELLER"
+    ]
+  },
+  "organization.tellers.update": {
+    "any": [
+      "UPDATE_TELLER"
+    ]
+  },
+  "organization.tellers.delete": {
+    "any": [
+      "DELETE_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.assign": {
+    "any": [
+      "ALLOCATECASHIER_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.update": {
+    "any": [
+      "UPDATECASHIERALLOCATION_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.delete": {
+    "any": [
+      "DELETECASHIERALLOCATION_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.allocate": {
+    "any": [
+      "ALLOCATECASHTOCASHIER_TELLER"
+    ]
+  },
+  "organization.tellers.cashiers.settle": {
+    "any": [
+      "SETTLECASHFROMCASHIER_TELLER"
+    ]
+  },
+  "organization.paymentTypes": {
+    "any": [
+      "READ_PAYMENTTYPE"
+    ]
+  },
+  "organization.paymentTypes.create": {
+    "any": [
+      "CREATE_PAYMENTTYPE"
+    ]
+  },
+  "organization.paymentTypes.update": {
+    "any": [
+      "UPDATE_PAYMENTTYPE"
+    ]
+  },
+  "organization.paymentTypes.delete": {
+    "any": [
+      "DELETE_PAYMENTTYPE"
+    ]
+  },
+  "organization.customerClasses": {
+    "any": [
+      "READ_CUSTOMERCLASS"
+    ]
+  },
+  "organization.customerClasses.create": {
+    "any": [
+      "CREATE_CUSTOMERCLASS"
+    ]
+  },
+  "organization.customerClasses.update": {
+    "any": [
+      "UPDATE_CUSTOMERCLASS"
+    ]
+  },
+  "organization.customerClasses.delete": {
+    "any": [
+      "DELETE_CUSTOMERCLASS"
+    ]
+  },
+  "organization.customerTitles": {
+    "any": [
+      "READ_CLIENTTITLE"
+    ]
+  },
+  "organization.customerTitles.create": {
+    "any": [
+      "CREATE_CLIENTTITLE"
+    ]
+  },
+  "organization.customerTitles.update": {
+    "any": [
+      "UPDATE_CLIENTTITLE"
+    ]
+  },
+  "organization.customerTitles.delete": {
+    "any": [
+      "DELETE_CLIENTTITLE"
+    ]
+  },
+  "organization.contactTypes": {
+    "any": [
+      "READ_CONTACTTYPE"
+    ]
+  },
+  "organization.contactTypes.create": {
+    "any": [
+      "CREATE_CONTACTTYPE"
+    ]
+  },
+  "organization.contactTypes.update": {
+    "any": [
+      "UPDATE_CONTACTTYPE"
+    ]
+  },
+  "organization.contactTypes.delete": {
+    "any": [
+      "DELETE_CONTACTTYPE"
+    ]
+  },
+  "organization.sectors": {
+    "any": [
+      "READ_SECTOR"
+    ]
+  },
+  "organization.sectors.create": {
+    "any": [
+      "CREATE_SECTOR"
+    ]
+  },
+  "organization.sectors.update": {
+    "any": [
+      "UPDATE_SECTOR"
+    ]
+  },
+  "organization.sectors.delete": {
+    "any": [
+      "DELETE_SECTOR"
+    ]
+  },
+  "organization.industries": {
+    "any": [
+      "READ_INDUSTRY"
+    ]
+  },
+  "organization.industries.create": {
+    "any": [
+      "CREATE_INDUSTRY"
+    ]
+  },
+  "organization.industries.update": {
+    "any": [
+      "UPDATE_INDUSTRY"
+    ]
+  },
+  "organization.industries.delete": {
+    "any": [
+      "DELETE_INDUSTRY"
+    ]
+  },
+  "organization.identityTypes": {
+    "any": [
+      "READ_IDENTITYTYPE"
+    ]
+  },
+  "organization.identityTypes.create": {
+    "any": [
+      "CREATE_IDENTITYTYPE"
+    ]
+  },
+  "organization.identityTypes.update": {
+    "any": [
+      "UPDATE_IDENTITYTYPE"
+    ]
+  },
+  "organization.identityTypes.delete": {
+    "any": [
+      "DELETE_IDENTITYTYPE"
+    ]
+  },
+  "organization.addressFieldConfiguration": {
+    "any": [
+      "READ_ADDRESS"
+    ]
+  },
+  "organization.passwordPreferences": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "organization.passwordPreferences.update": {
+    "any": [
+      "UPDATE_PASSWORD_VALIDATION_POLICY"
+    ]
+  },
+  "organization.bulkLoan": {
+    "any": [
+      "BULKREASSIGN_LOAN"
+    ]
+  },
+  "organization.entityChecks": {
+    "any": [
+      "READ_ENTITY_DATATABLE_CHECK"
+    ]
+  },
+  "organization.workingDays": {
+    "any": [
+      "READ_WORKINGDAYS"
+    ]
+  },
+  "organization.workingDays.update": {
+    "any": [
+      "UPDATE_WORKINGDAYS"
+    ]
+  },
+  "organization.loanOriginators": {
+    "any": [
+      "READ_LOAN_ORIGINATOR"
+    ]
+  },
+  "organization.loanOriginators.create": {
+    "any": [
+      "CREATE_LOAN_ORIGINATOR"
+    ]
+  },
+  "organization.loanOriginators.update": {
+    "any": [
+      "UPDATE_LOAN_ORIGINATOR"
+    ]
+  },
+  "organization.loanOriginators.delete": {
+    "any": [
+      "DELETE_LOAN_ORIGINATOR"
+    ]
+  },
+  "organization.funds": {
+    "any": [
+      "READ_FUND"
+    ]
+  },
+  "organization.funds.create": {
+    "any": [
+      "CREATE_FUND"
+    ]
+  },
+  "organization.funds.update": {
+    "any": [
+      "UPDATE_FUND"
+    ]
+  },
+  "organization.bulkImport": {
+    "any": [
+      "READ_OFFICE"
+    ]
+  },
+  "organization.holidays": {
+    "any": [
+      "READ_HOLIDAY"
+    ]
+  },
+  "organization.holidays.create": {
+    "any": [
+      "CREATE_HOLIDAY"
+    ]
+  },
+  "organization.holidays.update": {
+    "any": [
+      "UPDATE_HOLIDAY"
+    ]
+  },
+  "organization.holidays.delete": {
+    "any": [
+      "DELETE_HOLIDAY"
+    ]
+  },
+  "organization.holidays.activate": {
+    "any": [
+      "ACTIVATE_HOLIDAY"
+    ]
+  },
+  "system.codes": {
+    "any": [
+      "READ_CODE"
+    ]
+  },
+  "system.externalEvents": {
+    "any": [
+      "READ_EXTERNAL_EVENT_CONFIGURATION"
+    ]
+  },
+  "system.entityMapping": {
+    "any": [
+      "READ_ENTITYMAPPING"
+    ]
+  },
+  "system.externalServices": {
+    "any": [
+      "READ_EXTERNALSERVICES"
+    ]
+  },
+  "system.dataTables": {
+    "any": [
+      "READ_DATATABLE"
+    ]
+  },
+  "system.hooks": {
+    "any": [
+      "READ_HOOK"
+    ]
+  },
+  "system.roles": {
+    "any": [
+      "READ_ROLE",
+      "READ_PERMISSION"
+    ]
+  },
+  "system.makerChecker": {
+    "any": [
+      "READ_MAKERCHECKER",
+      "READ_PERMISSION"
+    ]
+  },
+  "system.surveys": {
+    "any": [
+      "READ_SURVEY"
+    ]
+  },
+  "system.surveys.create": {
+    "any": [
+      "CREATE_SURVEY"
+    ]
+  },
+  "system.surveys.update": {
+    "any": [
+      "UPDATE_SURVEY"
+    ]
+  },
+  "system.approvalWorkflows": {
+    "any": [
+      "READ_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.create": {
+    "any": [
+      "CREATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.update": {
+    "any": [
+      "UPDATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.activate": {
+    "any": [
+      "ACTIVATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.deactivate": {
+    "any": [
+      "DEACTIVATE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.approvalWorkflows.delete": {
+    "any": [
+      "DELETE_WORKFLOW_DEFINITION"
+    ]
+  },
+  "system.jobs": {
+    "any": [
+      "READ_SCHEDULER"
+    ]
+  },
+  "system.jobs.update": {
+    "any": [
+      "UPDATE_SCHEDULER"
+    ]
+  },
+  "system.jobs.execute": {
+    "any": [
+      "EXECUTEJOB_SCHEDULER"
+    ]
+  },
+  "system.jobs.inlineCob": {
+    "any": [
+      "EXECUTE_INLINE_JOB"
+    ]
+  },
+  "system.configurations": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.businessDate": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.businessDate.update": {
+    "any": [
+      "UPDATE_BUSINESSDATE"
+    ]
+  },
+  "system.accountNumberPrefs": {
+    "any": [
+      "READ_ACCOUNTNUMBERFORMAT"
+    ]
+  },
+  "system.accountNumberPrefs.create": {
+    "any": [
+      "CREATE_ACCOUNTNUMBERFORMAT"
+    ]
+  },
+  "system.accountNumberPrefs.update": {
+    "any": [
+      "UPDATE_ACCOUNTNUMBERFORMAT"
+    ]
+  },
+  "system.accountNumberPrefs.delete": {
+    "any": [
+      "DELETE_ACCOUNTNUMBERFORMAT"
+    ]
+  },
+  "system.reports": {
+    "any": [
+      "READ_REPORT"
+    ]
+  },
+  "system.reports.create": {
+    "any": [
+      "CREATE_REPORT"
+    ]
+  },
+  "system.reports.update": {
+    "any": [
+      "UPDATE_REPORT"
+    ]
+  },
+  "system.reports.delete": {
+    "any": [
+      "DELETE_REPORT"
+    ]
+  },
+  "system.information": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.aboutUs": {
+    "any": [
+      "READ_CONFIGURATION"
+    ]
+  },
+  "system.audit": {
+    "any": [
+      "READ_AUDIT"
+    ]
+  },
+  "products.share": {
+    "any": [
+      "READ_SHAREPRODUCT"
+    ]
+  },
+  "products.share.create": {
+    "any": [
+      "CREATE_SHAREPRODUCT"
+    ]
+  },
+  "products.share.update": {
+    "any": [
+      "UPDATE_SHAREPRODUCT"
+    ]
+  },
+  "products.charges": {
+    "any": [
+      "READ_CHARGE"
+    ]
+  },
+  "products.charges.create": {
+    "any": [
+      "CREATE_CHARGE"
+    ]
+  },
+  "products.charges.update": {
+    "any": [
+      "UPDATE_CHARGE"
+    ]
+  },
+  "products.charges.delete": {
+    "any": [
+      "DELETE_CHARGE"
+    ]
+  },
+  "products.mix": {
+    "any": [
+      "READ_PRODUCTMIX"
+    ]
+  },
+  "products.mix.create": {
+    "any": [
+      "CREATE_PRODUCTMIX"
+    ]
+  },
+  "products.mix.update": {
+    "any": [
+      "UPDATE_PRODUCTMIX"
+    ]
+  },
+  "products.mix.delete": {
+    "any": [
+      "DELETE_PRODUCTMIX"
+    ]
+  },
+  "products.tax": {
+    "any": [
+      "READ_TAXCOMPONENT",
+      "READ_TAXGROUP"
+    ]
+  },
+  "products.tax.components": {
+    "any": [
+      "READ_TAXCOMPONENT"
+    ]
+  },
+  "products.tax.components.create": {
+    "any": [
+      "CREATE_TAXCOMPONENT"
+    ]
+  },
+  "products.tax.components.update": {
+    "any": [
+      "UPDATE_TAXCOMPONENT"
+    ]
+  },
+  "products.tax.groups": {
+    "any": [
+      "READ_TAXGROUP"
+    ]
+  },
+  "products.tax.groups.create": {
+    "any": [
+      "CREATE_TAXGROUP"
+    ]
+  },
+  "products.tax.groups.update": {
+    "any": [
+      "UPDATE_TAXGROUP"
+    ]
+  },
+  "products.delinquency": {
+    "any": [
+      "READ_DELINQUENCY",
+      "READ_DELINQUENCY_RANGE",
+      "READ_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.ranges": {
+    "any": [
+      "READ_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.ranges.create": {
+    "any": [
+      "CREATE_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.ranges.update": {
+    "any": [
+      "UPDATE_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.ranges.delete": {
+    "any": [
+      "DELETE_DELINQUENCY_RANGE"
+    ]
+  },
+  "products.delinquency.buckets": {
+    "any": [
+      "READ_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.buckets.create": {
+    "any": [
+      "CREATE_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.buckets.update": {
+    "any": [
+      "UPDATE_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.delinquency.buckets.delete": {
+    "any": [
+      "DELETE_DELINQUENCY_BUCKET"
+    ]
+  },
+  "products.recurringDeposit": {
+    "any": [
+      "READ_RECURRINGDEPOSITPRODUCT"
+    ]
+  },
+  "products.recurringDeposit.create": {
+    "any": [
+      "CREATE_RECURRINGDEPOSITPRODUCT"
+    ]
+  },
+  "products.recurringDeposit.update": {
+    "any": [
+      "UPDATE_RECURRINGDEPOSITPRODUCT"
+    ]
+  },
+  "products.fixedDeposit": {
+    "any": [
+      "READ_FIXEDDEPOSITPRODUCT"
+    ]
+  },
+  "products.fixedDeposit.create": {
+    "any": [
+      "CREATE_FIXEDDEPOSITPRODUCT"
+    ]
+  },
+  "products.fixedDeposit.update": {
+    "any": [
+      "UPDATE_FIXEDDEPOSITPRODUCT"
+    ]
+  },
+  "products.floatingRates": {
+    "any": [
+      "READ_FLOATINGRATE"
+    ]
+  },
+  "products.floatingRates.create": {
+    "any": [
+      "CREATE_FLOATINGRATE"
+    ]
+  },
+  "products.floatingRates.update": {
+    "any": [
+      "UPDATE_FLOATINGRATE"
+    ]
+  },
+  "products.collaterals": {
+    "any": [
+      "READ_COLLATERAL"
+    ]
+  },
+  "products.collaterals.create": {
+    "any": [
+      "CREATE_COLLATERAL"
+    ]
+  },
+  "products.collaterals.update": {
+    "any": [
+      "UPDATE_COLLATERAL"
+    ]
+  },
+  "products.collaterals.delete": {
+    "any": [
+      "DELETE_COLLATERAL"
+    ]
+  },
+  "accounting.coa": {
+    "any": [
+      "READ_GLACCOUNT"
+    ]
+  },
+  "accounting.departments": {
+    "any": [
+      "READ_DEPARTMENT"
+    ]
+  },
+  "accounting.departments.create": {
+    "any": [
+      "CREATE_DEPARTMENT"
+    ]
+  },
+  "accounting.departments.update": {
+    "any": [
+      "UPDATE_DEPARTMENT"
+    ]
+  },
+  "accounting.departments.delete": {
+    "any": [
+      "DELETE_DEPARTMENT"
+    ]
+  },
+  "accounting.journal": {
+    "any": [
+      "READ_JOURNALENTRY"
+    ]
+  },
+  "accounting.frequentPostings": {
+    "any": [
+      "READ_JOURNALENTRY"
+    ]
+  },
+  "accounting.financialActivity": {
+    "any": [
+      "READ_FINANCIALACTIVITYACCOUNT"
+    ]
+  },
+  "accounting.migrateBalances": {
+    "any": [
+      "READ_JOURNALENTRY"
+    ]
+  },
+  "accounting.migrateBalances.define": {
+    "any": [
+      "DEFINEOPENINGBALANCE_JOURNALENTRY"
+    ]
+  },
+  "accounting.closing": {
+    "any": [
+      "READ_GLCLOSURE"
+    ]
+  },
+  "accounting.closing.create": {
+    "any": [
+      "CREATE_GLCLOSURE"
+    ]
+  },
+  "accounting.closing.update": {
+    "any": [
+      "UPDATE_GLCLOSURE"
+    ]
+  },
+  "accounting.closing.delete": {
+    "any": [
+      "DELETE_GLCLOSURE"
+    ]
+  },
+  "accounting.rules": {
+    "any": [
+      "READ_ACCOUNTINGRULE"
+    ]
+  },
+  "accounting.accruals": {
+    "any": [
+      "READ_JOURNALENTRY",
+      "EXECUTE_PERIODICACCRUALACCOUNTING"
+    ]
+  },
+  "accounting.accruals.execute": {
+    "any": [
+      "EXECUTE_PERIODICACCRUALACCOUNTING"
+    ]
+  },
+  "accounting.provisioning": {
+    "any": [
+      "READ_PROVISIONINGENTRY"
+    ]
+  },
+  "accounting.provisioning.create": {
+    "any": [
+      "CREATE_PROVISIONING_ENTRIES"
+    ]
+  },
+  "accounting.provisioning.journal": {
+    "any": [
+      "CREATE_JOURNALENTRY"
+    ]
+  },
+  "administration.users": {
+    "any": [
+      "READ_USER"
+    ]
+  },
+  "administration.templates": {
+    "any": [
+      "READ_TEMPLATE"
+    ]
+  },
+  "administration.reports": {
+    "any": [
+      "READ_REPORT"
+    ]
+  }
 }

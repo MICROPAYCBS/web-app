@@ -1,0 +1,17 @@
+{
+  "schemaId": "organization.adhoc-query.create",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.adhocquery.api.AdHocApiResource",
+    "org.apache.fineract.infrastructure.adhocquery.data.AdHocRequest"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 200 },
+    "query": { "required": true },
+    "tableName": { "required": true },
+    "tableFields": { "required": true },
+    "email": { "required": false, "type": "email" },
+    "reportRunFrequency": { "required": false, "type": "number" },
+    "reportRunEvery": { "required": false, "type": "number" },
+    "isActive": { "required": false, "type": "boolean" }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schemaId": "organization.bulk-loan-reassignment.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoanReassignmentApiResource",
+    "org.apache.fineract.portfolio.loanaccount.data.LoanReassignmentDataValidator"
+  ],
+  "fields": {
+    "fromLoanOfficerId": { "required": true, "type": "number" },
+    "toLoanOfficerId": { "required": true, "type": "number" },
+    "assignmentDate": { "required": true, "type": "string" },
+    "loans": { "required": true, "type": "array" },
+    "locale": { "required": false, "type": "string" },
+    "dateFormat": { "required": false, "type": "string" }
+  }
+}

@@ -1,1 +1,10 @@
-npx lint-staged
+# Angular lint-staged (requires root `npm install`). Skip when deps are missing
+# so mifos-web-next-only commits are not blocked by an uninstalled Angular toolchain.
+if [ -f node_modules/.bin/eslint ] || [ -f node_modules/.bin/eslint.cmd ]; then
+  npx --no-install lint-staged
+else
+  echo "husky: skipping lint-staged (root eslint not installed; run npm install at repo root for Angular lint)"
+fi
+
+# Block mifos-web-next commits that fail the same checks as Vercel (see mifos-web-next/scripts/pre-commit-check.mjs).
+node mifos-web-next/scripts/pre-commit-check.mjs

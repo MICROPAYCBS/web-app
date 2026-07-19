@@ -1,0 +1,84 @@
+/**
+ * Copyright since 2026 MicroPay
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import { sumCollectionSheetExpected } from '@/lib/fineract/collection-sheet-sum';
+import {
+  countReportDetailRows,
+  parseActiveLoansSummaryCounts,
+  sumDisbursedAmountFromReportRows
+} from '@/lib/dashboard/dashboard-kpi-parse';
+
+describe('sumCollectionSheetExpected', () => {
+  it('totals loan and savings dues across nested groups', () => {
+    const result = sumCollectionSheetExpected({
+      clients: [
+        {
+          clientId: 1,
+          loans: [{ principalDue: 100, interestDue: 20, feeDue: 5 }],
+          savings: [{ dueAmount: 50 }]
+        }
+      ],
+      groups: [
+        {
+          clients: [{ clientId: 2, loans: [{ principalDue: 200 }] }]
+        }
+      ]
+    });
+
+    assert.equal(result.totalExpected, 375);
+    assert.equal(result.loanCount, 2);
+  });
+});
+
+describe('sumDisbursedAmountFromReportRows', () => {
+  it('sums disbursed amount column values', () => {
+    const total = sumDisbursedAmountFromReportRows([
+      { Currency: 'UGX', disbursed_amount: 1000 },
+      { Currency: 'UGX', disbursed_amount: 250.5 }
+    ]);
+
+    assert.equal(total, 1250.5);
+  });
+});
+
+describe('parseActiveLoansSummaryCounts', () => {
+  it('aggregates active loans and arrears across branch rows', () => {
+    const result = parseActiveLoansSummaryCounts([
+      {
+        'No. Active Loans': 5,
+        'No. of Loans in Arrears': 2,
+        'Principal Outstanding': 1000,
+        'Principal Overdue': 100
+      },
+      {
+        'No. Active Loans': 3,
+        'No. of Loans in Arrears': 1,
+        'Principal Outstanding': 500,
+        'Principal Overdue': 50
+      }
+    ]);
+
+    assert.equal(result.active, 8);
+    assert.equal(result.inArrears, 3);
+    assert.equal(result.portfolioAtRiskPercent, 10);
+  });
+});
+
+describe('countReportDetailRows', () => {
+  it('returns the number of report rows', () => {
+    assert.equal(
+      countReportDetailRows([
+        { 'Loan Account No.': '0001' },
+        { 'Loan Account No.': '0002' }
+      ]),
+      2
+    );
+  });
+});

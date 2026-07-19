@@ -1,0 +1,19 @@
+{
+  "command": "accounting.journal-entry.legacy-import-post",
+  "fineractSources": [
+    "org.apache.fineract.accounting.journalentry.api.JournalEntriesApiResource"
+  ],
+  "fields": {
+    "currencyCode": { "required": true },
+    "groups": { "required": true },
+    "groups[].effectiveDate": { "required": true },
+    "groups[].reference": { "required": false },
+    "groups[].officeId": { "required": true },
+    "groups[].lines": { "required": true },
+    "groups[].lines[].side": { "required": true },
+    "groups[].lines[].amount": { "required": true },
+    "groups[].lines[].glAccountId": { "required": true },
+    "groups[].lines[].departmentId": { "required": false },
+    "groups[].comments": { "required": false }
+  }
+}

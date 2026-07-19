@@ -1,0 +1,7 @@
+{
+  "command": "groups.create",
+  "fineract": {
+    "method": "POST",
+    "path": "/groups"
+  }
+}

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { FineractClient } from '@mifos/api-client';
+import { fineractFetch } from '@/lib/fineract/fineract-fetch';
 import { getServerSession } from '@/lib/session/server';
 import { getFineractServerConfig } from './server-config';
 
@@ -14,6 +15,7 @@ export async function createFineractClient(): Promise<FineractClient> {
   return new FineractClient({
     baseUrl,
     tenantId,
+    fetch: fineractFetch,
     getAuthHeader: async () => {
       if (!session) {
         return null;

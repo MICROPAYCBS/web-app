@@ -1,40 +1,38 @@
 import { AppLink } from '@/components/routes/app-link';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
-import { ServerForm } from '@/components/servers/server-form';
-import { addServerAction } from '@/actions/servers';
-import { logoutAction } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
+import { ServerAddForm } from '@/components/servers/server-add-form';
+import { SignOutButton } from '@/components/auth/sign-out-control';
 import { ServerSettingsRow } from '@/components/servers/server-settings-row';
+import { platformInset, platformScrollRegion } from '@/lib/platform-layout';
+import { cn } from '@/lib/utils';
 
 export default async function ServerSettingsPage() {
   const catalog = await getServerCatalog();
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
+    <div className={platformScrollRegion}>
+      <div className={cn(platformInset, 'mx-auto max-w-lg space-y-8')}>
       <div>
         <AppLink route="dashboard" className="text-sm text-muted-foreground hover:text-foreground">
           ← Back
         </AppLink>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight">Fineract servers</h2>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight">Servers</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Manage named backends and tenants. Sign out to switch servers before logging in again.
+          Manage named backends and tenants. Switching servers signs you out so you can sign in with
+          the right credentials.
         </p>
       </div>
 
-      <form action={logoutAction}>
-        <Button type="submit" variant="outline">
-          Sign out
-        </Button>
-      </form>
+      <SignOutButton variant="outline" />
 
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Configured servers</h3>
         {catalog.servers.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No servers yet.{' '}
-            <AppLink route="connect" className="text-primary underline-offset-4 hover:underline">
-              Add one on the connect screen
-            </AppLink>
+            <a href="/login?servers=1" className="text-primary underline-offset-4 hover:underline">
+              Add one when signing in
+            </a>
             .
           </p>
         ) : (
@@ -52,7 +50,8 @@ export default async function ServerSettingsPage() {
 
       <div className="rounded-lg border border-border p-6">
         <h3 className="mb-4 text-sm font-semibold">Add server</h3>
-        <ServerForm submitLabel="Add server" onSubmit={(values) => addServerAction(values)} />
+        <ServerAddForm />
+      </div>
       </div>
     </div>
   );

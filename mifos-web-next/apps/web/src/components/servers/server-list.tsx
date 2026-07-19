@@ -1,22 +1,35 @@
 'use client';
 
+import { Server } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
-import { Button } from '@/components/ui/button';
-import { selectServerAndGoToLoginAction } from '@/actions/servers';
+import { selectServerAction } from '@/actions/servers';
+import { EmptyState } from '@/components/composites';
+import { finishServerSelection } from '@/lib/servers/finish-server-selection';
 import { cn } from '@/lib/utils';
 
 export function ServerList({
   servers,
-  activeServerId
+  activeServerId,
+  onSelected
 }: {
   servers: FineractServerProfile[];
   activeServerId: string | null;
+  /** Called after the active server cookie is updated (e.g. close sheet). */
+  onSelected?: () => void;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   if (servers.length === 0) {
-    return null;
+    return (
+      <EmptyState
+        icon={Server}
+        title="No servers yet"
+        description="Add a server below to sign in and use the app."
+      />
+    );
   }
 
   return (
@@ -33,18 +46,21 @@ export function ServerList({
                 isActive && 'border-primary ring-1 ring-primary'
               )}
               onClick={() =>
-                startTransition(() => selectServerAndGoToLoginAction(server.id))
+                startTransition(async () => {
+                  const result = await selectServerAction(server.id);
+                  finishServerSelection(result, router, onSelected);
+                })
               }
             >
               <span className="font-medium">{server.name}</span>
-              <span className="mt-1 text-xs text-muted-foreground">
-                Tenant: {server.tenantId}
+              <span className="mt-1 text-xs text-muted-foreground">Tenant: {server.tenantId}</span>
+              <span className="mt-0.5 truncate text-xs text-muted-foreground">
+                {server.baseUrl}
               </span>
-              <span className="mt-0.5 truncate text-xs text-muted-foreground">{server.baseUrl}</span>
               {isActive ? (
-                <span className="mt-2 text-xs font-medium text-primary">Selected</span>
+                <span className="mt-2 text-xs font-medium text-primary">Active for sign-in</span>
               ) : (
-                <span className="mt-2 text-xs text-muted-foreground">Click to use this server</span>
+                <span className="mt-2 text-xs text-muted-foreground">Tap to use this server</span>
               )}
             </button>
           </li>

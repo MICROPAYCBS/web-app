@@ -1,0 +1,10 @@
+{
+  "command": "system.global-configuration.update-enabled",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.configuration.api.GlobalConfigurationApiResource"
+  ],
+  "fields": {
+    "id": { "required": true },
+    "enabled": { "required": true }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schemaId": "clients.savings-account.withdrawal",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.SavingsAccountTransactionsApiResource",
+    "org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDataValidator"
+  ],
+  "fields": {
+    "transactionDate": { "required": true, "type": "date" },
+    "transactionAmount": { "required": true, "type": "money" },
+    "paymentTypeId": { "required": true, "type": "id" },
+    "accountNumber": { "required": false, "type": "string" },
+    "checkNumber": { "required": false, "type": "string" },
+    "routingCode": { "required": false, "type": "string" },
+    "receiptNumber": { "required": false, "type": "string" },
+    "bankNumber": { "required": false, "type": "string" },
+    "note": { "required": false, "type": "string" }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "command": "accounting.opening-balance.define",
+  "fineractSources": [
+    "org.apache.fineract.accounting.journalentry.api.JournalEntriesApiResource"
+  ],
+  "fields": {
+    "officeId": { "required": true },
+    "currencyCode": { "required": true },
+    "transactionDate": { "required": true },
+    "debits": { "required": true },
+    "credits": { "required": true },
+    "dateFormat": { "required": true },
+    "locale": { "required": true }
+  }
+}

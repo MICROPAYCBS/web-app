@@ -1,0 +1,22 @@
+{
+  "command": "products.share.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.shareproducts.api.ShareProductsApiResource",
+    "org.apache.fineract.portfolio.shareproducts.data.ShareProductDataValidator"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 100 },
+    "shortName": { "required": true, "maxLength": 4 },
+    "description": { "required": true, "maxLength": 500 },
+    "currencyCode": { "required": true, "maxLength": 3 },
+    "digitsAfterDecimal": { "required": true, "min": 0, "max": 6 },
+    "totalShares": { "required": true, "min": 1 },
+    "sharesIssued": { "required": true, "min": 1 },
+    "unitPrice": { "required": true, "min": 1 },
+    "minimumShares": { "required": true, "min": 1 },
+    "nominalShares": { "required": true, "min": 1 },
+    "maximumShares": { "required": true, "min": 1 },
+    "minimumActivePeriodForDividends": { "required": true, "min": 1 },
+    "accountingRule": { "required": true }
+  }
+}

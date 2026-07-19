@@ -1,0 +1,2 @@
+# Block mifos-web-next pushes that fail the same checks as Vercel (see mifos-web-next/scripts/pre-push-check.mjs).
+node mifos-web-next/scripts/pre-push-check.mjs

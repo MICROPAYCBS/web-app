@@ -1,0 +1,7 @@
+{
+  "command": "centers.create",
+  "fineract": {
+    "method": "POST",
+    "path": "/centers"
+  }
+}

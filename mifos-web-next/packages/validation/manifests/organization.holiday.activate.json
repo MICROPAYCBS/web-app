@@ -1,0 +1,9 @@
+{
+  "schemaId": "organization.holiday.activate",
+  "fineractSources": [
+    "org.apache.fineract.organisation.holiday.api.HolidaysApiResource"
+  ],
+  "fields": {
+    "holidayId": { "required": true, "type": "number" }
+  }
+}

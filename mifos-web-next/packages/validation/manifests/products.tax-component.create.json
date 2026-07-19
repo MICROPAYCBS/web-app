@@ -1,0 +1,11 @@
+{
+  "command": "products.tax-component.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.tax.api.TaxComponentApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "percentage": { "required": true },
+    "startDate": { "required": true }
+  }
+}

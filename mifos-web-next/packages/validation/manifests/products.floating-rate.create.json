@@ -1,0 +1,12 @@
+{
+  "command": "products.floating-rate.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.floatingrates.api.FloatingRatesApiResource"
+  ],
+  "fields": {
+    "name": { "required": true },
+    "isBaseLendingRate": { "required": false },
+    "isActive": { "required": false },
+    "ratePeriods": { "required": false }
+  }
+}

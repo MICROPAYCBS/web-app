@@ -1,0 +1,14 @@
+{
+  "schemaId": "system.datatable",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.dataqueries.api.DatatablesApiResource",
+    "org.apache.fineract.infrastructure.dataqueries.service.DatatableWriteServiceImpl"
+  ],
+  "fields": {
+    "datatableName": { "required": true, "type": "string" },
+    "apptableName": { "required": true, "type": "string" },
+    "multiRow": { "required": false, "type": "boolean" },
+    "entitySubType": { "required": false, "type": "string" },
+    "columns": { "required": true, "type": "array" }
+  }
+}

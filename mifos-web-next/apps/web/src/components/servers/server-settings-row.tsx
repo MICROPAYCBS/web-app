@@ -1,22 +1,29 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FineractServerProfile } from '@mifos/servers';
 import { Button } from '@/components/ui/button';
+import { ServerListRowActions } from '@/components/servers/server-list-row-actions';
 import { ServerForm, type ServerFormValues } from '@/components/servers/server-form';
+import { ServerRowDetailsTooltip } from '@/components/servers/server-row-details-tooltip';
 import {
   deleteServerAction,
   selectServerAction,
   updateServerAction
 } from '@/actions/servers';
+import { finishServerSelection } from '@/lib/servers/finish-server-selection';
 
 export function ServerSettingsRow({
   server,
-  isActive
+  isActive,
+  onChanged
 }: {
   server: FineractServerProfile;
   isActive: boolean;
+  onChanged?: () => void;
 }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -26,53 +33,48 @@ export function ServerSettingsRow({
     tenantId: server.tenantId
   };
 
+  function afterSuccess(signedOut?: boolean) {
+    if (signedOut) {
+      window.location.assign('/login');
+      return;
+    }
+    router.refresh();
+    onChanged?.();
+  }
+
   return (
     <li className="rounded-lg border border-border p-4">
       {!editing ? (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="font-medium">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <ServerRowDetailsTooltip server={server} isActive={isActive}>
+            <span className="min-w-0 truncate font-medium">
               {server.name}
               {isActive ? (
-                <span className="ml-2 text-xs font-normal text-primary">(active)</span>
+                <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
               ) : null}
-            </p>
-            <p className="text-xs text-muted-foreground">Tenant: {server.tenantId}</p>
-            <p className="mt-1 truncate text-xs text-muted-foreground">{server.baseUrl}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {!isActive ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    await selectServerAction(server.id);
-                  })
+            </span>
+          </ServerRowDetailsTooltip>
+          <ServerListRowActions
+            isActive={isActive}
+            pending={pending}
+            onUse={() =>
+              startTransition(async () => {
+                const result = await selectServerAction(server.id);
+                if (result.ok) {
+                  afterSuccess(result.signedOut);
                 }
-              >
-                Use this server
-              </Button>
-            ) : null}
-            <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
-              Edit
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  await deleteServerAction(server.id);
-                })
-              }
-            >
-              Remove
-            </Button>
-          </div>
+              })
+            }
+            onEdit={() => setEditing(true)}
+            onRemove={() =>
+              startTransition(async () => {
+                const result = await deleteServerAction(server.id);
+                if (result.ok) {
+                  afterSuccess();
+                }
+              })
+            }
+          />
         </div>
       ) : (
         <div className="space-y-3">
@@ -83,6 +85,7 @@ export function ServerSettingsRow({
               const result = await updateServerAction(server.id, values);
               if (result.ok) {
                 setEditing(false);
+                afterSuccess();
               }
               return result;
             }}

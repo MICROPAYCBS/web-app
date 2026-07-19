@@ -52,7 +52,9 @@ See [BFF.md](BFF.md). The browser never calls Fineract directly.
 | `(auth)` | `/login`, `/callback` | Authentication |
 | `(platform)` | `/`, `/clients`, … | Authenticated shell |
 
-Use normal paths (no hash routing). Deep links from the legacy app (`/#/…`) require a one-time redirect layer if needed during coexistence.
+Use normal paths (no hash routing).
+
+Request guards run in `apps/web/src/proxy.ts` (Next.js 16; replaces deprecated `middleware.ts`). Deep links from the legacy app (`/#/…`) require a one-time redirect layer if needed during coexistence.
 
 ## Theming
 

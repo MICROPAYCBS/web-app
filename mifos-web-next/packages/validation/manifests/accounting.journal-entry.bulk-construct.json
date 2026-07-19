@@ -1,0 +1,14 @@
+{
+  "command": "accounting.journal-entry.bulk-construct",
+  "fineractSources": [
+    "org.apache.fineract.accounting.journalentry.api.JournalEntriesApiResource"
+  ],
+  "fields": {
+    "template.accountingRuleId": { "required": true },
+    "template.variationMode": { "required": true },
+    "template.defaultOfficeId": { "required": true },
+    "template.currencyCode": { "required": true },
+    "template.transactionDate": { "required": true },
+    "rows": { "required": true }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schemaId": "organization.holiday.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.holiday.api.HolidaysApiResource",
+    "org.apache.fineract.organisation.holiday.data.HolidayDataValidator"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 200 },
+    "fromDate": { "required": false, "type": "date" },
+    "toDate": { "required": false, "type": "date" },
+    "reschedulingType": { "required": false, "type": "number" },
+    "repaymentsRescheduledTo": { "required": false, "type": "date" }
+  }
+}

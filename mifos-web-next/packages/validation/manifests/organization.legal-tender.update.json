@@ -1,0 +1,14 @@
+{
+  "schemaId": "organization.legal-tender.update",
+  "fineractSources": [
+    "org.apache.fineract.organisation.monetary.api.CurrencyLegalTenderApiResource",
+    "org.apache.fineract.organisation.monetary.data.CurrencyLegalTenderDataValidator"
+  ],
+  "fields": {
+    "value": { "required": true, "type": "decimal" },
+    "tenderType": { "required": true, "type": "enum", "values": ["NOTE", "COIN"] },
+    "label": { "required": true, "type": "string", "maxLength": 200 },
+    "displayOrder": { "required": true, "type": "integer" },
+    "active": { "required": true, "type": "boolean" }
+  }
+}

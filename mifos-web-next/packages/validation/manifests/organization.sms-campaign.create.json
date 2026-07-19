@@ -1,0 +1,14 @@
+{
+  "schemaId": "organization.sms-campaign.create",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.campaigns.sms.api.SmsCampaignApiResource",
+    "org.apache.fineract.infrastructure.campaigns.sms.data.SmsCampaignDataValidator"
+  ],
+  "fields": {
+    "campaignName": { "required": true, "maxLength": 200 },
+    "triggerType": { "required": true },
+    "runReportId": { "required": true },
+    "message": { "required": true },
+    "paramValue": { "required": true, "type": "object" }
+  }
+}

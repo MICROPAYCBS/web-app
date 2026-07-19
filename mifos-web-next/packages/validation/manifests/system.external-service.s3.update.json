@@ -1,0 +1,11 @@
+{
+  "command": "system.external-service.s3.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.configuration.api.ExternalServicesApiResource"
+  ],
+  "fields": {
+    "s3_access_key": { "required": true },
+    "s3_bucket_name": { "required": true },
+    "s3_secret_key": { "required": true }
+  }
+}

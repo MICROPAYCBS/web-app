@@ -13,7 +13,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mifos/api-client": "0.1.0",
+    "@mifos/api-client": "workspace:*",
+    "@mifos/domain": "workspace:*",
+    "@mifos/i18n": "workspace:*",
+    "decimal.js": "^10.5.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
