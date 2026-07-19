@@ -27,18 +27,21 @@ export function GlAccountEnquiryFilterFields({
   draft,
   onDraftChange,
   offices,
-  glAccounts,
+  glAccounts = [],
   departments,
   currencies,
-  pending = false
+  pending = false,
+  hideGlAccount = false
 }: {
   draft: GlAccountEnquirySearchFilters;
   onDraftChange: (draft: GlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
-  glAccounts: FineractJournalEntryGlAccountOption[];
+  glAccounts?: FineractJournalEntryGlAccountOption[];
   departments: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
+  /** When true, GL account is locked on the detail History tab. */
+  hideGlAccount?: boolean;
 }) {
   function patchDraft(patch: Partial<GlAccountEnquirySearchFilters>) {
     onDraftChange({ ...draft, ...patch });
@@ -46,19 +49,21 @@ export function GlAccountEnquiryFilterFields({
 
   return (
     <div className="space-y-4">
-      <SelectField
-        label="GL account"
-        required
-        value={draft.glAccountId}
-        onValueChange={(value) => patchDraft({ glAccountId: value })}
-        options={glAccounts.map((account) => ({
-          value: String(account.id),
-          label: formatJournalEntryGlAccountLabel(account),
-          keywords: [account.glCode, account.name]
-        }))}
-        placeholder="Select an account"
-        disabled={pending}
-      />
+      {!hideGlAccount ? (
+        <SelectField
+          label="GL account"
+          required
+          value={draft.glAccountId}
+          onValueChange={(value) => patchDraft({ glAccountId: value })}
+          options={glAccounts.map((account) => ({
+            value: String(account.id),
+            label: formatJournalEntryGlAccountLabel(account),
+            keywords: [account.glCode, account.name]
+          }))}
+          placeholder="Select an account"
+          disabled={pending}
+        />
+      ) : null}
       <SelectField
         label="Branch"
         required
@@ -117,10 +122,11 @@ export function GlAccountEnquiryFilterSidebar({
   draft,
   onDraftChange,
   offices,
-  glAccounts,
+  glAccounts = [],
   departments,
   currencies,
   pending = false,
+  lockedGlAccountId,
   onApply,
   onClear
 }: {
@@ -129,30 +135,43 @@ export function GlAccountEnquiryFilterSidebar({
   draft: GlAccountEnquirySearchFilters;
   onDraftChange: (draft: GlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
-  glAccounts: FineractJournalEntryGlAccountOption[];
+  glAccounts?: FineractJournalEntryGlAccountOption[];
   departments: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
+  /** When set, hides the GL account picker and locks the account id. */
+  lockedGlAccountId?: string;
   onApply: (filters: GlAccountEnquirySearchFilters) => void;
   onClear: () => void;
 }) {
+  const hideGlAccount = Boolean(lockedGlAccountId);
   const canApply = Boolean(
-    draft.glAccountId?.trim() && draft.currencyCode?.trim() && draft.officeId?.trim()
+    (hideGlAccount || draft.glAccountId?.trim()) &&
+      draft.currencyCode?.trim() &&
+      draft.officeId?.trim()
   );
 
   function handleApply() {
     if (!canApply) {
       return;
     }
-    onApply(draft);
+    onApply(
+      lockedGlAccountId
+        ? { ...draft, glAccountId: lockedGlAccountId }
+        : draft
+    );
   }
 
   return (
     <ListFilterSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="GL account enquiry"
-      description="Select a GL account, branch, currency, and date range. Balances use the ledger snapshot plus period activity."
+      title={hideGlAccount ? 'Account history' : 'GL account enquiry'}
+      description={
+        hideGlAccount
+          ? 'Select a branch, currency, and date range. Balances use the ledger snapshot plus period activity.'
+          : 'Select a GL account, branch, currency, and date range. Balances use the ledger snapshot plus period activity.'
+      }
       applyLabel={pending ? 'Searching…' : 'Search'}
       onApply={handleApply}
       onClear={onClear}
@@ -167,6 +186,7 @@ export function GlAccountEnquiryFilterSidebar({
         departments={departments}
         currencies={currencies}
         pending={pending}
+        hideGlAccount={hideGlAccount}
       />
     </ListFilterSheet>
   );

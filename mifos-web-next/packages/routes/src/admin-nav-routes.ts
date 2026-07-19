@@ -683,10 +683,10 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     label: 'GL account enquiry',
     navGroup: 'accounting',
     webAppRef: 'accounting/gl-account-enquiry',
-    permissionKey: 'accounting.journal',
-    navOrder: 22,
-    navIcon: 'search',
-    keywords: ['gl', 'account', 'enquiry', 'running balance', 'ledger'],
+    permissionKey: 'accounting.coa',
+    navOrder: 23,
+    navIcon: 'sliders-horizontal',
+    keywords: ['gl', 'account', 'enquiry', 'prefix', 'ledger', 'status', 'balance'],
     parityStatus: 'done'
   },
   {

@@ -11,8 +11,12 @@ import { describe, it } from 'node:test';
 import {
   buildGlAccountEnquiryReportParams,
   buildGlAccountEnquiryUrl,
+  buildGlAccountHistoryUrl,
   glAccountEnquiryHasRequiredFilters,
-  parseGlAccountEnquiryListQuery
+  parseGlAccountDetailReturnTo,
+  parseGlAccountDetailTab,
+  parseGlAccountEnquiryListQuery,
+  parseGlAccountHistoryQuery
 } from './gl-account-enquiry-query';
 
 describe('parseGlAccountEnquiryListQuery', () => {
@@ -31,9 +35,56 @@ describe('parseGlAccountEnquiryListQuery', () => {
     );
     assert.equal(complete.departmentId, '7');
     assert.equal(glAccountEnquiryHasRequiredFilters(complete), true);
-    assert.match(buildGlAccountEnquiryUrl(complete), /glAccountId=55/);
+    assert.match(buildGlAccountEnquiryUrl(complete), /chart-of-accounts\/55/);
+    assert.match(buildGlAccountEnquiryUrl(complete), /tab=history/);
     assert.match(buildGlAccountEnquiryUrl(complete), /departmentId=7/);
     assert.doesNotMatch(buildGlAccountEnquiryUrl(complete), /page=/);
+  });
+});
+
+describe('parseGlAccountHistoryQuery', () => {
+  it('locks account from path and does not default branch or currency', () => {
+    const query = parseGlAccountHistoryQuery(
+      {},
+      42,
+      { defaultTransactionDate: '01 July 2026' }
+    );
+    assert.equal(query.glAccountId, '42');
+    assert.equal(query.officeId, '');
+    assert.equal(query.currencyCode, '');
+    assert.equal(query.fromDate, '01 July 2026');
+    assert.equal(glAccountEnquiryHasRequiredFilters(query), false);
+    assert.equal(parseGlAccountDetailTab({ tab: 'history' }), 'history');
+    assert.equal(parseGlAccountDetailTab({}), 'summary');
+  });
+
+  it('builds history tab URLs without repeating glAccountId in the query', () => {
+    const url = buildGlAccountHistoryUrl(15, {
+      officeId: '1',
+      currencyCode: 'UGX'
+    });
+    assert.match(url, /\/accounting\/chart-of-accounts\/15\?/);
+    assert.match(url, /tab=history/);
+    assert.match(url, /officeId=1/);
+    assert.match(url, /currencyCode=UGX/);
+    assert.doesNotMatch(url, /glAccountId=/);
+  });
+
+  it('attaches a safe returnTo for enquiry back links', () => {
+    const url = buildGlAccountHistoryUrl(
+      15,
+      { officeId: '1', currencyCode: 'UGX' },
+      { returnTo: '/accounting/gl-account-enquiry?glPrefix=1' }
+    );
+    assert.match(url, /returnTo=/);
+    assert.match(decodeURIComponent(url), /\/accounting\/gl-account-enquiry\?glPrefix=1/);
+    assert.equal(
+      parseGlAccountDetailReturnTo({
+        returnTo: '/accounting/gl-account-enquiry?officeId=2'
+      }),
+      '/accounting/gl-account-enquiry?officeId=2'
+    );
+    assert.equal(parseGlAccountDetailReturnTo({ returnTo: 'https://evil.example/' }), null);
   });
 });
 

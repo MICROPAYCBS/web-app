@@ -46,7 +46,9 @@ const nextConfig: NextConfig = {
     '@mifos/validation'
   ],
   experimental: {
-    strictRouteTypes: true
+    strictRouteTypes: true,
+    /** Collapse per-segment link prefetches (reduces RSC fan-out after refresh in Next 16). */
+    prefetchInlining: true
   }
 };
 

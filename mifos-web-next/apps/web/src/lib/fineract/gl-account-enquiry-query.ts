@@ -16,6 +16,8 @@ import { REPORT_PARAMETER_SELECT_ALL_VALUE } from '@mifos/domain';
 /** Stretchy table report powered by m_gl_balance_snapshot + period journal lines. */
 export const GL_ACCOUNT_ENQUIRY_REPORT_NAME = 'GeneralLedgerReport Table';
 
+export type GlAccountDetailTab = 'summary' | 'history';
+
 export type GlAccountEnquirySearchFilters = {
   glAccountId: string;
   /** Required ISO currency code (e.g. UGX). */
@@ -59,6 +61,12 @@ function resolveDefaultFilterDate(defaultTransactionDate?: string) {
   return toFineractDate(new Date());
 }
 
+export function parseGlAccountDetailTab(
+  params: Record<string, string | string[] | undefined>
+): GlAccountDetailTab {
+  return readParam(params, 'tab') === 'history' ? 'history' : 'summary';
+}
+
 export function parseGlAccountEnquiryListQuery(
   params: Record<string, string | string[] | undefined>,
   options?: {
@@ -75,6 +83,26 @@ export function parseGlAccountEnquiryListQuery(
     glAccountId: readParam(params, 'glAccountId') ?? '',
     currencyCode: (readParam(params, 'currencyCode') ?? defaultCurrency).toUpperCase(),
     officeId: readParam(params, 'officeId') ?? defaultOffice,
+    departmentId: readParam(params, 'departmentId'),
+    fromDate: readParam(params, 'fromDate') ?? defaultDate,
+    toDate: readParam(params, 'toDate') ?? defaultDate
+  };
+}
+
+/**
+ * History tab on GL account detail — account comes from the path.
+ * Branch/currency are not defaulted (empty = choose filters); dates default to business date.
+ */
+export function parseGlAccountHistoryQuery(
+  params: Record<string, string | string[] | undefined>,
+  glAccountId: string | number,
+  options?: { defaultTransactionDate?: string }
+): GlAccountEnquiryListQuery {
+  const defaultDate = resolveDefaultFilterDate(options?.defaultTransactionDate);
+  return {
+    glAccountId: String(glAccountId),
+    currencyCode: (readParam(params, 'currencyCode') ?? '').toUpperCase(),
+    officeId: readParam(params, 'officeId') ?? '',
     departmentId: readParam(params, 'departmentId'),
     fromDate: readParam(params, 'fromDate') ?? defaultDate,
     toDate: readParam(params, 'toDate') ?? defaultDate
@@ -124,6 +152,19 @@ export function countActiveGlAccountEnquiryFilters(
   return count;
 }
 
+/** Active History filters excluding the locked GL account. */
+export function countActiveGlAccountHistoryFilters(
+  filters: GlAccountEnquirySearchFilters
+): number {
+  let count = 0;
+  if (filters.currencyCode?.trim()) count += 1;
+  if (filters.officeId?.trim()) count += 1;
+  if (filters.departmentId?.trim()) count += 1;
+  if (filters.fromDate?.trim()) count += 1;
+  if (filters.toDate?.trim()) count += 1;
+  return count;
+}
+
 export function glAccountEnquiryFiltersSignature(filters: GlAccountEnquirySearchFilters): string {
   return JSON.stringify({
     glAccountId: filters.glAccountId ?? '',
@@ -135,16 +176,120 @@ export function glAccountEnquiryFiltersSignature(filters: GlAccountEnquirySearch
   });
 }
 
+/** Maps legacy enquiry URLs to the History tab on chart-of-accounts detail. */
 export function buildGlAccountEnquiryUrl(query: GlAccountEnquiryListQuery): string {
-  const params = new URLSearchParams();
-  const filters = glAccountEnquiryFiltersFromQuery(query);
-  for (const [key, value] of Object.entries(filters)) {
-    if (value) {
-      params.set(key, value);
-    }
+  if (!glAccountEnquiryHasRequiredAccount(query)) {
+    return '/accounting/chart-of-accounts';
   }
+  return buildGlAccountHistoryUrl(query.glAccountId, query);
+}
+
+const GL_ACCOUNT_ENQUIRY_RETURN_PREFIX = '/accounting/gl-account-enquiry';
+
+/** Only allow return links back to GL account enquiry (blocks open redirects). */
+export function parseGlAccountDetailReturnTo(
+  params: Record<string, string | string[] | undefined>
+): string | null {
+  const raw = readParam(params, 'returnTo');
+  if (!raw) {
+    return null;
+  }
+  if (!raw.startsWith(GL_ACCOUNT_ENQUIRY_RETURN_PREFIX)) {
+    return null;
+  }
+  if (raw.includes('://') || raw.startsWith('//') || raw.includes('\\')) {
+    return null;
+  }
+  return raw;
+}
+
+export type GlAccountDetailNavOptions = {
+  returnTo?: string | null;
+};
+
+function withReturnToParam(params: URLSearchParams, returnTo?: string | null): void {
+  if (!returnTo) {
+    return;
+  }
+  if (
+    !returnTo.startsWith(GL_ACCOUNT_ENQUIRY_RETURN_PREFIX) ||
+    returnTo.includes('://') ||
+    returnTo.startsWith('//')
+  ) {
+    return;
+  }
+  params.set('returnTo', returnTo);
+}
+
+/** History tab URL on chart-of-accounts detail. */
+export function buildGlAccountHistoryUrl(
+  glAccountId: string | number,
+  filters: Pick<
+    GlAccountEnquirySearchFilters,
+    'officeId' | 'currencyCode' | 'departmentId' | 'fromDate' | 'toDate'
+  >,
+  options?: GlAccountDetailNavOptions
+): string {
+  const params = new URLSearchParams();
+  params.set('tab', 'history');
+  if (filters.officeId?.trim()) params.set('officeId', filters.officeId.trim());
+  if (filters.currencyCode?.trim()) {
+    params.set('currencyCode', filters.currencyCode.trim().toUpperCase());
+  }
+  if (filters.departmentId?.trim()) params.set('departmentId', filters.departmentId.trim());
+  if (filters.fromDate?.trim()) params.set('fromDate', filters.fromDate.trim());
+  if (filters.toDate?.trim()) params.set('toDate', filters.toDate.trim());
+  withReturnToParam(params, options?.returnTo);
+  return `/accounting/chart-of-accounts/${glAccountId}?${params.toString()}`;
+}
+
+export function buildGlAccountSummaryUrl(
+  glAccountId: string | number,
+  options?: GlAccountDetailNavOptions
+): string {
+  const params = new URLSearchParams();
+  withReturnToParam(params, options?.returnTo);
   const qs = params.toString();
-  return qs ? `/accounting/gl-account-enquiry?${qs}` : '/accounting/gl-account-enquiry';
+  return qs
+    ? `/accounting/chart-of-accounts/${glAccountId}?${qs}`
+    : `/accounting/chart-of-accounts/${glAccountId}`;
+}
+
+export function buildGlAccountDetailTabUrl(
+  glAccountId: string | number,
+  tab: GlAccountDetailTab,
+  filters?: Pick<
+    GlAccountEnquirySearchFilters,
+    'officeId' | 'currencyCode' | 'departmentId' | 'fromDate' | 'toDate'
+  >,
+  options?: GlAccountDetailNavOptions
+): string {
+  if (tab === 'history') {
+    return buildGlAccountHistoryUrl(
+      glAccountId,
+      {
+        officeId: filters?.officeId ?? '',
+        currencyCode: filters?.currencyCode ?? '',
+        departmentId: filters?.departmentId,
+        fromDate: filters?.fromDate,
+        toDate: filters?.toDate
+      },
+      options
+    );
+  }
+  const params = new URLSearchParams();
+  if (filters?.officeId?.trim()) params.set('officeId', filters.officeId.trim());
+  if (filters?.currencyCode?.trim()) {
+    params.set('currencyCode', filters.currencyCode.trim().toUpperCase());
+  }
+  if (filters?.departmentId?.trim()) params.set('departmentId', filters.departmentId.trim());
+  if (filters?.fromDate?.trim()) params.set('fromDate', filters.fromDate.trim());
+  if (filters?.toDate?.trim()) params.set('toDate', filters.toDate.trim());
+  withReturnToParam(params, options?.returnTo);
+  const qs = params.toString();
+  return qs
+    ? `/accounting/chart-of-accounts/${glAccountId}?${qs}`
+    : `/accounting/chart-of-accounts/${glAccountId}`;
 }
 
 /** Query params for `GET /runreports/GeneralLedgerReport Table`. */

@@ -42,10 +42,11 @@ export interface ListFilterSheetProps {
   formId?: string;
   applyLabel?: string;
   clearLabel?: string;
-  onApply?: () => void;
+  onApply?: () => void | boolean;
   onClear?: () => void;
   pending?: boolean;
   disabled?: boolean;
+  /** When false, Clear keeps the sheet open. Default true. */
   closeOnClear?: boolean;
   side?: 'left' | 'right';
   className?: string;
@@ -72,7 +73,10 @@ export function ListFilterSheet({
   const resolvedFormId = formId ?? generatedFormId;
 
   function handleApply() {
-    onApply?.();
+    const result = onApply?.();
+    if (result === false) {
+      return;
+    }
     onOpenChange(false);
   }
 

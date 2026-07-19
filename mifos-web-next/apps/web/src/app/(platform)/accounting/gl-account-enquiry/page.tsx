@@ -7,18 +7,29 @@
  */
 
 import { can, resolvePermission } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { GlAccountEnquiryPageContent } from '@/components/accounting/gl-account-enquiry/gl-account-enquiry-page-content';
-import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
+import { notFound, redirect } from 'next/navigation';
+import { AdvancedGlAccountEnquiryPageContent } from '@/components/accounting/advanced-gl-account-enquiry/advanced-gl-account-enquiry-page-content';
 import {
-  fetchGlAccountEnquiry,
-  listGlAccountEnquiryOptions
-} from '@/lib/fineract/gl-account-enquiry';
-import { parseGlAccountEnquiryListQuery } from '@/lib/fineract/gl-account-enquiry-query';
-import { listDepartments } from '@/lib/fineract/departments';
+  advancedGlAccountEnquiryHasActiveFilters,
+  parseAdvancedGlAccountEnquiryListQuery
+} from '@/lib/fineract/advanced-gl-account-enquiry-query';
+import { enquireGlAccounts } from '@/lib/fineract/gl-account-enquiry';
+import {
+  buildGlAccountEnquiryUrl,
+  parseGlAccountEnquiryListQuery
+} from '@/lib/fineract/gl-account-enquiry-query';
 import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
+
+function readSingleParam(
+  params: Record<string, string | string[] | undefined>,
+  key: string
+): string | undefined {
+  const value = params[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
 
 export default async function GlAccountEnquiryPage({
   searchParams
@@ -26,42 +37,38 @@ export default async function GlAccountEnquiryPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await getServerSession();
-  if (!can(session, resolvePermission('accounting.journal'))) {
+  if (!can(session, resolvePermission('accounting.coa'))) {
     notFound();
   }
 
   const params = await searchParams;
-  const [defaultTransactionDate, currencies, offices] = await Promise.all([
-    getDefaultTransactionDate().catch(() => undefined),
+
+  // Legacy stretchy-report enquiry bookmarks → account History tab.
+  if (readSingleParam(params, 'glAccountId')) {
+    redirect(buildGlAccountEnquiryUrl(parseGlAccountEnquiryListQuery(params)));
+  }
+
+  const query = parseAdvancedGlAccountEnquiryListQuery(params);
+  const hasSearch = advancedGlAccountEnquiryHasActiveFilters(query);
+
+  const [currencies, offices, enquiryResult] = await Promise.all([
     getOrganizationSelectedCurrencies(),
-    listOfficeOptions()
-  ]);
-  const defaultCurrencyCode =
-    currencies.find((currency) => currency.code?.trim())?.code?.trim() ?? '';
-  const defaultOfficeId = offices[0] ? String(offices[0].id) : '';
-  const query = parseGlAccountEnquiryListQuery(params, {
-    defaultTransactionDate,
-    defaultCurrencyCode,
-    defaultOfficeId
-  });
-  const [result, glAccounts, departments] = await Promise.all([
-    fetchGlAccountEnquiry(query),
-    listGlAccountEnquiryOptions(),
-    listDepartments().catch(() => [])
+    listOfficeOptions(),
+    hasSearch
+      ? tryFineractLoad(
+          () => enquireGlAccounts(query),
+          'Could not load GL account enquiry results.'
+        )
+      : Promise.resolve({ ok: true as const, data: [] })
   ]);
 
   return (
-    <GlAccountEnquiryPageContent
-      lines={result.lines}
+    <AdvancedGlAccountEnquiryPageContent
       query={query}
-      summary={result.summary}
-      glAccount={result.glAccount}
+      rows={enquiryResult.ok ? enquiryResult.data : []}
+      loadError={enquiryResult.ok ? null : enquiryResult.message}
       offices={offices}
-      glAccounts={glAccounts}
-      departments={departments}
       currencies={currencies}
-      defaultCurrencyCode={defaultCurrencyCode}
-      defaultOfficeId={defaultOfficeId}
     />
   );
 }

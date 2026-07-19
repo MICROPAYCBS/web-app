@@ -348,6 +348,11 @@ export type {
 } from './accounting/gl-account-types';
 
 export type {
+  FineractGlAccountEnquiryParams,
+  FineractGlAccountEnquiryRow
+} from './accounting/gl-account-enquiry-types';
+
+export type {
   FineractJournalEntriesPage,
   FineractJournalEntryCurrency,
   FineractJournalEntryGlAccountOption,

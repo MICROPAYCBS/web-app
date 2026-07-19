@@ -19,11 +19,11 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 ---
 
-## Scorecard (11 routes)
+## Scorecard (12 routes)
 
 | Done | Partial | Planned |
 | ---: | ------: | ------: |
-|   11 |       0 |       0 |
+|   11 |       1 |       0 |
 
 ---
 
@@ -31,9 +31,10 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 
 | ID      | Route                                           | Label                        | Status   | Notes                                      |
 | ------- | ----------------------------------------------- | ---------------------------- | -------- | ------------------------------------------ |
-| ACCT-010 | `/accounting/chart-of-accounts`                | Chart of accounts            | **Done** | List/tree, create, view, edit GL accounts    |
+| ACCT-010 | `/accounting/chart-of-accounts`                | Chart of accounts            | **Done** | List/tree, create, view (Summary + History tabs), edit GL accounts |
 | ACCT-015 | `/accounting/departments`                      | Departments                  | **Done** | List, create, edit cost centers              |
-| ACCT-018 | `/accounting/gl-account-enquiry`               | GL account enquiry           | **Done** | Required GL account search, balances, running balance column |
+| ACCT-018 | `/accounting/chart-of-accounts/[id]?tab=history` | GL account history         | **Done** | History tab on COA detail (branch/currency/dates) |
+| ACCT-019 | `/accounting/gl-account-enquiry`               | GL account enquiry           | **Done** | Prefix/ledger/branch/currency/status; hybrid balances; View summary / View history → COA detail |
 | ACCT-020 | `/accounting/journal-entries`                   | Journal entries              | **Done** | Search, create (incl. inter-branch), transaction view, reverse |
 | ACCT-025 | `/accounting/journal-entries/frequent-postings` | Frequent postings            | **Done** | Shortcut journal form with accounting rules |
 | ACCT-030 | `/accounting/financial-activity-mappings`       | Financial activity mappings  | **Done** | List, create, edit via FormSheet           |

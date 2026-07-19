@@ -11,7 +11,6 @@
 import type {
   FineractCurrencyOption,
   FineractGlAccountDetail,
-  FineractJournalEntryGlAccountOption,
   FineractOfficeOption
 } from '@mifos/api-client';
 import { Search } from 'lucide-react';
@@ -26,16 +25,17 @@ import {
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { EmptyState } from '@/components/composites/empty-state';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
-import { ListPage } from '@/components/composites/list-page';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { Button } from '@/components/ui/button';
 import {
   formatGlAccountEnquiryAccountHeading,
   formatGlAccountEnquiryPeriodLabel
 } from '@/lib/accounting/gl-account-enquiry-display';
 import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
+import type { Department } from '@/lib/fineract/departments';
 import {
-  buildGlAccountEnquiryUrl,
-  countActiveGlAccountEnquiryFilters,
+  buildGlAccountHistoryUrl,
+  countActiveGlAccountHistoryFilters,
   glAccountEnquiryFiltersFromQuery,
   glAccountEnquiryFiltersSignature,
   glAccountEnquiryHasRequiredFilters,
@@ -43,43 +43,48 @@ import {
   type GlAccountEnquiryListQuery,
   type GlAccountEnquirySearchFilters
 } from '@/lib/fineract/gl-account-enquiry-query';
-import type { Department } from '@/lib/fineract/departments';
 
-export function GlAccountEnquiryPageContent({
+export function GlAccountHistoryPanel({
+  glAccountId,
   lines,
   query,
   summary,
   glAccount,
+  loadError,
+  returnTo = null,
   offices,
-  glAccounts,
   departments,
-  currencies,
-  defaultCurrencyCode,
-  defaultOfficeId
+  currencies
 }: {
+  glAccountId: number;
   lines: GlAccountEnquiryLine[];
   query: GlAccountEnquiryListQuery;
   summary: GlAccountEnquirySummary | null;
   glAccount: FineractGlAccountDetail | null;
+  loadError?: string | null;
+  returnTo?: string | null;
   offices: FineractOfficeOption[];
-  glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
   currencies: FineractCurrencyOption[];
-  defaultCurrencyCode: string;
-  defaultOfficeId: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const hasSearch = glAccountEnquiryHasRequiredFilters(query);
+  const hasSearch = glAccountEnquiryHasRequiredFilters({
+    ...query,
+    glAccountId: String(glAccountId)
+  });
   const [filterOpen, setFilterOpen] = useState(!hasSearch);
-  const filters = glAccountEnquiryFiltersFromQuery(query);
+  const filters = glAccountEnquiryFiltersFromQuery({
+    ...query,
+    glAccountId: String(glAccountId)
+  });
   const [draftFilters, setDraftFilters] = useState(filters);
   const appliedFiltersSignature = useMemo(
     () => glAccountEnquiryFiltersSignature(filters),
     [filters]
   );
-  const activeFilterCount = countActiveGlAccountEnquiryFilters(filters);
-  const currencyCode = query.currencyCode || defaultCurrencyCode;
+  const activeFilterCount = countActiveGlAccountHistoryFilters(filters);
+  const currencyCode = query.currencyCode;
   const periodLabel = formatGlAccountEnquiryPeriodLabel(query.fromDate, query.toDate);
   const accountHeading = formatGlAccountEnquiryAccountHeading(glAccount);
 
@@ -88,31 +93,39 @@ export function GlAccountEnquiryPageContent({
   }, [appliedFiltersSignature]);
 
   const navigate = useCallback(
-    (next: GlAccountEnquiryListQuery) => {
+    (next: GlAccountEnquirySearchFilters) => {
       startTransition(() => {
-        router.push(buildGlAccountEnquiryUrl(next));
+        router.push(
+          buildGlAccountHistoryUrl(
+            glAccountId,
+            {
+              officeId: next.officeId,
+              currencyCode: next.currencyCode,
+              departmentId: next.departmentId,
+              fromDate: next.fromDate,
+              toDate: next.toDate
+            },
+            { returnTo }
+          )
+        );
       });
     },
-    [router]
+    [glAccountId, returnTo, router]
   );
 
   function handleApplyFilters(nextFilters: GlAccountEnquirySearchFilters) {
-    if (
-      !nextFilters.glAccountId?.trim() ||
-      !nextFilters.currencyCode?.trim() ||
-      !nextFilters.officeId?.trim()
-    ) {
+    if (!nextFilters.currencyCode?.trim() || !nextFilters.officeId?.trim()) {
       return;
     }
-    navigate(nextFilters);
+    navigate({ ...nextFilters, glAccountId: String(glAccountId) });
     setFilterOpen(false);
   }
 
   function handleClearFilters() {
     navigate({
-      glAccountId: '',
-      currencyCode: defaultCurrencyCode,
-      officeId: defaultOfficeId,
+      glAccountId: String(glAccountId),
+      currencyCode: '',
+      officeId: '',
       departmentId: '',
       fromDate: query.fromDate,
       toDate: query.toDate
@@ -123,52 +136,49 @@ export function GlAccountEnquiryPageContent({
 
   return (
     <>
-      <ListPage
-        title="GL account enquiry"
-        description="Search journal activity for a single GL account with opening and closing balances."
-      >
-        {!hasSearch ? (
-          <EmptyState
-            icon={Search}
-            title="Select an account, branch, and currency to begin"
-            description="Open search filters, choose the GL account, branch, and currency, then run the enquiry."
-            action={
-              <Button type="button" onClick={() => setFilterOpen(true)}>
-                Open search
-              </Button>
+      {!hasSearch ? (
+        <EmptyState
+          icon={Search}
+          title="Choose branch and currency to begin"
+          description="Open filters, select a branch and currency, then search account history."
+          action={
+            <Button type="button" onClick={() => setFilterOpen(true)}>
+              Open filters
+            </Button>
+          }
+        />
+      ) : loadError ? (
+        <LoadErrorAlert title="Could not load account history" message={loadError} />
+      ) : (
+        <div className="space-y-4" aria-busy={pending || undefined}>
+          <GlAccountEnquirySummaryPanel
+            summary={summary}
+            currencyCode={currencyCode}
+            glAccountTypeId={glAccount?.type?.id}
+            periodLabel={periodLabel}
+            accountHeading={accountHeading}
+            pending={pending}
+          />
+          <GlAccountEnquiryTableView
+            table={table}
+            pending={pending}
+            toolbar={
+              <>
+                <ListFilterTrigger
+                  activeCount={activeFilterCount}
+                  onClick={() => setFilterOpen(true)}
+                  disabled={pending}
+                />
+                <DataTableColumnVisibility
+                  table={table}
+                  disabled={pending}
+                  onReset={resetColumnVisibility}
+                />
+              </>
             }
           />
-        ) : (
-          <div className="space-y-4" aria-busy={pending || undefined}>
-            <GlAccountEnquirySummaryPanel
-              summary={summary}
-              currencyCode={currencyCode}
-              glAccountTypeId={glAccount?.type?.id}
-              periodLabel={periodLabel}
-              accountHeading={accountHeading}
-              pending={pending}
-            />
-            <GlAccountEnquiryTableView
-              table={table}
-              pending={pending}
-              toolbar={
-                <>
-                  <ListFilterTrigger
-                    activeCount={activeFilterCount}
-                    onClick={() => setFilterOpen(true)}
-                    disabled={pending}
-                  />
-                  <DataTableColumnVisibility
-                    table={table}
-                    disabled={pending}
-                    onReset={resetColumnVisibility}
-                  />
-                </>
-              }
-            />
-          </div>
-        )}
-      </ListPage>
+        </div>
+      )}
 
       <GlAccountEnquiryFilterSidebar
         open={filterOpen}
@@ -176,10 +186,10 @@ export function GlAccountEnquiryPageContent({
         draft={draftFilters}
         onDraftChange={setDraftFilters}
         offices={offices}
-        glAccounts={glAccounts}
         departments={departments}
         currencies={currencies}
         pending={pending}
+        lockedGlAccountId={String(glAccountId)}
         onApply={handleApplyFilters}
         onClear={handleClearFilters}
       />
