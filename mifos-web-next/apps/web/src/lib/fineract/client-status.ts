@@ -8,8 +8,13 @@
 
 import type { FineractClientDetail } from '@mifos/api-client';
 
+/** Fineract `ClientStatus` enum ids used for lifecycle branching. */
+export const CLIENT_STATUS_DRAFT_ID = 50;
+export const CLIENT_STATUS_PENDING_ID = 100;
+export const CLIENT_STATUS_ACTIVE_ID = 300;
+
 export type ClientStatusKind =
-  | 'incomplete'
+  | 'draft'
   | 'pending'
   | 'active'
   | 'closed'
@@ -22,16 +27,27 @@ function normalizeStatusText(value?: string): string {
   return value?.trim().toLowerCase().replace(/\s+/g, ' ') ?? '';
 }
 
-/** Maps Fineract client status labels to lifecycle menu behaviour (legacy web-app). */
+/** Maps Fineract client status to lifecycle menu behaviour. Prefer status.id / code. */
 export function clientStatusKind(
   client: Pick<FineractClientDetail, 'status'>
 ): ClientStatusKind {
+  const statusId = client.status?.id;
+  if (statusId === CLIENT_STATUS_DRAFT_ID) {
+    return 'draft';
+  }
+  if (statusId === CLIENT_STATUS_PENDING_ID) {
+    return 'pending';
+  }
+  if (statusId === CLIENT_STATUS_ACTIVE_ID) {
+    return 'active';
+  }
+
   const value = normalizeStatusText(client.status?.value);
   const code = normalizeStatusText(client.status?.code);
 
-  // Incomplete before active — code may contain "active" substrings in other statuses.
-  if (value === 'incomplete' || code.includes('incomplete')) {
-    return 'incomplete';
+  // Draft before pending/active — never treat Draft as Pending.
+  if (value === 'draft' || code.includes('draft') || value === 'incomplete' || code.includes('incomplete')) {
+    return 'draft';
   }
   if (value === 'pending' || code.includes('pending')) {
     return 'pending';

@@ -9,7 +9,7 @@
  */
 
 import type { FineractClientSummary, FineractOfficeOption } from '@mifos/api-client';
-import { Can } from '@mifos/auth';
+import { Can, resolvePermission } from '@mifos/auth';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ClientsFilterSheet } from '@/components/clients/clients-filter-sheet';
@@ -63,7 +63,7 @@ export function ClientsPageContent({
         title="Customers"
         description="Browse and manage customers."
         actions={
-          <Can permission={{ any: ['CREATE_CLIENT', 'SAVEINCOMPLETE_CLIENT'] }}>
+          <Can permission={resolvePermission('clients.create')}>
             <Link href="/clients/create" className={cn(buttonVariants())}>
               New customer
             </Link>

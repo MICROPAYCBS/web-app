@@ -45,6 +45,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   'validation.msg.client.customerClassId.edd.fatca.required':
     'FATCA registration is required on the compliance profile for the assigned customer class.',
   'error.msg.not.authorized': 'You do not have permission to perform this action.',
+  'error.msg.clients.must.be.draft.to.submit':
+    'Only draft customers can be submitted. Save as draft first, then submit.',
+  'error.msg.clients.must.be.pending.to.activate':
+    'Only pending customers can be activated. Submit the draft first.',
   'validation.msg.domain.rule.violation':
     'This change was rejected by a business rule.',
   'error.msg.glaccount.glcode.invalid.format':

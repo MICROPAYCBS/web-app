@@ -11,9 +11,9 @@ import {
   createClientSchema,
   LEGAL_FORM_PERSON,
   sanitizeComplianceProfileForSubmit,
-  saveIncompleteClientSchema,
+  saveDraftClientSchema,
   type CreateClientPayload,
-  type SaveIncompleteClientPayload
+  type SaveDraftClientPayload
 } from '@mifos/validation';
 import { buildOnboardingCreateClientContacts } from '@/lib/clients/onboarding-client-contacts';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
@@ -114,15 +114,15 @@ export function parseCreateClientPayload(
   return { ok: true, data: parsed.data };
 }
 
-export function parseSaveIncompleteClientPayload(
+export function parseSaveDraftClientPayload(
   draft: CreateClientDraft,
   template: FineractClientTemplate,
   legalFormId: number = draft.general.legalFormId ?? LEGAL_FORM_PERSON,
   contactTypeOptions: Array<{ id: number; typeCode: string; typeName: string }> = []
 ):
-  | { ok: true; data: SaveIncompleteClientPayload }
+  | { ok: true; data: SaveDraftClientPayload }
   | { ok: false; issues: import('zod').ZodIssue[] } {
-  const parsed = saveIncompleteClientSchema.safeParse(
+  const parsed = saveDraftClientSchema.safeParse(
     buildCreateClientRaw(draft, template, legalFormId, contactTypeOptions)
   );
   if (!parsed.success) {

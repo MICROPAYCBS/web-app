@@ -120,8 +120,8 @@ export async function executeClientActionCommand(
         );
         break;
       }
-      case 'submit-for-approval': {
-        response = await executeClientCommand(clientId, 'submitForApproval', {});
+      case 'submit': {
+        response = await executeClientCommand(clientId, 'submit', {});
         break;
       }
       case 'close': {

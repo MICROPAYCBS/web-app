@@ -205,18 +205,32 @@ export function ClientDetailActionsMenu({
     [canActivateCustomer, client, hasSignature, pendingCheckerActions, rbacEnabled, user]
   );
 
-  const showPrimaryActivateButton =
-    status === 'pending' &&
-    visibleItems.some((entry) => entry.kind === 'sheet' && entry.sheetId === 'activate');
+  const primarySheetId: ClientActionSheetId | null = useMemo(() => {
+    if (
+      status === 'draft' &&
+      visibleItems.some((entry) => entry.kind === 'sheet' && entry.sheetId === 'submit')
+    ) {
+      return 'submit';
+    }
+    if (
+      status === 'pending' &&
+      visibleItems.some((entry) => entry.kind === 'sheet' && entry.sheetId === 'activate')
+    ) {
+      return 'activate';
+    }
+    return null;
+  }, [status, visibleItems]);
+
+  const primaryActionLabel = primarySheetId === 'submit' ? 'Submit' : 'Activate';
 
   const menuItems = useMemo(() => {
-    if (!showPrimaryActivateButton) {
+    if (!primarySheetId) {
       return visibleItems;
     }
     return collapseMenuSeparators(
-      visibleItems.filter((entry) => !(entry.kind === 'sheet' && entry.sheetId === 'activate'))
+      visibleItems.filter((entry) => !(entry.kind === 'sheet' && entry.sheetId === primarySheetId))
     );
-  }, [showPrimaryActivateButton, visibleItems]);
+  }, [primarySheetId, visibleItems]);
 
   const hasMenu = menuItems.length > 0;
 
@@ -258,27 +272,27 @@ export function ClientDetailActionsMenu({
     runCommand(target);
   }
 
-  if (!showPrimaryActivateButton && !hasMenu) {
+  if (!primarySheetId && !hasMenu) {
     return null;
   }
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {showPrimaryActivateButton ? (
+        {primarySheetId ? (
           <Button
             type="button"
             size="sm"
             disabled={pending}
-            onClick={() => setActiveSheet('activate')}
+            onClick={() => setActiveSheet(primarySheetId)}
           >
             <CheckCircle className="size-4" aria-hidden />
-            Activate
+            {primaryActionLabel}
           </Button>
         ) : null}
         {hasMenu ? (
           <DropdownMenu>
-            {showPrimaryActivateButton ? (
+            {primarySheetId ? (
               <DropdownMenuTrigger
                 render={
                   <Button

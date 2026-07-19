@@ -52,7 +52,7 @@ export function EditClientSheet({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const isIncomplete = initial ? clientStatusKind(initial) === 'incomplete' : false;
+  const isDraft = initial ? clientStatusKind(initial) === 'draft' : false;
 
   useEffect(() => {
     if (!open) {
@@ -117,7 +117,7 @@ export function EditClientSheet({
     });
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  function handleSave(event: React.FormEvent) {
     event.preventDefault();
     if (!form || !initialForm || !initial) {
       return;
@@ -143,7 +143,7 @@ export function EditClientSheet({
     startTransition(async () => {
       const result = await updateClientAction(clientId, form, initialForm);
       if (!toastCommandOutcome(result, {
-        completed: isIncomplete ? 'Customer saved as incomplete.' : 'Customer updated.',
+        completed: isDraft ? 'Customer saved as draft.' : 'Customer updated.',
         pending: 'Customer update sent for approval.'
       })) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
@@ -157,13 +157,13 @@ export function EditClientSheet({
     });
   }
 
-  function handleSubmitForApproval() {
+  function handleLifecycleSubmit() {
     setSubmitError(null);
     startSubmitTransition(async () => {
-      const result = await executeClientActionCommand(clientId, 'submit-for-approval', {});
+      const result = await executeClientActionCommand(clientId, 'submit', {});
       if (
         !toastCommandOutcome(result, {
-          completed: 'Customer submitted for approval.',
+          completed: 'Customer submitted.',
           pending: 'Customer submission sent for approval.'
         })
       ) {
@@ -181,12 +181,12 @@ export function EditClientSheet({
       onOpenChange={onOpenChange}
       title="Edit customer"
       description={
-        isIncomplete
-          ? 'Update incomplete KYC details, then save progress or submit for approval.'
+        isDraft
+          ? 'Update draft details, then save or submit when ready for activation.'
           : 'Update names, contact details, customer class, and dates.'
       }
       formId={EDIT_CLIENT_FORM_ID}
-      submitLabel={isIncomplete ? 'Save progress' : 'Save changes'}
+      submitLabel={isDraft ? 'Save draft' : 'Save changes'}
       submitLoading={pending}
       submitDisabled={loading || !form || !hasChanges || submitPending}
       className={EDIT_PANEL_CLASS}
@@ -202,7 +202,7 @@ export function EditClientSheet({
         <p className="text-sm text-muted-foreground">Loading customer details…</p>
       ) : null}
       {initial && form ? (
-        <form id={EDIT_CLIENT_FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form id={EDIT_CLIENT_FORM_ID} onSubmit={handleSave} className="flex flex-col gap-4">
           <EditClientFormFields
             initial={initial}
             form={form}
@@ -210,20 +210,20 @@ export function EditClientSheet({
             onPatch={patch}
             onPatchNonPerson={patchNonPerson}
           />
-          {isIncomplete ? (
-            <Can permission={resolvePermission('clients.submitForApproval')}>
+          {isDraft ? (
+            <Can permission={resolvePermission('clients.submit')}>
               <div className="border-t border-border pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   disabled={pending || submitPending || hasChanges}
-                  onClick={handleSubmitForApproval}
+                  onClick={handleLifecycleSubmit}
                 >
-                  {submitPending ? 'Submitting…' : 'Submit for approval'}
+                  {submitPending ? 'Submitting…' : 'Submit'}
                 </Button>
                 {hasChanges ? (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Save progress before submitting for approval.
+                    Save the draft before submitting.
                   </p>
                 ) : null}
               </div>

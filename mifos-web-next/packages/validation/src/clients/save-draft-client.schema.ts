@@ -27,11 +27,11 @@ const optionalFineractDate = z.string().trim().optional();
 const clientGenderIdSchema = z.union([z.literal(GENDER_MALE), z.literal(GENDER_FEMALE)]);
 
 /**
- * Soft create payload for `POST /clients?command=saveIncomplete`.
+ * Soft create payload for draft customers (`POST /clients` with active omitted/false).
  * Requires office, legal form, submitted date, and person/entity name fields only.
- * Full KYC (identifiers, family, compliance, phone, etc.) is optional until submit.
+ * Full KYC is optional until Submit (Draft → Pending).
  */
-const saveIncompleteBaseSchema = z.object({
+const saveDraftBaseSchema = z.object({
   officeId: z.coerce.number().int().positive(),
   staffId: z.coerce.number().int().positive().optional(),
   legalFormId: z.coerce.number().int(),
@@ -64,7 +64,7 @@ const saveIncompleteBaseSchema = z.object({
   datatables: z.array(datatablePayloadSchema).optional()
 });
 
-const saveIncompletePersonSchema = saveIncompleteBaseSchema.extend({
+const saveDraftPersonSchema = saveDraftBaseSchema.extend({
   legalFormId: z.literal(LEGAL_FORM_PERSON),
   firstname: z.string().trim().min(1).max(50).regex(namePattern, {
     message: 'Name cannot begin with a number or special character'
@@ -75,20 +75,23 @@ const saveIncompletePersonSchema = saveIncompleteBaseSchema.extend({
   })
 });
 
-const saveIncompleteEntitySchema = saveIncompleteBaseSchema.extend({
+const saveDraftEntitySchema = saveDraftBaseSchema.extend({
   legalFormId: z.literal(LEGAL_FORM_ENTITY),
   fullname: z.string().trim().min(1).max(100).regex(namePattern, {
     message: 'Name cannot begin with a number or special character'
   }),
-  clientNonPersonDetails: clientNonPersonDetailsSchema.partial().extend({
-    constitutionId: z.coerce.number().int().positive().optional()
-  }).optional()
+  clientNonPersonDetails: clientNonPersonDetailsSchema
+    .partial()
+    .extend({
+      constitutionId: z.coerce.number().int().positive().optional()
+    })
+    .optional()
 });
 
-export const saveIncompleteClientSchema = z.discriminatedUnion('legalFormId', [
-  saveIncompletePersonSchema,
-  saveIncompleteEntitySchema
+export const saveDraftClientSchema = z.discriminatedUnion('legalFormId', [
+  saveDraftPersonSchema,
+  saveDraftEntitySchema
 ]);
 
-export type SaveIncompleteClientInput = z.input<typeof saveIncompleteClientSchema>;
-export type SaveIncompleteClientPayload = z.output<typeof saveIncompleteClientSchema>;
+export type SaveDraftClientInput = z.input<typeof saveDraftClientSchema>;
+export type SaveDraftClientPayload = z.output<typeof saveDraftClientSchema>;

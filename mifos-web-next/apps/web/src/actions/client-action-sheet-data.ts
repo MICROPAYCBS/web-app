@@ -147,7 +147,7 @@ export async function loadClientActionSheetDataAction(
       }
       case 'reactivate':
       case 'undo-rejection':
-      case 'submit-for-approval':
+      case 'submit':
         return { ok: true, data: { sheetId } };
       default: {
         const _exhaustive: never = sheetId;

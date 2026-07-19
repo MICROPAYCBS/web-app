@@ -12,16 +12,16 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   actionSuccessFromFineractCommand,
   createClientSchema,
-  saveIncompleteClientSchema,
+  saveDraftClientSchema,
   toFineractActionError,
   validateClientIdentifier,
   type CreateClientPayload,
   type FineractCommandActionMeta,
-  type SaveIncompleteClientPayload
+  type SaveDraftClientPayload
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
-import { createClient, saveClientIncomplete } from '@/lib/fineract/clients';
+import { createClient } from '@/lib/fineract/clients';
 import { executeClientCommand } from '@/lib/fineract/client-commands';
 import { seedOnboardingClientContacts } from '@/lib/fineract/seed-onboarding-client-contacts';
 import { getServerSession } from '@/lib/session/server';
@@ -36,14 +36,14 @@ export type ClientActionResult =
       ok: false;
       message: string;
       fieldErrors?: Record<string, string>;
-      /** Present when saveIncomplete succeeded but submitForApproval failed. */
+      /** Present when draft create succeeded but submit failed. */
       clientId?: number;
     };
 
 async function validateOptionalIdentifiers(
   identifiers:
     | CreateClientPayload['clientIdentifiers']
-    | SaveIncompleteClientPayload['clientIdentifiers']
+    | SaveDraftClientPayload['clientIdentifiers']
 ): Promise<Record<string, string> | null> {
   if (!identifiers?.length) {
     return null;
@@ -71,7 +71,7 @@ async function validateOptionalIdentifiers(
 
 async function finalizeCreatedClient(
   result: Awaited<ReturnType<typeof createClient>>,
-  data: CreateClientPayload | SaveIncompleteClientPayload
+  data: CreateClientPayload | SaveDraftClientPayload
 ): Promise<ClientActionResult> {
   const clientId = result.clientId ?? result.resourceId;
   revalidatePath('/clients');
@@ -94,6 +94,7 @@ async function finalizeCreatedClient(
   return actionSuccessFromFineractCommand(result, { clientId });
 }
 
+/** Full-schema create (Draft when active omitted). Kept for non-wizard callers. */
 export async function createClientAction(raw: unknown): Promise<ClientActionResult> {
   const session = await getServerSession();
   if (!session) {
@@ -135,20 +136,20 @@ export async function createClientAction(raw: unknown): Promise<ClientActionResu
   }
 }
 
-/** Persist Incomplete KYC (`POST /clients?command=saveIncomplete`). */
-export async function saveClientIncompleteAction(raw: unknown): Promise<ClientActionResult> {
+/** Soft save as Draft via `POST /clients` (active omitted). */
+export async function saveClientDraftAction(raw: unknown): Promise<ClientActionResult> {
   const session = await getServerSession();
   if (!session) {
     return { ok: false, message: 'You must be signed in.' };
   }
 
   try {
-    assertCan(session, resolvePermission('clients.saveIncomplete'));
+    assertCan(session, resolvePermission('clients.create'));
   } catch {
-    return { ok: false, message: 'You do not have permission to save incomplete customers.' };
+    return { ok: false, message: 'You do not have permission to create customers.' };
   }
 
-  const parsed = saveIncompleteClientSchema.safeParse(raw);
+  const parsed = saveDraftClientSchema.safeParse(raw);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
@@ -170,32 +171,30 @@ export async function saveClientIncompleteAction(raw: unknown): Promise<ClientAc
   }
 
   try {
-    const result = await saveClientIncomplete(parsed.data);
+    const result = await createClient(parsed.data);
     return await finalizeCreatedClient(result, parsed.data);
   } catch (err) {
-    return toFineractActionError(err, 'Failed to save customer progress.');
+    return toFineractActionError(err, 'Failed to save customer draft.');
   }
 }
 
 /**
- * Full create-wizard submit: save as Incomplete, then move to Pending.
- * If submit fails after save, returns the Incomplete client id so the UI can retry.
+ * Wizard Submit: create Draft, then `POST /clients/{id}?command=submit` → Pending.
+ * If submit fails after create, returns the Draft client id so the UI can retry.
  */
-export async function submitClientForApprovalFromCreateAction(
-  raw: unknown
-): Promise<ClientActionResult> {
+export async function submitClientFromCreateAction(raw: unknown): Promise<ClientActionResult> {
   const session = await getServerSession();
   if (!session) {
     return { ok: false, message: 'You must be signed in.' };
   }
 
   try {
-    assertCan(session, resolvePermission('clients.saveIncomplete'));
-    assertCan(session, resolvePermission('clients.submitForApproval'));
+    assertCan(session, resolvePermission('clients.create'));
+    assertCan(session, resolvePermission('clients.submit'));
   } catch {
     return {
       ok: false,
-      message: 'You do not have permission to submit customers for approval.'
+      message: 'You do not have permission to submit customers.'
     };
   }
 
@@ -221,12 +220,12 @@ export async function submitClientForApprovalFromCreateAction(
   }
 
   try {
-    const saved = await saveClientIncomplete(parsed.data as CreateClientPayload);
+    const saved = await createClient(parsed.data as CreateClientPayload);
     const clientId = saved.clientId ?? saved.resourceId;
     if (clientId == null) {
       return {
         ok: false,
-        message: 'Customer was saved but could not be submitted for approval.'
+        message: 'Customer was saved but could not be submitted.'
       };
     }
 
@@ -234,7 +233,7 @@ export async function submitClientForApprovalFromCreateAction(
     revalidatePath(`/clients/${clientId}`);
 
     try {
-      const submitted = await executeClientCommand(String(clientId), 'submitForApproval', {});
+      const submitted = await executeClientCommand(String(clientId), 'submit', {});
       if (!parsed.data.contacts?.length) {
         const seeded = await seedOnboardingClientContacts(clientId, parsed.data);
         const success = actionSuccessFromFineractCommand(submitted, { clientId });
@@ -247,7 +246,7 @@ export async function submitClientForApprovalFromCreateAction(
     } catch (submitErr) {
       const submitFailure = toFineractActionError(
         submitErr,
-        'Customer was saved as incomplete, but could not be submitted for approval.'
+        'Customer was saved as a draft, but could not be submitted.'
       );
       return {
         ok: false,
@@ -257,6 +256,6 @@ export async function submitClientForApprovalFromCreateAction(
       };
     }
   } catch (err) {
-    return toFineractActionError(err, 'Failed to submit customer for approval.');
+    return toFineractActionError(err, 'Failed to submit customer.');
   }
 }

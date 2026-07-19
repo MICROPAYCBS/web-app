@@ -14,7 +14,7 @@ export type ClientActionSheetId =
   | 'close'
   | 'transfer'
   | 'activate'
-  | 'submit-for-approval'
+  | 'submit'
   | 'withdraw'
   | 'reject'
   | 'reactivate'
@@ -50,4 +50,4 @@ export type ClientActionSheetData =
       savingsProductName?: string;
       activationBlockers: ClientActivationBlocker[];
     }
-  | { sheetId: 'reactivate' | 'undo-rejection' | 'submit-for-approval' };
+  | { sheetId: 'reactivate' | 'undo-rejection' | 'submit' };

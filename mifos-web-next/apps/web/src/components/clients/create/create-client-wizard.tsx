@@ -14,17 +14,14 @@ import {
   formatZodIssuesMessage,
   LEGAL_FORM_PERSON,
   type CreateClientPayload,
-  type SaveIncompleteClientPayload
+  type SaveDraftClientPayload
 } from '@mifos/validation';
 import { resolvePermission, useCan } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { addClientDatatableRowAction } from '@/actions/client-datatable';
-import {
-  saveClientIncompleteAction,
-  submitClientForApprovalFromCreateAction
-} from '@/actions/clients';
+import { saveClientDraftAction, submitClientFromCreateAction } from '@/actions/clients';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -56,7 +53,7 @@ import {
 import {
   createClientIssueStepId,
   parseCreateClientPayload,
-  parseSaveIncompleteClientPayload
+  parseSaveDraftClientPayload
 } from './build-create-client-raw';
 import type { CreateClientDraft, CreateClientWizardProps } from './types';
 import {
@@ -132,8 +129,8 @@ export function CreateClientWizard({
   contactTypeOptions = []
 }: CreateClientWizardProps) {
   const router = useRouter();
-  const canSaveIncomplete = useCan(resolvePermission('clients.saveIncomplete'));
-  const canSubmitForApproval = useCan(resolvePermission('clients.submitForApproval'));
+  const canCreate = useCan(resolvePermission('clients.create'));
+  const canSubmit = useCan(resolvePermission('clients.submit'));
   const initialSubmittedOnDate = useInitialTransactionDate();
   const [template] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(() =>
@@ -297,8 +294,8 @@ export function CreateClientWizard({
     return parsed.data;
   }
 
-  function buildSaveProgressPayload(): SaveIncompleteClientPayload | null {
-    const parsed = parseSaveIncompleteClientPayload(
+  function buildSaveDraftPayload(): SaveDraftClientPayload | null {
+    const parsed = parseSaveDraftClientPayload(
       draft,
       template,
       legalFormId,
@@ -343,28 +340,28 @@ export function CreateClientWizard({
     return true;
   }
 
-  function handleSaveProgress() {
+  function handleSaveDraft() {
     setSubmitError(null);
     const invalidStep = findFirstInvalidSaveProgressStep(draft);
     if (invalidStep) {
       markValidationAttempted(invalidStep.stepId);
       const summary = Object.values(invalidStep.errors).join(' ');
-      setSubmitError(summary || 'Complete the highlighted fields before saving progress.');
+      setSubmitError(summary || 'Complete the highlighted fields before saving the draft.');
       setStepId(invalidStep.stepId);
       return;
     }
-    const payload = buildSaveProgressPayload();
+    const payload = buildSaveDraftPayload();
     if (!payload) {
       return;
     }
     startTransition(async () => {
       setPendingMode('save');
       try {
-        const result = await saveClientIncompleteAction(payload);
+        const result = await saveClientDraftAction(payload);
         if (
           !toastCommandOutcome(result, {
-            completed: 'Customer saved as incomplete.',
-            pending: 'Customer save sent for approval.'
+            completed: 'Customer saved as draft.',
+            pending: 'Customer draft sent for approval.'
           })
         ) {
           setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
@@ -390,7 +387,7 @@ export function CreateClientWizard({
     });
   }
 
-  function handleSubmitForApproval() {
+  function handleSubmit() {
     setSubmitError(null);
     const invalidStep = findFirstInvalidCreateClientStep(
       steps,
@@ -402,7 +399,7 @@ export function CreateClientWizard({
       markValidationAttempted(invalidStep.stepId);
       const summary = Object.values(invalidStep.errors).join(' ');
       setSubmitError(
-        summary || 'Complete the highlighted step before submitting this customer for approval.'
+        summary || 'Complete the highlighted step before submitting this customer.'
       );
       setStepId(invalidStep.stepId);
       return;
@@ -414,7 +411,7 @@ export function CreateClientWizard({
     startTransition(async () => {
       setPendingMode('submit');
       try {
-        const result = await submitClientForApprovalFromCreateAction(payload);
+        const result = await submitClientFromCreateAction(payload);
         if (!result.ok) {
           setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
           if (result.clientId != null) {
@@ -426,7 +423,7 @@ export function CreateClientWizard({
         }
 
         toastCommandOutcome(result, {
-          completed: 'Customer submitted for approval.',
+          completed: 'Customer submitted.',
           pending: 'Customer submission sent for approval.'
         });
 
@@ -488,10 +485,10 @@ export function CreateClientWizard({
   }, [steps, draft, template, validationContext, legalFormId]);
 
   const isPreview = resolvedStepId === 'preview';
-  const showSaveProgress = isPreview && canSaveIncomplete;
-  const showSubmitForApproval = isPreview && canSaveIncomplete && canSubmitForApproval;
-  const primaryIsSubmit = Boolean(showSubmitForApproval);
-  const primaryIsSaveOnly = Boolean(showSaveProgress && !showSubmitForApproval);
+  const showSaveDraft = isPreview && canCreate;
+  const showSubmit = isPreview && canCreate && canSubmit;
+  const primaryIsSubmit = Boolean(showSubmit);
+  const primaryIsSaveOnly = Boolean(showSaveDraft && !showSubmit);
 
   return (
     <PlatformRouteLayout>
@@ -508,29 +505,21 @@ export function CreateClientWizard({
           showBack={currentIndex > 0}
           onBack={goBack}
           backDisabled={pending}
-          secondaryLabel={showSubmitForApproval ? 'Save progress' : undefined}
-          onSecondary={showSubmitForApproval ? handleSaveProgress : undefined}
+          secondaryLabel={showSubmit ? 'Save draft' : undefined}
+          onSecondary={showSubmit ? handleSaveDraft : undefined}
           secondaryLoading={pending && pendingMode === 'save'}
           secondaryLoadingLabel="Saving…"
           primaryLabel={
-            primaryIsSubmit
-              ? 'Submit for approval'
-              : primaryIsSaveOnly
-                ? 'Save progress'
-                : 'Next'
+            primaryIsSubmit ? 'Submit' : primaryIsSaveOnly ? 'Save draft' : 'Next'
           }
           onPrimary={
-            primaryIsSubmit
-              ? handleSubmitForApproval
-              : primaryIsSaveOnly
-                ? handleSaveProgress
-                : tryNext
+            primaryIsSubmit ? handleSubmit : primaryIsSaveOnly ? handleSaveDraft : tryNext
           }
           primaryLoading={
             pending && (pendingMode === 'submit' || (primaryIsSaveOnly && pendingMode === 'save'))
           }
           primaryLoadingLabel={primaryIsSubmit ? 'Submitting…' : 'Saving…'}
-          primaryDisabled={isPreview && !showSaveProgress && !showSubmitForApproval}
+          primaryDisabled={isPreview && !showSaveDraft && !showSubmit}
         />
       }
     >

@@ -1,5 +1,5 @@
 {
-  "command": "clients.saveIncomplete",
+  "command": "clients.create",
   "fineractSources": [
     "org.apache.fineract.portfolio.client.api.ClientsApiResource",
     "org.apache.fineract.portfolio.client.domain.ClientStatus"
@@ -18,7 +18,8 @@
     "familyMembers": { "required": false },
     "clientIdentifiers": { "required": false },
     "address": { "required": false },
-    "datatables": { "required": false }
+    "datatables": { "required": false },
+    "active": { "required": false, "default": false }
   },
-  "notes": "POST /clients?command=saveIncomplete — soft KYC persist as Incomplete (status 50)."
+  "notes": "Soft draft create via POST /clients (active omitted/false) → ClientStatus Draft (50)."
 }

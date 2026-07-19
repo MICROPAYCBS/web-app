@@ -44,7 +44,7 @@ export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
   return errors;
 }
 
-/** Soft gate for Save progress — office + submitted date only (staff optional). */
+/** Soft gate for Save draft — office + submitted date only (staff optional). */
 export function validateSaveProgressGeneralStep(draft: CreateClientDraft): StepErrors {
   const errors: StepErrors = {};
   const g = draft.general;
@@ -59,7 +59,7 @@ export function validateSaveProgressGeneralStep(draft: CreateClientDraft): StepE
   return errors;
 }
 
-/** Soft biodata for Save progress — legal form + names only. */
+/** Soft biodata for Save draft — legal form + names only. */
 export function validateSaveProgressBiodataStep(draft: CreateClientDraft): StepErrors {
   const errors: StepErrors = {};
   const g = draft.general;
@@ -411,7 +411,7 @@ export function findFirstInvalidCreateClientStep(
   return null;
 }
 
-/** Soft validation for Save progress — biodata names + office/submitted date only. */
+/** Soft validation for Save draft — biodata names + office/submitted date only. */
 export function findFirstInvalidSaveProgressStep(
   draft: CreateClientDraft
 ): { stepId: string; errors: StepErrors } | null {

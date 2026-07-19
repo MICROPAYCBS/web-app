@@ -20,7 +20,7 @@ export interface FormWizardFooterProps {
   onBack?: () => void;
   backLabel?: string;
   backDisabled?: boolean;
-  /** Optional secondary action (e.g. Save progress on preview). */
+  /** Optional secondary action (e.g. Save draft on preview). */
   secondaryLabel?: string;
   onSecondary?: () => void;
   secondaryDisabled?: boolean;

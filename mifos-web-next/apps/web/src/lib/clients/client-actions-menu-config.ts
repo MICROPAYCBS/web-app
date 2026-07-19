@@ -160,10 +160,9 @@ export function buildClientActionsMenuItems(
     lifecycle.push(lifecycleSheet('transfer', 'Transfer customer', ArrowRightLeft));
   }
 
-  if (status === 'incomplete') {
+  if (status === 'draft') {
     lifecycle.push(
-      lifecycleSheet('submit-for-approval', 'Submit for approval', CheckCircle),
-      lifecycleSheet('withdraw', 'Withdraw', Undo2),
+      lifecycleSheet('submit', 'Submit', CheckCircle),
       {
         kind: 'command',
         id: 'delete',
@@ -266,7 +265,7 @@ export const CLIENT_ACTION_SHEET_TITLES: Record<ClientActionSheetId, string> = {
   close: 'Close customer',
   transfer: 'Transfer customer',
   activate: 'Activate customer',
-  'submit-for-approval': 'Submit for approval',
+  submit: 'Submit customer',
   withdraw: 'Withdraw customer',
   reject: 'Reject customer',
   reactivate: 'Reactivate customer',
@@ -285,8 +284,8 @@ export const CLIENT_ACTION_SHEET_OUTCOME_MESSAGES: Record<
     completed: 'Customer activated.',
     pending: 'Customer activation sent for approval.'
   },
-  'submit-for-approval': {
-    completed: 'Customer submitted for approval.',
+  submit: {
+    completed: 'Customer submitted.',
     pending: 'Customer submission sent for approval.'
   },
   close: {

@@ -9,14 +9,9 @@
       "CREATE_CLIENT"
     ]
   },
-  "clients.saveIncomplete": {
+  "clients.submit": {
     "any": [
-      "SAVEINCOMPLETE_CLIENT"
-    ]
-  },
-  "clients.submitForApproval": {
-    "any": [
-      "SUBMITFORAPPROVAL_CLIENT"
+      "SUBMIT_CLIENT"
     ]
   },
   "clients.update": {
