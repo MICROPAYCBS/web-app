@@ -9,18 +9,22 @@
  */
 
 import type { FineractClientEditData } from '@mifos/api-client';
+import { Can, resolvePermission } from '@mifos/auth';
 import { LEGAL_FORM_ENTITY, type UpdateClientInput, formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { loadClientForEditAction } from '@/actions/client-edit-load';
 import { updateClientAction } from '@/actions/client-update';
+import { executeClientActionCommand } from '@/actions/client-lifecycle-command';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { EditClientFormFields } from '@/components/clients/edit/edit-client-form-fields';
+import { Button } from '@/components/ui/button';
 import { hasUpdateClientChanges } from '@/lib/fineract/build-update-client-payload';
 import { mapClientToEditFormInput } from '@/lib/fineract/client-edit-map';
 import { validateCustomerClassFormFields } from '@/lib/fineract/customer-class-eligibility';
+import { clientStatusKind } from '@/lib/fineract/client-status';
 
 export const EDIT_CLIENT_FORM_ID = 'edit-client-form';
 
@@ -39,6 +43,7 @@ export function EditClientSheet({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [submitPending, startSubmitTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [initial, setInitial] = useState<FineractClientEditData | null>(null);
@@ -46,6 +51,8 @@ export function EditClientSheet({
   const [initialForm, setInitialForm] = useState<UpdateClientInput | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const isIncomplete = initial ? clientStatusKind(initial) === 'incomplete' : false;
 
   useEffect(() => {
     if (!open) {
@@ -136,7 +143,7 @@ export function EditClientSheet({
     startTransition(async () => {
       const result = await updateClientAction(clientId, form, initialForm);
       if (!toastCommandOutcome(result, {
-        completed: 'Customer updated.',
+        completed: isIncomplete ? 'Customer saved as incomplete.' : 'Customer updated.',
         pending: 'Customer update sent for approval.'
       })) {
         setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
@@ -150,16 +157,38 @@ export function EditClientSheet({
     });
   }
 
+  function handleSubmitForApproval() {
+    setSubmitError(null);
+    startSubmitTransition(async () => {
+      const result = await executeClientActionCommand(clientId, 'submit-for-approval', {});
+      if (
+        !toastCommandOutcome(result, {
+          completed: 'Customer submitted for approval.',
+          pending: 'Customer submission sent for approval.'
+        })
+      ) {
+        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        return;
+      }
+      onOpenChange(false);
+      router.refresh();
+    });
+  }
+
   return (
     <FormSheet
       open={open}
       onOpenChange={onOpenChange}
       title="Edit customer"
-      description="Update names, contact details, customer class, and dates."
+      description={
+        isIncomplete
+          ? 'Update incomplete KYC details, then save progress or submit for approval.'
+          : 'Update names, contact details, customer class, and dates.'
+      }
       formId={EDIT_CLIENT_FORM_ID}
-      submitLabel="Save changes"
+      submitLabel={isIncomplete ? 'Save progress' : 'Save changes'}
       submitLoading={pending}
-      submitDisabled={loading || !form || !hasChanges}
+      submitDisabled={loading || !form || !hasChanges || submitPending}
       className={EDIT_PANEL_CLASS}
       error={
         submitError ? (
@@ -173,7 +202,7 @@ export function EditClientSheet({
         <p className="text-sm text-muted-foreground">Loading customer details…</p>
       ) : null}
       {initial && form ? (
-        <form id={EDIT_CLIENT_FORM_ID} onSubmit={handleSubmit}>
+        <form id={EDIT_CLIENT_FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-4">
           <EditClientFormFields
             initial={initial}
             form={form}
@@ -181,6 +210,25 @@ export function EditClientSheet({
             onPatch={patch}
             onPatchNonPerson={patchNonPerson}
           />
+          {isIncomplete ? (
+            <Can permission={resolvePermission('clients.submitForApproval')}>
+              <div className="border-t border-border pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={pending || submitPending || hasChanges}
+                  onClick={handleSubmitForApproval}
+                >
+                  {submitPending ? 'Submitting…' : 'Submit for approval'}
+                </Button>
+                {hasChanges ? (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Save progress before submitting for approval.
+                  </p>
+                ) : null}
+              </div>
+            </Can>
+          ) : null}
         </form>
       ) : null}
     </FormSheet>

@@ -1,0 +1,24 @@
+{
+  "command": "clients.saveIncomplete",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.client.api.ClientsApiResource",
+    "org.apache.fineract.portfolio.client.domain.ClientStatus"
+  ],
+  "fields": {
+    "officeId": { "required": true },
+    "staffId": { "required": false },
+    "legalFormId": { "required": true, "values": [1, 2] },
+    "firstname": { "requiredWhen": "legalFormId=1" },
+    "lastname": { "requiredWhen": "legalFormId=1" },
+    "fullname": { "requiredWhen": "legalFormId=2" },
+    "submittedOnDate": { "required": true },
+    "mobileNo": { "required": false, "maxLength": 13, "format": "ugandaInternationalMobile" },
+    "customerClassId": { "required": false },
+    "dateOfBirth": { "required": false },
+    "familyMembers": { "required": false },
+    "clientIdentifiers": { "required": false },
+    "address": { "required": false },
+    "datatables": { "required": false }
+  },
+  "notes": "POST /clients?command=saveIncomplete — soft KYC persist as Incomplete (status 50)."
+}

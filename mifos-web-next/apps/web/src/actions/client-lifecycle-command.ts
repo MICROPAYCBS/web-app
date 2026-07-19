@@ -120,6 +120,10 @@ export async function executeClientActionCommand(
         );
         break;
       }
+      case 'submit-for-approval': {
+        response = await executeClientCommand(clientId, 'submitForApproval', {});
+        break;
+      }
       case 'close': {
         const parsed = parseOrError(clientCloseCommandSchema, raw);
         if (!parsed.success) {

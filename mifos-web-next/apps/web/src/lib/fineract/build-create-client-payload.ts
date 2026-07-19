@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CreateClientPayload } from '@mifos/validation';
+import type { CreateClientPayload, SaveIncompleteClientPayload } from '@mifos/validation';
 import { buildOtherBankAccountsForApi } from '@/lib/fineract/compliance-profile-payload';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 
@@ -21,8 +21,10 @@ function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
   return next;
 }
 
-/** Maps validated form data to Fineract POST /clients body. */
-export function buildCreateClientPayload(input: CreateClientPayload): Record<string, unknown> {
+/** Maps validated form data to Fineract POST /clients body (create or saveIncomplete). */
+export function buildCreateClientPayload(
+  input: CreateClientPayload | SaveIncompleteClientPayload
+): Record<string, unknown> {
   const dateFormat = input.dateFormat ?? FINERACT_DATE_FORMAT;
   const locale = input.locale ?? FINERACT_LOCALE;
 

@@ -140,6 +140,8 @@ export function ClientActionSheet({
     switch (sheetId) {
       case 'activate':
         return { activationDate: form.activationDate };
+      case 'submit-for-approval':
+        return {};
       case 'close':
         return {
           closureDate: form.closureDate,
@@ -349,6 +351,12 @@ export function ClientActionSheet({
             </>
           )}
         </>
+      ) : null}
+
+      {sheetId === 'submit-for-approval' ? (
+        <p className="text-sm text-muted-foreground">
+          Submit this incomplete customer for supervisor review. Status will change to Pending.
+        </p>
       ) : null}
 
       {sheetId === 'close' ? (

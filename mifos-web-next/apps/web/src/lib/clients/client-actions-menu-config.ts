@@ -160,6 +160,26 @@ export function buildClientActionsMenuItems(
     lifecycle.push(lifecycleSheet('transfer', 'Transfer customer', ArrowRightLeft));
   }
 
+  if (status === 'incomplete') {
+    lifecycle.push(
+      lifecycleSheet('submit-for-approval', 'Submit for approval', CheckCircle),
+      lifecycleSheet('withdraw', 'Withdraw', Undo2),
+      {
+        kind: 'command',
+        id: 'delete',
+        label: 'Delete',
+        icon: Trash2,
+        command: 'deleteClient',
+        permission: 'DELETE_CLIENT',
+        confirmTitle: 'Delete customer?',
+        confirmDescription:
+          'This permanently removes the customer. This cannot be undone.',
+        confirmLabel: 'Delete',
+        destructive: true
+      }
+    );
+  }
+
   if (status === 'pending') {
     lifecycle.push(
       lifecycleSheet('activate', 'Activate', CheckCircle),
@@ -246,6 +266,7 @@ export const CLIENT_ACTION_SHEET_TITLES: Record<ClientActionSheetId, string> = {
   close: 'Close customer',
   transfer: 'Transfer customer',
   activate: 'Activate customer',
+  'submit-for-approval': 'Submit for approval',
   withdraw: 'Withdraw customer',
   reject: 'Reject customer',
   reactivate: 'Reactivate customer',
@@ -263,6 +284,10 @@ export const CLIENT_ACTION_SHEET_OUTCOME_MESSAGES: Record<
   activate: {
     completed: 'Customer activated.',
     pending: 'Customer activation sent for approval.'
+  },
+  'submit-for-approval': {
+    completed: 'Customer submitted for approval.',
+    pending: 'Customer submission sent for approval.'
   },
   close: {
     completed: 'Customer closed.',

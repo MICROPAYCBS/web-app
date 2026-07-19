@@ -12,6 +12,7 @@ import type { ClientActionSheetId } from '@/lib/clients/client-action-types';
 /** Fineract task permissions for customer lifecycle commands (`action_ENTITY`). */
 export const CLIENT_LIFECYCLE_PERMISSION_KEYS = {
   activate: 'clients.activate',
+  'submit-for-approval': 'clients.submitForApproval',
   close: 'clients.close',
   withdraw: 'clients.withdraw',
   reject: 'clients.reject',

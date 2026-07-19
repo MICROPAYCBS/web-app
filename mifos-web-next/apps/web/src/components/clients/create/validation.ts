@@ -44,6 +44,47 @@ export function validateGeneralStep(draft: CreateClientDraft): StepErrors {
   return errors;
 }
 
+/** Soft gate for Save progress — office + submitted date only (staff optional). */
+export function validateSaveProgressGeneralStep(draft: CreateClientDraft): StepErrors {
+  const errors: StepErrors = {};
+  const g = draft.general;
+
+  if (!g.officeId) {
+    errors._form = 'Your account is not assigned to a branch. Contact an administrator.';
+  }
+  if (!g.submittedOnDate?.trim()) {
+    errors.submittedOnDate = 'Submitted on is required';
+  }
+
+  return errors;
+}
+
+/** Soft biodata for Save progress — legal form + names only. */
+export function validateSaveProgressBiodataStep(draft: CreateClientDraft): StepErrors {
+  const errors: StepErrors = {};
+  const g = draft.general;
+  const legalFormId = g.legalFormId ?? LEGAL_FORM_PERSON;
+
+  if (!g.legalFormId) {
+    errors.legalFormId = 'Profile type is required';
+  }
+
+  if (legalFormId === LEGAL_FORM_PERSON) {
+    if (!g.firstname?.trim()) {
+      errors.firstname = 'First name is required';
+    }
+    if (!g.lastname?.trim()) {
+      errors.lastname = 'Last name is required';
+    }
+  } else if (legalFormId === LEGAL_FORM_ENTITY) {
+    if (!g.fullname?.trim()) {
+      errors.fullname = 'Entity name is required';
+    }
+  }
+
+  return errors;
+}
+
 export function validateBiodataStep(
   draft: CreateClientDraft,
   template?: FineractClientTemplate
@@ -366,6 +407,21 @@ export function findFirstInvalidCreateClientStep(
     if (Object.keys(errors).length > 0) {
       return { stepId: step.id, errors };
     }
+  }
+  return null;
+}
+
+/** Soft validation for Save progress — biodata names + office/submitted date only. */
+export function findFirstInvalidSaveProgressStep(
+  draft: CreateClientDraft
+): { stepId: string; errors: StepErrors } | null {
+  const biodataErrors = validateSaveProgressBiodataStep(draft);
+  if (Object.keys(biodataErrors).length > 0) {
+    return { stepId: 'biodata', errors: biodataErrors };
+  }
+  const generalErrors = validateSaveProgressGeneralStep(draft);
+  if (Object.keys(generalErrors).length > 0) {
+    return { stepId: 'general', errors: generalErrors };
   }
   return null;
 }

@@ -16,7 +16,7 @@ import type {
   FineractClientTemplate,
   FineractCreateClientResponse
 } from '@mifos/api-client';
-import type { CreateClientPayload, UpdateClientPayload } from '@mifos/validation';
+import type { CreateClientPayload, SaveIncompleteClientPayload, UpdateClientPayload } from '@mifos/validation';
 import { buildCreateClientPayload } from '@/lib/fineract/build-create-client-payload';
 import { buildUpdateClientPayload } from '@/lib/fineract/build-update-client-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
@@ -62,6 +62,17 @@ export async function createClient(
   const fineract = await createFineractClient();
   const body = buildCreateClientPayload(input);
   return fineract.post<FineractCreateClientResponse>('/clients', body);
+}
+
+/** Persist Incomplete KYC via `POST /clients?command=saveIncomplete`. */
+export async function saveClientIncomplete(
+  input: CreateClientPayload | SaveIncompleteClientPayload
+): Promise<FineractCreateClientResponse> {
+  const fineract = await createFineractClient();
+  const body = buildCreateClientPayload(input);
+  return fineract.post<FineractCreateClientResponse>('/clients', body, {
+    command: 'saveIncomplete'
+  });
 }
 
 export async function updateClient(

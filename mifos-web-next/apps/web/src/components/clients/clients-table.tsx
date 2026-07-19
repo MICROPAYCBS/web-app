@@ -37,6 +37,9 @@ function statusVariant(code?: string): 'default' | 'secondary' | 'outline' | 'de
   if (!code) {
     return 'secondary';
   }
+  if (code.includes('incomplete')) {
+    return 'secondary';
+  }
   if (code.includes('active')) {
     return 'default';
   }

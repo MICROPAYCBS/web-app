@@ -13,13 +13,18 @@ import {
   formatZodIssuesForDisplay,
   formatZodIssuesMessage,
   LEGAL_FORM_PERSON,
-  type CreateClientPayload
+  type CreateClientPayload,
+  type SaveIncompleteClientPayload
 } from '@mifos/validation';
+import { resolvePermission, useCan } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { addClientDatatableRowAction } from '@/actions/client-datatable';
-import { createClientAction } from '@/actions/clients';
+import {
+  saveClientIncompleteAction,
+  submitClientForApprovalFromCreateAction
+} from '@/actions/clients';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -48,7 +53,11 @@ import {
   multiRowDatatablesForLegalForm,
   singleRowDatatablesForLegalForm
 } from './datatable-payloads';
-import { createClientIssueStepId, parseCreateClientPayload } from './build-create-client-raw';
+import {
+  createClientIssueStepId,
+  parseCreateClientPayload,
+  parseSaveIncompleteClientPayload
+} from './build-create-client-raw';
 import type { CreateClientDraft, CreateClientWizardProps } from './types';
 import {
   CREATE_CLIENT_ADDRESS_STEP,
@@ -58,6 +67,7 @@ import {
 } from './create-client-wizard-steps';
 import {
   findFirstInvalidCreateClientStep,
+  findFirstInvalidSaveProgressStep,
   validateStep,
   type CreateClientValidationContext,
   type StepErrors
@@ -122,6 +132,8 @@ export function CreateClientWizard({
   contactTypeOptions = []
 }: CreateClientWizardProps) {
   const router = useRouter();
+  const canSaveIncomplete = useCan(resolvePermission('clients.saveIncomplete'));
+  const canSubmitForApproval = useCan(resolvePermission('clients.submitForApproval'));
   const initialSubmittedOnDate = useInitialTransactionDate();
   const [template] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(() =>
@@ -133,6 +145,7 @@ export function CreateClientWizard({
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [pendingMode, setPendingMode] = useState<'save' | 'submit' | null>(null);
 
   const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
   const steps = useMemo(() => buildSteps(template, legalFormId), [template, legalFormId]);
@@ -284,7 +297,100 @@ export function CreateClientWizard({
     return parsed.data;
   }
 
-  function handleSubmit() {
+  function buildSaveProgressPayload(): SaveIncompleteClientPayload | null {
+    const parsed = parseSaveIncompleteClientPayload(
+      draft,
+      template,
+      legalFormId,
+      contactTypeOptions
+    );
+    if (!parsed.ok) {
+      const message = formatZodIssuesMessage(parsed.issues);
+      setSubmitError(message);
+      const firstIssue = parsed.issues[0];
+      if (firstIssue) {
+        const targetStep = createClientIssueStepId(firstIssue.path);
+        if (steps.some((step) => step.id === targetStep)) {
+          markValidationAttempted(targetStep);
+          setStepId(targetStep);
+        }
+      }
+      return null;
+    }
+    return parsed.data;
+  }
+
+  async function persistExtraMultiRowDatatables(clientId: string): Promise<boolean> {
+    for (const dt of multiRowDatatablesForLegalForm(template, legalFormId)) {
+      const rows = draft.multiRowDatatables[dt.registeredTableName] ?? [];
+      for (const row of rows.slice(1)) {
+        const rowResult = await addClientDatatableRowAction(
+          clientId,
+          dt.registeredTableName,
+          row
+        );
+        if (!rowResult.ok) {
+          setSubmitError(
+            formatActionErrorMessage(
+              `Customer was saved, but a row for ${formatDatatableTableTitle(dt.registeredTableName)} could not be saved: ${rowResult.message}`,
+              rowResult.fieldErrors
+            )
+          );
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function handleSaveProgress() {
+    setSubmitError(null);
+    const invalidStep = findFirstInvalidSaveProgressStep(draft);
+    if (invalidStep) {
+      markValidationAttempted(invalidStep.stepId);
+      const summary = Object.values(invalidStep.errors).join(' ');
+      setSubmitError(summary || 'Complete the highlighted fields before saving progress.');
+      setStepId(invalidStep.stepId);
+      return;
+    }
+    const payload = buildSaveProgressPayload();
+    if (!payload) {
+      return;
+    }
+    startTransition(async () => {
+      setPendingMode('save');
+      try {
+        const result = await saveClientIncompleteAction(payload);
+        if (
+          !toastCommandOutcome(result, {
+            completed: 'Customer saved as incomplete.',
+            pending: 'Customer save sent for approval.'
+          })
+        ) {
+          setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+          return;
+        }
+
+        if (result.clientId == null) {
+          router.push('/clients');
+          router.refresh();
+          return;
+        }
+
+        const clientId = String(result.clientId);
+        if (result.contactSeedWarning) {
+          toast.message(result.contactSeedWarning);
+        }
+        await persistExtraMultiRowDatatables(clientId);
+        router.push(`/clients/${clientId}`);
+        router.refresh();
+      } finally {
+        setPendingMode(null);
+      }
+    });
+  }
+
+  function handleSubmitForApproval() {
     setSubmitError(null);
     const invalidStep = findFirstInvalidCreateClientStep(
       steps,
@@ -295,7 +401,9 @@ export function CreateClientWizard({
     if (invalidStep) {
       markValidationAttempted(invalidStep.stepId);
       const summary = Object.values(invalidStep.errors).join(' ');
-      setSubmitError(summary || 'Complete the highlighted step before creating this customer.');
+      setSubmitError(
+        summary || 'Complete the highlighted step before submitting this customer for approval.'
+      );
       setStepId(invalidStep.stepId);
       return;
     }
@@ -304,49 +412,40 @@ export function CreateClientWizard({
       return;
     }
     startTransition(async () => {
-      const result = await createClientAction(payload);
-      if (!toastCommandOutcome(result, {
-        completed: 'Customer created.',
-        pending: 'Customer creation sent for approval.'
-      })) {
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
-        return;
-      }
-
-      if (result.clientId == null) {
-        router.push('/clients');
-        router.refresh();
-        return;
-      }
-
-      const clientId = String(result.clientId);
-      if (result.contactSeedWarning) {
-        toast.message(result.contactSeedWarning);
-      }
-      for (const dt of multiRowDatatablesForLegalForm(template, legalFormId)) {
-        const rows = draft.multiRowDatatables[dt.registeredTableName] ?? [];
-        for (const row of rows.slice(1)) {
-          const rowResult = await addClientDatatableRowAction(
-            clientId,
-            dt.registeredTableName,
-            row
-          );
-          if (!rowResult.ok) {
-            setSubmitError(
-              formatActionErrorMessage(
-                `Customer was created, but a row for ${formatDatatableTableTitle(dt.registeredTableName)} could not be saved: ${rowResult.message}`,
-                rowResult.fieldErrors
-              )
-            );
-            router.push(`/clients/${clientId}`);
+      setPendingMode('submit');
+      try {
+        const result = await submitClientForApprovalFromCreateAction(payload);
+        if (!result.ok) {
+          setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+          if (result.clientId != null) {
+            toast.error(result.message);
+            router.push(`/clients/${result.clientId}`);
             router.refresh();
-            return;
           }
+          return;
         }
-      }
 
-      router.push(`/clients/${clientId}`);
-      router.refresh();
+        toastCommandOutcome(result, {
+          completed: 'Customer submitted for approval.',
+          pending: 'Customer submission sent for approval.'
+        });
+
+        if (result.clientId == null) {
+          router.push('/clients');
+          router.refresh();
+          return;
+        }
+
+        const clientId = String(result.clientId);
+        if (result.contactSeedWarning) {
+          toast.message(result.contactSeedWarning);
+        }
+        await persistExtraMultiRowDatatables(clientId);
+        router.push(`/clients/${clientId}`);
+        router.refresh();
+      } finally {
+        setPendingMode(null);
+      }
     });
   }
 
@@ -389,6 +488,10 @@ export function CreateClientWizard({
   }, [steps, draft, template, validationContext, legalFormId]);
 
   const isPreview = resolvedStepId === 'preview';
+  const showSaveProgress = isPreview && canSaveIncomplete;
+  const showSubmitForApproval = isPreview && canSaveIncomplete && canSubmitForApproval;
+  const primaryIsSubmit = Boolean(showSubmitForApproval);
+  const primaryIsSaveOnly = Boolean(showSaveProgress && !showSubmitForApproval);
 
   return (
     <PlatformRouteLayout>
@@ -405,10 +508,29 @@ export function CreateClientWizard({
           showBack={currentIndex > 0}
           onBack={goBack}
           backDisabled={pending}
-          primaryLabel={isPreview ? 'Create customer' : 'Next'}
-          onPrimary={isPreview ? handleSubmit : tryNext}
-          primaryLoading={isPreview && pending}
-          primaryLoadingLabel="Creating…"
+          secondaryLabel={showSubmitForApproval ? 'Save progress' : undefined}
+          onSecondary={showSubmitForApproval ? handleSaveProgress : undefined}
+          secondaryLoading={pending && pendingMode === 'save'}
+          secondaryLoadingLabel="Saving…"
+          primaryLabel={
+            primaryIsSubmit
+              ? 'Submit for approval'
+              : primaryIsSaveOnly
+                ? 'Save progress'
+                : 'Next'
+          }
+          onPrimary={
+            primaryIsSubmit
+              ? handleSubmitForApproval
+              : primaryIsSaveOnly
+                ? handleSaveProgress
+                : tryNext
+          }
+          primaryLoading={
+            pending && (pendingMode === 'submit' || (primaryIsSaveOnly && pendingMode === 'save'))
+          }
+          primaryLoadingLabel={primaryIsSubmit ? 'Submitting…' : 'Saving…'}
+          primaryDisabled={isPreview && !showSaveProgress && !showSubmitForApproval}
         />
       }
     >

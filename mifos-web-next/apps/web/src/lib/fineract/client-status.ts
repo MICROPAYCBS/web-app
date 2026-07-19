@@ -9,6 +9,7 @@
 import type { FineractClientDetail } from '@mifos/api-client';
 
 export type ClientStatusKind =
+  | 'incomplete'
   | 'pending'
   | 'active'
   | 'closed'
@@ -28,6 +29,10 @@ export function clientStatusKind(
   const value = normalizeStatusText(client.status?.value);
   const code = normalizeStatusText(client.status?.code);
 
+  // Incomplete before active — code may contain "active" substrings in other statuses.
+  if (value === 'incomplete' || code.includes('incomplete')) {
+    return 'incomplete';
+  }
   if (value === 'pending' || code.includes('pending')) {
     return 'pending';
   }

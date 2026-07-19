@@ -20,6 +20,12 @@ export interface FormWizardFooterProps {
   onBack?: () => void;
   backLabel?: string;
   backDisabled?: boolean;
+  /** Optional secondary action (e.g. Save progress on preview). */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
+  secondaryDisabled?: boolean;
+  secondaryLoading?: boolean;
+  secondaryLoadingLabel?: string;
   primaryLabel: string;
   onPrimary: () => void;
   primaryDisabled?: boolean;
@@ -39,6 +45,11 @@ export function FormWizardFooter({
   onBack,
   backLabel = 'Previous',
   backDisabled = false,
+  secondaryLabel,
+  onSecondary,
+  secondaryDisabled = false,
+  secondaryLoading = false,
+  secondaryLoadingLabel,
   primaryLabel,
   onPrimary,
   primaryDisabled = false,
@@ -46,6 +57,8 @@ export function FormWizardFooter({
   primaryLoadingLabel,
   className
 }: FormWizardFooterProps) {
+  const busy = primaryLoading || secondaryLoading;
+
   return (
     <div
       className={cn(
@@ -67,15 +80,25 @@ export function FormWizardFooter({
             type="button"
             variant="outline"
             onClick={onBack}
-            disabled={backDisabled || primaryLoading}
+            disabled={backDisabled || busy}
           >
             {backLabel}
+          </Button>
+        ) : null}
+        {secondaryLabel && onSecondary ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onSecondary}
+            disabled={secondaryDisabled || busy}
+          >
+            {secondaryLoading ? (secondaryLoadingLabel ?? 'Please wait…') : secondaryLabel}
           </Button>
         ) : null}
         <Button
           type="button"
           onClick={onPrimary}
-          disabled={primaryDisabled || primaryLoading}
+          disabled={primaryDisabled || busy}
         >
           {primaryLoading ? (primaryLoadingLabel ?? 'Please wait…') : primaryLabel}
         </Button>

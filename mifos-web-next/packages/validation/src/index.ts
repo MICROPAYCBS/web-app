@@ -58,6 +58,11 @@ export {
   type FamilyMemberInput
 } from './clients/create-client.schema';
 export {
+  saveIncompleteClientSchema,
+  type SaveIncompleteClientInput,
+  type SaveIncompleteClientPayload
+} from './clients/save-incomplete-client.schema';
+export {
   applyClientAddressActiveChange,
   isClientAddressActive,
   mergeClientAddressEntry,
