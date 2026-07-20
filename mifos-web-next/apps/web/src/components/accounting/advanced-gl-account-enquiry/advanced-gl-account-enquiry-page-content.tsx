@@ -98,7 +98,7 @@ export function AdvancedGlAccountEnquiryPageContent({
     <>
       <ListPage
         title="GL account enquiry"
-        description="Search GL accounts by branch–department prefix, ledger number, branch, department, currency, and status."
+        description="Search GL accounts by prefix, ledger number, description, branch, department, currency, status, or zero balance."
         actions={
           hasSearch ? (
             <ListFilterTrigger
@@ -113,7 +113,7 @@ export function AdvancedGlAccountEnquiryPageContent({
           <EmptyState
             icon={Search}
             title="Specify at least one filter to begin"
-            description="Open search and enter a prefix (01-02), ledger number, branch, department, currency, or status."
+            description="Open search and enter a prefix (01-02), ledger number, description, branch, department, currency, status, or the Zero balance tag."
             action={
               <Button type="button" onClick={() => setFilterOpen(true)}>
                 Open search

@@ -25,9 +25,16 @@ export interface FineractGlAccountEnquiryRow {
 /** Query params for advanced GL account enquiry (all optional; at least one required). */
 export interface FineractGlAccountEnquiryParams {
   ledgerNumber?: string;
+  /**
+   * Case-insensitive contains match on GL account name or description.
+   * Empty/omitted = no text filter.
+   */
+  description?: string;
   officeId?: number;
   departmentId?: number;
   currencyCode?: string;
   /** `true` = disabled only; `false` = enabled only. */
   disabled?: boolean;
+  /** `true` = only rows whose enquiry balance is exactly zero. */
+  zeroBalance?: boolean;
 }

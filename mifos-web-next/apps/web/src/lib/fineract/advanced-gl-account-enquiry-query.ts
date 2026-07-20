@@ -21,6 +21,11 @@ export type AdvancedGlAccountEnquirySearchFilters = {
   glPrefix: string;
   /** Full or partial ledger / GL code. */
   ledgerNumber: string;
+  /**
+   * Free-text match against GL account name or description (contains, case-insensitive).
+   * Sent as `description` on the enquiry URL and API.
+   */
+  description: string;
   /** Branch office id (also filled from the first two prefix digits). */
   officeId: string;
   /** Department id (also filled from digits after the branch segment). */
@@ -32,6 +37,11 @@ export type AdvancedGlAccountEnquirySearchFilters = {
    * Empty means any status.
    */
   status: AdvancedGlAccountEnquiryStatus;
+  /**
+   * When true, only accounts whose enquiry balance is exactly zero.
+   * Sent as `zeroBalance=true` on the enquiry URL and API.
+   */
+  zeroBalance: boolean;
 };
 
 export type AdvancedGlAccountEnquiryListQuery = AdvancedGlAccountEnquirySearchFilters;
@@ -48,10 +58,12 @@ export const ADVANCED_GL_ACCOUNT_ENQUIRY_STATUS_OPTIONS: Array<{
 export const EMPTY_ADVANCED_GL_ACCOUNT_ENQUIRY_FILTERS: AdvancedGlAccountEnquirySearchFilters = {
   glPrefix: '',
   ledgerNumber: '',
+  description: '',
   officeId: '',
   departmentId: '',
   currencyCode: '',
-  status: ''
+  status: '',
+  zeroBalance: false
 };
 
 function readParam(
@@ -90,10 +102,12 @@ export function parseAdvancedGlAccountEnquiryListQuery(
   return {
     glPrefix: '',
     ledgerNumber: readParam(params, 'ledgerNumber') ?? '',
+    description: readParam(params, 'description') ?? '',
     officeId,
     departmentId,
     currencyCode: (readParam(params, 'currencyCode') ?? '').toUpperCase(),
-    status: parseStatus(readParam(params, 'status'))
+    status: parseStatus(readParam(params, 'status')),
+    zeroBalance: readParam(params, 'zeroBalance') === 'true'
   };
 }
 
@@ -106,10 +120,12 @@ export function countActiveAdvancedGlAccountEnquiryFilters(
 ): number {
   let count = 0;
   if (filters.ledgerNumber?.trim()) count += 1;
+  if (filters.description?.trim()) count += 1;
   if (filters.officeId?.trim()) count += 1;
   if (filters.departmentId?.trim()) count += 1;
   if (filters.currencyCode?.trim()) count += 1;
   if (filters.status === 'enabled' || filters.status === 'disabled') count += 1;
+  if (filters.zeroBalance) count += 1;
   return count;
 }
 
@@ -132,10 +148,12 @@ export function advancedGlAccountEnquiryFiltersSignature(
   return [
     filters.glPrefix ?? '',
     filters.ledgerNumber ?? '',
+    filters.description ?? '',
     filters.officeId ?? '',
     filters.departmentId ?? '',
     filters.currencyCode ?? '',
-    filters.status ?? ''
+    filters.status ?? '',
+    filters.zeroBalance ? '1' : '0'
   ].join('|');
 }
 
@@ -145,10 +163,12 @@ export function advancedGlAccountEnquiryFiltersFromQuery(
   return {
     glPrefix: query.glPrefix ?? '',
     ledgerNumber: query.ledgerNumber ?? '',
+    description: query.description ?? '',
     officeId: query.officeId ?? '',
     departmentId: query.departmentId ?? '',
     currencyCode: query.currencyCode ?? '',
-    status: query.status ?? ''
+    status: query.status ?? '',
+    zeroBalance: query.zeroBalance === true
   };
 }
 
@@ -158,6 +178,7 @@ export function buildAdvancedGlAccountEnquiryUrl(
 ): string {
   const params = new URLSearchParams();
   if (filters.ledgerNumber?.trim()) params.set('ledgerNumber', filters.ledgerNumber.trim());
+  if (filters.description?.trim()) params.set('description', filters.description.trim());
   if (filters.officeId?.trim()) params.set('officeId', filters.officeId.trim());
   if (filters.departmentId?.trim()) params.set('departmentId', filters.departmentId.trim());
   if (filters.currencyCode?.trim()) {
@@ -166,6 +187,7 @@ export function buildAdvancedGlAccountEnquiryUrl(
   if (filters.status === 'enabled' || filters.status === 'disabled') {
     params.set('status', filters.status);
   }
+  if (filters.zeroBalance) params.set('zeroBalance', 'true');
   const query = params.toString();
   return query
     ? `${ADVANCED_GL_ACCOUNT_ENQUIRY_PATH}?${query}`
@@ -184,6 +206,7 @@ export function buildAdvancedGlAccountEnquiryApiParams(
 
   const params: Record<string, string> = {};
   if (filters.ledgerNumber?.trim()) params.ledgerNumber = filters.ledgerNumber.trim();
+  if (filters.description?.trim()) params.description = filters.description.trim();
   if (officeId) params.officeId = officeId;
   if (departmentId) params.departmentId = departmentId;
   if (filters.currencyCode?.trim()) {
@@ -191,6 +214,7 @@ export function buildAdvancedGlAccountEnquiryApiParams(
   }
   if (filters.status === 'enabled') params.disabled = 'false';
   if (filters.status === 'disabled') params.disabled = 'true';
+  if (filters.zeroBalance) params.zeroBalance = 'true';
 
   if (Object.keys(params).length === 0) {
     return null;

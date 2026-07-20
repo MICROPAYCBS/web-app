@@ -17,21 +17,27 @@ import {
 import { prefillFiltersFromGlAccountEnquiryPrefix } from './parse-gl-account-enquiry-prefix';
 
 describe('parseAdvancedGlAccountEnquiryListQuery', () => {
-  it('parses status and currency; empty filters are inactive', () => {
+  it('parses status, description, zeroBalance, and currency; empty filters are inactive', () => {
     const empty = parseAdvancedGlAccountEnquiryListQuery({});
     assert.equal(advancedGlAccountEnquiryHasActiveFilters(empty), false);
     assert.equal(buildAdvancedGlAccountEnquiryApiParams(empty), null);
+    assert.equal(empty.zeroBalance, false);
+    assert.equal(empty.description, '');
 
     const full = parseAdvancedGlAccountEnquiryListQuery({
       ledgerNumber: '001',
+      description: 'cash',
       officeId: '2',
       departmentId: '3',
       currencyCode: 'ugx',
-      status: 'enabled'
+      status: 'enabled',
+      zeroBalance: 'true'
     });
     assert.equal(full.currencyCode, 'UGX');
     assert.equal(full.status, 'enabled');
     assert.equal(full.departmentId, '3');
+    assert.equal(full.description, 'cash');
+    assert.equal(full.zeroBalance, true);
     assert.equal(full.glPrefix, '');
     assert.equal(advancedGlAccountEnquiryHasActiveFilters(full), true);
   });
@@ -50,10 +56,12 @@ describe('buildAdvancedGlAccountEnquiryApiParams', () => {
     const prefilled = prefillFiltersFromGlAccountEnquiryPrefix({
       glPrefix: '01-02',
       ledgerNumber: '',
+      description: '',
       officeId: '',
       departmentId: '',
       currencyCode: '',
-      status: ''
+      status: '',
+      zeroBalance: false
     });
     assert.deepEqual(buildAdvancedGlAccountEnquiryApiParams(prefilled), {
       officeId: '1',
@@ -73,10 +81,12 @@ describe('buildAdvancedGlAccountEnquiryApiParams', () => {
       buildAdvancedGlAccountEnquiryApiParams({
         glPrefix: '01-02',
         ledgerNumber: '',
+        description: '',
         officeId: '',
         departmentId: '',
         currencyCode: '',
-        status: ''
+        status: '',
+        zeroBalance: false
       }),
       null
     );
@@ -87,28 +97,50 @@ describe('buildAdvancedGlAccountEnquiryApiParams', () => {
       buildAdvancedGlAccountEnquiryApiParams({
         glPrefix: '',
         ledgerNumber: '55',
+        description: '',
         officeId: '1',
         departmentId: '',
         currencyCode: 'USD',
-        status: 'disabled'
+        status: 'disabled',
+        zeroBalance: false
       }),
       { ledgerNumber: '55', officeId: '1', currencyCode: 'USD', disabled: 'true' }
     );
   });
 
-  it('builds URL without glPrefix', () => {
+  it('maps description and zeroBalance to API params', () => {
+    assert.deepEqual(
+      buildAdvancedGlAccountEnquiryApiParams({
+        glPrefix: '',
+        ledgerNumber: '',
+        description: '  Petty cash  ',
+        officeId: '',
+        departmentId: '',
+        currencyCode: '',
+        status: '',
+        zeroBalance: true
+      }),
+      { description: 'Petty cash', zeroBalance: 'true' }
+    );
+  });
+
+  it('builds URL without glPrefix and with description / zeroBalance', () => {
     const url = buildAdvancedGlAccountEnquiryUrl({
       glPrefix: '01-02',
       ledgerNumber: '',
+      description: 'cash',
       officeId: '1',
       departmentId: '2',
       currencyCode: '',
-      status: 'disabled'
+      status: 'disabled',
+      zeroBalance: true
     });
     assert.match(url, /\/accounting\/gl-account-enquiry\?/);
     assert.match(url, /officeId=1/);
     assert.match(url, /departmentId=2/);
     assert.match(url, /status=disabled/);
+    assert.match(url, /description=cash/);
+    assert.match(url, /zeroBalance=true/);
     assert.doesNotMatch(url, /glPrefix=/);
     assert.doesNotMatch(url, /disabled=/);
   });

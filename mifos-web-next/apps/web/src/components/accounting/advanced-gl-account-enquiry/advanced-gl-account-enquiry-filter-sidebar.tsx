@@ -10,9 +10,11 @@
 
 import type { FineractCurrencyOption, FineractOfficeOption } from '@mifos/api-client';
 import { useEffect, useState } from 'react';
+import { FormLabel } from '@/components/composites/form-label';
 import { ListFilterSheet } from '@/components/composites/list-filter-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { Toggle } from '@/components/ui/toggle';
 import { currencySelectOptions } from '@/lib/accounting/journal-entry-display';
 import {
   ADVANCED_GL_ACCOUNT_ENQUIRY_STATUS_OPTIONS,
@@ -21,6 +23,7 @@ import {
 } from '@/lib/fineract/advanced-gl-account-enquiry-query';
 import type { Department } from '@/lib/fineract/departments';
 import { prefillFiltersFromGlAccountEnquiryPrefix } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
+import { cn } from '@/lib/utils';
 
 export function AdvancedGlAccountEnquiryFilterFields({
   draft,
@@ -81,6 +84,15 @@ export function AdvancedGlAccountEnquiryFilterFields({
         value={draft.ledgerNumber}
         onChange={(value) => patchDraft({ ledgerNumber: value })}
         placeholder="GL code or partial code"
+        disabled={pending}
+      />
+      <TextField
+        label="Description"
+        optional
+        value={draft.description}
+        onChange={(value) => patchDraft({ description: value })}
+        placeholder="Name or description contains…"
+        hint="Matches accounts whose name or description contains this text."
         disabled={pending}
       />
       <SelectField
@@ -157,6 +169,27 @@ export function AdvancedGlAccountEnquiryFilterFields({
         placeholder="Any status"
         disabled={pending}
       />
+      <div className="space-y-2">
+        <FormLabel optional>Tags</FormLabel>
+        <div className="flex flex-wrap gap-2">
+          <Toggle
+            variant="outline"
+            size="sm"
+            pressed={draft.zeroBalance}
+            onPressedChange={(pressed) => patchDraft({ zeroBalance: pressed })}
+            disabled={pending}
+            aria-label="Zero balance"
+            className={cn(
+              'rounded-full px-3 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary/90'
+            )}
+          >
+            Zero balance
+          </Toggle>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Zero balance shows only accounts whose current enquiry balance is exactly zero.
+        </p>
+      </div>
     </div>
   );
 }
