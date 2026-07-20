@@ -51,14 +51,22 @@ export interface FineractLoanAccountSummary {
 export interface FineractLoanAccountTimeline {
   submittedOnDate?: number[] | string;
   submittedByUsername?: string;
+  submittedByFirstname?: string;
+  submittedByLastname?: string;
   approvedOnDate?: number[] | string;
   approvedByUsername?: string;
+  approvedByFirstname?: string;
+  approvedByLastname?: string;
   expectedDisbursementDate?: number[] | string;
   actualDisbursementDate?: number[] | string;
   disbursedByUsername?: string;
+  disbursedByFirstname?: string;
+  disbursedByLastname?: string;
   expectedMaturityDate?: number[] | string;
   closedOnDate?: number[] | string;
   closedByUsername?: string;
+  closedByFirstname?: string;
+  closedByLastname?: string;
 }
 
 export interface FineractLoanAccountTransaction {

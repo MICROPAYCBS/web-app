@@ -74,6 +74,7 @@ import {
   loanTransactionRowClassName,
   type LoanAccountSectionId
 } from '@/lib/fineract/loan-account-display';
+import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
 import { cn } from '@/lib/utils';
 
 function LoanAccountSummaryMatrix({
@@ -288,15 +289,27 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
       ];
 
   const timelineRows = [
-    { label: 'Submitted', date: timeline?.submittedOnDate, by: timeline?.submittedByUsername },
-    { label: 'Approved', date: timeline?.approvedOnDate, by: timeline?.approvedByUsername },
+    {
+      label: 'Submitted',
+      date: timeline?.submittedOnDate,
+      by: formatTimelineActorByRole(timeline, 'submitted')
+    },
+    {
+      label: 'Approved',
+      date: timeline?.approvedOnDate,
+      by: formatTimelineActorByRole(timeline, 'approved')
+    },
     {
       label: 'Disbursed',
       date: timeline?.actualDisbursementDate,
-      by: timeline?.disbursedByUsername
+      by: formatTimelineActorByRole(timeline, 'disbursed')
     },
     { label: 'Expected maturity', date: timeline?.expectedMaturityDate },
-    { label: 'Closed', date: timeline?.closedOnDate, by: timeline?.closedByUsername }
+    {
+      label: 'Closed',
+      date: timeline?.closedOnDate,
+      by: formatTimelineActorByRole(timeline, 'closed')
+    }
   ].filter((row) => row.date);
 
   return (

@@ -12,6 +12,7 @@ import type { ClientDepositAccountKind, FineractSavingsAccountDetail } from '@mi
 import {
   DetailBackLink,
   DetailField,
+  DetailFieldGrid,
   DetailHeader,
   DetailPage,
   DetailSection
@@ -21,12 +22,17 @@ import {
   type AccountOfficerPermissions
 } from '@/components/clients/accounts/actions/account-officer-actions';
 import { AccountOfficerMeta } from '@/components/clients/accounts/account-officer-meta';
+import { AccountExternalIdMeta } from '@/components/clients/accounts/account-external-id-meta';
+import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
 import { clientGeneralPath } from '@/lib/fineract/client-action-paths';
 import {
   clientAccountListPath,
   type ClientAccountProductKind
 } from '@/lib/fineract/client-account-links';
-import { savingsAccountProductName } from '@/lib/fineract/savings-account-display';
+import {
+  formatSavingsAccountDate,
+  savingsAccountProductName
+} from '@/lib/fineract/savings-account-display';
 
 const KIND_LABELS: Record<ClientDepositAccountKind, string> = {
   savings: 'Savings account',
@@ -58,6 +64,29 @@ export function DepositAccountDetailView({
   permissions: AccountOfficerPermissions;
 }) {
   const listKind = LIST_KIND[kind];
+  const timeline = account.timeline;
+  const timelineRows = [
+    {
+      label: 'Submitted',
+      date: timeline?.submittedOnDate,
+      by: formatTimelineActorByRole(timeline, 'submitted')
+    },
+    {
+      label: 'Approved',
+      date: timeline?.approvedOnDate,
+      by: formatTimelineActorByRole(timeline, 'approved')
+    },
+    {
+      label: 'Activated',
+      date: timeline?.activatedOnDate,
+      by: formatTimelineActorByRole(timeline, 'activated')
+    },
+    {
+      label: 'Closed',
+      date: timeline?.closedOnDate,
+      by: formatTimelineActorByRole(timeline, 'closed')
+    }
+  ].filter((row) => row.date);
 
   return (
     <DetailPage
@@ -82,6 +111,7 @@ export function DepositAccountDetailView({
               <p>
                 {KIND_LABELS[kind]} · {account.accountNo}
               </p>
+              <AccountExternalIdMeta externalId={account.externalId} />
               <AccountOfficerMeta label="Field officer" name={account.fieldOfficerName} />
             </div>
           }
@@ -97,17 +127,38 @@ export function DepositAccountDetailView({
         />
       }
     >
-      <DetailSection title="Summary">
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <DetailField label="Account number">{account.accountNo}</DetailField>
-          <DetailField label="Status">{account.status.value}</DetailField>
-          <DetailField label="Field officer">{account.fieldOfficerName ?? '—'}</DetailField>
-          <DetailField label="Currency">{account.currency.code}</DetailField>
-        </dl>
-        <p className="mt-4 text-sm text-muted-foreground">
-          Additional account details and transactions will be added in a future update.
-        </p>
-      </DetailSection>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DetailSection title="Summary">
+          <DetailFieldGrid>
+            <DetailField label="Account number">{account.accountNo}</DetailField>
+            <DetailField label="External ID">{account.externalId?.trim() || '—'}</DetailField>
+            <DetailField label="Status">{account.status.value}</DetailField>
+            <DetailField label="Field officer">{account.fieldOfficerName ?? '—'}</DetailField>
+            <DetailField label="Currency">{account.currency.code}</DetailField>
+          </DetailFieldGrid>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Additional account details and transactions will be added in a future update.
+          </p>
+        </DetailSection>
+
+        <DetailSection title="Timeline">
+          {timelineRows.length ? (
+            <ul className="space-y-4">
+              {timelineRows.map((row) => (
+                <li key={row.label} className="flex flex-col gap-0.5 text-sm">
+                  <span className="font-medium">{row.label}</span>
+                  <span className="text-muted-foreground">
+                    {formatSavingsAccountDate(row.date)}
+                    {row.by ? ` · ${row.by}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">No timeline events recorded.</p>
+          )}
+        </DetailSection>
+      </div>
     </DetailPage>
   );
 }

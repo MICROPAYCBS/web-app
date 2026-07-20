@@ -99,6 +99,10 @@ function normalizeSummary(raw: unknown): FineractSavingsAccountSummary | undefin
   };
 }
 
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
 function normalizeTimeline(raw: unknown): FineractSavingsAccountTimeline | undefined {
   if (!raw || typeof raw !== 'object') {
     return undefined;
@@ -106,18 +110,29 @@ function normalizeTimeline(raw: unknown): FineractSavingsAccountTimeline | undef
   const row = raw as Record<string, unknown>;
   return {
     submittedOnDate: row.submittedOnDate as FineractSavingsAccountTimeline['submittedOnDate'],
-    submittedByUsername: typeof row.submittedByUsername === 'string' ? row.submittedByUsername : undefined,
-    submittedByFirstname:
-      typeof row.submittedByFirstname === 'string' ? row.submittedByFirstname : undefined,
-    submittedByLastname:
-      typeof row.submittedByLastname === 'string' ? row.submittedByLastname : undefined,
+    submittedByUsername: readOptionalString(row.submittedByUsername),
+    submittedByFirstname: readOptionalString(row.submittedByFirstname),
+    submittedByLastname: readOptionalString(row.submittedByLastname),
     approvedOnDate: row.approvedOnDate as FineractSavingsAccountTimeline['approvedOnDate'],
-    approvedByUsername: typeof row.approvedByUsername === 'string' ? row.approvedByUsername : undefined,
+    approvedByUsername: readOptionalString(row.approvedByUsername),
+    approvedByFirstname: readOptionalString(row.approvedByFirstname),
+    approvedByLastname: readOptionalString(row.approvedByLastname),
     activatedOnDate: row.activatedOnDate as FineractSavingsAccountTimeline['activatedOnDate'],
-    activatedByUsername:
-      typeof row.activatedByUsername === 'string' ? row.activatedByUsername : undefined,
+    activatedByUsername: readOptionalString(row.activatedByUsername),
+    activatedByFirstname: readOptionalString(row.activatedByFirstname),
+    activatedByLastname: readOptionalString(row.activatedByLastname),
     closedOnDate: row.closedOnDate as FineractSavingsAccountTimeline['closedOnDate'],
-    closedByUsername: typeof row.closedByUsername === 'string' ? row.closedByUsername : undefined
+    closedByUsername: readOptionalString(row.closedByUsername),
+    closedByFirstname: readOptionalString(row.closedByFirstname),
+    closedByLastname: readOptionalString(row.closedByLastname),
+    rejectedOnDate: row.rejectedOnDate as FineractSavingsAccountTimeline['rejectedOnDate'],
+    rejectedByUsername: readOptionalString(row.rejectedByUsername),
+    rejectedByFirstname: readOptionalString(row.rejectedByFirstname),
+    rejectedByLastname: readOptionalString(row.rejectedByLastname),
+    withdrawnOnDate: row.withdrawnOnDate as FineractSavingsAccountTimeline['withdrawnOnDate'],
+    withdrawnByUsername: readOptionalString(row.withdrawnByUsername),
+    withdrawnByFirstname: readOptionalString(row.withdrawnByFirstname),
+    withdrawnByLastname: readOptionalString(row.withdrawnByLastname)
   };
 }
 

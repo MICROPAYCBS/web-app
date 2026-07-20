@@ -24,6 +24,7 @@ import {
 import { AccountDetailActionsBar } from '@/components/clients/accounts/actions/account-detail-actions-bar';
 import { AccountOfficerActions } from '@/components/clients/accounts/actions/account-officer-actions';
 import { AccountOfficerMeta } from '@/components/clients/accounts/account-officer-meta';
+import { AccountExternalIdMeta } from '@/components/clients/accounts/account-external-id-meta';
 import { SavingsAccountDetailPanel } from '@/components/clients/savings/savings-account-detail-panel';
 import { SavingsAccountDetailSidebar } from '@/components/clients/savings/savings-account-detail-sidebar';
 import {
@@ -157,6 +158,7 @@ export function SavingsAccountDetailView({
             meta={
               <div className="space-y-1">
                 <p className="tabular-nums">Account no. {account.accountNo}</p>
+                <AccountExternalIdMeta externalId={account.externalId} />
                 <AccountOfficerMeta label="Field officer" name={account.fieldOfficerName} />
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">

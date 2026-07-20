@@ -19,6 +19,7 @@ import {
 import { AccountDetailActionsBar } from '@/components/clients/accounts/actions/account-detail-actions-bar';
 import { AccountOfficerActions } from '@/components/clients/accounts/actions/account-officer-actions';
 import { AccountOfficerMeta } from '@/components/clients/accounts/account-officer-meta';
+import { AccountExternalIdMeta } from '@/components/clients/accounts/account-external-id-meta';
 import { LoanAccountDetailPanel } from '@/components/clients/loan-account/loan-account-detail-panel';
 import { LoanAccountPendingCheckerBanner } from '@/components/clients/loan-account/loan-account-pending-checker-banner';
 import { LoanAccountDetailSidebar } from '@/components/clients/loan-account/loan-account-detail-sidebar';
@@ -173,6 +174,7 @@ export function LoanAccountDetailView({
             meta={
               <div className="space-y-1">
                 <p className="tabular-nums">Account no. {account.accountNo}</p>
+                <AccountExternalIdMeta externalId={account.externalId} />
                 <AccountOfficerMeta
                   label={LOAN_OFFICER_CONFIG.officerLabel}
                   name={account.loanOfficerName}

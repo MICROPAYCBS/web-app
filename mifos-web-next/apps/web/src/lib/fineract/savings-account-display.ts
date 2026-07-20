@@ -13,6 +13,7 @@ import type {
 } from '@mifos/api-client';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
+import { formatTimelineActor } from '@/lib/fineract/account-timeline-display';
 
 export const SAVINGS_ACCOUNT_SECTIONS = [
   { id: 'summary', label: 'Summary' },
@@ -295,13 +296,9 @@ export function savingsAccountActionVisibility(
 }
 
 export function savingsAccountTimelineName(timeline: FineractSavingsAccountDetail['timeline']) {
-  if (!timeline) {
-    return undefined;
-  }
-  const first = timeline.submittedByFirstname?.trim();
-  const last = timeline.submittedByLastname?.trim();
-  if (first || last) {
-    return [first, last].filter(Boolean).join(' ');
-  }
-  return timeline.submittedByUsername;
+  return formatTimelineActor({
+    firstname: timeline?.submittedByFirstname,
+    lastname: timeline?.submittedByLastname,
+    username: timeline?.submittedByUsername
+  });
 }

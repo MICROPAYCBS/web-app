@@ -47,11 +47,11 @@ import {
   isSavingsTransactionDebit,
   savingsAccountCurrencyCode,
   savingsAccountProductName,
-  savingsAccountTimelineName,
   savingsTransactionDate,
   savingsTransactionRowClassName,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
+import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
 import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
 import { cn } from '@/lib/utils';
 
@@ -94,22 +94,22 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
     {
       label: 'Submitted',
       date: timeline?.submittedOnDate,
-      by: savingsAccountTimelineName(timeline) ?? timeline?.submittedByUsername
+      by: formatTimelineActorByRole(timeline, 'submitted')
     },
     {
       label: 'Approved',
       date: timeline?.approvedOnDate,
-      by: timeline?.approvedByUsername
+      by: formatTimelineActorByRole(timeline, 'approved')
     },
     {
       label: 'Activated',
       date: timeline?.activatedOnDate,
-      by: timeline?.activatedByUsername
+      by: formatTimelineActorByRole(timeline, 'activated')
     },
     {
       label: 'Closed',
       date: timeline?.closedOnDate,
-      by: timeline?.closedByUsername
+      by: formatTimelineActorByRole(timeline, 'closed')
     }
   ].filter((row) => row.date);
 

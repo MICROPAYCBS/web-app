@@ -141,6 +141,10 @@ function normalizeSummary(raw: unknown): FineractLoanAccountSummary | undefined 
   };
 }
 
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
 function normalizeTimeline(raw: unknown): FineractLoanAccountTimeline | undefined {
   if (!raw || typeof raw !== 'object') {
     return undefined;
@@ -148,18 +152,23 @@ function normalizeTimeline(raw: unknown): FineractLoanAccountTimeline | undefine
   const row = raw as Record<string, unknown>;
   return {
     submittedOnDate: normalizeDateField(row.submittedOnDate),
-    submittedByUsername:
-      typeof row.submittedByUsername === 'string' ? row.submittedByUsername : undefined,
+    submittedByUsername: readOptionalString(row.submittedByUsername),
+    submittedByFirstname: readOptionalString(row.submittedByFirstname),
+    submittedByLastname: readOptionalString(row.submittedByLastname),
     approvedOnDate: normalizeDateField(row.approvedOnDate),
-    approvedByUsername:
-      typeof row.approvedByUsername === 'string' ? row.approvedByUsername : undefined,
+    approvedByUsername: readOptionalString(row.approvedByUsername),
+    approvedByFirstname: readOptionalString(row.approvedByFirstname),
+    approvedByLastname: readOptionalString(row.approvedByLastname),
     expectedDisbursementDate: normalizeDateField(row.expectedDisbursementDate),
     actualDisbursementDate: normalizeDateField(row.actualDisbursementDate),
-    disbursedByUsername:
-      typeof row.disbursedByUsername === 'string' ? row.disbursedByUsername : undefined,
+    disbursedByUsername: readOptionalString(row.disbursedByUsername),
+    disbursedByFirstname: readOptionalString(row.disbursedByFirstname),
+    disbursedByLastname: readOptionalString(row.disbursedByLastname),
     expectedMaturityDate: normalizeDateField(row.expectedMaturityDate),
     closedOnDate: normalizeDateField(row.closedOnDate),
-    closedByUsername: typeof row.closedByUsername === 'string' ? row.closedByUsername : undefined
+    closedByUsername: readOptionalString(row.closedByUsername),
+    closedByFirstname: readOptionalString(row.closedByFirstname),
+    closedByLastname: readOptionalString(row.closedByLastname)
   };
 }
 

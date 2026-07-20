@@ -30,10 +30,24 @@ export interface FineractSavingsAccountTimeline {
   submittedByLastname?: string;
   approvedOnDate?: number[] | string;
   approvedByUsername?: string;
+  approvedByFirstname?: string;
+  approvedByLastname?: string;
   activatedOnDate?: number[] | string;
   activatedByUsername?: string;
+  activatedByFirstname?: string;
+  activatedByLastname?: string;
   closedOnDate?: number[] | string;
   closedByUsername?: string;
+  closedByFirstname?: string;
+  closedByLastname?: string;
+  rejectedOnDate?: number[] | string;
+  rejectedByUsername?: string;
+  rejectedByFirstname?: string;
+  rejectedByLastname?: string;
+  withdrawnOnDate?: number[] | string;
+  withdrawnByUsername?: string;
+  withdrawnByFirstname?: string;
+  withdrawnByLastname?: string;
 }
 
 export interface FineractSavingsAccountSubStatus {
