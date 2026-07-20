@@ -17,6 +17,8 @@ export type JournalEntrySearchFilters = {
   officeId?: string;
   glAccountId?: string;
   departmentId?: string;
+  /** ISO currency code (e.g. UGX). Defaults to the first organisation-selected currency. */
+  currencyCode?: string;
   manualEntriesOnly?: string;
   /** Current user id, or {@link JOURNAL_ENTRIES_CREATED_BY_ALL}. Defaults to the signed-in user. */
   createdByUserId?: string;
@@ -76,6 +78,8 @@ export function parseJournalEntryListQuery(
   options?: {
     defaultTransactionDate?: string;
     defaultCreatedByUserId?: string;
+    /** First organisation-selected currency code. */
+    defaultCurrencyCode?: string;
   }
 ): JournalEntryListQuery {
   const defaultDate = resolveDefaultFilterDate(options?.defaultTransactionDate);
@@ -85,6 +89,9 @@ export function parseJournalEntryListQuery(
     Number(readParam(params, 'limit') ?? String(JOURNAL_ENTRIES_DEFAULT_LIMIT)) ||
       JOURNAL_ENTRIES_DEFAULT_LIMIT
   );
+  const currencyCode =
+    (readParam(params, 'currencyCode') ?? options?.defaultCurrencyCode?.trim() ?? '').toUpperCase() ||
+    undefined;
 
   return {
     offset: pageIndex * limit,
@@ -94,6 +101,7 @@ export function parseJournalEntryListQuery(
     officeId: readParam(params, 'officeId'),
     glAccountId: readParam(params, 'glAccountId'),
     departmentId: readParam(params, 'departmentId'),
+    currencyCode,
     manualEntriesOnly: readParam(params, 'manualEntriesOnly'),
     createdByUserId: resolveCreatedByUserId(params, options?.defaultCreatedByUserId),
     transactionId: readParam(params, 'transactionId'),
@@ -127,6 +135,7 @@ export function journalEntryFiltersFromQuery(
     officeId: query.officeId,
     glAccountId: query.glAccountId,
     departmentId: query.departmentId,
+    currencyCode: query.currencyCode,
     manualEntriesOnly: query.manualEntriesOnly,
     createdByUserId: query.createdByUserId,
     transactionId: query.transactionId,
@@ -160,6 +169,9 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
   if (query.departmentId) {
     params.departmentId = query.departmentId;
   }
+  if (query.currencyCode?.trim()) {
+    params.currencyCode = query.currencyCode.trim().toUpperCase();
+  }
   if (query.manualEntriesOnly) {
     params.manualEntriesOnly = query.manualEntriesOnly;
   }
@@ -184,7 +196,7 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
 
 export function countActiveJournalEntryFilters(
   filters: JournalEntrySearchFilters,
-  options?: { currentUserId?: string }
+  options?: { currentUserId?: string; defaultCurrencyCode?: string }
 ): number {
   let count = 0;
   if (filters.officeId) {
@@ -194,6 +206,14 @@ export function countActiveJournalEntryFilters(
     count += 1;
   }
   if (filters.departmentId) {
+    count += 1;
+  }
+  // Default is the first organisation currency — only count when the user changed it.
+  if (
+    filters.currencyCode?.trim() &&
+    options?.defaultCurrencyCode?.trim() &&
+    filters.currencyCode.trim().toUpperCase() !== options.defaultCurrencyCode.trim().toUpperCase()
+  ) {
     count += 1;
   }
   if (filters.manualEntriesOnly) {
@@ -225,6 +245,7 @@ export function journalEntryFiltersSignature(filters: JournalEntrySearchFilters)
     officeId: filters.officeId ?? '',
     glAccountId: filters.glAccountId ?? '',
     departmentId: filters.departmentId ?? '',
+    currencyCode: filters.currencyCode ?? '',
     manualEntriesOnly: filters.manualEntriesOnly ?? '',
     createdByUserId: filters.createdByUserId ?? '',
     transactionId: filters.transactionId ?? '',

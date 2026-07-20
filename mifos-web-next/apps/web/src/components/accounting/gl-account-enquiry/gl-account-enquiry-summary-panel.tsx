@@ -72,8 +72,8 @@ export function GlAccountEnquirySummarySkeleton({
       ) : (
         <Skeleton className="h-4 w-72" />
       )}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, index) => (
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, index) => (
           <Card key={index} className="gap-0 py-0 shadow-sm">
             <CardHeader className="pb-2">
               <Skeleton className="h-4 w-24" />
@@ -136,7 +136,7 @@ export function GlAccountEnquirySummaryPanel({
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         <SummaryStat
           label="Opening balance"
           value={formatGlAccountEnquiryAmountOnly(summary.openingBalance)}
@@ -159,11 +159,6 @@ export function GlAccountEnquirySummaryPanel({
           label="Closing balance"
           value={formatGlAccountEnquiryAmountOnly(summary.closingBalance)}
           description={`${balanceNature} · ${balanceScope}`}
-        />
-        <SummaryStat
-          label="Entries"
-          value={summary.entryCount.toLocaleString()}
-          description="Matching filters"
         />
       </div>
     </div>

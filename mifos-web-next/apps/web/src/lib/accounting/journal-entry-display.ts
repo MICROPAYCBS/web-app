@@ -99,8 +99,8 @@ export function defaultCreateJournalEntryFormValues(
   };
 }
 
-export function currencySelectOptions(currencies: FineractCurrencyOption[]) {
-  return currencies
+export function currencySelectOptions(currencies: FineractCurrencyOption[] | undefined | null) {
+  return (currencies ?? [])
     .filter((currency): currency is FineractCurrencyOption & { code: string } =>
       Boolean(currency.code?.trim())
     )

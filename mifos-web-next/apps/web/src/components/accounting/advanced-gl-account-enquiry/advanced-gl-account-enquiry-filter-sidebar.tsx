@@ -72,7 +72,7 @@ export function AdvancedGlAccountEnquiryFilterFields({
         value={draft.glPrefix}
         onChange={handlePrefixChange}
         placeholder="e.g. 01-02"
-        hint="Branch–department code (XX-XX). A complete prefix prefills Branch and Department."
+        hint="First two digits select Branch; digits after that (or after -) select Department."
         disabled={pending}
       />
       <TextField
@@ -206,7 +206,7 @@ export function AdvancedGlAccountEnquiryFilterSidebar({
       open={open}
       onOpenChange={onOpenChange}
       title="GL account enquiry"
-      description="Prefix uses branch–department code (01-02). A complete prefix prefills Branch and Department."
+      description="Prefix: first two digits select Branch; further digits (or after -) select Department."
       applyLabel={pending ? 'Searching…' : 'Search'}
       onApply={handleApply}
       onClear={onClear}

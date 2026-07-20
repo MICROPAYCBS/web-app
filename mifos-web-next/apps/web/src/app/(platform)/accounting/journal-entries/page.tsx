@@ -14,6 +14,7 @@ import { parseJournalEntryListQuery } from '@/lib/fineract/journal-entry-query';
 import { listDepartments } from '@/lib/fineract/departments';
 import { listJournalEntryGlAccounts, listJournalEntries } from '@/lib/fineract/journal-entries';
 import { listOfficeOptions } from '@/lib/fineract/offices';
+import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function JournalEntriesPage({
@@ -27,11 +28,16 @@ export default async function JournalEntriesPage({
   }
 
   const params = await searchParams;
-  const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
+  const [defaultTransactionDate, currencies] = await Promise.all([
+    getDefaultTransactionDate().catch(() => undefined),
+    getOrganizationSelectedCurrencies()
+  ]);
+  const defaultCurrencyCode = currencies[0]?.code?.trim().toUpperCase() || undefined;
   const currentUserId = String(session.userId);
   const query = parseJournalEntryListQuery(params, {
     defaultTransactionDate,
-    defaultCreatedByUserId: currentUserId
+    defaultCreatedByUserId: currentUserId,
+    defaultCurrencyCode
   });
   const openTransactionRaw = params.openTransaction;
   const openTransactionId =
@@ -52,8 +58,10 @@ export default async function JournalEntriesPage({
       offices={offices}
       glAccounts={glAccounts}
       departments={departments}
+      currencies={currencies}
       openTransactionId={openTransactionId}
       currentUserId={currentUserId}
+      defaultCurrencyCode={defaultCurrencyCode}
     />
   );
 }

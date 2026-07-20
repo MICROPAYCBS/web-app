@@ -14,15 +14,16 @@ export type AdvancedGlAccountEnquiryStatus = 'enabled' | 'disabled' | '';
 
 export type AdvancedGlAccountEnquirySearchFilters = {
   /**
-   * Branch–department prefix (`XX-XX`, e.g. `01-02`).
-   * UI-only: prefills Branch / Department. Never sent on the enquiry URL or API.
+   * Branch–department prefix (e.g. `01` then `01-02`).
+   * UI-only: first two digits prefill Branch; further digits prefill Department.
+   * Never sent on the enquiry URL or API.
    */
   glPrefix: string;
   /** Full or partial ledger / GL code. */
   ledgerNumber: string;
-  /** Branch office id (also filled from a complete prefix). */
+  /** Branch office id (also filled from the first two prefix digits). */
   officeId: string;
-  /** Department id (also filled from prefix; incomplete prefix prefers department). */
+  /** Department id (also filled from digits after the branch segment). */
   departmentId: string;
   /** ISO currency code (e.g. UGX). */
   currencyCode: string;

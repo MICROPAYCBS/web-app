@@ -10,7 +10,8 @@
 
 import type {
   FineractCurrencyOption,
-  FineractGlAccountDetail,
+  FineractGlAccountEditData,
+  FineractGlAccountLedgerEntry,
   FineractOfficeOption
 } from '@mifos/api-client';
 import { Search } from 'lucide-react';
@@ -39,18 +40,17 @@ import {
   glAccountEnquiryFiltersFromQuery,
   glAccountEnquiryFiltersSignature,
   glAccountEnquiryHasRequiredFilters,
-  type GlAccountEnquiryLine,
   type GlAccountEnquiryListQuery,
   type GlAccountEnquirySearchFilters
 } from '@/lib/fineract/gl-account-enquiry-query';
 
-/** Period history filters + summary + lines for one GL account (enquiry details). */
+/** Period filters + ledger summary + movements for one GL account. */
 export function GlAccountEnquiryDetailsPanel({
   glAccountId,
-  lines,
+  entries,
   query,
   summary,
-  glAccount,
+  account,
   loadError,
   returnTo = null,
   offices,
@@ -58,10 +58,10 @@ export function GlAccountEnquiryDetailsPanel({
   currencies
 }: {
   glAccountId: number;
-  lines: GlAccountEnquiryLine[];
+  entries: FineractGlAccountLedgerEntry[];
   query: GlAccountEnquiryListQuery;
   summary: GlAccountEnquirySummary | null;
-  glAccount: FineractGlAccountDetail | null;
+  account: FineractGlAccountEditData | null;
   loadError?: string | null;
   returnTo?: string | null;
   offices: FineractOfficeOption[];
@@ -87,7 +87,7 @@ export function GlAccountEnquiryDetailsPanel({
   const activeFilterCount = countActiveGlAccountHistoryFilters(filters);
   const currencyCode = query.currencyCode;
   const periodLabel = formatGlAccountEnquiryPeriodLabel(query.fromDate, query.toDate);
-  const accountHeading = formatGlAccountEnquiryAccountHeading(glAccount);
+  const accountHeading = formatGlAccountEnquiryAccountHeading(account);
 
   useEffect(() => {
     setDraftFilters(filters);
@@ -133,7 +133,7 @@ export function GlAccountEnquiryDetailsPanel({
     });
   }
 
-  const { table, resetColumnVisibility } = useGlAccountEnquiryTable({ lines });
+  const { table, resetColumnVisibility } = useGlAccountEnquiryTable({ entries });
 
   return (
     <>
@@ -141,7 +141,7 @@ export function GlAccountEnquiryDetailsPanel({
         <EmptyState
           icon={Search}
           title="Choose branch and currency to begin"
-          description="Open filters, select a branch and currency, then search account history."
+          description="Open filters, select a branch and currency, then search account movements."
           action={
             <Button type="button" onClick={() => setFilterOpen(true)}>
               Open filters
@@ -149,13 +149,13 @@ export function GlAccountEnquiryDetailsPanel({
           }
         />
       ) : loadError ? (
-        <LoadErrorAlert title="Could not load account history" message={loadError} />
+        <LoadErrorAlert title="Could not load account ledger" message={loadError} />
       ) : (
         <div className="space-y-4" aria-busy={pending || undefined}>
           <GlAccountEnquirySummaryPanel
             summary={summary}
             currencyCode={currencyCode}
-            glAccountTypeId={glAccount?.type?.id}
+            glAccountTypeId={account?.type?.id}
             periodLabel={periodLabel}
             accountHeading={accountHeading}
             pending={pending}
@@ -197,6 +197,3 @@ export function GlAccountEnquiryDetailsPanel({
     </>
   );
 }
-
-/** @deprecated Prefer {@link GlAccountEnquiryDetailsPanel}. */
-export const GlAccountHistoryPanel = GlAccountEnquiryDetailsPanel;

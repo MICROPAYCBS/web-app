@@ -9,14 +9,15 @@
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { GlAccountEnquiryDetailsView } from '@/components/accounting/gl-account-enquiry/gl-account-enquiry-details-view';
+import { buildGlAccountEnquirySummaryFromLedger } from '@/lib/accounting/gl-account-enquiry-summary';
 import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
 import { listDepartments } from '@/lib/fineract/departments';
-import { fetchGlAccountEnquiry } from '@/lib/fineract/gl-account-enquiry';
 import {
   glAccountEnquiryHasRequiredFilters,
   parseGlAccountDetailReturnTo,
   parseGlAccountHistoryQuery
 } from '@/lib/fineract/gl-account-enquiry-query';
+import { retrieveGlAccountLedger } from '@/lib/fineract/gl-account-ledger';
 import { getGlAccount } from '@/lib/fineract/gl-accounts';
 import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
@@ -53,32 +54,39 @@ export default async function GlAccountEnquiryDetailsPage({
     notFound();
   }
 
-  const loadReport = glAccountEnquiryHasRequiredFilters(query);
+  const loadLedger = glAccountEnquiryHasRequiredFilters(query);
 
-  const [offices, currencies, departments, historyResult] = await Promise.all([
+  const [offices, currencies, departments, ledgerResult] = await Promise.all([
     listOfficeOptions(),
     getOrganizationSelectedCurrencies(),
     listDepartments().catch(() => []),
-    loadReport
+    loadLedger
       ? tryFineractLoad(
-          () => fetchGlAccountEnquiry(query),
-          'Could not load account history.'
+          () =>
+            retrieveGlAccountLedger(id, {
+              startDate: query.fromDate ?? '',
+              endDate: query.toDate ?? '',
+              officeId: query.officeId,
+              currencyCode: query.currencyCode,
+              departmentId: query.departmentId
+            }),
+          'Could not load account ledger.'
         )
-      : Promise.resolve({
-          ok: true as const,
-          data: { lines: [], summary: null, glAccount: null }
-        })
+      : Promise.resolve({ ok: true as const, data: null })
   ]);
+
+  const ledger = ledgerResult.ok ? ledgerResult.data : null;
+  const summary = ledger ? buildGlAccountEnquirySummaryFromLedger(ledger) : null;
+  const entries = ledger?.entries ?? [];
 
   return (
     <GlAccountEnquiryDetailsView
       account={account}
       returnTo={returnTo}
       query={query}
-      lines={historyResult.ok ? historyResult.data.lines : []}
-      summary={historyResult.ok ? historyResult.data.summary : null}
-      historyGlAccount={historyResult.ok ? historyResult.data.glAccount : null}
-      loadError={historyResult.ok ? null : historyResult.message}
+      entries={entries}
+      summary={summary}
+      loadError={ledgerResult.ok ? null : ledgerResult.message}
       offices={offices}
       departments={departments}
       currencies={currencies}

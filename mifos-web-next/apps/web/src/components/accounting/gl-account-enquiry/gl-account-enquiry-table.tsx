@@ -8,6 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractGlAccountLedgerEntry } from '@mifos/api-client';
 import {
   getCoreRowModel,
   useReactTable,
@@ -21,20 +22,23 @@ import { useEffect, useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { formatJournalEntryDate } from '@/lib/accounting/journal-entry-display';
 import { formatGlAccountEnquiryAmountOnly } from '@/lib/accounting/gl-account-enquiry-display';
-import type { GlAccountEnquiryLine } from '@/lib/fineract/gl-account-enquiry-query';
 import {
   readStoredColumnVisibility,
   writeStoredColumnVisibility
 } from '@/lib/data-table/column-visibility';
 
-const COLUMN_VISIBILITY_STORAGE_KEY = 'gl-account-enquiry-column-visibility-v2';
+const COLUMN_VISIBILITY_STORAGE_KEY = 'gl-account-enquiry-column-visibility-v3';
 
 export const GL_ACCOUNT_ENQUIRY_DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
   description: false,
   source: true
 };
 
-export function useGlAccountEnquiryTable({ lines }: { lines: GlAccountEnquiryLine[] }) {
+export function useGlAccountEnquiryTable({
+  entries
+}: {
+  entries: FineractGlAccountLedgerEntry[];
+}) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     GL_ACCOUNT_ENQUIRY_DEFAULT_COLUMN_VISIBILITY
   );
@@ -50,30 +54,24 @@ export function useGlAccountEnquiryTable({ lines }: { lines: GlAccountEnquiryLin
     writeStoredColumnVisibility(COLUMN_VISIBILITY_STORAGE_KEY, columnVisibility);
   }, [columnVisibility]);
 
-  const columns = useMemo<ColumnDef<GlAccountEnquiryLine>[]>(
+  const columns = useMemo<ColumnDef<FineractGlAccountLedgerEntry>[]>(
     () => [
+      {
+        accessorKey: 'entryDate',
+        header: 'Date',
+        enableHiding: false,
+        cell: ({ row }) => formatJournalEntryDate(row.original.entryDate)
+      },
       {
         accessorKey: 'transactionId',
         header: 'Transaction ID',
         enableHiding: false,
         cell: ({ row }) =>
-          row.original.transactionId && row.original.transactionId !== '—' ? (
+          row.original.transactionId ? (
             <JournalEntryTransactionLink transactionId={row.original.transactionId} />
           ) : (
             '—'
           )
-      },
-      {
-        accessorKey: 'entryDate',
-        header: 'Transaction date',
-        enableHiding: false,
-        cell: ({ row }) => formatJournalEntryDate(row.original.entryDate)
-      },
-      {
-        id: 'source',
-        accessorKey: 'source',
-        header: 'Source',
-        cell: ({ row }) => row.original.source
       },
       {
         id: 'description',
@@ -82,35 +80,37 @@ export function useGlAccountEnquiryTable({ lines }: { lines: GlAccountEnquiryLin
         cell: ({ row }) => row.original.description?.trim() || '—'
       },
       {
+        id: 'source',
+        accessorKey: 'source',
+        header: 'Source',
+        cell: ({ row }) => row.original.source
+      },
+      {
         id: 'debit',
         header: 'Debit',
         enableHiding: false,
         cell: ({ row }) =>
-          row.original.debitAmount > 0
-            ? formatGlAccountEnquiryAmountOnly(row.original.debitAmount)
-            : '—'
+          row.original.debit > 0 ? formatGlAccountEnquiryAmountOnly(row.original.debit) : '—'
       },
       {
         id: 'credit',
         header: 'Credit',
         enableHiding: false,
         cell: ({ row }) =>
-          row.original.creditAmount > 0
-            ? formatGlAccountEnquiryAmountOnly(row.original.creditAmount)
-            : '—'
+          row.original.credit > 0 ? formatGlAccountEnquiryAmountOnly(row.original.credit) : '—'
       },
       {
         id: 'runningBalance',
-        header: 'Balance',
+        header: 'Running balance',
         enableHiding: false,
-        cell: ({ row }) => formatGlAccountEnquiryAmountOnly(row.original.cumulativeSum)
+        cell: ({ row }) => formatGlAccountEnquiryAmountOnly(row.original.runningBalance)
       }
     ],
     []
   );
 
   const table = useReactTable({
-    data: lines,
+    data: entries,
     columns,
     state: { columnVisibility },
     onColumnVisibilityChange: setColumnVisibility,
@@ -129,7 +129,7 @@ export function GlAccountEnquiryTableView({
   pending = false,
   toolbar
 }: {
-  table: Table<GlAccountEnquiryLine>;
+  table: Table<FineractGlAccountLedgerEntry>;
   pending?: boolean;
   toolbar?: ReactNode;
 }) {
@@ -143,7 +143,7 @@ export function GlAccountEnquiryTableView({
         stickyHeader={false}
         isLoading={pending}
         emptyMessage="No journal entries found"
-        emptyDescription="Try adjusting your account, branch, currency, or date range."
+        emptyDescription="Try adjusting your branch, currency, department, or date range."
       />
     </div>
   );

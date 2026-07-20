@@ -23,8 +23,9 @@ import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
-import { buildGlAccountEnquiryDetailsUrl } from '@/lib/fineract/gl-account-enquiry-query';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
+import { buildGlAccountEnquiryDetailsUrl } from '@/lib/fineract/gl-account-enquiry-query';
+import { formatGlAccountEnquiryPrefixedCode } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
 import { cn } from '@/lib/utils';
 
 export function AdvancedGlAccountEnquiryTable({
@@ -57,7 +58,12 @@ export function AdvancedGlAccountEnquiryTable({
       {
         accessorKey: 'glCode',
         header: 'GL Code',
-        cell: ({ row }) => row.original.glCode
+        cell: ({ row }) =>
+          formatGlAccountEnquiryPrefixedCode({
+            officeId: row.original.officeId,
+            departmentId: row.original.departmentId,
+            glCode: row.original.glCode
+          })
       },
       {
         accessorKey: 'glAccountName',
@@ -96,14 +102,16 @@ export function AdvancedGlAccountEnquiryTable({
               {
                 officeId: String(row.original.officeId),
                 currencyCode: row.original.currencyCode,
-                ...(row.original.departmentId > 0
-                  ? { departmentId: String(row.original.departmentId) }
-                  : {})
+                departmentId: String(row.original.departmentId)
               },
               { returnTo }
             )}
             className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
-            aria-label={`View details for ${row.original.glCode}`}
+            aria-label={`View details for ${formatGlAccountEnquiryPrefixedCode({
+              officeId: row.original.officeId,
+              departmentId: row.original.departmentId,
+              glCode: row.original.glCode
+            })}`}
           >
             <FileText className="mr-1.5 size-4" />
             View details

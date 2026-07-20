@@ -8,14 +8,6 @@
 
 import { subMonths } from 'date-fns';
 import { parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
-import {
-  buildReportRunQueryParams,
-  formatReportRunDateValue
-} from '@/lib/fineract/report-run-display';
-import { REPORT_PARAMETER_SELECT_ALL_VALUE } from '@mifos/domain';
-
-/** Stretchy table report powered by m_gl_balance_snapshot + period journal lines. */
-export const GL_ACCOUNT_ENQUIRY_REPORT_NAME = 'GeneralLedgerReport Table';
 
 export const GL_ACCOUNT_ENQUIRY_LIST_PATH = '/accounting/gl-account-enquiry';
 
@@ -23,26 +15,18 @@ export type GlAccountEnquirySearchFilters = {
   glAccountId: string;
   /** Required ISO currency code (e.g. UGX). */
   currencyCode: string;
-  /** Required branch — report scopes by office hierarchy. */
+  /** Required branch — ledger scopes by office hierarchy. */
   officeId: string;
-  /** Optional department filter; empty means all departments. */
+  /**
+   * Optional department filter.
+   * Empty = all departments; `"0"` = unassigned only.
+   */
   departmentId?: string;
   fromDate?: string;
   toDate?: string;
 };
 
 export type GlAccountEnquiryListQuery = GlAccountEnquirySearchFilters;
-
-export type GlAccountEnquiryLine = {
-  entryDate: string;
-  debitAmount: number;
-  creditAmount: number;
-  description?: string;
-  openingBalance: number;
-  source: string;
-  transactionId: string;
-  cumulativeSum: number;
-};
 
 function readParam(
   params: Record<string, string | string[] | undefined>,
@@ -297,18 +281,4 @@ export function buildGlAccountSummaryUrl(
   return qs
     ? `/accounting/chart-of-accounts/${glAccountId}?${qs}`
     : `/accounting/chart-of-accounts/${glAccountId}`;
-}
-
-/** Query params for `GET /runreports/GeneralLedgerReport Table`. */
-export function buildGlAccountEnquiryReportParams(
-  query: GlAccountEnquiryListQuery
-): Record<string, string> {
-  return buildReportRunQueryParams({
-    officeId: query.officeId,
-    GLAccountNO: query.glAccountId,
-    currencyId: query.currencyCode.trim().toUpperCase(),
-    departmentId: query.departmentId?.trim() || REPORT_PARAMETER_SELECT_ALL_VALUE,
-    startDate: formatReportRunDateValue(query.fromDate ?? ''),
-    endDate: formatReportRunDateValue(query.toDate ?? '')
-  });
 }

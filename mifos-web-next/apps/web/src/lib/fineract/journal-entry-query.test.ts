@@ -49,6 +49,28 @@ describe('parseJournalEntryListQuery', () => {
     const params = buildJournalEntrySearchParams(query);
     assert.equal(params.createdByUserId, undefined);
   });
+
+  it('defaults currency to the first organisation-selected currency', () => {
+    const query = parseJournalEntryListQuery(
+      {},
+      {
+        defaultTransactionDate: '07 July 2026',
+        defaultCreatedByUserId: '42',
+        defaultCurrencyCode: 'UGX'
+      }
+    );
+    assert.equal(query.currencyCode, 'UGX');
+    const params = buildJournalEntrySearchParams(query);
+    assert.equal(params.currencyCode, 'UGX');
+  });
+
+  it('keeps explicit currencyCode from the URL', () => {
+    const query = parseJournalEntryListQuery(
+      { currencyCode: 'usd' },
+      { defaultCurrencyCode: 'UGX' }
+    );
+    assert.equal(query.currencyCode, 'USD');
+  });
 });
 
 describe('journalEntryOrderByForApi', () => {

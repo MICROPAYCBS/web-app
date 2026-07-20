@@ -10,6 +10,7 @@ import type { FineractGlAccountDetail } from '@mifos/api-client';
 import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
 import { glAccountBalanceLabel } from '@/lib/accounting/gl-account-enquiry-summary';
 import { formatGlAccountLabel } from '@/lib/accounting/gl-account-display';
+import { formatFineractDateTimeArray } from '@/lib/fineract/dates';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 
 export function formatGlAccountEnquiryMoney(
@@ -24,7 +25,9 @@ export function formatGlAccountEnquiryAmountOnly(amount: number | null | undefin
   return formatAccountMoney(amount ?? undefined);
 }
 
-export function formatGlAccountEnquiryAccountHeading(account: FineractGlAccountDetail | null) {
+export function formatGlAccountEnquiryAccountHeading(
+  account: Pick<FineractGlAccountDetail, 'name' | 'glCode' | 'type'> | null
+) {
   if (!account) {
     return 'GL account';
   }
@@ -51,4 +54,13 @@ export function formatGlAccountEnquiryPeriodLabel(fromDate?: string, toDate?: st
     return fromDate;
   }
   return [fromDate, toDate].filter(Boolean).join(' – ');
+}
+
+/** Header-friendly last-updated label from ledger `summary.lastUpdated`. */
+export function formatGlAccountEnquiryLastUpdated(value: string | null | undefined): string | null {
+  if (!value?.trim()) {
+    return null;
+  }
+  const formatted = formatFineractDateTimeArray(value);
+  return formatted ? `Last updated ${formatted}` : null;
 }

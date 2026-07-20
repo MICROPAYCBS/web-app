@@ -10,8 +10,8 @@
 
 import type {
   FineractCurrencyOption,
-  FineractGlAccountDetail,
   FineractGlAccountEditData,
+  FineractGlAccountLedgerEntry,
   FineractOfficeOption
 } from '@mifos/api-client';
 import { GlAccountEnquiryDetailsPanel } from '@/components/accounting/gl-account-enquiry/gl-account-enquiry-details-panel';
@@ -21,13 +21,14 @@ import {
   DetailPage
 } from '@/components/composites';
 import { formatGlAccountTypeLabel } from '@/lib/accounting/gl-account-display';
+import { formatGlAccountEnquiryLastUpdated } from '@/lib/accounting/gl-account-enquiry-display';
 import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
 import type { Department } from '@/lib/fineract/departments';
 import {
   GL_ACCOUNT_ENQUIRY_LIST_PATH,
-  type GlAccountEnquiryLine,
   type GlAccountEnquiryListQuery
 } from '@/lib/fineract/gl-account-enquiry-query';
+import { formatGlAccountEnquiryPrefixedCode } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
 
 function resolveOfficeName(
   offices: FineractOfficeOption[],
@@ -59,9 +60,18 @@ function buildEnquiryDetailsHeaderMeta(
   account: FineractGlAccountEditData,
   query: GlAccountEnquiryListQuery,
   offices: FineractOfficeOption[],
-  departments: Department[]
+  departments: Department[],
+  summary: GlAccountEnquirySummary | null
 ): string {
-  const parts = [account.glCode, formatGlAccountTypeLabel(account.type)];
+  const glCodeDisplay =
+    query.officeId?.trim()
+      ? formatGlAccountEnquiryPrefixedCode({
+          officeId: query.officeId,
+          departmentId: query.departmentId,
+          glCode: account.glCode
+        })
+      : account.glCode;
+  const parts = [glCodeDisplay, formatGlAccountTypeLabel(account.type)];
   const branchName = resolveOfficeName(offices, query.officeId);
   const departmentName = resolveDepartmentName(departments, query.departmentId);
   if (branchName) {
@@ -70,6 +80,10 @@ function buildEnquiryDetailsHeaderMeta(
   if (departmentName) {
     parts.push(departmentName);
   }
+  const lastUpdated = formatGlAccountEnquiryLastUpdated(summary?.lastUpdated);
+  if (lastUpdated) {
+    parts.push(lastUpdated);
+  }
   return parts.join(' · ');
 }
 
@@ -77,9 +91,8 @@ export function GlAccountEnquiryDetailsView({
   account,
   returnTo = null,
   query,
-  lines,
+  entries,
   summary,
-  historyGlAccount,
   loadError,
   offices,
   departments,
@@ -88,9 +101,8 @@ export function GlAccountEnquiryDetailsView({
   account: FineractGlAccountEditData;
   returnTo?: string | null;
   query: GlAccountEnquiryListQuery;
-  lines: GlAccountEnquiryLine[];
+  entries: FineractGlAccountLedgerEntry[];
   summary: GlAccountEnquirySummary | null;
-  historyGlAccount: FineractGlAccountDetail | null;
   loadError?: string | null;
   offices: FineractOfficeOption[];
   departments: Department[];
@@ -107,7 +119,7 @@ export function GlAccountEnquiryDetailsView({
             />
           }
           title={account.name}
-          meta={buildEnquiryDetailsHeaderMeta(account, query, offices, departments)}
+          meta={buildEnquiryDetailsHeaderMeta(account, query, offices, departments, summary)}
           status={
             account.disabled
               ? { label: 'Disabled', variant: 'secondary' }
@@ -118,10 +130,10 @@ export function GlAccountEnquiryDetailsView({
     >
       <GlAccountEnquiryDetailsPanel
         glAccountId={account.id}
-        lines={lines}
+        entries={entries}
         query={query}
         summary={summary}
-        glAccount={historyGlAccount ?? account}
+        account={account}
         loadError={loadError}
         returnTo={returnTo}
         offices={offices}

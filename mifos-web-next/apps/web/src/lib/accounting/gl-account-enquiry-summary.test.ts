@@ -8,60 +8,73 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { GL_ACCOUNT_TYPE_ASSET } from '@/lib/accounting/gl-account-display';
-import { buildGlAccountEnquirySummaryFromReport } from '@/lib/accounting/gl-account-enquiry-summary';
-import type { GlAccountEnquiryLine } from '@/lib/fineract/gl-account-enquiry-query';
+import type { FineractGlAccountLedgerResponse } from '@mifos/api-client';
+import { buildGlAccountEnquirySummaryFromLedger } from './gl-account-enquiry-summary';
 
-function line(overrides: Partial<GlAccountEnquiryLine> = {}): GlAccountEnquiryLine {
+function ledger(
+  overrides: Partial<FineractGlAccountLedgerResponse> = {}
+): FineractGlAccountLedgerResponse {
   return {
-    entryDate: '2026-07-04',
-    debitAmount: 0,
-    creditAmount: 0,
-    openingBalance: 5_000_000,
-    source: 'Manual',
-    transactionId: 'abc',
-    cumulativeSum: 5_000_000,
+    glAccountId: 15,
+    glCode: '100001',
+    glAccountName: 'Cash',
+    officeId: 1,
+    officeName: 'Head Office',
+    departmentId: 2,
+    departmentName: 'IT',
+    currencyCode: 'UGX',
+    startDate: '2026-07-01',
+    endDate: '2026-07-16',
+    summary: {
+      openingBalance: 1000,
+      totalDebit: 0,
+      totalCredit: 0,
+      closingBalance: 1000,
+      lastUpdated: null
+    },
+    entries: [],
     ...overrides
   };
 }
 
-describe('buildGlAccountEnquirySummaryFromReport', () => {
-  it('sums debits/credits and uses newest-row balances', () => {
-    const summary = buildGlAccountEnquirySummaryFromReport({
-      glAccountTypeId: GL_ACCOUNT_TYPE_ASSET,
-      lines: [
-        line({
-          transactionId: 'newer',
-          debitAmount: 30_000,
-          cumulativeSum: 3_000
-        }),
-        line({
-          transactionId: 'older',
-          creditAmount: 5_027_000,
-          cumulativeSum: -27_000
-        })
-      ]
-    });
-
-    assert.equal(summary.totalDebits, 30_000);
-    assert.equal(summary.totalCredits, 5_027_000);
-    assert.equal(summary.openingBalance, 5_000_000);
-    assert.equal(summary.closingBalance, 3_000);
-    assert.equal(summary.netMovement, 3_000 - 5_000_000);
-    assert.equal(summary.entryCount, 2);
-    assert.equal(summary.truncated, false);
-    assert.equal(summary.balanceScope, 'office');
-  });
-
-  it('returns empty totals when there are no lines', () => {
-    const summary = buildGlAccountEnquirySummaryFromReport({
-      glAccountTypeId: GL_ACCOUNT_TYPE_ASSET,
-      lines: []
-    });
-    assert.equal(summary.entryCount, 0);
+describe('buildGlAccountEnquirySummaryFromLedger', () => {
+  it('maps empty-period summary without inventing entries', () => {
+    const summary = buildGlAccountEnquirySummaryFromLedger(ledger());
+    assert.equal(summary.openingBalance, 1000);
+    assert.equal(summary.closingBalance, 1000);
     assert.equal(summary.totalDebits, 0);
     assert.equal(summary.totalCredits, 0);
-    assert.equal(summary.openingBalance, null);
-    assert.equal(summary.closingBalance, null);
+    assert.equal(summary.netMovement, 0);
+    assert.equal(summary.entryCount, 0);
+    assert.equal(summary.lastUpdated, null);
+  });
+
+  it('maps activity totals and lastUpdated from the API summary', () => {
+    const summary = buildGlAccountEnquirySummaryFromLedger(
+      ledger({
+        summary: {
+          openingBalance: 1000,
+          totalDebit: 100,
+          totalCredit: 0,
+          closingBalance: 1100,
+          lastUpdated: '2026-07-10T12:00:00Z'
+        },
+        entries: [
+          {
+            entryDate: '2026-07-10',
+            transactionId: 'abc',
+            source: 'Manual',
+            debit: 100,
+            credit: 0,
+            runningBalance: 1100
+          }
+        ]
+      })
+    );
+    assert.equal(summary.totalDebits, 100);
+    assert.equal(summary.closingBalance, 1100);
+    assert.equal(summary.netMovement, 100);
+    assert.equal(summary.entryCount, 1);
+    assert.equal(summary.lastUpdated, '2026-07-10T12:00:00Z');
   });
 });

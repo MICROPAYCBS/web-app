@@ -9,6 +9,7 @@
  */
 
 import type {
+  FineractCurrencyOption,
   FineractJournalEntriesPage,
   FineractJournalEntryGlAccountOption,
   FineractOfficeOption
@@ -28,7 +29,7 @@ import { useJournalEntryTransactionPanel } from '@/components/accounting/journal
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   buildJournalEntriesUrl,
   countActiveJournalEntryFilters,
@@ -50,16 +51,20 @@ export function JournalEntriesPageContent({
   offices,
   glAccounts,
   departments,
+  currencies = [],
   openTransactionId,
-  currentUserId
+  currentUserId,
+  defaultCurrencyCode
 }: {
   page: FineractJournalEntriesPage;
   query: JournalEntryListQuery;
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currencies?: FineractCurrencyOption[];
   openTransactionId?: string;
   currentUserId: string;
+  defaultCurrencyCode?: string;
 }) {
   const router = useRouter();
   const journalPanel = useJournalEntryTransactionPanel();
@@ -68,7 +73,10 @@ export function JournalEntriesPageContent({
   const filters = journalEntryFiltersFromQuery(query);
   const [draftFilters, setDraftFilters] = useState(filters);
   const appliedFiltersSignature = useMemo(() => journalEntryFiltersSignature(filters), [filters]);
-  const activeFilterCount = countActiveJournalEntryFilters(filters, { currentUserId });
+  const activeFilterCount = countActiveJournalEntryFilters(filters, {
+    currentUserId,
+    defaultCurrencyCode
+  });
 
   useEffect(() => {
     setDraftFilters(filters);
@@ -110,6 +118,7 @@ export function JournalEntriesPageContent({
       orderBy: '',
       sortOrder: '',
       createdByUserId: currentUserId,
+      currencyCode: defaultCurrencyCode,
       dateFormat: query.dateFormat,
       locale: query.locale
     });
@@ -199,6 +208,7 @@ export function JournalEntriesPageContent({
         offices={offices}
         glAccounts={glAccounts}
         departments={departments}
+        currencies={currencies}
         currentUserId={currentUserId}
         pending={pending}
         onApply={handleApplyFilters}

@@ -9,6 +9,7 @@
  */
 
 import type {
+  FineractCurrencyOption,
   FineractJournalEntryGlAccountOption,
   FineractOfficeOption
 } from '@mifos/api-client';
@@ -16,7 +17,10 @@ import { ListFilterSheet } from '@/components/composites/list-filter-sheet';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
-import { formatJournalEntryGlAccountLabel } from '@/lib/accounting/journal-entry-display';
+import {
+  currencySelectOptions,
+  formatJournalEntryGlAccountLabel
+} from '@/lib/accounting/journal-entry-display';
 import type { Department } from '@/lib/fineract/departments';
 import type { JournalEntrySearchFilters } from '@/lib/fineract/journal-entry-query';
 import { JOURNAL_ENTRIES_CREATED_BY_ALL } from '@/lib/fineract/journal-entry-query';
@@ -39,6 +43,7 @@ export function JournalEntriesFilterFields({
   offices,
   glAccounts,
   departments,
+  currencies = [],
   currentUserId,
   pending = false
 }: {
@@ -47,6 +52,7 @@ export function JournalEntriesFilterFields({
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currencies?: FineractCurrencyOption[];
   currentUserId: string;
   pending?: boolean;
 }) {
@@ -54,8 +60,18 @@ export function JournalEntriesFilterFields({
     onDraftChange({ ...draft, ...patch });
   }
 
+  const currencyOptions = currencySelectOptions(currencies);
+
   return (
     <div className="space-y-4">
+      <SelectField
+        label="Currency"
+        value={draft.currencyCode || currencyOptions[0]?.value || ''}
+        onValueChange={(value) => patchDraft({ currencyCode: value || undefined })}
+        options={currencyOptions}
+        placeholder="Select currency"
+        disabled={pending || currencyOptions.length === 0}
+      />
       <SelectField
         label="Created by"
         value={draft.createdByUserId || currentUserId}
@@ -164,6 +180,7 @@ export function JournalEntriesFilterSidebar({
   offices,
   glAccounts,
   departments,
+  currencies = [],
   currentUserId,
   pending = false,
   onApply,
@@ -176,6 +193,7 @@ export function JournalEntriesFilterSidebar({
   offices: FineractOfficeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
+  currencies?: FineractCurrencyOption[];
   currentUserId: string;
   pending?: boolean;
   onApply: (filters: JournalEntrySearchFilters) => void;
@@ -202,6 +220,7 @@ export function JournalEntriesFilterSidebar({
         offices={offices}
         glAccounts={glAccounts}
         departments={departments}
+        currencies={currencies}
         currentUserId={currentUserId}
         pending={pending}
       />

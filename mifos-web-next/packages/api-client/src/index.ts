@@ -353,6 +353,13 @@ export type {
 } from './accounting/gl-account-enquiry-types';
 
 export type {
+  FineractGlAccountLedgerEntry,
+  FineractGlAccountLedgerParams,
+  FineractGlAccountLedgerResponse,
+  FineractGlAccountLedgerSummary
+} from './accounting/gl-account-ledger-types';
+
+export type {
   FineractJournalEntriesPage,
   FineractJournalEntryCurrency,
   FineractJournalEntryGlAccountOption,
