@@ -16,14 +16,14 @@ import {
   type ColumnDef,
   type PaginationState
 } from '@tanstack/react-table';
-import { FileText, History } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
-import { buildGlAccountHistoryUrl, buildGlAccountSummaryUrl } from '@/lib/fineract/gl-account-enquiry-query';
+import { buildGlAccountEnquiryDetailsUrl } from '@/lib/fineract/gl-account-enquiry-query';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { cn } from '@/lib/utils';
 
@@ -48,6 +48,11 @@ export function AdvancedGlAccountEnquiryTable({
         accessorKey: 'officeName',
         header: 'Branch',
         cell: ({ row }) => row.original.officeName
+      },
+      {
+        id: 'departmentName',
+        header: 'Department',
+        cell: ({ row }) => row.original.departmentName?.trim() || ''
       },
       {
         accessorKey: 'glCode',
@@ -85,31 +90,24 @@ export function AdvancedGlAccountEnquiryTable({
         header: 'Actions',
         meta: { sticky: 'right' },
         cell: ({ row }) => (
-          <div className="flex flex-wrap justify-end gap-1">
-            <Link
-              href={buildGlAccountSummaryUrl(row.original.glAccountId, { returnTo })}
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
-              aria-label={`View summary for ${row.original.glCode}`}
-            >
-              <FileText className="mr-1.5 size-4" />
-              View summary
-            </Link>
-            <Link
-              href={buildGlAccountHistoryUrl(
-                row.original.glAccountId,
-                {
-                  officeId: String(row.original.officeId),
-                  currencyCode: row.original.currencyCode
-                },
-                { returnTo }
-              )}
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
-              aria-label={`View history for ${row.original.glCode}`}
-            >
-              <History className="mr-1.5 size-4" />
-              View history
-            </Link>
-          </div>
+          <Link
+            href={buildGlAccountEnquiryDetailsUrl(
+              row.original.glAccountId,
+              {
+                officeId: String(row.original.officeId),
+                currencyCode: row.original.currencyCode,
+                ...(row.original.departmentId > 0
+                  ? { departmentId: String(row.original.departmentId) }
+                  : {})
+              },
+              { returnTo }
+            )}
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+            aria-label={`View details for ${row.original.glCode}`}
+          >
+            <FileText className="mr-1.5 size-4" />
+            View details
+          </Link>
         )
       }
     ],

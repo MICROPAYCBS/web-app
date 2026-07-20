@@ -33,25 +33,32 @@ import {
   type AdvancedGlAccountEnquiryListQuery,
   type AdvancedGlAccountEnquirySearchFilters
 } from '@/lib/fineract/advanced-gl-account-enquiry-query';
+import type { Department } from '@/lib/fineract/departments';
+import { prefillFiltersFromGlAccountEnquiryPrefix } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
 
 export function AdvancedGlAccountEnquiryPageContent({
   query,
   rows,
   loadError,
   offices,
+  departments = [],
   currencies
 }: {
   query: AdvancedGlAccountEnquiryListQuery;
   rows: FineractGlAccountEnquiryRow[];
   loadError?: string | null;
   offices: FineractOfficeOption[];
+  departments?: Department[];
   currencies: FineractCurrencyOption[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const hasSearch = advancedGlAccountEnquiryHasActiveFilters(query);
   const [filterOpen, setFilterOpen] = useState(!hasSearch);
-  const filters = advancedGlAccountEnquiryFiltersFromQuery(query);
+  const filters = useMemo(
+    () => prefillFiltersFromGlAccountEnquiryPrefix(advancedGlAccountEnquiryFiltersFromQuery(query)),
+    [query]
+  );
   const [draftFilters, setDraftFilters] = useState(filters);
   const appliedFiltersSignature = useMemo(
     () => advancedGlAccountEnquiryFiltersSignature(filters),
@@ -61,22 +68,25 @@ export function AdvancedGlAccountEnquiryPageContent({
 
   useEffect(() => {
     setDraftFilters(filters);
-  }, [appliedFiltersSignature]);
+  }, [appliedFiltersSignature, filters]);
 
   const navigate = useCallback(
     (next: AdvancedGlAccountEnquiryListQuery) => {
       startTransition(() => {
-        router.push(buildAdvancedGlAccountEnquiryUrl(next));
+        router.push(
+          buildAdvancedGlAccountEnquiryUrl(prefillFiltersFromGlAccountEnquiryPrefix(next))
+        );
       });
     },
     [router]
   );
 
   function handleApplyFilters(nextFilters: AdvancedGlAccountEnquirySearchFilters) {
-    if (countActiveAdvancedGlAccountEnquiryFilters(nextFilters) === 0) {
+    const expanded = prefillFiltersFromGlAccountEnquiryPrefix(nextFilters);
+    if (countActiveAdvancedGlAccountEnquiryFilters(expanded) === 0) {
       return;
     }
-    navigate(nextFilters);
+    navigate(expanded);
     setFilterOpen(false);
   }
 
@@ -88,7 +98,7 @@ export function AdvancedGlAccountEnquiryPageContent({
     <>
       <ListPage
         title="GL account enquiry"
-        description="Search GL accounts by prefix, ledger number, branch, currency, and status."
+        description="Search GL accounts by branch–department prefix, ledger number, branch, department, currency, and status."
         actions={
           hasSearch ? (
             <ListFilterTrigger
@@ -103,7 +113,7 @@ export function AdvancedGlAccountEnquiryPageContent({
           <EmptyState
             icon={Search}
             title="Specify at least one filter to begin"
-            description="Open search and enter a GL prefix, ledger number, branch, currency, or status."
+            description="Open search and enter a prefix (01-02), ledger number, branch, department, currency, or status."
             action={
               <Button type="button" onClick={() => setFilterOpen(true)}>
                 Open search
@@ -127,6 +137,7 @@ export function AdvancedGlAccountEnquiryPageContent({
         draft={draftFilters}
         onDraftChange={setDraftFilters}
         offices={offices}
+        departments={departments}
         currencies={currencies}
         pending={pending}
         onApply={handleApplyFilters}

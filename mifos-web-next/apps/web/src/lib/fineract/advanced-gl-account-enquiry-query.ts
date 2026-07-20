@@ -6,17 +6,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { parseGlAccountEnquiryPrefix } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
+
 export const ADVANCED_GL_ACCOUNT_ENQUIRY_PATH = '/accounting/gl-account-enquiry';
 
 export type AdvancedGlAccountEnquiryStatus = 'enabled' | 'disabled' | '';
 
 export type AdvancedGlAccountEnquirySearchFilters = {
-  /** Leading digits of the GL code (e.g. account class / header prefix). */
+  /**
+   * Branch–department prefix (`XX-XX`, e.g. `01-02`).
+   * UI-only: prefills Branch / Department. Never sent on the enquiry URL or API.
+   */
   glPrefix: string;
   /** Full or partial ledger / GL code. */
   ledgerNumber: string;
-  /** Branch office id. */
+  /** Branch office id (also filled from a complete prefix). */
   officeId: string;
+  /** Department id (also filled from prefix; incomplete prefix prefers department). */
+  departmentId: string;
   /** ISO currency code (e.g. UGX). */
   currencyCode: string;
   /**
@@ -41,6 +48,7 @@ export const EMPTY_ADVANCED_GL_ACCOUNT_ENQUIRY_FILTERS: AdvancedGlAccountEnquiry
   glPrefix: '',
   ledgerNumber: '',
   officeId: '',
+  departmentId: '',
   currencyCode: '',
   status: ''
 };
@@ -63,26 +71,42 @@ function parseStatus(value: string | undefined): AdvancedGlAccountEnquiryStatus 
   return '';
 }
 
+/**
+ * Parse shareable enquiry URL params.
+ * Legacy `glPrefix` is expanded into office/department ids and never kept on the query.
+ */
 export function parseAdvancedGlAccountEnquiryListQuery(
   params: Record<string, string | string[] | undefined>
 ): AdvancedGlAccountEnquiryListQuery {
+  const fromLegacyPrefix = parseGlAccountEnquiryPrefix(readParam(params, 'glPrefix'));
+  const officeId =
+    readParam(params, 'officeId') ??
+    (fromLegacyPrefix.officeId != null ? String(fromLegacyPrefix.officeId) : '');
+  const departmentId =
+    readParam(params, 'departmentId') ??
+    (fromLegacyPrefix.departmentId != null ? String(fromLegacyPrefix.departmentId) : '');
+
   return {
-    glPrefix: readParam(params, 'glPrefix') ?? '',
+    glPrefix: '',
     ledgerNumber: readParam(params, 'ledgerNumber') ?? '',
-    officeId: readParam(params, 'officeId') ?? '',
+    officeId,
+    departmentId,
     currencyCode: (readParam(params, 'currencyCode') ?? '').toUpperCase(),
     status: parseStatus(readParam(params, 'status'))
   };
 }
 
-/** True when at least one optional filter is set. */
+/**
+ * Counts filters that become enquiry API params (not the UI-only prefix).
+ * Call after {@link prefillFiltersFromGlAccountEnquiryPrefix} when validating Search.
+ */
 export function countActiveAdvancedGlAccountEnquiryFilters(
   filters: AdvancedGlAccountEnquirySearchFilters
 ): number {
   let count = 0;
-  if (filters.glPrefix?.trim()) count += 1;
   if (filters.ledgerNumber?.trim()) count += 1;
   if (filters.officeId?.trim()) count += 1;
+  if (filters.departmentId?.trim()) count += 1;
   if (filters.currencyCode?.trim()) count += 1;
   if (filters.status === 'enabled' || filters.status === 'disabled') count += 1;
   return count;
@@ -108,6 +132,7 @@ export function advancedGlAccountEnquiryFiltersSignature(
     filters.glPrefix ?? '',
     filters.ledgerNumber ?? '',
     filters.officeId ?? '',
+    filters.departmentId ?? '',
     filters.currencyCode ?? '',
     filters.status ?? ''
   ].join('|');
@@ -120,18 +145,20 @@ export function advancedGlAccountEnquiryFiltersFromQuery(
     glPrefix: query.glPrefix ?? '',
     ledgerNumber: query.ledgerNumber ?? '',
     officeId: query.officeId ?? '',
+    departmentId: query.departmentId ?? '',
     currencyCode: query.currencyCode ?? '',
     status: query.status ?? ''
   };
 }
 
+/** Shareable enquiry URL — never includes UI-only `glPrefix`. */
 export function buildAdvancedGlAccountEnquiryUrl(
   filters: AdvancedGlAccountEnquirySearchFilters
 ): string {
   const params = new URLSearchParams();
-  if (filters.glPrefix?.trim()) params.set('glPrefix', filters.glPrefix.trim());
   if (filters.ledgerNumber?.trim()) params.set('ledgerNumber', filters.ledgerNumber.trim());
   if (filters.officeId?.trim()) params.set('officeId', filters.officeId.trim());
+  if (filters.departmentId?.trim()) params.set('departmentId', filters.departmentId.trim());
   if (filters.currencyCode?.trim()) {
     params.set('currencyCode', filters.currencyCode.trim().toUpperCase());
   }
@@ -146,22 +173,26 @@ export function buildAdvancedGlAccountEnquiryUrl(
 
 /**
  * Maps UI filters to `GET /glaccounts/enquiry` query params.
- * Returns `null` when no filter is set (API requires at least one).
+ * Never sends `glPrefix`. Returns `null` when no API filter is set.
  */
 export function buildAdvancedGlAccountEnquiryApiParams(
   filters: AdvancedGlAccountEnquirySearchFilters
 ): Record<string, string> | null {
-  if (!advancedGlAccountEnquiryHasActiveFilters(filters)) {
-    return null;
-  }
+  const officeId = filters.officeId?.trim() || '';
+  const departmentId = filters.departmentId?.trim() || '';
+
   const params: Record<string, string> = {};
-  if (filters.glPrefix?.trim()) params.glPrefix = filters.glPrefix.trim();
   if (filters.ledgerNumber?.trim()) params.ledgerNumber = filters.ledgerNumber.trim();
-  if (filters.officeId?.trim()) params.officeId = filters.officeId.trim();
+  if (officeId) params.officeId = officeId;
+  if (departmentId) params.departmentId = departmentId;
   if (filters.currencyCode?.trim()) {
     params.currencyCode = filters.currencyCode.trim().toUpperCase();
   }
   if (filters.status === 'enabled') params.disabled = 'false';
   if (filters.status === 'disabled') params.disabled = 'true';
+
+  if (Object.keys(params).length === 0) {
+    return null;
+  }
   return params;
 }

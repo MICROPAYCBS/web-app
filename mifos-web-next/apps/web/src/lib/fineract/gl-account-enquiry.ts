@@ -128,18 +128,31 @@ function normalizeEnquiryRow(raw: unknown): FineractGlAccountEnquiryRow | null {
     typeof row.currencyCode === 'string' ? row.currencyCode.trim().toUpperCase() : '';
   const officeName = typeof row.officeName === 'string' ? row.officeName.trim() : '';
   const balance = Number(row.balance);
+  const departmentIdRaw = row.departmentId;
+  const departmentId =
+    departmentIdRaw == null || departmentIdRaw === ''
+      ? 0
+      : Number(departmentIdRaw);
+  const departmentNameRaw = row.departmentName;
+  const departmentName =
+    typeof departmentNameRaw === 'string' && departmentNameRaw.trim()
+      ? departmentNameRaw.trim()
+      : null;
   if (
     !Number.isFinite(officeId) ||
     !Number.isFinite(glAccountId) ||
     !glCode ||
     !currencyCode ||
-    !Number.isFinite(balance)
+    !Number.isFinite(balance) ||
+    !Number.isFinite(departmentId)
   ) {
     return null;
   }
   return {
     officeId,
     officeName: officeName || String(officeId),
+    departmentId,
+    departmentName: departmentId === 0 ? null : departmentName,
     glAccountId,
     glCode,
     glAccountName: glAccountName || glCode,

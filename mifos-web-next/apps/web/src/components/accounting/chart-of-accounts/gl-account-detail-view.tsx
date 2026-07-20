@@ -8,24 +8,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
-  FineractCurrencyOption,
-  FineractGlAccountDetail,
-  FineractGlAccountEditData,
-  FineractOfficeOption
-} from '@mifos/api-client';
+import type { FineractGlAccountEditData } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import { Lock, LockOpen, Pencil, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
 import {
   deleteGlAccountAction,
   toggleGlAccountDisabledAction
 } from '@/actions/gl-accounts';
-import { GlAccountHistoryPanel } from '@/components/accounting/chart-of-accounts/gl-account-history-panel';
 import {
   DetailBackLink,
   DetailField,
@@ -42,49 +36,20 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   formatGlAccountLabel,
   formatGlAccountTypeLabel
 } from '@/lib/accounting/gl-account-display';
-import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
-import type { Department } from '@/lib/fineract/departments';
-import {
-  buildGlAccountDetailTabUrl,
-  type GlAccountDetailTab,
-  type GlAccountEnquiryLine,
-  type GlAccountEnquiryListQuery
-} from '@/lib/fineract/gl-account-enquiry-query';
 import { yesNoLabel } from '@/lib/fineract/user-display';
 import { cn } from '@/lib/utils';
 
 export function GlAccountDetailView({
   account,
-  tab,
-  returnTo = null,
-  historyQuery,
-  historyLines,
-  historySummary,
-  historyGlAccount,
-  historyLoadError,
-  offices,
-  departments,
-  currencies,
   canCreate,
   canUpdate,
   canDelete
 }: {
   account: FineractGlAccountEditData;
-  tab: GlAccountDetailTab;
-  returnTo?: string | null;
-  historyQuery: GlAccountEnquiryListQuery;
-  historyLines: GlAccountEnquiryLine[];
-  historySummary: GlAccountEnquirySummary | null;
-  historyGlAccount: FineractGlAccountDetail | null;
-  historyLoadError?: string | null;
-  offices: FineractOfficeOption[];
-  departments: Department[];
-  currencies: FineractCurrencyOption[];
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
@@ -93,36 +58,7 @@ export function GlAccountDetailView({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [activeTab, setActiveTab] = useState<GlAccountDetailTab>(tab);
   const isHeader = account.usage.value === 'HEADER';
-
-  useEffect(() => {
-    setActiveTab(tab);
-  }, [tab]);
-
-  const navigateTab = useCallback(
-    (nextTab: GlAccountDetailTab) => {
-      setActiveTab(nextTab);
-      startTransition(() => {
-        router.replace(
-          buildGlAccountDetailTabUrl(
-            account.id,
-            nextTab,
-            {
-              officeId: historyQuery.officeId,
-              currencyCode: historyQuery.currencyCode,
-              departmentId: historyQuery.departmentId,
-              fromDate: historyQuery.fromDate,
-              toDate: historyQuery.toDate
-            },
-            { returnTo }
-          ),
-          { scroll: false }
-        );
-      });
-    },
-    [account.id, historyQuery, returnTo, router]
-  );
 
   function handleToggleDisabled() {
     setActionError(null);
@@ -164,14 +100,10 @@ export function GlAccountDetailView({
         header={
           <DetailHeader
             backLink={
-              returnTo ? (
-                <DetailBackLink href={returnTo} label="Back to GL account enquiry" />
-              ) : (
-                <DetailBackLink
-                  href="/accounting/chart-of-accounts"
-                  label="Back to chart of accounts"
-                />
-              )
+              <DetailBackLink
+                href="/accounting/chart-of-accounts"
+                label="Back to chart of accounts"
+              />
             }
             title={account.name}
             meta={`${account.glCode} · ${formatGlAccountTypeLabel(account.type)}`}
@@ -238,70 +170,41 @@ export function GlAccountDetailView({
           />
         }
       >
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => navigateTab(value as GlAccountDetailTab)}
-        >
-          <TabsList>
-            <TabsTrigger value="summary" disabled={pending}>
-              Summary
-            </TabsTrigger>
-            <TabsTrigger value="history" disabled={pending}>
-              History
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-6">
+          <DetailFieldGrid columns={2}>
+            <DetailField label="Account type">{formatGlAccountTypeLabel(account.type)}</DetailField>
+            <DetailField label="GL code">{account.glCode}</DetailField>
+            <DetailField label="Usage">{account.usage.value}</DetailField>
+            <DetailField label="Manual entries allowed">
+              {yesNoLabel(account.manualEntriesAllowed)}
+            </DetailField>
+          </DetailFieldGrid>
 
-          <TabsContent value="summary" className="mt-6 space-y-6">
-            <DetailFieldGrid columns={2}>
-              <DetailField label="Account type">{formatGlAccountTypeLabel(account.type)}</DetailField>
-              <DetailField label="GL code">{account.glCode}</DetailField>
-              <DetailField label="Usage">{account.usage.value}</DetailField>
-              <DetailField label="Manual entries allowed">
-                {yesNoLabel(account.manualEntriesAllowed)}
-              </DetailField>
+          <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+            <DetailFieldGrid columns={1}>
+              {account.parent ? (
+                <DetailField label="Parent account">
+                  <Link
+                    href={`/accounting/chart-of-accounts/${account.parent.id}`}
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    {formatGlAccountLabel(account.parent)}
+                  </Link>
+                </DetailField>
+              ) : null}
+              {account.tagId?.name || account.tagId?.value ? (
+                <DetailField label="Tag">{account.tagId.name ?? account.tagId.value}</DetailField>
+              ) : null}
+              <DetailField label="Description">{account.description?.trim() || '—'}</DetailField>
             </DetailFieldGrid>
+          </div>
 
-            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-              <DetailFieldGrid columns={1}>
-                {account.parent ? (
-                  <DetailField label="Parent account">
-                    <Link
-                      href={`/accounting/chart-of-accounts/${account.parent.id}`}
-                      className="text-primary underline-offset-4 hover:underline"
-                    >
-                      {formatGlAccountLabel(account.parent)}
-                    </Link>
-                  </DetailField>
-                ) : null}
-                {account.tagId?.name || account.tagId?.value ? (
-                  <DetailField label="Tag">{account.tagId.name ?? account.tagId.value}</DetailField>
-                ) : null}
-                <DetailField label="Description">{account.description?.trim() || '—'}</DetailField>
-              </DetailFieldGrid>
-            </div>
-
-            {actionError ? (
-              <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {actionError}
-              </p>
-            ) : null}
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-6">
-            <GlAccountHistoryPanel
-              glAccountId={account.id}
-              lines={historyLines}
-              query={historyQuery}
-              summary={historySummary}
-              glAccount={historyGlAccount ?? account}
-              loadError={historyLoadError}
-              returnTo={returnTo}
-              offices={offices}
-              departments={departments}
-              currencies={currencies}
-            />
-          </TabsContent>
-        </Tabs>
+          {actionError ? (
+            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {actionError}
+            </p>
+          ) : null}
+        </div>
       </DetailPage>
 
       <Can permission="DELETE_GLACCOUNT">

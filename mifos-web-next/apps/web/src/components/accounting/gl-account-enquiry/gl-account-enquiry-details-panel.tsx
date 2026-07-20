@@ -34,7 +34,7 @@ import {
 import type { GlAccountEnquirySummary } from '@/lib/accounting/gl-account-enquiry-summary';
 import type { Department } from '@/lib/fineract/departments';
 import {
-  buildGlAccountHistoryUrl,
+  buildGlAccountEnquiryDetailsUrl,
   countActiveGlAccountHistoryFilters,
   glAccountEnquiryFiltersFromQuery,
   glAccountEnquiryFiltersSignature,
@@ -44,7 +44,8 @@ import {
   type GlAccountEnquirySearchFilters
 } from '@/lib/fineract/gl-account-enquiry-query';
 
-export function GlAccountHistoryPanel({
+/** Period history filters + summary + lines for one GL account (enquiry details). */
+export function GlAccountEnquiryDetailsPanel({
   glAccountId,
   lines,
   query,
@@ -96,7 +97,7 @@ export function GlAccountHistoryPanel({
     (next: GlAccountEnquirySearchFilters) => {
       startTransition(() => {
         router.push(
-          buildGlAccountHistoryUrl(
+          buildGlAccountEnquiryDetailsUrl(
             glAccountId,
             {
               officeId: next.officeId,
@@ -196,3 +197,6 @@ export function GlAccountHistoryPanel({
     </>
   );
 }
+
+/** @deprecated Prefer {@link GlAccountEnquiryDetailsPanel}. */
+export const GlAccountHistoryPanel = GlAccountEnquiryDetailsPanel;

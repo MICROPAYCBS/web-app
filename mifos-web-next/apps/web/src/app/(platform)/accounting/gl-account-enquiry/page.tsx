@@ -11,6 +11,7 @@ import { notFound, redirect } from 'next/navigation';
 import { AdvancedGlAccountEnquiryPageContent } from '@/components/accounting/advanced-gl-account-enquiry/advanced-gl-account-enquiry-page-content';
 import {
   advancedGlAccountEnquiryHasActiveFilters,
+  buildAdvancedGlAccountEnquiryUrl,
   parseAdvancedGlAccountEnquiryListQuery
 } from '@/lib/fineract/advanced-gl-account-enquiry-query';
 import { enquireGlAccounts } from '@/lib/fineract/gl-account-enquiry';
@@ -18,6 +19,7 @@ import {
   buildGlAccountEnquiryUrl,
   parseGlAccountEnquiryListQuery
 } from '@/lib/fineract/gl-account-enquiry-query';
+import { listDepartments } from '@/lib/fineract/departments';
 import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -43,17 +45,24 @@ export default async function GlAccountEnquiryPage({
 
   const params = await searchParams;
 
-  // Legacy stretchy-report enquiry bookmarks → account History tab.
+  // Legacy stretchy-report enquiry bookmarks → enquiry details page.
   if (readSingleParam(params, 'glAccountId')) {
     redirect(buildGlAccountEnquiryUrl(parseGlAccountEnquiryListQuery(params)));
   }
 
   const query = parseAdvancedGlAccountEnquiryListQuery(params);
+
+  // Legacy shareable URLs used `glPrefix`; rewrite to officeId/departmentId only.
+  if (readSingleParam(params, 'glPrefix')) {
+    redirect(buildAdvancedGlAccountEnquiryUrl(query));
+  }
+
   const hasSearch = advancedGlAccountEnquiryHasActiveFilters(query);
 
-  const [currencies, offices, enquiryResult] = await Promise.all([
+  const [currencies, offices, departments, enquiryResult] = await Promise.all([
     getOrganizationSelectedCurrencies(),
     listOfficeOptions(),
+    listDepartments().catch(() => []),
     hasSearch
       ? tryFineractLoad(
           () => enquireGlAccounts(query),
@@ -68,6 +77,7 @@ export default async function GlAccountEnquiryPage({
       rows={enquiryResult.ok ? enquiryResult.data : []}
       loadError={enquiryResult.ok ? null : enquiryResult.message}
       offices={offices}
+      departments={departments}
       currencies={currencies}
     />
   );

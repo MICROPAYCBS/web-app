@@ -14,6 +14,7 @@ import {
   buildAdvancedGlAccountEnquiryUrl,
   parseAdvancedGlAccountEnquiryListQuery
 } from './advanced-gl-account-enquiry-query';
+import { prefillFiltersFromGlAccountEnquiryPrefix } from './parse-gl-account-enquiry-prefix';
 
 describe('parseAdvancedGlAccountEnquiryListQuery', () => {
   it('parses status and currency; empty filters are inactive', () => {
@@ -22,36 +23,72 @@ describe('parseAdvancedGlAccountEnquiryListQuery', () => {
     assert.equal(buildAdvancedGlAccountEnquiryApiParams(empty), null);
 
     const full = parseAdvancedGlAccountEnquiryListQuery({
-      glPrefix: '100',
       ledgerNumber: '001',
       officeId: '2',
+      departmentId: '3',
       currencyCode: 'ugx',
       status: 'enabled'
     });
     assert.equal(full.currencyCode, 'UGX');
     assert.equal(full.status, 'enabled');
+    assert.equal(full.departmentId, '3');
+    assert.equal(full.glPrefix, '');
     assert.equal(advancedGlAccountEnquiryHasActiveFilters(full), true);
+  });
+
+  it('expands legacy glPrefix into office/department and drops glPrefix', () => {
+    const query = parseAdvancedGlAccountEnquiryListQuery({ glPrefix: '01-02' });
+    assert.equal(query.glPrefix, '');
+    assert.equal(query.officeId, '1');
+    assert.equal(query.departmentId, '2');
+    assert.equal(advancedGlAccountEnquiryHasActiveFilters(query), true);
   });
 });
 
 describe('buildAdvancedGlAccountEnquiryApiParams', () => {
-  it('maps UI status to disabled query param and omits unset filters', () => {
-    assert.deepEqual(
+  it('never sends glPrefix; uses officeId and departmentId only', () => {
+    const prefilled = prefillFiltersFromGlAccountEnquiryPrefix({
+      glPrefix: '01-02',
+      ledgerNumber: '',
+      officeId: '',
+      departmentId: '',
+      currencyCode: '',
+      status: ''
+    });
+    assert.deepEqual(buildAdvancedGlAccountEnquiryApiParams(prefilled), {
+      officeId: '1',
+      departmentId: '2'
+    });
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(
+        buildAdvancedGlAccountEnquiryApiParams(prefilled) ?? {},
+        'glPrefix'
+      ),
+      false
+    );
+  });
+
+  it('rejects prefix-only draft until branch/department are prefilled', () => {
+    assert.equal(
       buildAdvancedGlAccountEnquiryApiParams({
-        glPrefix: '100',
+        glPrefix: '01-02',
         ledgerNumber: '',
         officeId: '',
+        departmentId: '',
         currencyCode: '',
-        status: 'enabled'
+        status: ''
       }),
-      { glPrefix: '100', disabled: 'false' }
+      null
     );
+  });
 
+  it('maps UI status to disabled query param and omits unset filters', () => {
     assert.deepEqual(
       buildAdvancedGlAccountEnquiryApiParams({
         glPrefix: '',
         ledgerNumber: '55',
         officeId: '1',
+        departmentId: '',
         currencyCode: 'USD',
         status: 'disabled'
       }),
@@ -59,17 +96,20 @@ describe('buildAdvancedGlAccountEnquiryApiParams', () => {
     );
   });
 
-  it('builds URL with UI status (not API disabled) for shareable filters', () => {
+  it('builds URL without glPrefix', () => {
     const url = buildAdvancedGlAccountEnquiryUrl({
-      glPrefix: '1',
+      glPrefix: '01-02',
       ledgerNumber: '',
-      officeId: '',
+      officeId: '1',
+      departmentId: '2',
       currencyCode: '',
       status: 'disabled'
     });
     assert.match(url, /\/accounting\/gl-account-enquiry\?/);
-    assert.match(url, /glPrefix=1/);
+    assert.match(url, /officeId=1/);
+    assert.match(url, /departmentId=2/);
     assert.match(url, /status=disabled/);
+    assert.doesNotMatch(url, /glPrefix=/);
     assert.doesNotMatch(url, /disabled=/);
   });
 });

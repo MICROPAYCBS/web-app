@@ -6,7 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { toFineractDate } from '@/lib/fineract/dates';
+import { subMonths } from 'date-fns';
+import { parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
 import {
   buildReportRunQueryParams,
   formatReportRunDateValue
@@ -16,7 +17,7 @@ import { REPORT_PARAMETER_SELECT_ALL_VALUE } from '@mifos/domain';
 /** Stretchy table report powered by m_gl_balance_snapshot + period journal lines. */
 export const GL_ACCOUNT_ENQUIRY_REPORT_NAME = 'GeneralLedgerReport Table';
 
-export type GlAccountDetailTab = 'summary' | 'history';
+export const GL_ACCOUNT_ENQUIRY_LIST_PATH = '/accounting/gl-account-enquiry';
 
 export type GlAccountEnquirySearchFilters = {
   glAccountId: string;
@@ -61,10 +62,24 @@ function resolveDefaultFilterDate(defaultTransactionDate?: string) {
   return toFineractDate(new Date());
 }
 
-export function parseGlAccountDetailTab(
+/** Default enquiry-details range: one month ending on the business date. */
+function resolveDefaultEnquiryDateRange(defaultTransactionDate?: string): {
+  fromDate: string;
+  toDate: string;
+} {
+  const toDate = resolveDefaultFilterDate(defaultTransactionDate);
+  const toDateParsed = parseFineractDateString(toDate) ?? new Date();
+  return {
+    fromDate: toFineractDate(subMonths(toDateParsed, 1)),
+    toDate
+  };
+}
+
+/** True when a COA detail URL still uses the legacy History tab bookmark. */
+export function isLegacyGlAccountHistoryTab(
   params: Record<string, string | string[] | undefined>
-): GlAccountDetailTab {
-  return readParam(params, 'tab') === 'history' ? 'history' : 'summary';
+): boolean {
+  return readParam(params, 'tab') === 'history';
 }
 
 export function parseGlAccountEnquiryListQuery(
@@ -75,7 +90,9 @@ export function parseGlAccountEnquiryListQuery(
     defaultOfficeId?: string;
   }
 ): GlAccountEnquiryListQuery {
-  const defaultDate = resolveDefaultFilterDate(options?.defaultTransactionDate);
+  const { fromDate: defaultFromDate, toDate: defaultToDate } = resolveDefaultEnquiryDateRange(
+    options?.defaultTransactionDate
+  );
   const defaultCurrency = options?.defaultCurrencyCode?.trim().toUpperCase() ?? '';
   const defaultOffice = options?.defaultOfficeId?.trim() ?? '';
 
@@ -84,28 +101,31 @@ export function parseGlAccountEnquiryListQuery(
     currencyCode: (readParam(params, 'currencyCode') ?? defaultCurrency).toUpperCase(),
     officeId: readParam(params, 'officeId') ?? defaultOffice,
     departmentId: readParam(params, 'departmentId'),
-    fromDate: readParam(params, 'fromDate') ?? defaultDate,
-    toDate: readParam(params, 'toDate') ?? defaultDate
+    fromDate: readParam(params, 'fromDate') ?? defaultFromDate,
+    toDate: readParam(params, 'toDate') ?? defaultToDate
   };
 }
 
 /**
- * History tab on GL account detail — account comes from the path.
- * Branch/currency are not defaulted (empty = choose filters); dates default to business date.
+ * Enquiry details page — account comes from the path.
+ * Branch/currency are not defaulted (empty = choose filters);
+ * dates default to a one-month window ending on the business date.
  */
 export function parseGlAccountHistoryQuery(
   params: Record<string, string | string[] | undefined>,
   glAccountId: string | number,
   options?: { defaultTransactionDate?: string }
 ): GlAccountEnquiryListQuery {
-  const defaultDate = resolveDefaultFilterDate(options?.defaultTransactionDate);
+  const { fromDate: defaultFromDate, toDate: defaultToDate } = resolveDefaultEnquiryDateRange(
+    options?.defaultTransactionDate
+  );
   return {
     glAccountId: String(glAccountId),
     currencyCode: (readParam(params, 'currencyCode') ?? '').toUpperCase(),
     officeId: readParam(params, 'officeId') ?? '',
     departmentId: readParam(params, 'departmentId'),
-    fromDate: readParam(params, 'fromDate') ?? defaultDate,
-    toDate: readParam(params, 'toDate') ?? defaultDate
+    fromDate: readParam(params, 'fromDate') ?? defaultFromDate,
+    toDate: readParam(params, 'toDate') ?? defaultToDate
   };
 }
 
@@ -152,7 +172,7 @@ export function countActiveGlAccountEnquiryFilters(
   return count;
 }
 
-/** Active History filters excluding the locked GL account. */
+/** Active enquiry-details filters excluding the locked GL account. */
 export function countActiveGlAccountHistoryFilters(
   filters: GlAccountEnquirySearchFilters
 ): number {
@@ -176,17 +196,15 @@ export function glAccountEnquiryFiltersSignature(filters: GlAccountEnquirySearch
   });
 }
 
-/** Maps legacy enquiry URLs to the History tab on chart-of-accounts detail. */
+/** Maps legacy enquiry URLs (with glAccountId) to the enquiry details page. */
 export function buildGlAccountEnquiryUrl(query: GlAccountEnquiryListQuery): string {
   if (!glAccountEnquiryHasRequiredAccount(query)) {
-    return '/accounting/chart-of-accounts';
+    return GL_ACCOUNT_ENQUIRY_LIST_PATH;
   }
-  return buildGlAccountHistoryUrl(query.glAccountId, query);
+  return buildGlAccountEnquiryDetailsUrl(query.glAccountId, query);
 }
 
-const GL_ACCOUNT_ENQUIRY_RETURN_PREFIX = '/accounting/gl-account-enquiry';
-
-/** Only allow return links back to GL account enquiry (blocks open redirects). */
+/** Only allow return links back to GL account enquiry list (blocks open redirects). */
 export function parseGlAccountDetailReturnTo(
   params: Record<string, string | string[] | undefined>
 ): string | null {
@@ -194,7 +212,11 @@ export function parseGlAccountDetailReturnTo(
   if (!raw) {
     return null;
   }
-  if (!raw.startsWith(GL_ACCOUNT_ENQUIRY_RETURN_PREFIX)) {
+  if (!raw.startsWith(GL_ACCOUNT_ENQUIRY_LIST_PATH)) {
+    return null;
+  }
+  // Disallow nested detail paths as return targets (list only).
+  if (raw !== GL_ACCOUNT_ENQUIRY_LIST_PATH && !raw.startsWith(`${GL_ACCOUNT_ENQUIRY_LIST_PATH}?`)) {
     return null;
   }
   if (raw.includes('://') || raw.startsWith('//') || raw.includes('\\')) {
@@ -203,16 +225,20 @@ export function parseGlAccountDetailReturnTo(
   return raw;
 }
 
-export type GlAccountDetailNavOptions = {
+export type GlAccountEnquiryDetailsNavOptions = {
   returnTo?: string | null;
 };
+
+/** @deprecated Prefer {@link GlAccountEnquiryDetailsNavOptions}. */
+export type GlAccountDetailNavOptions = GlAccountEnquiryDetailsNavOptions;
 
 function withReturnToParam(params: URLSearchParams, returnTo?: string | null): void {
   if (!returnTo) {
     return;
   }
   if (
-    !returnTo.startsWith(GL_ACCOUNT_ENQUIRY_RETURN_PREFIX) ||
+    (returnTo !== GL_ACCOUNT_ENQUIRY_LIST_PATH &&
+      !returnTo.startsWith(`${GL_ACCOUNT_ENQUIRY_LIST_PATH}?`)) ||
     returnTo.includes('://') ||
     returnTo.startsWith('//')
   ) {
@@ -221,17 +247,19 @@ function withReturnToParam(params: URLSearchParams, returnTo?: string | null): v
   params.set('returnTo', returnTo);
 }
 
-/** History tab URL on chart-of-accounts detail. */
-export function buildGlAccountHistoryUrl(
+/**
+ * Period history / enquiry details for one GL account.
+ * Path: `/accounting/gl-account-enquiry/{id}`.
+ */
+export function buildGlAccountEnquiryDetailsUrl(
   glAccountId: string | number,
   filters: Pick<
     GlAccountEnquirySearchFilters,
     'officeId' | 'currencyCode' | 'departmentId' | 'fromDate' | 'toDate'
   >,
-  options?: GlAccountDetailNavOptions
+  options?: GlAccountEnquiryDetailsNavOptions
 ): string {
   const params = new URLSearchParams();
-  params.set('tab', 'history');
   if (filters.officeId?.trim()) params.set('officeId', filters.officeId.trim());
   if (filters.currencyCode?.trim()) {
     params.set('currencyCode', filters.currencyCode.trim().toUpperCase());
@@ -240,51 +268,30 @@ export function buildGlAccountHistoryUrl(
   if (filters.fromDate?.trim()) params.set('fromDate', filters.fromDate.trim());
   if (filters.toDate?.trim()) params.set('toDate', filters.toDate.trim());
   withReturnToParam(params, options?.returnTo);
-  return `/accounting/chart-of-accounts/${glAccountId}?${params.toString()}`;
-}
-
-export function buildGlAccountSummaryUrl(
-  glAccountId: string | number,
-  options?: GlAccountDetailNavOptions
-): string {
-  const params = new URLSearchParams();
-  withReturnToParam(params, options?.returnTo);
   const qs = params.toString();
   return qs
-    ? `/accounting/chart-of-accounts/${glAccountId}?${qs}`
-    : `/accounting/chart-of-accounts/${glAccountId}`;
+    ? `${GL_ACCOUNT_ENQUIRY_LIST_PATH}/${glAccountId}?${qs}`
+    : `${GL_ACCOUNT_ENQUIRY_LIST_PATH}/${glAccountId}`;
 }
 
-export function buildGlAccountDetailTabUrl(
+/** @deprecated Prefer {@link buildGlAccountEnquiryDetailsUrl}. */
+export function buildGlAccountHistoryUrl(
   glAccountId: string | number,
-  tab: GlAccountDetailTab,
-  filters?: Pick<
+  filters: Pick<
     GlAccountEnquirySearchFilters,
     'officeId' | 'currencyCode' | 'departmentId' | 'fromDate' | 'toDate'
   >,
-  options?: GlAccountDetailNavOptions
+  options?: GlAccountEnquiryDetailsNavOptions
 ): string {
-  if (tab === 'history') {
-    return buildGlAccountHistoryUrl(
-      glAccountId,
-      {
-        officeId: filters?.officeId ?? '',
-        currencyCode: filters?.currencyCode ?? '',
-        departmentId: filters?.departmentId,
-        fromDate: filters?.fromDate,
-        toDate: filters?.toDate
-      },
-      options
-    );
-  }
+  return buildGlAccountEnquiryDetailsUrl(glAccountId, filters, options);
+}
+
+/** Chart-of-accounts metadata detail URL. */
+export function buildGlAccountSummaryUrl(
+  glAccountId: string | number,
+  options?: GlAccountEnquiryDetailsNavOptions
+): string {
   const params = new URLSearchParams();
-  if (filters?.officeId?.trim()) params.set('officeId', filters.officeId.trim());
-  if (filters?.currencyCode?.trim()) {
-    params.set('currencyCode', filters.currencyCode.trim().toUpperCase());
-  }
-  if (filters?.departmentId?.trim()) params.set('departmentId', filters.departmentId.trim());
-  if (filters?.fromDate?.trim()) params.set('fromDate', filters.fromDate.trim());
-  if (filters?.toDate?.trim()) params.set('toDate', filters.toDate.trim());
   withReturnToParam(params, options?.returnTo);
   const qs = params.toString();
   return qs

@@ -19,17 +19,21 @@ import {
   countActiveAdvancedGlAccountEnquiryFilters,
   type AdvancedGlAccountEnquirySearchFilters
 } from '@/lib/fineract/advanced-gl-account-enquiry-query';
+import type { Department } from '@/lib/fineract/departments';
+import { prefillFiltersFromGlAccountEnquiryPrefix } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
 
 export function AdvancedGlAccountEnquiryFilterFields({
   draft,
   onDraftChange,
   offices,
+  departments = [],
   currencies,
   pending = false
 }: {
   draft: AdvancedGlAccountEnquirySearchFilters;
   onDraftChange: (draft: AdvancedGlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
+  departments?: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
 }) {
@@ -37,14 +41,38 @@ export function AdvancedGlAccountEnquiryFilterFields({
     onDraftChange({ ...draft, ...patch });
   }
 
+  function handlePrefixChange(value: string) {
+    onDraftChange(
+      prefillFiltersFromGlAccountEnquiryPrefix({
+        ...draft,
+        glPrefix: value
+      })
+    );
+  }
+
+  const departmentOptions = departments
+    .filter((department) => department.active !== false)
+    .filter(
+      (department) =>
+        !draft.officeId ||
+        department.officeId == null ||
+        String(department.officeId) === draft.officeId
+    )
+    .map((department) => ({
+      value: String(department.id),
+      label: department.departmentName,
+      keywords: [department.departmentCode]
+    }));
+
   return (
     <div className="space-y-4">
       <TextField
-        label="GL prefix"
+        label="Prefix"
         optional
         value={draft.glPrefix}
-        onChange={(value) => patchDraft({ glPrefix: value })}
-        placeholder="e.g. 1"
+        onChange={handlePrefixChange}
+        placeholder="e.g. 01-02"
+        hint="Branch–department code (XX-XX). A complete prefix prefills Branch and Department."
         disabled={pending}
       />
       <TextField
@@ -59,7 +87,23 @@ export function AdvancedGlAccountEnquiryFilterFields({
         label="Branch"
         optional
         value={draft.officeId || ''}
-        onValueChange={(value) => patchDraft({ officeId: value ?? '' })}
+        onValueChange={(value) =>
+          patchDraft({
+            officeId: value ?? '',
+            // Clear department when it no longer belongs to the selected branch.
+            departmentId:
+              value &&
+              draft.departmentId &&
+              departments.some(
+                (department) =>
+                  String(department.id) === draft.departmentId &&
+                  department.officeId != null &&
+                  String(department.officeId) !== value
+              )
+                ? ''
+                : draft.departmentId
+          })
+        }
         options={[
           { value: '', label: 'Any branch' },
           ...offices.map((office) => ({
@@ -68,6 +112,18 @@ export function AdvancedGlAccountEnquiryFilterFields({
           }))
         ]}
         placeholder="Any branch"
+        disabled={pending}
+      />
+      <SelectField
+        label="Department"
+        optional
+        value={draft.departmentId || ''}
+        onValueChange={(value) => patchDraft({ departmentId: value ?? '' })}
+        options={[
+          { value: '', label: 'Any department' },
+          ...departmentOptions
+        ]}
+        placeholder="Any department"
         disabled={pending}
       />
       <SelectField
@@ -111,6 +167,7 @@ export function AdvancedGlAccountEnquiryFilterSidebar({
   draft,
   onDraftChange,
   offices,
+  departments = [],
   currencies,
   pending = false,
   onApply,
@@ -121,27 +178,26 @@ export function AdvancedGlAccountEnquiryFilterSidebar({
   draft: AdvancedGlAccountEnquirySearchFilters;
   onDraftChange: (draft: AdvancedGlAccountEnquirySearchFilters) => void;
   offices: FineractOfficeOption[];
+  departments?: Department[];
   currencies: FineractCurrencyOption[];
   pending?: boolean;
   onApply: (filters: AdvancedGlAccountEnquirySearchFilters) => void;
   onClear: () => void;
 }) {
   const [filterHint, setFilterHint] = useState<string | null>(null);
-  const activeCount = countActiveAdvancedGlAccountEnquiryFilters(draft);
 
   useEffect(() => {
-    if (activeCount > 0) {
-      setFilterHint(null);
-    }
-  }, [activeCount]);
+    setFilterHint(null);
+  }, [draft]);
 
   function handleApply(): boolean {
-    if (activeCount === 0) {
+    const expanded = prefillFiltersFromGlAccountEnquiryPrefix(draft);
+    if (countActiveAdvancedGlAccountEnquiryFilters(expanded) === 0) {
       setFilterHint('Specify at least one filter to search.');
       return false;
     }
     setFilterHint(null);
-    onApply(draft);
+    onApply(expanded);
     return true;
   }
 
@@ -150,7 +206,7 @@ export function AdvancedGlAccountEnquiryFilterSidebar({
       open={open}
       onOpenChange={onOpenChange}
       title="GL account enquiry"
-      description="All filters are optional — specify at least one to search."
+      description="Prefix uses branch–department code (01-02). A complete prefix prefills Branch and Department."
       applyLabel={pending ? 'Searching…' : 'Search'}
       onApply={handleApply}
       onClear={onClear}
@@ -160,6 +216,7 @@ export function AdvancedGlAccountEnquiryFilterSidebar({
         draft={draft}
         onDraftChange={onDraftChange}
         offices={offices}
+        departments={departments}
         currencies={currencies}
         pending={pending}
       />

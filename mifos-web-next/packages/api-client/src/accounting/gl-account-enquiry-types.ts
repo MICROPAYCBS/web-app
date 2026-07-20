@@ -6,10 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/** One branch × GL account × currency row from `GET /glaccounts/enquiry`. */
+/** One branch × department × GL account × currency row from `GET /glaccounts/enquiry`. */
 export interface FineractGlAccountEnquiryRow {
   officeId: number;
   officeName: string;
+  /** `0` when activity is not assigned to a department. */
+  departmentId: number;
+  /** Null/omitted when unassigned (`departmentId` is 0). */
+  departmentName: string | null;
   glAccountId: number;
   glCode: string;
   glAccountName: string;
@@ -20,9 +24,9 @@ export interface FineractGlAccountEnquiryRow {
 
 /** Query params for advanced GL account enquiry (all optional; at least one required). */
 export interface FineractGlAccountEnquiryParams {
-  glPrefix?: string;
   ledgerNumber?: string;
   officeId?: number;
+  departmentId?: number;
   currencyCode?: string;
   /** `true` = disabled only; `false` = enabled only. */
   disabled?: boolean;
