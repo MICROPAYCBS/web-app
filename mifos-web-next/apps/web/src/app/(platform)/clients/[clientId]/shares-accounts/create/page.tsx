@@ -6,13 +6,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ClientAccountCreatePlaceholder } from '@/components/clients/detail/client-account-create-placeholder';
+import { redirect } from 'next/navigation';
+import { clientShareAccountCreatePath } from '@/lib/fineract/share-account-config';
 
+/** Legacy create URL → list with create side panel. */
 export default async function NewShareAccountPage({
   params
 }: {
   params: Promise<{ clientId: string }>;
-}) {
+}): Promise<never> {
   const { clientId } = await params;
-  return <ClientAccountCreatePlaceholder clientId={clientId} kind="share" />;
+  redirect(clientShareAccountCreatePath(clientId));
 }

@@ -1,0 +1,11 @@
+{
+  "command": "clients.share-account.activate",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.accounts.api.AccountsApiResource",
+    "org.apache.fineract.portfolio.accounts.constants.ShareAccountApiConstants",
+    "org.apache.fineract.portfolio.shareaccounts.serialization.ShareAccountDataSerializer"
+  ],
+  "fields": {
+    "activatedDate": { "required": true }
+  }
+}

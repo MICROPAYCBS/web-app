@@ -1,0 +1,11 @@
+{
+  "command": "clients.share-account.additional-decision",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.accounts.api.AccountsApiResource",
+    "org.apache.fineract.portfolio.accounts.constants.ShareAccountApiConstants",
+    "org.apache.fineract.portfolio.shareaccounts.serialization.ShareAccountDataSerializer"
+  ],
+  "fields": {
+    "requestedShares": { "required": true }
+  }
+}

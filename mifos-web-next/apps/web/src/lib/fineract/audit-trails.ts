@@ -25,7 +25,8 @@ import { filterAuditTrailsForResource } from '@/lib/fineract/resource-pending-ch
 import { filterAuditTrailsForLoanAccount } from '@/lib/fineract/loan-account-pending-checker-filters';
 import {
   clientPendingCheckerScope,
-  savingsAccountPendingCheckerScope
+  savingsAccountPendingCheckerScope,
+  shareAccountPendingCheckerScope
 } from '@/lib/fineract/resource-pending-checker-display';
 
 const AUDITS_PATH = '/audits';
@@ -316,6 +317,34 @@ export async function listAuditTrailsForLoanAccount(
     locale: FINERACT_LOCALE
   });
   const pageItems = filterAuditTrailsForLoanAccount(page.pageItems, accountId);
+  return {
+    pageItems,
+    totalFilteredRecords: pageItems.length
+  };
+}
+
+/** Fineract audit entity for share account commands. */
+export const SHARE_ACCOUNT_AUDIT_ENTITY = 'SHAREACCOUNT';
+
+export async function listAuditTrailsForShareAccount(
+  accountId: string | number,
+  options?: { limit?: number; offset?: number }
+): Promise<FineractAuditTrailsPage> {
+  const page = await listAuditTrails({
+    offset: options?.offset ?? 0,
+    limit: options?.limit ?? 100,
+    orderBy: 'id',
+    sortOrder: 'desc',
+    entityName: SHARE_ACCOUNT_AUDIT_ENTITY,
+    resourceId: String(accountId),
+    includeJson: true,
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  });
+  const pageItems = filterAuditTrailsForResource(
+    page.pageItems,
+    shareAccountPendingCheckerScope(Number(accountId))
+  );
   return {
     pageItems,
     totalFilteredRecords: pageItems.length

@@ -65,6 +65,21 @@ export type {
 } from './clients/savings-account-types';
 
 export type {
+  CreateShareAccountResponse,
+  FineractShareAccountCharge,
+  FineractShareAccountChargeOption,
+  FineractShareAccountDetail,
+  FineractShareAccountDividend,
+  FineractShareAccountProductOption,
+  FineractShareAccountSavingsOption,
+  FineractShareAccountStatus,
+  FineractShareAccountSummary,
+  FineractShareAccountTemplate,
+  FineractShareAccountTimeline,
+  FineractShareAccountTransaction
+} from './clients/share-account-types';
+
+export type {
   FineractSavingsOnHoldTransaction,
   FineractSavingsOnHoldTransactionsPage
 } from './clients/transfer-types';

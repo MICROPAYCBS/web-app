@@ -62,7 +62,7 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-024 | Header: name, status, office, account no., staff       | Card subtitle      | `ClientDetailTop` meta (dates, type, groups, legal form, staff badge) | Partial |
 | CL-025 | Summary KPIs (groups, type, mobile, email, activation) | Card fields        | Header meta + General client information | Partial |
 | CL-026 | Actions menu (state + RBAC)                            | `mat-menu`         | Flat menu → sheets / dialogs / confirms      | Partial |
-| CL-027 | New account CTAs (per product list)                    | When client active | Toolbar on Loans/Savings/FD/RD/Shares tabs | Partial |
+| CL-027 | New account CTAs (per product list)                    | When client active | Toolbar on Loans/Savings/FD/RD/Shares tabs; Shares uses `?create=1` FormSheet | Done (shares); Partial (others) |
 | CL-028 | Compliance masking on detail                           | env flag           | —                                       | Planned |
 
 ### Sidebar routes (target IA)
@@ -80,7 +80,7 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-038 | Savings               | `/savings`                            | General → savings             | Partial  |
 | CL-039 | Fixed deposits        | `/fixed-deposits`                     | General → FD                  | Partial  |
 | CL-040 | Recurring deposits    | `/recurring-deposits`                 | General → RD                  | Partial  |
-| CL-041 | Shares                | `/shares`                             | General → shares              | Partial  |
+| CL-041 | Shares                | `/shares`                             | List + FormSheet create; detail at `shares-accounts/:id/general` | Done     |
 | CL-042 | Charges               | `/charges` (+ nested)                 | General → upcoming + overview | Planned  |
 | CL-043 | Collateral            | `/collateral`                         | List + add (side panel)       | Partial  |
 | CL-044 | Standing instructions | `/standing-instructions`              | List + create (sidebar tab)   | Partial  |
@@ -100,7 +100,7 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-054 | Performance history (account-derived KPIs)        | Computed from accounts      | Financial summary (+ last loan amount) | Partial                  |
 | CL-055 | Upcoming charges table                            | Pending charges + pay/waive | —                       | N/A (no client charges)  |
 | CL-056 | Loan accounts table + closed toggle + row actions | On General                  | Moved to `/loans`       | Partial                  |
-| CL-057 | Savings / FD / RD / shares tables                 | On General                  | Split to sidebar routes | Partial                  |
+| CL-057 | Savings / FD / RD / shares tables                 | On General                  | Split to sidebar routes; shares list Done | Partial                  |
 | CL-058 | Collateral table on General                       | On General                  | CL-043 route            | Planned                  |
 | CL-059 | Loan application PDF from row                     | Report export               | —                       | Deferred                 |
 
@@ -111,7 +111,7 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-060 | Data source                                    | `GET /clients/{id}/accounts`       | Same BFF              | Done                         |
 | CL-061 | Working capital loans in Loans tab             | `workingCapitalLoanAccounts`       | Merged in Loans tab   | Done                         |
 | CL-062 | Open vs closed toggle                          | Per product button                 | `ClientAccountsSection` show closed switch | Done              |
-| CL-063 | Row → product detail                           | `loans-accounts/:id/general`, etc. | Linked rows + placeholder general tab | Partial |
+| CL-063 | Row → product detail                           | `loans-accounts/:id/general`, etc. | Shares detail live; savings/loans live; FD/RD may still placeholder | Partial |
 | CL-064 | Row quick actions (repay, approve, deposit, …) | Contextual buttons                 | Phase 2 per product   | Deferred                     |
 | CL-065 | Column parity per product                      | See tables below                   | `ClientAccountsTable` | Partial                      |
 | CL-066 | Currency / `MoneyValue` (ADR-013)              | `formatNumber` + currency pipe     | Domain formatters     | Planned                      |
@@ -264,7 +264,7 @@ Header `DropdownMenu` — **flat list with icons**; lifecycle/staff/savings open
 | Edit                   | `/edit`                                                         | `UPDATE_CLIENT`                  | Always in menu    |
 | New Loan Account       | `loans-accounts/create`                                         | `CREATE_LOAN`                    | Loans tab toolbar (active client) |
 | New Savings Account    | `savings-accounts/create`                                       | `CREATE_SAVINGSACCOUNT`          | Savings tab toolbar               |
-| New Share Account      | `shares-accounts/create`                                        | `CREATE_SHAREACCOUNT`            | Shares tab toolbar                |
+| New Share Account      | `shares?create=1` (legacy `shares-accounts/create` redirects) | `CREATE_SHAREACCOUNT`            | Shares tab toolbar                |
 | New Recurring Deposit  | `recurring-deposits-accounts/create-recurring-deposits-account` | `CREATE_RECURRINGDEPOSITACCOUNT` | Recurring deposits tab toolbar    |
 | New Fixed Deposit      | `fixed-deposits-accounts/create`                                | `CREATE_FIXEDDEPOSITACCOUNT`     | Fixed deposits tab toolbar        |
 
@@ -398,7 +398,7 @@ Resolver prefetch: `ClientActionsResolver` (template, offices, charges, collater
 | Accounts UI   | `client-accounts-section.tsx` (open / closed toggle), `client-accounts-table.tsx`          |
 | Top / avatar  | `client-detail-top.tsx`, `client-profile-avatar.tsx`, image dialogs, `api/.../image/route` |
 | General       | `general/page.tsx`, `client-general-sections.tsx` (includes legacy personal-data fields)   |
-| Accounts      | `loans`, `savings`, `fixed-deposits`, `recurring-deposits`, `shares/page.tsx`               |
+| Accounts      | `loans`, `savings`, `fixed-deposits`, `recurring-deposits`, `shares/page.tsx`; share detail under `shares-accounts/[accountId]/general` |
 | Relations     | `relations/page.tsx`, `client-relations-view.tsx`                                      |
 | Family        | `family-members/page.tsx`, `client-family-view.tsx`, `family-member-form-sheet.tsx`        |
 | Identities    | `identities/page.tsx`, `client-identities-view.tsx`, `client-identifier-form-sheet.tsx`    |
@@ -416,9 +416,9 @@ Resolver prefetch: `ClientActionsResolver` (template, offices, charges, collater
 | **A** (current) | Shell, avatar, sidebar scaffold, General fields, open account lists, many-to-one | CL-020–022, CL-030, CL-037–039, CL-045, CL-060         |
 | **B**           | Personal data, Address, Family, closed toggles, MoneyValue, WC loans             | CL-031–033, CL-061–062, CL-066, CL-070–083, CL-090–094 |
 | **C**           | Identities, Documents, Notes                                                     | CL-034–036, CL-100–121                                 |
-| **D**           | RD, Shares, SI, per-datatable routes                                             | CL-040–041, CL-044, CL-150–152, CL-046, CL-162–165     |
+| **D**           | RD, Shares, SI, per-datatable routes                                             | CL-040–041 (shares Done), CL-044, CL-150–152, CL-046, CL-162–165     |
 | **E**           | Actions menu + `/edit` + `/actions/*`                                            | CL-026–027, CL-170–171, all action rows                |
-| **F**           | Product account deep-links + row actions                                         | CL-063–064, CL-141, loan/savings/FD/share modules      |
+| **F**           | Product account deep-links + row actions                                         | CL-063–064, CL-141; share account module Done; FD/RD remaining      |
 
 ---
 

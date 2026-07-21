@@ -13,6 +13,7 @@ import {
   type ClientAccountProductKind
 } from '@/lib/fineract/client-account-links';
 import { clientDepositAccountCreatePath } from '@/lib/fineract/client-deposit-account-config';
+import { clientShareAccountCreatePath } from '@/lib/fineract/share-account-config';
 import { clientStatusKind } from '@/lib/fineract/client-status';
 
 const CREATE_BY_KIND: Record<
@@ -54,7 +55,9 @@ export function clientAccountCreateAction(
       ? clientAccountCreatePath(clientId, kind)
       : kind === 'savings' || kind === 'fixedDeposit' || kind === 'recurringDeposit'
         ? clientDepositAccountCreatePath(clientId, kind)
-        : clientAccountCreatePath(clientId, kind);
+        : kind === 'share'
+          ? clientShareAccountCreatePath(clientId)
+          : clientAccountCreatePath(clientId, kind);
 
   return {
     href,

@@ -1,0 +1,22 @@
+{
+  "command": "clients.share-account.create",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.accounts.api.AccountsApiResource",
+    "org.apache.fineract.portfolio.accounts.constants.ShareAccountApiConstants",
+    "org.apache.fineract.portfolio.shareaccounts.serialization.ShareAccountDataSerializer"
+  ],
+  "fields": {
+    "productId": { "required": true },
+    "submittedDate": { "required": true },
+    "requestedShares": { "required": true },
+    "savingsAccountId": { "required": true },
+    "applicationDate": { "required": true },
+    "externalId": { "required": false },
+    "minimumActivePeriod": { "required": false },
+    "minimumActivePeriodFrequencyType": { "required": false },
+    "lockinPeriodFrequency": { "required": false },
+    "lockinPeriodFrequencyType": { "required": false },
+    "allowDividendCalculationForInactiveClients": { "required": false },
+    "charges": { "required": false }
+  }
+}

@@ -9,7 +9,7 @@
 import type { FineractDateTimeValue } from '@/lib/fineract/dates';
 import { formatAuditTrailFilterLabel } from '@/lib/fineract/audit-trail-display';
 
-export type ResourcePendingCheckerEntity = 'LOAN' | 'SAVINGSACCOUNT' | 'CLIENT';
+export type ResourcePendingCheckerEntity = 'LOAN' | 'SAVINGSACCOUNT' | 'CLIENT' | 'SHAREACCOUNT';
 
 export type ResourcePendingCheckerAction = {
   id: number;
@@ -37,6 +37,7 @@ export type ResourcePendingCheckerScope = {
 export const CLIENT_CHECKER_ENTITY: ResourcePendingCheckerEntity = 'CLIENT';
 export const SAVINGS_ACCOUNT_CHECKER_ENTITY: ResourcePendingCheckerEntity = 'SAVINGSACCOUNT';
 export const LOAN_ACCOUNT_CHECKER_ENTITY: ResourcePendingCheckerEntity = 'LOAN';
+export const SHARE_ACCOUNT_CHECKER_ENTITY: ResourcePendingCheckerEntity = 'SHAREACCOUNT';
 
 export function clientPendingCheckerScope(clientId: number): ResourcePendingCheckerScope {
   return {
@@ -64,6 +65,17 @@ export function loanAccountPendingCheckerScope(loanAccountId: number): ResourceP
     resourceId: loanAccountId,
     inboxFilters: { resourceId: loanAccountId, loanId: loanAccountId },
     resourceLabel: 'loan'
+  };
+}
+
+export function shareAccountPendingCheckerScope(
+  accountId: number
+): ResourcePendingCheckerScope {
+  return {
+    entityName: SHARE_ACCOUNT_CHECKER_ENTITY,
+    resourceId: accountId,
+    inboxFilters: { resourceId: accountId },
+    resourceLabel: 'share account'
   };
 }
 

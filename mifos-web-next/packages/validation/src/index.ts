@@ -219,6 +219,31 @@ export {
   type CreateClientSavingsAccountInput
 } from './clients/create-client-deposit-account.schema';
 export {
+  createShareAccountSchema,
+  updateShareAccountSchema,
+  type CreateShareAccountInput,
+  type ShareAccountChargeItemInput,
+  type UpdateShareAccountInput
+} from './clients/create-share-account.schema';
+export {
+  shareAccountActivateCommandSchema,
+  shareAccountAdditionalSharesDecisionSchema,
+  shareAccountApplyAdditionalSharesSchema,
+  shareAccountApproveCommandSchema,
+  shareAccountCloseCommandSchema,
+  shareAccountRedeemSharesSchema,
+  shareAccountRejectCommandSchema,
+  shareAccountUndoApprovalCommandSchema,
+  type ShareAccountActivateCommandInput,
+  type ShareAccountAdditionalSharesDecisionInput,
+  type ShareAccountApplyAdditionalSharesInput,
+  type ShareAccountApproveCommandInput,
+  type ShareAccountCloseCommandInput,
+  type ShareAccountRedeemSharesInput,
+  type ShareAccountRejectCommandInput,
+  type ShareAccountUndoApprovalCommandInput
+} from './clients/share-account-command.schema';
+export {
   createLoanAccountSchema,
   loanAccountCoreStepSchema,
   loanAccountFinancialStepSchema,
