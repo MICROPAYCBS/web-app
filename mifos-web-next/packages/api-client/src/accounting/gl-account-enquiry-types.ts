@@ -22,7 +22,7 @@ export interface FineractGlAccountEnquiryRow {
   disabled: boolean;
 }
 
-/** Query params for advanced GL account enquiry (all optional; at least one required). */
+/** Query params for advanced GL account enquiry (all optional; at least one search criterion required). */
 export interface FineractGlAccountEnquiryParams {
   ledgerNumber?: string;
   /**
@@ -35,6 +35,10 @@ export interface FineractGlAccountEnquiryParams {
   currencyCode?: string;
   /** `true` = disabled only; `false` = enabled only. */
   disabled?: boolean;
-  /** `true` = only rows whose enquiry balance is exactly zero. */
-  zeroBalance?: boolean;
+  /**
+   * When `true` (default), omit rows whose enquiry balance is exactly zero.
+   * When `false`, include zero-balance rows that match the other filters.
+   * Omitted should be treated as `true` on the server.
+   */
+  excludeZeroBalance?: boolean;
 }

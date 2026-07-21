@@ -13,7 +13,7 @@ export default function GlAccountEnquiryLoading() {
   return (
     <ListPage
       title="GL account enquiry"
-      description="Search GL accounts by prefix, ledger number, description, branch, department, currency, status, or zero balance."
+      description="Search GL accounts by prefix, ledger number, description, branch, department, currency, and status. Zero-balance accounts are excluded by default."
     >
       <div className="space-y-4" aria-busy aria-label="Loading GL account enquiry">
         <Skeleton className="h-28 w-full rounded-lg" />

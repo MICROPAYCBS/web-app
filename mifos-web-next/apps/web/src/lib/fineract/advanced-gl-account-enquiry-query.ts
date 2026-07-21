@@ -38,10 +38,12 @@ export type AdvancedGlAccountEnquirySearchFilters = {
    */
   status: AdvancedGlAccountEnquiryStatus;
   /**
-   * When true, only accounts whose enquiry balance is exactly zero.
-   * Sent as `zeroBalance=true` on the enquiry URL and API.
+   * When true (default), omit accounts whose enquiry balance is exactly zero.
+   * When false, include zero-balance accounts that match the other filters.
+   * Sent as `excludeZeroBalance` on the enquiry URL and API whenever a search runs.
+   * Does not count as a standalone search criterion.
    */
-  zeroBalance: boolean;
+  excludeZeroBalance: boolean;
 };
 
 export type AdvancedGlAccountEnquiryListQuery = AdvancedGlAccountEnquirySearchFilters;
@@ -63,7 +65,7 @@ export const EMPTY_ADVANCED_GL_ACCOUNT_ENQUIRY_FILTERS: AdvancedGlAccountEnquiry
   departmentId: '',
   currencyCode: '',
   status: '',
-  zeroBalance: false
+  excludeZeroBalance: true
 };
 
 function readParam(
@@ -82,6 +84,11 @@ function parseStatus(value: string | undefined): AdvancedGlAccountEnquiryStatus 
     return value;
   }
   return '';
+}
+
+/** Default is exclude (`true`). Only `false` opts in to zero-balance rows. */
+function parseExcludeZeroBalance(value: string | undefined): boolean {
+  return value !== 'false';
 }
 
 /**
@@ -107,12 +114,13 @@ export function parseAdvancedGlAccountEnquiryListQuery(
     departmentId,
     currencyCode: (readParam(params, 'currencyCode') ?? '').toUpperCase(),
     status: parseStatus(readParam(params, 'status')),
-    zeroBalance: readParam(params, 'zeroBalance') === 'true'
+    excludeZeroBalance: parseExcludeZeroBalance(readParam(params, 'excludeZeroBalance'))
   };
 }
 
 /**
- * Counts filters that become enquiry API params (not the UI-only prefix).
+ * Counts filters that become enquiry API search criteria (not the UI-only prefix,
+ * and not the exclude-zero-balance result modifier).
  * Call after {@link prefillFiltersFromGlAccountEnquiryPrefix} when validating Search.
  */
 export function countActiveAdvancedGlAccountEnquiryFilters(
@@ -125,7 +133,6 @@ export function countActiveAdvancedGlAccountEnquiryFilters(
   if (filters.departmentId?.trim()) count += 1;
   if (filters.currencyCode?.trim()) count += 1;
   if (filters.status === 'enabled' || filters.status === 'disabled') count += 1;
-  if (filters.zeroBalance) count += 1;
   return count;
 }
 
@@ -153,7 +160,7 @@ export function advancedGlAccountEnquiryFiltersSignature(
     filters.departmentId ?? '',
     filters.currencyCode ?? '',
     filters.status ?? '',
-    filters.zeroBalance ? '1' : '0'
+    filters.excludeZeroBalance === false ? '0' : '1'
   ].join('|');
 }
 
@@ -168,7 +175,7 @@ export function advancedGlAccountEnquiryFiltersFromQuery(
     departmentId: query.departmentId ?? '',
     currencyCode: query.currencyCode ?? '',
     status: query.status ?? '',
-    zeroBalance: query.zeroBalance === true
+    excludeZeroBalance: query.excludeZeroBalance !== false
   };
 }
 
@@ -187,7 +194,10 @@ export function buildAdvancedGlAccountEnquiryUrl(
   if (filters.status === 'enabled' || filters.status === 'disabled') {
     params.set('status', filters.status);
   }
-  if (filters.zeroBalance) params.set('zeroBalance', 'true');
+  // Only persist the non-default opt-in; omit when excluding (default).
+  if (filters.excludeZeroBalance === false) {
+    params.set('excludeZeroBalance', 'false');
+  }
   const query = params.toString();
   return query
     ? `${ADVANCED_GL_ACCOUNT_ENQUIRY_PATH}?${query}`
@@ -196,7 +206,8 @@ export function buildAdvancedGlAccountEnquiryUrl(
 
 /**
  * Maps UI filters to `GET /glaccounts/enquiry` query params.
- * Never sends `glPrefix`. Returns `null` when no API filter is set.
+ * Never sends `glPrefix`. Returns `null` when no search criterion is set
+ * (`excludeZeroBalance` alone is not enough).
  */
 export function buildAdvancedGlAccountEnquiryApiParams(
   filters: AdvancedGlAccountEnquirySearchFilters
@@ -214,10 +225,11 @@ export function buildAdvancedGlAccountEnquiryApiParams(
   }
   if (filters.status === 'enabled') params.disabled = 'false';
   if (filters.status === 'disabled') params.disabled = 'true';
-  if (filters.zeroBalance) params.zeroBalance = 'true';
 
   if (Object.keys(params).length === 0) {
     return null;
   }
+
+  params.excludeZeroBalance = filters.excludeZeroBalance === false ? 'false' : 'true';
   return params;
 }

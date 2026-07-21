@@ -10,11 +10,10 @@
 
 import type { FineractCurrencyOption, FineractOfficeOption } from '@mifos/api-client';
 import { useEffect, useState } from 'react';
-import { FormLabel } from '@/components/composites/form-label';
 import { ListFilterSheet } from '@/components/composites/list-filter-sheet';
 import { SelectField } from '@/components/composites/select-field';
+import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
-import { Toggle } from '@/components/ui/toggle';
 import { currencySelectOptions } from '@/lib/accounting/journal-entry-display';
 import {
   ADVANCED_GL_ACCOUNT_ENQUIRY_STATUS_OPTIONS,
@@ -23,7 +22,6 @@ import {
 } from '@/lib/fineract/advanced-gl-account-enquiry-query';
 import type { Department } from '@/lib/fineract/departments';
 import { prefillFiltersFromGlAccountEnquiryPrefix } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
-import { cn } from '@/lib/utils';
 
 export function AdvancedGlAccountEnquiryFilterFields({
   draft,
@@ -117,13 +115,13 @@ export function AdvancedGlAccountEnquiryFilterFields({
           })
         }
         options={[
-          { value: '', label: 'Any branch' },
+          { value: '', label: 'All Branches' },
           ...offices.map((office) => ({
             value: String(office.id),
             label: office.name ?? office.nameDecorated ?? String(office.id)
           }))
         ]}
-        placeholder="Any branch"
+        placeholder="All Branches"
         disabled={pending}
       />
       <SelectField
@@ -132,10 +130,10 @@ export function AdvancedGlAccountEnquiryFilterFields({
         value={draft.departmentId || ''}
         onValueChange={(value) => patchDraft({ departmentId: value ?? '' })}
         options={[
-          { value: '', label: 'Any department' },
+          { value: '', label: 'All Departments' },
           ...departmentOptions
         ]}
-        placeholder="Any department"
+        placeholder="All Departments"
         disabled={pending}
       />
       <SelectField
@@ -144,10 +142,10 @@ export function AdvancedGlAccountEnquiryFilterFields({
         value={draft.currencyCode || ''}
         onValueChange={(value) => patchDraft({ currencyCode: value ?? '' })}
         options={[
-          { value: '', label: 'Any currency' },
+          { value: '', label: 'All Currencies' },
           ...currencySelectOptions(currencies)
         ]}
-        placeholder="Any currency"
+        placeholder="All Currencies"
         disabled={pending || currencies.length === 0}
       />
       <SelectField
@@ -160,36 +158,23 @@ export function AdvancedGlAccountEnquiryFilterFields({
           })
         }
         options={[
-          { value: '', label: 'Any status' },
+          { value: '', label: 'All Statuses' },
           ...ADVANCED_GL_ACCOUNT_ENQUIRY_STATUS_OPTIONS.map((option) => ({
             value: option.value,
             label: option.label
           }))
         ]}
-        placeholder="Any status"
+        placeholder="All Statuses"
         disabled={pending}
       />
-      <div className="space-y-2">
-        <FormLabel optional>Tags</FormLabel>
-        <div className="flex flex-wrap gap-2">
-          <Toggle
-            variant="outline"
-            size="sm"
-            pressed={draft.zeroBalance}
-            onPressedChange={(pressed) => patchDraft({ zeroBalance: pressed })}
-            disabled={pending}
-            aria-label="Zero balance"
-            className={cn(
-              'rounded-full px-3 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary/90'
-            )}
-          >
-            Zero balance
-          </Toggle>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Zero balance shows only accounts whose current enquiry balance is exactly zero.
-        </p>
-      </div>
+      <SwitchField
+        label="Exclude Zero Balance Accounts"
+        optional
+        checked={draft.excludeZeroBalance}
+        onCheckedChange={(checked) => patchDraft({ excludeZeroBalance: checked })}
+        description="On by default. Turn off to also return matching accounts with a zero balance."
+        disabled={pending}
+      />
     </div>
   );
 }

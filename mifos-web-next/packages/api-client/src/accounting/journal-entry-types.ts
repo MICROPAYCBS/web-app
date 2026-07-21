@@ -17,6 +17,8 @@ export interface FineractJournalEntryCurrency {
 export interface FineractJournalEntryListItem {
   id: number;
   officeName: string;
+  /** Branch office id when returned on the journal entry line. */
+  officeId?: number;
   transactionId: string;
   transactionDate: string | number[];
   glAccountType: FineractEnumOption;

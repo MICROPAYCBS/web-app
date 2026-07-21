@@ -21,6 +21,7 @@ import {
   type CreateJournalEntryFormInput,
   type RevertJournalEntryInput
 } from '@mifos/validation';
+import { backfillJournalEntryGlAccountCode } from '@/lib/accounting/journal-entry-display';
 import {
   buildJournalEntrySearchParams,
   type JournalEntryListQuery
@@ -51,7 +52,7 @@ function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListIt
   const id = Number(row.id);
   const officeName = typeof row.officeName === 'string' ? row.officeName : '';
   const transactionId = typeof row.transactionId === 'string' ? row.transactionId : '';
-  const glAccountCode = typeof row.glAccountCode === 'string' ? row.glAccountCode : '';
+  const rawGlAccountCode = typeof row.glAccountCode === 'string' ? row.glAccountCode : '';
   const glAccountName = typeof row.glAccountName === 'string' ? row.glAccountName : '';
   const glAccountType = normalizeEnumOption(row.glAccountType);
   const entryType = normalizeEnumOption(row.entryType);
@@ -60,7 +61,7 @@ function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListIt
     !Number.isFinite(id) ||
     !officeName ||
     !transactionId ||
-    !glAccountCode ||
+    !rawGlAccountCode ||
     !glAccountName ||
     !glAccountType ||
     !entryType ||
@@ -92,9 +93,26 @@ function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListIt
     return null;
   }
 
+  const officeIdRaw = row.officeId;
+  const officeId =
+    officeIdRaw == null || officeIdRaw === ''
+      ? undefined
+      : Number(officeIdRaw);
+  const departmentIdRaw = row.departmentId;
+  const departmentId =
+    departmentIdRaw == null || departmentIdRaw === ''
+      ? undefined
+      : Number(departmentIdRaw);
+
+  const resolvedOfficeId =
+    officeId != null && Number.isFinite(officeId) ? officeId : undefined;
+  const resolvedDepartmentId =
+    departmentId != null && Number.isFinite(departmentId) ? departmentId : undefined;
+
   return {
     id,
     officeName,
+    officeId: resolvedOfficeId,
     transactionId,
     transactionDate:
       typeof row.transactionDate === 'string' || Array.isArray(row.transactionDate)
@@ -107,7 +125,11 @@ function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListIt
       typeof row.submittedOnDate === 'string' || Array.isArray(row.submittedOnDate)
         ? (row.submittedOnDate as string | number[])
         : undefined,
-    glAccountCode,
+    glAccountCode: backfillJournalEntryGlAccountCode({
+      glAccountCode: rawGlAccountCode,
+      officeId: resolvedOfficeId,
+      departmentId: resolvedDepartmentId
+    }),
     glAccountName,
     currency,
     entryType,
@@ -119,7 +141,7 @@ function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListIt
     paymentTypeName: typeof row.paymentTypeName === 'string' ? row.paymentTypeName : undefined,
     externalAssetOwner:
       typeof row.externalAssetOwner === 'string' ? row.externalAssetOwner : undefined,
-    departmentId: row.departmentId != null ? Number(row.departmentId) : undefined,
+    departmentId: resolvedDepartmentId,
     departmentName: typeof row.departmentName === 'string' ? row.departmentName : undefined
   };
 }

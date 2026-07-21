@@ -17,9 +17,34 @@ import type { CreateJournalEntryFormInput, JournalEntryLineInput } from '@mifos/
 import { formatGlAccountLabel } from '@/lib/accounting/gl-account-display';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { FINERACT_LOCALE, formatFineractDateArray, toFineractDate } from '@/lib/fineract/dates';
+import { formatGlAccountEnquiryPrefixedCode } from '@/lib/fineract/parse-gl-account-enquiry-prefix';
 
 export function formatJournalEntryGlAccountLabel(account: FineractJournalEntryGlAccountOption) {
   return formatGlAccountLabel(account);
+}
+
+/**
+ * Prefixed display code using the same branch–department strategy as GL enquiry
+ * (`01-02-100001`). When `officeId` is missing, returns the raw code unchanged.
+ */
+export function backfillJournalEntryGlAccountCode(input: {
+  glAccountCode: string;
+  officeId?: number | null;
+  departmentId?: number | null;
+}): string {
+  const code = input.glAccountCode.trim();
+  if (!code) {
+    return input.glAccountCode;
+  }
+  const officeRaw = input.officeId == null ? NaN : Number(input.officeId);
+  if (!Number.isFinite(officeRaw) || officeRaw <= 0) {
+    return code;
+  }
+  return formatGlAccountEnquiryPrefixedCode({
+    officeId: officeRaw,
+    departmentId: input.departmentId,
+    glCode: code
+  });
 }
 
 export function formatJournalEntryDate(value: string | number[] | undefined) {
