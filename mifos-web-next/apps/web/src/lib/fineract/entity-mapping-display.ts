@@ -52,6 +52,7 @@ const MAPPING_TYPE_LABELS: Record<string, string> = {
   office_access_to_loan_products: 'Offices → Loan products',
   office_access_to_savings_products: 'Offices → Savings products',
   'office_access_to_fees/charges': 'Offices → Charges/fees',
+  office_access_to_departments: 'Offices → Departments',
   role_access_to_loan_products: 'Roles → Loan products',
   role_access_to_savings_products: 'Roles → Savings products'
 };
@@ -64,10 +65,14 @@ export function entityMappingTypeNavId(type: { id: number }): string {
   return String(type.id);
 }
 
-const MAPPING_TYPE_ICON_KEYS: Record<string, 'office-loan' | 'office-savings' | 'office-charge' | 'role-loan' | 'role-savings'> = {
+const MAPPING_TYPE_ICON_KEYS: Record<
+  string,
+  'office-loan' | 'office-savings' | 'office-charge' | 'office-department' | 'role-loan' | 'role-savings'
+> = {
   office_access_to_loan_products: 'office-loan',
   office_access_to_savings_products: 'office-savings',
   'office_access_to_fees/charges': 'office-charge',
+  office_access_to_departments: 'office-department',
   role_access_to_loan_products: 'role-loan',
   role_access_to_savings_products: 'role-savings'
 };
@@ -84,6 +89,7 @@ export function entityMappingFilterLabels(mappingTypes: string): {
     case 'office_access_to_loan_products':
     case 'office_access_to_savings_products':
     case 'office_access_to_fees/charges':
+    case 'office_access_to_departments':
       return { fromLabel: 'Office', toLabel: entityMappingToEntityLabel(mappingTypes) };
     case 'role_access_to_loan_products':
     case 'role_access_to_savings_products':
@@ -103,9 +109,27 @@ function entityMappingToEntityLabel(mappingTypes: string): string {
       return 'Savings product';
     case 'office_access_to_fees/charges':
       return 'Charge/fee';
+    case 'office_access_to_departments':
+      return 'Department';
     default:
       return 'To entity';
   }
+}
+
+export function departmentMappingOptions(
+  items: Array<{ id: number; departmentName: string }>
+): EntityMappingOption[] {
+  return items
+    .map((item) => {
+      const id = Number(item.id);
+      const name = item.departmentName?.trim();
+      if (!Number.isFinite(id) || !name) {
+        return null;
+      }
+      return { id, name };
+    })
+    .filter((item): item is EntityMappingOption => item !== null)
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function toEntityMappingOptions(

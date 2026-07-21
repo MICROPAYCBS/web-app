@@ -17,7 +17,6 @@ import { defaultCreateJournalEntryFormValues } from '@/lib/accounting/journal-en
 import { resolveCentralBranchClearingGlAccount } from '@/lib/accounting/inter-branch-recon';
 import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
 import { listFinancialActivityMappings } from '@/lib/fineract/financial-activity-mappings';
-import { listDepartments } from '@/lib/fineract/departments';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import { listJournalEntryGlAccounts } from '@/lib/fineract/journal-entries';
 import { listOfficeOptions } from '@/lib/fineract/offices';
@@ -37,13 +36,12 @@ export default async function CreateJournalEntryPage() {
     notFound();
   }
 
-  const [offices, currencies, paymentTypes, glAccounts, departments, departmentConfig, transactionDate, financialActivityMappings] =
+  const [offices, currencies, paymentTypes, glAccounts, departmentConfig, transactionDate, financialActivityMappings] =
     await Promise.all([
       listOfficeOptions(),
       getOrganizationSelectedCurrencies(),
       listPaymentTypes(),
       listJournalEntryGlAccounts(),
-      listDepartments(),
       getGlobalConfigurationByName(REQUIRE_DEPARTMENT_CONFIG),
       getDefaultTransactionDate(),
       listFinancialActivityMappings()
@@ -83,7 +81,6 @@ export default async function CreateJournalEntryPage() {
           currencies={currencies}
           paymentTypes={paymentTypes}
           glAccounts={glAccounts}
-          departments={departments}
           validationContext={{
             requireDepartmentOnPlLines: departmentConfig?.enabled ?? false,
             glAccountTypesById

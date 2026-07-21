@@ -16,8 +16,10 @@ import type { EntityMappingFilterOptions,
 import type { UpsertEntityMappingInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { listCharges } from '@/lib/fineract/charges';
+import { listDepartments } from '@/lib/fineract/departments';
 import {
   chargeOptions,
+  departmentMappingOptions,
   entityMappingFilterLabels,
   loanProductOptions,
   savingsProductOptions
@@ -246,6 +248,15 @@ export async function getEntityMappingFilterOptions(
         name: office.name?.trim() || office.nameDecorated?.trim() || String(office.id)
       }));
       toOptions = chargeOptions(charges);
+      break;
+    }
+    case 'office_access_to_departments': {
+      const [offices, departments] = await Promise.all([listOfficeOptions(), listDepartments()]);
+      fromOptions = offices.map((office) => ({
+        id: office.id,
+        name: office.name?.trim() || office.nameDecorated?.trim() || String(office.id)
+      }));
+      toOptions = departmentMappingOptions(departments);
       break;
     }
     case 'role_access_to_loan_products': {

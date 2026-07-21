@@ -144,7 +144,7 @@ export function expandBulkConstructRowToJournalEntry(
   const departmentId =
     template.variationMode === 'department'
       ? row.departmentId
-      : template.departmentId;
+      : (row.departmentId ?? template.departmentId);
 
   const base = createJournalEntryFormValuesForRule(
     rule,

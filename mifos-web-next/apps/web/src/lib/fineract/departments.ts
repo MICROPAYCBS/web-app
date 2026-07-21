@@ -14,17 +14,17 @@ import {
   DEFAULT_DEPARTMENT_ACTIVE_OPTIONS,
   normalizeDepartmentActiveOption
 } from '@/lib/fineract/department-options';
+import {
+  buildDepartmentsQueryParams,
+  type ListDepartmentsFilterInput
+} from '@/lib/fineract/department-query';
+import type { Department } from '@/lib/fineract/department-types';
+
+export type { ListDepartmentsFilterInput } from '@/lib/fineract/department-query';
+export { buildDepartmentsQueryParams } from '@/lib/fineract/department-query';
+export type { Department } from '@/lib/fineract/department-types';
 
 const BASE_PATH = '/departments';
-
-export type Department = {
-  id: number;
-  departmentCode: string;
-  departmentName: string;
-  officeId?: number;
-  officeName?: string;
-  active?: boolean;
-};
 
 export type DepartmentTemplate = {
   activeOptions: Array<{ value: string; label: string }>;
@@ -101,9 +101,16 @@ function normalizeTemplate(raw: unknown): DepartmentTemplate {
   };
 }
 
-export async function listDepartments(): Promise<Department[]> {
+/**
+ * List departments. Pass `officeId` for branch-mapped posting pickers
+ * (`GET /departments?officeId=`). Omit for the full master list (admin / filters).
+ */
+export async function listDepartments(
+  filters: ListDepartmentsFilterInput = {}
+): Promise<Department[]> {
   const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>(BASE_PATH);
+  const params = buildDepartmentsQueryParams(filters);
+  const raw = await fineract.get<unknown>(BASE_PATH, params);
   if (!Array.isArray(raw)) {
     return [];
   }

@@ -11,6 +11,7 @@
 import { BULK_CONSTRUCT_JOURNAL_ENTRIES_MAX_ROWS } from '@mifos/validation';
 import { Plus, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { OfficeDepartmentSelect } from '@/components/accounting/journal-entries/office-department-select';
 import { MoneyField } from '@/components/composites/money-field';
 import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
@@ -22,11 +23,11 @@ export function BulkConstructVariationsStep({
   errors,
   pending,
   onPatchRows,
-  offices,
-  departments
+  offices
 }: BulkConstructStepProps) {
   const { template, rows } = form;
   const byBranch = template.variationMode === 'branch';
+  const templateOfficeId = template.defaultOfficeId > 0 ? template.defaultOfficeId : undefined;
 
   const officeOptions = useMemo(
     () =>
@@ -36,21 +37,6 @@ export function BulkConstructVariationsStep({
       })),
     [offices]
   );
-
-  const departmentOptions = useMemo(() => {
-    const officeId = template.defaultOfficeId > 0 ? template.defaultOfficeId : undefined;
-    return departments
-      .filter((department) => department.active !== false)
-      .filter(
-        (department) =>
-          department.officeId == null || officeId == null || department.officeId === officeId
-      )
-      .map((department) => ({
-        value: String(department.id),
-        label: department.departmentName,
-        keywords: [department.departmentCode]
-      }));
-  }, [departments, template.defaultOfficeId]);
 
   function updateRow(index: number, patch: Partial<(typeof rows)[number]>) {
     onPatchRows(rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
@@ -85,60 +71,78 @@ export function BulkConstructVariationsStep({
       ) : null}
 
       <div className="space-y-3">
-        {rows.map((row, index) => (
-          <div
-            key={`variation-row-${index}`}
-            className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end"
-          >
-            {byBranch ? (
-              <SelectField
-                label={`Branch ${index + 1}`}
-                required
-                value={row.officeId != null ? String(row.officeId) : undefined}
-                onValueChange={(value) =>
-                  updateRow(index, { officeId: value ? Number(value) : undefined })
-                }
-                options={officeOptions}
-                placeholder="Select branch"
-                disabled={pending}
-                error={errors[`rows.${index}.officeId`]}
-              />
-            ) : (
-              <SelectField
+        {rows.map((row, index) => {
+          const rowOfficeId = byBranch
+            ? row.officeId != null && row.officeId > 0
+              ? row.officeId
+              : undefined
+            : templateOfficeId;
+
+          return (
+            <div
+              key={`variation-row-${index}`}
+              className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end"
+            >
+              {byBranch ? (
+                <SelectField
+                  label={`Branch ${index + 1}`}
+                  required
+                  value={row.officeId != null ? String(row.officeId) : undefined}
+                  onValueChange={(value) =>
+                    updateRow(index, {
+                      officeId: value ? Number(value) : undefined,
+                      departmentId: undefined
+                    })
+                  }
+                  options={officeOptions}
+                  placeholder="Select branch"
+                  disabled={pending}
+                  error={errors[`rows.${index}.officeId`]}
+                />
+              ) : (
+                <SelectField
+                  label="Branch"
+                  value={templateOfficeId != null ? String(templateOfficeId) : undefined}
+                  onValueChange={() => undefined}
+                  options={officeOptions}
+                  disabled
+                  placeholder="Set branch on template"
+                />
+              )}
+              <OfficeDepartmentSelect
                 label={`Department ${index + 1}`}
-                required
-                value={row.departmentId != null ? String(row.departmentId) : undefined}
-                onValueChange={(value) =>
-                  updateRow(index, { departmentId: value ? Number(value) : undefined })
-                }
-                options={departmentOptions}
-                placeholder="Select department"
+                required={!byBranch}
+                optional={byBranch}
+                officeId={rowOfficeId}
+                value={row.departmentId}
+                onValueChange={(departmentId) => updateRow(index, { departmentId })}
                 disabled={pending}
+                nonePlaceholder={byBranch ? 'None' : 'Select department'}
                 error={errors[`rows.${index}.departmentId`]}
               />
-            )}
-            <MoneyField
-              label="Amount"
-              required
-              currencyCode={template.currencyCode || undefined}
-              value={row.amount > 0 ? String(row.amount) : ''}
-              onChange={(value) => updateRow(index, { amount: value ? Number(value) : 0 })}
-              disabled={pending}
-              error={errors[`rows.${index}.amount`]}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="shrink-0"
-              disabled={pending || rows.length <= 1}
-              onClick={() => removeRow(index)}
-              aria-label={`Remove row ${index + 1}`}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
-        ))}
+              <MoneyField
+                label="Amount"
+                required
+                currencyCode={template.currencyCode || undefined}
+                value={row.amount > 0 ? String(row.amount) : ''}
+                onChange={(value) => updateRow(index, { amount: value ? Number(value) : 0 })}
+                disabled={pending}
+                error={errors[`rows.${index}.amount`]}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                disabled={pending || rows.length <= 1}
+                onClick={() => removeRow(index)}
+                aria-label={`Remove row ${index + 1}`}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          );
+        })}
       </div>
 
       <Button

@@ -33,7 +33,6 @@ export function BulkConstructTemplateStep({
   onPatchTemplate,
   offices,
   currencies,
-  departments,
   accountingRules
 }: BulkConstructStepProps) {
   const { template } = form;
@@ -78,20 +77,7 @@ export function BulkConstructTemplateStep({
       ? bulkConstructRuleIneligibilityReason(selectedRule)
       : null;
 
-  const departmentOptions = useMemo(() => {
-    const officeId = template.defaultOfficeId > 0 ? template.defaultOfficeId : undefined;
-    return departments
-      .filter((department) => department.active !== false)
-      .filter(
-        (department) =>
-          department.officeId == null || officeId == null || department.officeId === officeId
-      )
-      .map((department) => ({
-        value: String(department.id),
-        label: department.departmentName,
-        keywords: [department.departmentCode]
-      }));
-  }, [departments, template.defaultOfficeId]);
+  const defaultOfficeId = template.defaultOfficeId > 0 ? template.defaultOfficeId : undefined;
 
   return (
     <div className="space-y-6">
@@ -138,39 +124,31 @@ export function BulkConstructTemplateStep({
         <SelectField
           label={template.variationMode === 'department' ? 'Branch' : 'Default branch'}
           required
-          value={template.defaultOfficeId > 0 ? String(template.defaultOfficeId) : undefined}
+          value={defaultOfficeId != null ? String(defaultOfficeId) : undefined}
           onValueChange={(value) => {
             if (!value) {
               return;
             }
-            const defaultOfficeId = Number(value);
-            const patch: Partial<typeof template> = { defaultOfficeId };
-            if (template.departmentId != null) {
-              const department = departments.find((row) => row.id === template.departmentId);
-              if (department?.officeId != null && department.officeId !== defaultOfficeId) {
-                patch.departmentId = undefined;
-              }
-            }
-            onPatchTemplate(patch);
+            onPatchTemplate({
+              defaultOfficeId: Number(value),
+              departmentId: undefined
+            });
           }}
           options={officeOptions}
           placeholder="Select branch"
           disabled={pending}
           error={errors['template.defaultOfficeId'] ?? errors.defaultOfficeId}
+          hint={
+            template.variationMode === 'branch'
+              ? 'Used when a variation row does not pick its own branch.'
+              : undefined
+          }
         />
         {template.variationMode === 'branch' ? (
-          <SelectField
-            label="Department"
-            optional
-            value={template.departmentId != null ? String(template.departmentId) : undefined}
-            onValueChange={(value) =>
-              onPatchTemplate({ departmentId: value ? Number(value) : undefined })
-            }
-            options={departmentOptions}
-            placeholder="None"
-            disabled={pending}
-            error={errors['template.departmentId'] ?? errors.departmentId}
-          />
+          <p className="text-sm text-muted-foreground md:col-span-2">
+            Choose an optional department on each branch variation row — only departments mapped to
+            that branch are listed.
+          </p>
         ) : null}
         <SelectField
           label="Currency"

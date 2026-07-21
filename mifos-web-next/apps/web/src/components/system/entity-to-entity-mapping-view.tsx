@@ -26,6 +26,7 @@ import {
   Building2,
   CircleDollarSign,
   Landmark,
+  Network,
   Pencil,
   PiggyBank,
   Shield,
@@ -83,6 +84,7 @@ const MAPPING_TYPE_ICONS: Record<
   'office-loan': Building2,
   'office-savings': PiggyBank,
   'office-charge': CircleDollarSign,
+  'office-department': Network,
   'role-loan': Shield,
   'role-savings': Landmark
 };

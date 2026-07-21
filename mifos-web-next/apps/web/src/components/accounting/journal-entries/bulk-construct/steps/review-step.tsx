@@ -97,9 +97,16 @@ export function BulkConstructReviewStep({
           }
           const row = rows[rowIndex];
           const result = postResults?.find((item) => item.rowIndex === rowIndex);
+          const branchLabel = officeName(row.officeId ?? template.defaultOfficeId);
+          const rowDepartmentLabel = departmentName(
+            row.departmentId ??
+              (template.variationMode === 'branch' ? template.departmentId : undefined)
+          );
           const variationLabel =
             template.variationMode === 'branch'
-              ? officeName(row.officeId ?? template.defaultOfficeId)
+              ? rowDepartmentLabel !== '—'
+                ? `${branchLabel} · ${rowDepartmentLabel}`
+                : branchLabel
               : departmentName(row.departmentId);
 
           return (

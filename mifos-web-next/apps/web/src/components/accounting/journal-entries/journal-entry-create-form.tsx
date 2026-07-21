@@ -24,7 +24,7 @@ import {
 } from '@mifos/validation';
 import { AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { createJournalEntryAction } from '@/actions/journal-entries';
 import { JournalEntryLinesEditor } from '@/components/accounting/journal-entries/journal-entry-lines-editor';
 import { validateJournalEntryForm } from '@/components/accounting/journal-entries/journal-entry-form-validation';
@@ -36,11 +36,12 @@ import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDepartmentsForOffice } from '@/hooks/use-departments-for-office';
 import { CENTRAL_BRANCH_CLEARING_NOT_CONFIGURED_MESSAGE } from '@/lib/accounting/inter-branch-recon';
 import { journalEntriesListPathWithOpenTransaction } from '@/lib/accounting/journal-entry-links';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { currencySelectOptions } from '@/lib/accounting/journal-entry-display';
-import type { Department } from '@/lib/fineract/departments';
+import { departmentSelectOptions } from '@/lib/fineract/department-select-options';
 
 const JOURNAL_ENTRIES_LIST_PATH = '/accounting/journal-entries';
 
@@ -59,20 +60,6 @@ function hasAdvancedFieldErrors(errors: Record<string, string>) {
   return Object.keys(errors).some((key) => ADVANCED_FIELD_KEYS.has(key));
 }
 
-function departmentOptionsForOffice(departments: Department[], officeId?: number) {
-  return departments
-    .filter((department) => department.active !== false)
-    .filter(
-      (department) =>
-        department.officeId == null || officeId == null || department.officeId === officeId
-    )
-    .map((department) => ({
-      value: String(department.id),
-      label: department.departmentName,
-      keywords: [department.departmentCode]
-    }));
-}
-
 function sideRequiresDepartment(
   lines: CreateJournalEntryFormInput['debits'],
   glAccountTypesById: Record<number, number>
@@ -83,28 +70,12 @@ function sideRequiresDepartment(
   });
 }
 
-function clearDepartmentIfOfficeMismatch(
-  departmentId: number | undefined,
-  officeId: number,
-  departments: Department[]
-) {
-  if (departmentId == null) {
-    return undefined;
-  }
-  const department = departments.find((row) => row.id === departmentId);
-  if (department?.officeId != null && department.officeId !== officeId) {
-    return undefined;
-  }
-  return departmentId;
-}
-
 export type JournalEntryCreateFormProps = {
   initialValues: CreateJournalEntryFormInput;
   offices: FineractOfficeOption[];
   currencies: FineractCurrencyOption[];
   paymentTypes: FineractPaymentTypeOption[];
   glAccounts: FineractJournalEntryGlAccountOption[];
-  departments: Department[];
   validationContext: CreateJournalEntryValidationContext;
   clearingConfigured?: boolean;
 };
@@ -115,7 +86,6 @@ export function JournalEntryCreateForm({
   currencies,
   paymentTypes,
   glAccounts,
-  departments,
   validationContext,
   clearingConfigured = true
 }: JournalEntryCreateFormProps) {
@@ -150,15 +120,47 @@ export function JournalEntryCreateForm({
   const debitOfficeId = form.debitOfficeId > 0 ? form.debitOfficeId : undefined;
   const creditOfficeId = form.creditOfficeId > 0 ? form.creditOfficeId : undefined;
 
+  const { departments: debitDepartments, loading: debitDepartmentsLoading } =
+    useDepartmentsForOffice(debitOfficeId);
+  const { departments: creditDepartments, loading: creditDepartmentsLoading } =
+    useDepartmentsForOffice(creditOfficeId);
+
   const debitDepartmentOptions = useMemo(
-    () => departmentOptionsForOffice(departments, debitOfficeId),
-    [departments, debitOfficeId]
+    () => departmentSelectOptions(debitDepartments),
+    [debitDepartments]
+  );
+  const creditDepartmentOptions = useMemo(
+    () => departmentSelectOptions(creditDepartments),
+    [creditDepartments]
   );
 
-  const creditDepartmentOptions = useMemo(
-    () => departmentOptionsForOffice(departments, creditOfficeId),
-    [departments, creditOfficeId]
-  );
+  useEffect(() => {
+    if (form.debitDepartmentId == null) {
+      return;
+    }
+    if (
+      debitOfficeId == null ||
+      (!debitDepartmentsLoading &&
+        !debitDepartments.some((department) => department.id === form.debitDepartmentId))
+    ) {
+      patchForm({ debitDepartmentId: undefined });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear stale dept when branch/options change
+  }, [debitOfficeId, debitDepartments, debitDepartmentsLoading, form.debitDepartmentId]);
+
+  useEffect(() => {
+    if (form.creditDepartmentId == null) {
+      return;
+    }
+    if (
+      creditOfficeId == null ||
+      (!creditDepartmentsLoading &&
+        !creditDepartments.some((department) => department.id === form.creditDepartmentId))
+    ) {
+      patchForm({ creditDepartmentId: undefined });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear stale dept when branch/options change
+  }, [creditOfficeId, creditDepartments, creditDepartmentsLoading, form.creditDepartmentId]);
 
   const glAccountTypesById = validationContext.glAccountTypesById ?? {};
 
@@ -331,14 +333,9 @@ export function JournalEntryCreateForm({
                         if (!value) {
                           return;
                         }
-                        const officeId = Number(value);
                         patchForm({
-                          debitOfficeId: officeId,
-                          debitDepartmentId: clearDepartmentIfOfficeMismatch(
-                            form.debitDepartmentId,
-                            officeId,
-                            departments
-                          )
+                          debitOfficeId: Number(value),
+                          debitDepartmentId: undefined
                         });
                       }}
                       options={officeOptions}
@@ -357,8 +354,14 @@ export function JournalEntryCreateForm({
                         patchForm({ debitDepartmentId: value ? Number(value) : undefined })
                       }
                       options={debitDepartmentOptions}
-                      placeholder="None"
-                      disabled={pending}
+                      placeholder={
+                        debitOfficeId == null
+                          ? 'Select branch first'
+                          : debitDepartmentsLoading
+                            ? 'Loading…'
+                            : 'None'
+                      }
+                      disabled={pending || debitOfficeId == null || debitDepartmentsLoading}
                       error={fieldErrors.debitDepartmentId}
                     />
                   </div>
@@ -385,14 +388,9 @@ export function JournalEntryCreateForm({
                         if (!value) {
                           return;
                         }
-                        const officeId = Number(value);
                         patchForm({
-                          creditOfficeId: officeId,
-                          creditDepartmentId: clearDepartmentIfOfficeMismatch(
-                            form.creditDepartmentId,
-                            officeId,
-                            departments
-                          )
+                          creditOfficeId: Number(value),
+                          creditDepartmentId: undefined
                         });
                       }}
                       options={officeOptions}
@@ -413,8 +411,14 @@ export function JournalEntryCreateForm({
                         patchForm({ creditDepartmentId: value ? Number(value) : undefined })
                       }
                       options={creditDepartmentOptions}
-                      placeholder="None"
-                      disabled={pending}
+                      placeholder={
+                        creditOfficeId == null
+                          ? 'Select branch first'
+                          : creditDepartmentsLoading
+                            ? 'Loading…'
+                            : 'None'
+                      }
+                      disabled={pending || creditOfficeId == null || creditDepartmentsLoading}
                       error={fieldErrors.creditDepartmentId}
                     />
                   </div>

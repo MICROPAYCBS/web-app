@@ -18,14 +18,39 @@ import {
 import {
   createDepartment,
   deleteDepartment,
+  listDepartments,
   updateDepartment,
   type UpsertDepartmentInput
 } from '@/lib/fineract/departments';
+import type { Department } from '@/lib/fineract/department-types';
 import { getServerSession } from '@/lib/session/server';
 
 export type DepartmentActionResult =
   | { ok: true; resourceId?: number }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+/** Active departments mapped to a branch for journal / posting dropdowns. */
+export async function listDepartmentsForOfficeAction(
+  officeId: number
+): Promise<DepartmentActionResult & { data?: Department[] }> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'READ_DEPARTMENT');
+  } catch {
+    return { ok: false, message: 'You do not have permission to view departments.' };
+  }
+
+  if (!Number.isFinite(officeId) || officeId <= 0) {
+    return { ok: false, message: 'Select a branch first.' };
+  }
+
+  try {
+    const data = await listDepartments({ officeId });
+    return { ok: true, data };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load departments for this branch.');
+  }
+}
 
 function validateInput(input: UpsertDepartmentInput): Record<string, string> | null {
   const fieldErrors: Record<string, string> = {};

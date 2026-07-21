@@ -110,7 +110,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.entry.is.not.waiting.for.approval':
     'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.',
   'error.msg.command.not.waiting.for.approval':
-    'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.'
+    'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.',
+  'error.msg.department.not.mapped.to.office':
+    'The selected department is not mapped to this branch. Choose a department mapped to the branch, or update office–department mappings.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

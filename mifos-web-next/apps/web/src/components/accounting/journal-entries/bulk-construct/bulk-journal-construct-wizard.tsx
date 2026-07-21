@@ -126,6 +126,10 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
       const nextTemplate = { ...current.template, ...patch };
       const variationModeChanged =
         patch.variationMode != null && patch.variationMode !== current.template.variationMode;
+      if (nextTemplate.variationMode === 'branch') {
+        // Department is chosen per branch row from mapped options.
+        nextTemplate.departmentId = undefined;
+      }
       return {
         ...current,
         template: nextTemplate,
