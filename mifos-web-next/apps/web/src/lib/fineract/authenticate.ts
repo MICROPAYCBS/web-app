@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { FineractHttpError } from '@mifos/api-client';
+import { parseSessionRoles } from '@mifos/auth';
 import { AuthenticationError } from '@/lib/fineract/authentication-error';
 import { readFineractJsonBody } from '@/lib/fineract/fineract-response';
 import { getFineractServerConfig } from '@/lib/fineract/server-config';
@@ -44,7 +45,7 @@ export function mapAuthenticationToSession(data: FineractAuthenticationResponse)
     officeId: data.officeId,
     officeName: data.officeName,
     permissions: data.permissions ?? [],
-    roles: data.roles,
+    roles: parseSessionRoles(data.roles),
     authenticated: data.authenticated ?? true,
     base64EncodedAuthenticationKey: data.base64EncodedAuthenticationKey,
     accessToken: data.accessToken,

@@ -9,12 +9,13 @@
  */
 
 import { KeyRoundIcon } from 'lucide-react';
-import { useState } from 'react';
-import { useSession } from '@mifos/auth';
+import { useMemo, useState } from 'react';
+import { parseSessionRoles, useSession } from '@mifos/auth';
 import { ChangePasswordDialog } from '@/components/auth/change-password-dialog';
 import { SignOutMenuItem } from '@/components/auth/sign-out-control';
 import { ThemeMenuGroup } from '@/components/theme/theme-menu-group';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -38,6 +39,7 @@ function userInitials(displayName: string): string {
 export function MifosNavUser() {
   const { user } = useSession();
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const roles = useMemo(() => parseSessionRoles(user?.roles), [user?.roles]);
 
   if (!user) {
     return null;
@@ -72,6 +74,15 @@ export function MifosNavUser() {
                 <p className="font-medium">{displayName}</p>
                 {branchLabel ? (
                   <p className="text-xs text-muted-foreground">Branch: {branchLabel}</p>
+                ) : null}
+                {roles.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {roles.map((role) => (
+                      <Badge key={role.id} variant="secondary" className="font-normal">
+                        {role.name}
+                      </Badge>
+                    ))}
+                  </div>
                 ) : null}
               </div>
             </DropdownMenuLabel>

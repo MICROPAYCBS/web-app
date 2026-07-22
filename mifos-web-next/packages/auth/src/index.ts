@@ -2,7 +2,7 @@ export { can, canAll, cannot } from './can';
 export { assertCan, ForbiddenError } from './assert-can';
 export { Can, type CanProps } from './can-gate';
 export { SessionProvider, useSession, useCan } from './session-context';
-export { parseSessionJson } from './session-parse';
+export { parseSessionJson, parseSessionRoles } from './session-parse';
 export { NAV_MANIFEST, filterNavForUser, getNavPermission, type NavItem } from './nav-manifest';
 export { filterNavStructure } from './filter-nav';
 export {
@@ -13,4 +13,4 @@ export {
   type RouteRule
 } from './route-manifest';
 export { resolvePermission, type PermissionKey } from './permissions-map';
-export type { SessionUser, PermissionInput, PermissionRule } from './types';
+export type { SessionUser, SessionRole, PermissionInput, PermissionRule } from './types';
