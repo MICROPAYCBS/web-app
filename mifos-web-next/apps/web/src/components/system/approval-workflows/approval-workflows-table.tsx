@@ -44,8 +44,10 @@ import {
 import { Input } from '@/components/ui/input';
 import {
   formatWorkflowTaskDisplay,
+  isWorkflowTaskMakerCheckerDisabled,
   workflowDefinitionStatusLabel,
-  workflowDefinitionStatusVariant
+  workflowDefinitionStatusVariant,
+  WORKFLOW_ACTIVATE_MC_DISABLED_HINT
 } from '@/lib/fineract/approval-workflow-display';
 import {
   approvalWorkflowDetailPath,
@@ -56,6 +58,7 @@ import {
   type ApprovalWorkflowListFilters
 } from '@/lib/fineract/approval-workflow-list-query';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function ApprovalWorkflowsTable({
   definitions,
@@ -154,11 +157,16 @@ export function ApprovalWorkflowsTable({
                 const isDraft = status === 'DRAFT';
                 const isActive = status === 'ACTIVE';
                 const isInactive = status === 'INACTIVE';
+                const canShowActivate = (isDraft || isInactive) && canActivate;
+                const activateBlockedByMc = isWorkflowTaskMakerCheckerDisabled(
+                  row.original.taskPermissionCode,
+                  taskPermissions
+                );
                 const hasRowActions =
                   canUpdate ||
                   (isDraft && canDelete) ||
                   (isActive && canDeactivate) ||
-                  (isInactive && canActivate);
+                  canShowActivate;
                 if (!hasRowActions) {
                   return null;
                 }
@@ -173,27 +181,50 @@ export function ApprovalWorkflowsTable({
                         <Pencil className="size-4" />
                       </Link>
                     ) : null}
-                    {isInactive && canActivate ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Activate ${row.original.name}`}
-                        disabled={pending}
-                        onClick={() => {
-                          startTransition(async () => {
-                            const result = await activateApprovalWorkflowAction(row.original.id);
-                            if (!result.ok) {
-                              toast.error(result.message);
-                              return;
+                    {canShowActivate ? (
+                      activateBlockedByMc ? (
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <span className="inline-flex cursor-not-allowed" />
                             }
-                            toast.success('Workflow activated.');
-                            router.refresh();
-                          });
-                        }}
-                      >
-                        <Power className="size-4" />
-                      </Button>
+                          >
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Activate ${row.original.name} (maker-checker required)`}
+                              disabled
+                            >
+                              <Power className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs text-pretty">
+                            {WORKFLOW_ACTIVATE_MC_DISABLED_HINT}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Activate ${row.original.name}`}
+                          disabled={pending}
+                          onClick={() => {
+                            startTransition(async () => {
+                              const result = await activateApprovalWorkflowAction(row.original.id);
+                              if (!result.ok) {
+                                toast.error(result.message);
+                                return;
+                              }
+                              toast.success('Workflow activated.');
+                              router.refresh();
+                            });
+                          }}
+                        >
+                          <Power className="size-4" />
+                        </Button>
+                      )
                     ) : null}
                     {isActive && canDeactivate ? (
                       <Button
@@ -279,7 +310,7 @@ export function ApprovalWorkflowsTable({
   }
 
   return (
-    <>
+    <TooltipProvider>
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <Input
@@ -337,6 +368,6 @@ export function ApprovalWorkflowsTable({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </TooltipProvider>
   );
 }

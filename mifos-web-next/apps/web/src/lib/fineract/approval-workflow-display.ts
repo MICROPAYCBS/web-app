@@ -301,6 +301,17 @@ export function formatWorkflowTaskDisplay(
   };
 }
 
+/** Known false — task exists in maker-checkerable list but is not enabled. */
+export function isWorkflowTaskMakerCheckerDisabled(
+  taskPermissionCode: string,
+  permissions?: FineractRolePermissionUsage[]
+): boolean {
+  return formatWorkflowTaskDisplay(taskPermissionCode, permissions).makerCheckerEnabled === false;
+}
+
+export const WORKFLOW_ACTIVATE_MC_DISABLED_HINT =
+  'Maker-checker is not enabled for this task. Enable it before activating this workflow.';
+
 export function isWorkflowActivationMcDisabledError(message: string): boolean {
   const normalized = message.toLowerCase();
   return (

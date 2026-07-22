@@ -42,8 +42,10 @@ import {
   CONFIGURE_MC_TASKS_PATH,
   formatWorkflowTaskDisplay,
   isWorkflowActivationMcDisabledError,
+  isWorkflowTaskMakerCheckerDisabled,
   workflowDefinitionStatusLabel,
-  workflowDefinitionStatusVariant
+  workflowDefinitionStatusVariant,
+  WORKFLOW_ACTIVATE_MC_DISABLED_HINT
 } from '@/lib/fineract/approval-workflow-display';
 import {
   APPROVAL_WORKFLOWS_LIST_PATH,
@@ -72,6 +74,11 @@ export function ApprovalWorkflowDetailView({
   const isActive = definition.status === 'ACTIVE';
   const isInactive = definition.status === 'INACTIVE';
   const taskDisplay = formatWorkflowTaskDisplay(definition.taskPermissionCode, taskPermissions);
+  const showActivate = (isDraft || isInactive) && canActivate;
+  const activateBlockedByMc = isWorkflowTaskMakerCheckerDisabled(
+    definition.taskPermissionCode,
+    taskPermissions
+  );
 
   function handleActivate() {
     setActionError(null);
@@ -157,7 +164,13 @@ export function ApprovalWorkflowDetailView({
                   </Link>
                 ) : null}
                 {(isDraft || isInactive) && canActivate ? (
-                  <Button type="button" size="sm" disabled={pending} onClick={handleActivate}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pending || activateBlockedByMc}
+                    title={activateBlockedByMc ? WORKFLOW_ACTIVATE_MC_DISABLED_HINT : undefined}
+                    onClick={handleActivate}
+                  >
                     <Power className="mr-2 size-4" />
                     Activate
                   </Button>
@@ -195,6 +208,18 @@ export function ApprovalWorkflowDetailView({
           <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {actionError}
           </p>
+        ) : null}
+
+        {showActivate && activateBlockedByMc ? (
+          <div className="mb-4 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm">
+            <p className="text-foreground">{WORKFLOW_ACTIVATE_MC_DISABLED_HINT}</p>
+            <Link
+              href={CONFIGURE_MC_TASKS_PATH}
+              className="mt-1 inline-flex font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Configure maker-checker tasks
+            </Link>
+          </div>
         ) : null}
 
         <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
