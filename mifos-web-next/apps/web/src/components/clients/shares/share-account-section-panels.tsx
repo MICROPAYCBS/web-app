@@ -39,6 +39,7 @@ import {
   shareAccountCurrencyCode,
   type ShareAccountSectionId
 } from '@/lib/fineract/share-account-display';
+import { sharePurchaseFundingLabel } from '@/lib/fineract/share-account-use-savings';
 
 function ShareAccountSummarySection({ account }: { account: FineractShareAccountDetail }) {
   const currency = shareAccountCurrencyCode(account);
@@ -173,6 +174,11 @@ function ShareAccountPurchasesSection({ account }: { account: FineractShareAccou
         accessorKey: 'amount',
         header: 'Amount',
         cell: ({ row }) => <MoneyValue amount={row.original.amount} currencyCode={currency} />
+      },
+      {
+        id: 'funding',
+        header: 'Funding',
+        cell: ({ row }) => sharePurchaseFundingLabel(row.original.useSavings)
       },
       {
         id: 'status',

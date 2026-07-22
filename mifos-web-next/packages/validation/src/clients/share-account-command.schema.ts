@@ -36,7 +36,9 @@ export const shareAccountCloseCommandSchema = z.object({
 
 export const shareAccountApplyAdditionalSharesSchema = z.object({
   requestedDate: requiredDate,
-  requestedShares: z.coerce.number().int().positive('Requested shares must be greater than zero.')
+  requestedShares: z.coerce.number().int().positive('Requested shares must be greater than zero.'),
+  /** When true, fund from linked savings on approval. Default / omitted = cash. */
+  useSavings: z.boolean().optional()
 });
 
 export const shareAccountRedeemSharesSchema = z.object({

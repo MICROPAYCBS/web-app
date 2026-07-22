@@ -229,14 +229,14 @@ export function ShareAccountActions({
         open={applyOpen}
         onOpenChange={setApplyOpen}
         clientId={clientId}
-        accountId={account.id}
+        account={account}
         kind="applyAdditional"
       />
       <ShareAccountSharesRequestSheet
         open={redeemOpen}
         onOpenChange={setRedeemOpen}
         clientId={clientId}
-        accountId={account.id}
+        account={account}
         kind="redeem"
       />
       <ShareAccountAdditionalDecisionSheet

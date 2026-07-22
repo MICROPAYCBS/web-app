@@ -32,6 +32,7 @@ import {
   getShareAccountTemplate,
   updateShareAccountRecord
 } from '@/lib/fineract/share-accounts';
+import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
 import { clientAccountGeneralPath, clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { getServerSession } from '@/lib/session/server';
 
@@ -87,6 +88,36 @@ export async function fetchShareAccountTemplateAction(clientId: string, productI
     return await getShareAccountTemplate(clientId, productId);
   } catch (err) {
     return toFineractActionError(err, 'Could not load application template.');
+  }
+}
+
+/** Available balance on a linked savings account for share funding hints. */
+export async function fetchLinkedSavingsAvailableBalanceAction(savingsAccountId: number): Promise<
+  | { ok: true; availableBalance: number | null; accountNo?: string; currencyCode?: string }
+  | { ok: false; message: string }
+> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  if (!Number.isFinite(savingsAccountId) || savingsAccountId <= 0) {
+    return { ok: false, message: 'Select a savings account.' };
+  }
+
+  try {
+    assertCan(session, 'READ_SAVINGSACCOUNT');
+    const account = await getSavingsAccount(savingsAccountId);
+    if (!account) {
+      return { ok: false, message: 'Savings account not found.' };
+    }
+    return {
+      ok: true,
+      availableBalance: account.summary?.availableBalance ?? null,
+      accountNo: account.accountNo,
+      currencyCode: account.currency?.code
+    };
+  } catch (err) {
+    return toFineractActionError(err, 'Could not load savings balance.');
   }
 }
 

@@ -17,6 +17,7 @@
     "lockinPeriodFrequency": { "required": false },
     "lockinPeriodFrequencyType": { "required": false },
     "allowDividendCalculationForInactiveClients": { "required": false },
+    "useSavings": { "required": false },
     "charges": { "required": false }
   }
 }

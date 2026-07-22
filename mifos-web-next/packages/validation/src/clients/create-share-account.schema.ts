@@ -43,6 +43,11 @@ export const createShareAccountSchema = z
     lockinPeriodFrequency: optionalNonNegativeInt,
     lockinPeriodFrequencyType: optionalId,
     allowDividendCalculationForInactiveClients: z.boolean().optional(),
+    /**
+     * When true, available balance is checked at apply and funds are withdrawn from the
+     * linked savings account on approval. Default / omitted = cash-funded.
+     */
+    useSavings: z.boolean().optional(),
     charges: z.array(shareAccountChargeItemSchema).optional()
   })
   .superRefine((data, ctx) => {

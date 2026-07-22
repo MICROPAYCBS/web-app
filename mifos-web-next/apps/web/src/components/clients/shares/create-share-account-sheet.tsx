@@ -11,7 +11,7 @@
 import type { FineractShareAccountTemplate } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   createShareAccountAction,
   fetchShareAccountTemplateAction
@@ -26,11 +26,34 @@ import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLinkedSavingsBalance } from '@/hooks/use-linked-savings-balance';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { isShareAccountTemplate } from '@/lib/fineract/share-account-action-result';
 import { SHARE_ACCOUNT_CREATE_TOAST } from '@/lib/fineract/share-account-command-toasts';
+import { estimateSharePurchaseTotal } from '@/lib/fineract/share-account-use-savings';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import { toSelectOptions } from '@/lib/form/select-options';
+
+/** Product templates often omit lookup lists present on the base template. */
+function mergeShareAccountTemplate(
+  previous: FineractShareAccountTemplate,
+  next: FineractShareAccountTemplate
+): FineractShareAccountTemplate {
+  return {
+    ...next,
+    productOptions: next.productOptions?.length ? next.productOptions : previous.productOptions,
+    chargeOptions: next.chargeOptions?.length ? next.chargeOptions : previous.chargeOptions,
+    clientSavingsAccounts: next.clientSavingsAccounts?.length
+      ? next.clientSavingsAccounts
+      : previous.clientSavingsAccounts,
+    lockinPeriodFrequencyTypeOptions: next.lockinPeriodFrequencyTypeOptions?.length
+      ? next.lockinPeriodFrequencyTypeOptions
+      : previous.lockinPeriodFrequencyTypeOptions,
+    minimumActivePeriodFrequencyTypeOptions: next.minimumActivePeriodFrequencyTypeOptions?.length
+      ? next.minimumActivePeriodFrequencyTypeOptions
+      : previous.minimumActivePeriodFrequencyTypeOptions
+  };
+}
 
 export const CREATE_SHARE_ACCOUNT_FORM_ID = 'create-share-account-form';
 
@@ -48,6 +71,7 @@ type FormState = {
   lockinPeriodFrequency: string;
   lockinPeriodFrequencyType: string;
   allowDividendCalculationForInactiveClients: boolean;
+  useSavings: boolean;
   charges: ChargeRow[];
 };
 
@@ -64,6 +88,7 @@ function emptyForm(initialDate: string): FormState {
     lockinPeriodFrequency: '',
     lockinPeriodFrequencyType: '',
     allowDividendCalculationForInactiveClients: false,
+    useSavings: false,
     charges: []
   };
 }
@@ -123,14 +148,48 @@ export function CreateShareAccountSheet({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [loadingTemplate, startLoadTemplate] = useTransition();
+  const templateRequestIdRef = useRef(0);
 
   const productSelected = Boolean(form.productId);
   const currencyCode = productSelected ? template.currency?.code : undefined;
+  const savingsAccountIdNum = form.savingsAccountId ? Number(form.savingsAccountId) : null;
+  const {
+    balance: linkedSavingsBalance,
+    loading: linkedSavingsLoading
+  } = useLinkedSavingsBalance(savingsAccountIdNum, form.useSavings);
 
-  const productOptions = useMemo(
-    () => toSelectOptions(template.productOptions),
-    [template.productOptions]
-  );
+  const estimatedPurchaseTotal = useMemo(() => {
+    const shares = Number(form.requestedShares);
+    const chargeAmounts = form.charges
+      .map((row) => Number(row.amount))
+      .filter((amount) => Number.isFinite(amount) && amount > 0);
+    return estimateSharePurchaseTotal({
+      requestedShares: shares,
+      unitPrice: template.currentMarketPrice,
+      chargeAmounts
+    });
+  }, [form.charges, form.requestedShares, template.currentMarketPrice]);
+
+  const insufficientSavings =
+    form.useSavings &&
+    linkedSavingsBalance?.availableBalance != null &&
+    estimatedPurchaseTotal != null &&
+    linkedSavingsBalance.availableBalance < estimatedPurchaseTotal;
+
+  const productOptions = useMemo(() => {
+    const options = toSelectOptions(template.productOptions);
+    if (
+      form.productId &&
+      !options.some((option) => option.value === form.productId) &&
+      template.productName
+    ) {
+      return [
+        ...options,
+        { value: form.productId, label: template.productName, keywords: [template.productName] }
+      ];
+    }
+    return options;
+  }, [form.productId, template.productName, template.productOptions]);
   const savingsOptions = useMemo(
     () =>
       (template.clientSavingsAccounts ?? []).map((account) => ({
@@ -162,12 +221,13 @@ export function CreateShareAccountSheet({
 
   const loadTemplate = useCallback(
     (productId: string) => {
+      const requestId = ++templateRequestIdRef.current;
       startLoadTemplate(async () => {
         const result = await fetchShareAccountTemplateAction(clientId, productId || undefined);
-        if (!isShareAccountTemplate(result)) {
+        if (requestId !== templateRequestIdRef.current || !isShareAccountTemplate(result)) {
           return;
         }
-        setTemplate(result);
+        setTemplate((previous) => mergeShareAccountTemplate(previous, result));
         setForm((current) => ({
           ...current,
           ...applyTemplateDefaults(result, current)
@@ -181,6 +241,7 @@ export function CreateShareAccountSheet({
     if (!open) {
       return;
     }
+    const requestId = ++templateRequestIdRef.current;
     setTemplate(initialTemplate);
     setForm(emptyForm(initialTransactionDate));
     setActiveTab('basic');
@@ -188,9 +249,10 @@ export function CreateShareAccountSheet({
     setSubmitError(null);
     startTransition(async () => {
       const result = await fetchShareAccountTemplateAction(clientId);
-      if (isShareAccountTemplate(result)) {
-        setTemplate(result);
+      if (requestId !== templateRequestIdRef.current || !isShareAccountTemplate(result)) {
+        return;
       }
+      setTemplate(result);
     });
   }, [open, initialTemplate, clientId, initialTransactionDate]);
 
@@ -208,6 +270,7 @@ export function CreateShareAccountSheet({
       lockinPeriodFrequency: '',
       lockinPeriodFrequencyType: '',
       allowDividendCalculationForInactiveClients: false,
+      useSavings: false,
       charges: []
     });
     if (value) {
@@ -233,6 +296,7 @@ export function CreateShareAccountSheet({
         lockinPeriodFrequencyType: form.lockinPeriodFrequencyType,
         allowDividendCalculationForInactiveClients:
           form.allowDividendCalculationForInactiveClients,
+        ...(form.useSavings ? { useSavings: true } : {}),
         charges: form.charges
           .filter((row) => row.chargeId && row.amount)
           .map((row) => ({
@@ -267,7 +331,7 @@ export function CreateShareAccountSheet({
       description="Apply for a share account for this customer."
       formId={CREATE_SHARE_ACCOUNT_FORM_ID}
       submitLoading={pending || loadingTemplate}
-      submitDisabled={productOptions.length === 0}
+      submitDisabled={productOptions.length === 0 || insufficientSavings === true}
       submitLabel="Submit application"
       className="data-[side=right]:w-full data-[side=right]:sm:max-w-xl"
     >
@@ -339,6 +403,62 @@ export function CreateShareAccountSheet({
               required
               disabled={!productSelected}
             />
+            <SwitchField
+              label="Use savings to fund purchase"
+              description="When enabled, available balance is checked now and funds are withdrawn from the linked savings account when the purchase is approved. Leave off for cash funding."
+              checked={form.useSavings}
+              onCheckedChange={(checked) => patchForm({ useSavings: checked })}
+              disabled={!productSelected || !form.savingsAccountId}
+            />
+            {form.useSavings ? (
+              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                {linkedSavingsLoading ? (
+                  <p>Loading savings balance…</p>
+                ) : (
+                  <>
+                    <p>
+                      Linked savings{' '}
+                      <span className="font-medium text-foreground">
+                        {linkedSavingsBalance?.accountNo ??
+                          savingsOptions.find((option) => option.value === form.savingsAccountId)
+                            ?.label ??
+                          form.savingsAccountId}
+                      </span>
+                      {linkedSavingsBalance?.availableBalance != null ? (
+                        <>
+                          {' '}
+                          · Available{' '}
+                          <MoneyValue
+                            amount={linkedSavingsBalance.availableBalance}
+                            currencyCode={
+                              linkedSavingsBalance.currencyCode ??
+                              currencyCode ??
+                              'USD'
+                            }
+                          />
+                        </>
+                      ) : null}
+                    </p>
+                    {estimatedPurchaseTotal != null && currencyCode ? (
+                      <p className="mt-1">
+                        Estimated purchase{' '}
+                        <MoneyValue
+                          amount={estimatedPurchaseTotal}
+                          currencyCode={currencyCode}
+                        />{' '}
+                        (shares × market price
+                        {form.charges.length ? ' + charges' : ''})
+                      </p>
+                    ) : null}
+                    {insufficientSavings ? (
+                      <p className="mt-1 text-destructive" role="alert">
+                        Available balance is below the estimated purchase total.
+                      </p>
+                    ) : null}
+                  </>
+                )}
+              </div>
+            ) : null}
             <TransactionDateField
               label="Application date"
               value={form.applicationDate}

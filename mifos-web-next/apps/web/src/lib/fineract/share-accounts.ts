@@ -143,7 +143,8 @@ function normalizeTransaction(raw: unknown): FineractShareAccountTransaction | n
     type: normalizeEnum(row.type),
     amount: asNumber(row.amount),
     chargeAmount: asNumber(row.chargeAmount),
-    amountPaid: asNumber(row.amountPaid)
+    amountPaid: asNumber(row.amountPaid),
+    useSavings: row.useSavings === true
   };
 }
 

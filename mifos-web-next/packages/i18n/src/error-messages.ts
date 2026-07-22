@@ -112,7 +112,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.command.not.waiting.for.approval':
     'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.',
   'error.msg.department.not.mapped.to.office':
-    'The selected department is not mapped to this branch. Choose a department mapped to the branch, or update office–department mappings.'
+    'The selected department is not mapped to this branch. Choose a department mapped to the branch, or update office–department mappings.',
+  'insufficient.available.balance.on.linked.savings':
+    'The linked savings account does not have enough available balance for this share purchase.',
+  'error.msg.shareaccount.insufficient.available.balance.on.linked.savings':
+    'The linked savings account does not have enough available balance to approve this share purchase.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

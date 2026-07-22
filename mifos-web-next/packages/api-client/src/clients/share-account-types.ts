@@ -68,6 +68,8 @@ export interface FineractShareAccountTransaction {
   amount?: number;
   chargeAmount?: number;
   amountPaid?: number;
+  /** When true, purchase is funded from the linked savings account on approval. */
+  useSavings?: boolean;
 }
 
 export interface FineractShareAccountCharge {

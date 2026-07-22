@@ -51,6 +51,7 @@ export function buildShareAccountCreatePayload(
     lockinPeriodFrequencyType: input.lockinPeriodFrequencyType,
     allowDividendCalculationForInactiveClients:
       input.allowDividendCalculationForInactiveClients === true,
+    useSavings: input.useSavings === true ? true : undefined,
     charges: chargeRows(input.charges),
     locale: FINERACT_LOCALE,
     dateFormat: FINERACT_DATE_FORMAT

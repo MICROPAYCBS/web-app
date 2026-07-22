@@ -211,12 +211,18 @@ export async function executeShareAccountSharesCommandAction(
 
   try {
     let body: Record<string, unknown>;
-    if (command === 'applyadditionalshares' || command === 'redeemshares') {
-      const schema =
-        command === 'applyadditionalshares'
-          ? shareAccountApplyAdditionalSharesSchema
-          : shareAccountRedeemSharesSchema;
-      const parsed = parseOrError(schema, raw);
+    if (command === 'applyadditionalshares') {
+      const parsed = parseOrError(shareAccountApplyAdditionalSharesSchema, raw);
+      if (!parsed.success) {
+        return parsed.result;
+      }
+      body = buildFineractCommandBody({
+        requestedDate: parsed.data.requestedDate,
+        requestedShares: parsed.data.requestedShares,
+        ...(parsed.data.useSavings === true ? { useSavings: true } : {})
+      });
+    } else if (command === 'redeemshares') {
+      const parsed = parseOrError(shareAccountRedeemSharesSchema, raw);
       if (!parsed.success) {
         return parsed.result;
       }
