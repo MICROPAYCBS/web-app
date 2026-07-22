@@ -9,6 +9,7 @@
  */
 
 import type { FineractRolePermissionUsage, WorkflowDefinition } from '@mifos/api-client';
+import { useCan } from '@mifos/auth';
 import { formatActionErrorMessage } from '@mifos/validation';
 import {
   getCoreRowModel,
@@ -17,13 +18,17 @@ import {
   type ColumnDef,
   type PaginationState
 } from '@tanstack/react-table';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Power, PowerOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { deleteApprovalWorkflowAction } from '@/actions/approval-workflows';
+import {
+  activateApprovalWorkflowAction,
+  deactivateApprovalWorkflowAction,
+  deleteApprovalWorkflowAction
+} from '@/actions/approval-workflows';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
@@ -56,18 +61,18 @@ export function ApprovalWorkflowsTable({
   definitions,
   appliedFilters,
   taskPermissions,
-  canUpdate,
-  canDelete,
   filterTrigger
 }: {
   definitions: WorkflowDefinition[];
   appliedFilters: ApprovalWorkflowListFilters;
   taskPermissions: FineractRolePermissionUsage[];
-  canUpdate: boolean;
-  canDelete: boolean;
   filterTrigger?: ReactNode;
 }) {
   const router = useRouter();
+  const canUpdate = useCan('UPDATE_WORKFLOW_DEFINITION');
+  const canDelete = useCan('DELETE_WORKFLOW_DEFINITION');
+  const canActivate = useCan('ACTIVATE_WORKFLOW_DEFINITION');
+  const canDeactivate = useCan('DEACTIVATE_WORKFLOW_DEFINITION');
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -76,7 +81,7 @@ export function ApprovalWorkflowsTable({
   const [deleteTarget, setDeleteTarget] = useState<WorkflowDefinition | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const showActions = canUpdate || canDelete;
+  const showActions = canUpdate || canDelete || canActivate || canDeactivate;
 
   const filteredRows = useMemo(
     () => filterApprovalWorkflowDefinitions(definitions, search, appliedFilters),
@@ -145,13 +150,20 @@ export function ApprovalWorkflowsTable({
               header: 'Actions',
               meta: { sticky: 'right' },
               cell: ({ row }) => {
-                const isDraft = row.original.status === 'DRAFT';
-                if (!isDraft) {
+                const status = row.original.status;
+                const isDraft = status === 'DRAFT';
+                const isActive = status === 'ACTIVE';
+                const isInactive = status === 'INACTIVE';
+                const hasRowActions =
+                  (isDraft && (canUpdate || canDelete)) ||
+                  (isActive && canDeactivate) ||
+                  (isInactive && canActivate);
+                if (!hasRowActions) {
                   return null;
                 }
                 return (
                   <div className="flex items-center gap-1">
-                    {canUpdate ? (
+                    {isDraft && canUpdate ? (
                       <Link
                         href={approvalWorkflowEditPath(row.original.id)}
                         className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}
@@ -160,7 +172,51 @@ export function ApprovalWorkflowsTable({
                         <Pencil className="size-4" />
                       </Link>
                     ) : null}
-                    {canDelete ? (
+                    {isInactive && canActivate ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Activate ${row.original.name}`}
+                        disabled={pending}
+                        onClick={() => {
+                          startTransition(async () => {
+                            const result = await activateApprovalWorkflowAction(row.original.id);
+                            if (!result.ok) {
+                              toast.error(result.message);
+                              return;
+                            }
+                            toast.success('Workflow activated.');
+                            router.refresh();
+                          });
+                        }}
+                      >
+                        <Power className="size-4" />
+                      </Button>
+                    ) : null}
+                    {isActive && canDeactivate ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Deactivate ${row.original.name}`}
+                        disabled={pending}
+                        onClick={() => {
+                          startTransition(async () => {
+                            const result = await deactivateApprovalWorkflowAction(row.original.id);
+                            if (!result.ok) {
+                              toast.error(result.message);
+                              return;
+                            }
+                            toast.success('Workflow deactivated.');
+                            router.refresh();
+                          });
+                        }}
+                      >
+                        <PowerOff className="size-4" />
+                      </Button>
+                    ) : null}
+                    {isDraft && canDelete ? (
                       <Button
                         type="button"
                         variant="ghost"
@@ -182,7 +238,16 @@ export function ApprovalWorkflowsTable({
           ]
         : [])
     ],
-    [canDelete, canUpdate, showActions, taskPermissions]
+    [
+      canActivate,
+      canDeactivate,
+      canDelete,
+      canUpdate,
+      pending,
+      router,
+      showActions,
+      taskPermissions
+    ]
   );
 
   const table = useReactTable({

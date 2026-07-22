@@ -33,16 +33,12 @@ export function ApprovalWorkflowsPageContent({
   definitions,
   taskPermissions,
   engineConfiguration,
-  canUpdateConfiguration,
-  canUpdate,
-  canDelete
+  canUpdateConfiguration
 }: {
   definitions: WorkflowDefinition[];
   taskPermissions: FineractRolePermissionUsage[];
   engineConfiguration: FineractGlobalConfiguration | null;
   canUpdateConfiguration: boolean;
-  canUpdate: boolean;
-  canDelete: boolean;
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<ApprovalWorkflowListFilters>({});
@@ -88,8 +84,6 @@ export function ApprovalWorkflowsPageContent({
             definitions={definitions}
             appliedFilters={appliedFilters}
             taskPermissions={taskPermissions}
-            canUpdate={canUpdate}
-            canDelete={canDelete}
             filterTrigger={
               <ListFilterTrigger
                 activeCount={activeFilterCount}

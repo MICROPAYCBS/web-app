@@ -52,12 +52,6 @@ export default async function ApprovalWorkflowDetailPage({
     <ApprovalWorkflowDetailView
       definition={result.data}
       taskPermissions={taskPermissions}
-      permissions={{
-        canUpdate: can(session, 'UPDATE_WORKFLOW_DEFINITION'),
-        canActivate: can(session, 'ACTIVATE_WORKFLOW_DEFINITION'),
-        canDeactivate: can(session, 'DEACTIVATE_WORKFLOW_DEFINITION'),
-        canDelete: can(session, 'DELETE_WORKFLOW_DEFINITION')
-      }}
     />
   );
 }

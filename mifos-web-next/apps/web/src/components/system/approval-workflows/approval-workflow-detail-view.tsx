@@ -9,6 +9,7 @@
  */
 
 import type { FineractRolePermissionUsage, WorkflowDefinition } from '@mifos/api-client';
+import { useCan } from '@mifos/auth';
 import { Pencil, Power, PowerOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -52,19 +53,16 @@ import { cn } from '@/lib/utils';
 
 export function ApprovalWorkflowDetailView({
   definition,
-  taskPermissions,
-  permissions
+  taskPermissions
 }: {
   definition: WorkflowDefinition;
   taskPermissions: FineractRolePermissionUsage[];
-  permissions: {
-    canUpdate: boolean;
-    canActivate: boolean;
-    canDeactivate: boolean;
-    canDelete: boolean;
-  };
 }) {
   const router = useRouter();
+  const canUpdate = useCan('UPDATE_WORKFLOW_DEFINITION');
+  const canActivate = useCan('ACTIVATE_WORKFLOW_DEFINITION');
+  const canDeactivate = useCan('DEACTIVATE_WORKFLOW_DEFINITION');
+  const canDelete = useCan('DELETE_WORKFLOW_DEFINITION');
   const [pending, startTransition] = useTransition();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [activateErrorOpen, setActivateErrorOpen] = useState(false);
@@ -72,6 +70,7 @@ export function ApprovalWorkflowDetailView({
   const [actionError, setActionError] = useState<string | null>(null);
   const isDraft = definition.status === 'DRAFT';
   const isActive = definition.status === 'ACTIVE';
+  const isInactive = definition.status === 'INACTIVE';
   const taskDisplay = formatWorkflowTaskDisplay(definition.taskPermissionCode, taskPermissions);
 
   function handleActivate() {
@@ -148,7 +147,7 @@ export function ApprovalWorkflowDetailView({
             }
             actions={
               <div className="flex flex-wrap gap-2">
-                {isDraft && permissions.canUpdate ? (
+                {isDraft && canUpdate ? (
                   <Link
                     href={approvalWorkflowEditPath(definition.id)}
                     className={cn(buttonVariants({ size: 'sm' }))}
@@ -157,13 +156,13 @@ export function ApprovalWorkflowDetailView({
                     Edit
                   </Link>
                 ) : null}
-                {isDraft && permissions.canActivate ? (
+                {(isDraft || isInactive) && canActivate ? (
                   <Button type="button" size="sm" disabled={pending} onClick={handleActivate}>
                     <Power className="mr-2 size-4" />
                     Activate
                   </Button>
                 ) : null}
-                {isActive && permissions.canDeactivate ? (
+                {isActive && canDeactivate ? (
                   <Button
                     type="button"
                     size="sm"
@@ -175,7 +174,7 @@ export function ApprovalWorkflowDetailView({
                     Deactivate
                   </Button>
                 ) : null}
-                {isDraft && permissions.canDelete ? (
+                {isDraft && canDelete ? (
                   <Button
                     type="button"
                     size="sm"
