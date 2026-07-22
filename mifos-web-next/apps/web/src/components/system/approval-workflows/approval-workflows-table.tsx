@@ -155,7 +155,8 @@ export function ApprovalWorkflowsTable({
                 const isActive = status === 'ACTIVE';
                 const isInactive = status === 'INACTIVE';
                 const hasRowActions =
-                  (isDraft && (canUpdate || canDelete)) ||
+                  canUpdate ||
+                  (isDraft && canDelete) ||
                   (isActive && canDeactivate) ||
                   (isInactive && canActivate);
                 if (!hasRowActions) {
@@ -163,7 +164,7 @@ export function ApprovalWorkflowsTable({
                 }
                 return (
                   <div className="flex items-center gap-1">
-                    {isDraft && canUpdate ? (
+                    {canUpdate ? (
                       <Link
                         href={approvalWorkflowEditPath(row.original.id)}
                         className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}

@@ -37,15 +37,12 @@ export default async function EditApprovalWorkflowPage({
     notFound();
   }
 
-  if (result.data.status !== 'DRAFT') {
-    notFound();
-  }
-
   return (
     <ApprovalWorkflowWizardPageContent
       mode="edit"
       definitionId={result.data.id}
       workflowName={result.data.name}
+      definitionStatus={result.data.status}
       initialValues={workflowDefinitionToFormValues(result.data)}
       taskPermissions={taskPermissions}
       roles={roles}

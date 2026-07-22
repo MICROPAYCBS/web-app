@@ -309,6 +309,19 @@ export function isWorkflowActivationMcDisabledError(message: string): boolean {
   );
 }
 
+/** PUT blocked while live instances still resolve stages from this definition. */
+export function isWorkflowInProgressUpdateError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('cannot.be.updated.with.in.progress.instances') ||
+    (normalized.includes('in_progress') && normalized.includes('updated')) ||
+    (normalized.includes('in-progress') && normalized.includes('instance'))
+  );
+}
+
+export const WORKFLOW_IN_PROGRESS_UPDATE_HINT =
+  'Finish or reject open approvals for this workflow first. Deactivating stops new selections but does not clear in-flight instances.';
+
 export function defaultWorkflowDefinitionFormValues(
   preferredTaskPermissionCode?: string
 ): UpsertWorkflowDefinitionInput {

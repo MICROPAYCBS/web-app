@@ -20,6 +20,10 @@ import {
   APPROVAL_WORKFLOWS_LIST_PATH,
   approvalWorkflowDetailPath
 } from '@/lib/fineract/approval-workflow-paths';
+import {
+  isWorkflowInProgressUpdateError,
+  WORKFLOW_IN_PROGRESS_UPDATE_HINT
+} from '@/lib/fineract/approval-workflow-display';
 import { BasicsStep } from './steps/basics-step';
 import { ReviewStep } from './steps/review-step';
 import { StagesStep } from './steps/stages-step';
@@ -42,6 +46,7 @@ export function ApprovalWorkflowWizard({
   mode = 'create',
   definitionId,
   workflowName,
+  definitionStatus,
   initialValues,
   taskPermissions,
   roles
@@ -58,7 +63,9 @@ export function ApprovalWorkflowWizard({
       : 'Edit approval workflow'
     : 'Create approval workflow';
   const wizardDescription = isEdit
-    ? 'Draft workflows can be fully replaced. Activate when the structure is ready.'
+    ? definitionStatus === 'ACTIVE' || definitionStatus === 'INACTIVE'
+      ? 'Saving replaces stages and transitions in place. Updates are blocked while approvals for this workflow are still in progress.'
+      : 'Draft workflows can be fully replaced. Activate when the structure is ready.'
     : 'Define stages and transitions for a maker-checker task. New workflows start in draft status.';
   const [draft, setDraft] = useState(initialValues);
   const [stepId, setStepId] = useState('basics');
@@ -177,13 +184,19 @@ export function ApprovalWorkflowWizard({
           : await createApprovalWorkflowAction(draft);
 
       if (!result.ok) {
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        const baseMessage = formatActionErrorMessage(result.message, result.fieldErrors);
+        setSubmitError(
+          isWorkflowInProgressUpdateError(baseMessage)
+            ? `${baseMessage}\n\n${WORKFLOW_IN_PROGRESS_UPDATE_HINT}`
+            : baseMessage
+        );
         if (result.fieldErrors) {
           const firstField = Object.keys(result.fieldErrors)[0];
           if (firstField) {
             setStepId(stepForField(firstField));
           }
         }
+        toast.error(result.message);
         return;
       }
 
@@ -234,7 +247,12 @@ export function ApprovalWorkflowWizard({
         {stepId === 'stages' ? <StagesStep {...stepProps} /> : null}
         {stepId === 'transitions' ? <TransitionsStep {...stepProps} /> : null}
         {stepId === 'review' ? (
-          <ReviewStep {...stepProps} mode={mode} submitError={submitError} />
+          <ReviewStep
+            {...stepProps}
+            mode={mode}
+            definitionStatus={definitionStatus}
+            submitError={submitError}
+          />
         ) : null}
       </FormWizard>
     </PlatformRouteLayout>

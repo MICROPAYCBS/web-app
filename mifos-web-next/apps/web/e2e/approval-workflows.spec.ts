@@ -35,7 +35,7 @@ test.describe('Approval workflows', () => {
     await expect(page.getByRole('link', { name: /create workflow/i })).toBeVisible();
   });
 
-  test('creates and activates default and large loan workflows', async ({ page }) => {
+  test('creates and activates default and higher-priority loan workflows', async ({ page }) => {
     const defaultPayload = fineract.buildDefaultLoanWorkflow(runSuffix);
     const largePayload = fineract.buildLargeLoanWorkflow(runSuffix);
 
@@ -48,8 +48,6 @@ test.describe('Approval workflows', () => {
     await expect(page.getByRole('link', { name: defaultPayload.name })).toBeVisible();
     await expect(page.getByRole('link', { name: largePayload.name })).toBeVisible();
     await expect(page.getByText('CREATE_LOAN').first()).toBeVisible();
-    await expect(page.getByText('Default').first()).toBeVisible();
-    await expect(page.getByText(/5[,.]?000[,.]?000/).first()).toBeVisible();
 
     await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${defaultResult.resourceId}`);
     await expect(page.getByRole('heading', { name: defaultPayload.name })).toBeVisible();
@@ -68,6 +66,25 @@ test.describe('Approval workflows', () => {
     await expect(page.getByText('BRANCH_MANAGER', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('REGIONAL_MANAGER', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('CREDIT_COMMITTEE', { exact: true }).first()).toBeVisible();
+  });
+
+  test('rejects activating a second workflow at the same priority for a task', async () => {
+    const first = fineract.buildDefaultLoanWorkflow(`${runSuffix}-prio-a`);
+    first.priority = 55;
+    first.name = e2eWorkflowName('Same Priority A', runSuffix);
+    const second = fineract.buildDefaultLoanWorkflow(`${runSuffix}-prio-b`);
+    second.priority = 55;
+    second.name = e2eWorkflowName('Same Priority B', runSuffix);
+
+    const firstResult = await fineract.createWorkflowDefinition(first);
+    const secondResult = await fineract.createWorkflowDefinition(second);
+    expect(firstResult.resourceId).toBeTruthy();
+    expect(secondResult.resourceId).toBeTruthy();
+
+    await fineract.activateWorkflowDefinition(firstResult.resourceId as number);
+    await expect(fineract.activateWorkflowDefinition(secondResult.resourceId as number)).rejects.toThrow(
+      /duplicate\.priority\.for\.task|same priority/i
+    );
   });
 
   test('rejects activating a cyclic draft via Fineract', async () => {

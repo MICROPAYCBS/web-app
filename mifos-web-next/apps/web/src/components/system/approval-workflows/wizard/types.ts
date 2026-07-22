@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractRoleListItem, FineractRolePermissionUsage } from '@mifos/api-client';
+import type { FineractRoleListItem, FineractRolePermissionUsage, WorkflowDefinitionStatus } from '@mifos/api-client';
 import type { UpsertWorkflowDefinitionInput } from '@mifos/validation';
 
 export type StepErrors = Record<string, string>;
@@ -18,6 +18,8 @@ export interface ApprovalWorkflowWizardProps {
   definitionId?: number;
   /** Used for the edit wizard title when mode is `edit`. */
   workflowName?: string;
+  /** Status of the definition being edited (`DRAFT` / `ACTIVE` / `INACTIVE`). */
+  definitionStatus?: WorkflowDefinitionStatus;
   initialValues: UpsertWorkflowDefinitionInput;
   taskPermissions: FineractRolePermissionUsage[];
   roles: FineractRoleListItem[];

@@ -14,13 +14,15 @@ import {
   DetailSection
 } from '@/components/composites';
 import { Badge } from '@/components/ui/badge';
+import type { WorkflowDefinitionStatus } from '@mifos/api-client';
 import {
   buildWorkflowChain,
   findWorkflowTaskPermission,
   formatWorkflowTaskPrimaryLabel,
   formatWorkflowTaskOptionDescription,
   resolveWorkflowStageRoleName,
-  workflowChainBookend
+  workflowChainBookend,
+  WORKFLOW_IN_PROGRESS_UPDATE_HINT
 } from '@/lib/fineract/approval-workflow-display';
 import type { WorkflowStepProps } from '../types';
 
@@ -29,22 +31,37 @@ export function ReviewStep({
   taskPermissions,
   roles,
   mode = 'create',
+  definitionStatus,
   submitError
-}: WorkflowStepProps & { mode?: 'create' | 'edit'; submitError: string | null }) {
+}: WorkflowStepProps & {
+  mode?: 'create' | 'edit';
+  definitionStatus?: WorkflowDefinitionStatus;
+  submitError: string | null;
+}) {
   const task = findWorkflowTaskPermission(taskPermissions, draft.taskPermissionCode);
   const taskLabel = task
     ? formatWorkflowTaskPrimaryLabel(task)
     : draft.taskPermissionCode || '—';
   const taskDescription = task ? formatWorkflowTaskOptionDescription(task) : undefined;
   const chain = buildWorkflowChain(draft.stages, draft.transitions);
+  const editingPublished =
+    mode === 'edit' && (definitionStatus === 'ACTIVE' || definitionStatus === 'INACTIVE');
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         {mode === 'edit'
-          ? 'Review your changes before saving. The workflow remains in draft status.'
+          ? editingPublished
+            ? 'Review your changes before saving. The definition is updated in place and keeps its current status.'
+            : 'Review your changes before saving. The workflow remains in draft status until you activate it.'
           : 'Review the workflow before creating it. The definition will be saved in draft status.'}
       </p>
+
+      {editingPublished ? (
+        <p className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          {WORKFLOW_IN_PROGRESS_UPDATE_HINT}
+        </p>
+      ) : null}
 
       {submitError ? (
         <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive whitespace-pre-wrap">

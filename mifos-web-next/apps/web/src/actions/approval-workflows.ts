@@ -51,7 +51,7 @@ function revalidateApprovalWorkflowViews(definitionId?: number) {
   }
 }
 
-function activationErrorMessage(error: unknown, fallback: string): string {
+function workflowCommandErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof FineractHttpError) {
     const developerMessage = error.body?.errors?.find(
       (item) => typeof item.developerMessage === 'string' && item.developerMessage.trim()
@@ -124,7 +124,8 @@ export async function updateApprovalWorkflowAction(
     revalidateApprovalWorkflowViews(definitionId);
     return actionSuccessFromFineractCommand(response, { resourceId: definitionId });
   } catch (error) {
-    return toFineractActionError(error, 'Failed to update approval workflow.');
+    const message = workflowCommandErrorMessage(error, 'Failed to update approval workflow.');
+    return { ok: false, message };
   }
 }
 
@@ -147,7 +148,7 @@ export async function activateApprovalWorkflowAction(
     revalidateApprovalWorkflowViews(definitionId);
     return actionSuccessFromFineractCommand(response, { resourceId: definitionId });
   } catch (error) {
-    const message = activationErrorMessage(error, 'Failed to activate approval workflow.');
+    const message = workflowCommandErrorMessage(error, 'Failed to activate approval workflow.');
     return { ok: false, message, activationError: message };
   }
 }

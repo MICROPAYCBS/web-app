@@ -147,7 +147,7 @@ export function ApprovalWorkflowDetailView({
             }
             actions={
               <div className="flex flex-wrap gap-2">
-                {isDraft && canUpdate ? (
+                {canUpdate ? (
                   <Link
                     href={approvalWorkflowEditPath(definition.id)}
                     className={cn(buttonVariants({ size: 'sm' }))}
