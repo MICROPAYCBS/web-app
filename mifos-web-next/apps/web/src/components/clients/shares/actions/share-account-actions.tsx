@@ -188,7 +188,7 @@ export function ShareAccountActions({
               <MoreHorizontal className="size-4" />
               More
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-72">
               {overflow.map((item, index) => (
                 <Fragment key={item.id}>
                   {index > 0 && item.destructive ? <DropdownMenuSeparator /> : null}

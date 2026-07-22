@@ -38,6 +38,26 @@ export function shareAccountCurrencyCode(account: FineractShareAccountDetail): s
   return account.currency.code ?? account.summary?.currency?.code ?? 'USD';
 }
 
+export function shareAccountLinkedSavingsLabel(
+  account: FineractShareAccountDetail
+): string | null {
+  if (account.savingsAccountNumber?.trim()) {
+    return account.savingsAccountNumber.trim();
+  }
+  if (account.savingsAccountId != null && account.savingsAccountId > 0) {
+    return `#${account.savingsAccountId}`;
+  }
+  return null;
+}
+
+export function shareAccountLinkedSavingsId(
+  account: FineractShareAccountDetail
+): number | undefined {
+  return account.savingsAccountId != null && account.savingsAccountId > 0
+    ? account.savingsAccountId
+    : undefined;
+}
+
 export function formatShareAccountMoney(
   account: FineractShareAccountDetail,
   amount: number | undefined

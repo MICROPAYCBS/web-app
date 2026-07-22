@@ -20,6 +20,7 @@ import {
   type PaginationState
 } from '@tanstack/react-table';
 import { ScrollText } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { AuditTrailEntryList } from '@/components/audit/audit-trail-entry-list';
 import {
@@ -34,9 +35,12 @@ import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
 import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
+import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import {
   formatShareAccountDate,
   shareAccountCurrencyCode,
+  shareAccountLinkedSavingsId,
+  shareAccountLinkedSavingsLabel,
   type ShareAccountSectionId
 } from '@/lib/fineract/share-account-display';
 import { sharePurchaseFundingLabel } from '@/lib/fineract/share-account-use-savings';
@@ -45,6 +49,13 @@ function ShareAccountSummarySection({ account }: { account: FineractShareAccount
   const currency = shareAccountCurrencyCode(account);
   const summary = account.summary;
   const timeline = account.timeline;
+  const linkedSavingsLabel = shareAccountLinkedSavingsLabel(account);
+  const linkedSavingsId = shareAccountLinkedSavingsId(account);
+  const clientId = account.clientId != null ? String(account.clientId) : undefined;
+  const linkedSavingsHref =
+    clientId && linkedSavingsId != null
+      ? clientAccountGeneralPath(clientId, 'savings', linkedSavingsId)
+      : undefined;
 
   const kpiItems = [
     {
@@ -110,11 +121,20 @@ function ShareAccountSummarySection({ account }: { account: FineractShareAccount
           <DetailField label="Product">{account.productName || '—'}</DetailField>
           <DetailField label="Currency">{currency}</DetailField>
           <DetailField label="Linked savings">
-            {account.savingsAccountNumber
-              ? account.savingsAccountNumber
-              : account.savingsAccountId
-                ? `#${account.savingsAccountId}`
-                : '—'}
+            {linkedSavingsLabel ? (
+              linkedSavingsHref ? (
+                <Link
+                  href={linkedSavingsHref}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {linkedSavingsLabel}
+                </Link>
+              ) : (
+                linkedSavingsLabel
+              )
+            ) : (
+              '—'
+            )}
           </DetailField>
           <DetailField label="Allow dividends when inactive">
             {account.allowDividendCalculationForInactiveClients ? 'Yes' : 'No'}

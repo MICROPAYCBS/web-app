@@ -24,10 +24,15 @@ import {
 import { ShareAccountDetailPanel } from '@/components/clients/shares/share-account-detail-panel';
 import { ShareAccountDetailSidebar } from '@/components/clients/shares/share-account-detail-sidebar';
 import { clientGeneralPath } from '@/lib/fineract/client-action-paths';
-import { clientAccountListPath } from '@/lib/fineract/client-account-links';
+import {
+  clientAccountGeneralPath,
+  clientAccountListPath
+} from '@/lib/fineract/client-account-links';
 import {
   shareAccountClientBackLabel,
   shareAccountCurrencyCode,
+  shareAccountLinkedSavingsId,
+  shareAccountLinkedSavingsLabel,
   shareAccountProductName,
   shareAccountStatusVariant
 } from '@/lib/fineract/share-account-display';
@@ -50,6 +55,12 @@ export function ShareAccountDetailView({
   auditTotalRecords?: number;
 }) {
   const currency = shareAccountCurrencyCode(account);
+  const linkedSavingsLabel = shareAccountLinkedSavingsLabel(account);
+  const linkedSavingsId = shareAccountLinkedSavingsId(account);
+  const linkedSavingsHref =
+    linkedSavingsId != null
+      ? clientAccountGeneralPath(clientId, 'savings', linkedSavingsId)
+      : undefined;
 
   return (
     <DetailPage
@@ -90,6 +101,21 @@ export function ShareAccountDetailView({
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span>Account {account.accountNo}</span>
               <AccountExternalIdMeta externalId={account.externalId} />
+              {linkedSavingsLabel ? (
+                <span>
+                  Linked savings{' '}
+                  {linkedSavingsHref ? (
+                    <Link
+                      href={linkedSavingsHref}
+                      className="font-medium text-foreground underline-offset-4 hover:underline"
+                    >
+                      {linkedSavingsLabel}
+                    </Link>
+                  ) : (
+                    <span className="font-medium text-foreground">{linkedSavingsLabel}</span>
+                  )}
+                </span>
+              ) : null}
               {account.currentMarketPrice != null ? (
                 <span>
                   Market price{' '}
