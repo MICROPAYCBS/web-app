@@ -9,7 +9,11 @@
 import type { FineractSavingsAccountTransaction } from '@mifos/api-client';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { isSavingsTransactionDebit } from './savings-account-display';
+import {
+  formatSavingsTransactionType,
+  isSavingsTransactionDebit,
+  sumSavingsCashMovementTotals
+} from './savings-account-display';
 
 function transaction(
   overrides: Partial<FineractSavingsAccountTransaction> = {}
@@ -58,5 +62,81 @@ describe('isSavingsTransactionDebit', () => {
       isSavingsTransactionDebit(transaction({ transactionType: { withdrawal: true } })),
       true
     );
+  });
+});
+
+describe('formatSavingsTransactionType', () => {
+  it('labels linked account transfers as inward or outward', () => {
+    assert.equal(
+      formatSavingsTransactionType(
+        transaction({
+          transactionType: { deposit: true, value: 'Deposit' },
+          transfer: { id: 1 }
+        })
+      ),
+      'Inward Transfer'
+    );
+    assert.equal(
+      formatSavingsTransactionType(
+        transaction({
+          transactionType: { withdrawal: true, value: 'Withdrawal' },
+          transfer: { id: 2 }
+        })
+      ),
+      'Outward Transfer'
+    );
+  });
+
+  it('keeps cash deposits and withdrawals unchanged', () => {
+    assert.equal(
+      formatSavingsTransactionType(transaction({ transactionType: { deposit: true, value: 'Deposit' } })),
+      'Deposit'
+    );
+    assert.equal(
+      formatSavingsTransactionType(
+        transaction({ transactionType: { withdrawal: true, value: 'Withdrawal' } })
+      ),
+      'Withdrawal'
+    );
+  });
+});
+
+describe('sumSavingsCashMovementTotals', () => {
+  it('excludes account transfers from deposit and withdrawal totals', () => {
+    const totals = sumSavingsCashMovementTotals([
+      transaction({
+        id: 1,
+        amount: 10_000_000,
+        transactionType: { deposit: true, value: 'Deposit' }
+      }),
+      transaction({
+        id: 2,
+        amount: 1_000_000,
+        transactionType: { withdrawal: true, value: 'Withdrawal' }
+      }),
+      transaction({
+        id: 3,
+        amount: 200_000,
+        transactionType: { deposit: true, value: 'Deposit' },
+        transfer: { id: 9 }
+      }),
+      transaction({
+        id: 4,
+        amount: 500_000,
+        transactionType: { withdrawal: true, value: 'Withdrawal' },
+        transfer: { id: 10 }
+      }),
+      transaction({
+        id: 5,
+        amount: 50,
+        reversed: true,
+        transactionType: { withdrawal: true, value: 'Withdrawal' }
+      })
+    ]);
+
+    assert.equal(totals.totalDeposits, 10_000_000);
+    assert.equal(totals.totalWithdrawals, 1_000_000);
+    assert.equal(totals.totalInwardTransfers, 200_000);
+    assert.equal(totals.totalOutwardTransfers, 500_000);
   });
 });

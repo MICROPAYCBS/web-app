@@ -111,11 +111,11 @@ function LoanProductTermsSection({ product }: { product: LoanProductDetail }) {
     <>
       <DetailSection title="Principal">
         <DetailFieldGrid>
-          <DetailField label="Default principal">
-            <MoneyValue amount={product.principal} currencyCode={currency} />
-          </DetailField>
           <DetailField label="Min principal">
             <MoneyValue amount={product.minPrincipal} currencyCode={currency} />
+          </DetailField>
+          <DetailField label="Default principal">
+            <MoneyValue amount={product.principal} currencyCode={currency} />
           </DetailField>
           <DetailField label="Max principal">
             <MoneyValue amount={product.maxPrincipal} currencyCode={currency} />
@@ -125,11 +125,11 @@ function LoanProductTermsSection({ product }: { product: LoanProductDetail }) {
 
       <DetailSection title="Repayments">
         <DetailFieldGrid>
-          <DetailField label="Number of repayments">
-            {product.numberOfRepayments ?? '—'}
-          </DetailField>
           <DetailField label="Min repayments">
             {product.minNumberOfRepayments ?? '—'}
+          </DetailField>
+          <DetailField label="Number of repayments">
+            {product.numberOfRepayments ?? '—'}
           </DetailField>
           <DetailField label="Max repayments">
             {product.maxNumberOfRepayments ?? '—'}

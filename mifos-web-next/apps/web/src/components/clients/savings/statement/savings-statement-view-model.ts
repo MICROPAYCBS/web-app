@@ -38,6 +38,9 @@ export type SavingsStatementDocumentData = {
   closingBalanceLabel: string;
   totalDepositsLabel: string;
   totalWithdrawalsLabel: string;
+  totalInwardTransfersLabel: string;
+  totalOutwardTransfersLabel: string;
+  hasTransferTotals: boolean;
   rows: SavingsStatementRow[];
 };
 
@@ -89,6 +92,10 @@ export function buildSavingsStatementDocumentData(input: {
     closingBalanceLabel: formatAccountMoney(statement.closingBalance, currencyCode),
     totalDepositsLabel: formatAccountMoney(statement.totalDeposits, currencyCode),
     totalWithdrawalsLabel: formatAccountMoney(statement.totalWithdrawals, currencyCode),
+    totalInwardTransfersLabel: formatAccountMoney(statement.totalInwardTransfers, currencyCode),
+    totalOutwardTransfersLabel: formatAccountMoney(statement.totalOutwardTransfers, currencyCode),
+    hasTransferTotals:
+      statement.totalInwardTransfers > 0 || statement.totalOutwardTransfers > 0,
     rows: statement.transactions.map((transaction) => ({
       id: transaction.id,
       dateLabel: formatSavingsAccountDate(savingsTransactionDate(transaction)),

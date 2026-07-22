@@ -83,11 +83,11 @@ function ProductTermsSummaryContent({
 
       <TermsGroup title="Principal">
           <DetailFieldGrid>
-            <DetailField label="Default principal" hint={LOAN_ACCOUNT_PRINCIPAL_HINT}>
-              <MoneyValue amount={template.principal} currencyCode={currencyCode} />
-            </DetailField>
             <DetailField label="Min principal">
               <MoneyValue amount={template.minPrincipal} currencyCode={currencyCode} />
+            </DetailField>
+            <DetailField label="Default principal" hint={LOAN_ACCOUNT_PRINCIPAL_HINT}>
+              <MoneyValue amount={template.principal} currencyCode={currencyCode} />
             </DetailField>
             <DetailField label="Max principal">
               <MoneyValue amount={template.maxPrincipal} currencyCode={currencyCode} />
@@ -107,14 +107,14 @@ function ProductTermsSummaryContent({
 
         <TermsGroup title="Repayments">
           <DetailFieldGrid>
+            <DetailField label="Min repayments">
+              {template.minNumberOfRepayments ?? '—'}
+            </DetailField>
             <DetailField
               label="Number of repayments"
               hint={LOAN_ACCOUNT_NUMBER_OF_REPAYMENTS_HINT}
             >
               {template.numberOfRepayments ?? '—'}
-            </DetailField>
-            <DetailField label="Min repayments">
-              {template.minNumberOfRepayments ?? '—'}
             </DetailField>
             <DetailField label="Max repayments">
               {template.maxNumberOfRepayments ?? '—'}

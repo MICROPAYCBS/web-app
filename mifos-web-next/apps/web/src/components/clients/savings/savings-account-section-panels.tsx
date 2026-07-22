@@ -49,6 +49,7 @@ import {
   savingsAccountProductName,
   savingsTransactionDate,
   savingsTransactionRowClassName,
+  sumSavingsCashMovementTotals,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
 import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
@@ -60,6 +61,15 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
   const summary = account.summary;
   const onHold = account.onHoldFunds ?? account.savingsAmountOnHold ?? 0;
   const timeline = account.timeline;
+
+  // Prefer transaction-derived totals so transfers are not counted as deposits/withdrawals.
+  const cashMovements = account.transactions
+    ? sumSavingsCashMovementTotals(account.transactions)
+    : null;
+  const totalDeposits = cashMovements?.totalDeposits ?? summary?.totalDeposits;
+  const totalWithdrawals = cashMovements?.totalWithdrawals ?? summary?.totalWithdrawals;
+  const totalInwardTransfers = cashMovements?.totalInwardTransfers;
+  const totalOutwardTransfers = cashMovements?.totalOutwardTransfers;
 
   const kpiItems = [
     {
@@ -81,13 +91,31 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
     {
       id: 'deposits',
       label: 'Total deposits',
-      value: <MoneyValue amount={summary?.totalDeposits} currencyCode={currency} />
+      value: <MoneyValue amount={totalDeposits} currencyCode={currency} />
     },
     {
       id: 'withdrawals',
       label: 'Total withdrawals',
-      value: <MoneyValue amount={summary?.totalWithdrawals} currencyCode={currency} />
-    }
+      value: <MoneyValue amount={totalWithdrawals} currencyCode={currency} />
+    },
+    ...(totalInwardTransfers && totalInwardTransfers > 0
+      ? [
+          {
+            id: 'inward-transfers',
+            label: 'Inward transfers',
+            value: <MoneyValue amount={totalInwardTransfers} currencyCode={currency} />
+          }
+        ]
+      : []),
+    ...(totalOutwardTransfers && totalOutwardTransfers > 0
+      ? [
+          {
+            id: 'outward-transfers',
+            label: 'Outward transfers',
+            value: <MoneyValue amount={totalOutwardTransfers} currencyCode={currency} />
+          }
+        ]
+      : [])
   ];
 
   const timelineRows = [

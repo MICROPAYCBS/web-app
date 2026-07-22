@@ -8,16 +8,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractShareAccountDetail } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { executeShareAccountLifecycleCommandAction } from '@/actions/share-account-command';
+import { MoneyValue } from '@/components/composites';
 import { FormSheet } from '@/components/composites/form-sheet';
+import { SwitchField } from '@/components/composites/switch-field';
 import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
+import { useLinkedSavingsBalance } from '@/hooks/use-linked-savings-balance';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { SHARE_LIFECYCLE_COMMAND_TOAST } from '@/lib/fineract/share-account-command-toasts';
+import { shareAccountCurrencyCode } from '@/lib/fineract/share-account-display';
 
 const FORM_ID = 'share-account-close-form';
 
@@ -25,20 +30,27 @@ export function ShareAccountCloseSheet({
   open,
   onOpenChange,
   clientId,
-  accountId
+  account
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clientId: string;
-  accountId: number;
+  account: FineractShareAccountDetail;
 }) {
   const router = useRouter();
   const initialDate = useInitialTransactionDate();
   const [closedDate, setClosedDate] = useState(initialDate);
   const [note, setNote] = useState('');
+  const [useSavings, setUseSavings] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
+
+  const currencyCode = shareAccountCurrencyCode(account);
+  const {
+    balance: linkedSavingsBalance,
+    loading: linkedSavingsLoading
+  } = useLinkedSavingsBalance(account.savingsAccountId, useSavings);
 
   useEffect(() => {
     if (!open) {
@@ -46,6 +58,7 @@ export function ShareAccountCloseSheet({
     }
     setClosedDate(initialDate);
     setNote('');
+    setUseSavings(false);
     setError(null);
     setFieldErrors({});
   }, [open, initialDate]);
@@ -57,9 +70,13 @@ export function ShareAccountCloseSheet({
     startTransition(async () => {
       const result = await executeShareAccountLifecycleCommandAction(
         clientId,
-        String(accountId),
+        String(account.id),
         'close',
-        { closedDate, note: note.trim() || undefined }
+        {
+          closedDate,
+          note: note.trim() || undefined,
+          ...(useSavings ? { useSavings: true } : {})
+        }
       );
       if (!toastCommandOutcome(result, SHARE_LIFECYCLE_COMMAND_TOAST.close)) {
         if (!result.ok) {
@@ -99,6 +116,48 @@ export function ShareAccountCloseSheet({
           error={fieldErrors.closedDate}
           required
         />
+        <SwitchField
+          label="Credit proceeds to savings"
+          checked={useSavings}
+          onCheckedChange={setUseSavings}
+          disabled={account.savingsAccountId == null}
+        />
+        {useSavings ? (
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            {linkedSavingsLoading ? (
+              <p>Loading savings balance…</p>
+            ) : (
+              <>
+                <p>
+                  Linked savings{' '}
+                  <span className="font-medium text-foreground">
+                    {account.savingsAccountNumber ??
+                      linkedSavingsBalance?.accountNo ??
+                      (account.savingsAccountId != null
+                        ? `#${account.savingsAccountId}`
+                        : '—')}
+                  </span>
+                  {linkedSavingsBalance?.availableBalance != null ? (
+                    <>
+                      {' '}
+                      · Available{' '}
+                      <MoneyValue
+                        amount={linkedSavingsBalance.availableBalance}
+                        currencyCode={
+                          linkedSavingsBalance.currencyCode ?? currencyCode
+                        }
+                      />
+                    </>
+                  ) : null}
+                </p>
+                <p className="mt-1">
+                  Net redemption proceeds from closing will be deposited to the linked
+                  savings account.
+                </p>
+              </>
+            )}
+          </div>
+        ) : null}
         <TextField label="Note" value={note} onChange={setNote} error={fieldErrors.note} />
       </form>
     </FormSheet>

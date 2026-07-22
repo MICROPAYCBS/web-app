@@ -64,19 +64,32 @@ function clientOfficeParams(
   return clientListParamsForOfficeScope(officeId, hierarchy);
 }
 
-function buildOfficeLoanReportParams(
+/** Shared filters for office-scoped loan listing/summary reports (no PAR). */
+function buildOfficeLoanFilterParams(
   officeId: number,
-  currencyCode: string | null
+  currencyCode: string | null,
+  options: { includeFundId?: boolean } = {}
 ): Record<string, string> {
+  const { includeFundId = true } = options;
   return buildReportRunQueryParams({
     officeId: String(officeId),
-    parType: '1',
     currencyId: resolveDashboardReportCurrencyId(currencyCode),
     loanProductId: '-1',
     loanOfficerId: '-1',
-    fundId: '-1',
+    ...(includeFundId ? { fundId: '-1' } : {}),
     loanPurposeId: '-1'
   });
+}
+
+/** Active Loans - Summary registers parType; awaiting/pending reports do not. */
+function buildActiveLoansSummaryParams(
+  officeId: number,
+  currencyCode: string | null
+): Record<string, string> {
+  return {
+    ...buildOfficeLoanFilterParams(officeId, currencyCode),
+    ...buildReportRunQueryParams({ parType: '1' })
+  };
 }
 
 function toIsoDate(businessDate: string): string | null {
@@ -120,18 +133,23 @@ async function fetchLoanCountsForOffice(
     'active' | 'pendingApproval' | 'pendingDisbursal' | 'inArrears' | 'portfolioAtRiskPercent'
   >
 > {
-  const reportParams = buildOfficeLoanReportParams(officeId, currencyCode);
+  const activeSummaryParams = buildActiveLoansSummaryParams(officeId, currencyCode);
+  const awaitingDisbursalParams = buildOfficeLoanFilterParams(officeId, currencyCode);
+  // Loans Pending Approval does not register fundId or parType.
+  const pendingApprovalParams = buildOfficeLoanFilterParams(officeId, currencyCode, {
+    includeFundId: false
+  });
   const [activeSummary, pendingApproval, pendingDisbursal] = await Promise.all([
     tryRunReport('Active Loans - Summary', {
-      ...reportParams,
+      ...activeSummaryParams,
       genericResultSet: 'false'
     }),
     tryRunReport('Loans Pending Approval', {
-      ...reportParams,
+      ...pendingApprovalParams,
       genericResultSet: 'false'
     }),
     tryRunReport('Loans Awaiting Disbursal', {
-      ...reportParams,
+      ...awaitingDisbursalParams,
       genericResultSet: 'false'
     })
   ]);
@@ -169,9 +187,8 @@ async function fetchLoanHealthFromReports(
     return { inArrears: null, portfolioAtRiskPercent: null };
   }
 
-  const reportParams = buildOfficeLoanReportParams(officeId, currencyCode);
   const activeLoansSummary = await tryRunReport('Active Loans - Summary', {
-    ...reportParams,
+    ...buildActiveLoansSummaryParams(officeId, currencyCode),
     genericResultSet: 'false'
   });
   if (activeLoansSummary) {

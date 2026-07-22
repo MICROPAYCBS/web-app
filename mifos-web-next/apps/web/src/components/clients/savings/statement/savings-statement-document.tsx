@@ -181,6 +181,23 @@ export function SavingsStatementDocument({ data }: { data: SavingsStatementDocum
           </View>
         </View>
 
+        {data.hasTransferTotals ? (
+          <View style={[styles.summarySection, { marginTop: -12 }]}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Inward transfers</Text>
+              <Text style={[styles.summaryValue, styles.amountCredit]}>
+                {data.totalInwardTransfersLabel}
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Outward transfers</Text>
+              <Text style={[styles.summaryValue, styles.amountDebit]}>
+                {data.totalOutwardTransfersLabel}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderCell, styles.colDate]}>Date</Text>
           <Text style={[styles.tableHeaderCell, styles.colDesc]}>Description</Text>

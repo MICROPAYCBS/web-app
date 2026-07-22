@@ -103,4 +103,34 @@ describe('normalizeLoanAccountChargeOptions', () => {
     expect(template.loanTermFrequencyType?.id).toBe(2);
     expect(template.loanTermFrequencyType?.value).toBe('Months');
   });
+
+  it('reads product min/max term limits from nested product', () => {
+    const template = normalizeClientLoanAccountTemplate({
+      clientId: 1,
+      principal: 100_000,
+      numberOfRepayments: 1,
+      interestRatePerPeriod: 3,
+      transactionProcessingStrategyCode: 'creocore-standard',
+      product: {
+        id: 10,
+        name: 'Normal Loan Product',
+        minPrincipal: 50_000,
+        maxPrincipal: 5_000_000,
+        minNumberOfRepayments: 1,
+        maxNumberOfRepayments: 36,
+        minInterestRatePerPeriod: 2,
+        maxInterestRatePerPeriod: 5,
+        transactionProcessingStrategyName: 'Creocore Unique'
+      }
+    });
+
+    expect(template.minPrincipal).toBe(50_000);
+    expect(template.maxPrincipal).toBe(5_000_000);
+    expect(template.minNumberOfRepayments).toBe(1);
+    expect(template.maxNumberOfRepayments).toBe(36);
+    expect(template.minInterestRatePerPeriod).toBe(2);
+    expect(template.maxInterestRatePerPeriod).toBe(5);
+    expect(template.transactionProcessingStrategyCode).toBe('creocore-standard');
+    expect(template.transactionProcessingStrategyName).toBe('Creocore Unique');
+  });
 });

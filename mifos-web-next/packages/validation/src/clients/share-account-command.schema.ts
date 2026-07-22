@@ -31,7 +31,9 @@ export const shareAccountUndoApprovalCommandSchema = z.object({
 
 export const shareAccountCloseCommandSchema = z.object({
   closedDate: requiredDate,
-  note: optionalNote
+  note: optionalNote,
+  /** When true, credit net redemption proceeds to linked savings. Default / omitted = cash. */
+  useSavings: z.boolean().optional()
 });
 
 export const shareAccountApplyAdditionalSharesSchema = z.object({
@@ -43,7 +45,9 @@ export const shareAccountApplyAdditionalSharesSchema = z.object({
 
 export const shareAccountRedeemSharesSchema = z.object({
   requestedDate: requiredDate,
-  requestedShares: z.coerce.number().int().positive('Shares to redeem must be greater than zero.')
+  requestedShares: z.coerce.number().int().positive('Shares to redeem must be greater than zero.'),
+  /** When true, credit net proceeds to linked savings. Default / omitted = cash. */
+  useSavings: z.boolean().optional()
 });
 
 export const shareAccountAdditionalSharesDecisionSchema = z.object({

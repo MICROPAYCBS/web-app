@@ -139,192 +139,205 @@ export function TermsStep({
           <div className="sm:col-span-2">
             <DetailSection title="Nominal interest rate">
               <div className="grid gap-4 sm:grid-cols-2">
-              <NumericField
-                id="terms.minInterestRatePerPeriod"
-                label="Minimum interest rate"
-                optional
-                maxDecimalPlaces={6}
-                value={
-                  terms.minInterestRatePerPeriod != null
-                    ? String(terms.minInterestRatePerPeriod)
-                    : ''
-                }
-                onChange={(value) =>
-                  onChange({
-                    minInterestRatePerPeriod: value === '' ? undefined : Number(value)
-                  })
-                }
-                error={errors['terms.minInterestRatePerPeriod']}
-              />
-              <NumericField
-                id="terms.interestRatePerPeriod"
-                label="Default interest rate"
-                required
-                maxDecimalPlaces={6}
-                hint={LOAN_PRODUCT_NOMINAL_INTEREST_RATE_HINT}
-                hintAriaLabel="About nominal interest rate"
-                value={
-                  terms.interestRatePerPeriod != null ? String(terms.interestRatePerPeriod) : ''
-                }
-                onChange={(value) =>
-                  onChange({
-                    interestRatePerPeriod: value === '' ? undefined : Number(value)
-                  })
-                }
-                error={errors['terms.interestRatePerPeriod']}
-              />
-              <NumericField
-                id="terms.maxInterestRatePerPeriod"
-                label="Maximum interest rate"
-                optional
-                maxDecimalPlaces={6}
-                value={
-                  terms.maxInterestRatePerPeriod != null
-                    ? String(terms.maxInterestRatePerPeriod)
-                    : ''
-                }
-                onChange={(value) =>
-                  onChange({
-                    maxInterestRatePerPeriod: value === '' ? undefined : Number(value)
-                  })
-                }
-                error={errors['terms.maxInterestRatePerPeriod']}
-              />
-              <SelectField
-                id="terms.interestRateFrequencyType"
-                label="Interest rate frequency"
-                required
-                value={
-                  terms.interestRateFrequencyType != null
-                    ? String(terms.interestRateFrequencyType)
-                    : undefined
-                }
-                onValueChange={(value) =>
-                  onChange({
-                    interestRateFrequencyType: value ? Number(value) : undefined
-                  })
-                }
-                options={toSelectOptions(template.interestRateFrequencyTypeOptions)}
-                error={errors['terms.interestRateFrequencyType']}
-              />
-            </div>
+                <NumericField
+                  id="terms.minInterestRatePerPeriod"
+                  label="Minimum interest rate"
+                  optional
+                  maxDecimalPlaces={6}
+                  value={
+                    terms.minInterestRatePerPeriod != null
+                      ? String(terms.minInterestRatePerPeriod)
+                      : ''
+                  }
+                  onChange={(value) =>
+                    onChange({
+                      minInterestRatePerPeriod: value === '' ? undefined : Number(value)
+                    })
+                  }
+                  error={errors['terms.minInterestRatePerPeriod']}
+                />
+                <NumericField
+                  id="terms.interestRatePerPeriod"
+                  label="Default interest rate"
+                  required
+                  maxDecimalPlaces={6}
+                  hint={LOAN_PRODUCT_NOMINAL_INTEREST_RATE_HINT}
+                  hintAriaLabel="About nominal interest rate"
+                  value={
+                    terms.interestRatePerPeriod != null ? String(terms.interestRatePerPeriod) : ''
+                  }
+                  onChange={(value) =>
+                    onChange({
+                      interestRatePerPeriod: value === '' ? undefined : Number(value)
+                    })
+                  }
+                  error={errors['terms.interestRatePerPeriod']}
+                />
+                <NumericField
+                  id="terms.maxInterestRatePerPeriod"
+                  label="Maximum interest rate"
+                  optional
+                  maxDecimalPlaces={6}
+                  value={
+                    terms.maxInterestRatePerPeriod != null
+                      ? String(terms.maxInterestRatePerPeriod)
+                      : ''
+                  }
+                  onChange={(value) =>
+                    onChange({
+                      maxInterestRatePerPeriod: value === '' ? undefined : Number(value)
+                    })
+                  }
+                  error={errors['terms.maxInterestRatePerPeriod']}
+                />
+                <SelectField
+                  id="terms.interestRateFrequencyType"
+                  label="Interest rate frequency"
+                  required
+                  value={
+                    terms.interestRateFrequencyType != null
+                      ? String(terms.interestRateFrequencyType)
+                      : undefined
+                  }
+                  onValueChange={(value) =>
+                    onChange({
+                      interestRateFrequencyType: value ? Number(value) : undefined
+                    })
+                  }
+                  options={toSelectOptions(template.interestRateFrequencyTypeOptions)}
+                  error={errors['terms.interestRateFrequencyType']}
+                />
+              </div>
             </DetailSection>
           </div>
         )}
 
-        <MoneyField
-          id="terms.principal"
-          label="Default principal"
-          required
-          currencyCode={currencyCode}
-          value={terms.principal != null ? String(terms.principal) : ''}
-          onChange={(value) =>
-            onChange({ principal: value === '' ? undefined : Number(value) })
-          }
-          error={errors['terms.principal']}
-        />
-        <MoneyField
-          id="terms.minPrincipal"
-          label="Minimum principal"
-          optional
-          currencyCode={currencyCode}
-          value={terms.minPrincipal != null ? String(terms.minPrincipal) : ''}
-          onChange={(value) =>
-            onChange({ minPrincipal: value === '' ? undefined : Number(value) })
-          }
-          error={errors['terms.minPrincipal']}
-        />
-        <MoneyField
-          id="terms.maxPrincipal"
-          label="Maximum principal"
-          optional
-          currencyCode={currencyCode}
-          value={terms.maxPrincipal != null ? String(terms.maxPrincipal) : ''}
-          onChange={(value) =>
-            onChange({ maxPrincipal: value === '' ? undefined : Number(value) })
-          }
-          error={errors['terms.maxPrincipal']}
-        />
-        <NumericField
-          id="terms.numberOfRepayments"
-          label="Number of repayments"
-          required
-          integer
-          value={terms.numberOfRepayments != null ? String(terms.numberOfRepayments) : ''}
-          onChange={(value) =>
-            onChange({ numberOfRepayments: value === '' ? undefined : Number(value) })
-          }
-          error={errors['terms.numberOfRepayments']}
-        />
-        <NumericField
-          id="terms.minNumberOfRepayments"
-          label="Minimum repayments"
-          optional
-          integer
-          value={
-            terms.minNumberOfRepayments != null ? String(terms.minNumberOfRepayments) : ''
-          }
-          onChange={(value) =>
-            onChange({ minNumberOfRepayments: value === '' ? undefined : Number(value) })
-          }
-          error={errors['terms.minNumberOfRepayments']}
-        />
-        <NumericField
-          id="terms.maxNumberOfRepayments"
-          label="Maximum repayments"
-          optional
-          integer
-          value={
-            terms.maxNumberOfRepayments != null ? String(terms.maxNumberOfRepayments) : ''
-          }
-          onChange={(value) =>
-            onChange({ maxNumberOfRepayments: value === '' ? undefined : Number(value) })
-          }
-          error={errors['terms.maxNumberOfRepayments']}
-        />
-        <NumericField
-          id="terms.repaymentEvery"
-          label="Repay every"
-          required
-          integer
-          value={terms.repaymentEvery != null ? String(terms.repaymentEvery) : ''}
-          onChange={(value) =>
-            onChange({ repaymentEvery: value === '' ? undefined : Number(value) })
-          }
-          error={errors['terms.repaymentEvery']}
-        />
-        <SelectField
-          id="terms.repaymentFrequencyType"
-          label="Repayment frequency type"
-          required
-          value={
-            terms.repaymentFrequencyType != null
-              ? String(terms.repaymentFrequencyType)
-              : undefined
-          }
-          onValueChange={(value) =>
-            onChange({ repaymentFrequencyType: value ? Number(value) : undefined })
-          }
-          options={toSelectOptions(template.repaymentFrequencyTypeOptions)}
-          error={errors['terms.repaymentFrequencyType']}
-        />
-        {template.repaymentStartDateTypeOptions?.length ? (
-          <SelectField
-            id="terms.repaymentStartDateType"
-            label="Repayment start date type"
-            optional
-            value={
-              terms.repaymentStartDateType != null
-                ? String(terms.repaymentStartDateType)
-                : undefined
-            }
-            onValueChange={(value) =>
-              onChange({ repaymentStartDateType: value ? Number(value) : undefined })
-            }
-            options={toSelectOptions(template.repaymentStartDateTypeOptions)}
-            error={errors['terms.repaymentStartDateType']}
-          />
-        ) : null}
+        <div className="sm:col-span-2">
+          <DetailSection title="Principal">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <MoneyField
+                id="terms.minPrincipal"
+                label="Minimum principal"
+                optional
+                currencyCode={currencyCode}
+                value={terms.minPrincipal != null ? String(terms.minPrincipal) : ''}
+                onChange={(value) =>
+                  onChange({ minPrincipal: value === '' ? undefined : Number(value) })
+                }
+                error={errors['terms.minPrincipal']}
+              />
+              <MoneyField
+                id="terms.principal"
+                label="Default principal"
+                required
+                currencyCode={currencyCode}
+                value={terms.principal != null ? String(terms.principal) : ''}
+                onChange={(value) =>
+                  onChange({ principal: value === '' ? undefined : Number(value) })
+                }
+                error={errors['terms.principal']}
+              />
+              <MoneyField
+                id="terms.maxPrincipal"
+                label="Maximum principal"
+                optional
+                currencyCode={currencyCode}
+                value={terms.maxPrincipal != null ? String(terms.maxPrincipal) : ''}
+                onChange={(value) =>
+                  onChange({ maxPrincipal: value === '' ? undefined : Number(value) })
+                }
+                error={errors['terms.maxPrincipal']}
+              />
+            </div>
+          </DetailSection>
+        </div>
+
+        <div className="sm:col-span-2">
+          <DetailSection title="Repayments">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <NumericField
+                id="terms.minNumberOfRepayments"
+                label="Minimum repayments"
+                optional
+                integer
+                value={
+                  terms.minNumberOfRepayments != null ? String(terms.minNumberOfRepayments) : ''
+                }
+                onChange={(value) =>
+                  onChange({ minNumberOfRepayments: value === '' ? undefined : Number(value) })
+                }
+                error={errors['terms.minNumberOfRepayments']}
+              />
+              <NumericField
+                id="terms.numberOfRepayments"
+                label="Number of repayments"
+                required
+                integer
+                value={terms.numberOfRepayments != null ? String(terms.numberOfRepayments) : ''}
+                onChange={(value) =>
+                  onChange({ numberOfRepayments: value === '' ? undefined : Number(value) })
+                }
+                error={errors['terms.numberOfRepayments']}
+              />
+              <NumericField
+                id="terms.maxNumberOfRepayments"
+                label="Maximum repayments"
+                optional
+                integer
+                value={
+                  terms.maxNumberOfRepayments != null ? String(terms.maxNumberOfRepayments) : ''
+                }
+                onChange={(value) =>
+                  onChange({ maxNumberOfRepayments: value === '' ? undefined : Number(value) })
+                }
+                error={errors['terms.maxNumberOfRepayments']}
+              />
+              <NumericField
+                id="terms.repaymentEvery"
+                label="Repay every"
+                required
+                integer
+                value={terms.repaymentEvery != null ? String(terms.repaymentEvery) : ''}
+                onChange={(value) =>
+                  onChange({ repaymentEvery: value === '' ? undefined : Number(value) })
+                }
+                error={errors['terms.repaymentEvery']}
+              />
+              <SelectField
+                id="terms.repaymentFrequencyType"
+                label="Repayment frequency type"
+                required
+                value={
+                  terms.repaymentFrequencyType != null
+                    ? String(terms.repaymentFrequencyType)
+                    : undefined
+                }
+                onValueChange={(value) =>
+                  onChange({ repaymentFrequencyType: value ? Number(value) : undefined })
+                }
+                options={toSelectOptions(template.repaymentFrequencyTypeOptions)}
+                error={errors['terms.repaymentFrequencyType']}
+              />
+              {template.repaymentStartDateTypeOptions?.length ? (
+                <SelectField
+                  id="terms.repaymentStartDateType"
+                  label="Repayment start date type"
+                  optional
+                  value={
+                    terms.repaymentStartDateType != null
+                      ? String(terms.repaymentStartDateType)
+                      : undefined
+                  }
+                  onValueChange={(value) =>
+                    onChange({ repaymentStartDateType: value ? Number(value) : undefined })
+                  }
+                  options={toSelectOptions(template.repaymentStartDateTypeOptions)}
+                  error={errors['terms.repaymentStartDateType']}
+                />
+              ) : null}
+            </div>
+          </DetailSection>
+        </div>
       </div>
     </div>
   );

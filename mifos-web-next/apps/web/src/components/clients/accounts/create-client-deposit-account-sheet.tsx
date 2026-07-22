@@ -35,6 +35,7 @@ import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isClientDepositAccountTemplate } from '@/lib/fineract/client-account-action-result';
+import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import { CLIENT_DEPOSIT_ACCOUNT_CONFIG } from '@/lib/fineract/client-deposit-account-config';
 import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
 import { SAVINGS_ACCOUNT_CREATE_TOAST } from '@/lib/fineract/savings-account-command-toasts';
@@ -197,6 +198,10 @@ export function CreateClientDepositAccountSheet({
       }
       onOpenChange(false);
       onCreated?.();
+      if (result.resourceId != null) {
+        router.push(clientAccountGeneralPath(clientId, kind, result.resourceId));
+        return;
+      }
       router.refresh();
     });
   }

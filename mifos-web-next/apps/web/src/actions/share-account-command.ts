@@ -172,7 +172,8 @@ export async function executeShareAccountLifecycleCommandAction(
         body = buildFineractCommandBody(
           omitEmptyStrings({
             closedDate: parsed.data.closedDate,
-            note: parsed.data.note
+            note: parsed.data.note,
+            ...(parsed.data.useSavings === true ? { useSavings: true } : {})
           })
         );
         break;
@@ -228,7 +229,8 @@ export async function executeShareAccountSharesCommandAction(
       }
       body = buildFineractCommandBody({
         requestedDate: parsed.data.requestedDate,
-        requestedShares: parsed.data.requestedShares
+        requestedShares: parsed.data.requestedShares,
+        ...(parsed.data.useSavings === true ? { useSavings: true } : {})
       });
     } else {
       const parsed = parseOrError(shareAccountAdditionalSharesDecisionSchema, raw);

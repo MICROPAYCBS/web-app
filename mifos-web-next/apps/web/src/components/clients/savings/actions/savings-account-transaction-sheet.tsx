@@ -420,7 +420,7 @@ export function SavingsAccountTransactionSheet({
         showCloseButton
         className={cn(
           DOCKED_SHEET_LAYOUT_CLASSNAME,
-          'data-[side=right]:w-full data-[side=right]:sm:max-w-lg'
+          'data-[side=right]:w-full data-[side=right]:sm:max-w-3xl'
         )}
       >
         <SheetHeader className="shrink-0 border-b border-border">

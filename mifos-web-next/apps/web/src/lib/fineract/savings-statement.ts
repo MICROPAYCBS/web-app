@@ -16,6 +16,10 @@ import {
 import { fineractDateToDate } from '@/lib/fineract/date-input';
 import {
   formatSavingsTransactionType,
+  isPureSavingsDeposit,
+  isPureSavingsWithdrawal,
+  isSavingsAccountTransfer,
+  isSavingsTransactionDebit,
   savingsTransactionDate
 } from '@/lib/fineract/savings-account-display';
 
@@ -25,6 +29,8 @@ export type SavingsStatementResult = {
   closingBalance: number;
   totalDeposits: number;
   totalWithdrawals: number;
+  totalInwardTransfers: number;
+  totalOutwardTransfers: number;
 };
 
 export function isReversedSavingsStatementTransaction(
@@ -111,11 +117,25 @@ export function buildSavingsStatement(
   }
 
   const totalDeposits = transactions
-    .filter((transaction) => transaction.transactionType?.deposit === true)
+    .filter(isPureSavingsDeposit)
     .reduce((sum, transaction) => sum + (transaction.amount ?? 0), 0);
 
   const totalWithdrawals = transactions
-    .filter((transaction) => transaction.transactionType?.withdrawal === true)
+    .filter(isPureSavingsWithdrawal)
+    .reduce((sum, transaction) => sum + (transaction.amount ?? 0), 0);
+
+  const totalInwardTransfers = transactions
+    .filter(
+      (transaction) =>
+        isSavingsAccountTransfer(transaction) && !isSavingsTransactionDebit(transaction)
+    )
+    .reduce((sum, transaction) => sum + (transaction.amount ?? 0), 0);
+
+  const totalOutwardTransfers = transactions
+    .filter(
+      (transaction) =>
+        isSavingsAccountTransfer(transaction) && isSavingsTransactionDebit(transaction)
+    )
     .reduce((sum, transaction) => sum + (transaction.amount ?? 0), 0);
 
   return {
@@ -123,6 +143,8 @@ export function buildSavingsStatement(
     openingBalance,
     closingBalance,
     totalDeposits,
-    totalWithdrawals
+    totalWithdrawals,
+    totalInwardTransfers,
+    totalOutwardTransfers
   };
 }

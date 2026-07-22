@@ -60,6 +60,45 @@ describe('buildSavingsStatement', () => {
     assert.equal(result.closingBalance, 1150);
     assert.equal(result.totalDeposits, 200);
     assert.equal(result.totalWithdrawals, 50);
+    assert.equal(result.totalInwardTransfers, 0);
+    assert.equal(result.totalOutwardTransfers, 0);
+  });
+
+  it('excludes account transfers from deposit and withdrawal totals', () => {
+    const result = buildSavingsStatement(
+      [
+        transaction({
+          id: 1,
+          date: [2026, 6, 1],
+          amount: 1000,
+          runningBalance: 1000,
+          transactionType: { deposit: true, value: 'Deposit' }
+        }),
+        transaction({
+          id: 2,
+          date: [2026, 6, 2],
+          amount: 300,
+          runningBalance: 700,
+          transactionType: { withdrawal: true, value: 'Withdrawal' },
+          transfer: { id: 55, transferDescription: 'Share purchase' }
+        }),
+        transaction({
+          id: 3,
+          date: [2026, 6, 3],
+          amount: 100,
+          runningBalance: 800,
+          transactionType: { deposit: true, value: 'Deposit' },
+          transfer: { id: 56 }
+        })
+      ],
+      new Date(2026, 5, 1),
+      new Date(2026, 5, 30)
+    );
+
+    assert.equal(result.totalDeposits, 1000);
+    assert.equal(result.totalWithdrawals, 0);
+    assert.equal(result.totalOutwardTransfers, 300);
+    assert.equal(result.totalInwardTransfers, 100);
   });
 
   it('excludes reversed transactions', () => {
@@ -98,6 +137,18 @@ describe('savingsStatementTransactionDescription', () => {
         })
       ),
       'Loan repayment'
+    );
+  });
+
+  it('falls back to inward or outward transfer labels', () => {
+    assert.equal(
+      savingsStatementTransactionDescription(
+        transaction({
+          transactionType: { withdrawal: true, value: 'Withdrawal' },
+          transfer: { id: 1 }
+        })
+      ),
+      'Outward Transfer'
     );
   });
 });

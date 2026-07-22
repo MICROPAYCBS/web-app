@@ -90,7 +90,16 @@ export function savingsAccountBlockedMessage(account: FineractSavingsAccountDeta
   return null;
 }
 
+export function isSavingsAccountTransfer(
+  transaction: FineractSavingsAccountTransaction
+): boolean {
+  return Boolean(transaction.transfer);
+}
+
 export function formatSavingsTransactionType(transaction: FineractSavingsAccountTransaction) {
+  if (isSavingsAccountTransfer(transaction)) {
+    return isSavingsTransactionDebit(transaction) ? 'Outward Transfer' : 'Inward Transfer';
+  }
   return transaction.transactionType?.value ?? 'Transaction';
 }
 
@@ -133,6 +142,68 @@ export function isSavingsTransactionDebit(transaction: FineractSavingsAccountTra
   }
   const entryCode = transaction.entryType?.code?.toUpperCase();
   return entryCode === 'DEBIT';
+}
+
+/** Cash deposit — excludes account transfers (share purchase, loan repayment, etc.). */
+export function isPureSavingsDeposit(transaction: FineractSavingsAccountTransaction): boolean {
+  return (
+    !isSavingsAccountTransfer(transaction) && transaction.transactionType?.deposit === true
+  );
+}
+
+/** Cash withdrawal — excludes account transfers. */
+export function isPureSavingsWithdrawal(transaction: FineractSavingsAccountTransaction): boolean {
+  return (
+    !isSavingsAccountTransfer(transaction) && transaction.transactionType?.withdrawal === true
+  );
+}
+
+export type SavingsCashMovementTotals = {
+  totalDeposits: number;
+  totalWithdrawals: number;
+  totalInwardTransfers: number;
+  totalOutwardTransfers: number;
+};
+
+/**
+ * Cash and transfer totals from transaction history.
+ * Fineract `summary.totalWithdrawals` / `totalDeposits` include account transfers;
+ * this separates customer cash movements from inward/outward transfers.
+ */
+export function sumSavingsCashMovementTotals(
+  transactions: FineractSavingsAccountTransaction[]
+): SavingsCashMovementTotals {
+  let totalDeposits = 0;
+  let totalWithdrawals = 0;
+  let totalInwardTransfers = 0;
+  let totalOutwardTransfers = 0;
+
+  for (const transaction of transactions) {
+    if (transaction.reversed) {
+      continue;
+    }
+    const amount = transaction.amount ?? 0;
+    if (isSavingsAccountTransfer(transaction)) {
+      if (isSavingsTransactionDebit(transaction)) {
+        totalOutwardTransfers += amount;
+      } else {
+        totalInwardTransfers += amount;
+      }
+      continue;
+    }
+    if (transaction.transactionType?.deposit === true) {
+      totalDeposits += amount;
+    } else if (transaction.transactionType?.withdrawal === true) {
+      totalWithdrawals += amount;
+    }
+  }
+
+  return {
+    totalDeposits,
+    totalWithdrawals,
+    totalInwardTransfers,
+    totalOutwardTransfers
+  };
 }
 
 export function isSavingsTransactionAccrual(transaction: FineractSavingsAccountTransaction) {

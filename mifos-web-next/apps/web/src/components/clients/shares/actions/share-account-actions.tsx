@@ -217,7 +217,7 @@ export function ShareAccountActions({
         open={closeOpen}
         onOpenChange={setCloseOpen}
         clientId={clientId}
-        accountId={account.id}
+        account={account}
       />
       <ShareAccountModifySheet
         open={modifyOpen}

@@ -54,7 +54,7 @@ export function ShareAccountSharesRequestSheet({
   const {
     balance: linkedSavingsBalance,
     loading: linkedSavingsLoading
-  } = useLinkedSavingsBalance(account.savingsAccountId, !isRedeem && useSavings);
+  } = useLinkedSavingsBalance(account.savingsAccountId, useSavings);
 
   const estimatedPurchaseTotal = useMemo(() => {
     if (isRedeem) {
@@ -96,7 +96,7 @@ export function ShareAccountSharesRequestSheet({
         {
           requestedDate,
           requestedShares,
-          ...(!isRedeem && useSavings ? { useSavings: true } : {})
+          ...(useSavings ? { useSavings: true } : {})
         }
       );
       if (
@@ -154,62 +154,66 @@ export function ShareAccountSharesRequestSheet({
           error={fieldErrors.requestedShares}
           required
         />
-        {!isRedeem ? (
-          <>
-            <SwitchField
-              label="Use savings to fund purchase"
-              checked={useSavings}
-              onCheckedChange={setUseSavings}
-              disabled={account.savingsAccountId == null}
-            />
-            {useSavings ? (
-              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                {linkedSavingsLoading ? (
-                  <p>Loading savings balance…</p>
-                ) : (
-                  <>
-                    <p>
-                      Linked savings{' '}
-                      <span className="font-medium text-foreground">
-                        {account.savingsAccountNumber ??
-                          linkedSavingsBalance?.accountNo ??
-                          (account.savingsAccountId != null
-                            ? `#${account.savingsAccountId}`
-                            : '—')}
-                      </span>
-                      {linkedSavingsBalance?.availableBalance != null ? (
-                        <>
-                          {' '}
-                          · Available{' '}
-                          <MoneyValue
-                            amount={linkedSavingsBalance.availableBalance}
-                            currencyCode={
-                              linkedSavingsBalance.currencyCode ?? currencyCode
-                            }
-                          />
-                        </>
-                      ) : null}
-                    </p>
-                    {estimatedPurchaseTotal != null ? (
-                      <p className="mt-1">
-                        Estimated purchase{' '}
-                        <MoneyValue
-                          amount={estimatedPurchaseTotal}
-                          currencyCode={currencyCode}
-                        />{' '}
-                        (shares × market price)
-                      </p>
-                    ) : null}
-                    {insufficientSavings ? (
-                      <p className="mt-1 text-destructive" role="alert">
-                        Available balance is below the estimated purchase total.
-                      </p>
-                    ) : null}
-                  </>
-                )}
-              </div>
-            ) : null}
-          </>
+        <SwitchField
+          label={
+            isRedeem ? 'Credit proceeds to savings' : 'Use savings to fund purchase'
+          }
+          checked={useSavings}
+          onCheckedChange={setUseSavings}
+          disabled={account.savingsAccountId == null}
+        />
+        {useSavings ? (
+          <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            {linkedSavingsLoading ? (
+              <p>Loading savings balance…</p>
+            ) : (
+              <>
+                <p>
+                  Linked savings{' '}
+                  <span className="font-medium text-foreground">
+                    {account.savingsAccountNumber ??
+                      linkedSavingsBalance?.accountNo ??
+                      (account.savingsAccountId != null
+                        ? `#${account.savingsAccountId}`
+                        : '—')}
+                  </span>
+                  {linkedSavingsBalance?.availableBalance != null ? (
+                    <>
+                      {' '}
+                      · Available{' '}
+                      <MoneyValue
+                        amount={linkedSavingsBalance.availableBalance}
+                        currencyCode={
+                          linkedSavingsBalance.currencyCode ?? currencyCode
+                        }
+                      />
+                    </>
+                  ) : null}
+                </p>
+                {!isRedeem && estimatedPurchaseTotal != null ? (
+                  <p className="mt-1">
+                    Estimated purchase{' '}
+                    <MoneyValue
+                      amount={estimatedPurchaseTotal}
+                      currencyCode={currencyCode}
+                    />{' '}
+                    (shares × market price)
+                  </p>
+                ) : null}
+                {isRedeem ? (
+                  <p className="mt-1">
+                    Net redemption proceeds will be deposited to the linked savings
+                    account.
+                  </p>
+                ) : null}
+                {insufficientSavings ? (
+                  <p className="mt-1 text-destructive" role="alert">
+                    Available balance is below the estimated purchase total.
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
         ) : null}
       </form>
     </FormSheet>

@@ -290,6 +290,34 @@ function loanTemplateSourceRow(raw: Record<string, unknown>): Record<string, unk
   return raw;
 }
 
+/** Fineract puts product limits on nested `product`, not top-level loan template fields. */
+function loanTemplateProductRow(
+  row: Record<string, unknown>
+): Record<string, unknown> | undefined {
+  return row.product && typeof row.product === 'object'
+    ? (row.product as Record<string, unknown>)
+    : undefined;
+}
+
+function toNumberFromTemplateOrProduct(
+  row: Record<string, unknown>,
+  key: string
+): number | undefined {
+  return toNumber(row[key]) ?? toNumber(loanTemplateProductRow(row)?.[key]);
+}
+
+function stringFromTemplateOrProduct(
+  row: Record<string, unknown>,
+  key: string
+): string | undefined {
+  const top = row[key];
+  if (typeof top === 'string' && top.trim()) {
+    return top;
+  }
+  const nested = loanTemplateProductRow(row)?.[key];
+  return typeof nested === 'string' && nested.trim() ? nested : undefined;
+}
+
 
 
 export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAccountTemplate {
@@ -502,9 +530,9 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     principal: toNumber(row.principal),
 
-    minPrincipal: toNumber(row.minPrincipal),
+    minPrincipal: toNumberFromTemplateOrProduct(row, 'minPrincipal'),
 
-    maxPrincipal: toNumber(row.maxPrincipal),
+    maxPrincipal: toNumberFromTemplateOrProduct(row, 'maxPrincipal'),
 
     loanTermFrequency: toNumber(row.loanTermFrequency) ?? toNumber(row.termFrequency),
 
@@ -513,9 +541,9 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     numberOfRepayments: toNumber(row.numberOfRepayments),
 
-    minNumberOfRepayments: toNumber(row.minNumberOfRepayments),
+    minNumberOfRepayments: toNumberFromTemplateOrProduct(row, 'minNumberOfRepayments'),
 
-    maxNumberOfRepayments: toNumber(row.maxNumberOfRepayments),
+    maxNumberOfRepayments: toNumberFromTemplateOrProduct(row, 'maxNumberOfRepayments'),
 
     repaymentEvery: toNumber(row.repaymentEvery),
 
@@ -523,9 +551,9 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     interestRatePerPeriod: toNumber(row.interestRatePerPeriod),
 
-    minInterestRatePerPeriod: toNumber(row.minInterestRatePerPeriod),
+    minInterestRatePerPeriod: toNumberFromTemplateOrProduct(row, 'minInterestRatePerPeriod'),
 
-    maxInterestRatePerPeriod: toNumber(row.maxInterestRatePerPeriod),
+    maxInterestRatePerPeriod: toNumberFromTemplateOrProduct(row, 'maxInterestRatePerPeriod'),
 
     interestRateFrequencyType: asEnumOption(row.interestRateFrequencyType),
 
@@ -535,36 +563,37 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     interestCalculationPeriodType: asEnumOption(row.interestCalculationPeriodType),
 
-    transactionProcessingStrategyCode:
+    transactionProcessingStrategyCode: stringFromTemplateOrProduct(
+      row,
+      'transactionProcessingStrategyCode'
+    ),
 
-      typeof row.transactionProcessingStrategyCode === 'string'
+    transactionProcessingStrategyName: stringFromTemplateOrProduct(
+      row,
+      'transactionProcessingStrategyName'
+    ),
 
-        ? row.transactionProcessingStrategyCode
-
-        : undefined,
-
-    transactionProcessingStrategyName:
-
-      typeof row.transactionProcessingStrategyName === 'string'
-
-        ? row.transactionProcessingStrategyName
-
-        : undefined,
-
-    allowAttributeOverrides: asLoanProductAttributeOverrides(row.allowAttributeOverrides),
+    allowAttributeOverrides:
+      asLoanProductAttributeOverrides(row.allowAttributeOverrides) ??
+      asLoanProductAttributeOverrides(loanTemplateProductRow(row)?.allowAttributeOverrides),
 
     linkedToFloatingInterestRates:
       row.isLoanProductLinkedToFloatingRate === true ||
-      row.linkedToFloatingInterestRates === true,
+      row.linkedToFloatingInterestRates === true ||
+      loanTemplateProductRow(row)?.isLinkedToFloatingInterestRates === true ||
+      loanTemplateProductRow(row)?.linkedToFloatingInterestRates === true,
 
     isLoanProductLinkedToFloatingRate:
       row.isLoanProductLinkedToFloatingRate === true ? true : undefined,
 
-    minInterestRateDifferential: toNumber(row.minDifferentialLendingRate),
+    minInterestRateDifferential: toNumberFromTemplateOrProduct(row, 'minDifferentialLendingRate'),
 
-    maxInterestRateDifferential: toNumber(row.maxDifferentialLendingRate),
+    maxInterestRateDifferential: toNumberFromTemplateOrProduct(row, 'maxDifferentialLendingRate'),
 
-    defaultDifferentialLendingRate: toNumber(row.defaultDifferentialLendingRate),
+    defaultDifferentialLendingRate: toNumberFromTemplateOrProduct(
+      row,
+      'defaultDifferentialLendingRate'
+    ),
 
     multiDisburseLoan: row.multiDisburseLoan === true ? true : undefined,
 
