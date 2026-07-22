@@ -16,10 +16,13 @@ const optionalId = z.coerce
   .or(z.literal(''))
   .transform((v) => (v === '' ? undefined : v));
 
-const optionalNonNegativeInt = z
-  .union([z.coerce.number().int().min(0), z.literal('')])
-  .optional()
-  .transform((value) => (value === '' || value === undefined ? undefined : value));
+const optionalNonNegativeInt = z.preprocess((value) => {
+  if (value === '' || value === null || value === undefined) {
+    return undefined;
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : value;
+}, z.number().int().min(0).optional());
 
 const shareAccountChargeItemSchema = z.object({
   chargeId: z.coerce.number().int().positive('Select a charge.'),
