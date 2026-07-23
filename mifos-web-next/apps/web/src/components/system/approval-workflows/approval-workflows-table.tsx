@@ -44,10 +44,10 @@ import {
 import { Input } from '@/components/ui/input';
 import {
   formatWorkflowTaskDisplay,
-  isWorkflowTaskMakerCheckerDisabled,
+  getWorkflowActivateBlockReason,
+  workflowActivateBlockHint,
   workflowDefinitionStatusLabel,
-  workflowDefinitionStatusVariant,
-  WORKFLOW_ACTIVATE_MC_DISABLED_HINT
+  workflowDefinitionStatusVariant
 } from '@/lib/fineract/approval-workflow-display';
 import {
   approvalWorkflowDetailPath,
@@ -64,11 +64,13 @@ export function ApprovalWorkflowsTable({
   definitions,
   appliedFilters,
   taskPermissions,
+  makerCheckerGloballyEnabled = null,
   filterTrigger
 }: {
   definitions: WorkflowDefinition[];
   appliedFilters: ApprovalWorkflowListFilters;
   taskPermissions: FineractRolePermissionUsage[];
+  makerCheckerGloballyEnabled?: boolean | null;
   filterTrigger?: ReactNode;
 }) {
   const router = useRouter();
@@ -158,10 +160,13 @@ export function ApprovalWorkflowsTable({
                 const isActive = status === 'ACTIVE';
                 const isInactive = status === 'INACTIVE';
                 const canShowActivate = (isDraft || isInactive) && canActivate;
-                const activateBlockedByMc = isWorkflowTaskMakerCheckerDisabled(
-                  row.original.taskPermissionCode,
+                const activateBlockReason = getWorkflowActivateBlockReason({
+                  makerCheckerGloballyEnabled,
+                  taskPermissionCode: row.original.taskPermissionCode,
                   taskPermissions
-                );
+                });
+                const activateBlocked = activateBlockReason != null;
+                const activateHint = workflowActivateBlockHint(activateBlockReason);
                 const hasRowActions =
                   canUpdate ||
                   (isDraft && canDelete) ||
@@ -182,7 +187,7 @@ export function ApprovalWorkflowsTable({
                       </Link>
                     ) : null}
                     {canShowActivate ? (
-                      activateBlockedByMc ? (
+                      activateBlocked ? (
                         <Tooltip>
                           <TooltipTrigger
                             render={
@@ -200,7 +205,7 @@ export function ApprovalWorkflowsTable({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="left" className="max-w-xs text-pretty">
-                            {WORKFLOW_ACTIVATE_MC_DISABLED_HINT}
+                            {activateHint}
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -275,6 +280,7 @@ export function ApprovalWorkflowsTable({
       canDeactivate,
       canDelete,
       canUpdate,
+      makerCheckerGloballyEnabled,
       pending,
       router,
       showActions,

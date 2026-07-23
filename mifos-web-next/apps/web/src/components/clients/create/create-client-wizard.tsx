@@ -130,7 +130,6 @@ export function CreateClientWizard({
 }: CreateClientWizardProps) {
   const router = useRouter();
   const canCreate = useCan(resolvePermission('clients.create'));
-  const canSubmit = useCan(resolvePermission('clients.submit'));
   const initialSubmittedOnDate = useInitialTransactionDate();
   const [template] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(() =>
@@ -485,10 +484,7 @@ export function CreateClientWizard({
   }, [steps, draft, template, validationContext, legalFormId]);
 
   const isPreview = resolvedStepId === 'preview';
-  const showSaveDraft = isPreview && canCreate;
-  const showSubmit = isPreview && canCreate && canSubmit;
-  const primaryIsSubmit = Boolean(showSubmit);
-  const primaryIsSaveOnly = Boolean(showSaveDraft && !showSubmit);
+  const showPreviewActions = isPreview && canCreate;
 
   return (
     <PlatformRouteLayout>
@@ -505,21 +501,15 @@ export function CreateClientWizard({
           showBack={currentIndex > 0}
           onBack={goBack}
           backDisabled={pending}
-          secondaryLabel={showSubmit ? 'Save draft' : undefined}
-          onSecondary={showSubmit ? handleSaveDraft : undefined}
+          secondaryLabel={showPreviewActions ? 'Save draft' : undefined}
+          onSecondary={showPreviewActions ? handleSaveDraft : undefined}
           secondaryLoading={pending && pendingMode === 'save'}
           secondaryLoadingLabel="Saving…"
-          primaryLabel={
-            primaryIsSubmit ? 'Submit' : primaryIsSaveOnly ? 'Save draft' : 'Next'
-          }
-          onPrimary={
-            primaryIsSubmit ? handleSubmit : primaryIsSaveOnly ? handleSaveDraft : tryNext
-          }
-          primaryLoading={
-            pending && (pendingMode === 'submit' || (primaryIsSaveOnly && pendingMode === 'save'))
-          }
-          primaryLoadingLabel={primaryIsSubmit ? 'Submitting…' : 'Saving…'}
-          primaryDisabled={isPreview && !showSaveDraft && !showSubmit}
+          primaryLabel={showPreviewActions ? 'Submit' : 'Next'}
+          onPrimary={showPreviewActions ? handleSubmit : tryNext}
+          primaryLoading={pending && pendingMode === 'submit'}
+          primaryLoadingLabel="Submitting…"
+          primaryDisabled={isPreview && !showPreviewActions}
         />
       }
     >

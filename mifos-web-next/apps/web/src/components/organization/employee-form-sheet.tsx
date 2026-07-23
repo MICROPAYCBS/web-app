@@ -16,7 +16,7 @@ import {
   type UpdateStaffInput
 } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useId, useState, useTransition } from 'react';
+import { useId, useMemo, useState, useTransition } from 'react';
 import { createStaffAction, updateStaffAction } from '@/actions/staff';
 import { DateField } from '@/components/composites/date-field';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
@@ -79,6 +79,18 @@ function formStateFromInitial(initial?: EmployeeFormInitial): EmployeeFormState 
   };
 }
 
+function employeeFormsEqual(a: EmployeeFormState, b: EmployeeFormState): boolean {
+  return (
+    a.officeId === b.officeId &&
+    a.firstname.trim() === b.firstname.trim() &&
+    a.lastname.trim() === b.lastname.trim() &&
+    a.isLoanOfficer === b.isLoanOfficer &&
+    a.mobileNo.trim() === b.mobileNo.trim() &&
+    a.joiningDate === b.joiningDate &&
+    a.isActive === b.isActive
+  );
+}
+
 function toCreatePayload(form: EmployeeFormState): CreateStaffInput {
   return {
     officeId: Number(form.officeId),
@@ -117,6 +129,9 @@ export function EmployeeFormSheet({
   const router = useRouter();
   const formId = useId();
   const [form, setForm] = useState<EmployeeFormState>(() => formStateFromInitial(initial));
+  const [baseline, setBaseline] = useState<EmployeeFormState | null>(() =>
+    mode === 'edit' ? formStateFromInitial(initial) : null
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -126,7 +141,9 @@ export function EmployeeFormSheet({
       return;
     }
     if (next) {
-      setForm(formStateFromInitial(initial));
+      const nextForm = formStateFromInitial(initial);
+      setForm(nextForm);
+      setBaseline(mode === 'edit' ? nextForm : null);
       setFieldErrors({});
       setSubmitError(null);
     }
@@ -137,8 +154,18 @@ export function EmployeeFormSheet({
     setForm((prev) => ({ ...prev, ...patch }));
   }
 
+  const hasChanges = useMemo(() => {
+    if (mode !== 'edit' || baseline == null) {
+      return true;
+    }
+    return !employeeFormsEqual(form, baseline);
+  }, [mode, form, baseline]);
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (mode === 'edit' && !hasChanges) {
+      return;
+    }
     setSubmitError(null);
     setFieldErrors({});
 
@@ -190,7 +217,7 @@ export function EmployeeFormSheet({
       }
       formId={formId}
       submitLabel={mode === 'create' ? 'Create employee' : 'Save changes'}
-      submitDisabled={!canSubmit}
+      submitDisabled={!canSubmit || (mode === 'edit' && !hasChanges)}
       submitLoading={pending}
       className="data-[side=right]:sm:max-w-lg"
       error={

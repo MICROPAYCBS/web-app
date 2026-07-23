@@ -301,16 +301,60 @@ export function formatWorkflowTaskDisplay(
   };
 }
 
-/** Known false — task exists in maker-checkerable list but is not enabled. */
+/** True when the institution-wide `maker-checker` global configuration is off. */
+export function isWorkflowGlobalMakerCheckerDisabled(
+  makerCheckerGloballyEnabled: boolean | null | undefined
+): boolean {
+  return makerCheckerGloballyEnabled === false;
+}
+
+/** True when maker-checker is not enabled for this task (and we have permissions data). */
 export function isWorkflowTaskMakerCheckerDisabled(
   taskPermissionCode: string,
   permissions?: FineractRolePermissionUsage[]
 ): boolean {
-  return formatWorkflowTaskDisplay(taskPermissionCode, permissions).makerCheckerEnabled === false;
+  if (!permissions?.length || !taskPermissionCode.trim()) {
+    return false;
+  }
+  const match = findWorkflowTaskPermission(permissions, taskPermissionCode);
+  return match?.selected !== true;
 }
 
+export type WorkflowActivateBlockReason = 'global' | 'task';
+
+/** Prefer the global gate; fall back to per-task maker-checker. */
+export function getWorkflowActivateBlockReason(options: {
+  makerCheckerGloballyEnabled?: boolean | null;
+  taskPermissionCode?: string;
+  taskPermissions?: FineractRolePermissionUsage[];
+}): WorkflowActivateBlockReason | null {
+  if (isWorkflowGlobalMakerCheckerDisabled(options.makerCheckerGloballyEnabled)) {
+    return 'global';
+  }
+  if (
+    options.taskPermissionCode &&
+    isWorkflowTaskMakerCheckerDisabled(options.taskPermissionCode, options.taskPermissions)
+  ) {
+    return 'task';
+  }
+  return null;
+}
+
+export const WORKFLOW_ACTIVATE_GLOBAL_MC_DISABLED_HINT =
+  'Maker-checker is off in global configurations. Enable it to activate workflows.';
+
 export const WORKFLOW_ACTIVATE_MC_DISABLED_HINT =
-  'Maker-checker is not enabled for this task. Enable it before activating this workflow.';
+  'Maker-checker is off for this task. Enable it to activate.';
+
+export function workflowActivateBlockHint(reason: WorkflowActivateBlockReason | null): string | null {
+  if (reason === 'global') {
+    return WORKFLOW_ACTIVATE_GLOBAL_MC_DISABLED_HINT;
+  }
+  if (reason === 'task') {
+    return WORKFLOW_ACTIVATE_MC_DISABLED_HINT;
+  }
+  return null;
+}
 
 export function isWorkflowActivationMcDisabledError(message: string): boolean {
   const normalized = message.toLowerCase();

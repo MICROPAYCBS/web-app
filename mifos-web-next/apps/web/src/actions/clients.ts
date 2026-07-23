@@ -190,11 +190,10 @@ export async function submitClientFromCreateAction(raw: unknown): Promise<Client
 
   try {
     assertCan(session, resolvePermission('clients.create'));
-    assertCan(session, resolvePermission('clients.submit'));
   } catch {
     return {
       ok: false,
-      message: 'You do not have permission to submit customers.'
+      message: 'You do not have permission to create customers.'
     };
   }
 

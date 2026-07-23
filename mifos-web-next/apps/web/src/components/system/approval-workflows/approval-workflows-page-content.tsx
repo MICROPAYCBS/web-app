@@ -33,11 +33,13 @@ export function ApprovalWorkflowsPageContent({
   definitions,
   taskPermissions,
   engineConfiguration,
+  makerCheckerGloballyEnabled,
   canUpdateConfiguration
 }: {
   definitions: WorkflowDefinition[];
   taskPermissions: FineractRolePermissionUsage[];
   engineConfiguration: FineractGlobalConfiguration | null;
+  makerCheckerGloballyEnabled: boolean | null;
   canUpdateConfiguration: boolean;
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -84,6 +86,7 @@ export function ApprovalWorkflowsPageContent({
             definitions={definitions}
             appliedFilters={appliedFilters}
             taskPermissions={taskPermissions}
+            makerCheckerGloballyEnabled={makerCheckerGloballyEnabled}
             filterTrigger={
               <ListFilterTrigger
                 activeCount={activeFilterCount}

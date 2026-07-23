@@ -11,7 +11,10 @@ import { notFound } from 'next/navigation';
 import { ApprovalWorkflowsPageContent } from '@/components/system/approval-workflows/approval-workflows-page-content';
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
-import { ENABLE_APPROVAL_WORKFLOWS_CONFIG_NAME } from '@/lib/fineract/approval-workflow-paths';
+import {
+  ENABLE_APPROVAL_WORKFLOWS_CONFIG_NAME,
+  MAKER_CHECKER_GLOBAL_CONFIG_NAME
+} from '@/lib/fineract/approval-workflow-paths';
 import { listWorkflowDefinitions } from '@/lib/fineract/approval-workflows';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
@@ -24,11 +27,13 @@ export default async function ApprovalWorkflowsPage() {
     notFound();
   }
 
-  const [definitionsResult, taskPermissions, engineConfiguration] = await Promise.all([
-    tryFineractLoad(() => listWorkflowDefinitions(), 'Could not load approval workflows.'),
-    listMakerCheckerPermissions().catch(() => []),
-    getGlobalConfigurationByName(ENABLE_APPROVAL_WORKFLOWS_CONFIG_NAME)
-  ]);
+  const [definitionsResult, taskPermissions, engineConfiguration, makerCheckerConfiguration] =
+    await Promise.all([
+      tryFineractLoad(() => listWorkflowDefinitions(), 'Could not load approval workflows.'),
+      listMakerCheckerPermissions().catch(() => []),
+      getGlobalConfigurationByName(ENABLE_APPROVAL_WORKFLOWS_CONFIG_NAME),
+      getGlobalConfigurationByName(MAKER_CHECKER_GLOBAL_CONFIG_NAME).catch(() => null)
+    ]);
 
   if (!definitionsResult.ok) {
     return (
@@ -43,6 +48,7 @@ export default async function ApprovalWorkflowsPage() {
       definitions={definitionsResult.data ?? []}
       taskPermissions={taskPermissions}
       engineConfiguration={engineConfiguration}
+      makerCheckerGloballyEnabled={makerCheckerConfiguration?.enabled ?? null}
       canUpdateConfiguration={can(session, 'UPDATE_CONFIGURATION')}
     />
   );

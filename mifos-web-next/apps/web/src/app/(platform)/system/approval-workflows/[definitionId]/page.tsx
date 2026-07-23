@@ -11,8 +11,9 @@ import { notFound } from 'next/navigation';
 import { ApprovalWorkflowDetailView } from '@/components/system/approval-workflows/approval-workflow-detail-view';
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
-import { APPROVAL_WORKFLOWS_LIST_PATH } from '@/lib/fineract/approval-workflow-paths';
+import { MAKER_CHECKER_GLOBAL_CONFIG_NAME } from '@/lib/fineract/approval-workflow-paths';
 import { getWorkflowDefinition } from '@/lib/fineract/approval-workflows';
+import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
@@ -28,12 +29,13 @@ export default async function ApprovalWorkflowDetailPage({
     notFound();
   }
 
-  const [result, taskPermissions] = await Promise.all([
+  const [result, taskPermissions, makerCheckerConfiguration] = await Promise.all([
     tryFineractLoad(
       () => getWorkflowDefinition(Number(definitionId)),
       'Could not load approval workflow.'
     ),
-    listMakerCheckerPermissions().catch(() => [])
+    listMakerCheckerPermissions().catch(() => []),
+    getGlobalConfigurationByName(MAKER_CHECKER_GLOBAL_CONFIG_NAME).catch(() => null)
   ]);
 
   if (!result.ok) {
@@ -52,6 +54,7 @@ export default async function ApprovalWorkflowDetailPage({
     <ApprovalWorkflowDetailView
       definition={result.data}
       taskPermissions={taskPermissions}
+      makerCheckerGloballyEnabled={makerCheckerConfiguration?.enabled ?? null}
     />
   );
 }

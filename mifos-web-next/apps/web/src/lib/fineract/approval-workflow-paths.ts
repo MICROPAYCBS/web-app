@@ -8,6 +8,9 @@
 
 export const APPROVAL_WORKFLOWS_LIST_PATH = '/system/approval-workflows';
 export const ENABLE_APPROVAL_WORKFLOWS_CONFIG_NAME = 'enable-approval-workflows';
+/** Fineract global configuration that turns maker-checker on for the institution. */
+export const MAKER_CHECKER_GLOBAL_CONFIG_NAME = 'maker-checker';
+export const GLOBAL_CONFIGURATIONS_PATH = '/system/configurations';
 
 export function approvalWorkflowDetailPath(definitionId: number | string) {
   return `${APPROVAL_WORKFLOWS_LIST_PATH}/${definitionId}`;

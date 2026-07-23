@@ -53,18 +53,16 @@ export function BasicsStep({
           listClassName="max-h-72"
         />
         {selectedTask && !selectedTask.selected ? (
-          <div className="md:col-span-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm">
-            <p className="text-foreground">
-              Maker-checker is not enabled for this task yet. Enable it before activating this
-              workflow.
-            </p>
+          <p className="md:col-span-2 text-sm text-muted-foreground">
+            Maker-checker is off for this task.{' '}
             <Link
               href={CONFIGURE_MC_TASKS_PATH}
-              className="mt-1 inline-flex font-medium text-primary underline-offset-4 hover:underline"
+              className="text-foreground underline-offset-4 hover:underline"
             >
-              Configure maker-checker tasks
-            </Link>
-          </div>
+              Enable it
+            </Link>{' '}
+            before you can activate this workflow.
+          </p>
         ) : selectedTask?.selected ? (
           <div className="md:col-span-2">
             <Badge variant="secondary">Maker-checker enabled</Badge>
