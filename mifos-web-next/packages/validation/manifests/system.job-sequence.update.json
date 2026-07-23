@@ -1,0 +1,19 @@
+{
+  "command": "system.job-sequence.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.jobs.api.JobSequenceApiResource",
+    "org.apache.fineract.infrastructure.jobs.service.JobSequenceWritePlatformService"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 100 },
+    "description": { "required": false, "maxLength": 500 },
+    "active": { "required": false },
+    "steps": { "required": true },
+    "steps[].stepOrder": { "required": true },
+    "steps[].stepType": { "required": true },
+    "steps[].jobShortName": { "required": false },
+    "steps[].operationCode": { "required": false },
+    "steps[].enabled": { "required": false },
+    "steps[].stopOnFailure": { "required": false }
+  }
+}

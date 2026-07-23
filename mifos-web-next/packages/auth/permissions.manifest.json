@@ -745,6 +745,31 @@
       "EXECUTE_INLINE_JOB"
     ]
   },
+  "system.jobSequences": {
+    "any": [
+      "READ_JOBSEQUENCE"
+    ]
+  },
+  "system.jobSequences.create": {
+    "any": [
+      "CREATE_JOBSEQUENCE"
+    ]
+  },
+  "system.jobSequences.update": {
+    "any": [
+      "UPDATE_JOBSEQUENCE"
+    ]
+  },
+  "system.jobSequences.delete": {
+    "any": [
+      "DELETE_JOBSEQUENCE"
+    ]
+  },
+  "system.jobSequences.execute": {
+    "any": [
+      "EXECUTE_JOBSEQUENCE"
+    ]
+  },
   "system.configurations": {
     "any": [
       "READ_CONFIGURATION"

@@ -19,6 +19,8 @@ export interface FineractSchedulerJobRunHistory {
 export interface FineractSchedulerJob {
   jobId: number;
   displayName: string;
+  /** Present on Micropay / some Fineract builds; used by job-sequence step editors. */
+  shortName?: string;
   cronExpression: string;
   active: boolean;
   currentlyRunning: boolean;

@@ -42,6 +42,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-090 | `/system/surveys`                    | Surveys               | **Done**    | List, create, view, edit, activate       |
 | SYS-095 | `/system/approval-workflows`         | Approval workflows    | **Done**    | List, create, edit, activate/deactivate  |
 | SYS-100 | `/system/manage-jobs`                | Manage jobs           | **Done**    | Scheduler, workflow, COB tabs + detail   |
+| SYS-105 | `/system/job-sequences`              | Job sequences         | **In progress** | List, create, edit, execute, run monitor |
 | SYS-110 | `/system/configurations`             | Global configurations | **Done**    | Inline edit sheet                        |
 | SYS-120 | `/system/account-number-preferences` | Account number prefs  | **Done**    | List, create sheet, view, edit, delete   |
 | SYS-130 | `/system/reports`                    | Report configuration  | **Done**    | List, create, view, edit, delete, params |
@@ -59,6 +60,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 4. **Account number preferences** — medium CRUD slice (`SYS-120`, done).
 5. **Audit trails** — search template + paginated list + detail (`SYS-160`, done).
 6. **Manage jobs** — scheduler, workflow, COB tabs + detail/history (`SYS-100`, done).
+6b. **Job sequences** — EOD packs / ordered scheduler+operation runs (`SYS-105`, in progress).
 7. **Report configuration** — report CRUD + parameters (`SYS-130`, done).
 
 ---

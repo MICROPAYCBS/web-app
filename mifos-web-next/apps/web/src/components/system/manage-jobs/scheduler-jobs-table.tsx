@@ -104,6 +104,16 @@ export function SchedulerJobsTable({
         )
       },
       {
+        accessorKey: 'shortName',
+        header: 'Short name',
+        cell: ({ row }) =>
+          row.original.shortName?.trim() ? (
+            <span className="font-mono text-sm tabular-nums">{row.original.shortName}</span>
+          ) : (
+            '—'
+          )
+      },
+      {
         accessorKey: 'active',
         header: 'Active',
         cell: ({ row }) => yesNoLabel(row.original.active)
@@ -176,7 +186,9 @@ export function SchedulerJobsTable({
     onGlobalFilterChange: setFilter,
     globalFilterFn: (row, _columnId, value) => {
       const needle = String(value).toLowerCase();
-      return row.original.displayName.toLowerCase().includes(needle);
+      const displayName = row.original.displayName.toLowerCase();
+      const shortName = row.original.shortName?.toLowerCase() ?? '';
+      return displayName.includes(needle) || shortName.includes(needle);
     },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -192,7 +204,7 @@ export function SchedulerJobsTable({
       <Input
         value={filter}
         onChange={(event) => setFilter(event.target.value)}
-        placeholder="Filter jobs by name…"
+        placeholder="Filter by job name or short name..."
         className="max-w-sm"
       />
       <DataTable<FineractSchedulerJob>

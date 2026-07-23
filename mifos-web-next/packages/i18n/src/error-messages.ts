@@ -116,7 +116,25 @@ const ERROR_MESSAGES: Record<string, string> = {
   'insufficient.available.balance.on.linked.savings':
     'The linked savings account does not have enough available balance for this share purchase.',
   'error.msg.shareaccount.insufficient.available.balance.on.linked.savings':
-    'The linked savings account does not have enough available balance to approve this share purchase.'
+    'The linked savings account does not have enough available balance to approve this share purchase.',
+  'error.msg.job.sequence.duplicate.name':
+    'A job sequence with this name already exists. Choose a different name.',
+  'error.msg.job.sequence.already.running':
+    'This sequence already has a run in progress. Wait for it to finish or open the current run.',
+  'error.msg.job.sequence.inactive':
+    'This sequence is inactive. Enable it before executing.',
+  'error.msg.job.sequence.cannot.update.while.running':
+    'Cannot update this sequence while a run is in progress. Wait for the run to finish.',
+  'error.msg.job.sequence.cannot.delete.while.running':
+    'Cannot delete this sequence while a run is in progress. Wait for the run to finish.',
+  'error.msg.job.sequence.job.inactive':
+    'A target scheduler job is inactive. Enable it under Manage jobs, then try again.',
+  'error.msg.job.sequence.job.timeout':
+    'Waiting for a scheduler job timed out. Check Manage jobs and retry if needed.',
+  'error.msg.job.sequence.jobShortName.unknown.job':
+    'Unknown scheduler job short name. Pick a job from the list.',
+  'error.msg.job.sequence.operationCode.unknown.operation':
+    'Unknown platform operation. Use ADVANCE_BUSINESS_DATE.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

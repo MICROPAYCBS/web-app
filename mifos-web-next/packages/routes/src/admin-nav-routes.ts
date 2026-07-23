@@ -503,6 +503,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'sysJobSequences',
+    path: '/system/job-sequences',
+    label: 'Job sequences',
+    navGroup: 'system',
+    webAppRef: 'system/job-sequences',
+    permissionKey: 'system.jobSequences',
+    navOrder: 101,
+    navIcon: 'list',
+    keywords: ['eod', 'sequence', 'end of day', 'scheduler'],
+    parityStatus: 'in_progress'
+  },
+  {
     id: 'sysConfigurations',
     path: '/system/configurations',
     label: 'Global configurations',

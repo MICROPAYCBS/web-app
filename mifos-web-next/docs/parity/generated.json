@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-07-19T12:54:55.609Z",
+  "generatedAt": "2026-07-23T09:28:37.922Z",
   "summary": {
     "todo": 0,
-    "in_progress": 0,
+    "in_progress": 1,
     "done": 91,
     "n/a": 0
   },
@@ -617,6 +617,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "system/manage-jobs"
+    },
+    {
+      "id": "sysJobSequences",
+      "path": "/system/job-sequences",
+      "domain": "system",
+      "label": "Job sequences",
+      "kind": "page",
+      "status": "in_progress",
+      "webAppRef": "system/job-sequences"
     },
     {
       "id": "sysConfigurations",

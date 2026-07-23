@@ -508,6 +508,18 @@ export type {
 } from './system/job-types';
 
 export type {
+  FineractJobSequence,
+  FineractJobSequenceExecuteResponse,
+  FineractJobSequenceRun,
+  FineractJobSequenceRunStep,
+  FineractJobSequenceStep,
+  FineractJobSequenceWritePayload,
+  JobSequenceOperationCode,
+  JobSequenceRunStatus,
+  JobSequenceStepType
+} from './system/job-sequence-types';
+
+export type {
   EntityMappingFilterOptions,
   EntityMappingOption,
   FineractEntityMappingDetail,
