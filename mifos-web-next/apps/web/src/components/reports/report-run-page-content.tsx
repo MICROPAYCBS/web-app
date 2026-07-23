@@ -148,7 +148,11 @@ export function ReportRunPageContent({
             can be run here; chart and PDF report types will follow in a later update.
           </div>
         ) : (
-          <ReportResultTable result={result} reportName={report.reportName} />
+          <ReportResultTable
+            result={result}
+            reportName={report.reportName}
+            loading={pending}
+          />
         )}
       </div>
 

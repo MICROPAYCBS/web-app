@@ -21,6 +21,7 @@ import { Download } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
+import { ReportResultTableSkeleton } from '@/components/reports/report-result-table-skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -52,10 +53,13 @@ function exportRowsToCsv(filename: string, headers: string[], rows: Record<strin
 
 export function ReportResultTable({
   result,
-  reportName
+  reportName,
+  loading = false
 }: {
   result: FineractReportRunResult | null;
   reportName: string;
+  /** True while a report run is in flight (first run or re-run). */
+  loading?: boolean;
 }) {
   const [filter, setFilter] = useState('');
 
@@ -100,6 +104,14 @@ export function ReportResultTable({
       pagination: { pageSize: 50 }
     }
   });
+
+  if (loading) {
+    return (
+      <ReportResultTableSkeleton
+        columnCount={result?.columnHeaders?.length || 4}
+      />
+    );
+  }
 
   if (!result) {
     return (
