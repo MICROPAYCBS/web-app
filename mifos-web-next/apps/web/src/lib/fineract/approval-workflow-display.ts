@@ -153,7 +153,7 @@ export function findWorkflowTaskPermission(
   taskPermissionCode: string
 ): FineractRolePermissionUsage | undefined {
   const normalized = taskPermissionCode.trim();
-  return permissions.find((permission) => permission.code === normalized);
+  return permissions.find((permission) => permission.code.trim() === normalized);
 }
 
 export function formatWorkflowTaskSubtitle(permission: FineractRolePermissionUsage): string | null {

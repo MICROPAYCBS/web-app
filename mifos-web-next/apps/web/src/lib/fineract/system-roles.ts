@@ -16,6 +16,10 @@ import type {
 } from '@mifos/api-client';
 import type { CreateRoleInput, UpdateRoleInput, UpdateRolePermissionsInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import {
+  dedupePermissionUsageByCode,
+  normalizePermissionUsage
+} from '@/lib/fineract/permission-usage';
 
 const ROLES_PATH = '/roles';
 
@@ -38,25 +42,6 @@ function normalizeRoleListItem(raw: unknown): FineractRoleListItem | null {
   };
 }
 
-function normalizePermissionUsage(raw: unknown): FineractRolePermissionUsage | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-  const row = raw as Record<string, unknown>;
-  const grouping = typeof row.grouping === 'string' ? row.grouping : '';
-  const code = typeof row.code === 'string' ? row.code : '';
-  if (!grouping || !code) {
-    return null;
-  }
-  return {
-    grouping,
-    code,
-    selected: row.selected === true,
-    entityName: typeof row.entityName === 'string' ? row.entityName : undefined,
-    actionName: typeof row.actionName === 'string' ? row.actionName : undefined
-  };
-}
-
 function normalizeRolePermissionsDetail(raw: unknown): FineractRolePermissionsDetail | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -69,11 +54,13 @@ function normalizeRolePermissionsDetail(raw: unknown): FineractRolePermissionsDe
     return null;
   }
 
-  const permissionUsageData = Array.isArray(row.permissionUsageData)
-    ? row.permissionUsageData
-        .map((item) => normalizePermissionUsage(item))
-        .filter((item): item is FineractRolePermissionUsage => item !== null)
-    : [];
+  const permissionUsageData = dedupePermissionUsageByCode(
+    Array.isArray(row.permissionUsageData)
+      ? row.permissionUsageData
+          .map((item) => normalizePermissionUsage(item))
+          .filter((item): item is FineractRolePermissionUsage => item !== null)
+      : []
+  );
 
   return {
     id,

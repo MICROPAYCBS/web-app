@@ -12,6 +12,7 @@ export type NavGroupId =
   | 'portfolio'
   | 'products'
   | 'accounting'
+  | 'financialReports'
   | 'organization'
   | 'system'
   | 'administration';

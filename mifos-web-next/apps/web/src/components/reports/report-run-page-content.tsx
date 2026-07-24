@@ -32,10 +32,15 @@ import { cn } from '@/lib/utils';
 
 export function ReportRunPageContent({
   report,
-  canEdit = false
+  canEdit = false,
+  backHref = '/reports',
+  backLabel = 'Back to reports'
 }: {
   report: FineractReportDetail;
   canEdit?: boolean;
+  /** Override catalog back link (e.g. financial-report entry points). */
+  backHref?: string;
+  backLabel?: string;
 }) {
   const [parameters, setParameters] = useState<FineractReportRunParameter[]>(() =>
     mergeReportRunParameters([], report)
@@ -100,7 +105,7 @@ export function ReportRunPageContent({
 
   return (
     <ListPage
-      backLink={<DetailBackLink href="/reports" label="Back to reports" />}
+      backLink={<DetailBackLink href={backHref} label={backLabel} />}
       title={report.reportName}
       meta={`${report.reportType}${report.reportSubType ? ` · ${report.reportSubType}` : ''}`}
       titleHint={reportDescription}

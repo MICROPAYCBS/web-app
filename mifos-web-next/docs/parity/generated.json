@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-23T09:28:37.922Z",
+  "generatedAt": "2026-07-24T08:19:25.832Z",
   "summary": {
     "todo": 0,
     "in_progress": 1,
-    "done": 91,
+    "done": 94,
     "n/a": 0
   },
   "routes": [
@@ -824,6 +824,33 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "accounting/provisioning-entries"
+    },
+    {
+      "id": "finReportBalanceSheet",
+      "path": "/financial-reports/balance-sheet",
+      "domain": "financial-reports",
+      "label": "Balance sheet",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "reports/run/Balance Sheet Table"
+    },
+    {
+      "id": "finReportIncomeStatement",
+      "path": "/financial-reports/income-statement",
+      "domain": "financial-reports",
+      "label": "Income statement",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "reports/run/Income Statement Table"
+    },
+    {
+      "id": "finReportTrialBalance",
+      "path": "/financial-reports/trial-balance",
+      "domain": "financial-reports",
+      "label": "Trial balance",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "reports/run/Trial Balance Table"
     },
     {
       "id": "adminUsers",

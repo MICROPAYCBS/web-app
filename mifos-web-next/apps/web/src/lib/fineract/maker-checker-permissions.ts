@@ -11,28 +11,12 @@ import 'server-only';
 import type { FineractRolePermissionUsage, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { UpdateMakerCheckerPermissionsInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import {
+  dedupePermissionUsageByCode,
+  normalizePermissionUsage
+} from '@/lib/fineract/permission-usage';
 
 const PERMISSIONS_PATH = '/permissions';
-
-function normalizePermissionUsage(raw: unknown): FineractRolePermissionUsage | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-  const row = raw as Record<string, unknown>;
-  const grouping = typeof row.grouping === 'string' ? row.grouping : '';
-  const code = typeof row.code === 'string' ? row.code : '';
-  if (!grouping || !code) {
-    return null;
-  }
-
-  return {
-    grouping,
-    code,
-    selected: row.selected === true || row.makerChecker === true,
-    entityName: typeof row.entityName === 'string' ? row.entityName : undefined,
-    actionName: typeof row.actionName === 'string' ? row.actionName : undefined
-  };
-}
 
 function normalizeMakerCheckerPermissionList(raw: unknown): FineractRolePermissionUsage[] {
   const rows = Array.isArray(raw)
@@ -49,9 +33,11 @@ function normalizeMakerCheckerPermissionList(raw: unknown): FineractRolePermissi
           ? (raw as { permissions: unknown[] }).permissions
           : [];
 
-  return rows
-    .map((item) => normalizePermissionUsage(item))
-    .filter((item): item is FineractRolePermissionUsage => item !== null);
+  return dedupePermissionUsageByCode(
+    rows
+      .map((item) => normalizePermissionUsage(item))
+      .filter((item): item is FineractRolePermissionUsage => item !== null)
+  );
 }
 
 export async function listMakerCheckerPermissions(): Promise<FineractRolePermissionUsage[]> {

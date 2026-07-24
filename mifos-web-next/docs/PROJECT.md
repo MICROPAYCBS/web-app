@@ -28,3 +28,7 @@ There is no plan to merge this work into the community web-app or to coordinate 
 ## Naming
 
 “Mifos” and “Fineract” refer to the platforms this client integrates with. Use of those names does not imply affiliation with the Mifos Initiative or Apache Fineract projects unless explicitly stated later.
+
+## End-user documentation
+
+Operator and administrator handbooks live under [`docs/user-guide/`](user-guide/README.md). That content is for people who use the product UI. ADRs, parity matrices, and architecture notes in this `docs/` tree remain developer-facing.

@@ -50,6 +50,13 @@ export const NAV_GROUPS: NavGroupDefinition[] = [
     order: 40
   },
   {
+    id: 'financialReports',
+    label: 'Financial reports',
+    icon: 'file-bar-chart',
+    defaultOpen: false,
+    order: 45
+  },
+  {
     id: 'organization',
     label: 'Organization',
     icon: 'building',

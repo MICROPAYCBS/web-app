@@ -786,6 +786,45 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'finReportBalanceSheet',
+    path: '/financial-reports/balance-sheet',
+    label: 'Balance sheet',
+    navGroup: 'financialReports',
+    webAppRef: 'reports/run/Balance Sheet Table',
+    permissionKey: 'administration.reports',
+    navOrder: 10,
+    navIcon: 'scale',
+    keywords: ['balance sheet', 'financial statement', 'assets', 'liabilities', 'equity'],
+    domain: 'financial-reports',
+    parityStatus: 'done'
+  },
+  {
+    id: 'finReportIncomeStatement',
+    path: '/financial-reports/income-statement',
+    label: 'Income statement',
+    navGroup: 'financialReports',
+    webAppRef: 'reports/run/Income Statement Table',
+    permissionKey: 'administration.reports',
+    navOrder: 20,
+    navIcon: 'file-bar-chart',
+    keywords: ['income statement', 'p&l', 'profit and loss', 'financial statement'],
+    domain: 'financial-reports',
+    parityStatus: 'done'
+  },
+  {
+    id: 'finReportTrialBalance',
+    path: '/financial-reports/trial-balance',
+    label: 'Trial balance',
+    navGroup: 'financialReports',
+    webAppRef: 'reports/run/Trial Balance Table',
+    permissionKey: 'administration.reports',
+    navOrder: 30,
+    navIcon: 'table-2',
+    keywords: ['trial balance', 'gl', 'ledger', 'financial statement'],
+    domain: 'financial-reports',
+    parityStatus: 'done'
+  },
+  {
     id: 'adminUsers',
     path: '/appusers',
     label: 'Users',

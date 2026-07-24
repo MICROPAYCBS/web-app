@@ -153,6 +153,26 @@ export async function getReport(reportId: number): Promise<FineractReportDetail 
   return normalizeReportDetail(raw);
 }
 
+/**
+ * Resolve a runnable report by exact Fineract report name (tenant-safe; ids vary).
+ */
+export async function findRunnableReportByName(
+  reportName: string
+): Promise<FineractReportDetail | null> {
+  const normalized = reportName.trim();
+  if (!normalized) {
+    return null;
+  }
+  const list = await listReports();
+  const match = list.find(
+    (report) => report.reportName === normalized && report.useReport === true
+  );
+  if (!match) {
+    return null;
+  }
+  return getReport(match.id);
+}
+
 export async function createReport(input: UpsertReportFormInput): Promise<FineractReportMutationResponse> {
   const fineract = await createFineractClient();
   const payload = buildCreateReportPayload(input);
