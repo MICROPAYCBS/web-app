@@ -20,7 +20,7 @@ From `apps/web`:
 pnpm run test:e2e
 ```
 
-Playwright starts `pnpm dev` on **http://127.0.0.1:3000** (reuses an existing dev server when one is already listening). The server catalog is seeded with the local Fineract URL via `FINERACT_SERVERS`.
+Playwright starts the web app on **http://localhost:3000** (reuses an existing UI server when one is already listening). The handbook docs site uses **3010** separately. The server catalog is seeded with the local Fineract URL via `FINERACT_SERVERS`.
 
 ### Environment overrides
 
@@ -28,7 +28,7 @@ Playwright starts `pnpm dev` on **http://127.0.0.1:3000** (reuses an existing de
 |----------|---------|
 | `FINERACT_API_URL` | `https://localhost:8443/fineract-provider/api/v1` |
 | `FINERACT_TENANT_ID` | `default` |
-| `E2E_BASE_URL` | `http://127.0.0.1:3000` |
+| `E2E_BASE_URL` | `http://localhost:3000` (use `localhost`, not `127.0.0.1`, so the Next client hydrates; see `allowedDevOrigins`) |
 | `E2E_USERNAME` | `mifos` |
 | `E2E_PASSWORD` | `password` |
 | `E2E_SKIP_WEB_SERVER` | unset — set to `1` if you already run `pnpm dev` and want Playwright to skip starting it |
@@ -38,6 +38,32 @@ Example against an already-running dev server:
 
 ```bash
 E2E_SKIP_WEB_SERVER=1 pnpm run test:e2e
+```
+
+## Docs screenshots
+
+Handbook captures for [Micropay CBS Docs](../../../../../documentation) (sibling repo). Specs live under `e2e/docs/*.screenshots.spec.ts` and use a lightweight sign-in (`docs-auth.setup.ts`) that does **not** require the approval-workflow module.
+
+From `apps/web` (Fineract on **8443**):
+
+```bash
+pnpm run test:e2e:docs
+```
+
+| Variable | Default |
+|----------|---------|
+| `DOCS_PUBLIC_IMG` | Sibling `documentation/public/img` (from `apps/web`: `../../../../documentation/public/img`) |
+
+Pilot: **Organization → Offices** → `administrators/organization/offices-list.png` and `create-office-form.png`.
+
+CI: GitHub Actions workflow **`mifos-web-next-docs-screenshots`** (`workflow_dispatch`) boots Fineract via root `docker-compose.e2e.yml`, sets `DOCS_PUBLIC_IMG` to `mifos-web-next/.docs-screenshots/img`, and uploads that folder as the `docs-screenshots` artifact. Copy into the docs repo’s `public/img/`. Not part of `check:ci`.
+
+### Windows (reuse an existing dev server)
+
+```powershell
+$env:E2E_SKIP_WEB_SERVER="1"
+$env:E2E_REUSE_DEV_SERVER="1"
+pnpm run test:e2e:docs
 ```
 
 ## Approval workflow suite

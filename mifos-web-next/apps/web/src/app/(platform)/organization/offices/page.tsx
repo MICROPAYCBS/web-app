@@ -8,7 +8,6 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { BranchCreateUrlPanel } from '@/components/organization/branch-create-url-panel';
 import { BranchesPageContent } from '@/components/organization/branches-page-content';
 import { getStructuredAccountNumberFormatsEnabled } from '@/lib/fineract/account-number-format-policy';
@@ -35,13 +34,11 @@ export default async function OrganizationOfficesPage() {
     <>
       <BranchesPageContent offices={offices} />
       {canCreate ? (
-        <Suspense fallback={null}>
-          <BranchCreateUrlPanel
-            parentOptions={parentOptions}
-            managerOptions={toBranchManagerOptions(staff)}
-            structuredAccountNumberFormatsEnabled={structuredAccountNumberFormatsEnabled}
-          />
-        </Suspense>
+        <BranchCreateUrlPanel
+          parentOptions={parentOptions}
+          managerOptions={toBranchManagerOptions(staff)}
+          structuredAccountNumberFormatsEnabled={structuredAccountNumberFormatsEnabled}
+        />
       ) : null}
     </>
   );

@@ -12,7 +12,7 @@ import path from 'node:path';
 const FINERACT_API_URL =
   process.env.FINERACT_API_URL ?? 'https://localhost:8443/fineract-provider/api/v1';
 const FINERACT_TENANT_ID = process.env.FINERACT_TENANT_ID ?? 'default';
-const E2E_BASE_URL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000';
+const E2E_BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
 const FINERACT_SERVERS = JSON.stringify([
   {
@@ -22,6 +22,8 @@ const FINERACT_SERVERS = JSON.stringify([
     tenantId: FINERACT_TENANT_ID
   }
 ]);
+
+const authDir = path.join(__dirname, 'e2e', '.auth');
 
 export default defineConfig({
   testDir: './e2e',
@@ -40,22 +42,39 @@ export default defineConfig({
   projects: [
     {
       name: 'setup',
-      testMatch: /auth\.setup\.ts/
+      testMatch: /auth\.setup\.ts/,
+      testIgnore: /docs\//
     },
     {
       name: 'chromium',
       testMatch: /.*\.spec\.ts/,
+      testIgnore: [/docs\//, /\.screenshots\.spec\.ts$/],
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: path.join(__dirname, 'e2e', '.auth', 'session.json')
+        storageState: path.join(authDir, 'session.json')
+      }
+    },
+    {
+      name: 'docs-setup',
+      testMatch: /docs\/docs-auth\.setup\.ts/
+    },
+    {
+      name: 'docs-screenshots',
+      testMatch: /docs\/.*\.screenshots\.spec\.ts/,
+      dependencies: ['docs-setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        colorScheme: 'light',
+        storageState: path.join(authDir, 'docs-session.json')
       }
     }
   ],
   webServer: process.env.E2E_SKIP_WEB_SERVER
     ? undefined
     : {
-        command: 'pnpm dev',
+        // Webpack avoids Turbopack HMR websocket failures that break client hydration in e2e.
+        command: 'pnpm dev:webpack',
         url: E2E_BASE_URL,
         reuseExistingServer: process.env.E2E_REUSE_DEV_SERVER === '1',
         timeout: 180_000,

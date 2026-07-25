@@ -94,7 +94,7 @@ export function FormSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} disablePointerDismissal>
       <SheetContent
         side={side}
         showCloseButton

@@ -114,6 +114,18 @@ function toOptions(values: string[]) {
   return values.map((value) => ({ value, label: value.replaceAll('_', ' ') }));
 }
 
+const DEFAULT_STATUS_OPTIONS = ['ACTIVE', 'INACTIVE'] as const;
+
+function statusOptions(template: CustomerClassTemplate) {
+  const values = [...template.statusOptions];
+  for (const status of DEFAULT_STATUS_OPTIONS) {
+    if (!values.includes(status)) {
+      values.push(status);
+    }
+  }
+  return toOptions(values);
+}
+
 function segmentOptions(template: CustomerClassTemplate, currentValue?: string) {
   const values = [...template.customerTypeOptions];
   if (currentValue && !values.includes(currentValue)) {
@@ -366,10 +378,11 @@ export function CustomerClassFormSheet({
           />
           <SelectField
             label="Status"
-            value={form.status}
+            value={form.status || 'ACTIVE'}
             onValueChange={(value) => patchForm({ status: value ?? 'ACTIVE' })}
-            options={toOptions(template.statusOptions)}
+            options={statusOptions(template)}
             error={fieldErrors.status}
+            required
             disabled={pending}
           />
           <SelectField

@@ -38,6 +38,7 @@ Instructions for AI agents working in this repository.
 12. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
 13. **User-facing copy** must not mention Fineract, APIs, or backend product names unless unavoidable (e.g. a technical settings field). Prefer domain language users know: “Customer addresses”, “Family members”, “Servers”, “Sign in”. Code, comments, and docs for developers may still reference Fineract.
 14. **Business date on transaction forms** — posting and operation dates (deposits, transfers, journal entries, lifecycle commands, etc.) must use `TransactionDateField` and the shared business-date context — see `docs/COMPONENTS.md` § Business date & transaction dates. Do **not** use plain `DateField` or `new Date()` for those fields. Search/filter date ranges and profile or planning dates (DOB, expected disbursement, holidays) stay editable `DateField`s.
+15. **User-facing UI changes need a docs PR in `documentation`.** Operator/admin how-tos live in the sibling **Micropay CBS Docs** repo (`../documentation`, Fumadocs), not in `docs/user-guide/` (retired seed). When you ship or change a user-facing screen/flow, update the matching page under `content/docs/end-users/` or `content/docs/administrators/` there; follow that repo’s authoring guide and Docs sync checklist. Developer ADRs/parity stay in this repo’s `docs/`.
 
 ## Reference repos
 

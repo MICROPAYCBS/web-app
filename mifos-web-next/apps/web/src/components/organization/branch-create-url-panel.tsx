@@ -10,27 +10,55 @@
 
 import type { FineractOfficeOption } from '@mifos/api-client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import {
   BranchFormSheet,
   type BranchManagerOption
 } from '@/components/organization/branch-form-sheet';
 
-/** Opens the create branch sidebar when the URL contains `?create=1`. */
-export function BranchCreateUrlPanel({
-  parentOptions,
-  managerOptions = [],
-  structuredAccountNumberFormatsEnabled = false
-}: {
+type BranchCreateUrlPanelProps = {
   parentOptions: FineractOfficeOption[];
   managerOptions?: BranchManagerOption[];
   structuredAccountNumberFormatsEnabled?: boolean;
-}) {
+};
+
+/** Opens the create branch sidebar when the URL contains `?create=1`. */
+export function BranchCreateUrlPanel(props: BranchCreateUrlPanelProps) {
+  return (
+    <Suspense fallback={null}>
+      <BranchCreateUrlPanelInner {...props} />
+    </Suspense>
+  );
+}
+
+function BranchCreateUrlPanelInner({
+  parentOptions,
+  managerOptions = [],
+  structuredAccountNumberFormatsEnabled = false
+}: BranchCreateUrlPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const open = searchParams.get('create') === '1';
+  const createRequested = searchParams.get('create') === '1';
+
+  // Base UI Dialog portals only after open goes false→true on a mounted root.
+  const [ready, setReady] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    const timer = window.setTimeout(() => setOpen(createRequested), 50);
+    return () => window.clearTimeout(timer);
+  }, [ready, createRequested]);
 
   function handleOpenChange(next: boolean) {
+    setOpen(next);
     if (!next && searchParams.get('create') === '1') {
       const params = new URLSearchParams(searchParams.toString());
       params.delete('create');
@@ -39,9 +67,12 @@ export function BranchCreateUrlPanel({
     }
   }
 
+  if (!ready) {
+    return null;
+  }
+
   return (
     <BranchFormSheet
-      key={open ? 'create-open' : 'create-closed'}
       open={open}
       onOpenChange={handleOpenChange}
       mode="create"

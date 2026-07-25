@@ -33,9 +33,12 @@ const nextConfig: NextConfig = {
     /** Baked at build time so the browser can tell production vs preview deploys. */
     NEXT_PUBLIC_DEPLOY_ENV: process.env.VERCEL_ENV ?? 'local'
   },
+  /** Playwright and local tooling often hit the app via 127.0.0.1 rather than localhost. */
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   turbopack: {
     root: monorepoRoot
   },
+
   transpilePackages: [
     '@mifos/auth',
     '@mifos/routes',

@@ -1,26 +1,28 @@
-# User guide
+# User guide (moved)
 
-End-user handbook for people who **use** the application — not developer architecture docs.
+**End-user and administrator handbooks are no longer maintained here.**
 
-| Volume | Audience | Status |
-|--------|----------|--------|
-| [1 — Administrator](admin/README.md) | Superusers / IT / ops who set up the institution | In progress |
-| [2 — Day-to-day users](daily/README.md) | Tellers, loan officers, accountants, checkers | Stub (after Volume 1) |
+Canonical publishable docs live in the sibling repo:
 
-Developer docs (ADRs, parity, BFF, RBAC) stay under [`docs/`](../) and are separate from this guide.
+| Location | Role |
+|----------|------|
+| [`D:\projects\micropay\documentation`](../../../../documentation) (clone as `micropay/documentation`) | **Micropay CBS Docs** — Fumadocs site for end users, administrators, and developers |
+| This folder | Retired pointer only — do not add new task pages |
 
-## How to use this guide
+Start at the docs site’s **Administrators** and **End users** tabs (see that repo’s `content/docs/`).
 
-1. **Administrators** follow Volume 1 **in order** (Phase 0 → 8). Each phase ends when the institution is ready for the next setup step.
-2. Skip tasks marked **Configure later** until after go-live if you only need a minimal institution.
-3. Each task page follows the same template: goal, prerequisites, flow diagram, steps with screenshots, success checks, and troubleshooting.
+## Developer docs in this repo
 
-## Screenshots
+ADRs, parity matrices, BFF, RBAC, and architecture notes remain under [`docs/`](../) in **mifos-web-next**. Those are for engineers, not operators.
 
-Place captures under [`assets/`](assets/). Prefer the light theme, use a sandbox tenant, and redact real customer data. Naming: `01-offices-list.png`, `02-create-office-sheet.png`, and so on.
+## Reading the handbook
 
-## Writing conventions
+Use the Fumadocs site in the documentation repo:
 
-- Prefer domain language users know (“Customers”, “Servers”, “Sign in”).
-- Do not mention backend product or API names in user-facing copy unless unavoidable.
-- New task pages should start from [`_templates/task-page.md`](_templates/task-page.md).
+```bash
+cd ../documentation   # or your clone path
+pnpm install
+pnpm run dev          # http://localhost:3000
+# or
+pnpm run build
+```

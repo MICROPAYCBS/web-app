@@ -31,4 +31,8 @@ There is no plan to merge this work into the community web-app or to coordinate 
 
 ## End-user documentation
 
-Operator and administrator handbooks live under [`docs/user-guide/`](user-guide/README.md). That content is for people who use the product UI. ADRs, parity matrices, and architecture notes in this `docs/` tree remain developer-facing.
+Operator and administrator handbooks are maintained in the sibling **Micropay CBS Docs** repo (`documentation` next to `web-app` / `fineract` — Fumadocs + MDX). Do not grow new how-tos under [`docs/user-guide/`](user-guide/README.md); that folder is a retired seed pointer only.
+
+ADRs, parity matrices, BFF, RBAC, and architecture notes in this `docs/` tree remain **developer-facing**.
+
+When a UI change alters flows, labels, navigation, or screenshots, open a linked PR in the documentation repo (see that repo’s README → Docs sync).
