@@ -1,0 +1,11 @@
+{
+  "command": "accounting.journal-entry.update-narration",
+  "fineractSources": [
+    "org.apache.fineract.accounting.journalentry.api.JournalEntriesApiResource",
+    "org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformServiceJpaRepositoryImpl#updateJournalEntryNarration",
+    "org.apache.fineract.accounting.journalentry.handler.UpdateJournalEntryCommandHandler"
+  ],
+  "fields": {
+    "comments": { "required": true, "maxLength": 500 }
+  }
+}

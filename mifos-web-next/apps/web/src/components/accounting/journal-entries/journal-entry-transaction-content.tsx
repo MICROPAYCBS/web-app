@@ -10,10 +10,14 @@
 
 import type { FineractJournalEntryListItem } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { Undo2 } from 'lucide-react';
+import { JOURNAL_ENTRY_NARRATION_MAX_LENGTH } from '@mifos/validation';
+import { Pencil, Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { revertJournalEntryAction } from '@/actions/journal-entries';
+import {
+  revertJournalEntryAction,
+  updateJournalEntryNarrationAction
+} from '@/actions/journal-entries';
 import { JournalEntryLineDialog } from '@/components/accounting/journal-entries/journal-entry-line-dialog';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DetailField, DetailFieldGrid } from '@/components/composites';
@@ -27,6 +31,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   formatJournalEntryAmount,
   formatJournalEntryDate,
@@ -40,6 +45,9 @@ import {
   type ColumnDef
 } from '@tanstack/react-table';
 
+const REVERSED_NARRATION_HINT =
+  'Reversed transactions cannot be edited — reverse creates a new transaction.';
+
 function yesNoLabel(value: boolean | undefined) {
   if (value === true) {
     return 'Yes';
@@ -48,6 +56,11 @@ function yesNoLabel(value: boolean | undefined) {
     return 'No';
   }
   return '—';
+}
+
+function resolveTransactionNarration(entries: FineractJournalEntryListItem[]): string {
+  const unreversed = entries.find((entry) => entry.reversed !== true);
+  return (unreversed ?? entries[0])?.comments ?? '';
 }
 
 export function JournalEntryTransactionContent({
@@ -63,12 +76,16 @@ export function JournalEntryTransactionContent({
   const [selectedEntry, setSelectedEntry] = useState<FineractJournalEntryListItem | null>(null);
   const [revertOpen, setRevertOpen] = useState(false);
   const [revertComments, setRevertComments] = useState('');
+  const [narrationOpen, setNarrationOpen] = useState(false);
+  const [narrationDraft, setNarrationDraft] = useState('');
+  const [narrationError, setNarrationError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const summary = entries[0];
   const isManual = summary?.manualEntry === true;
-  const isReversed = summary?.reversed === true;
+  const isReversed = summary?.reversed === true || !entries.some((entry) => entry.reversed !== true);
+  const currentNarration = useMemo(() => resolveTransactionNarration(entries), [entries]);
   const departmentLabel = summary ? formatJournalEntryDepartment(summary) : null;
 
   const columns = useMemo<ColumnDef<FineractJournalEntryListItem>[]>(
@@ -123,6 +140,26 @@ export function JournalEntryTransactionContent({
     getCoreRowModel: getCoreRowModel()
   });
 
+  function openNarrationEditor() {
+    setActionError(null);
+    setNarrationError(null);
+    setNarrationDraft(currentNarration);
+    setNarrationOpen(true);
+  }
+
+  function refreshAfterMutation(nextTransactionId?: string) {
+    if (onReverted) {
+      onReverted({ transactionId: nextTransactionId ?? transactionId });
+      return;
+    }
+
+    if (nextTransactionId && nextTransactionId !== transactionId) {
+      router.push(`/accounting/journal-entries/transactions/${nextTransactionId}`);
+    } else {
+      router.refresh();
+    }
+  }
+
   function handleRevert() {
     setActionError(null);
     startTransition(async () => {
@@ -141,17 +178,39 @@ export function JournalEntryTransactionContent({
       });
       setRevertOpen(false);
       setRevertComments('');
+      refreshAfterMutation(result.transactionId);
+    });
+  }
 
-      if (onReverted) {
-        onReverted({ transactionId: result.transactionId });
+  function handleUpdateNarration() {
+    setActionError(null);
+    setNarrationError(null);
+
+    if (narrationDraft.length > JOURNAL_ENTRY_NARRATION_MAX_LENGTH) {
+      setNarrationError(
+        `Narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
+      );
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await updateJournalEntryNarrationAction(transactionId, {
+        comments: narrationDraft
+      });
+      if (!result.ok) {
+        const fieldMessage = result.fieldErrors?.comments ?? result.message;
+        setNarrationError(fieldMessage);
+        setActionError(result.message);
+        toastFineractError(result.message);
         return;
       }
 
-      if (result.transactionId && result.transactionId !== transactionId) {
-        router.push(`/accounting/journal-entries/transactions/${result.transactionId}`);
-      } else {
-        router.refresh();
-      }
+      toastCommandOutcome(result, {
+        completed: 'Narration updated.',
+        pending: 'Narration update sent for approval.'
+      });
+      setNarrationOpen(false);
+      refreshAfterMutation(result.transactionId);
     });
   }
 
@@ -163,25 +222,59 @@ export function JournalEntryTransactionContent({
     );
   }
 
+  const editNarrationButton = (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      onClick={openNarrationEditor}
+      disabled={pending || isReversed}
+      aria-label="Edit narration"
+    >
+      <Pencil className="mr-2 size-4" />
+      Edit narration
+    </Button>
+  );
+
   return (
     <>
       <div className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <p className="text-sm text-muted-foreground">{summary.officeName}</p>
-          {isManual ? (
-            <Can permission="REVERSE_JOURNALENTRY">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setRevertOpen(true)}
-                disabled={pending || isReversed}
-              >
-                <Undo2 className="mr-2 size-4" />
-                {isReversed ? 'Transaction reversed' : 'Revert transaction'}
-              </Button>
-            </Can>
-          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            {isManual ? (
+              <>
+                <Can permission="UPDATE_JOURNALENTRY">
+                  {isReversed ? (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={<span className="inline-flex cursor-not-allowed" />}
+                      >
+                        {editNarrationButton}
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs text-pretty">
+                        {REVERSED_NARRATION_HINT}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    editNarrationButton
+                  )}
+                </Can>
+                <Can permission="REVERSE_JOURNALENTRY">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setRevertOpen(true)}
+                    disabled={pending || isReversed}
+                  >
+                    <Undo2 className="mr-2 size-4" />
+                    {isReversed ? 'Transaction reversed' : 'Revert transaction'}
+                  </Button>
+                </Can>
+              </>
+            ) : null}
+          </div>
         </div>
 
         <DetailFieldGrid columns={2}>
@@ -203,7 +296,7 @@ export function JournalEntryTransactionContent({
           {summary.referenceNumber ? (
             <DetailField label="Reference number">{summary.referenceNumber}</DetailField>
           ) : null}
-          {summary.comments ? <DetailField label="Comments">{summary.comments}</DetailField> : null}
+          <DetailField label="Narration">{currentNarration || '—'}</DetailField>
         </DetailFieldGrid>
 
         <div className="rounded-lg border border-border bg-card shadow-sm">
@@ -226,6 +319,68 @@ export function JournalEntryTransactionContent({
           }
         }}
       />
+
+      <Can permission="UPDATE_JOURNALENTRY">
+        <Dialog
+          open={narrationOpen}
+          onOpenChange={(open) => {
+            setNarrationOpen(open);
+            if (!open) {
+              setNarrationError(null);
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit narration</DialogTitle>
+              <DialogDescription>
+                Update the narration for all unreversed lines on this manual transaction. Amounts,
+                accounts, and dates cannot be changed here — reverse and re-post to correct those.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="journal-narration" className="text-sm font-medium">
+                  Narration
+                </label>
+                <span className="text-xs text-muted-foreground">
+                  {narrationDraft.length}/{JOURNAL_ENTRY_NARRATION_MAX_LENGTH}
+                </span>
+              </div>
+              <Textarea
+                id="journal-narration"
+                value={narrationDraft}
+                onChange={(event) => {
+                  setNarrationDraft(event.target.value);
+                  if (narrationError) {
+                    setNarrationError(null);
+                  }
+                }}
+                rows={4}
+                disabled={pending}
+                maxLength={JOURNAL_ENTRY_NARRATION_MAX_LENGTH}
+                aria-invalid={narrationError ? true : undefined}
+              />
+              {narrationError ? (
+                <p className="text-sm text-destructive">{narrationError}</p>
+              ) : null}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setNarrationOpen(false)}
+                disabled={pending}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleUpdateNarration} disabled={pending}>
+                {pending ? 'Saving…' : 'Save narration'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Can>
 
       <Can permission="REVERSE_JOURNALENTRY">
         <Dialog open={revertOpen} onOpenChange={setRevertOpen}>

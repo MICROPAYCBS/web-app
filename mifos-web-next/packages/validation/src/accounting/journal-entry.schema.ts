@@ -121,9 +121,22 @@ export const revertJournalEntrySchema = z.object({
   comments: z.string().optional()
 });
 
+/** Max length matches Fineract `updateJournalEntryNarration` (comments ≤ 500). */
+export const JOURNAL_ENTRY_NARRATION_MAX_LENGTH = 500;
+
+export const updateJournalEntryNarrationSchema = z.object({
+  comments: z
+    .string({ required_error: 'Narration is required.' })
+    .max(
+      JOURNAL_ENTRY_NARRATION_MAX_LENGTH,
+      `Narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
+    )
+});
+
 export type JournalEntryLineInput = z.infer<typeof journalEntryLineSchema>;
 export type CreateJournalEntryFormInput = z.infer<typeof createJournalEntryFormSchema>;
 export type RevertJournalEntryInput = z.infer<typeof revertJournalEntrySchema>;
+export type UpdateJournalEntryNarrationInput = z.infer<typeof updateJournalEntryNarrationSchema>;
 
 export function isSameOfficeJournalEntry(
   input: Pick<CreateJournalEntryFormInput, 'debitOfficeId' | 'creditOfficeId'>
@@ -145,6 +158,14 @@ export function validateCreateJournalEntryForm(
 
 export function validateRevertJournalEntry(input: unknown) {
   return revertJournalEntrySchema.safeParse(input);
+}
+
+export function validateUpdateJournalEntryNarration(input: unknown) {
+  return updateJournalEntryNarrationSchema.safeParse(input);
+}
+
+export function buildUpdateJournalEntryNarrationPayload(input: UpdateJournalEntryNarrationInput) {
+  return { comments: input.comments };
 }
 
 export function buildCreateJournalEntryPayload(

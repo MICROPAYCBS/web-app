@@ -14,12 +14,15 @@ import type {
   FineractJournalEntryGlAccountOption,
   FineractJournalEntryListItem,
   FineractJournalEntryMutationResponse,
-  FineractJournalEntryRevertResponse
+  FineractJournalEntryRevertResponse,
+  FineractJournalEntryUpdateNarrationResponse
 } from '@mifos/api-client';
 import {
   buildCreateJournalEntryPayload,
+  buildUpdateJournalEntryNarrationPayload,
   type CreateJournalEntryFormInput,
-  type RevertJournalEntryInput
+  type RevertJournalEntryInput,
+  type UpdateJournalEntryNarrationInput
 } from '@mifos/validation';
 import { backfillJournalEntryGlAccountCode } from '@/lib/accounting/journal-entry-display';
 import {
@@ -260,6 +263,23 @@ export async function revertJournalEntryTransaction(
     `${JOURNAL_ENTRIES_PATH}/${transactionId}`,
     body,
     { command: 'reverse' }
+  );
+  return {
+    transactionId: String(raw?.transactionId ?? transactionId),
+    resourceId: raw?.resourceId
+  };
+}
+
+export async function updateJournalEntryNarration(
+  transactionId: string,
+  input: UpdateJournalEntryNarrationInput
+): Promise<FineractJournalEntryUpdateNarrationResponse> {
+  const fineract = await createFineractClient();
+  const body = buildUpdateJournalEntryNarrationPayload(input);
+  const raw = await fineract.post<FineractJournalEntryUpdateNarrationResponse>(
+    `${JOURNAL_ENTRIES_PATH}/${transactionId}`,
+    body,
+    { command: 'updateNarration' }
   );
   return {
     transactionId: String(raw?.transactionId ?? transactionId),

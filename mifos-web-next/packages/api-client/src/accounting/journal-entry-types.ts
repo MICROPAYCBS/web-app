@@ -58,6 +58,9 @@ export interface FineractJournalEntryRevertResponse {
   resourceId?: number;
 }
 
+/** Same command-result shape as reverse; returned by `command=updateNarration`. */
+export type FineractJournalEntryUpdateNarrationResponse = FineractJournalEntryRevertResponse;
+
 export interface FineractJournalEntryGlAccountOption {
   id: number;
   name: string;

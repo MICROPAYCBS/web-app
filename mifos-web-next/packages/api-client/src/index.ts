@@ -381,6 +381,7 @@ export type {
   FineractJournalEntryListItem,
   FineractJournalEntryMutationResponse,
   FineractJournalEntryRevertResponse,
+  FineractJournalEntryUpdateNarrationResponse,
   FineractPaymentTypeOption
 } from './accounting/journal-entry-types';
 
