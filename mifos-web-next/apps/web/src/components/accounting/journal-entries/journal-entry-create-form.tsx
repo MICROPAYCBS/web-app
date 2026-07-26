@@ -52,8 +52,7 @@ const ADVANCED_FIELD_KEYS = new Set([
   'checkNumber',
   'routingCode',
   'receiptNumber',
-  'bankNumber',
-  'comments'
+  'bankNumber'
 ]);
 
 function hasAdvancedFieldErrors(errors: Record<string, string>) {
@@ -293,6 +292,17 @@ export function JournalEntryCreateForm({
                   disabled={pending}
                   error={fieldErrors.transactionDate}
                 />
+                <TextField
+                  label="Comment"
+                  required
+                  multiline
+                  rows={3}
+                  className="md:col-span-2"
+                  value={form.comments ?? ''}
+                  onChange={(value) => patchForm({ comments: value })}
+                  disabled={pending}
+                  error={fieldErrors.comments}
+                />
               </div>
             </DetailSection>
 
@@ -510,17 +520,6 @@ export function JournalEntryCreateForm({
                 />
               </div>
             </DetailSection>
-
-            <TextField
-              label="Comments"
-              optional
-              multiline
-              rows={3}
-              value={form.comments ?? ''}
-              onChange={(value) => patchForm({ comments: value })}
-              disabled={pending}
-              error={fieldErrors.comments}
-            />
           </TabsContent>
         </Tabs>
 

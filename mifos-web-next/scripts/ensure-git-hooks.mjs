@@ -45,7 +45,7 @@ const hooksPath = gitConfig('core.hooksPath');
 if (!hooksPath || !hooksPathLooksLikeHusky(hooksPath)) {
   console.warn(
     `\nmifos-web-next: Git hooks are not active (core.hooksPath=${hooksPath || 'unset'}).\n` +
-      'Commits and pushes can reach Vercel without local typecheck/build.\n' +
+      'Commits can reach Vercel without local typecheck/build.\n' +
       'From the repository root run: npm install\n'
   );
 }
@@ -54,7 +54,7 @@ function warnMissingHook(hookName, scriptName) {
   const hookPath = join(root, `.husky/${hookName}`);
   if (!existsSync(hookPath)) {
     console.warn(
-      `\nmifos-web-next: Git ${hookName} hook is not installed. Pushes may reach Vercel without local checks.\n` +
+      `\nmifos-web-next: Git ${hookName} hook is not installed. Commits may reach Vercel without local checks.\n` +
         'From the repository root run: npm install\n'
     );
     return;
@@ -70,4 +70,3 @@ function warnMissingHook(hookName, scriptName) {
 }
 
 warnMissingHook('pre-commit', 'pre-commit-check.mjs');
-warnMissingHook('pre-push', 'pre-push-check.mjs');

@@ -54,7 +54,12 @@ pnpm run test:e2e:docs
 |----------|---------|
 | `DOCS_PUBLIC_IMG` | Sibling `documentation/public/img` (from `apps/web`: `../../../../documentation/public/img`) |
 
-Pilot: **Organization → Offices** → `administrators/organization/offices-list.png` and `create-office-form.png`.
+Specs:
+
+| Feature | Output under `public/img/` |
+|---------|----------------------------|
+| Organization → Offices | `administrators/organization/offices-list.png`, `create-office-form.png` |
+| Products → Loan products | `administrators/products/loan-products-list.png` |
 
 CI: GitHub Actions workflow **`mifos-web-next-docs-screenshots`** (`workflow_dispatch`) boots Fineract via root `docker-compose.e2e.yml`, sets `DOCS_PUBLIC_IMG` to `mifos-web-next/.docs-screenshots/img`, and uploads that folder as the `docs-screenshots` artifact. Copy into the docs repo’s `public/img/`. Not part of `check:ci`.
 

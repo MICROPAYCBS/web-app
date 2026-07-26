@@ -4,6 +4,10 @@ import type { SessionUser } from '@mifos/auth';
 export interface FineractAuthSecrets {
   accessToken?: string;
   base64EncodedAuthenticationKey?: string;
+  /** Access token from POST /twofactor/validate — sent as Fineract-Platform-TFA-Token. */
+  twoFactorAccessToken?: string;
+  /** ISO timestamp when the TFA token expires (informational). */
+  twoFactorValidTo?: string;
 }
 
 /** Full session available only on the server (Route Handlers, Server Actions, RSC). */

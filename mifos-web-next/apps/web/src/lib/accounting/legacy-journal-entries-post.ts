@@ -113,6 +113,6 @@ export function legacyPostGroupToCreateJournalEntryForm(
     debits,
     credits,
     referenceNumber: group.reference.trim() || undefined,
-    comments: group.comments?.trim() || undefined
+    comments: group.comments?.trim() || ''
   };
 }

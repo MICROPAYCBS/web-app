@@ -50,6 +50,9 @@ export async function buildFineractRequestInit(
   } else if (session?.base64EncodedAuthenticationKey) {
     headers.set('Authorization', `Basic ${session.base64EncodedAuthenticationKey}`);
   }
+  if (session?.twoFactorAccessToken) {
+    headers.set('Fineract-Platform-TFA-Token', session.twoFactorAccessToken);
+  }
   return {
     urlBase: baseUrl.replace(/\/$/, ''),
     init: { ...init, headers }

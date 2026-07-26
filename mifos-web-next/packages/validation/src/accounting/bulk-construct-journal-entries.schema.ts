@@ -44,7 +44,7 @@ export const bulkConstructJournalEntriesTemplateSchema = z.object({
   routingCode: z.string().optional(),
   receiptNumber: z.string().optional(),
   bankNumber: z.string().optional(),
-  comments: z.string().optional()
+  comments: z.string().trim().min(1, 'Comment is required.')
 });
 
 export const bulkConstructJournalEntryRowSchema = z.object({

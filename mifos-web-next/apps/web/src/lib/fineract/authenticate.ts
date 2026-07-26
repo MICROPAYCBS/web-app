@@ -1,3 +1,11 @@
+/**
+ * Copyright since 2026 Mifos Initiative
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 import 'server-only';
 
 import { FineractHttpError } from '@mifos/api-client';
@@ -11,6 +19,7 @@ import {
   getFineractApiHost,
   isDeprecatedDemoFineractHost
 } from '@mifos/servers';
+import type { TwoFactorPendingAuth } from '@/lib/session/pending-twofactor';
 import type { ServerSession } from '@/lib/session/types';
 
 /** Fineract POST /authentication response (subset). */
@@ -36,6 +45,13 @@ export interface AuthenticateParams {
   remember?: boolean;
 }
 
+export type AuthenticateOutcome =
+  | { status: 'authenticated'; session: ServerSession }
+  | {
+      status: 'twoFactorRequired';
+      pendingBase: Omit<TwoFactorPendingAuth, 'remember' | 'redirectTo'>;
+    };
+
 export { AuthenticationError } from '@/lib/fineract/authentication-error';
 
 export function mapAuthenticationToSession(data: FineractAuthenticationResponse): ServerSession {
@@ -52,6 +68,41 @@ export function mapAuthenticationToSession(data: FineractAuthenticationResponse)
     sessionIdleTimeoutMinutes: data.sessionIdleTimeoutMinutes,
     sessionIdleWarningSeconds: data.sessionIdleWarningSeconds
   };
+}
+
+export function mapAuthenticationToPendingBase(
+  data: FineractAuthenticationResponse
+): Omit<TwoFactorPendingAuth, 'remember' | 'redirectTo'> {
+  return {
+    userId: data.userId,
+    username: data.username,
+    officeId: data.officeId,
+    officeName: data.officeName,
+    base64EncodedAuthenticationKey: data.base64EncodedAuthenticationKey,
+    accessToken: data.accessToken,
+    shouldRenewPassword: data.shouldRenewPassword,
+    sessionIdleTimeoutMinutes: data.sessionIdleTimeoutMinutes,
+    sessionIdleWarningSeconds: data.sessionIdleWarningSeconds
+  };
+}
+
+/** Decode Basic auth key from POST /authentication (username:password). */
+export function credentialsFromBasicAuthenticationKey(
+  base64EncodedAuthenticationKey: string
+): { username: string; password: string } | null {
+  try {
+    const decoded = Buffer.from(base64EncodedAuthenticationKey, 'base64').toString('utf8');
+    const separator = decoded.indexOf(':');
+    if (separator <= 0) {
+      return null;
+    }
+    return {
+      username: decoded.slice(0, separator),
+      password: decoded.slice(separator + 1)
+    };
+  } catch {
+    return null;
+  }
 }
 
 function invalidCredentialsMessage(
@@ -73,8 +124,9 @@ function invalidCredentialsMessage(
 
 /**
  * Authenticate against the active Fineract server (BFF — never from the browser).
+ * When 2FA is required, returns pending auth material instead of a full session.
  */
-export async function authenticateFineract(params: AuthenticateParams): Promise<ServerSession> {
+export async function authenticateFineract(params: AuthenticateParams): Promise<AuthenticateOutcome> {
   const { baseUrl, tenantId, serverName } = await getFineractServerConfig();
   const url = `${baseUrl.replace(/\/$/, '')}/authentication`;
 
@@ -135,11 +187,15 @@ export async function authenticateFineract(params: AuthenticateParams): Promise<
 
   const data = await readFineractJsonBody<FineractAuthenticationResponse>(res, responseContext);
 
+  if (!data.base64EncodedAuthenticationKey && !data.accessToken) {
+    throw new AuthenticationError('Authentication response was incomplete.', 'SERVER');
+  }
+
   if (data.isTwoFactorAuthenticationRequired) {
-    throw new AuthenticationError(
-      'Two-factor authentication is required. This client does not support 2FA yet.',
-      'TWO_FACTOR'
-    );
+    return {
+      status: 'twoFactorRequired',
+      pendingBase: mapAuthenticationToPendingBase(data)
+    };
   }
 
   if (data.shouldRenewPassword) {
@@ -149,11 +205,19 @@ export async function authenticateFineract(params: AuthenticateParams): Promise<
     );
   }
 
-  if (!data.base64EncodedAuthenticationKey && !data.accessToken) {
-    throw new AuthenticationError('Authentication response was incomplete.', 'SERVER');
-  }
+  return { status: 'authenticated', session: mapAuthenticationToSession(data) };
+}
 
-  return mapAuthenticationToSession(data);
+/** Authenticate and require a full session (rejects when 2FA is still required). */
+export async function authenticateFineractSession(params: AuthenticateParams): Promise<ServerSession> {
+  const outcome = await authenticateFineract(params);
+  if (outcome.status === 'twoFactorRequired') {
+    throw new AuthenticationError(
+      'Two-factor authentication is required. Complete the verification code step to sign in.',
+      'TWO_FACTOR'
+    );
+  }
+  return outcome.session;
 }
 
 export function toLoginErrorMessage(error: unknown): string {

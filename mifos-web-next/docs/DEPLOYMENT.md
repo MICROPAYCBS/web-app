@@ -115,9 +115,7 @@ cd mifos-web-next
 pnpm run check:ci
 ```
 
-Git **pre-commit** (repo root `.husky/pre-commit`) runs the same gate when staged files touch `mifos-web-next/apps/`, `packages/`, or lockfiles. Docs-only changes under `mifos-web-next/docs/` run typecheck only.
-
-**pre-push** (`.husky/pre-push`) runs the same checks on commits being pushed — useful if a commit used `--no-verify` or hooks were not installed when committing.
+Git **pre-commit** (repo root `.husky/pre-commit`) runs the same gate when staged files touch `mifos-web-next/apps/`, `packages/`, or lockfiles. Docs-only changes under `mifos-web-next/docs/` run typecheck only. **pre-push** does not re-run these checks.
 
 Install hooks once from the **repository root** (not only inside `mifos-web-next`):
 
@@ -125,8 +123,21 @@ Install hooks once from the **repository root** (not only inside `mifos-web-next
 npm install   # runs husky via prepare
 ```
 
-Emergency bypass (not for routine use): `MIFOS_WEB_NEXT_SKIP_HOOK=1 git commit …` or `MIFOS_WEB_NEXT_SKIP_HOOK=1 git push …`
+Emergency bypass (not for routine use): `MIFOS_WEB_NEXT_SKIP_HOOK=1 git commit …`
 
+## 8. GitHub Actions (repo root)
+
+Workflows live under the parent repo’s `.github/workflows/` (this monorepo shares a tree with the legacy Angular app).
+
+| Workflow | Applies to Next? | Notes |
+|----------|------------------|--------|
+| `mifos-web-next-ci.yml` | **Yes** | Path-filtered to `mifos-web-next/**`; runs `pnpm run check:ci` |
+| `mifos-web-next-docs-screenshots.yml` | **Yes** | `workflow_dispatch` only; Playwright docs shots + `docker-compose.e2e.yml` (Fineract) |
+| `build.yml` / `playwright.yml` / `test.yml` | **No** | Angular lint/build/E2E/testRigor; path-filtered to Angular/`src` (and related) so Next-only PRs skip them |
+| `license-headers.yml` / `commit-lint.yml` | **No** (openMF process) | Target Angular `src` / squash conventions; do not apply to private Next work unless you opt in |
+| `create-docker-hub-image.yml` | **No** | Publishes the Angular root Docker image |
+| `check-broken-markdown -links.yml` | Partial | Lychee on markdown **in this git repo** — not the sibling Micropay CBS Docs (`documentation`) site |
+| `stale.yml` / `scan-skills.yml` | N/A | Repo hygiene / Angular `skills/` |
 
 ## Security
 

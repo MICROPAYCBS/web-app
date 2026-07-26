@@ -59,6 +59,7 @@ export async function POST(request: Request) {
     }
 
     try {
+      // Password-only check; 2FA-required still means credentials were accepted.
       await authenticateFineract({
         username: session!.username,
         password: currentPassword

@@ -10,13 +10,19 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { performLogin } from '@/lib/auth/login-request';
 import { setSessionCookie } from '@/lib/session/cookie';
+import {
+  TWO_FACTOR_PENDING_MAX_AGE,
+  twoFactorPendingCookieAttributes
+} from '@/lib/session/pending-twofactor';
 
 export type LoginFormState = {
   ok: boolean;
   message?: string;
   redirectTo?: string;
+  needsTwoFactor?: boolean;
 };
 
 /**
@@ -30,6 +36,12 @@ export async function loginAction(
   const result = await performLogin(formData);
   if (!result.ok) {
     return { ok: false, message: result.message };
+  }
+  if (result.needsTwoFactor) {
+    const cookieStore = await cookies();
+    const attrs = twoFactorPendingCookieAttributes(TWO_FACTOR_PENDING_MAX_AGE);
+    cookieStore.set(attrs.name, JSON.stringify(result.pending), attrs);
+    return { ok: true, needsTwoFactor: true };
   }
   await setSessionCookie(result.session, { remember: result.remember });
   revalidatePath('/', 'layout');

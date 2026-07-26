@@ -46,7 +46,7 @@ export const createJournalEntryFormBaseSchema = z.object({
   routingCode: z.string().optional(),
   receiptNumber: z.string().optional(),
   bankNumber: z.string().optional(),
-  comments: z.string().optional(),
+  comments: z.string().trim().min(1, 'Comment is required.'),
   externalAssetOwner: z.string().optional(),
   accountingRule: optionalPositiveInt
 });
@@ -186,7 +186,7 @@ export function buildCreateJournalEntryPayload(
     routingCode: input.routingCode?.trim() || undefined,
     receiptNumber: input.receiptNumber?.trim() || undefined,
     bankNumber: input.bankNumber?.trim() || undefined,
-    comments: input.comments?.trim() || undefined,
+    comments: input.comments.trim(),
     externalAssetOwner: input.externalAssetOwner?.trim() || undefined,
     ...(input.accountingRule != null ? { accountingRule: input.accountingRule } : {})
   };

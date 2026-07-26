@@ -15,7 +15,14 @@ export async function createFineractClient(): Promise<FineractClient> {
   return new FineractClient({
     baseUrl,
     tenantId,
-    fetch: fineractFetch,
+    fetch: async (input, init) => {
+      if (!session?.twoFactorAccessToken) {
+        return fineractFetch(input, init);
+      }
+      const headers = new Headers(init?.headers);
+      headers.set('Fineract-Platform-TFA-Token', session.twoFactorAccessToken);
+      return fineractFetch(input, { ...init, headers });
+    },
     getAuthHeader: async () => {
       if (!session) {
         return null;

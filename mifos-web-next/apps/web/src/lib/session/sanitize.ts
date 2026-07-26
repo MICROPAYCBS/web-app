@@ -2,7 +2,12 @@ import type { SessionUser } from '@mifos/auth';
 import { parseSessionRoles } from '@mifos/auth';
 import type { ServerSession } from './types';
 
-const SECRET_KEYS = ['accessToken', 'base64EncodedAuthenticationKey'] as const;
+const SECRET_KEYS = [
+  'accessToken',
+  'base64EncodedAuthenticationKey',
+  'twoFactorAccessToken',
+  'twoFactorValidTo'
+] as const;
 
 /** Strip Fineract auth secrets before passing session to client components. */
 export function toPublicSession(session: ServerSession | null): SessionUser | null {

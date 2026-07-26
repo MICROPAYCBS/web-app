@@ -9,6 +9,7 @@
 /** `Accept` value for interactive login via `fetch` (see `/api/auth/login`). */
 export const LOGIN_JSON_ACCEPT = 'application/json';
 
-export type LoginApiSuccess = { ok: true; redirectTo: string };
+export type LoginApiSuccess = { ok: true; redirectTo: string; needsTwoFactor?: false };
+export type LoginApiNeedsTwoFactor = { ok: true; needsTwoFactor: true };
 export type LoginApiFailure = { ok: false; message: string };
-export type LoginApiResponse = LoginApiSuccess | LoginApiFailure;
+export type LoginApiResponse = LoginApiSuccess | LoginApiNeedsTwoFactor | LoginApiFailure;

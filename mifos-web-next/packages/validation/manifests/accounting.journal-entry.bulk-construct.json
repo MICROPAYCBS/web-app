@@ -9,6 +9,7 @@
     "template.defaultOfficeId": { "required": true },
     "template.currencyCode": { "required": true },
     "template.transactionDate": { "required": true },
+    "template.comments": { "required": true },
     "rows": { "required": true }
   }
 }

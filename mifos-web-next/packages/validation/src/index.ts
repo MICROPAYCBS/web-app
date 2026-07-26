@@ -1028,3 +1028,11 @@ export {
   type BulkLoanReassignmentInput,
   type BulkLoanReassignmentPayload
 } from './organization/bulk-loan-reassignment.schema';
+export {
+  requestTwoFactorOtpSchema,
+  validateTwoFactorOtpSchema,
+  validateRequestTwoFactorOtp,
+  validateValidateTwoFactorOtp,
+  type RequestTwoFactorOtpInput,
+  type ValidateTwoFactorOtpInput
+} from './auth/twofactor.schema';

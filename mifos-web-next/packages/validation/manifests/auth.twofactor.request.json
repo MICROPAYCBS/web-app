@@ -1,0 +1,9 @@
+{
+  "command": "auth.twofactor.request",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.security.api.TwoFactorApiResource"
+  ],
+  "fields": {
+    "deliveryMethod": { "required": true }
+  }
+}

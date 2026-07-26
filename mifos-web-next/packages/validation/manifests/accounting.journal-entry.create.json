@@ -19,7 +19,7 @@
     "routingCode": { "required": false },
     "receiptNumber": { "required": false },
     "bankNumber": { "required": false },
-    "comments": { "required": false },
+    "comments": { "required": true },
     "externalAssetOwner": { "required": false }
   }
 }

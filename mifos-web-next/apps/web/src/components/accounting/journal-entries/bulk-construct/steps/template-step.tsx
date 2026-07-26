@@ -181,13 +181,14 @@ export function BulkConstructTemplateStep({
           error={errors['template.referenceNumber'] ?? errors.referenceNumber}
         />
         <TextField
-          label="Comments"
-          optional
+          label="Comment"
+          required
           multiline
           rows={2}
           value={template.comments ?? ''}
           onChange={(value) => onPatchTemplate({ comments: value })}
           disabled={pending}
+          error={errors['template.comments'] ?? errors.comments}
         />
       </div>
 
