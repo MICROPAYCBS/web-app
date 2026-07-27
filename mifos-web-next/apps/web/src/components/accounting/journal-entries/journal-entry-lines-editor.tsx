@@ -15,6 +15,7 @@ import { Minus, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { MoneyField } from '@/components/composites/money-field';
 import { SelectField } from '@/components/composites/select-field';
+import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
 import { formatJournalEntryGlAccountLabel } from '@/lib/accounting/journal-entry-display';
 
@@ -125,6 +126,14 @@ export function JournalEntryLinesEditor({
                 <Minus className="size-4" />
               </Button>
             </div>
+            <TextField
+              label="Line narration"
+              optional
+              value={line.comments ?? ''}
+              onChange={(value) => patchLine(index, { comments: value || undefined })}
+              disabled={pending}
+              error={fieldErrors[`${fieldPrefix}.${index}.comments`]}
+            />
           </div>
         ))}
       </div>

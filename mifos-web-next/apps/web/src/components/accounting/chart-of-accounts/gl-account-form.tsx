@@ -63,6 +63,8 @@ export function GlAccountForm({
     type: initialValues.type,
     parentId: initialValues.parentId
   });
+  /** Avoid validating GL code on type/parent changes before the user has focused it. */
+  const glCodeTouchedRef = useRef(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -216,7 +218,7 @@ export function GlAccountForm({
         parentId: undefined,
         tagId: undefined
       },
-      { validateFields: ['glCode'] }
+      glCodeTouchedRef.current ? { validateFields: ['glCode'] } : undefined
     );
   }
 
@@ -229,17 +231,20 @@ export function GlAccountForm({
   }
 
   function handleGlCodeBlur() {
+    glCodeTouchedRef.current = true;
     syncFieldErrors(formRef.current, ['glCode']);
   }
 
   function handleParentChange(value: string | undefined) {
-    patchForm(
-      { parentId: value ? Number(value) : undefined },
-      { validateFields: ['glCode', 'parentId'] }
-    );
+    const validateFields: Array<'glCode' | 'parentId' | 'tagId'> = ['parentId'];
+    if (glCodeTouchedRef.current) {
+      validateFields.push('glCode');
+    }
+    patchForm({ parentId: value ? Number(value) : undefined }, { validateFields });
   }
 
   function handleSubmit() {
+    glCodeTouchedRef.current = true;
     setSubmitError(null);
     const parsed = validateUpsertGlAccountForm(formRef.current, validationContext);
     if (!parsed.success) {

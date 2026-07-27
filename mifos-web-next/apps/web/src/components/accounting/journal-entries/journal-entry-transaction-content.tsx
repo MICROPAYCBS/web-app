@@ -9,13 +9,14 @@
  */
 
 import type { FineractJournalEntryListItem } from '@mifos/api-client';
-import { Can } from '@mifos/auth';
+import { Can, useCan } from '@mifos/auth';
 import { JOURNAL_ENTRY_NARRATION_MAX_LENGTH } from '@mifos/validation';
 import { Pencil, Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 import {
   revertJournalEntryAction,
+  updateJournalEntryLineNarrationAction,
   updateJournalEntryNarrationAction
 } from '@/actions/journal-entries';
 import { JournalEntryLineDialog } from '@/components/accounting/journal-entries/journal-entry-line-dialog';
@@ -58,9 +59,10 @@ function yesNoLabel(value: boolean | undefined) {
   return '—';
 }
 
-function resolveTransactionNarration(entries: FineractJournalEntryListItem[]): string {
+function resolveTransactionComments(entries: FineractJournalEntryListItem[]): string {
   const unreversed = entries.find((entry) => entry.reversed !== true);
-  return (unreversed ?? entries[0])?.comments ?? '';
+  const source = unreversed ?? entries[0];
+  return source?.transactionComments ?? '';
 }
 
 export function JournalEntryTransactionContent({
@@ -73,19 +75,28 @@ export function JournalEntryTransactionContent({
   onReverted?: (result: { transactionId?: string }) => void;
 }) {
   const router = useRouter();
+  const canUpdateNarration = useCan('UPDATE_JOURNALENTRY');
   const [selectedEntry, setSelectedEntry] = useState<FineractJournalEntryListItem | null>(null);
   const [revertOpen, setRevertOpen] = useState(false);
   const [revertComments, setRevertComments] = useState('');
-  const [narrationOpen, setNarrationOpen] = useState(false);
-  const [narrationDraft, setNarrationDraft] = useState('');
-  const [narrationError, setNarrationError] = useState<string | null>(null);
+  const [transactionNarrationOpen, setTransactionNarrationOpen] = useState(false);
+  const [transactionNarrationDraft, setTransactionNarrationDraft] = useState('');
+  const [transactionNarrationError, setTransactionNarrationError] = useState<string | null>(null);
+  const [lineNarrationEntry, setLineNarrationEntry] =
+    useState<FineractJournalEntryListItem | null>(null);
+  const [lineNarrationDraft, setLineNarrationDraft] = useState('');
+  const [lineNarrationError, setLineNarrationError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const summary = entries[0];
   const isManual = summary?.manualEntry === true;
   const isReversed = summary?.reversed === true || !entries.some((entry) => entry.reversed !== true);
-  const currentNarration = useMemo(() => resolveTransactionNarration(entries), [entries]);
+  const canEditNarrations = isManual && !isReversed && canUpdateNarration;
+  const currentTransactionComments = useMemo(
+    () => resolveTransactionComments(entries),
+    [entries]
+  );
   const departmentLabel = summary ? formatJournalEntryDepartment(summary) : null;
 
   const columns = useMemo<ColumnDef<FineractJournalEntryListItem>[]>(
@@ -129,9 +140,42 @@ export function JournalEntryTransactionContent({
         id: 'credit',
         header: 'Credit',
         cell: ({ row }) => formatJournalEntryAmount(row.original, 'CREDIT')
+      },
+      {
+        id: 'comments',
+        header: 'Line narration',
+        cell: ({ row }) => {
+          const entry = row.original;
+          const lineReversed = entry.reversed === true;
+          return (
+            <div className="flex items-start justify-between gap-2">
+              <span className="min-w-0 whitespace-pre-wrap break-words text-sm">
+                {entry.comments?.trim() ? entry.comments : '—'}
+              </span>
+              {canEditNarrations && !lineReversed ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="shrink-0"
+                  aria-label={`Edit line narration for entry ${entry.id}`}
+                  disabled={pending}
+                  onClick={() => {
+                    setActionError(null);
+                    setLineNarrationError(null);
+                    setLineNarrationEntry(entry);
+                    setLineNarrationDraft(entry.comments ?? '');
+                  }}
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              ) : null}
+            </div>
+          );
+        }
       }
     ],
-    []
+    [canEditNarrations, pending]
   );
 
   const table = useReactTable({
@@ -140,11 +184,11 @@ export function JournalEntryTransactionContent({
     getCoreRowModel: getCoreRowModel()
   });
 
-  function openNarrationEditor() {
+  function openTransactionNarrationEditor() {
     setActionError(null);
-    setNarrationError(null);
-    setNarrationDraft(currentNarration);
-    setNarrationOpen(true);
+    setTransactionNarrationError(null);
+    setTransactionNarrationDraft(currentTransactionComments);
+    setTransactionNarrationOpen(true);
   }
 
   function refreshAfterMutation(nextTransactionId?: string) {
@@ -182,12 +226,12 @@ export function JournalEntryTransactionContent({
     });
   }
 
-  function handleUpdateNarration() {
+  function handleUpdateTransactionNarration() {
     setActionError(null);
-    setNarrationError(null);
+    setTransactionNarrationError(null);
 
-    if (narrationDraft.length > JOURNAL_ENTRY_NARRATION_MAX_LENGTH) {
-      setNarrationError(
+    if (transactionNarrationDraft.length > JOURNAL_ENTRY_NARRATION_MAX_LENGTH) {
+      setTransactionNarrationError(
         `Narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
       );
       return;
@@ -195,22 +239,59 @@ export function JournalEntryTransactionContent({
 
     startTransition(async () => {
       const result = await updateJournalEntryNarrationAction(transactionId, {
-        comments: narrationDraft
+        transactionComments: transactionNarrationDraft
       });
       if (!result.ok) {
-        const fieldMessage = result.fieldErrors?.comments ?? result.message;
-        setNarrationError(fieldMessage);
+        const fieldMessage = result.fieldErrors?.transactionComments ?? result.message;
+        setTransactionNarrationError(fieldMessage);
         setActionError(result.message);
         toastFineractError(result.message);
         return;
       }
 
       toastCommandOutcome(result, {
-        completed: 'Narration updated.',
-        pending: 'Narration update sent for approval.'
+        completed: 'Transaction narration updated.',
+        pending: 'Transaction narration update sent for approval.'
       });
-      setNarrationOpen(false);
+      setTransactionNarrationOpen(false);
       refreshAfterMutation(result.transactionId);
+    });
+  }
+
+  function handleUpdateLineNarration() {
+    if (!lineNarrationEntry) {
+      return;
+    }
+
+    setActionError(null);
+    setLineNarrationError(null);
+
+    if (lineNarrationDraft.length > JOURNAL_ENTRY_NARRATION_MAX_LENGTH) {
+      setLineNarrationError(
+        `Narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
+      );
+      return;
+    }
+
+    const journalEntryId = lineNarrationEntry.id;
+    startTransition(async () => {
+      const result = await updateJournalEntryLineNarrationAction(journalEntryId, {
+        comments: lineNarrationDraft
+      });
+      if (!result.ok) {
+        const fieldMessage = result.fieldErrors?.comments ?? result.message;
+        setLineNarrationError(fieldMessage);
+        setActionError(result.message);
+        toastFineractError(result.message);
+        return;
+      }
+
+      toastCommandOutcome(result, {
+        completed: 'Line narration updated.',
+        pending: 'Line narration update sent for approval.'
+      });
+      setLineNarrationEntry(null);
+      refreshAfterMutation(result.transactionId || transactionId);
     });
   }
 
@@ -222,17 +303,17 @@ export function JournalEntryTransactionContent({
     );
   }
 
-  const editNarrationButton = (
+  const editTransactionNarrationButton = (
     <Button
       type="button"
       size="sm"
       variant="outline"
-      onClick={openNarrationEditor}
+      onClick={openTransactionNarrationEditor}
       disabled={pending || isReversed}
-      aria-label="Edit narration"
+      aria-label="Edit transaction narration"
     >
       <Pencil className="mr-2 size-4" />
-      Edit narration
+      Edit transaction narration
     </Button>
   );
 
@@ -250,14 +331,14 @@ export function JournalEntryTransactionContent({
                       <TooltipTrigger
                         render={<span className="inline-flex cursor-not-allowed" />}
                       >
-                        {editNarrationButton}
+                        {editTransactionNarrationButton}
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs text-pretty">
                         {REVERSED_NARRATION_HINT}
                       </TooltipContent>
                     </Tooltip>
                   ) : (
-                    editNarrationButton
+                    editTransactionNarrationButton
                   )}
                 </Can>
                 <Can permission="REVERSE_JOURNALENTRY">
@@ -296,7 +377,9 @@ export function JournalEntryTransactionContent({
           {summary.referenceNumber ? (
             <DetailField label="Reference number">{summary.referenceNumber}</DetailField>
           ) : null}
-          <DetailField label="Narration">{currentNarration || '—'}</DetailField>
+          <DetailField label="Transaction narration">
+            {currentTransactionComments || '—'}
+          </DetailField>
         </DetailFieldGrid>
 
         <div className="rounded-lg border border-border bg-card shadow-sm">
@@ -322,59 +405,124 @@ export function JournalEntryTransactionContent({
 
       <Can permission="UPDATE_JOURNALENTRY">
         <Dialog
-          open={narrationOpen}
+          open={transactionNarrationOpen}
           onOpenChange={(open) => {
-            setNarrationOpen(open);
+            setTransactionNarrationOpen(open);
             if (!open) {
-              setNarrationError(null);
+              setTransactionNarrationError(null);
             }
           }}
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit narration</DialogTitle>
+              <DialogTitle>Edit transaction narration</DialogTitle>
               <DialogDescription>
-                Update the narration for all unreversed lines on this manual transaction. Amounts,
-                accounts, and dates cannot be changed here — reverse and re-post to correct those.
+                Update the shared narration for this manual transaction. Per-line narrations are
+                unchanged. Amounts, accounts, and dates cannot be edited here — reverse and re-post
+                to correct those.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <label htmlFor="journal-narration" className="text-sm font-medium">
-                  Narration
+                <label htmlFor="journal-transaction-narration" className="text-sm font-medium">
+                  Transaction narration
                 </label>
                 <span className="text-xs text-muted-foreground">
-                  {narrationDraft.length}/{JOURNAL_ENTRY_NARRATION_MAX_LENGTH}
+                  {transactionNarrationDraft.length}/{JOURNAL_ENTRY_NARRATION_MAX_LENGTH}
                 </span>
               </div>
               <Textarea
-                id="journal-narration"
-                value={narrationDraft}
+                id="journal-transaction-narration"
+                value={transactionNarrationDraft}
                 onChange={(event) => {
-                  setNarrationDraft(event.target.value);
-                  if (narrationError) {
-                    setNarrationError(null);
+                  setTransactionNarrationDraft(event.target.value);
+                  if (transactionNarrationError) {
+                    setTransactionNarrationError(null);
                   }
                 }}
                 rows={4}
                 disabled={pending}
                 maxLength={JOURNAL_ENTRY_NARRATION_MAX_LENGTH}
-                aria-invalid={narrationError ? true : undefined}
+                aria-invalid={transactionNarrationError ? true : undefined}
               />
-              {narrationError ? (
-                <p className="text-sm text-destructive">{narrationError}</p>
+              {transactionNarrationError ? (
+                <p className="text-sm text-destructive">{transactionNarrationError}</p>
               ) : null}
             </div>
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setNarrationOpen(false)}
+                onClick={() => setTransactionNarrationOpen(false)}
                 disabled={pending}
               >
                 Cancel
               </Button>
-              <Button type="button" onClick={handleUpdateNarration} disabled={pending}>
+              <Button
+                type="button"
+                onClick={handleUpdateTransactionNarration}
+                disabled={pending}
+              >
+                {pending ? 'Saving…' : 'Save narration'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={lineNarrationEntry !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setLineNarrationEntry(null);
+              setLineNarrationError(null);
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit line narration</DialogTitle>
+              <DialogDescription>
+                Update the narration for journal entry {lineNarrationEntry?.id}. Other lines and the
+                shared transaction narration are unchanged.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="journal-line-narration" className="text-sm font-medium">
+                  Line narration
+                </label>
+                <span className="text-xs text-muted-foreground">
+                  {lineNarrationDraft.length}/{JOURNAL_ENTRY_NARRATION_MAX_LENGTH}
+                </span>
+              </div>
+              <Textarea
+                id="journal-line-narration"
+                value={lineNarrationDraft}
+                onChange={(event) => {
+                  setLineNarrationDraft(event.target.value);
+                  if (lineNarrationError) {
+                    setLineNarrationError(null);
+                  }
+                }}
+                rows={4}
+                disabled={pending}
+                maxLength={JOURNAL_ENTRY_NARRATION_MAX_LENGTH}
+                aria-invalid={lineNarrationError ? true : undefined}
+              />
+              {lineNarrationError ? (
+                <p className="text-sm text-destructive">{lineNarrationError}</p>
+              ) : null}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLineNarrationEntry(null)}
+                disabled={pending}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleUpdateLineNarration} disabled={pending}>
                 {pending ? 'Saving…' : 'Save narration'}
               </Button>
             </DialogFooter>

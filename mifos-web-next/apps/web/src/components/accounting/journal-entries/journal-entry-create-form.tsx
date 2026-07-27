@@ -293,7 +293,7 @@ export function JournalEntryCreateForm({
                   error={fieldErrors.transactionDate}
                 />
                 <TextField
-                  label="Comment"
+                  label="Transaction narration"
                   required
                   multiline
                   rows={3}
@@ -302,13 +302,14 @@ export function JournalEntryCreateForm({
                   onChange={(value) => patchForm({ comments: value })}
                   disabled={pending}
                   error={fieldErrors.comments}
+                  hint="Shared memo for the whole journal entry."
                 />
               </div>
             </DetailSection>
 
             <DetailSection
               title="Journal lines"
-              description="Enter debit and credit lines. Totals must balance before you can post."
+              description="Enter debit and credit lines. Optional line narrations describe each debit or credit. Totals must balance before you can post."
             >
               {isInterBranch ? (
                 <div

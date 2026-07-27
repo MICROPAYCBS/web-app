@@ -74,7 +74,12 @@ export function JournalEntryLineDialog({
           {entry.referenceNumber ? (
             <DetailField label="Reference number">{entry.referenceNumber}</DetailField>
           ) : null}
-          {entry.comments ? <DetailField label="Comments">{entry.comments}</DetailField> : null}
+          {entry.transactionComments ? (
+            <DetailField label="Transaction narration">{entry.transactionComments}</DetailField>
+          ) : null}
+          {entry.comments ? (
+            <DetailField label="Line narration">{entry.comments}</DetailField>
+          ) : null}
           {entry.paymentTypeName ? (
             <DetailField label="Payment type">{entry.paymentTypeName}</DetailField>
           ) : null}

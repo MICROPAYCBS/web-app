@@ -181,7 +181,7 @@ export function BulkConstructTemplateStep({
           error={errors['template.referenceNumber'] ?? errors.referenceNumber}
         />
         <TextField
-          label="Comment"
+          label="Transaction narration"
           required
           multiline
           rows={2}

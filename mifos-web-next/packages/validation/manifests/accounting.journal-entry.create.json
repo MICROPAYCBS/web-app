@@ -11,7 +11,9 @@
     "currencyCode": { "required": true },
     "transactionDate": { "required": true },
     "debits": { "required": true },
+    "debits[].comments": { "required": false, "maxLength": 500 },
     "credits": { "required": true },
+    "credits[].comments": { "required": false, "maxLength": 500 },
     "referenceNumber": { "required": false },
     "paymentTypeId": { "required": false },
     "accountNumber": { "required": false },
@@ -19,7 +21,7 @@
     "routingCode": { "required": false },
     "receiptNumber": { "required": false },
     "bankNumber": { "required": false },
-    "comments": { "required": true },
+    "comments": { "required": true, "maxLength": 500 },
     "externalAssetOwner": { "required": false }
   }
 }

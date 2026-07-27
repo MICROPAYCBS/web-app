@@ -6,6 +6,6 @@
     "org.apache.fineract.accounting.journalentry.handler.UpdateJournalEntryCommandHandler"
   ],
   "fields": {
-    "comments": { "required": true, "maxLength": 500 }
+    "transactionComments": { "required": true, "maxLength": 500 }
   }
 }

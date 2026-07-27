@@ -32,6 +32,9 @@ export interface FineractJournalEntryListItem {
   manualEntry?: boolean;
   reversed?: boolean;
   referenceNumber?: string;
+  /** Shared memo for the whole transaction (`transaction_comment`). */
+  transactionComments?: string;
+  /** Per-line narration (`description`). */
   comments?: string;
   paymentTypeName?: string;
   externalAssetOwner?: string;

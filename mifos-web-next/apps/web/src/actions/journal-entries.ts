@@ -20,11 +20,15 @@ import {
   validateCreateJournalEntryForm,
   validatePostLegacyJournalEntriesForm,
   validateRevertJournalEntry,
+  validateUpdateJournalEntryLineNarration,
+  validateUpdateJournalEntryLineNarrations,
   validateUpdateJournalEntryNarration,
   type BulkConstructJournalEntriesFormInput,
   type CreateJournalEntryFormInput,
   type PostLegacyJournalEntriesFormInput,
   type RevertJournalEntryInput,
+  type UpdateJournalEntryLineNarrationInput,
+  type UpdateJournalEntryLineNarrationsInput,
   type UpdateJournalEntryNarrationInput
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
@@ -36,6 +40,8 @@ import {
   getJournalEntryTransaction,
   listJournalEntryGlAccounts,
   revertJournalEntryTransaction,
+  updateJournalEntryLineNarration,
+  updateJournalEntryLineNarrations,
   updateJournalEntryNarration
 } from '@/lib/fineract/journal-entries';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
@@ -496,6 +502,22 @@ export async function revertJournalEntryAction(
   }
 }
 
+function assertManualUnreversedTransaction(
+  entries: FineractJournalEntryListItem[]
+): JournalEntriesActionResult | null {
+  const unreversed = entries.filter((entry) => entry.reversed !== true);
+  if (unreversed.length === 0) {
+    return { ok: false, message: 'Reversed transactions cannot be edited.' };
+  }
+  if (!unreversed.some((entry) => entry.manualEntry === true)) {
+    return {
+      ok: false,
+      message: 'Only manually entered transactions can have their narration updated.'
+    };
+  }
+  return null;
+}
+
 export async function updateJournalEntryNarrationAction(
   transactionId: string,
   input: UpdateJournalEntryNarrationInput
@@ -516,28 +538,96 @@ export async function updateJournalEntryNarrationAction(
     const fieldErrors = zodFieldErrors(parsed.error);
     return {
       ok: false,
-      message: fieldErrors.comments ?? 'Invalid narration.',
+      message: fieldErrors.transactionComments ?? 'Invalid transaction narration.',
       fieldErrors
     };
   }
 
   try {
     const page = await getJournalEntryTransaction(transactionId);
-    const unreversed = page.pageItems.filter((entry) => entry.reversed !== true);
-    if (unreversed.length === 0) {
-      return { ok: false, message: 'Reversed transactions cannot be edited.' };
-    }
-    if (!unreversed.some((entry) => entry.manualEntry === true)) {
-      return {
-        ok: false,
-        message: 'Only manually entered transactions can have their narration updated.'
-      };
+    const gate = assertManualUnreversedTransaction(page.pageItems);
+    if (gate) {
+      return gate;
     }
 
     const response = await updateJournalEntryNarration(transactionId, parsed.data);
     revalidateJournalEntryViews(response.transactionId);
     return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
   } catch (error) {
-    return toFineractActionError(error, 'Failed to update journal narration.');
+    return toFineractActionError(error, 'Failed to update transaction narration.');
+  }
+}
+
+export async function updateJournalEntryLineNarrationAction(
+  journalEntryId: number,
+  input: UpdateJournalEntryLineNarrationInput
+): Promise<JournalEntriesActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'UPDATE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to edit journal narration.' };
+  }
+
+  if (!Number.isFinite(journalEntryId) || journalEntryId <= 0) {
+    return { ok: false, message: 'Invalid journal entry id.' };
+  }
+
+  const parsed = validateUpdateJournalEntryLineNarration(input);
+  if (!parsed.success) {
+    const fieldErrors = zodFieldErrors(parsed.error);
+    return {
+      ok: false,
+      message: fieldErrors.comments ?? 'Invalid line narration.',
+      fieldErrors
+    };
+  }
+
+  try {
+    const response = await updateJournalEntryLineNarration(journalEntryId, parsed.data);
+    revalidateJournalEntryViews(response.transactionId);
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to update line narration.');
+  }
+}
+
+export async function updateJournalEntryLineNarrationsAction(
+  transactionId: string,
+  input: UpdateJournalEntryLineNarrationsInput
+): Promise<JournalEntriesActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'UPDATE_JOURNALENTRY');
+  } catch {
+    return { ok: false, message: 'You do not have permission to edit journal narration.' };
+  }
+
+  if (!transactionId.trim()) {
+    return { ok: false, message: 'Invalid transaction id.' };
+  }
+
+  const parsed = validateUpdateJournalEntryLineNarrations(input);
+  if (!parsed.success) {
+    const fieldErrors = zodFieldErrors(parsed.error);
+    return {
+      ok: false,
+      message: fieldErrors.entries ?? 'Invalid line narrations.',
+      fieldErrors
+    };
+  }
+
+  try {
+    const page = await getJournalEntryTransaction(transactionId);
+    const gate = assertManualUnreversedTransaction(page.pageItems);
+    if (gate) {
+      return gate;
+    }
+
+    const response = await updateJournalEntryLineNarrations(transactionId, parsed.data);
+    revalidateJournalEntryViews(response.transactionId);
+    return actionSuccessFromFineractCommand(response, { transactionId: response.transactionId });
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to update line narrations.');
   }
 }

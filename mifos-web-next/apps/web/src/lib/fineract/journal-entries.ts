@@ -19,9 +19,13 @@ import type {
 } from '@mifos/api-client';
 import {
   buildCreateJournalEntryPayload,
+  buildUpdateJournalEntryLineNarrationPayload,
+  buildUpdateJournalEntryLineNarrationsPayload,
   buildUpdateJournalEntryNarrationPayload,
   type CreateJournalEntryFormInput,
   type RevertJournalEntryInput,
+  type UpdateJournalEntryLineNarrationInput,
+  type UpdateJournalEntryLineNarrationsInput,
   type UpdateJournalEntryNarrationInput
 } from '@mifos/validation';
 import { backfillJournalEntryGlAccountCode } from '@/lib/accounting/journal-entry-display';
@@ -140,6 +144,8 @@ function normalizeJournalEntryListItem(raw: unknown): FineractJournalEntryListIt
     manualEntry: row.manualEntry === true,
     reversed: row.reversed === true,
     referenceNumber: typeof row.referenceNumber === 'string' ? row.referenceNumber : undefined,
+    transactionComments:
+      typeof row.transactionComments === 'string' ? row.transactionComments : undefined,
     comments: typeof row.comments === 'string' ? row.comments : undefined,
     paymentTypeName: typeof row.paymentTypeName === 'string' ? row.paymentTypeName : undefined,
     externalAssetOwner:
@@ -280,6 +286,40 @@ export async function updateJournalEntryNarration(
     `${JOURNAL_ENTRIES_PATH}/${transactionId}`,
     body,
     { command: 'updateNarration' }
+  );
+  return {
+    transactionId: String(raw?.transactionId ?? transactionId),
+    resourceId: raw?.resourceId
+  };
+}
+
+export async function updateJournalEntryLineNarration(
+  journalEntryId: number,
+  input: UpdateJournalEntryLineNarrationInput
+): Promise<FineractJournalEntryUpdateNarrationResponse> {
+  const fineract = await createFineractClient();
+  const body = buildUpdateJournalEntryLineNarrationPayload(input);
+  const raw = await fineract.post<FineractJournalEntryUpdateNarrationResponse>(
+    `${JOURNAL_ENTRIES_PATH}/entries/${journalEntryId}`,
+    body,
+    { command: 'updateLineNarration' }
+  );
+  return {
+    transactionId: String(raw?.transactionId ?? ''),
+    resourceId: raw?.resourceId
+  };
+}
+
+export async function updateJournalEntryLineNarrations(
+  transactionId: string,
+  input: UpdateJournalEntryLineNarrationsInput
+): Promise<FineractJournalEntryUpdateNarrationResponse> {
+  const fineract = await createFineractClient();
+  const body = buildUpdateJournalEntryLineNarrationsPayload(input);
+  const raw = await fineract.post<FineractJournalEntryUpdateNarrationResponse>(
+    `${JOURNAL_ENTRIES_PATH}/${transactionId}`,
+    body,
+    { command: 'updateLineNarrations' }
   );
   return {
     transactionId: String(raw?.transactionId ?? transactionId),

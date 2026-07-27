@@ -24,10 +24,31 @@ const optionalPositiveInt = z.preprocess(
   z.number().int().positive().optional()
 );
 
+/** Max length matches Fineract journal narration fields (≤ 500). */
+export const JOURNAL_ENTRY_NARRATION_MAX_LENGTH = 500;
+
+const optionalLineComments = z.preprocess(
+  (value) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+    return value;
+  },
+  z
+    .string()
+    .trim()
+    .max(
+      JOURNAL_ENTRY_NARRATION_MAX_LENGTH,
+      `Line narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
+    )
+    .optional()
+);
+
 export const journalEntryLineSchema = z.object({
   glAccountId: z.number().int().positive('Select a GL account.'),
   amount: z.coerce.number().min(1, 'Amount must be at least 1.'),
-  departmentId: optionalPositiveInt
+  departmentId: optionalPositiveInt,
+  comments: optionalLineComments
 });
 
 export const createJournalEntryFormBaseSchema = z.object({
@@ -46,7 +67,15 @@ export const createJournalEntryFormBaseSchema = z.object({
   routingCode: z.string().optional(),
   receiptNumber: z.string().optional(),
   bankNumber: z.string().optional(),
-  comments: z.string().trim().min(1, 'Comment is required.'),
+  /** Shared transaction memo — maps to Fineract create top-level `comments` → `transactionComments`. */
+  comments: z
+    .string()
+    .trim()
+    .min(1, 'Transaction narration is required.')
+    .max(
+      JOURNAL_ENTRY_NARRATION_MAX_LENGTH,
+      `Transaction narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
+    ),
   externalAssetOwner: z.string().optional(),
   accountingRule: optionalPositiveInt
 });
@@ -121,22 +150,42 @@ export const revertJournalEntrySchema = z.object({
   comments: z.string().optional()
 });
 
-/** Max length matches Fineract `updateJournalEntryNarration` (comments ≤ 500). */
-export const JOURNAL_ENTRY_NARRATION_MAX_LENGTH = 500;
+const narrationStringSchema = z
+  .string({ required_error: 'Narration is required.' })
+  .max(
+    JOURNAL_ENTRY_NARRATION_MAX_LENGTH,
+    `Narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
+  );
 
 export const updateJournalEntryNarrationSchema = z.object({
-  comments: z
-    .string({ required_error: 'Narration is required.' })
-    .max(
-      JOURNAL_ENTRY_NARRATION_MAX_LENGTH,
-      `Narration must be at most ${JOURNAL_ENTRY_NARRATION_MAX_LENGTH} characters.`
+  transactionComments: narrationStringSchema
+});
+
+export const updateJournalEntryLineNarrationSchema = z.object({
+  comments: narrationStringSchema
+});
+
+export const updateJournalEntryLineNarrationsSchema = z.object({
+  entries: z
+    .array(
+      z.object({
+        id: z.number().int().positive('Entry id is required.'),
+        comments: narrationStringSchema
+      })
     )
+    .min(1, 'Add at least one line narration.')
 });
 
 export type JournalEntryLineInput = z.infer<typeof journalEntryLineSchema>;
 export type CreateJournalEntryFormInput = z.infer<typeof createJournalEntryFormSchema>;
 export type RevertJournalEntryInput = z.infer<typeof revertJournalEntrySchema>;
 export type UpdateJournalEntryNarrationInput = z.infer<typeof updateJournalEntryNarrationSchema>;
+export type UpdateJournalEntryLineNarrationInput = z.infer<
+  typeof updateJournalEntryLineNarrationSchema
+>;
+export type UpdateJournalEntryLineNarrationsInput = z.infer<
+  typeof updateJournalEntryLineNarrationsSchema
+>;
 
 export function isSameOfficeJournalEntry(
   input: Pick<CreateJournalEntryFormInput, 'debitOfficeId' | 'creditOfficeId'>
@@ -164,8 +213,49 @@ export function validateUpdateJournalEntryNarration(input: unknown) {
   return updateJournalEntryNarrationSchema.safeParse(input);
 }
 
+export function validateUpdateJournalEntryLineNarration(input: unknown) {
+  return updateJournalEntryLineNarrationSchema.safeParse(input);
+}
+
+export function validateUpdateJournalEntryLineNarrations(input: unknown) {
+  return updateJournalEntryLineNarrationsSchema.safeParse(input);
+}
+
 export function buildUpdateJournalEntryNarrationPayload(input: UpdateJournalEntryNarrationInput) {
+  return { transactionComments: input.transactionComments };
+}
+
+export function buildUpdateJournalEntryLineNarrationPayload(
+  input: UpdateJournalEntryLineNarrationInput
+) {
   return { comments: input.comments };
+}
+
+export function buildUpdateJournalEntryLineNarrationsPayload(
+  input: UpdateJournalEntryLineNarrationsInput
+) {
+  return {
+    entries: input.entries.map((entry) => ({
+      id: entry.id,
+      comments: entry.comments
+    }))
+  };
+}
+
+function mapJournalEntryLinePayload(
+  line: JournalEntryLineInput,
+  sideDepartmentId: number | undefined
+) {
+  return {
+    glAccountId: line.glAccountId,
+    amount: line.amount,
+    ...(line.departmentId != null
+      ? { departmentId: line.departmentId }
+      : sideDepartmentId != null
+        ? { departmentId: sideDepartmentId }
+        : {}),
+    ...(line.comments?.trim() ? { comments: line.comments.trim() } : {})
+  };
 }
 
 export function buildCreateJournalEntryPayload(
@@ -182,24 +272,10 @@ export function buildCreateJournalEntryPayload(
     officeId: input.debitOfficeId,
     currencyCode: input.currencyCode,
     transactionDate: input.transactionDate,
-    debits: input.debits.map((line) => ({
-      glAccountId: line.glAccountId,
-      amount: line.amount,
-      ...(line.departmentId != null
-        ? { departmentId: line.departmentId }
-        : input.debitDepartmentId != null
-          ? { departmentId: input.debitDepartmentId }
-          : {})
-    })),
-    credits: input.credits.map((line) => ({
-      glAccountId: line.glAccountId,
-      amount: line.amount,
-      ...(line.departmentId != null
-        ? { departmentId: line.departmentId }
-        : input.creditDepartmentId != null
-          ? { departmentId: input.creditDepartmentId }
-          : {})
-    })),
+    debits: input.debits.map((line) => mapJournalEntryLinePayload(line, input.debitDepartmentId)),
+    credits: input.credits.map((line) =>
+      mapJournalEntryLinePayload(line, input.creditDepartmentId)
+    ),
     referenceNumber: input.referenceNumber?.trim() || undefined,
     paymentTypeId: input.paymentTypeId,
     accountNumber: input.accountNumber?.trim() || undefined,

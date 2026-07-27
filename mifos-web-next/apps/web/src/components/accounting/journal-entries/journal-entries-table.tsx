@@ -56,7 +56,9 @@ export const JOURNAL_ENTRIES_DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
   glAccountType: false,
   createdByUserName: false,
   submittedOnDate: false,
-  currency: false
+  currency: false,
+  transactionComments: false,
+  comments: false
 };
 
 function SortableHeader({
@@ -276,6 +278,18 @@ export function useJournalEntriesTable({
           />
         ),
         cell: ({ row }) => formatJournalEntryAmount(row.original, 'CREDIT')
+      },
+      {
+        accessorKey: 'transactionComments',
+        meta: { label: 'Transaction narration' },
+        header: 'Transaction narration',
+        cell: ({ row }) => row.original.transactionComments?.trim() || '—'
+      },
+      {
+        accessorKey: 'comments',
+        meta: { label: 'Line narration' },
+        header: 'Line narration',
+        cell: ({ row }) => row.original.comments?.trim() || '—'
       }
     ],
     [onSort, orderBy, sortOrder]

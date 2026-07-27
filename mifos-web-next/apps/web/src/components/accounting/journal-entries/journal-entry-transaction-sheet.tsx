@@ -57,8 +57,8 @@ export function JournalEntryTransactionSheet({
         <SheetHeader className="shrink-0 border-b border-border">
           <SheetTitle>{loading && !transactionId ? 'Loading transaction…' : title}</SheetTitle>
           <SheetDescription>
-            Review journal lines and metadata, edit narration, or reverse manual entries without
-            leaving this screen.
+            Review journal lines and metadata, edit transaction or line narration, or reverse manual
+            entries without leaving this screen.
           </SheetDescription>
         </SheetHeader>
 

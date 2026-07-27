@@ -525,20 +525,28 @@ export {
 export { applyGlAccountFineractFieldErrors } from './accounting/gl-account-fineract-errors';
 export {
   buildCreateJournalEntryPayload,
+  buildUpdateJournalEntryLineNarrationPayload,
+  buildUpdateJournalEntryLineNarrationsPayload,
   buildUpdateJournalEntryNarrationPayload,
   createJournalEntryFormSchema,
   isSameOfficeJournalEntry,
   JOURNAL_ENTRY_NARRATION_MAX_LENGTH,
   journalEntryLineSchema,
   revertJournalEntrySchema,
+  updateJournalEntryLineNarrationSchema,
+  updateJournalEntryLineNarrationsSchema,
   updateJournalEntryNarrationSchema,
   validateCreateJournalEntryForm,
   validateRevertJournalEntry,
+  validateUpdateJournalEntryLineNarration,
+  validateUpdateJournalEntryLineNarrations,
   validateUpdateJournalEntryNarration,
   type CreateJournalEntryFormInput,
   type CreateJournalEntryValidationContext,
   type JournalEntryLineInput,
   type RevertJournalEntryInput,
+  type UpdateJournalEntryLineNarrationInput,
+  type UpdateJournalEntryLineNarrationsInput,
   type UpdateJournalEntryNarrationInput
 } from './accounting/journal-entry.schema';
 export {
