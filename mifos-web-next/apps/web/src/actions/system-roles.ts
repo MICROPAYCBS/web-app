@@ -20,11 +20,13 @@ import {
   actionSuccessFromFineractCommand
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
+import { isSuperUserRole } from '@/lib/fineract/role-display';
 import {
   createRole,
   deleteRole,
   disableRole,
   enableRole,
+  getRolePermissions,
   updateRole,
   updateRolePermissions
 } from '@/lib/fineract/system-roles';
@@ -163,6 +165,11 @@ export async function deleteRoleAction(roleId: number): Promise<SystemRolesActio
   }
 
   try {
+    const role = await getRolePermissions(roleId);
+    if (role && isSuperUserRole(role.name)) {
+      return { ok: false, message: 'The Super user role cannot be deleted.' };
+    }
+
     const response = await deleteRole(roleId);
     revalidateRoleViews();
     return actionSuccessFromFineractCommand(response, { resourceId: roleId });
@@ -184,6 +191,11 @@ export async function enableRoleAction(roleId: number): Promise<SystemRolesActio
   }
 
   try {
+    const role = await getRolePermissions(roleId);
+    if (role && isSuperUserRole(role.name)) {
+      return { ok: false, message: 'The Super user role cannot be enabled or disabled.' };
+    }
+
     const response = await enableRole(roleId);
     revalidateRoleViews(roleId);
     return actionSuccessFromFineractCommand(response, { resourceId: roleId });
@@ -205,6 +217,11 @@ export async function disableRoleAction(roleId: number): Promise<SystemRolesActi
   }
 
   try {
+    const role = await getRolePermissions(roleId);
+    if (role && isSuperUserRole(role.name)) {
+      return { ok: false, message: 'The Super user role cannot be enabled or disabled.' };
+    }
+
     const response = await disableRole(roleId);
     revalidateRoleViews(roleId);
     return actionSuccessFromFineractCommand(response, { resourceId: roleId });

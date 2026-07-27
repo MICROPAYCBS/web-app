@@ -8,6 +8,7 @@
 
 import type { FineractRolePermissionUsage } from '@mifos/api-client';
 
+/** Seeded full-admin role name. Permissions may be edited; delete/disable stay locked. */
 export const SUPER_USER_ROLE_NAME = 'Super user';
 
 export function isSuperUserRole(name: string): boolean {

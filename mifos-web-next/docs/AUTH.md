@@ -24,7 +24,9 @@ Enabled **on the Fineract server**, not per user in this UI:
 | User | Permission **`BYPASS_TWOFACTOR`** skips the OTP challenge (checked with Fineract `hasSpecificPermissionTo` — **`ALL_FUNCTIONS` does not imply bypass**) |
 | Delivery | Tenant `twofactor_configuration` (email/SMS, OTP length/TTL) |
 
-When the flag is on, every non-bypass user must complete OTP after a successful password login. Super users with only `ALL_FUNCTIONS` still see the OTP step unless their role also includes `BYPASS_TWOFACTOR`. There is no per-user “enable 2FA” toggle in this app. Admin configuration of `/v1/twofactor/configure` is out of scope here.
+When the flag is on, every non-bypass user must complete OTP after a successful password login. Super users with only `ALL_FUNCTIONS` still see the OTP step unless their role also includes `BYPASS_TWOFACTOR`. There is no per-user “enable 2FA” toggle in this app.
+
+Admin delivery settings (email/SMS templates, OTP length/TTL, access-token lifetime) are edited at **System → Two-factor authentication** (`/system/two-factor`), which calls `GET/PUT /v1/twofactor/configure` (`READ_TWOFACTOR_CONFIGURATION` / `UPDATE_TWOFACTOR_CONFIGURATION`). Email and SMS still require working External services (SMTP / SMS gateway).
 
 The pending cookie stores only credentials metadata (not the full permissions list) so it stays under browser cookie size limits; permissions are re-loaded from authentication after OTP validates.
 
@@ -115,6 +117,7 @@ Client-side TanStack Query caches are cleared before navigating to `/api/auth/lo
 |-------|----------|
 | Fineract login | `apps/web/src/lib/fineract/authenticate.ts` |
 | 2FA Fineract helpers | `apps/web/src/lib/fineract/twofactor.ts` |
+| 2FA admin configure | `apps/web/src/lib/fineract/twofactor-configuration.ts`, `/system/two-factor` |
 | Cookie helpers | `apps/web/src/lib/session/cookie.ts`, `pending-twofactor.ts` |
 | Idle timeout | `apps/web/src/components/auth/inactivity-timeout.tsx` |
 | Login Route Handler | `apps/web/src/app/api/auth/login/route.ts` |

@@ -1049,3 +1049,8 @@ export {
   type RequestTwoFactorOtpInput,
   type ValidateTwoFactorOtpInput
 } from './auth/twofactor.schema';
+export {
+  updateTwoFactorConfigurationSchema,
+  validateUpdateTwoFactorConfiguration,
+  type UpdateTwoFactorConfigurationInput
+} from './system/twofactor-configuration.schema';

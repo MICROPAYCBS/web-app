@@ -24,7 +24,6 @@ import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { isSuperUserRole } from '@/lib/fineract/role-display';
 import { cn } from '@/lib/utils';
 
 export function RolesTable({
@@ -84,7 +83,7 @@ export function RolesTable({
         header: 'Actions',
         meta: { sticky: 'right' },
         cell: ({ row }) =>
-          canUpdate && !isSuperUserRole(row.original.name) ? (
+          canUpdate ? (
             <Link
               href={`/system/roles-and-permissions/${row.original.id}?edit=1`}
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }))}

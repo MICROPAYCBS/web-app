@@ -11,7 +11,6 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { RoleDetailView } from '@/components/system/role-detail-view';
 import { RoleEditUrlPanel } from '@/components/system/role-edit-url-panel';
-import { isSuperUserRole } from '@/lib/fineract/role-display';
 import { getRolePermissions } from '@/lib/fineract/system-roles';
 import { getServerSession } from '@/lib/session/server';
 
@@ -36,13 +35,13 @@ export default async function RoleDetailPage({
     notFound();
   }
 
-  const canUpdate = can(session, 'UPDATE_ROLE') && !isSuperUserRole(role.name);
+  const canUpdate = can(session, 'UPDATE_ROLE');
 
   return (
     <>
       <RoleDetailView
         role={role}
-        canUpdate={can(session, 'UPDATE_ROLE')}
+        canUpdate={canUpdate}
         canDelete={can(session, 'DELETE_ROLE')}
       />
       {canUpdate ? (

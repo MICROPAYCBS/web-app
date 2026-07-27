@@ -527,6 +527,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'sysTwoFactor',
+    path: '/system/two-factor',
+    label: 'Two-factor authentication',
+    navGroup: 'system',
+    webAppRef: 'system/two-factor',
+    permissionKey: 'system.twoFactor',
+    navOrder: 112,
+    navIcon: 'shield-check',
+    keywords: ['2fa', 'otp', 'two factor', 'verification code', 'mfa'],
+    parityStatus: 'done'
+  },
+  {
     id: 'sysBusinessDate',
     path: '/system/business-date',
     label: 'Business date',

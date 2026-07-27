@@ -281,6 +281,12 @@ export type {
   FineractGlobalConfigurationUpdateResponse
 } from './system/global-configuration-types';
 
+export type {
+  FineractTwoFactorConfiguration,
+  FineractTwoFactorConfigurationUpdatePayload,
+  FineractTwoFactorConfigurationUpdateResponse
+} from './system/twofactor-configuration-types';
+
 export {
   BUSINESS_DATE_TYPE,
   COB_DATE_TYPE

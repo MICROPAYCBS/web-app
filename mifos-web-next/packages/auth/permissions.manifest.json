@@ -775,6 +775,16 @@
       "READ_CONFIGURATION"
     ]
   },
+  "system.twoFactor": {
+    "any": [
+      "READ_TWOFACTOR_CONFIGURATION"
+    ]
+  },
+  "system.twoFactor.update": {
+    "any": [
+      "UPDATE_TWOFACTOR_CONFIGURATION"
+    ]
+  },
   "system.businessDate": {
     "any": [
       "READ_CONFIGURATION"

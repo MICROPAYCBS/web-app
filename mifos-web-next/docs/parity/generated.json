@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-24T08:19:25.832Z",
+  "generatedAt": "2026-07-27T12:20:44.959Z",
   "summary": {
     "todo": 0,
     "in_progress": 1,
-    "done": 94,
+    "done": 95,
     "n/a": 0
   },
   "routes": [
@@ -635,6 +635,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "system/configurations"
+    },
+    {
+      "id": "sysTwoFactor",
+      "path": "/system/two-factor",
+      "domain": "system",
+      "label": "Two-factor authentication",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "system/two-factor"
     },
     {
       "id": "sysBusinessDate",

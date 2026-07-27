@@ -43,7 +43,7 @@ export function RoleDetailView({
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const protectedRole = isSuperUserRole(role.name);
-  const canManageRole = canUpdate && !protectedRole;
+  const canToggleEnabled = canUpdate && !protectedRole;
 
   function handleToggleEnabled(enabled: boolean) {
     setActionError(null);
@@ -86,37 +86,37 @@ export function RoleDetailView({
             meta={role.description || 'No description provided.'}
             actions={
               <div className="flex flex-wrap gap-2">
-                {canManageRole ? (
-                  <>
-                    <Link
-                      href={`/system/roles-and-permissions/${role.id}?edit=1`}
-                      className={cn(buttonVariants({ size: 'sm' }))}
+                {canUpdate ? (
+                  <Link
+                    href={`/system/roles-and-permissions/${role.id}?edit=1`}
+                    className={cn(buttonVariants({ size: 'sm' }))}
+                  >
+                    <Pencil className="mr-2 size-4" />
+                    Edit description
+                  </Link>
+                ) : null}
+                {canToggleEnabled ? (
+                  role.disabled ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggleEnabled(true)}
+                      disabled={pending}
                     >
-                      <Pencil className="mr-2 size-4" />
-                      Edit description
-                    </Link>
-                    {role.disabled ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleToggleEnabled(true)}
-                        disabled={pending}
-                      >
-                        Enable role
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleToggleEnabled(false)}
-                        disabled={pending}
-                      >
-                        Disable role
-                      </Button>
-                    )}
-                  </>
+                      Enable role
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggleEnabled(false)}
+                      disabled={pending}
+                    >
+                      Disable role
+                    </Button>
+                  )
                 ) : null}
                 {canDelete && !protectedRole ? (
                   <Button
@@ -137,7 +137,8 @@ export function RoleDetailView({
         summary={
           protectedRole ? (
             <p className="text-sm text-muted-foreground">
-              The Super user role is protected and cannot be edited or deleted.
+              The Super user role cannot be disabled or deleted. You can still change its
+              permissions (for example, remove broad grants such as all functions).
             </p>
           ) : null
         }
@@ -145,7 +146,7 @@ export function RoleDetailView({
         <RolePermissionsPanel
           roleId={role.id}
           permissions={role.permissionUsageData}
-          canEdit={canManageRole}
+          canEdit={canUpdate}
         />
 
         {actionError ? (

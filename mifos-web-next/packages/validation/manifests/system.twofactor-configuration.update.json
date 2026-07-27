@@ -1,0 +1,20 @@
+{
+  "command": "system.twofactor-configuration.update",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.security.api.TwoFactorConfigurationApiResource",
+    "org.apache.fineract.infrastructure.security.data.TwoFactorConfigurationValidator",
+    "org.apache.fineract.infrastructure.security.constants.TwoFactorConfigurationConstants"
+  ],
+  "fields": {
+    "emailEnabled": { "required": true },
+    "emailSubject": { "required": true, "maxLength": 1000 },
+    "emailBody": { "required": true, "maxLength": 1000 },
+    "smsEnabled": { "required": true },
+    "smsProviderId": { "required": true, "min": 1 },
+    "smsText": { "required": true, "maxLength": 1000 },
+    "otpTokenLiveTime": { "required": true, "min": 1 },
+    "otpTokenLength": { "required": true, "min": 1 },
+    "accessTokenLiveTime": { "required": true, "min": 1 },
+    "accessTokenLiveTimeExtended": { "required": true, "min": 1 }
+  }
+}
