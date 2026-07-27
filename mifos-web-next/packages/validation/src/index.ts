@@ -550,13 +550,8 @@ export {
   type UpdateJournalEntryNarrationInput
 } from './accounting/journal-entry.schema';
 export {
-  expandInterBranchJournalEntry,
-  formatInterBranchJournalEntryComments,
-  INTER_BRANCH_JOURNAL_ENTRY_COMMENT_PREFIX,
   isInterBranchJournalEntry,
-  journalEntryLinesTotal,
-  type ExpandedInterBranchJournalEntry,
-  type InterBranchJournalEntryExpandInput
+  journalEntryLinesTotal
 } from './accounting/inter-branch-journal-entry';
 export {
   BULK_CONSTRUCT_JOURNAL_ENTRIES_MAX_ROWS,

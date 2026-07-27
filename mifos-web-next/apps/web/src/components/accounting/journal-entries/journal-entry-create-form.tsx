@@ -235,10 +235,10 @@ export function JournalEntryCreateForm({
       }
       toastCommandOutcome(result, {
         completed: result.interBranch
-          ? 'Cross-branch journal entries created.'
+          ? 'Cross-branch journal entry created.'
           : 'Journal entry created.',
         pending: result.interBranch
-          ? 'Cross-branch journal entries sent for approval.'
+          ? 'Cross-branch journal entry sent for approval.'
           : 'Journal entry created sent for approval.'
       });
       router.refresh();
@@ -321,8 +321,8 @@ export function JournalEntryCreateForm({
                     aria-hidden
                   />
                   <p className="text-sm text-muted-foreground">
-                    Cross-branch posting — 2 journal entries will be created and cleared through
-                    inter-branch reconciliation.
+                    Cross-branch posting — one journal transaction will be created across both
+                    branches, with inter-branch clearing applied automatically.
                   </p>
                 </div>
               ) : null}

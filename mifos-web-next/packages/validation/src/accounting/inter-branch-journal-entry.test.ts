@@ -9,19 +9,18 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  expandInterBranchJournalEntry,
-  isInterBranchJournalEntry,
-  journalEntryLinesTotal
-} from './inter-branch-journal-entry';
-import type { CreateJournalEntryFormInput } from './journal-entry.schema';
+  buildCreateJournalEntryPayload,
+  isSameOfficeJournalEntry,
+  type CreateJournalEntryFormInput
+} from './journal-entry.schema';
+import { isInterBranchJournalEntry, journalEntryLinesTotal } from './inter-branch-journal-entry';
 
 const DEBIT_OFFICE_ID = 2;
 const CREDIT_OFFICE_ID = 1;
-const CLEARING_GL_ID = 900;
 const EXPENSE_GL_ID = 501;
 const BANK_GL_ID = 200;
 
-function baseForm(): CreateJournalEntryFormInput {
+function baseForm(overrides: Partial<CreateJournalEntryFormInput> = {}): CreateJournalEntryFormInput {
   return {
     debitOfficeId: DEBIT_OFFICE_ID,
     creditOfficeId: CREDIT_OFFICE_ID,
@@ -32,19 +31,28 @@ function baseForm(): CreateJournalEntryFormInput {
     referenceNumber: 'XB-20260711-TEST',
     comments: 'Utilities',
     debits: [{ glAccountId: EXPENSE_GL_ID, amount: 150_000 }],
-    credits: [{ glAccountId: BANK_GL_ID, amount: 150_000 }]
+    credits: [{ glAccountId: BANK_GL_ID, amount: 150_000 }],
+    ...overrides
   };
 }
 
-describe('inter-branch-journal-entry', () => {
+describe('inter-branch journal entry', () => {
   it('detects inter-branch when debit and credit offices differ', () => {
     assert.equal(isInterBranchJournalEntry(baseForm()), true);
+    assert.equal(isSameOfficeJournalEntry(baseForm()), false);
     assert.equal(
       isInterBranchJournalEntry({
         ...baseForm(),
         creditOfficeId: DEBIT_OFFICE_ID
       }),
       false
+    );
+    assert.equal(
+      isSameOfficeJournalEntry({
+        ...baseForm(),
+        creditOfficeId: DEBIT_OFFICE_ID
+      }),
+      true
     );
   });
 
@@ -58,37 +66,31 @@ describe('inter-branch-journal-entry', () => {
     );
   });
 
-  it('expands balanced form into debit-office and credit-office entries', () => {
-    const expanded = expandInterBranchJournalEntry({
-      ...baseForm(),
-      clearingGlAccountId: CLEARING_GL_ID,
-      officeNamesById: {
-        [DEBIT_OFFICE_ID]: 'Branch A',
-        [CREDIT_OFFICE_ID]: 'Head Office'
-      }
+  it('builds one create payload with per-line office ids for inter-branch', () => {
+    const payload = buildCreateJournalEntryPayload(baseForm(), {
+      locale: 'en',
+      dateFormat: 'dd MMMM yyyy'
     });
 
-    assert.equal(expanded.length, 2);
+    assert.equal(payload.officeId, DEBIT_OFFICE_ID);
+    assert.equal(payload.debits.length, 1);
+    assert.equal(payload.credits.length, 1);
+    assert.equal(payload.debits[0]?.officeId, DEBIT_OFFICE_ID);
+    assert.equal(payload.debits[0]?.departmentId, 3);
+    assert.equal(payload.debits[0]?.glAccountId, EXPENSE_GL_ID);
+    assert.equal(payload.credits[0]?.officeId, CREDIT_OFFICE_ID);
+    assert.equal(payload.credits[0]?.glAccountId, BANK_GL_ID);
+    assert.equal(payload.comments, 'Utilities');
+  });
 
-    const debitEntry = expanded[0];
-    assert.equal(debitEntry.role, 'debit_office');
-    assert.equal(debitEntry.officeId, DEBIT_OFFICE_ID);
-    assert.equal(debitEntry.input.debitOfficeId, DEBIT_OFFICE_ID);
-    assert.equal(debitEntry.input.creditOfficeId, DEBIT_OFFICE_ID);
-    assert.equal(debitEntry.input.debits.length, 1);
-    assert.equal(debitEntry.input.debits[0]?.glAccountId, EXPENSE_GL_ID);
-    assert.equal(debitEntry.input.credits.length, 1);
-    assert.equal(debitEntry.input.credits[0]?.glAccountId, CLEARING_GL_ID);
-    assert.equal(debitEntry.input.credits[0]?.amount, 150_000);
-    assert.equal(debitEntry.input.debitDepartmentId, 3);
-    assert.match(debitEntry.input.comments ?? '', /Branch A/);
+  it('builds same-office payload with matching line office ids', () => {
+    const payload = buildCreateJournalEntryPayload(
+      baseForm({ creditOfficeId: DEBIT_OFFICE_ID }),
+      { locale: 'en', dateFormat: 'dd MMMM yyyy' }
+    );
 
-    const creditEntry = expanded[1];
-    assert.equal(creditEntry.role, 'credit_office');
-    assert.equal(creditEntry.officeId, CREDIT_OFFICE_ID);
-    assert.equal(creditEntry.input.debits[0]?.glAccountId, CLEARING_GL_ID);
-    assert.equal(creditEntry.input.credits[0]?.glAccountId, BANK_GL_ID);
-    assert.equal(creditEntry.input.credits[0]?.amount, 150_000);
-    assert.match(creditEntry.input.comments ?? '', /Head Office/);
+    assert.equal(payload.officeId, DEBIT_OFFICE_ID);
+    assert.equal(payload.debits[0]?.officeId, DEBIT_OFFICE_ID);
+    assert.equal(payload.credits[0]?.officeId, DEBIT_OFFICE_ID);
   });
 });

@@ -45,6 +45,30 @@ import {
 } from '@/lib/fineract/bulk-import-paths';
 import { cn } from '@/lib/utils';
 
+/** Survives the list soft-nav that clears `openTransaction` before the sheet fetch starts. */
+const PENDING_OPEN_TRANSACTION_KEY = 'mifos.journal-entries.pending-open-transaction';
+
+function readPendingOpenTransaction(): string | null {
+  try {
+    const value = sessionStorage.getItem(PENDING_OPEN_TRANSACTION_KEY)?.trim();
+    if (value) {
+      sessionStorage.removeItem(PENDING_OPEN_TRANSACTION_KEY);
+      return value;
+    }
+  } catch {
+    // sessionStorage may be unavailable
+  }
+  return null;
+}
+
+function writePendingOpenTransaction(transactionId: string) {
+  try {
+    sessionStorage.setItem(PENDING_OPEN_TRANSACTION_KEY, transactionId);
+  } catch {
+    // sessionStorage may be unavailable
+  }
+}
+
 export function JournalEntriesPageContent({
   page,
   query,
@@ -83,16 +107,26 @@ export function JournalEntriesPageContent({
   }, [appliedFiltersSignature]);
 
   useEffect(() => {
-    const transactionId = openTransactionId?.trim();
-    if (!transactionId || !journalPanel.canView) {
+    if (!journalPanel.canView) {
       return;
     }
-    journalPanel.openJournalTransaction(transactionId);
-    // Drop the one-shot deep-link param so refresh/back does not reopen forever.
-    startTransition(() => {
-      router.replace(buildJournalEntriesUrl(query));
-    });
-  }, [openTransactionId]);
+
+    const fromQuery = openTransactionId?.trim();
+    if (fromQuery) {
+      // Clear the deep-link first. Opening the sheet in the same turn as
+      // `router.replace` aborts the server action and leaves the sheet loading forever.
+      writePendingOpenTransaction(fromQuery);
+      startTransition(() => {
+        router.replace(buildJournalEntriesUrl(query));
+      });
+      return;
+    }
+
+    const pendingTransactionId = readPendingOpenTransaction();
+    if (pendingTransactionId) {
+      journalPanel.openJournalTransaction(pendingTransactionId);
+    }
+  }, [openTransactionId, journalPanel.canView, journalPanel.openJournalTransaction, query, router]);
 
   const navigate = useCallback(
     (next: JournalEntryListQuery) => {

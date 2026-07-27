@@ -97,6 +97,22 @@ export function JournalEntryTransactionContent({
     () => resolveTransactionComments(entries),
     [entries]
   );
+  const branchLabels = useMemo(() => {
+    const names = new Set<string>();
+    for (const entry of entries) {
+      const name = entry.officeName?.trim();
+      if (name) {
+        names.add(name);
+      }
+    }
+    return [...names];
+  }, [entries]);
+  const branchSummaryLabel =
+    branchLabels.length === 0
+      ? '—'
+      : branchLabels.length === 1
+        ? branchLabels[0]
+        : branchLabels.join(' · ');
   const departmentLabel = summary ? formatJournalEntryDepartment(summary) : null;
 
   const columns = useMemo<ColumnDef<FineractJournalEntryListItem>[]>(
@@ -114,6 +130,11 @@ export function JournalEntryTransactionContent({
             {row.original.id}
           </Button>
         )
+      },
+      {
+        accessorKey: 'officeName',
+        header: 'Branch',
+        cell: ({ row }) => row.original.officeName
       },
       {
         id: 'glAccountType',
@@ -321,7 +342,7 @@ export function JournalEntryTransactionContent({
     <>
       <div className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <p className="text-sm text-muted-foreground">{summary.officeName}</p>
+          <p className="text-sm text-muted-foreground">{branchSummaryLabel}</p>
           <div className="flex flex-wrap items-center gap-2">
             {isManual ? (
               <>
@@ -359,7 +380,7 @@ export function JournalEntryTransactionContent({
         </div>
 
         <DetailFieldGrid columns={2}>
-          <DetailField label="Branch">{summary.officeName}</DetailField>
+          <DetailField label="Branch">{branchSummaryLabel}</DetailField>
           {departmentLabel ? (
             <DetailField label="Department">{departmentLabel}</DetailField>
           ) : null}

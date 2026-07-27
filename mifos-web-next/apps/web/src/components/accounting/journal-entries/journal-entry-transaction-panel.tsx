@@ -71,10 +71,15 @@ function loadTransaction(
       }
       onComplete({ entries: result.entries, error: null, loading: false });
     })
-    .catch(() => {
+    .catch((error: unknown) => {
+      const aborted =
+        (error instanceof DOMException && error.name === 'AbortError') ||
+        (error instanceof Error && /abort|cancel/i.test(error.message));
       onComplete({
         entries: [],
-        error: 'Failed to load journal transaction.',
+        error: aborted
+          ? 'Loading was interrupted. Close this panel and open the transaction again.'
+          : 'Failed to load journal transaction.',
         loading: false
       });
     });
@@ -135,6 +140,7 @@ export function JournalEntryTransactionPanelProvider({ children }: { children: R
       }
 
       setEntries([]);
+      setLoading(true);
       loadTransaction(request.transactionId, (result) => applyLoadResult(generation, result));
     },
     [applyLoadResult, canView]

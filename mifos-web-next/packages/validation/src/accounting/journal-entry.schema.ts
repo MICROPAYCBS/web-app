@@ -244,11 +244,13 @@ export function buildUpdateJournalEntryLineNarrationsPayload(
 
 function mapJournalEntryLinePayload(
   line: JournalEntryLineInput,
+  sideOfficeId: number,
   sideDepartmentId: number | undefined
 ) {
   return {
     glAccountId: line.glAccountId,
     amount: line.amount,
+    officeId: sideOfficeId,
     ...(line.departmentId != null
       ? { departmentId: line.departmentId }
       : sideDepartmentId != null
@@ -258,23 +260,28 @@ function mapJournalEntryLinePayload(
   };
 }
 
+/**
+ * Builds `POST /journalentries` body.
+ *
+ * Header `officeId` is the debit branch. Each debit/credit line carries its side
+ * `officeId` so inter-branch documents post as one transaction (backend adds
+ * clearing legs when the two offices are unbalanced).
+ */
 export function buildCreateJournalEntryPayload(
   input: CreateJournalEntryFormInput,
   options: { locale: string; dateFormat: string }
 ) {
-  if (!isSameOfficeJournalEntry(input)) {
-    throw new Error('Cannot build a single journal entry payload for inter-branch offices.');
-  }
-
   return {
     locale: options.locale,
     dateFormat: options.dateFormat,
     officeId: input.debitOfficeId,
     currencyCode: input.currencyCode,
     transactionDate: input.transactionDate,
-    debits: input.debits.map((line) => mapJournalEntryLinePayload(line, input.debitDepartmentId)),
+    debits: input.debits.map((line) =>
+      mapJournalEntryLinePayload(line, input.debitOfficeId, input.debitDepartmentId)
+    ),
     credits: input.credits.map((line) =>
-      mapJournalEntryLinePayload(line, input.creditDepartmentId)
+      mapJournalEntryLinePayload(line, input.creditOfficeId, input.creditDepartmentId)
     ),
     referenceNumber: input.referenceNumber?.trim() || undefined,
     paymentTypeId: input.paymentTypeId,

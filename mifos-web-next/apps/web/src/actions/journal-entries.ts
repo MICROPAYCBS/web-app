@@ -13,7 +13,6 @@ import { assertCan } from '@mifos/auth';
 import {
   actionSuccessFromFineractCommand,
   expandBulkConstructJournalEntries,
-  expandInterBranchJournalEntry,
   isInterBranchJournalEntry,
   toFineractActionError,
   validateBulkConstructJournalEntriesForm,
@@ -46,7 +45,6 @@ import {
 } from '@/lib/fineract/journal-entries';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import { listFinancialActivityMappings } from '@/lib/fineract/financial-activity-mappings';
-import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getServerSession } from '@/lib/session/server';
 import { listAccountingRulesForFrequentPostings } from '@/lib/fineract/accounting-rules';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
@@ -60,7 +58,6 @@ export type JournalEntriesActionResult =
   | {
       ok: true;
       transactionId?: string;
-      transactionIds?: string[];
       interBranch?: boolean;
       pendingChecker?: boolean;
     }
@@ -166,57 +163,19 @@ async function createInterBranchJournalEntries(
     };
   }
 
-  const offices = await listOfficeOptions();
-  const officeNamesById = Object.fromEntries(
-    offices.map((office) => [office.id, office.name ?? office.nameDecorated ?? String(office.id)])
-  );
-
-  const expanded = expandInterBranchJournalEntry({
-    ...input,
-    clearingGlAccountId: clearing.clearingGlAccountId,
-    officeNamesById
-  });
-
-  const transactionIds: string[] = [];
-  let pendingChecker = false;
-
-  for (const entry of expanded) {
-    const validated = validateCreateJournalEntryForm(entry.input, validationContext);
-    if (!validated.success) {
-      return {
-        ok: false,
-        message: 'Generated journal entry failed validation.'
-      };
+  try {
+    const response = await createJournalEntry(input);
+    revalidateJournalEntryViews(response.transactionId);
+    const outcome = actionSuccessFromFineractCommand(response, {
+      transactionId: response.transactionId
+    });
+    if (!outcome.ok) {
+      return outcome;
     }
-
-    try {
-      const response = await createJournalEntry(validated.data);
-      const outcome = actionSuccessFromFineractCommand(response, {
-        transactionId: response.transactionId
-      });
-      if (!outcome.ok) {
-        return { ok: false, message: 'Failed to create journal entry.' };
-      }
-      if (response.transactionId) {
-        transactionIds.push(response.transactionId);
-      }
-      pendingChecker = pendingChecker || outcome.pendingChecker === true;
-    } catch (error) {
-      return toFineractActionError(error, 'Failed to create journal entry.');
-    }
+    return { ...outcome, interBranch: true };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to create journal entry.');
   }
-
-  for (const transactionId of transactionIds) {
-    revalidateJournalEntryViews(transactionId);
-  }
-
-  return {
-    ok: true,
-    transactionId: transactionIds[0],
-    transactionIds,
-    interBranch: true,
-    pendingChecker
-  };
 }
 
 export async function createJournalEntryAction(
