@@ -51,15 +51,21 @@ export interface FineractJournalEntriesPage {
 }
 
 export interface FineractJournalEntryMutationResponse {
-  transactionId: string;
+  /** Present when the entry committed; often absent while awaiting checker approval. */
+  transactionId?: string;
   officeId?: number;
   resourceId?: number;
+  commandId?: number;
+  rollbackTransaction?: boolean;
 }
 
 export interface FineractJournalEntryRevertResponse {
-  transactionId: string;
+  transactionId?: string;
   resourceId?: number;
+  commandId?: number;
+  rollbackTransaction?: boolean;
 }
+
 
 /** Same command-result shape as reverse; returned by `command=updateNarration`. */
 export type FineractJournalEntryUpdateNarrationResponse = FineractJournalEntryRevertResponse;

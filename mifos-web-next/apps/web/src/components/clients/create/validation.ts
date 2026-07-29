@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE, complianceProfileSchema, countValidClientIdentifiers, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE, clientAddressEntrySchema, complianceProfileSchema, countValidClientIdentifiers, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
@@ -211,6 +211,13 @@ export function validateAddressStep(draft: CreateClientDraft): StepErrors {
   }
   if (draft.addresses.some((entry) => entry.isPrimary && entry.isActive === false)) {
     return { address: 'Primary address must be active' };
+  }
+  for (let index = 0; index < draft.addresses.length; index += 1) {
+    const parsed = clientAddressEntrySchema.safeParse(draft.addresses[index]);
+    if (!parsed.success) {
+      const message = parsed.error.issues[0]?.message ?? 'Fix the address fields.';
+      return { address: `Address ${index + 1}: ${message}` };
+    }
   }
   return {};
 }

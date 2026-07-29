@@ -8,7 +8,11 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { createClientSchema } from './create-client.schema';
+import {
+  CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH,
+  clientAddressEntrySchema,
+  createClientSchema
+} from './create-client.schema';
 import { GENDER_FEMALE } from './gender';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
 
@@ -100,5 +104,60 @@ describe('createClientSchema clientIdentifiers', () => {
       familyMembers: []
     });
     assert.equal(result.success, true);
+  });
+});
+
+describe('clientAddressEntrySchema', () => {
+  it('accepts Micropay geographic fields with empty postal code', () => {
+    const result = clientAddressEntrySchema.safeParse({
+      addressTypeId: 1,
+      isActive: true,
+      isPrimary: true,
+      stateProvinceId: 10,
+      city: 'Kampala',
+      countyDistrict: 'Kampala Central',
+      addressLine1: 'Central Division',
+      addressLine2: 'Nakasero',
+      townVillage: 'Kololo',
+      street: 'Plot 1',
+      countryId: 1
+    });
+    assert.equal(result.success, true);
+  });
+
+  it('accepts postal codes up to 20 characters', () => {
+    const result = clientAddressEntrySchema.safeParse({
+      postalCode: '12345-6789'
+    });
+    assert.equal(result.success, true);
+  });
+
+  it('rejects postal codes longer than 20 characters', () => {
+    const tooLong = '1'.repeat(CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH + 1);
+    const result = clientAddressEntrySchema.safeParse({
+      postalCode: tooLong
+    });
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.ok(
+        result.error.issues.some((issue) =>
+          issue.message.includes('Postal code must be 20 characters or fewer')
+        )
+      );
+    }
+  });
+
+  it('rejects district/city longer than 100 characters', () => {
+    const result = clientAddressEntrySchema.safeParse({
+      city: 'x'.repeat(101)
+    });
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.ok(
+        result.error.issues.some((issue) =>
+          issue.message.includes('District must be 100 characters or fewer')
+        )
+      );
+    }
   });
 });

@@ -225,22 +225,23 @@ export function JournalEntryCreateForm({
         toastFineractError(result.message);
         return;
       }
-      if (result.transactionId) {
-        // Open the sheet from the list page after navigation — starting the fetch on the
-        // create page can leave loading stuck when the route transition aborts the action.
-        router.push(journalEntriesListPathWithOpenTransaction(result.transactionId));
-      } else {
-        router.push(JOURNAL_ENTRIES_LIST_PATH);
-        return;
-      }
+
       toastCommandOutcome(result, {
         completed: result.interBranch
           ? 'Cross-branch journal entry created.'
           : 'Journal entry created.',
         pending: result.interBranch
           ? 'Cross-branch journal entry sent for approval.'
-          : 'Journal entry created sent for approval.'
+          : 'Journal entry sent for approval.'
       });
+
+      if (result.pendingChecker || !result.transactionId) {
+        router.push(JOURNAL_ENTRIES_LIST_PATH);
+      } else {
+        // Open the sheet from the list page after navigation — starting the fetch on the
+        // create page can leave loading stuck when the route transition aborts the action.
+        router.push(journalEntriesListPathWithOpenTransaction(result.transactionId));
+      }
       router.refresh();
     });
   }

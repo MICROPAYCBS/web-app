@@ -51,18 +51,71 @@ export const familyMemberSchema = z.object({
 export const CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE =
   'Add at least one next of kin for individual customers';
 
+/** Fineract `m_address` text columns (Micropay mapping). */
+export const CLIENT_ADDRESS_TEXT_MAX_LENGTH = 100;
+/** Fineract `m_address.postal_code` — postal/ZIP only, not geographic names. */
+export const CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH = 20;
+
 export const clientAddressEntrySchema = z.object({
   addressTypeId: z.coerce.number().int().positive().optional(),
-  postalCode: z.string().trim().max(20).optional(),
-  street: z.string().trim().max(200).optional(),
-  addressLine1: z.string().trim().max(200).optional(),
-  addressLine2: z.string().trim().max(200).optional(),
-  addressLine3: z.string().trim().max(200).optional(),
-  townVillage: z.string().trim().max(100).optional(),
-  city: z.string().trim().max(100).optional(),
+  postalCode: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH, {
+      message: 'Postal code must be 20 characters or fewer.'
+    })
+    .optional(),
+  street: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_TEXT_MAX_LENGTH, {
+      message: 'Street must be 100 characters or fewer.'
+    })
+    .optional(),
+  addressLine1: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_TEXT_MAX_LENGTH, {
+      message: 'SubCounty must be 100 characters or fewer.'
+    })
+    .optional(),
+  addressLine2: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_TEXT_MAX_LENGTH, {
+      message: 'Parish must be 100 characters or fewer.'
+    })
+    .optional(),
+  addressLine3: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_TEXT_MAX_LENGTH, {
+      message: 'Must be 100 characters or fewer.'
+    })
+    .optional(),
+  townVillage: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_TEXT_MAX_LENGTH, {
+      message: 'Village must be 100 characters or fewer.'
+    })
+    .optional(),
+  city: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_TEXT_MAX_LENGTH, {
+      message: 'District must be 100 characters or fewer.'
+    })
+    .optional(),
   stateProvinceId: z.coerce.number().int().positive().optional(),
   countryId: z.coerce.number().int().positive().optional(),
-  countyDistrict: z.string().trim().max(100).optional(),
+  countyDistrict: z
+    .string()
+    .trim()
+    .max(CLIENT_ADDRESS_TEXT_MAX_LENGTH, {
+      message: 'County must be 100 characters or fewer.'
+    })
+    .optional(),
   latitude: z.coerce.number().min(-90).max(90).optional(),
   longitude: z.coerce.number().min(-180).max(180).optional(),
   isActive: z.boolean().optional(),

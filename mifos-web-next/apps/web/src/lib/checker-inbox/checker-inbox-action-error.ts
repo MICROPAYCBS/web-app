@@ -56,7 +56,7 @@ export function formatCheckerInboxActionError(
   }
 
   if (NOT_AWAITING_APPROVAL_PATTERN.test(text)) {
-    return 'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.';
+    return 'This task is not awaiting approval, so it cannot be approved or rejected.';
   }
 
   const workflowCheckerMatch = text.match(WORKFLOW_CHECKER_PERMISSION_PATTERN);

@@ -57,6 +57,24 @@ describe('resolveFineractErrorItemMessage', () => {
       'The command ACTIVATE_SAVINGSACCOUNT is not supported. Can not be checked by the same user.'
     );
   });
+
+  it('maps Address max-length codes to Micropay field labels', () => {
+    assert.equal(
+      resolveFineractErrorItemMessage({
+        parameterName: 'postalCode',
+        defaultUserMessage: 'The parameter `postalCode` exceeds max length of 20.',
+        userMessageGlobalisationCode: 'validation.msg.Address.postalCode.exceeds.max.length'
+      }),
+      'Postal code must be 20 characters or fewer.'
+    );
+    assert.equal(
+      resolveFineractErrorItemMessage({
+        parameterName: 'city',
+        userMessageGlobalisationCode: 'validation.msg.Address.city.exceeds.max.length'
+      }),
+      'District must be 100 characters or fewer.'
+    );
+  });
 });
 
 describe('sanitizeRawDatabaseErrorMessage', () => {

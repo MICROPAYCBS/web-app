@@ -14,6 +14,16 @@ import {
   checkerCommandHighlights
 } from '@/lib/checker-inbox/checker-inbox-command-summary';
 import {
+  createClientDisplayNameFromCommandAsJson,
+  isCreateClientCheckerCommand
+} from '@/lib/checker-inbox/create-client-command-review';
+import {
+  isCreateJournalEntryCheckerCommand,
+  isJournalEntryCheckerEntity,
+  journalEntrySubjectFromCommandAsJson,
+  journalEntryTransactionIdFromCommandAsJson
+} from '@/lib/checker-inbox/journal-entry-command-review';
+import {
   matchApprovalWorkflowForCheckerItem,
   resolveMakerCheckerTaskPermissionCode,
   type ApprovalWorkflowRuntimeContext
@@ -25,11 +35,15 @@ import type {
 import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
 import { getWorkflowInstanceByCommandSourceId } from '@/lib/fineract/workflow-instances';
 import { getAuditTrail } from '@/lib/fineract/audit-trails';
+import {
+  isAwaitingApprovalAuditResult
+} from '@/lib/fineract/audit-trail-display';
 import { centerDetailPath } from '@/lib/fineract/center-paths';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import { clientGeneralPath } from '@/lib/fineract/client-action-paths';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { groupDetailPath } from '@/lib/fineract/group-paths';
+import { journalEntryTransactionPath } from '@/lib/accounting/journal-entry-links';
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
 import { loanAccountProductName } from '@/lib/fineract/loan-account-display';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
@@ -116,12 +130,20 @@ function resolveClientContext(
   clientId: number,
   audit: FineractAuditTrailDetail | null
 ): CheckerInboxItemContext {
-  const customerName = audit?.clientName?.trim() || `Customer #${clientId}`;
-  const commandHighlights = checkerCommandHighlights(audit?.commandAsJson);
+  const fromCommand = createClientDisplayNameFromCommandAsJson(audit?.commandAsJson);
+  const customerName =
+    audit?.clientName?.trim() || fromCommand || `Customer #${clientId}`;
+  const isPendingCreate =
+    isCreateClientCheckerCommand(audit?.actionName, audit?.entityName) &&
+    isAwaitingApprovalAuditResult(audit?.processingResult);
+  const commandHighlights = checkerCommandHighlights(audit?.commandAsJson, {
+    actionName: audit?.actionName,
+    entityName: audit?.entityName
+  });
 
   return {
-    href: clientGeneralPath(clientId),
-    hrefLabel: 'Open customer',
+    href: isPendingCreate ? undefined : clientGeneralPath(clientId),
+    hrefLabel: isPendingCreate ? undefined : 'Open customer',
     subjectLabel: customerName,
     customerName,
     commandHighlights,
@@ -129,7 +151,6 @@ function resolveClientContext(
       actionName: audit?.actionName,
       entityName: audit?.entityName ?? 'CLIENT',
       subjectLabel: customerName,
-      customerName,
       commandHighlights
     })
   };
@@ -150,6 +171,40 @@ function resolveGroupContext(
     summary: buildCheckerInboxSummary({
       actionName: audit?.actionName,
       entityName: audit?.entityName ?? 'GROUP',
+      subjectLabel,
+      commandHighlights
+    })
+  };
+}
+
+function resolveJournalEntryContext(
+  audit: FineractAuditTrailDetail | null,
+  item?: CheckerInboxListItem
+): CheckerInboxItemContext {
+  const actionName = item?.actionName ?? audit?.actionName;
+  const entityName = item?.entityName ?? audit?.entityName ?? 'JOURNALENTRY';
+  const fromCommand = journalEntrySubjectFromCommandAsJson(audit?.commandAsJson);
+  const subjectLabel =
+    fromCommand ||
+    audit?.officeName?.trim() ||
+    (audit?.resourceId != null ? `Journal entry #${audit.resourceId}` : 'Journal entry');
+  const isPendingCreate =
+    isCreateJournalEntryCheckerCommand(actionName, entityName) &&
+    isAwaitingApprovalAuditResult(audit?.processingResult);
+  const transactionId = journalEntryTransactionIdFromCommandAsJson(audit?.commandAsJson);
+  const commandHighlights = checkerCommandHighlights(audit?.commandAsJson, {
+    actionName,
+    entityName
+  });
+
+  return {
+    href: isPendingCreate || !transactionId ? undefined : journalEntryTransactionPath(transactionId),
+    hrefLabel: isPendingCreate || !transactionId ? undefined : 'Open journal entry',
+    subjectLabel,
+    commandHighlights,
+    summary: buildCheckerInboxSummary({
+      actionName,
+      entityName,
       subjectLabel,
       commandHighlights
     })
@@ -181,9 +236,22 @@ function fallbackContext(
   item: CheckerInboxListItem,
   audit: FineractAuditTrailDetail | null
 ): CheckerInboxItemContext {
-  const commandHighlights = checkerCommandHighlights(audit?.commandAsJson);
-  const customerName = audit?.clientName?.trim();
+  if (isJournalEntryCheckerEntity(item.entityName ?? audit?.entityName)) {
+    return resolveJournalEntryContext(audit, item);
+  }
+  const commandHighlights = checkerCommandHighlights(audit?.commandAsJson, {
+    actionName: item.actionName ?? audit?.actionName,
+    entityName: item.entityName ?? audit?.entityName
+  });
+  const fromCommand = isCreateClientCheckerCommand(
+    item.actionName ?? audit?.actionName,
+    item.entityName ?? audit?.entityName
+  )
+    ? createClientDisplayNameFromCommandAsJson(audit?.commandAsJson)
+    : undefined;
+  const customerName = audit?.clientName?.trim() || fromCommand;
   const subjectLabel =
+    customerName ||
     audit?.savingsAccountNo?.trim() ||
     (item.resourceId != null ? `${item.entityName ?? 'Resource'} #${item.resourceId}` : undefined);
 
@@ -195,7 +263,6 @@ function fallbackContext(
       actionName: item.actionName,
       entityName: item.entityName,
       subjectLabel,
-      customerName,
       commandHighlights
     })
   };
@@ -276,6 +343,10 @@ async function resolveEntityContext(
       return resolveGroupContext(resourceId, audit);
     case 'CENTER':
       return resolveCenterContext(resourceId, audit);
+    case 'JOURNALENTRY':
+    case 'JOURNAL_ENTRY':
+    case 'JOURNAL ENTRY':
+      return resolveJournalEntryContext(audit, item);
     default:
       return fallbackContext(item, audit);
   }

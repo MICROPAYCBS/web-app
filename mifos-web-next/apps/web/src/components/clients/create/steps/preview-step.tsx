@@ -35,7 +35,8 @@ export function PreviewStep({
   validationIssues = [],
   incomeSourceOptions,
   identifierDocumentTypes = [],
-  contactTypeOptions = []
+  contactTypeOptions = [],
+  mode = 'wizard'
 }: {
   template: FineractClientTemplate;
   draft: CreateClientDraft;
@@ -44,6 +45,8 @@ export function PreviewStep({
   incomeSourceOptions?: FineractIncomeSourceOptions;
   identifierDocumentTypes?: { id: number; name: string }[];
   contactTypeOptions?: ContactType[];
+  /** `review` hides create validation chrome and uses checker-oriented copy. */
+  mode?: 'wizard' | 'review';
 }) {
   const g = draft.general;
   const legalForm = template.clientLegalFormOptions?.find((o) => o.id === g.legalFormId);
@@ -58,10 +61,12 @@ export function PreviewStep({
   );
   const customerClass = template.customerClassOptions?.find((c) => c.id === g.customerClassId);
   const staff = template.staffOptions?.find((o) => o.id === g.staffId);
+  const office = template.officeOptions?.find((o) => o.id === g.officeId);
   const isPerson = (g.legalFormId ?? LEGAL_FORM_PERSON) === LEGAL_FORM_PERSON;
   const customerClassLabel = customerClass
     ? `${customerClass.classCode} — ${customerClass.className}`
     : undefined;
+  const isReview = mode === 'review';
 
   function incomeSourceTypeLabel(incomeSourceTypeId: number): string | undefined {
     return incomeSourceOptions?.incomeSourceTypeOptions?.find((o) => o.id === incomeSourceTypeId)?.name;
@@ -70,9 +75,11 @@ export function PreviewStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Review the information below before creating the customer.
+        {isReview
+          ? 'Review the customer details below before approving.'
+          : 'Review the information below before creating the customer.'}
       </p>
-      {validationIssues.length > 0 ? (
+      {!isReview && validationIssues.length > 0 ? (
         <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           <p className="font-medium">Still required before you can create this customer:</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -82,7 +89,7 @@ export function PreviewStep({
           </ul>
         </div>
       ) : null}
-      {submitError ? (
+      {!isReview && submitError ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {submitError}
         </p>
@@ -171,9 +178,17 @@ export function PreviewStep({
       {template.isAddressEnabled && draft.addresses.length === 0 ? (
         <>
           <section className="space-y-2">
-            <h2 className="text-sm font-medium text-destructive">Address</h2>
+            <h2
+              className={
+                isReview ? 'text-sm font-medium' : 'text-sm font-medium text-destructive'
+              }
+            >
+              Address
+            </h2>
             <p className="text-sm text-muted-foreground">
-              No address added yet. Go back to the Address step and add at least one address.
+              {isReview
+                ? 'No address included in this create request.'
+                : 'No address added yet. Go back to the Address step and add at least one address.'}
             </p>
           </section>
           <Separator />
@@ -321,6 +336,14 @@ export function PreviewStep({
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Account opening</h2>
         <Field
+          label="Branch"
+          value={
+            office?.name ??
+            office?.nameDecorated ??
+            (g.officeId != null ? `Office #${g.officeId}` : undefined)
+          }
+        />
+        <Field
           label="Relationship officer"
           value={
             staff?.displayName ??
@@ -329,7 +352,7 @@ export function PreviewStep({
         />
         {isPerson && g.isStaff ? <Field label="Is staff" value="Yes" /> : null}
         <Field label="Submitted on" value={g.submittedOnDate} />
-        <Field label="Status" value="Pending" />
+        <Field label="Status" value={isReview ? 'Awaiting approval' : 'Pending'} />
         {g.savingsProductId ? (
           <Field
             label="Savings product on activation"

@@ -8,15 +8,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Check, Trash2, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '@mifos/auth';
 import { toastFineractError } from '@/lib/toast-fineract-error';
-import {
-  bulkDeleteCheckerInboxItemsAction,
-  bulkExecuteCheckerInboxActionAction
-} from '@/actions/checker-inbox';
+import { bulkExecuteCheckerInboxActionAction } from '@/actions/checker-inbox';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
 import { CheckerInboxFilterSheet } from '@/components/tasks/checker-inbox-filter-sheet';
@@ -64,7 +61,7 @@ import {
   type CheckerInboxTab
 } from '@/lib/fineract/checker-inbox-paths';
 
-type ConfirmAction = 'approve' | 'reject' | 'delete';
+type ConfirmAction = 'approve' | 'reject';
 
 function pageDescription(tab: CheckerInboxTab, approvalWorkflowsEnabled: boolean): string {
   if (tab === CHECKER_INBOX_TAB_MY_SUBMISSIONS) {
@@ -181,7 +178,7 @@ export function CheckerInboxPageContent({
   );
 
   function runBulkAction(action: ConfirmAction) {
-    if ((hasSelfBlockedSelection || isMySubmissionsTab) && action !== 'delete') {
+    if (hasSelfBlockedSelection || isMySubmissionsTab) {
       return;
     }
     const ids = selectedItems.map((item) => item.id);
@@ -192,13 +189,10 @@ export function CheckerInboxPageContent({
       ])
     );
     startTransition(async () => {
-      const result =
-        action === 'delete'
-          ? await bulkDeleteCheckerInboxItemsAction(ids)
-          : await bulkExecuteCheckerInboxActionAction(ids, action, itemsById);
+      const result = await bulkExecuteCheckerInboxActionAction(ids, action, itemsById);
       if (!toastCheckerInboxActionOutcome(action, result, {
         stageLabel:
-          action !== 'delete' && selectedItems.length === 1
+          selectedItems.length === 1
             ? (() => {
                 const stage = resolveCheckerInboxWorkflowStageContext(selectedItems[0].context);
                 return stage ? formatCheckerInboxWorkflowStageHeadline(stage) : undefined;
@@ -226,8 +220,8 @@ export function CheckerInboxPageContent({
         title="Pending tasks"
         description={pageDescription(activeTab, approvalWorkflowsEnabled)}
         actions={
-          <>
-            {!isMySubmissionsTab ? (
+          !isMySubmissionsTab ? (
+            <>
               <Button
                 type="button"
                 disabled={checkerActionsDisabled}
@@ -236,17 +230,6 @@ export function CheckerInboxPageContent({
                 <Check className="mr-2 size-4" />
                 Approve
               </Button>
-            ) : null}
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={pending || !hasSelection}
-              onClick={() => setConfirmAction('delete')}
-            >
-              <Trash2 className="mr-2 size-4" />
-              Delete
-            </Button>
-            {!isMySubmissionsTab ? (
               <Button
                 type="button"
                 variant="outline"
@@ -256,8 +239,8 @@ export function CheckerInboxPageContent({
                 <X className="mr-2 size-4" />
                 Reject
               </Button>
-            ) : null}
-          </>
+            </>
+          ) : undefined
         }
       >
         <div className="space-y-4">
@@ -315,9 +298,7 @@ export function CheckerInboxPageContent({
             <DialogTitle>
               {confirmAction === 'approve'
                 ? `Approve ${selectedItems.length} checker item${selectedItems.length === 1 ? '' : 's'}`
-                : confirmAction === 'reject'
-                  ? `Reject ${selectedItems.length} checker item${selectedItems.length === 1 ? '' : 's'}`
-                  : `Delete ${selectedItems.length} checker item${selectedItems.length === 1 ? '' : 's'}`}
+                : `Reject ${selectedItems.length} checker item${selectedItems.length === 1 ? '' : 's'}`}
             </DialogTitle>
             <DialogDescription>
               {confirmAction === 'approve'
@@ -329,23 +310,21 @@ export function CheckerInboxPageContent({
                     )
                   : bulkWorkflowStageDescription ??
                     'Review the selected requests before approving.'
-                : confirmAction === 'reject'
-                  ? singleSelectedItem
-                    ? checkerInboxWorkflowStageConfirmDescription(
+                : singleSelectedItem
+                  ? checkerInboxWorkflowStageConfirmDescription(
+                      singleSelectedItem.context,
+                      'reject',
+                      checkerInboxConfirmDescription(
                         singleSelectedItem.context,
-                        'reject',
-                        checkerInboxConfirmDescription(
-                          singleSelectedItem.context,
-                          singleSelectedItem.id
-                        )
+                        singleSelectedItem.id
                       )
-                    : bulkWorkflowStageDescription ??
-                      'These requests will be rejected and will not be applied.'
-                  : 'These pending requests will be removed from the inbox.'}
+                    )
+                  : bulkWorkflowStageDescription ??
+                    'These requests will be rejected and will not be applied.'}
             </DialogDescription>
           </DialogHeader>
           <CheckerInboxSelfApprovalNotice block={bulkSelfApprovalBlock} />
-          {singleSelectedItem && (confirmAction === 'approve' || confirmAction === 'reject') ? (
+          {singleSelectedItem && confirmAction ? (
             <CheckerInboxWorkflowStageNotice
               context={singleSelectedItem.context}
               action={confirmAction}
@@ -359,7 +338,6 @@ export function CheckerInboxPageContent({
             </Button>
             <Button
               type="button"
-              variant={confirmAction === 'delete' ? 'destructive' : 'default'}
               disabled={pending}
               onClick={() => confirmAction && runBulkAction(confirmAction)}
             >
@@ -371,15 +349,13 @@ export function CheckerInboxPageContent({
                       'Approve'
                     )
                   : 'Approve'
-                : confirmAction === 'reject'
-                  ? singleSelectedItem
-                    ? checkerInboxWorkflowStageActionButtonLabel(
-                        singleSelectedItem.context,
-                        'reject',
-                        'Reject'
-                      )
-                    : 'Reject'
-                  : 'Delete'}
+                : singleSelectedItem
+                  ? checkerInboxWorkflowStageActionButtonLabel(
+                      singleSelectedItem.context,
+                      'reject',
+                      'Reject'
+                    )
+                  : 'Reject'}
             </Button>
           </DialogFooter>
         </DialogContent>

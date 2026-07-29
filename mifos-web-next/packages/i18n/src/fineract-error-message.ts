@@ -98,13 +98,19 @@ export function resolveFineractErrorItemMessage(item?: FineractErrorItem | null)
 
   const code = item.userMessageGlobalisationCode;
   const raw = resolveFineractErrorItemRawMessage(item);
-  if (raw) {
-    if (code) {
-      const translated = translateFineractCode(code);
-      if (translated !== code && isGenericFineractValidationMessage(raw)) {
+  if (code) {
+    const translated = translateFineractCode(code);
+    if (translated !== code) {
+      if (
+        !raw ||
+        isGenericFineractValidationMessage(raw) ||
+        code.startsWith('validation.msg.Address.')
+      ) {
         return translated;
       }
     }
+  }
+  if (raw) {
     return raw;
   }
 

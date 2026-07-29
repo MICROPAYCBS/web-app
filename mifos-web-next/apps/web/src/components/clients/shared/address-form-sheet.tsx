@@ -9,7 +9,12 @@
  */
 
 import type { FineractAddressFieldConfig, FineractClientTemplate } from '@mifos/api-client';
-import type { ClientAddressEntry } from '@mifos/validation';
+import {
+  CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH,
+  CLIENT_ADDRESS_TEXT_MAX_LENGTH,
+  clientAddressEntrySchema,
+  type ClientAddressEntry
+} from '@mifos/validation';
 import { LocateFixed } from 'lucide-react';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { LocationCascadeSelect } from '@/components/clients/shared/location-cascade-select';
@@ -19,6 +24,7 @@ import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
+import { addressFieldConfigurationLabel } from '@/lib/fineract/address-field-configuration-display';
 import type { FormSubmitResult } from '@/lib/form/submit-result';
 import { toSelectOptions } from '@/lib/form/select-options';
 import { readCurrentGpsPosition } from '@/lib/geolocation/coordinates';
@@ -155,43 +161,76 @@ function buildAddressFormState(
   };
 }
 
+function characterCountHint(value: string | undefined, max: number): string {
+  const length = (value ?? '').trim().length;
+  return `${length} / ${max}`;
+}
+
 function AddressLineFields({
   fieldConfig,
   form,
-  onChange
+  onChange,
+  /** When cascade owns Sub-county/Parish, only show optional address line 3. */
+  cascadeMode = false
 }: {
   fieldConfig: FineractAddressFieldConfig[];
   form: ClientAddressEntry;
   onChange: (entry: ClientAddressEntry) => void;
+  cascadeMode?: boolean;
 }) {
   return (
     <>
-      {isFieldEnabled(fieldConfig, 'addressLine1') ? (
+      {!cascadeMode && isFieldEnabled(fieldConfig, 'addressLine1') ? (
         <TextField
-          label="Address line 1"
+          label={addressFieldConfigurationLabel('addressLine1')}
           optional
           value={form.addressLine1 ?? ''}
           onChange={(v) => onChange({ ...form, addressLine1: v })}
+          maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+          hint={characterCountHint(form.addressLine1, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
         />
       ) : null}
-      {isFieldEnabled(fieldConfig, 'addressLine2') ? (
+      {!cascadeMode && isFieldEnabled(fieldConfig, 'addressLine2') ? (
         <TextField
-          label="Address line 2"
+          label={addressFieldConfigurationLabel('addressLine2')}
           optional
           value={form.addressLine2 ?? ''}
           onChange={(v) => onChange({ ...form, addressLine2: v })}
+          maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+          hint={characterCountHint(form.addressLine2, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
         />
       ) : null}
       {isFieldEnabled(fieldConfig, 'addressLine3') ? (
         <TextField
           className="sm:col-span-2"
-          label="Address line 3"
+          label={addressFieldConfigurationLabel('addressLine3')}
           optional
           value={form.addressLine3 ?? ''}
           onChange={(v) => onChange({ ...form, addressLine3: v })}
+          maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+          hint={characterCountHint(form.addressLine3, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
         />
       ) : null}
     </>
+  );
+}
+
+function PostalCodeField({
+  form,
+  onChange
+}: {
+  form: ClientAddressEntry;
+  onChange: (entry: ClientAddressEntry) => void;
+}) {
+  return (
+    <TextField
+      label="Postal code"
+      optional
+      value={form.postalCode ?? ''}
+      onChange={(v) => onChange({ ...form, postalCode: v })}
+      maxLength={CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH}
+      hint={`Optional. Postal/ZIP only — not region or district names. ${characterCountHint(form.postalCode, CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH)}`}
+    />
   );
 }
 
@@ -292,15 +331,34 @@ export function AddressFormSheet({
         ? {
             ...form,
             ...locationFields,
-            addressLine1: form.addressLine1,
-            addressLine2: form.addressLine2,
-            addressLine3: form.addressLine3,
+            // Cascade owns Sub-county / Parish; keep optional line 3 and street from the form.
+            addressLine3: form.addressLine3?.trim() || undefined,
+            street: form.street?.trim() || undefined,
+            postalCode: form.postalCode?.trim() || undefined,
             isActive: form.isActive ?? true,
             isPrimary: form.isPrimary ?? false
           }
-        : { ...form, isActive: form.isActive ?? true, isPrimary: form.isPrimary ?? false };
+        : {
+            ...form,
+            street: form.street?.trim() || undefined,
+            addressLine1: form.addressLine1?.trim() || undefined,
+            addressLine2: form.addressLine2?.trim() || undefined,
+            addressLine3: form.addressLine3?.trim() || undefined,
+            townVillage: form.townVillage?.trim() || undefined,
+            city: form.city?.trim() || undefined,
+            countyDistrict: form.countyDistrict?.trim() || undefined,
+            postalCode: form.postalCode?.trim() || undefined,
+            isActive: form.isActive ?? true,
+            isPrimary: form.isPrimary ?? false
+          };
 
-      const result = await onSave(entry);
+      const parsed = clientAddressEntrySchema.safeParse(entry);
+      if (!parsed.success) {
+        setError(parsed.error.issues[0]?.message ?? 'Fix the highlighted address fields.');
+        return;
+      }
+
+      const result = await onSave(parsed.data);
       if (result.ok) {
         handleOpenChange(false);
         return;
@@ -364,20 +422,22 @@ export function AddressFormSheet({
             {isFieldEnabled(fieldConfig, 'street') ? (
               <TextField
                 className="sm:col-span-2"
-                label="Street"
+                label={addressFieldConfigurationLabel('street')}
                 optional
                 value={form.street ?? ''}
                 onChange={(v) => setForm({ ...form, street: v })}
+                maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+                hint={characterCountHint(form.street, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
               />
             ) : null}
-            <AddressLineFields fieldConfig={fieldConfig} form={form} onChange={setForm} />
+            <AddressLineFields
+              fieldConfig={fieldConfig}
+              form={form}
+              onChange={setForm}
+              cascadeMode
+            />
             {isFieldEnabled(fieldConfig, 'postalCode') ? (
-              <TextField
-                label="Postal code"
-                optional
-                value={form.postalCode ?? ''}
-                onChange={(v) => setForm({ ...form, postalCode: v })}
-              />
+              <PostalCodeField form={form} onChange={setForm} />
             ) : null}
             <CoordinateFields
               open={open}
@@ -392,32 +452,38 @@ export function AddressFormSheet({
             {isFieldEnabled(fieldConfig, 'street') ? (
               <TextField
                 className="sm:col-span-2"
-                label="Street"
+                label={addressFieldConfigurationLabel('street')}
                 optional
                 value={form.street ?? ''}
                 onChange={(v) => setForm({ ...form, street: v })}
+                maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+                hint={characterCountHint(form.street, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
               />
             ) : null}
             <AddressLineFields fieldConfig={fieldConfig} form={form} onChange={setForm} />
             {isFieldEnabled(fieldConfig, 'townVillage') ? (
               <TextField
-                label="Town / village"
+                label={addressFieldConfigurationLabel('townVillage')}
                 optional
                 value={form.townVillage ?? ''}
                 onChange={(v) => setForm({ ...form, townVillage: v })}
+                maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+                hint={characterCountHint(form.townVillage, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
               />
             ) : null}
             {isFieldEnabled(fieldConfig, 'city') ? (
               <TextField
-                label="City"
+                label={addressFieldConfigurationLabel('city')}
                 optional
                 value={form.city ?? ''}
                 onChange={(v) => setForm({ ...form, city: v })}
+                maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+                hint={characterCountHint(form.city, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
               />
             ) : null}
             {isFieldEnabled(fieldConfig, 'stateProvinceId') ? (
               <SelectField
-                label="State / province"
+                label={addressFieldConfigurationLabel('stateProvinceId')}
                 optional
                 value={form.stateProvinceId ? String(form.stateProvinceId) : undefined}
                 onValueChange={(v) =>
@@ -427,19 +493,16 @@ export function AddressFormSheet({
               />
             ) : null}
             {isFieldEnabled(fieldConfig, 'postalCode') ? (
-              <TextField
-                label="Postal code"
-                optional
-                value={form.postalCode ?? ''}
-                onChange={(v) => setForm({ ...form, postalCode: v })}
-              />
+              <PostalCodeField form={form} onChange={setForm} />
             ) : null}
             {isFieldEnabled(fieldConfig, 'countyDistrict') ? (
               <TextField
-                label="County district"
+                label={addressFieldConfigurationLabel('countyDistrict')}
                 optional
                 value={form.countyDistrict ?? ''}
                 onChange={(v) => setForm({ ...form, countyDistrict: v })}
+                maxLength={CLIENT_ADDRESS_TEXT_MAX_LENGTH}
+                hint={characterCountHint(form.countyDistrict, CLIENT_ADDRESS_TEXT_MAX_LENGTH)}
               />
             ) : null}
             <CoordinateFields

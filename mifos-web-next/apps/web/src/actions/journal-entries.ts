@@ -60,6 +60,7 @@ export type JournalEntriesActionResult =
       transactionId?: string;
       interBranch?: boolean;
       pendingChecker?: boolean;
+      commandId?: number;
     }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 

@@ -76,6 +76,22 @@ const ERROR_MESSAGES: Record<string, string> = {
     'PEP position is required when the customer is a PEP.',
   'validation.msg.ComplianceProfile.fatcaRegistrationNo.cannot.be.blank':
     'FATCA registration number is required when FATCA registered is selected.',
+  'validation.msg.Address.postalCode.exceeds.max.length':
+    'Postal code must be 20 characters or fewer.',
+  'validation.msg.Address.city.exceeds.max.length':
+    'District must be 100 characters or fewer.',
+  'validation.msg.Address.countyDistrict.exceeds.max.length':
+    'County must be 100 characters or fewer.',
+  'validation.msg.Address.addressLine1.exceeds.max.length':
+    'SubCounty must be 100 characters or fewer.',
+  'validation.msg.Address.addressLine2.exceeds.max.length':
+    'Parish must be 100 characters or fewer.',
+  'validation.msg.Address.addressLine3.exceeds.max.length':
+    'Must be 100 characters or fewer.',
+  'validation.msg.Address.townVillage.exceeds.max.length':
+    'Village must be 100 characters or fewer.',
+  'validation.msg.Address.street.exceeds.max.length':
+    'Street must be 100 characters or fewer.',
   'error.msg.cashier.insufficient.amount.exception':
     'The cashier does not have enough cash for this transaction.',
   'error.msg.cashier.active.session.required.exception':

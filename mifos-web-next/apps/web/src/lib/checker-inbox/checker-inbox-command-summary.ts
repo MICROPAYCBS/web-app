@@ -7,6 +7,16 @@
  */
 
 import {
+  CREATE_CLIENT_PREFERRED_COMMAND_KEYS,
+  createClientCommandHighlightLimit,
+  isCreateClientCheckerCommand
+} from '@/lib/checker-inbox/create-client-command-review';
+import {
+  JOURNAL_ENTRY_PREFERRED_COMMAND_KEYS,
+  isJournalEntryCheckerEntity,
+  journalEntryCommandHighlightLimit
+} from '@/lib/checker-inbox/journal-entry-command-review';
+import {
   formatAuditTrailFilterLabel,
   parseAuditTrailCommandFields
 } from '@/lib/fineract/audit-trail-display';
@@ -25,21 +35,41 @@ const PREFERRED_COMMAND_KEYS = [
   'dateFormat'
 ] as const;
 
-function commandFieldRank(key: string): number {
+function commandFieldRank(key: string, preferredKeys: readonly string[]): number {
   const topLevel = key.split('.')[0] ?? key;
-  const index = PREFERRED_COMMAND_KEYS.indexOf(topLevel as (typeof PREFERRED_COMMAND_KEYS)[number]);
-  return index >= 0 ? index : PREFERRED_COMMAND_KEYS.length + 1;
+  const index = preferredKeys.indexOf(topLevel);
+  return index >= 0 ? index : preferredKeys.length + 1;
 }
 
 /** Human-readable bullets from a queued Fineract command payload. */
 export function checkerCommandHighlights(
   commandAsJson: string | undefined,
-  options?: { limit?: number }
+  options?: {
+    limit?: number;
+    preferredKeys?: readonly string[];
+    actionName?: string | null;
+    entityName?: string | null;
+  }
 ): string[] {
-  const limit = options?.limit ?? 4;
+  const isCreateClient = isCreateClientCheckerCommand(options?.actionName, options?.entityName);
+  const isJournalEntry = isJournalEntryCheckerEntity(options?.entityName);
+  const preferredKeys =
+    options?.preferredKeys ??
+    (isCreateClient
+      ? CREATE_CLIENT_PREFERRED_COMMAND_KEYS
+      : isJournalEntry
+        ? JOURNAL_ENTRY_PREFERRED_COMMAND_KEYS
+        : PREFERRED_COMMAND_KEYS);
+  const limit =
+    options?.limit ??
+    (isCreateClient
+      ? createClientCommandHighlightLimit()
+      : isJournalEntry
+        ? journalEntryCommandHighlightLimit()
+        : 4);
   return parseAuditTrailCommandFields(commandAsJson)
     .filter((field) => field.display.trim() && field.display !== '—' && field.display !== '{}')
-    .sort((a, b) => commandFieldRank(a.key) - commandFieldRank(b.key))
+    .sort((a, b) => commandFieldRank(a.key, preferredKeys) - commandFieldRank(b.key, preferredKeys))
     .slice(0, limit)
     .map((field) => `${field.label}: ${field.display}`);
 }

@@ -52,6 +52,8 @@ export {
   datatablePayloadSchema,
   familyMemberSchema,
   CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE,
+  CLIENT_ADDRESS_TEXT_MAX_LENGTH,
+  CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH,
   type ClientAddressEntry,
   type CreateClientInput,
   type CreateClientPayload,

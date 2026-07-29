@@ -38,6 +38,32 @@ import { createFineractClient } from '@/lib/fineract/create-client';
 
 const JOURNAL_ENTRIES_PATH = '/journalentries';
 
+function normalizeJournalEntryMutationResponse(
+  raw: {
+    transactionId?: string;
+    officeId?: number;
+    resourceId?: number;
+    commandId?: number;
+    rollbackTransaction?: boolean;
+  } | null | undefined,
+  fallbackTransactionId?: string
+): FineractJournalEntryMutationResponse {
+  const transactionIdRaw = raw?.transactionId ?? fallbackTransactionId;
+  const transactionId =
+    typeof transactionIdRaw === 'string' && transactionIdRaw.trim()
+      ? transactionIdRaw.trim()
+      : undefined;
+  return {
+    ...(transactionId ? { transactionId } : {}),
+    ...(raw?.officeId != null ? { officeId: raw.officeId } : {}),
+    ...(raw?.resourceId != null ? { resourceId: raw.resourceId } : {}),
+    ...(raw?.commandId != null ? { commandId: raw.commandId } : {}),
+    ...(raw?.rollbackTransaction != null
+      ? { rollbackTransaction: raw.rollbackTransaction }
+      : {})
+  };
+}
+
 function normalizeEnumOption(raw: unknown): FineractEnumOption | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -252,11 +278,7 @@ export async function createJournalEntry(
     delete body.externalAssetOwner;
   }
   const raw = await fineract.post<FineractJournalEntryMutationResponse>(JOURNAL_ENTRIES_PATH, body);
-  return {
-    transactionId: String(raw?.transactionId ?? ''),
-    officeId: raw?.officeId,
-    resourceId: raw?.resourceId
-  };
+  return normalizeJournalEntryMutationResponse(raw);
 }
 
 export async function revertJournalEntryTransaction(
@@ -270,10 +292,7 @@ export async function revertJournalEntryTransaction(
     body,
     { command: 'reverse' }
   );
-  return {
-    transactionId: String(raw?.transactionId ?? transactionId),
-    resourceId: raw?.resourceId
-  };
+  return normalizeJournalEntryMutationResponse(raw, transactionId);
 }
 
 export async function updateJournalEntryNarration(
@@ -287,10 +306,7 @@ export async function updateJournalEntryNarration(
     body,
     { command: 'updateNarration' }
   );
-  return {
-    transactionId: String(raw?.transactionId ?? transactionId),
-    resourceId: raw?.resourceId
-  };
+  return normalizeJournalEntryMutationResponse(raw, transactionId);
 }
 
 export async function updateJournalEntryLineNarration(
@@ -304,10 +320,7 @@ export async function updateJournalEntryLineNarration(
     body,
     { command: 'updateLineNarration' }
   );
-  return {
-    transactionId: String(raw?.transactionId ?? ''),
-    resourceId: raw?.resourceId
-  };
+  return normalizeJournalEntryMutationResponse(raw);
 }
 
 export async function updateJournalEntryLineNarrations(
@@ -321,8 +334,5 @@ export async function updateJournalEntryLineNarrations(
     body,
     { command: 'updateLineNarrations' }
   );
-  return {
-    transactionId: String(raw?.transactionId ?? transactionId),
-    resourceId: raw?.resourceId
-  };
+  return normalizeJournalEntryMutationResponse(raw, transactionId);
 }

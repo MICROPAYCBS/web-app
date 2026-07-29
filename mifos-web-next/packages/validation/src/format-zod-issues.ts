@@ -46,9 +46,15 @@ const FIELD_LABELS: Record<string, string> = {
   monthlyIncome: 'Monthly income',
   addressTypeId: 'Address type',
   street: 'Street',
-  city: 'City',
-  townVillage: 'Town / village',
+  addressLine1: 'SubCounty',
+  addressLine2: 'Parish',
+  addressLine3: 'Address line 3',
+  city: 'District',
+  countyDistrict: 'County',
+  townVillage: 'Village',
   postalCode: 'Postal code',
+  stateProvinceId: 'Region',
+  countryId: 'Country',
   latitude: 'Latitude',
   longitude: 'Longitude'
 };
