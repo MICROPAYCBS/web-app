@@ -40,6 +40,10 @@ import { CheckerInboxWorkflowStageNotice } from '@/components/tasks/checker-inbo
 import { CheckerInboxSelfApprovalNotice } from '@/components/tasks/checker-inbox-self-approval-notice';
 import { CreateClientCheckerReview } from '@/components/tasks/create-client-checker-review';
 import {
+  CreateLoanCheckerReview,
+  type CreateLoanCheckerReviewData
+} from '@/components/tasks/create-loan-checker-review';
+import {
   ApprovalWorkflowNoMatchHint,
   MatchedApprovalWorkflowPanel
 } from '@/components/tasks/matched-approval-workflow-panel';
@@ -106,12 +110,14 @@ export function CheckerInboxDetailView({
   item,
   context,
   taskPermissions = [],
-  createClientReview = null
+  createClientReview = null,
+  createLoanReview = null
 }: {
   item: FineractAuditTrailDetail;
   context: CheckerInboxItemContext;
   taskPermissions?: FineractRolePermissionUsage[];
   createClientReview?: CreateClientCheckerReviewData | null;
+  createLoanReview?: CreateLoanCheckerReviewData | null;
 }) {
   const router = useRouter();
   const { user } = useSession();
@@ -310,6 +316,29 @@ export function CheckerInboxDetailView({
               incomeSourceOptions={createClientReview.incomeSourceOptions}
               identifierDocumentTypes={createClientReview.identifierDocumentTypes}
               contactTypeOptions={createClientReview.contactTypeOptions}
+            />
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                    <ChevronDown className="size-4" />
+                    Technical command fields
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-4">
+                    <AuditTrailCommandFields
+                      commandAsJson={item.commandAsJson}
+                      entityName={item.entityName}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              </CardContent>
+            </Card>
+          </>
+        ) : createLoanReview ? (
+          <>
+            <CreateLoanCheckerReview
+              draft={createLoanReview.draft}
+              template={createLoanReview.template}
             />
             <Card className="mb-6">
               <CardContent className="pt-6">

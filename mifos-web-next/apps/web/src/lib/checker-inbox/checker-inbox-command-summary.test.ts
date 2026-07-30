@@ -54,6 +54,25 @@ describe('checkerCommandHighlights', () => {
     assert.ok(highlights.some((line) => line.toLowerCase().includes('transaction date')));
   });
 
+  it('prefers loan fields for LOAN commands', () => {
+    const highlights = checkerCommandHighlights(
+      JSON.stringify({
+        principal: 1500000,
+        productId: 7,
+        clientId: 42,
+        expectedDisbursementDate: '15 July 2026',
+        locale: 'en',
+        dateFormat: 'dd MMMM yyyy'
+      }),
+      { actionName: 'CREATE', entityName: 'LOAN' }
+    );
+
+    assert.ok(highlights.length >= 4);
+    assert.ok(highlights.length <= 6);
+    assert.ok(highlights[0]?.toLowerCase().includes('principal'));
+    assert.ok(highlights.some((line) => line.toLowerCase().includes('product')));
+  });
+
   it('keeps loan-biased defaults for other commands', () => {
     const highlights = checkerCommandHighlights(
       JSON.stringify({

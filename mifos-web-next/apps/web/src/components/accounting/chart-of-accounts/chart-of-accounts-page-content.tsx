@@ -10,7 +10,7 @@
 
 import type { FineractGlAccountListItem } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { List, Network, Plus } from 'lucide-react';
+import { List, Network, Plus, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { GlAccountsTable } from '@/components/accounting/chart-of-accounts/gl-accounts-table';
@@ -18,6 +18,7 @@ import { GlAccountTreeView } from '@/components/accounting/chart-of-accounts/gl-
 import { ListPage } from '@/components/composites/list-page';
 import { buttonVariants } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { CHART_OF_ACCOUNTS_IMPORT_PATH } from '@/lib/accounting/chart-of-accounts-import';
 import { cn } from '@/lib/utils';
 
 type ViewMode = 'list' | 'tree';
@@ -51,6 +52,15 @@ export function ChartOfAccountsPageContent({ accounts }: { accounts: FineractGlA
               <Network className="size-4" />
             </ToggleGroupItem>
           </ToggleGroup>
+          <Can permission="CREATE_GLACCOUNT">
+            <Link
+              href={CHART_OF_ACCOUNTS_IMPORT_PATH}
+              className={cn(buttonVariants({ variant: 'outline' }))}
+            >
+              <Upload className="mr-2 size-4" />
+              Import
+            </Link>
+          </Can>
           <Can permission="CREATE_GLACCOUNT">
             <Link href="/accounting/chart-of-accounts/create" className={cn(buttonVariants())}>
               <Plus className="mr-2 size-4" />

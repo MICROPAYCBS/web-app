@@ -80,7 +80,7 @@ export const BULK_IMPORT_DEFINITIONS: BulkImportDefinition[] = [
     name: 'Chart of Accounts',
     entityType: 'chartofaccounts',
     urlSuffix: '/glaccounts',
-    formFields: 2,
+    formFields: 0,
     listPermission: 'READ_GLACCOUNT',
     downloadPermission: 'READ_CLIENT',
     description: 'Download chart of accounts template and upload Excel files'

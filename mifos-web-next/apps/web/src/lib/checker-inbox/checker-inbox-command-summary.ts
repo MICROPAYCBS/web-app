@@ -17,6 +17,11 @@ import {
   journalEntryCommandHighlightLimit
 } from '@/lib/checker-inbox/journal-entry-command-review';
 import {
+  LOAN_PREFERRED_COMMAND_KEYS,
+  isLoanCheckerEntity,
+  loanCommandHighlightLimit
+} from '@/lib/checker-inbox/loan-command-review';
+import {
   formatAuditTrailFilterLabel,
   parseAuditTrailCommandFields
 } from '@/lib/fineract/audit-trail-display';
@@ -53,20 +58,25 @@ export function checkerCommandHighlights(
 ): string[] {
   const isCreateClient = isCreateClientCheckerCommand(options?.actionName, options?.entityName);
   const isJournalEntry = isJournalEntryCheckerEntity(options?.entityName);
+  const isLoan = isLoanCheckerEntity(options?.entityName);
   const preferredKeys =
     options?.preferredKeys ??
     (isCreateClient
       ? CREATE_CLIENT_PREFERRED_COMMAND_KEYS
       : isJournalEntry
         ? JOURNAL_ENTRY_PREFERRED_COMMAND_KEYS
-        : PREFERRED_COMMAND_KEYS);
+        : isLoan
+          ? LOAN_PREFERRED_COMMAND_KEYS
+          : PREFERRED_COMMAND_KEYS);
   const limit =
     options?.limit ??
     (isCreateClient
       ? createClientCommandHighlightLimit()
       : isJournalEntry
         ? journalEntryCommandHighlightLimit()
-        : 4);
+        : isLoan
+          ? loanCommandHighlightLimit()
+          : 4);
   return parseAuditTrailCommandFields(commandAsJson)
     .filter((field) => field.display.trim() && field.display !== '—' && field.display !== '{}')
     .sort((a, b) => commandFieldRank(a.key, preferredKeys) - commandFieldRank(b.key, preferredKeys))

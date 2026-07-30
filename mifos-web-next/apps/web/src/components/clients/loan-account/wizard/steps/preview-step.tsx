@@ -89,7 +89,9 @@ export function LoanAccountPreviewStep({
 
   template,
 
-  draft
+  draft,
+
+  mode = 'wizard'
 
 }: {
 
@@ -97,7 +99,13 @@ export function LoanAccountPreviewStep({
 
   draft: LoanAccountDraft;
 
+  /** `review` uses checker-oriented copy. */
+
+  mode?: 'wizard' | 'review';
+
 }) {
+
+  const isReview = mode === 'review';
 
   const currencyCode = template.currency?.code ?? 'USD';
   const productSupportsDownPayment = template.enableDownPayment === true;
@@ -118,7 +126,11 @@ export function LoanAccountPreviewStep({
 
       <p className="text-sm text-muted-foreground">
 
-        Review the loan application before submitting.
+        {isReview
+
+          ? 'Review the loan application details below before approving.'
+
+          : 'Review the loan application before submitting.'}
 
       </p>
 

@@ -14,11 +14,18 @@ import {
   createClientDraftFromCommandAsJson,
   isCreateClientCheckerCommand
 } from '@/lib/checker-inbox/create-client-command-review';
+import {
+  isCreateLoanCheckerCommand,
+  loanAccountDraftFromCommandAsJson,
+  loanClientIdFromCommandAsJson,
+  loanProductIdFromCommandAsJson
+} from '@/lib/checker-inbox/loan-command-review';
 import { enrichCheckerInboxDetail } from '@/lib/checker-inbox/enrich-checker-inbox-items';
 import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
 import { getClientIncomeSourceTemplate } from '@/lib/fineract/client-income-source';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { getClientTemplate } from '@/lib/fineract/clients';
+import { getClientLoanAccountTemplate } from '@/lib/fineract/client-loan-accounts';
 import { getCheckerInboxDetail } from '@/lib/fineract/checker-inbox';
 import { listContactTypes } from '@/lib/fineract/contact-types';
 import { getServerSession } from '@/lib/session/server';
@@ -81,12 +88,28 @@ export default async function CheckerInboxDetailPage({
     }
   }
 
+  let createLoanReview = null;
+  if (isCreateLoanCheckerCommand(item.actionName, item.entityName)) {
+    const draft = loanAccountDraftFromCommandAsJson(item.commandAsJson);
+    const clientId = loanClientIdFromCommandAsJson(item.commandAsJson);
+    const productId = loanProductIdFromCommandAsJson(item.commandAsJson);
+    if (draft && clientId != null) {
+      const template = await getClientLoanAccountTemplate(clientId, productId).catch(() =>
+        getClientLoanAccountTemplate(clientId).catch(() => null)
+      );
+      if (template) {
+        createLoanReview = { draft, template };
+      }
+    }
+  }
+
   return (
     <CheckerInboxDetailView
       item={item}
       context={context}
       taskPermissions={workflowRuntime.makerCheckerPermissions}
       createClientReview={createClientReview}
+      createLoanReview={createLoanReview}
     />
   );
 }

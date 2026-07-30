@@ -24,6 +24,11 @@ import {
   journalEntryTransactionIdFromCommandAsJson
 } from '@/lib/checker-inbox/journal-entry-command-review';
 import {
+  isCreateLoanCheckerCommand,
+  isLoanCheckerEntity,
+  loanSubjectFromCommandAsJson
+} from '@/lib/checker-inbox/loan-command-review';
+import {
   matchApprovalWorkflowForCheckerItem,
   resolveMakerCheckerTaskPermissionCode,
   type ApprovalWorkflowRuntimeContext
@@ -56,9 +61,13 @@ async function resolveLoanAccountContext(
   const customerName = loan?.clientName?.trim() || audit?.clientName?.trim();
   const productName = loan ? loanAccountProductName(loan) : undefined;
   const accountNo = loan?.accountNo?.trim();
-  const subjectLabel = productName || accountNo || `Loan #${loanAccountId}`;
+  const fromCommand = loanSubjectFromCommandAsJson(audit?.commandAsJson);
+  const subjectLabel = productName || accountNo || fromCommand || `Loan #${loanAccountId}`;
+  const isPendingCreate =
+    isCreateLoanCheckerCommand(audit?.actionName, audit?.entityName) &&
+    isAwaitingApprovalAuditResult(audit?.processingResult);
   const href =
-    loan?.clientId != null
+    !isPendingCreate && loan?.clientId != null
       ? clientAccountGeneralPath(loan.clientId, 'loan', loanAccountId)
       : undefined;
 
@@ -73,14 +82,17 @@ async function resolveLoanAccountContext(
     return `Amount: ${formatAccountMoney(loanAmount, loanCurrency)}`;
   })();
 
-  const commandHighlights = checkerCommandHighlights(audit?.commandAsJson);
+  const commandHighlights = checkerCommandHighlights(audit?.commandAsJson, {
+    actionName: audit?.actionName,
+    entityName: audit?.entityName ?? 'LOAN'
+  });
   if (amountHighlight && !commandHighlights.some((line) => line.toLowerCase().includes('amount'))) {
     commandHighlights.unshift(amountHighlight);
   }
 
   return {
     href,
-    hrefLabel: 'Open loan account',
+    hrefLabel: href ? 'Open loan account' : undefined,
     subjectLabel,
     customerName,
     commandHighlights,
@@ -238,6 +250,29 @@ function fallbackContext(
 ): CheckerInboxItemContext {
   if (isJournalEntryCheckerEntity(item.entityName ?? audit?.entityName)) {
     return resolveJournalEntryContext(audit, item);
+  }
+  if (isLoanCheckerEntity(item.entityName ?? audit?.entityName)) {
+    const fromCommand = loanSubjectFromCommandAsJson(audit?.commandAsJson);
+    const customerName = audit?.clientName?.trim();
+    const subjectLabel = fromCommand || (item.resourceId != null ? `Loan #${item.resourceId}` : 'Loan');
+    const commandHighlights = checkerCommandHighlights(audit?.commandAsJson, {
+      actionName: item.actionName ?? audit?.actionName,
+      entityName: item.entityName ?? audit?.entityName ?? 'LOAN'
+    });
+    return {
+      href: undefined,
+      hrefLabel: undefined,
+      subjectLabel,
+      customerName,
+      commandHighlights,
+      summary: buildCheckerInboxSummary({
+        actionName: item.actionName ?? audit?.actionName,
+        entityName: item.entityName ?? audit?.entityName ?? 'LOAN',
+        subjectLabel,
+        customerName,
+        commandHighlights
+      })
+    };
   }
   const commandHighlights = checkerCommandHighlights(audit?.commandAsJson, {
     actionName: item.actionName ?? audit?.actionName,

@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-27T12:20:44.959Z",
+  "generatedAt": "2026-07-30T16:58:27.466Z",
   "summary": {
     "todo": 0,
     "in_progress": 1,
-    "done": 95,
+    "done": 96,
     "n/a": 0
   },
   "routes": [
@@ -743,6 +743,15 @@
       "kind": "page",
       "status": "done",
       "webAppRef": "accounting/chart-of-accounts"
+    },
+    {
+      "id": "acctCoaImport",
+      "path": "/accounting/chart-of-accounts/import",
+      "domain": "accounting",
+      "label": "Import chart of accounts",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "accounting/chart-of-accounts/import"
     },
     {
       "id": "acctDepartments",

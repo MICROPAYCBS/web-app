@@ -13,6 +13,9 @@ export function bulkImportDetailPath(importName: string) {
 }
 
 /** Fineract bulk-import definition key (unchanged for API compatibility). */
+export const CHART_OF_ACCOUNTS_BULK_IMPORT_NAME = 'Chart of Accounts';
+
+/** Fineract bulk-import definition key (unchanged for API compatibility). */
 export const JOURNAL_ENTRIES_BULK_IMPORT_NAME = 'Journal Entries';
 
 export const JOURNAL_ENTRIES_BULK_OPERATIONS_LABEL = 'Bulk journal operations';

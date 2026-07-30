@@ -678,6 +678,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'acctCoaImport',
+    path: '/accounting/chart-of-accounts/import',
+    label: 'Import chart of accounts',
+    navGroup: 'accounting',
+    webAppRef: 'accounting/chart-of-accounts/import',
+    permissionKey: 'accounting.coa',
+    navOrder: 12,
+    navIcon: 'upload',
+    keywords: ['gl', 'coa', 'import', 'excel', 'bulk'],
+    parityStatus: 'done'
+  },
+  {
     id: 'acctDepartments',
     path: '/accounting/departments',
     label: 'Departments',
