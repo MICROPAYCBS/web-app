@@ -14,12 +14,14 @@ export {
   UGANDA_MOBILE_INTERNATIONAL_REGEX,
   UGANDA_PHONE_INTERNATIONAL_HINT,
   UGANDA_PHONE_INTERNATIONAL_REGEX,
+  formatUgandaPhonePresentation,
   isValidUgandaMobileInternational,
   normalizeUgandaMobileInternational,
   optionalUgandaMobileInternationalSchema,
   preparePhoneForValidation,
   stripPhoneSpaces,
-  ugandaMobileInternationalSchema
+  ugandaMobileInternationalSchema,
+  ugandaPhoneTelHref
 } from './uganda-mobile';
 export {
   UGANDA_NIN_MESSAGE,

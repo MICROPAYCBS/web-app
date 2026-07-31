@@ -8,6 +8,7 @@
 
 import type { FineractClientFamilyMember } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
+import { formatUgandaPhonePresentation } from '@mifos/validation';
 import type { ReactNode } from 'react';
 import type { CollectionDetailMode } from '@/components/composites';
 import { CollectionItemFieldDetails, DetailField, DetailFieldGrid, DetailSection, TextValue } from '@/components/composites';
@@ -31,7 +32,12 @@ export function formatFamilyMemberSummary(member: {
   emailAddress?: string;
   isDependent?: boolean;
 }): string {
-  const parts = [member.relationship, member.gender, member.mobileNumber, member.emailAddress].filter(Boolean);
+  const parts = [
+    member.relationship,
+    member.gender,
+    member.mobileNumber ? formatUgandaPhonePresentation(member.mobileNumber) : undefined,
+    member.emailAddress
+  ].filter(Boolean);
   if (member.isDependent) {
     parts.push('Dependent');
   }
@@ -241,7 +247,7 @@ export function ClientFamilySections({ member }: { member: FineractClientFamilyM
       ) : null}
       {member.mobileNumber ? (
         <DetailField label="Telephone">
-          <TextValue value={member.mobileNumber} />
+          <TextValue value={formatUgandaPhonePresentation(member.mobileNumber)} />
         </DetailField>
       ) : null}
       {member.emailAddress ? (

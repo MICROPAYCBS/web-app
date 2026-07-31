@@ -9,6 +9,7 @@
  */
 
 import type { FineractStaff } from '@mifos/api-client';
+import { formatUgandaPhonePresentation } from '@mifos/validation';
 import { Pencil } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -67,7 +68,9 @@ export function EmployeeDetailView({
           <DetailField label="Last name">{staff.lastname ?? '—'}</DetailField>
           <DetailField label="Branch">{staff.officeName ?? '—'}</DetailField>
           <DetailField label="Loan officer">{formatYesNo(staff.isLoanOfficer)}</DetailField>
-          <DetailField label="Phone number">{staff.mobileNo?.trim() || '—'}</DetailField>
+          <DetailField label="Phone number">
+            {formatUgandaPhonePresentation(staff.mobileNo) || '—'}
+          </DetailField>
           <DetailField label="Joining date">
             {formatFineractDateArray(staff.joiningDate) ?? '—'}
           </DetailField>

@@ -9,7 +9,7 @@
  */
 
 import type { FineractClientEditData } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, stripPhoneSpaces, type UpdateClientInput, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, UGANDA_PHONE_INTERNATIONAL_HINT } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, formatUgandaPhonePresentation, stripPhoneSpaces, type UpdateClientInput, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, UGANDA_PHONE_INTERNATIONAL_HINT } from '@mifos/validation';
 import { useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
@@ -297,7 +297,7 @@ export function EditClientFormFields({
           autoComplete="tel"
           placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
           hint={UGANDA_PHONE_INTERNATIONAL_HINT}
-          value={form.mobileNo ?? ''}
+          value={formatUgandaPhonePresentation(form.mobileNo)}
           onChange={(v) => onPatch({ mobileNo: stripPhoneSpaces(v) })}
           error={fieldError(fieldErrors, 'mobileNo')}
         />
@@ -310,7 +310,7 @@ export function EditClientFormFields({
           autoComplete="tel"
           placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
           hint={UGANDA_PHONE_INTERNATIONAL_HINT}
-          value={form.alternativeMobileNo ?? ''}
+          value={formatUgandaPhonePresentation(form.alternativeMobileNo)}
           onChange={(v) => onPatch({ alternativeMobileNo: stripPhoneSpaces(v) })}
           error={fieldError(fieldErrors, 'alternativeMobileNo')}
         />

@@ -9,6 +9,7 @@
  */
 
 import type { SmsCampaignMessageByStatusItem } from '@mifos/api-client';
+import { formatUgandaPhonePresentation } from '@mifos/validation';
 import { useState, useTransition } from 'react';
 import { listSmsCampaignMessagesAction } from '@/actions/sms-campaign';
 import { DateField } from '@/components/composites/date-field';
@@ -112,7 +113,7 @@ export function SmsCampaignMessagesPanel({ campaignId }: { campaignId: number })
                 <TableRow key={`${message.mobileNo ?? index}-${index}`}>
                   <TableCell className="max-w-md whitespace-pre-wrap">{message.message ?? '—'}</TableCell>
                   <TableCell>{message.status?.value ?? '—'}</TableCell>
-                  <TableCell>{message.mobileNo ?? '—'}</TableCell>
+                  <TableCell>{formatUgandaPhonePresentation(message.mobileNo) || '—'}</TableCell>
                   <TableCell>{message.campaignName ?? '—'}</TableCell>
                 </TableRow>
               ))

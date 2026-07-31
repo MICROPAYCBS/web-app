@@ -10,6 +10,7 @@
 
 import type { ContactType } from '@mifos/api-client';
 import {
+  formatUgandaPhonePresentation,
   stripPhoneSpaces,
   UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER,
   UGANDA_PHONE_INTERNATIONAL_HINT,
@@ -112,7 +113,7 @@ export function ContactStep({
               autoComplete="tel"
               placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
               hint={UGANDA_PHONE_INTERNATIONAL_HINT}
-              value={g.mobileNo ?? ''}
+              value={formatUgandaPhonePresentation(g.mobileNo)}
               onChange={(v) => onDraftChange({ mobileNo: stripPhoneSpaces(v) })}
               error={errors.mobileNo}
             />
@@ -125,7 +126,7 @@ export function ContactStep({
               autoComplete="tel"
               placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
               hint={UGANDA_PHONE_INTERNATIONAL_HINT}
-              value={g.alternativeMobileNo ?? ''}
+              value={formatUgandaPhonePresentation(g.alternativeMobileNo)}
               onChange={(v) => onDraftChange({ alternativeMobileNo: stripPhoneSpaces(v) })}
               error={errors.alternativeMobileNo}
             />

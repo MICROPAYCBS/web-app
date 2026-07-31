@@ -7,6 +7,7 @@
  */
 
 import type { FineractClientComplianceProfile, FineractClientDetail, FineractClientIncomeSource } from '@mifos/api-client';
+import { formatUgandaPhonePresentation } from '@mifos/validation';
 import Link from 'next/link';
 import { SectorDisplayValue } from '@/components/clients/shared/sector-display-value';
 import { formatIncomeSourceSummary } from '@/components/clients/detail/client-income-source-sections';
@@ -115,10 +116,10 @@ function ClientInformationSection({ client }: { client: FineractClientDetail }) 
           </DetailField>
         ) : null}
         <DetailField label="Mobile number">
-          <TextValue value={client.mobileNo} />
+          <TextValue value={formatUgandaPhonePresentation(client.mobileNo)} />
         </DetailField>
         <DetailField label="Alternative mobile number">
-          <TextValue value={client.alternativeMobileNo} />
+          <TextValue value={formatUgandaPhonePresentation(client.alternativeMobileNo)} />
         </DetailField>
         <DetailField label="Email">
           <TextValue value={client.emailAddress} />

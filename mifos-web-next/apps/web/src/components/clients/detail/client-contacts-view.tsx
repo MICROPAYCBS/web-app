@@ -9,7 +9,7 @@
  */
 
 import type { ClientContact, ContactType } from '@mifos/api-client';
-import { formatActionErrorMessage, type ClientContactInput } from '@mifos/validation';
+import { formatActionErrorMessage, formatUgandaPhonePresentation, type ClientContactInput } from '@mifos/validation';
 import { Pencil, Phone, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
@@ -174,7 +174,9 @@ export function ClientContactsView({
                   {contact.primary ? <Badge variant="secondary">Primary</Badge> : null}
                   {contact.mandatory ? <Badge variant="outline">Required type</Badge> : null}
                 </div>
-                <p className="text-sm text-muted-foreground break-all">{contact.contactValue}</p>
+                <p className="text-sm text-muted-foreground break-all">
+                  {formatUgandaPhonePresentation(contact.contactValue) || contact.contactValue}
+                </p>
               </div>
               <div className="flex shrink-0 gap-1">
                 {canUpdate ? (

@@ -17,10 +17,10 @@ export const UGANDA_PHONE_INTERNATIONAL_REGEX = /^\+256\d{9}$/;
 /** @deprecated Prefer {@link UGANDA_PHONE_INTERNATIONAL_REGEX}. */
 export const UGANDA_MOBILE_INTERNATIONAL_REGEX = UGANDA_PHONE_INTERNATIONAL_REGEX;
 
-export const UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER = '+256712345678';
+export const UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER = '+256 712 345 678';
 
 export const UGANDA_PHONE_INTERNATIONAL_HINT =
-  'International format (+256…). Mobile (e.g. +256712345678), MTN fixed (+2563…), Airtel fixed (+256200…), or landline (+25641…). Spaces are ignored.';
+  'International format (+256 …). Mobile (e.g. +256 712 345 678), MTN fixed (+256 3…), Airtel fixed (+256 200…), or landline (+256 41…). Spaces are ignored.';
 
 export const UGANDA_MOBILE_INTERNATIONAL_MESSAGE =
   'Enter a valid Uganda phone number in international format (+256 followed by 9 digits). Spaces are ignored. Numbers starting with 0 are not accepted.';
@@ -64,6 +64,35 @@ export function normalizeUgandaMobileInternational(value: string | undefined): s
     return candidate;
   }
   return prepared;
+}
+
+/** Readable presentation: +256 XXX XXX XXX (storage/API stay compact). */
+export function formatUgandaPhonePresentation(value: string | undefined | null): string {
+  const trimmed = (value ?? '').trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const normalized = normalizeUgandaMobileInternational(trimmed);
+  if (UGANDA_PHONE_INTERNATIONAL_REGEX.test(normalized)) {
+    const national = normalized.slice(4);
+    return `+256 ${national.slice(0, 3)} ${national.slice(3, 6)} ${national.slice(6, 9)}`;
+  }
+
+  const prepared = preparePhoneForValidation(trimmed);
+  if (prepared.startsWith('+256')) {
+    const national = prepared.slice(4);
+    const groups = [national.slice(0, 3), national.slice(3, 6), national.slice(6, 9)].filter(Boolean);
+    return groups.length > 0 ? `+256 ${groups.join(' ')}` : '+256';
+  }
+
+  return trimmed;
+}
+
+/** Compact E.164 for tel: links and API payloads. */
+export function ugandaPhoneTelHref(value: string | undefined | null): string | undefined {
+  const normalized = normalizeUgandaMobileInternational(value ?? '');
+  return UGANDA_PHONE_INTERNATIONAL_REGEX.test(normalized) ? normalized : undefined;
 }
 
 const ugandaPhoneInternationalValueSchema = z

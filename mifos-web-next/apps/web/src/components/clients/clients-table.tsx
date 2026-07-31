@@ -9,6 +9,7 @@
  */
 
 import type { FineractClientSummary } from '@mifos/api-client';
+import { formatUgandaPhonePresentation } from '@mifos/validation';
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -169,7 +170,7 @@ export function ClientsTable({
         accessorKey: 'mobileNo',
         enableSorting: false,
         header: 'Phone',
-        cell: ({ row }) => row.original.mobileNo?.trim() || '—'
+        cell: ({ row }) => formatUgandaPhonePresentation(row.original.mobileNo) || '—'
       },
       {
         id: 'emailAddress',

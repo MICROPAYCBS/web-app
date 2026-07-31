@@ -9,7 +9,7 @@
  */
 
 import type { ContactType, FineractClientTemplate, FineractIncomeSourceOptions } from '@mifos/api-client';
-import { isComplianceProfileEmpty, LEGAL_FORM_PERSON } from '@mifos/validation';
+import { isComplianceProfileEmpty, formatUgandaPhonePresentation, LEGAL_FORM_PERSON } from '@mifos/validation';
 import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
 import { incomeSourceInputDisplayName } from '@/components/clients/detail/client-income-source-sections';
 import { SectorDisplayValue } from '@/components/clients/shared/sector-display-value';
@@ -149,8 +149,8 @@ export function PreviewStep({
 
       <section className="space-y-2">
         <h2 className="text-sm font-medium">Contact</h2>
-        <Field label="Phone number" value={g.mobileNo} />
-        <Field label="Alternative phone number" value={g.alternativeMobileNo} />
+        <Field label="Phone number" value={formatUgandaPhonePresentation(g.mobileNo)} />
+        <Field label="Alternative phone number" value={formatUgandaPhonePresentation(g.alternativeMobileNo)} />
         <Field label="Email" value={g.emailAddress} />
         <Field label="Alternative email" value={g.alternativeEmailAddress} />
         {draft.contacts.length > 0 ? (
@@ -161,7 +161,7 @@ export function PreviewStep({
                 `Type #${contact.contactTypeId}`;
               return (
                 <li key={`${contact.contactTypeId}-${contact.contactValue}-${index}`}>
-                  {typeName}: {contact.contactValue}
+                  {typeName}: {formatUgandaPhonePresentation(contact.contactValue) || contact.contactValue}
                   {contact.primary ? ' (primary)' : ''}
                 </li>
               );
@@ -255,7 +255,7 @@ export function PreviewStep({
               {draft.familyMembers.map((m, i) => (
                 <li key={i}>
                   {[m.firstName, m.middleName, m.lastName].filter(Boolean).join(' ')}
-                  {m.mobileNumber ? ` · ${m.mobileNumber}` : ''}
+                  {m.mobileNumber ? ` · ${formatUgandaPhonePresentation(m.mobileNumber)}` : ''}
                   {m.emailAddress ? ` · ${m.emailAddress}` : ''}
                   {m.address ? ` · ${m.address}` : ''}
                 </li>

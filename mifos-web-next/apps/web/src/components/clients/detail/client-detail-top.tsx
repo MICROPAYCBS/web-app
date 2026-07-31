@@ -7,6 +7,7 @@
  */
 
 import type { FineractClientDetail } from '@mifos/api-client';
+import { formatUgandaPhonePresentation, ugandaPhoneTelHref } from '@mifos/validation';
 import { Calendar, Hash, Mail, Phone, UserRound, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ClientProfileAvatar } from '@/components/clients/detail/client-profile-avatar';
@@ -94,6 +95,8 @@ function ClientHeaderKeyInfo({
   staffName?: string;
 }) {
   const mobile = mobileNo?.trim();
+  const mobileDisplay = formatUgandaPhonePresentation(mobile);
+  const mobileTel = ugandaPhoneTelHref(mobile);
   const email = emailAddress?.trim();
   const external = externalId?.trim();
   const staff = staffName?.trim();
@@ -103,10 +106,14 @@ function ClientHeaderKeyInfo({
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-      {mobile ? (
-        <a href={`tel:${mobile}`} className={linkClassName} aria-label={`Mobile ${mobile}`}>
+      {mobileDisplay ? (
+        <a
+          href={`tel:${mobileTel ?? mobile}`}
+          className={linkClassName}
+          aria-label={`Mobile ${mobileDisplay}`}
+        >
           <Phone className="size-4 shrink-0" aria-hidden />
-          <span>{mobile}</span>
+          <span>{mobileDisplay}</span>
         </a>
       ) : (
         <span className={missingClassName} aria-label="Mobile not provided">
