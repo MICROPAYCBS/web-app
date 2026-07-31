@@ -12,6 +12,7 @@ import {
   formatActionErrorMessage,
   formatZodIssuesForDisplay,
   formatZodIssuesMessage,
+  LEGAL_FORM_ENTITY,
   LEGAL_FORM_PERSON,
   type CreateClientPayload,
   type SaveDraftClientPayload
@@ -60,7 +61,8 @@ import {
   CREATE_CLIENT_ADDRESS_STEP,
   CREATE_CLIENT_WIZARD_END_STEPS,
   CREATE_CLIENT_WIZARD_MIDDLE_STEPS,
-  CREATE_CLIENT_WIZARD_START_STEPS
+  CREATE_CLIENT_WIZARD_START_STEPS,
+  filterCreateClientStepsForLegalForm
 } from './create-client-wizard-steps';
 import {
   findFirstInvalidCreateClientStep,
@@ -92,17 +94,21 @@ function buildSteps(
     });
   }
   steps.push(...CREATE_CLIENT_WIZARD_END_STEPS);
-  return steps;
+  return filterCreateClientStepsForLegalForm(steps, legalFormId);
 }
 
 function emptyDraft(
   defaultOfficeId: number | undefined,
-  initialSubmittedOnDate: string
+  initialSubmittedOnDate: string,
+  defaultLegalFormId: number = LEGAL_FORM_PERSON
 ): CreateClientDraft {
+  const isEntity = defaultLegalFormId === LEGAL_FORM_ENTITY;
   return {
     general: {
       officeId: defaultOfficeId,
-      legalFormId: LEGAL_FORM_PERSON,
+      legalFormId: defaultLegalFormId,
+      fullname: isEntity ? '' : undefined,
+      clientNonPersonDetails: isEntity ? {} : undefined,
       submittedOnDate: initialSubmittedOnDate,
       dateFormat: FINERACT_DATE_FORMAT,
       locale: FINERACT_LOCALE
@@ -121,6 +127,7 @@ function emptyDraft(
 export function CreateClientWizard({
   initialTemplate,
   defaultOfficeId,
+  defaultLegalFormId = LEGAL_FORM_PERSON,
   addressFieldConfig,
   entityDatatableChecks = [],
   incomeSourceOptions,
@@ -133,7 +140,7 @@ export function CreateClientWizard({
   const initialSubmittedOnDate = useInitialTransactionDate();
   const [template] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(() =>
-    emptyDraft(defaultOfficeId, initialSubmittedOnDate)
+    emptyDraft(defaultOfficeId, initialSubmittedOnDate, defaultLegalFormId)
   );
   const [stepId, setStepId] = useState('biodata');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(

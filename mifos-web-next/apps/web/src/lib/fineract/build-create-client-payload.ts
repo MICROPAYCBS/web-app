@@ -7,6 +7,7 @@
  */
 
 import type { CreateClientPayload, SaveDraftClientPayload } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY } from '@mifos/validation';
 import { buildOtherBankAccountsForApi } from '@/lib/fineract/compliance-profile-payload';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 
@@ -106,6 +107,21 @@ export function buildCreateClientPayload(
 
   if (!input.savingsProductId) {
     delete base.savingsProductId;
+  }
+
+  if (input.legalFormId === LEGAL_FORM_ENTITY) {
+    delete base.firstname;
+    delete base.middlename;
+    delete base.lastname;
+    delete base.genderId;
+    delete base.titleId;
+    delete base.nationalityCountryId;
+    delete base.maritalStatusId;
+    delete base.isStaff;
+    delete base.familyMembers;
+  } else {
+    delete base.fullname;
+    delete base.clientNonPersonDetails;
   }
 
   return base;

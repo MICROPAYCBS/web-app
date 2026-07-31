@@ -7,7 +7,7 @@
  */
 
 import type { FineractClientDatatableTemplate, FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE, clientAddressEntrySchema, complianceProfileSchema, countValidClientIdentifiers, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, UGANDA_MOBILE_INTERNATIONAL_MESSAGE, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE, CLIENT_IDENTIFIERS_REQUIRED_MESSAGE, clientAddressEntrySchema, complianceProfileSchema, countValidClientIdentifiers, ENTITY_CLIENT_FULLNAME_MAX_LENGTH, ENTITY_CLIENT_REMARKS_MAX_LENGTH, incomeSourceSchema, isValidUgandaMobileInternational, prepareComplianceProfileForValidation, preparePhoneForValidation, validateClientIdentifier, type ClientIdentifierIdentityTypeOption } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import {
   buildDatatableDataPayload,
@@ -80,6 +80,9 @@ export function validateSaveProgressBiodataStep(draft: CreateClientDraft): StepE
     if (!g.fullname?.trim()) {
       errors.fullname = 'Entity name is required';
     }
+    if (!g.clientNonPersonDetails?.constitutionId) {
+      errors.constitutionId = 'Constitution is required';
+    }
   }
 
   return errors;
@@ -135,12 +138,21 @@ export function validateBiodataStep(
   } else if (legalFormId === LEGAL_FORM_ENTITY) {
     if (!g.fullname?.trim()) {
       errors.fullname = 'Entity name is required';
+    } else if (g.fullname.trim().length > ENTITY_CLIENT_FULLNAME_MAX_LENGTH) {
+      errors.fullname = `Entity name must be at most ${ENTITY_CLIENT_FULLNAME_MAX_LENGTH} characters`;
     }
     if (!g.clientNonPersonDetails?.constitutionId) {
       errors.constitutionId = 'Constitution is required';
     }
-    if (!g.dateOfBirth?.trim()) {
-      errors.dateOfBirth = 'Incorporation date is required';
+    const nonPerson = g.clientNonPersonDetails;
+    if (nonPerson?.incorpNumber && nonPerson.incorpNumber.trim().length > 50) {
+      errors.incorpNumber = 'Incorporation number must be at most 50 characters';
+    }
+    if (nonPerson?.remarks && nonPerson.remarks.trim().length > ENTITY_CLIENT_REMARKS_MAX_LENGTH) {
+      errors.remarks = `Remarks must be at most ${ENTITY_CLIENT_REMARKS_MAX_LENGTH} characters`;
+    }
+    if (nonPerson?.incorpValidityTillDate?.trim() && !g.dateOfBirth?.trim()) {
+      errors.dateOfBirth = 'Incorporation date is required when validity till date is set';
     }
   }
 
@@ -151,12 +163,15 @@ export function validateContactStep(draft: CreateClientDraft): StepErrors {
   const errors: StepErrors = {};
   const g = draft.general;
 
-  if (!g.mobileNo?.trim()) {
+  const mobileNo = preparePhoneForValidation(g.mobileNo ?? '');
+
+  if (!mobileNo) {
     errors.mobileNo = 'Phone number is required';
-  } else if (!isValidUgandaMobileInternational(g.mobileNo)) {
+  } else if (!isValidUgandaMobileInternational(mobileNo)) {
     errors.mobileNo = UGANDA_MOBILE_INTERNATIONAL_MESSAGE;
   }
-  if (g.alternativeMobileNo?.trim() && !isValidUgandaMobileInternational(g.alternativeMobileNo.trim())) {
+  const alternativeMobileNo = preparePhoneForValidation(g.alternativeMobileNo ?? '');
+  if (alternativeMobileNo && !isValidUgandaMobileInternational(alternativeMobileNo)) {
     errors.alternativeMobileNo = UGANDA_MOBILE_INTERNATIONAL_MESSAGE;
   }
   if (g.emailAddress?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.emailAddress.trim())) {

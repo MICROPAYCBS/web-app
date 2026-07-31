@@ -10,7 +10,7 @@
 
 import type { FineractFamilyMemberOptions } from '@mifos/api-client';
 import type { FamilyMemberInput } from '@mifos/validation';
-import { UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER } from '@mifos/validation';
+import { stripPhoneSpaces, UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER, UGANDA_PHONE_INTERNATIONAL_HINT } from '@mifos/validation';
 import { useId, useState } from 'react';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { DateField } from '@/components/composites/date-field';
@@ -141,8 +141,9 @@ export function FamilyMemberFormSheet({
           label="Telephone"
           optional
           placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
+          hint={UGANDA_PHONE_INTERNATIONAL_HINT}
           value={form.mobileNumber ?? ''}
-          onChange={(v) => setForm({ ...form, mobileNumber: v })}
+          onChange={(v) => setForm({ ...form, mobileNumber: stripPhoneSpaces(v) })}
         />
         <TextField
           id="familyEmailAddress"

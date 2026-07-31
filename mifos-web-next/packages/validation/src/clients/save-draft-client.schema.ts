@@ -18,6 +18,7 @@ import {
   clientAddressEntrySchema,
   clientNonPersonDetailsSchema,
   datatablePayloadSchema,
+  ENTITY_CLIENT_FULLNAME_MAX_LENGTH,
   familyMemberSchema
 } from './create-client.schema';
 
@@ -77,15 +78,10 @@ const saveDraftPersonSchema = saveDraftBaseSchema.extend({
 
 const saveDraftEntitySchema = saveDraftBaseSchema.extend({
   legalFormId: z.literal(LEGAL_FORM_ENTITY),
-  fullname: z.string().trim().min(1).max(100).regex(namePattern, {
+  fullname: z.string().trim().min(1).max(ENTITY_CLIENT_FULLNAME_MAX_LENGTH).regex(namePattern, {
     message: 'Name cannot begin with a number or special character'
   }),
   clientNonPersonDetails: clientNonPersonDetailsSchema
-    .partial()
-    .extend({
-      constitutionId: z.coerce.number().int().positive().optional()
-    })
-    .optional()
 });
 
 export const saveDraftClientSchema = z.discriminatedUnion('legalFormId', [

@@ -19,12 +19,17 @@ const namePattern = /^[A-Za-z].*/;
 const fineractDate = z.string().trim().min(1);
 const optionalFineractDate = z.string().trim().optional();
 
+/** Fineract `Client.fullname` column limit for entity clients. */
+export const ENTITY_CLIENT_FULLNAME_MAX_LENGTH = 160;
+/** Fineract `ClientNonPerson.remarks` column limit. */
+export const ENTITY_CLIENT_REMARKS_MAX_LENGTH = 150;
+
 export const clientNonPersonDetailsSchema = z.object({
   constitutionId: z.coerce.number().int().positive(),
   incorpValidityTillDate: optionalFineractDate,
   incorpNumber: z.string().trim().max(50).optional(),
   mainBusinessLineId: z.coerce.number().int().positive().optional(),
-  remarks: z.string().trim().max(300).optional(),
+  remarks: z.string().trim().max(ENTITY_CLIENT_REMARKS_MAX_LENGTH).optional(),
   dateFormat: z.string().optional(),
   locale: z.string().optional()
 });
@@ -175,7 +180,7 @@ const personClientSchema = clientBaseSchema.extend({
 
 const entityClientSchema = clientBaseSchema.extend({
   legalFormId: z.literal(LEGAL_FORM_ENTITY),
-  fullname: z.string().trim().min(1).max(100).regex(namePattern, {
+  fullname: z.string().trim().min(1).max(ENTITY_CLIENT_FULLNAME_MAX_LENGTH).regex(namePattern, {
     message: 'Name cannot begin with a number or special character'
   }),
   clientNonPersonDetails: clientNonPersonDetailsSchema
@@ -184,13 +189,21 @@ const entityClientSchema = clientBaseSchema.extend({
 export const createClientSchema = z
   .discriminatedUnion('legalFormId', [personClientSchema, entityClientSchema])
   .superRefine((data, ctx) => {
-    if (!data.dateOfBirth?.trim()) {
+    if (data.legalFormId === LEGAL_FORM_PERSON && !data.dateOfBirth?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message:
-          data.legalFormId === LEGAL_FORM_PERSON
-            ? 'Date of birth is required'
-            : 'Incorporation date is required',
+        message: 'Date of birth is required',
+        path: ['dateOfBirth']
+      });
+    }
+    if (
+      data.legalFormId === LEGAL_FORM_ENTITY &&
+      data.clientNonPersonDetails.incorpValidityTillDate?.trim() &&
+      !data.dateOfBirth?.trim()
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Incorporation date is required when validity till date is set',
         path: ['dateOfBirth']
       });
     }

@@ -9,7 +9,7 @@
  */
 
 import type { FineractClientTemplate } from '@mifos/api-client';
-import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from '@mifos/validation';
+import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON, ENTITY_CLIENT_FULLNAME_MAX_LENGTH, ENTITY_CLIENT_REMARKS_MAX_LENGTH } from '@mifos/validation';
 import { useMemo } from 'react';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
@@ -132,6 +132,7 @@ export function BiodataStep({
             value={g.fullname ?? ''}
             onChange={(v) => onDraftChange({ fullname: v })}
             error={errors.fullname}
+            maxLength={ENTITY_CLIENT_FULLNAME_MAX_LENGTH}
           />
         ) : (
           <>
@@ -225,7 +226,7 @@ export function BiodataStep({
         <DateField
           id="dateOfBirth"
           label={isPerson ? 'Date of birth' : 'Incorporation date'}
-          required
+          required={isPerson}
           value={g.dateOfBirth}
           onChange={(v) => {
             const nextEligibleClasses = filterEligibleCustomerClasses(template.customerClassOptions, {
@@ -288,6 +289,7 @@ export function BiodataStep({
                   clientNonPersonDetails: { ...nonPerson, incorpValidityTillDate: v }
                 })
               }
+              hint="Must be on or after the incorporation date."
             />
             <TextField
               id="incorpNumber"
@@ -299,6 +301,8 @@ export function BiodataStep({
                   clientNonPersonDetails: { ...nonPerson, incorpNumber: v }
                 })
               }
+              error={errors.incorpNumber}
+              maxLength={50}
             />
             <TextField
               id="remarks"
@@ -312,6 +316,8 @@ export function BiodataStep({
                   clientNonPersonDetails: { ...nonPerson, remarks: v }
                 })
               }
+              error={errors.remarks}
+              maxLength={ENTITY_CLIENT_REMARKS_MAX_LENGTH}
             />
           </>
         ) : null}

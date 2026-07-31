@@ -7,6 +7,7 @@
  */
 
 import { assertCan, resolvePermission } from '@mifos/auth';
+import { LEGAL_FORM_ENTITY } from '@mifos/validation';
 import { redirect } from 'next/navigation';
 import { CreateClientWizard } from '@/components/clients/create/create-client-wizard';
 import type { FineractClientIdentifierTemplate } from '@mifos/api-client';
@@ -17,7 +18,16 @@ import { listContactTypes } from '@/lib/fineract/contact-types';
 import { listEntityDatatableChecks } from '@/lib/fineract/entity-datatable-checks';
 import { getServerSession } from '@/lib/session/server';
 
-export default async function CreateClientPage() {
+export default async function CreateClientPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const profileParam = typeof params.profile === 'string' ? params.profile : undefined;
+  const defaultLegalFormId =
+    profileParam === 'entity' ? LEGAL_FORM_ENTITY : undefined;
+
   const session = await getServerSession();
   if (!session) {
     redirect('/login');
@@ -66,6 +76,7 @@ export default async function CreateClientPage() {
     <CreateClientWizard
       initialTemplate={template}
       defaultOfficeId={defaultOfficeId}
+      defaultLegalFormId={defaultLegalFormId}
       addressFieldConfig={addressFieldConfig}
       entityDatatableChecks={entityDatatableChecks}
       incomeSourceOptions={incomeSourceOptions}

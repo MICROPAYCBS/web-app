@@ -9,6 +9,7 @@
 import type { FineractClientTemplate } from '@mifos/api-client';
 import {
   createClientSchema,
+  LEGAL_FORM_ENTITY,
   LEGAL_FORM_PERSON,
   sanitizeComplianceProfileForSubmit,
   saveDraftClientSchema,
@@ -60,18 +61,13 @@ export function buildCreateClientRaw(
     contactTypeOptions
   );
 
-  return {
+  const isEntity = legalFormId === LEGAL_FORM_ENTITY;
+
+  const shared = {
     officeId: general.officeId,
     staffId: general.staffId,
     legalFormId,
     externalId: general.externalId,
-    firstname: general.firstname,
-    middlename: general.middlename,
-    lastname: general.lastname,
-    fullname: general.fullname,
-    clientNonPersonDetails: general.clientNonPersonDetails,
-    genderId: general.genderId,
-    isStaff: general.isStaff,
     mobileNo: general.mobileNo,
     emailAddress: general.emailAddress,
     taxIdentificationNumber: general.taxIdentificationNumber,
@@ -79,9 +75,6 @@ export function buildCreateClientRaw(
     alternativeEmailAddress: general.alternativeEmailAddress,
     subIndustryId: general.subIndustryId,
     customerClassId: general.customerClassId,
-    titleId: general.titleId,
-    nationalityCountryId: general.nationalityCountryId,
-    maritalStatusId: general.maritalStatusId,
     customerRiskProfileId: general.customerRiskProfileId,
     dateOfBirth: general.dateOfBirth,
     clientTypeId: general.clientTypeId,
@@ -89,13 +82,34 @@ export function buildCreateClientRaw(
     savingsProductId: general.savingsProductId,
     dateFormat,
     locale,
-    familyMembers: familyMembers.length ? familyMembers : undefined,
+    familyMembers: !isEntity && familyMembers.length ? familyMembers : undefined,
     clientIdentifiers: clientIdentifiers.length ? clientIdentifiers : undefined,
     incomeSources: incomeSources.length ? incomeSources : undefined,
     contacts: contactsPayload.length ? contactsPayload : undefined,
     complianceProfile: sanitizeComplianceProfileForSubmit(complianceProfile),
     address: template.isAddressEnabled && addresses.length ? addresses : undefined,
     datatables: datatablePayloads.length ? datatablePayloads : undefined
+  };
+
+  if (isEntity) {
+    return {
+      ...shared,
+      fullname: general.fullname,
+      clientNonPersonDetails: general.clientNonPersonDetails
+    };
+  }
+
+  return {
+    ...shared,
+    firstname: general.firstname,
+    middlename: general.middlename,
+    lastname: general.lastname,
+    genderId: general.genderId,
+    isStaff: general.isStaff,
+    titleId: general.titleId,
+    nationalityCountryId: general.nationalityCountryId,
+    maritalStatusId: general.maritalStatusId,
+    familyMembers: familyMembers.length ? familyMembers : undefined
   };
 }
 

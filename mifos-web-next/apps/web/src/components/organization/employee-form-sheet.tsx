@@ -11,7 +11,9 @@
 import type { FineractOfficeOption } from '@mifos/api-client';
 import {
   formatActionErrorMessage,
+  stripPhoneSpaces,
   UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER,
+  UGANDA_PHONE_INTERNATIONAL_HINT,
   type CreateStaffInput,
   type UpdateStaffInput
 } from '@mifos/validation';
@@ -266,11 +268,12 @@ export function EmployeeFormSheet({
           label="Phone number"
           optional
           value={form.mobileNo}
-          onChange={(value) => patchForm({ mobileNo: value })}
+          onChange={(value) => patchForm({ mobileNo: stripPhoneSpaces(value) })}
           error={fieldErrors.mobileNo}
           autoComplete="tel"
           type="tel"
           placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
+          hint={UGANDA_PHONE_INTERNATIONAL_HINT}
         />
         <DateField
           id={`${formId}-joiningDate`}

@@ -85,7 +85,7 @@ describe('createClientSchema clientIdentifiers', () => {
     assert.equal(result.success, true);
   });
 
-  it('does not require identifiers or next of kin for entity customers', () => {
+  it('does not require identifiers, next of kin, or incorporation date for entity customers', () => {
     const result = createClientSchema.safeParse({
       officeId: 1,
       staffId: 1,
@@ -93,7 +93,6 @@ describe('createClientSchema clientIdentifiers', () => {
       fullname: 'Acme Ltd',
       mobileNo: '+256700000000',
       customerClassId: 1,
-      dateOfBirth: '01 January 2020',
       submittedOnDate: '01 July 2026',
       dateFormat: 'dd MMMM yyyy',
       locale: 'en',
@@ -104,6 +103,28 @@ describe('createClientSchema clientIdentifiers', () => {
       familyMembers: []
     });
     assert.equal(result.success, true);
+  });
+
+  it('requires incorporation date when entity validity till date is set', () => {
+    const result = createClientSchema.safeParse({
+      officeId: 1,
+      staffId: 1,
+      legalFormId: LEGAL_FORM_ENTITY,
+      fullname: 'Acme Ltd',
+      mobileNo: '+256700000000',
+      customerClassId: 1,
+      submittedOnDate: '01 July 2026',
+      dateFormat: 'dd MMMM yyyy',
+      locale: 'en',
+      clientNonPersonDetails: {
+        constitutionId: 1,
+        incorpValidityTillDate: '01 January 2030'
+      }
+    });
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.ok(result.error.issues.some((issue) => issue.path[0] === 'dateOfBirth'));
+    }
   });
 });
 

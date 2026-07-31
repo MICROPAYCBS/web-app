@@ -7,12 +7,26 @@
  */
 
 import type { FormWizardStep } from '@/components/composites/form-wizard';
+import { LEGAL_FORM_ENTITY } from '@mifos/validation';
 
 export const CREATE_CLIENT_WIZARD_START_STEPS: FormWizardStep[] = [
   { id: 'biodata', label: 'Biodata' },
   { id: 'contact', label: 'Contact' },
   { id: 'identifiers', label: 'Identification' }
 ];
+
+/** Steps shown only for individual (person) customers — hidden for entity onboarding. */
+export const CREATE_CLIENT_PERSON_ONLY_STEP_IDS = new Set(['family']);
+
+export function filterCreateClientStepsForLegalForm(
+  steps: FormWizardStep[],
+  legalFormId: number
+): FormWizardStep[] {
+  if (legalFormId === LEGAL_FORM_ENTITY) {
+    return steps.filter((step) => !CREATE_CLIENT_PERSON_ONLY_STEP_IDS.has(step.id));
+  }
+  return steps;
+}
 
 export const CREATE_CLIENT_ADDRESS_STEP: FormWizardStep = {
   id: 'address',

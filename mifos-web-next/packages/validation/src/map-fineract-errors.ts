@@ -8,6 +8,7 @@
 
 import type { FineractApiError } from '@mifos/api-client';
 import { getFineractErrorMessage, resolveFineractErrorItemMessage } from '@mifos/i18n';
+import { resolveCreateClientErrorField } from './clients/create-client-error-fields';
 
 export interface FieldError {
   field: string;
@@ -32,7 +33,10 @@ export function mapFineractErrors(body: FineractApiError | null): MappedFineract
         continue;
       }
       fieldErrors.push({
-        field: err.parameterName?.trim() || '_form',
+        field: resolveCreateClientErrorField(
+          err.userMessageGlobalisationCode,
+          err.parameterName
+        ),
         message,
         code: err.userMessageGlobalisationCode
       });

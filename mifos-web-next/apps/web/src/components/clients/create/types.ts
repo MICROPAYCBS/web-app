@@ -66,6 +66,8 @@ export interface CreateClientWizardProps {
   initialTemplate: FineractClientTemplate;
   /** Branch for the new customer — always the signed-in user's office. */
   defaultOfficeId?: number;
+  /** Pre-select profile type (e.g. entity onboarding via `?profile=entity`). */
+  defaultLegalFormId?: number;
   addressFieldConfig: FineractAddressFieldConfig[];
   entityDatatableChecks?: FineractEntityDatatableCheck[];
   incomeSourceOptions?: FineractIncomeSourceOptions;

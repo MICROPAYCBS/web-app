@@ -63,6 +63,13 @@ export function PreviewStep({
   const staff = template.staffOptions?.find((o) => o.id === g.staffId);
   const office = template.officeOptions?.find((o) => o.id === g.officeId);
   const isPerson = (g.legalFormId ?? LEGAL_FORM_PERSON) === LEGAL_FORM_PERSON;
+  const nonPerson = g.clientNonPersonDetails;
+  const constitution = template.clientNonPersonConstitutionOptions?.find(
+    (o) => o.id === nonPerson?.constitutionId
+  );
+  const businessLine = template.clientNonPersonMainBusinessLineOptions?.find(
+    (o) => o.id === nonPerson?.mainBusinessLineId
+  );
   const customerClassLabel = customerClass
     ? `${customerClass.classCode} — ${customerClass.className}`
     : undefined;
@@ -123,6 +130,18 @@ export function PreviewStep({
           label={isPerson ? 'Date of birth' : 'Incorporation date'}
           value={g.dateOfBirth}
         />
+        {!isPerson ? (
+          <>
+            <Field label="Constitution" value={constitution?.name ?? constitution?.value} />
+            <Field label="Main business line" value={businessLine?.name ?? businessLine?.value} />
+            <Field label="Incorporation number" value={nonPerson?.incorpNumber} />
+            <Field
+              label="Incorporation validity till"
+              value={nonPerson?.incorpValidityTillDate}
+            />
+            <Field label="Remarks" value={nonPerson?.remarks} />
+          </>
+        ) : null}
         <Field label="External ID" value={g.externalId} />
       </section>
 

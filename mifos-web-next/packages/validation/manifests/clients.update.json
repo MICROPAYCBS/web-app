@@ -13,7 +13,7 @@
     "clientNonPersonDetails.constitutionId": { "requiredWhen": "legalFormId=2" },
     "submittedOnDate": { "required": true },
     "taxIdentificationNumber": { "required": false, "maxLength": 50 },
-    "alternativeMobileNo": { "required": false, "maxLength": 13, "format": "ugandaInternationalMobile" },
+    "alternativeMobileNo": { "required": false, "maxLength": 13, "format": "ugandaInternationalPhone" },
     "alternativeEmailAddress": { "required": false, "maxLength": 50 },
     "subIndustryId": { "required": false },
     "active": { "required": true },

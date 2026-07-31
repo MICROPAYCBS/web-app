@@ -9,7 +9,7 @@
 import { z } from 'zod';
 import { GENDER_FEMALE, GENDER_MALE } from './gender';
 import { LEGAL_FORM_ENTITY, LEGAL_FORM_PERSON } from './legal-form';
-import { clientNonPersonDetailsSchema } from './create-client.schema';
+import { clientNonPersonDetailsSchema, ENTITY_CLIENT_FULLNAME_MAX_LENGTH } from './create-client.schema';
 import { optionalUgandaMobileInternationalSchema } from '../uganda-mobile';
 
 const namePattern = /^[A-Za-z].*/;
@@ -56,7 +56,7 @@ const updatePersonSchema = updateClientBaseSchema.extend({
 
 const updateEntitySchema = updateClientBaseSchema.extend({
   legalFormId: z.literal(LEGAL_FORM_ENTITY),
-  fullname: z.string().trim().min(1).max(100).regex(namePattern, {
+  fullname: z.string().trim().min(1).max(ENTITY_CLIENT_FULLNAME_MAX_LENGTH).regex(namePattern, {
     message: 'Name cannot begin with a number or special character'
   }),
   clientNonPersonDetails: clientNonPersonDetailsSchema

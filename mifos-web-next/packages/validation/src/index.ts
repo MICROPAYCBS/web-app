@@ -12,9 +12,13 @@ export {
   UGANDA_MOBILE_INTERNATIONAL_MESSAGE,
   UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER,
   UGANDA_MOBILE_INTERNATIONAL_REGEX,
+  UGANDA_PHONE_INTERNATIONAL_HINT,
+  UGANDA_PHONE_INTERNATIONAL_REGEX,
   isValidUgandaMobileInternational,
   normalizeUgandaMobileInternational,
   optionalUgandaMobileInternationalSchema,
+  preparePhoneForValidation,
+  stripPhoneSpaces,
   ugandaMobileInternationalSchema
 } from './uganda-mobile';
 export {
@@ -54,6 +58,8 @@ export {
   CLIENT_FAMILY_MEMBERS_REQUIRED_MESSAGE,
   CLIENT_ADDRESS_TEXT_MAX_LENGTH,
   CLIENT_ADDRESS_POSTAL_CODE_MAX_LENGTH,
+  ENTITY_CLIENT_FULLNAME_MAX_LENGTH,
+  ENTITY_CLIENT_REMARKS_MAX_LENGTH,
   type ClientAddressEntry,
   type CreateClientInput,
   type CreateClientPayload,

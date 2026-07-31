@@ -10,7 +10,9 @@
 
 import type { ContactType } from '@mifos/api-client';
 import {
+  stripPhoneSpaces,
   UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER,
+  UGANDA_PHONE_INTERNATIONAL_HINT,
   type ClientContactInput
 } from '@mifos/validation';
 import { Pencil, Phone, Plus, Trash2 } from 'lucide-react';
@@ -109,8 +111,9 @@ export function ContactStep({
               type="tel"
               autoComplete="tel"
               placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
+              hint={UGANDA_PHONE_INTERNATIONAL_HINT}
               value={g.mobileNo ?? ''}
-              onChange={(v) => onDraftChange({ mobileNo: v })}
+              onChange={(v) => onDraftChange({ mobileNo: stripPhoneSpaces(v) })}
               error={errors.mobileNo}
             />
 
@@ -121,8 +124,9 @@ export function ContactStep({
               type="tel"
               autoComplete="tel"
               placeholder={UGANDA_MOBILE_INTERNATIONAL_PLACEHOLDER}
+              hint={UGANDA_PHONE_INTERNATIONAL_HINT}
               value={g.alternativeMobileNo ?? ''}
-              onChange={(v) => onDraftChange({ alternativeMobileNo: v })}
+              onChange={(v) => onDraftChange({ alternativeMobileNo: stripPhoneSpaces(v) })}
               error={errors.alternativeMobileNo}
             />
 
