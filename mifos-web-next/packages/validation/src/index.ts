@@ -1049,13 +1049,17 @@ export {
 export {
   requestTwoFactorOtpSchema,
   validateTwoFactorOtpSchema,
+  confirmTotpEnrollmentSchema,
   validateRequestTwoFactorOtp,
   validateValidateTwoFactorOtp,
+  validateConfirmTotpEnrollment,
   type RequestTwoFactorOtpInput,
-  type ValidateTwoFactorOtpInput
+  type ValidateTwoFactorOtpInput,
+  type ConfirmTotpEnrollmentInput
 } from './auth/twofactor.schema';
 export {
   updateTwoFactorConfigurationSchema,
+  otpDeliveryMethodSchema,
   validateUpdateTwoFactorConfiguration,
   type UpdateTwoFactorConfigurationInput
 } from './system/twofactor-configuration.schema';

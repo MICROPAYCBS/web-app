@@ -9,14 +9,14 @@
  */
 
 import type { FineractUserDetail } from '@mifos/api-client';
-import { Can } from '@mifos/auth';
-import { KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { Can, resolvePermission } from '@mifos/auth';
+import { KeyRound, Pencil, ShieldOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import { toast } from 'sonner';
-import { deleteUserAction } from '@/actions/app-users';
+import { deleteUserAction, resetUserTotpAction } from '@/actions/app-users';
 import { ChangePasswordDialog } from '@/components/app-users/change-password-dialog';
 import { UserRolesBadges } from '@/components/app-users/user-roles-badges';
 import {
@@ -42,14 +42,17 @@ import { cn } from '@/lib/utils';
 export function UserDetailView({
   user,
   canUpdate,
-  canDelete
+  canDelete,
+  canResetTotp
 }: {
   user: FineractUserDetail;
   canUpdate: boolean;
   canDelete: boolean;
+  canResetTotp: boolean;
 }) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [resetTotpOpen, setResetTotpOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -70,6 +73,24 @@ export function UserDetailView({
       });
       setDeleteOpen(false);
       router.push('/appusers');
+      router.refresh();
+    });
+  }
+
+  function handleResetTotp() {
+    setActionError(null);
+    startTransition(async () => {
+      const result = await resetUserTotpAction(user.id);
+      if (!result.ok) {
+        setActionError(result.message);
+        toastFineractError(result.message);
+        return;
+      }
+      toastCommandOutcome(result, {
+        completed: 'Authenticator enrollment reset.',
+        pending: 'Authenticator reset sent for approval.'
+      });
+      setResetTotpOpen(false);
       router.refresh();
     });
   }
@@ -107,6 +128,20 @@ export function UserDetailView({
                     </Button>
                   </>
                 ) : null}
+                <Can permission={resolvePermission('administration.users.resetTotp')}>
+                  {canResetTotp && user.totpEnabled ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setResetTotpOpen(true)}
+                      disabled={pending}
+                    >
+                      <ShieldOff className="mr-2 size-4" />
+                      Reset authenticator
+                    </Button>
+                  ) : null}
+                </Can>
                 <Can permission="DELETE_USER">
                   {canDelete ? (
                     <Button
@@ -137,6 +172,7 @@ export function UserDetailView({
             <DetailField label="Password never expires">{yesNoLabel(user.passwordNeverExpires)}</DetailField>
             <DetailField label="Login retry limit">{yesNoLabel(user.isLoginRetriesEnabled)}</DetailField>
             <DetailField label="Allow password reset">{yesNoLabel(user.isPasswordResetAllowed)}</DetailField>
+            <DetailField label="Authenticator enrolled">{yesNoLabel(user.totpEnabled)}</DetailField>
           </DetailFieldGrid>
         }
       >
@@ -154,6 +190,32 @@ export function UserDetailView({
         userId={user.id}
         firstname={user.firstname}
       />
+
+      <Dialog open={resetTotpOpen} onOpenChange={(next) => !pending && setResetTotpOpen(next)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset authenticator</DialogTitle>
+            <DialogDescription>
+              Clear authenticator enrollment for <strong>{displayName}</strong>? They will need to set
+              up their app again on next sign-in when authenticator verification is required.
+            </DialogDescription>
+          </DialogHeader>
+          {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setResetTotpOpen(false)}
+              disabled={pending}
+            >
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleResetTotp} disabled={pending}>
+              Reset authenticator
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={deleteOpen} onOpenChange={(next) => !pending && setDeleteOpen(next)}>
         <DialogContent>

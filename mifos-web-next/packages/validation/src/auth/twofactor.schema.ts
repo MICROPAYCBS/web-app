@@ -16,8 +16,16 @@ export const validateTwoFactorOtpSchema = z.object({
   token: z.string().trim().min(1, 'Enter the verification code.')
 });
 
+export const confirmTotpEnrollmentSchema = z.object({
+  token: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Enter the 6-digit code from your authenticator app.')
+});
+
 export type RequestTwoFactorOtpInput = z.input<typeof requestTwoFactorOtpSchema>;
 export type ValidateTwoFactorOtpInput = z.input<typeof validateTwoFactorOtpSchema>;
+export type ConfirmTotpEnrollmentInput = z.input<typeof confirmTotpEnrollmentSchema>;
 
 export function validateRequestTwoFactorOtp(input: unknown) {
   return requestTwoFactorOtpSchema.safeParse(input);
@@ -25,4 +33,8 @@ export function validateRequestTwoFactorOtp(input: unknown) {
 
 export function validateValidateTwoFactorOtp(input: unknown) {
   return validateTwoFactorOtpSchema.safeParse(input);
+}
+
+export function validateConfirmTotpEnrollment(input: unknown) {
+  return confirmTotpEnrollmentSchema.safeParse(input);
 }

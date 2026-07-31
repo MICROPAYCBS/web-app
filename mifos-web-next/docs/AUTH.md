@@ -8,8 +8,8 @@ Fineract **basic authentication** via the app BFF. The browser never calls `POST
 1. /login       — pick server (sheet) + username + password form
 2. POST /api/auth/login — BFF → POST {baseUrl}/authentication
 3a. No 2FA     — httpOnly cookie mifos-session; redirect home
-3b. 2FA required — httpOnly cookie mifos-2fa-pending (Basic key + login payload); UI OTP step
-4. OTP step    — GET delivery methods → POST request OTP → POST validate
+3b. 2FA required — httpOnly cookie mifos-2fa-pending (Basic key + login payload); UI second step
+4. Second step — depends on tenant delivery method (see below)
 5. On validate — mifos-session (+ twoFactorAccessToken); clear pending; redirect home
 6. BFF routes  — Authorization: Basic {key} and, when present, Fineract-Platform-TFA-Token
 ```
@@ -22,25 +22,50 @@ Enabled **on the Fineract server**, not per user in this UI:
 |-------|-----------|
 | Server | `fineract.security.2fa.enabled` / env `FINERACT_SECURITY_2FA_ENABLED` (default `false`) |
 | User | Permission **`BYPASS_TWOFACTOR`** skips the OTP challenge (checked with Fineract `hasSpecificPermissionTo` — **`ALL_FUNCTIONS` does not imply bypass**) |
-| Delivery | Tenant `twofactor_configuration` (email/SMS, OTP length/TTL) |
+| Delivery | Tenant `twofactor_configuration` — **exactly one** global method: `email`, `sms`, or `totp` (`otp-delivery-method`) |
 
-When the flag is on, every non-bypass user must complete OTP after a successful password login. Super users with only `ALL_FUNCTIONS` still see the OTP step unless their role also includes `BYPASS_TWOFACTOR`. There is no per-user “enable 2FA” toggle in this app.
+When the flag is on, every non-bypass user must complete the second step after a successful password login. Super users with only `ALL_FUNCTIONS` still see the verification step unless their role also includes `BYPASS_TWOFACTOR`. There is no per-user “enable 2FA” toggle in this app.
 
-Admin delivery settings (email/SMS templates, OTP length/TTL, access-token lifetime) are edited at **System → Two-factor authentication** (`/system/two-factor`), which calls `GET/PUT /v1/twofactor/configure` (`READ_TWOFACTOR_CONFIGURATION` / `UPDATE_TWOFACTOR_CONFIGURATION`). Email and SMS still require working External services (SMTP / SMS gateway).
+Admin delivery settings are edited at **System → Two-factor authentication** (`/system/two-factor`), which calls `GET/PUT /v1/twofactor/configure` (`READ_TWOFACTOR_CONFIGURATION` / `UPDATE_TWOFACTOR_CONFIGURATION`). Email and SMS still require working External services (SMTP / SMS gateway). Authenticator app (TOTP) does not use those channels.
 
-The pending cookie stores only credentials metadata (not the full permissions list) so it stays under browser cookie size limits; permissions are re-loaded from authentication after OTP validates.
+The pending cookie stores credentials metadata plus 2FA context from the login response (`deliveryMethod`, `totpEnabled`, `totpEnrollmentRequired`). It intentionally omits the full permissions list so it stays under browser cookie size limits; permissions are re-loaded from authentication after OTP validates.
+
+### Delivery methods
+
+| Method | Admin configure | Login second step |
+|--------|-----------------|-------------------|
+| **Email** | Subject/body templates with `{{token}}`, `{{username}}` | Send code → enter OTP from email |
+| **SMS** | Provider ID + message template | Send code → enter OTP from SMS |
+| **Authenticator app (TOTP)** | No templates; staff enroll on first sign-in | Enroll (QR + secret → confirm 6-digit code) if `totpEnrollmentRequired`; otherwise enter code from app only |
+
+`GET /v1/twofactor` returns **at most one** method matching the global policy (TOTP only when the user is enrolled). There is no multi-method picker at login.
+
+### TOTP enrollment and reset
+
+Password-authenticated, pre-TFA-token:
+
+| Fineract | BFF |
+|----------|-----|
+| `POST /v1/twofactor/totp/enroll` → `{ secret, otpauthUri }` | `POST /api/auth/twofactor/totp/enroll` (also returns QR data URL) |
+| `POST /v1/twofactor/totp/confirm?token={code}` → `{ totpEnabled: true }` | `POST /api/auth/twofactor/totp/confirm` (updates pending cookie) |
+
+Enrolled TOTP login: `POST /v1/twofactor/validate?token={authenticatorCode}` (optional `POST /v1/twofactor?deliveryMethod=totp` for symmetry).
+
+Admin lost-device reset: `POST /v1/users/{userId}?command=resetTotp` (`RESETTOTP_USER`). User GET includes read-only `totpEnabled` (never the secret). UI: **Administration → Users** detail — **Authenticator enrolled** field and **Reset authenticator** action.
 
 ### BFF routes
 
 | Route | Fineract |
 |-------|----------|
-| `POST /api/auth/login` | On `isTwoFactorAuthenticationRequired`, sets `mifos-2fa-pending`; JSON `{ ok: true, needsTwoFactor: true }` |
-| `GET /api/auth/twofactor/delivery-methods` | `GET /v1/twofactor` with Basic from pending cookie |
-| `POST /api/auth/twofactor/request` | `POST /v1/twofactor?deliveryMethod=&extendedToken=` |
+| `POST /api/auth/login` | On `isTwoFactorAuthenticationRequired`, sets `mifos-2fa-pending`; JSON `{ ok: true, needsTwoFactor: true, deliveryMethod?, totpEnabled?, totpEnrollmentRequired? }` |
+| `GET /api/auth/twofactor/delivery-methods` | `GET /v1/twofactor` + pending 2FA context from cookie |
+| `POST /api/auth/twofactor/request` | `POST /v1/twofactor?deliveryMethod=&extendedToken=` (email/SMS only) |
 | `POST /api/auth/twofactor/validate` | `POST /v1/twofactor/validate?token=`; sets full `mifos-session` with TFA token |
+| `POST /api/auth/twofactor/totp/enroll` | `POST /v1/twofactor/totp/enroll` |
+| `POST /api/auth/twofactor/totp/confirm` | `POST /v1/twofactor/totp/confirm?token=` |
 | `POST /api/auth/twofactor/cancel` | Clears `mifos-2fa-pending` (return to password step) |
 
-Pending cookie TTL is about **10 minutes**. Full `mifos-session` is not granted until OTP validates.
+Pending cookie TTL is about **10 minutes**. Full `mifos-session` is not granted until the second step validates.
 
 Outbound Fineract calls from `buildFineractRequestInit` / `createFineractClient` send `Fineract-Platform-TFA-Token` when the session has `twoFactorAccessToken`. Without it, Fineract returns **403** while 2FA is enabled.
 
@@ -57,7 +82,7 @@ Outbound Fineract calls from `buildFineractRequestInit` / `createFineractClient`
 | Pending 2FA | Value |
 |-------------|--------|
 | Name | `mifos-2fa-pending` |
-| Content | Minimal login payload + Basic/Bearer key for OTP APIs |
+| Content | Minimal login payload + Basic/Bearer key + optional `deliveryMethod`, `totpEnabled`, `totpEnrollmentRequired` |
 | TTL | ~10 minutes |
 
 Public fields exposed to React via `getPublicSession()` / `SessionProvider` (no auth keys or TFA token).
@@ -95,6 +120,7 @@ Disable demo flags in production.
 ## Not yet supported
 
 - OAuth / OIDC (legacy web-app modes)
+- WebAuthn, backup codes, client/mobile banking MFA, OIDC IdP MFA
 - In-app password renewal (`shouldRenewPassword`) — reset with your administrator first (also blocked after OTP if the login payload requires renewal)
 
 ## Sign out
@@ -118,10 +144,20 @@ Client-side TanStack Query caches are cleared before navigating to `/api/auth/lo
 | Fineract login | `apps/web/src/lib/fineract/authenticate.ts` |
 | 2FA Fineract helpers | `apps/web/src/lib/fineract/twofactor.ts` |
 | 2FA admin configure | `apps/web/src/lib/fineract/twofactor-configuration.ts`, `/system/two-factor` |
+| TOTP enrollment UI | `apps/web/src/components/auth/totp-enrollment-step.tsx` |
+| User TOTP reset | `apps/web/src/lib/fineract/app-users.ts`, `resetUserTotpAction` |
 | Cookie helpers | `apps/web/src/lib/session/cookie.ts`, `pending-twofactor.ts` |
 | Idle timeout | `apps/web/src/components/auth/inactivity-timeout.tsx` |
 | Login Route Handler | `apps/web/src/app/api/auth/login/route.ts` |
-| 2FA Route Handlers | `apps/web/src/app/api/auth/twofactor/*` |
+| 2FA Route Handlers | `apps/web/src/app/api/auth/twofactor/*` (allowed through `proxy.ts` without full session — pending cookie only) |
 | Legacy server action | `apps/web/src/actions/auth.ts` |
 | Login UI | `apps/web/src/components/auth/login-form.tsx` |
 | Route guard | `apps/web/src/proxy.ts` |
+
+## Permissions
+
+| Semantic key | Fineract code | Use |
+|--------------|---------------|-----|
+| `system.twoFactor` | `READ_TWOFACTOR_CONFIGURATION` | View `/system/two-factor` |
+| `system.twoFactor.update` | `UPDATE_TWOFACTOR_CONFIGURATION` | Save delivery settings |
+| `administration.users.resetTotp` | `RESETTOTP_USER` | Reset authenticator enrollment on user detail |

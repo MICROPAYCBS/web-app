@@ -9,6 +9,7 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
+import type { OtpDeliveryMethod } from '@mifos/api-client';
 import { TWO_FACTOR_PENDING_COOKIE_NAME, TWO_FACTOR_PENDING_MAX_AGE } from './constants';
 
 export { TWO_FACTOR_PENDING_COOKIE_NAME, TWO_FACTOR_PENDING_MAX_AGE };
@@ -30,6 +31,10 @@ export type TwoFactorPendingAuth = {
   sessionIdleTimeoutMinutes?: number;
   sessionIdleWarningSeconds?: number;
   redirectTo: string;
+  /** Global delivery method from POST /authentication. */
+  deliveryMethod?: OtpDeliveryMethod;
+  totpEnabled?: boolean;
+  totpEnrollmentRequired?: boolean;
 };
 
 export function twoFactorPendingCookieAttributes(maxAge: number) {

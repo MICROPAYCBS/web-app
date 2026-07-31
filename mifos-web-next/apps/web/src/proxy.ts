@@ -10,6 +10,7 @@ const CONNECT_PATH = '/connect';
 const LOGIN_PATH = '/login';
 const LOGOUT_PATH = '/api/auth/logout';
 const LOGIN_API_PATH = '/api/auth/login';
+const TWOFACTOR_API_PREFIX = '/api/auth/twofactor';
 const LOGIN_ERROR_FLASH_PATH = '/api/auth/login-error-flash';
 const SERVER_HEALTH_PATH = '/api/servers/health';
 const SENTRY_TUNNEL_PATH = process.env.SENTRY_TUNNEL_ROUTE ?? '/monitoring';
@@ -97,6 +98,7 @@ export function proxy(request: NextRequest) {
     pathname === SENTRY_TUNNEL_PATH ||
     pathname === LOGOUT_PATH ||
     pathname === LOGIN_API_PATH ||
+    pathname.startsWith(TWOFACTOR_API_PREFIX) ||
     pathname === LOGIN_ERROR_FLASH_PATH ||
     pathname === SERVER_HEALTH_PATH
   ) {

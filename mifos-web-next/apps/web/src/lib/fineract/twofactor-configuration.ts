@@ -12,7 +12,8 @@ import {
   FineractHttpError,
   type FineractTwoFactorConfiguration,
   type FineractTwoFactorConfigurationUpdatePayload,
-  type FineractTwoFactorConfigurationUpdateResponse
+  type FineractTwoFactorConfigurationUpdateResponse,
+  type OtpDeliveryMethod
 } from '@mifos/api-client';
 import type { UpdateTwoFactorConfigurationInput } from '@mifos/validation';
 import { createFineractClient } from '@/lib/fineract/create-client';
@@ -20,6 +21,7 @@ import { createFineractClient } from '@/lib/fineract/create-client';
 const CONFIGURE_PATH = '/twofactor/configure';
 
 const DEFAULTS: FineractTwoFactorConfiguration = {
+  otpDeliveryMethod: 'email',
   emailEnabled: false,
   emailSubject: 'Your verification code',
   emailBody: 'Hello {{username}}.\nYour verification code is {{token}}.',
@@ -63,15 +65,55 @@ function asPositiveInt(value: unknown, fallback: number): number {
   return fallback;
 }
 
+function asOtpDeliveryMethod(value: unknown, fallback: OtpDeliveryMethod): OtpDeliveryMethod {
+  if (value === 'email' || value === 'sms' || value === 'totp') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'email' || normalized === 'sms' || normalized === 'totp') {
+      return normalized;
+    }
+  }
+  return fallback;
+}
+
+function deriveDeliveryMethod(row: Record<string, unknown>): OtpDeliveryMethod {
+  const explicit = asOtpDeliveryMethod(row['otp-delivery-method'], DEFAULTS.otpDeliveryMethod);
+  if (row['otp-delivery-method'] != null) {
+    return explicit;
+  }
+  const emailEnabled = asBoolean(row['otp-delivery-email-enable'], DEFAULTS.emailEnabled);
+  const smsEnabled = asBoolean(row['otp-delivery-sms-enable'], DEFAULTS.smsEnabled);
+  if (emailEnabled && !smsEnabled) {
+    return 'email';
+  }
+  if (smsEnabled && !emailEnabled) {
+    return 'sms';
+  }
+  return explicit;
+}
+
 export function normalizeTwoFactorConfiguration(raw: unknown): FineractTwoFactorConfiguration {
   const row =
     raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : ({} as Record<string, unknown>);
 
+  const otpDeliveryMethod = deriveDeliveryMethod(row);
+  const emailEnabled =
+    otpDeliveryMethod === 'email'
+      ? true
+      : asBoolean(row['otp-delivery-email-enable'], DEFAULTS.emailEnabled);
+  const smsEnabled =
+    otpDeliveryMethod === 'sms'
+      ? true
+      : asBoolean(row['otp-delivery-sms-enable'], DEFAULTS.smsEnabled);
+
   return {
-    emailEnabled: asBoolean(row['otp-delivery-email-enable'], DEFAULTS.emailEnabled),
+    otpDeliveryMethod,
+    emailEnabled,
     emailSubject: asString(row['otp-delivery-email-subject'], DEFAULTS.emailSubject),
     emailBody: asString(row['otp-delivery-email-body'], DEFAULTS.emailBody),
-    smsEnabled: asBoolean(row['otp-delivery-sms-enable'], DEFAULTS.smsEnabled),
+    smsEnabled,
     smsProviderId: asPositiveInt(row['otp-delivery-sms-provider'], DEFAULTS.smsProviderId),
     smsText: asString(row['otp-delivery-sms-text'], DEFAULTS.smsText),
     otpTokenLiveTime: asPositiveInt(row['otp-token-live-time'], DEFAULTS.otpTokenLiveTime),
@@ -87,11 +129,15 @@ export function normalizeTwoFactorConfiguration(raw: unknown): FineractTwoFactor
 export function toTwoFactorConfigurationPayload(
   input: UpdateTwoFactorConfigurationInput
 ): FineractTwoFactorConfigurationUpdatePayload {
+  const emailEnabled = input.otpDeliveryMethod === 'email';
+  const smsEnabled = input.otpDeliveryMethod === 'sms';
+
   return {
-    'otp-delivery-email-enable': input.emailEnabled,
+    'otp-delivery-method': input.otpDeliveryMethod,
+    'otp-delivery-email-enable': emailEnabled,
     'otp-delivery-email-subject': input.emailSubject,
     'otp-delivery-email-body': input.emailBody,
-    'otp-delivery-sms-enable': input.smsEnabled,
+    'otp-delivery-sms-enable': smsEnabled,
     'otp-delivery-sms-provider': input.smsProviderId,
     'otp-delivery-sms-text': input.smsText,
     'otp-token-live-time': input.otpTokenLiveTime,

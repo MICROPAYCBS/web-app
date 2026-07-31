@@ -6,10 +6,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { OtpDeliveryMethod } from '@mifos/api-client';
+
 /** `Accept` value for interactive login via `fetch` (see `/api/auth/login`). */
 export const LOGIN_JSON_ACCEPT = 'application/json';
 
 export type LoginApiSuccess = { ok: true; redirectTo: string; needsTwoFactor?: false };
-export type LoginApiNeedsTwoFactor = { ok: true; needsTwoFactor: true };
+export type LoginApiNeedsTwoFactor = {
+  ok: true;
+  needsTwoFactor: true;
+  deliveryMethod?: OtpDeliveryMethod;
+  totpEnabled?: boolean;
+  totpEnrollmentRequired?: boolean;
+};
 export type LoginApiFailure = { ok: false; message: string };
 export type LoginApiResponse = LoginApiSuccess | LoginApiNeedsTwoFactor | LoginApiFailure;

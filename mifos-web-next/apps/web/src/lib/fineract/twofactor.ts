@@ -8,7 +8,13 @@
 
 import 'server-only';
 
+import type {
+  FineractTotpConfirmResponse,
+  FineractTotpEnrollResponse
+} from '@mifos/api-client';
+import { getFineractErrorMessage, type FineractErrorBody } from '@mifos/i18n';
 import {
+  AuthenticationError,
   credentialsFromBasicAuthenticationKey,
   mapAuthenticationToSession,
   type FineractAuthenticationResponse
@@ -76,15 +82,57 @@ async function fineractTwoFactorFetch(
   });
 }
 
-function userFacingTwoFactorError(status: number, body: { defaultUserMessage?: string } | null): string {
-  const message = body?.defaultUserMessage?.trim();
+function userFacingTwoFactorError(status: number, body: FineractErrorBody | unknown): string {
+  const message = getFineractErrorMessage(
+    body && typeof body === 'object' ? (body as FineractErrorBody) : null,
+    status
+  ).trim();
   if (message) {
     return message;
   }
   if (status === 401 || status === 403) {
     return 'Your sign-in session expired. Sign in again.';
   }
+  if (status === 404) {
+    return 'Two-factor enrollment is not available on this server. Confirm two-factor is enabled and the delivery method is authenticator app.';
+  }
   return 'Two-factor verification failed. Please try again.';
+}
+
+function normalizeTotpEnrollResponse(raw: unknown): FineractTotpEnrollResponse | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const secret =
+    typeof row.secret === 'string' && row.secret.trim()
+      ? row.secret.trim()
+      : typeof row['totp-secret'] === 'string' && row['totp-secret'].trim()
+        ? row['totp-secret'].trim()
+        : null;
+  const otpauthUri =
+    typeof row.otpauthUri === 'string' && row.otpauthUri.trim()
+      ? row.otpauthUri.trim()
+      : typeof row.otpAuthUri === 'string' && row.otpAuthUri.trim()
+        ? row.otpAuthUri.trim()
+        : typeof row['otpauth-uri'] === 'string' && row['otpauth-uri'].trim()
+          ? row['otpauth-uri'].trim()
+          : null;
+  if (!secret || !otpauthUri) {
+    return null;
+  }
+  return { secret, otpauthUri };
+}
+
+async function readFineractErrorBody(res: Response, context: {
+  requestUrl: string;
+  operation: string;
+}): Promise<unknown | null> {
+  try {
+    return await readFineractJsonBody<unknown>(res, context);
+  } catch {
+    return null;
+  }
 }
 
 export async function listTwoFactorDeliveryMethods(
@@ -103,15 +151,10 @@ export async function listTwoFactorDeliveryMethods(
   }
 
   if (!res.ok) {
-    let body: { defaultUserMessage?: string } | null = null;
-    try {
-      body = await readFineractJsonBody<{ defaultUserMessage?: string }>(res, {
-        requestUrl: 'twofactor',
-        operation: 'GET /twofactor'
-      });
-    } catch {
-      body = null;
-    }
+    const body = await readFineractErrorBody(res, {
+      requestUrl: 'twofactor',
+      operation: 'GET /twofactor'
+    });
     return { ok: false, message: userFacingTwoFactorError(res.status, body) };
   }
 
@@ -148,15 +191,10 @@ export async function requestTwoFactorOtp(
   }
 
   if (!res.ok) {
-    let body: { defaultUserMessage?: string } | null = null;
-    try {
-      body = await readFineractJsonBody<{ defaultUserMessage?: string }>(res, {
-        requestUrl: 'twofactor',
-        operation: 'POST /twofactor'
-      });
-    } catch {
-      body = null;
-    }
+    const body = await readFineractErrorBody(res, {
+      requestUrl: 'twofactor',
+      operation: 'POST /twofactor'
+    });
     return { ok: false, message: userFacingTwoFactorError(res.status, body) };
   }
 
@@ -191,15 +229,10 @@ export async function validateTwoFactorOtp(
   }
 
   if (!res.ok) {
-    let body: { defaultUserMessage?: string } | null = null;
-    try {
-      body = await readFineractJsonBody<{ defaultUserMessage?: string }>(res, {
-        requestUrl: 'twofactor/validate',
-        operation: 'POST /twofactor/validate'
-      });
-    } catch {
-      body = null;
-    }
+    const body = await readFineractErrorBody(res, {
+      requestUrl: 'twofactor/validate',
+      operation: 'POST /twofactor/validate'
+    });
     return { ok: false, message: userFacingTwoFactorError(res.status, body) };
   }
 
@@ -326,4 +359,90 @@ export async function invalidateTwoFactorAccessToken(
   } catch {
     // Ignore — cookie clear still proceeds.
   }
+}
+
+export async function enrollTotp(
+  pending: TwoFactorPendingAuth
+): Promise<{ ok: true; result: FineractTotpEnrollResponse } | { ok: false; message: string }> {
+  const auth = pendingAuthHeader(pending);
+  if (!auth) {
+    return { ok: false, message: 'Your sign-in session expired. Sign in again.' };
+  }
+
+  let res: Response;
+  try {
+    res = await fineractTwoFactorFetch('twofactor/totp/enroll', auth, {
+      method: 'POST'
+    });
+  } catch {
+    return { ok: false, message: 'Could not reach the server. Check your connection and try again.' };
+  }
+
+  const responseContext = {
+    requestUrl: 'twofactor/totp/enroll',
+    operation: 'POST /twofactor/totp/enroll'
+  };
+
+  if (!res.ok) {
+    const body = await readFineractErrorBody(res, responseContext);
+    return { ok: false, message: userFacingTwoFactorError(res.status, body) };
+  }
+
+  let raw: unknown;
+  try {
+    raw = await readFineractJsonBody<unknown>(res, responseContext);
+  } catch (error) {
+    const message =
+      error instanceof AuthenticationError
+        ? error.message
+        : 'Enrollment response was unreadable. Please try again.';
+    return { ok: false, message };
+  }
+
+  const result = normalizeTotpEnrollResponse(raw);
+  if (!result) {
+    return {
+      ok: false,
+      message:
+        'Enrollment response was incomplete. Confirm authenticator app is the active delivery method, then try again.'
+    };
+  }
+
+  return { ok: true, result };
+}
+
+export async function confirmTotpEnrollment(
+  pending: TwoFactorPendingAuth,
+  token: string
+): Promise<{ ok: true; result: FineractTotpConfirmResponse } | { ok: false; message: string }> {
+  const auth = pendingAuthHeader(pending);
+  if (!auth) {
+    return { ok: false, message: 'Your sign-in session expired. Sign in again.' };
+  }
+
+  const params = new URLSearchParams({ token });
+  let res: Response;
+  try {
+    res = await fineractTwoFactorFetch(`twofactor/totp/confirm?${params.toString()}`, auth, {
+      method: 'POST',
+      body: '{}'
+    });
+  } catch {
+    return { ok: false, message: 'Could not reach the server. Check your connection and try again.' };
+  }
+
+  if (!res.ok) {
+    const body = await readFineractErrorBody(res, {
+      requestUrl: 'twofactor/totp/confirm',
+      operation: 'POST /twofactor/totp/confirm'
+    });
+    return { ok: false, message: userFacingTwoFactorError(res.status, body) };
+  }
+
+  const result = await readFineractJsonBody<FineractTotpConfirmResponse>(res, {
+    requestUrl: 'twofactor/totp/confirm',
+    operation: 'POST /twofactor/totp/confirm'
+  });
+
+  return { ok: true, result: result ?? { totpEnabled: true } };
 }

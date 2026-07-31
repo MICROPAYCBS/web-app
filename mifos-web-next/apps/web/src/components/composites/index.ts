@@ -82,6 +82,7 @@ export {
   type CodeValueSelectFieldProps
 } from './code-value-select-field';
 export { TextField, type TextFieldProps } from './text-field';
+export { VerificationCodeField, type VerificationCodeFieldProps } from './verification-code-field';
 export { MoneyField, sanitizeMoneyInput, formatMoneyInputDisplay, type MoneyFieldProps } from './money-field';
 export {
   NumericField,

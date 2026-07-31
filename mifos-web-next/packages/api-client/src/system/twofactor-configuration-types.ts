@@ -6,8 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/** Tenant-global OTP delivery method (exactly one). */
+export type OtpDeliveryMethod = 'email' | 'sms' | 'totp';
+
 /** Normalized two-factor delivery and token settings from GET /twofactor/configure. */
 export type FineractTwoFactorConfiguration = {
+  otpDeliveryMethod: OtpDeliveryMethod;
   emailEnabled: boolean;
   emailSubject: string;
   emailBody: string;
@@ -22,6 +26,7 @@ export type FineractTwoFactorConfiguration = {
 
 /** PUT /twofactor/configure body (Fineract kebab-case keys). */
 export type FineractTwoFactorConfigurationUpdatePayload = {
+  'otp-delivery-method'?: OtpDeliveryMethod;
   'otp-delivery-email-enable'?: boolean;
   'otp-delivery-email-subject'?: string;
   'otp-delivery-email-body'?: string;

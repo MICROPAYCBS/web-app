@@ -44,7 +44,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-100 | `/system/manage-jobs`                | Manage jobs           | **Done**    | Scheduler, workflow, COB tabs + detail   |
 | SYS-105 | `/system/job-sequences`              | Job sequences         | **In progress** | List, create, edit, execute, run monitor |
 | SYS-110 | `/system/configurations`             | Global configurations | **Done**    | Inline edit sheet                        |
-| SYS-112 | `/system/two-factor`                 | Two-factor auth       | **Done**    | Delivery + OTP/session settings          |
+| SYS-112 | `/system/two-factor`                 | Two-factor auth       | **Done**    | Global delivery (email/SMS/TOTP), OTP/session settings |
 | SYS-120 | `/system/account-number-preferences` | Account number prefs  | **Done**    | List, create sheet, view, edit, delete   |
 | SYS-130 | `/system/reports`                    | Report configuration  | **Done**    | List, create, view, edit, delete, params |
 | SYS-140 | `/system/system-information`         | System information    | **Done**    | Tenant, versions, server, licensing      |

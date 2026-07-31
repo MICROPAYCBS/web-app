@@ -1,0 +1,9 @@
+{
+  "command": "auth.twofactor.totp.confirm",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.security.api.TwoFactorApiResource"
+  ],
+  "fields": {
+    "token": { "required": true, "pattern": "^\\d{6}$" }
+  }
+}

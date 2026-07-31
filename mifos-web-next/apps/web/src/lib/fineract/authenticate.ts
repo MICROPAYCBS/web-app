@@ -8,7 +8,7 @@
 
 import 'server-only';
 
-import { FineractHttpError } from '@mifos/api-client';
+import { FineractHttpError, type OtpDeliveryMethod } from '@mifos/api-client';
 import { parseSessionRoles } from '@mifos/auth';
 import { AuthenticationError } from '@/lib/fineract/authentication-error';
 import { readFineractJsonBody } from '@/lib/fineract/fineract-response';
@@ -34,6 +34,9 @@ export interface FineractAuthenticationResponse {
   permissions: string[];
   roles?: unknown;
   isTwoFactorAuthenticationRequired?: boolean;
+  deliveryMethod?: OtpDeliveryMethod;
+  totpEnabled?: boolean;
+  totpEnrollmentRequired?: boolean;
   shouldRenewPassword?: boolean;
   sessionIdleTimeoutMinutes?: number;
   sessionIdleWarningSeconds?: number;
@@ -73,6 +76,12 @@ export function mapAuthenticationToSession(data: FineractAuthenticationResponse)
 export function mapAuthenticationToPendingBase(
   data: FineractAuthenticationResponse
 ): Omit<TwoFactorPendingAuth, 'remember' | 'redirectTo'> {
+  const deliveryMethod = data.deliveryMethod;
+  const totpEnabled = data.totpEnabled === true;
+  const totpEnrollmentRequired =
+    data.totpEnrollmentRequired === true ||
+    (deliveryMethod === 'totp' && !totpEnabled);
+
   return {
     userId: data.userId,
     username: data.username,
@@ -82,7 +91,10 @@ export function mapAuthenticationToPendingBase(
     accessToken: data.accessToken,
     shouldRenewPassword: data.shouldRenewPassword,
     sessionIdleTimeoutMinutes: data.sessionIdleTimeoutMinutes,
-    sessionIdleWarningSeconds: data.sessionIdleWarningSeconds
+    sessionIdleWarningSeconds: data.sessionIdleWarningSeconds,
+    deliveryMethod,
+    totpEnabled,
+    totpEnrollmentRequired
   };
 }
 

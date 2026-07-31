@@ -38,6 +38,7 @@ export default async function AppUserDetailPage({
       user={user}
       canUpdate={can(session, 'UPDATE_USER')}
       canDelete={can(session, 'DELETE_USER')}
+      canResetTotp={can(session, resolvePermission('administration.users.resetTotp'))}
     />
   );
 }

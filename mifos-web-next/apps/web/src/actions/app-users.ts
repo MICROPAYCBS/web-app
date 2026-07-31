@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { assertCan } from '@mifos/auth';
+import { assertCan, resolvePermission } from '@mifos/auth';
 import type { EntityMappingOption } from '@mifos/api-client';
 import {
   toFineractActionError,
@@ -26,6 +26,7 @@ import {
   createUser,
   deleteUser,
   listStaffByOffice,
+  resetUserTotp,
   updateUser
 } from '@/lib/fineract/app-users';
 import { getServerSession } from '@/lib/session/server';
@@ -191,5 +192,26 @@ export async function deleteUserAction(userId: number): Promise<AppUsersActionRe
     return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to delete user.');
+  }
+}
+
+export async function resetUserTotpAction(userId: number): Promise<AppUsersActionResult> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, resolvePermission('administration.users.resetTotp'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to reset authenticator enrollment.' };
+  }
+
+  if (!Number.isFinite(userId)) {
+    return { ok: false, message: 'Invalid user id.' };
+  }
+
+  try {
+    const response = await resetUserTotp(userId);
+    revalidateUserViews(userId);
+    return actionSuccessFromFineractCommand(response, { resourceId: userId });
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to reset authenticator.');
   }
 }

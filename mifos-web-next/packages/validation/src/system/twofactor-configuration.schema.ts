@@ -10,12 +10,15 @@ import { z } from 'zod';
 
 const positiveInt = z.number().int().positive('Must be a whole number greater than zero.');
 
+export const otpDeliveryMethodSchema = z.enum(['email', 'sms', 'totp'], {
+  errorMap: () => ({ message: 'Select a delivery method.' })
+});
+
 export const updateTwoFactorConfigurationSchema = z
   .object({
-    emailEnabled: z.boolean(),
+    otpDeliveryMethod: otpDeliveryMethodSchema,
     emailSubject: z.string().trim().min(1, 'Email subject is required.').max(1000),
     emailBody: z.string().trim().min(1, 'Email body is required.').max(1000),
-    smsEnabled: z.boolean(),
     smsProviderId: positiveInt,
     smsText: z.string().trim().min(1, 'SMS message is required.').max(1000),
     otpTokenLiveTime: positiveInt,
@@ -24,13 +27,6 @@ export const updateTwoFactorConfigurationSchema = z
     accessTokenLiveTimeExtended: positiveInt
   })
   .superRefine((value, ctx) => {
-    if (!value.emailEnabled && !value.smsEnabled) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Enable at least one delivery method (email or SMS).',
-        path: ['emailEnabled']
-      });
-    }
     if (value.accessTokenLiveTimeExtended < value.accessTokenLiveTime) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

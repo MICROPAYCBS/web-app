@@ -284,8 +284,16 @@ export type {
 export type {
   FineractTwoFactorConfiguration,
   FineractTwoFactorConfigurationUpdatePayload,
-  FineractTwoFactorConfigurationUpdateResponse
+  FineractTwoFactorConfigurationUpdateResponse,
+  OtpDeliveryMethod
 } from './system/twofactor-configuration-types';
+
+export type {
+  FineractAuthenticationTwoFactorContext,
+  FineractTotpConfirmResponse,
+  FineractTotpEnrollResponse,
+  FineractTwoFactorDeliveryMethodOption
+} from './auth/twofactor-types';
 
 export {
   BUSINESS_DATE_TYPE,

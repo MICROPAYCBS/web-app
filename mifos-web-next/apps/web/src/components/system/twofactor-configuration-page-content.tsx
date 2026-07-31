@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractTwoFactorConfiguration } from '@mifos/api-client';
+import type { FineractTwoFactorConfiguration, OtpDeliveryMethod } from '@mifos/api-client';
 import { Can, resolvePermission } from '@mifos/auth';
 import { formatActionErrorMessage, validateUpdateTwoFactorConfiguration } from '@mifos/validation';
 import Link from 'next/link';
@@ -17,23 +17,54 @@ import { useEffect, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { updateTwoFactorConfigurationAction } from '@/actions/twofactor-configuration';
 import { ListPage } from '@/components/composites/list-page';
-import { SwitchField } from '@/components/composites/switch-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
-type FormState = FineractTwoFactorConfiguration;
+type FormState = {
+  otpDeliveryMethod: OtpDeliveryMethod;
+  emailSubject: string;
+  emailBody: string;
+  smsProviderId: number;
+  smsText: string;
+  otpTokenLiveTime: number;
+  otpTokenLength: number;
+  accessTokenLiveTime: number;
+  accessTokenLiveTimeExtended: number;
+};
 
-function cloneConfig(config: FineractTwoFactorConfiguration): FormState {
-  return { ...config };
+const DELIVERY_METHOD_LABELS: Record<OtpDeliveryMethod, string> = {
+  email: 'Email',
+  sms: 'SMS',
+  totp: 'Authenticator app'
+};
+
+function formFromConfiguration(config: FineractTwoFactorConfiguration): FormState {
+  return {
+    otpDeliveryMethod: config.otpDeliveryMethod,
+    emailSubject: config.emailSubject,
+    emailBody: config.emailBody,
+    smsProviderId: config.smsProviderId,
+    smsText: config.smsText,
+    otpTokenLiveTime: config.otpTokenLiveTime,
+    otpTokenLength: config.otpTokenLength,
+    accessTokenLiveTime: config.accessTokenLiveTime,
+    accessTokenLiveTimeExtended: config.accessTokenLiveTimeExtended
+  };
 }
 
 function configsEqual(left: FormState, right: FormState): boolean {
   return (
-    left.emailEnabled === right.emailEnabled &&
+    left.otpDeliveryMethod === right.otpDeliveryMethod &&
     left.emailSubject === right.emailSubject &&
     left.emailBody === right.emailBody &&
-    left.smsEnabled === right.smsEnabled &&
     left.smsProviderId === right.smsProviderId &&
     left.smsText === right.smsText &&
     left.otpTokenLiveTime === right.otpTokenLiveTime &&
@@ -54,10 +85,10 @@ export function TwoFactorConfigurationPageContent({
 }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState | null>(
-    configuration ? cloneConfig(configuration) : null
+    configuration ? formFromConfiguration(configuration) : null
   );
   const [baseline, setBaseline] = useState<FormState | null>(
-    configuration ? cloneConfig(configuration) : null
+    configuration ? formFromConfiguration(configuration) : null
   );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -69,7 +100,7 @@ export function TwoFactorConfigurationPageContent({
       setBaseline(null);
       return;
     }
-    const next = cloneConfig(configuration);
+    const next = formFromConfiguration(configuration);
     setForm(next);
     setBaseline(next);
     setFieldErrors({});
@@ -92,7 +123,7 @@ export function TwoFactorConfigurationPageContent({
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             Ask your platform operator to enable two-factor authentication on the application
-            server and restart it, then return here to choose email or SMS delivery.
+            server and restart it, then return here to choose a delivery method.
           </CardContent>
         </Card>
       </ListPage>
@@ -110,7 +141,7 @@ export function TwoFactorConfigurationPageContent({
     if (!baseline) {
       return;
     }
-    setForm(cloneConfig(baseline));
+    setForm({ ...baseline });
     setFieldErrors({});
     setSubmitError(null);
   }
@@ -152,8 +183,14 @@ export function TwoFactorConfigurationPageContent({
         completed: 'Two-factor settings saved.',
         pending: 'Two-factor settings sent for approval.'
       });
-      setBaseline(cloneConfig(parsed.data));
-      setForm(cloneConfig(parsed.data));
+      const saved = formFromConfiguration({
+        ...configuration!,
+        ...parsed.data,
+        emailEnabled: parsed.data.otpDeliveryMethod === 'email',
+        smsEnabled: parsed.data.otpDeliveryMethod === 'sms'
+      });
+      setBaseline(saved);
+      setForm(saved);
       router.refresh();
     });
   }
@@ -161,135 +198,184 @@ export function TwoFactorConfigurationPageContent({
   return (
     <ListPage
       title="Two-factor authentication"
-      description="Choose how verification codes are sent after password sign-in, and how long codes and sessions last."
+      description="Choose how staff verify their identity after password sign-in, and how long codes and sessions last."
     >
       <form className="mx-auto max-w-3xl space-y-6" onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Email delivery</CardTitle>
+            <CardTitle>Delivery method</CardTitle>
             <CardDescription>
-              Requires a working email connection under{' '}
-              <Link href="/system/external-services" className="underline underline-offset-2">
-                External services
-              </Link>
-              . Use <code className="rounded bg-muted px-1 py-0.5 text-xs">{'{{username}}'}</code> and{' '}
-              <code className="rounded bg-muted px-1 py-0.5 text-xs">{'{{token}}'}</code> in templates.
+              Exactly one method applies tenant-wide. Staff cannot choose a different channel at
+              sign-in.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <SwitchField
-              id="emailEnabled"
-              label="Send codes by email"
-              checked={form.emailEnabled}
-              onCheckedChange={(checked) => patch('emailEnabled', checked)}
-              error={fieldErrors.emailEnabled}
-              disabled={disabled}
-            />
-            <TextField
-              id="emailSubject"
-              label="Email subject"
-              value={form.emailSubject}
-              onChange={(value) => patch('emailSubject', value)}
-              error={fieldErrors.emailSubject}
-              disabled={disabled || !form.emailEnabled}
-              required
-            />
-            <TextField
-              id="emailBody"
-              label="Email body"
-              value={form.emailBody}
-              onChange={(value) => patch('emailBody', value)}
-              error={fieldErrors.emailBody}
-              disabled={disabled || !form.emailEnabled}
-              multiline
-              rows={4}
-              required
-            />
+          <CardContent>
+            <div className="space-y-2">
+              <label htmlFor="otpDeliveryMethod" className="text-sm font-medium">
+                Verification method
+              </label>
+              <Select
+                value={form.otpDeliveryMethod}
+                onValueChange={(value) => patch('otpDeliveryMethod', value as OtpDeliveryMethod)}
+                disabled={disabled}
+              >
+                <SelectTrigger id="otpDeliveryMethod" className="w-full max-w-sm">
+                  <SelectValue placeholder="Select delivery method" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(DELIVERY_METHOD_LABELS) as OtpDeliveryMethod[]).map((method) => (
+                    <SelectItem key={method} value={method}>
+                      {DELIVERY_METHOD_LABELS[method]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldErrors.otpDeliveryMethod ? (
+                <p className="text-sm text-destructive">{fieldErrors.otpDeliveryMethod}</p>
+              ) : null}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>SMS delivery</CardTitle>
-            <CardDescription>
-              Requires an SMS provider under{' '}
-              <Link href="/system/external-services" className="underline underline-offset-2">
-                External services
-              </Link>
-              . The provider ID is the numeric SMS gateway identifier.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <SwitchField
-              id="smsEnabled"
-              label="Send codes by SMS"
-              checked={form.smsEnabled}
-              onCheckedChange={(checked) => patch('smsEnabled', checked)}
-              error={fieldErrors.smsEnabled}
-              disabled={disabled}
-            />
-            <TextField
-              id="smsProviderId"
-              label="SMS provider ID"
-              type="number"
-              inputMode="numeric"
-              value={String(form.smsProviderId)}
-              onChange={(value) => patch('smsProviderId', Number(value) || 0)}
-              error={fieldErrors.smsProviderId}
-              disabled={disabled || !form.smsEnabled}
-              required
-            />
-            <TextField
-              id="smsText"
-              label="SMS message"
-              value={form.smsText}
-              onChange={(value) => patch('smsText', value)}
-              error={fieldErrors.smsText}
-              disabled={disabled || !form.smsEnabled}
-              multiline
-              rows={3}
-              required
-            />
-          </CardContent>
-        </Card>
+        {form.otpDeliveryMethod === 'email' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Email delivery</CardTitle>
+              <CardDescription>
+                Requires a working email connection under{' '}
+                <Link href="/system/external-services" className="underline underline-offset-2">
+                  External services
+                </Link>
+                . Use <code className="rounded bg-muted px-1 py-0.5 text-xs">{'{{username}}'}</code>{' '}
+                and <code className="rounded bg-muted px-1 py-0.5 text-xs">{'{{token}}'}</code> in
+                templates.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <TextField
+                id="emailSubject"
+                label="Email subject"
+                value={form.emailSubject}
+                onChange={(value) => patch('emailSubject', value)}
+                error={fieldErrors.emailSubject}
+                disabled={disabled}
+                required
+              />
+              <TextField
+                id="emailBody"
+                label="Email body"
+                value={form.emailBody}
+                onChange={(value) => patch('emailBody', value)}
+                error={fieldErrors.emailBody}
+                disabled={disabled}
+                multiline
+                rows={4}
+                required
+              />
+            </CardContent>
+          </Card>
+        ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Verification code</CardTitle>
-            <CardDescription>Length and lifetime of the one-time code sent to the user.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              id="otpTokenLength"
-              label="Code length"
-              type="number"
-              inputMode="numeric"
-              value={String(form.otpTokenLength)}
-              onChange={(value) => patch('otpTokenLength', Number(value) || 0)}
-              error={fieldErrors.otpTokenLength}
-              disabled={disabled}
-              required
-            />
-            <TextField
-              id="otpTokenLiveTime"
-              label="Code lifetime (seconds)"
-              type="number"
-              inputMode="numeric"
-              value={String(form.otpTokenLiveTime)}
-              onChange={(value) => patch('otpTokenLiveTime', Number(value) || 0)}
-              error={fieldErrors.otpTokenLiveTime}
-              disabled={disabled}
-              required
-            />
-          </CardContent>
-        </Card>
+        {form.otpDeliveryMethod === 'sms' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>SMS delivery</CardTitle>
+              <CardDescription>
+                Requires an SMS provider under{' '}
+                <Link href="/system/external-services" className="underline underline-offset-2">
+                  External services
+                </Link>
+                . The provider ID is the numeric SMS gateway identifier.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <TextField
+                id="smsProviderId"
+                label="SMS provider ID"
+                type="number"
+                inputMode="numeric"
+                value={String(form.smsProviderId)}
+                onChange={(value) => patch('smsProviderId', Number(value) || 0)}
+                error={fieldErrors.smsProviderId}
+                disabled={disabled}
+                required
+              />
+              <TextField
+                id="smsText"
+                label="SMS message"
+                value={form.smsText}
+                onChange={(value) => patch('smsText', value)}
+                error={fieldErrors.smsText}
+                disabled={disabled}
+                multiline
+                rows={3}
+                required
+              />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {form.otpDeliveryMethod === 'totp' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Authenticator app</CardTitle>
+              <CardDescription>
+                Staff sign in with a time-based one-time password from an app such as Google
+                Authenticator or Microsoft Authenticator. Each user enrolls on first sign-in after
+                you enable this method.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              No email or SMS templates are used for this method. Use{' '}
+              <Link href="/appusers" className="underline underline-offset-2">
+                Users
+              </Link>{' '}
+              to reset enrollment when someone loses their device.
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {form.otpDeliveryMethod !== 'totp' ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Verification code</CardTitle>
+              <CardDescription>
+                Length and lifetime of the one-time code sent to the user.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <TextField
+                id="otpTokenLength"
+                label="Code length"
+                type="number"
+                inputMode="numeric"
+                value={String(form.otpTokenLength)}
+                onChange={(value) => patch('otpTokenLength', Number(value) || 0)}
+                error={fieldErrors.otpTokenLength}
+                disabled={disabled}
+                required
+              />
+              <TextField
+                id="otpTokenLiveTime"
+                label="Code lifetime (seconds)"
+                type="number"
+                inputMode="numeric"
+                value={String(form.otpTokenLiveTime)}
+                onChange={(value) => patch('otpTokenLiveTime', Number(value) || 0)}
+                error={fieldErrors.otpTokenLiveTime}
+                disabled={disabled}
+                required
+              />
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card>
           <CardHeader>
             <CardTitle>Signed-in session after verification</CardTitle>
             <CardDescription>
-              How long the two-factor access token stays valid after a successful code check. Extended
-              applies when the user opts for a longer session at verification.
+              How long the two-factor access token stays valid after a successful code check.
+              Extended applies when the user opts for a longer session at verification.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">

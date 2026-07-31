@@ -165,6 +165,7 @@ function normalizeUserDetail(raw: unknown): FineractUserDetail | null {
     passwordNeverExpires: row.passwordNeverExpires === true,
     isLoginRetriesEnabled: row.isLoginRetriesEnabled === true,
     isPasswordResetAllowed: row.isPasswordResetAllowed === true,
+    totpEnabled: row.totpEnabled === true,
     selectedRoles,
     staff
   };
@@ -381,4 +382,12 @@ export async function changeUserPassword(
 export async function deleteUser(userId: number): Promise<FineractCommandProcessingResult> {
   const fineract = await createFineractClient();
   return fineract.delete<FineractCommandProcessingResult>(`${USERS_PATH}/${userId}`);
+}
+
+export async function resetUserTotp(userId: number): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.post<FineractCommandProcessingResult>(
+    `${USERS_PATH}/${userId}?command=resetTotp`,
+    {}
+  );
 }

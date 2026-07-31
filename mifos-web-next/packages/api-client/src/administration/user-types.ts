@@ -38,6 +38,8 @@ export interface FineractUserDetail {
   passwordNeverExpires: boolean;
   isLoginRetriesEnabled: boolean;
   isPasswordResetAllowed: boolean;
+  /** Read-only — whether the user has enrolled an authenticator app. */
+  totpEnabled: boolean;
   selectedRoles: FineractUserRoleRef[];
   staff?: FineractUserStaffRef | null;
 }

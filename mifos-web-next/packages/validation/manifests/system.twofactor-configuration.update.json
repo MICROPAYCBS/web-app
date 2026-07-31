@@ -6,10 +6,9 @@
     "org.apache.fineract.infrastructure.security.constants.TwoFactorConfigurationConstants"
   ],
   "fields": {
-    "emailEnabled": { "required": true },
+    "otpDeliveryMethod": { "required": true, "enum": ["email", "sms", "totp"] },
     "emailSubject": { "required": true, "maxLength": 1000 },
     "emailBody": { "required": true, "maxLength": 1000 },
-    "smsEnabled": { "required": true },
     "smsProviderId": { "required": true, "min": 1 },
     "smsText": { "required": true, "maxLength": 1000 },
     "otpTokenLiveTime": { "required": true, "min": 1 },

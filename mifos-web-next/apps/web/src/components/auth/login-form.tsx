@@ -8,31 +8,61 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { OtpDeliveryMethod } from '@mifos/api-client';
 import { Loader2, ShieldCheckIcon } from 'lucide-react';
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { DemoLoginButton } from '@/components/auth/demo-login-button';
 import { LoginMarketingPanel } from '@/components/auth/login-marketing-panel';
 import { LoginNoServerEmpty } from '@/components/auth/login-no-server-empty';
 import { LoginActiveServer } from '@/components/auth/login-active-server';
+import { TotpEnrollmentStep } from '@/components/auth/totp-enrollment-step';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
+import { VerificationCodeField } from '@/components/composites/verification-code-field';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { PasswordInput } from '@/components/composites/password-input';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import type { FineractServerProfile } from '@mifos/servers';
 import { APP_NAME } from '@/lib/branding';
 import { LOGIN_JSON_ACCEPT, type LoginApiResponse } from '@/lib/auth/login-api';
 import { cn } from '@/lib/utils';
 
 type DeliveryMethod = { name: string; target?: string };
+
+type TwoFactorContext = {
+  deliveryMethod?: OtpDeliveryMethod;
+  totpEnabled?: boolean;
+  totpEnrollmentRequired?: boolean;
+};
+
+type TwoFactorPhase = 'enroll' | 'requestOtp' | 'enterCode';
+
+function resolveTwoFactorPhase(context: TwoFactorContext): TwoFactorPhase {
+  const needsTotpEnrollment =
+    context.totpEnrollmentRequired === true ||
+    (context.deliveryMethod === 'totp' && context.totpEnabled !== true);
+  if (needsTotpEnrollment) {
+    return 'enroll';
+  }
+  if (context.deliveryMethod === 'totp') {
+    return 'enterCode';
+  }
+  return 'requestOtp';
+}
+
+function twoFactorSubtitle(context: TwoFactorContext, phase: TwoFactorPhase): string {
+  if (phase === 'enroll') {
+    return 'Set up your authenticator app to finish signing in.';
+  }
+  if (context.deliveryMethod === 'totp') {
+    return 'Enter the code from your authenticator app.';
+  }
+  if (phase === 'enterCode') {
+    return 'Enter the verification code sent to you to finish signing in.';
+  }
+  return 'Request a verification code to finish signing in.';
+}
 
 export interface LoginFormProps {
   redirectTo: string;
@@ -59,14 +89,31 @@ export function LoginForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [step, setStep] = useState<'password' | 'twoFactor'>('password');
+  const [twoFactorContext, setTwoFactorContext] = useState<TwoFactorContext>({});
+  const [twoFactorPhase, setTwoFactorPhase] = useState<TwoFactorPhase>('requestOtp');
   const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
   const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState('');
   const [otpRequested, setOtpRequested] = useState(false);
   const [otp, setOtp] = useState('');
   const [tokenLiveTimeInSec, setTokenLiveTimeInSec] = useState<number | null>(null);
   const [loadingMethods, setLoadingMethods] = useState(false);
+  const verifyInFlight = useRef(false);
 
-  const loadDeliveryMethods = useCallback(async () => {
+  const verificationCodeLength = 6;
+
+  const applyTwoFactorSession = useCallback((context: TwoFactorContext, methods: DeliveryMethod[]) => {
+    setTwoFactorContext(context);
+    setTwoFactorPhase(resolveTwoFactorPhase(context));
+    setDeliveryMethods(methods);
+    if (methods.length === 1) {
+      setSelectedDeliveryMethod(methods[0].name);
+    } else if (context.deliveryMethod) {
+      setSelectedDeliveryMethod(context.deliveryMethod);
+    }
+    setStep('twoFactor');
+  }, []);
+
+  const loadPendingTwoFactor = useCallback(async () => {
     setLoadingMethods(true);
     setSubmitError(null);
     try {
@@ -74,7 +121,13 @@ export function LoginForm({
         credentials: 'same-origin'
       });
       const body = (await response.json().catch(() => null)) as
-        | { ok: true; methods: DeliveryMethod[] }
+        | {
+            ok: true;
+            methods: DeliveryMethod[];
+            deliveryMethod?: OtpDeliveryMethod;
+            totpEnabled?: boolean;
+            totpEnrollmentRequired?: boolean;
+          }
         | { ok: false; message: string }
         | null;
       if (!body?.ok) {
@@ -82,17 +135,21 @@ export function LoginForm({
         setStep('password');
         return;
       }
-      setDeliveryMethods(body.methods);
-      if (body.methods.length === 1) {
-        setSelectedDeliveryMethod(body.methods[0].name);
-      }
+      applyTwoFactorSession(
+        {
+          deliveryMethod: body.deliveryMethod,
+          totpEnabled: body.totpEnabled,
+          totpEnrollmentRequired: body.totpEnrollmentRequired
+        },
+        body.methods
+      );
     } catch {
       setSubmitError('Could not reach the server. Check your connection and try again.');
       setStep('password');
     } finally {
       setLoadingMethods(false);
     }
-  }, []);
+  }, [applyTwoFactorSession]);
 
   useEffect(() => {
     if (!canSignIn) {
@@ -108,17 +165,26 @@ export function LoginForm({
           return;
         }
         const body = (await response.json().catch(() => null)) as
-          | { ok: true; methods: DeliveryMethod[] }
+          | {
+              ok: true;
+              methods: DeliveryMethod[];
+              deliveryMethod?: OtpDeliveryMethod;
+              totpEnabled?: boolean;
+              totpEnrollmentRequired?: boolean;
+            }
           | { ok: false; message: string }
           | null;
         if (!body?.ok || cancelled) {
           return;
         }
-        setDeliveryMethods(body.methods);
-        if (body.methods.length === 1) {
-          setSelectedDeliveryMethod(body.methods[0].name);
-        }
-        setStep('twoFactor');
+        applyTwoFactorSession(
+          {
+            deliveryMethod: body.deliveryMethod,
+            totpEnabled: body.totpEnabled,
+            totpEnrollmentRequired: body.totpEnrollmentRequired
+          },
+          body.methods
+        );
       } catch {
         // No pending 2FA cookie — stay on password step.
       }
@@ -126,13 +192,18 @@ export function LoginForm({
     return () => {
       cancelled = true;
     };
-  }, [canSignIn]);
+  }, [canSignIn, applyTwoFactorSession]);
 
   useEffect(() => {
-    if (step === 'twoFactor' && deliveryMethods.length === 0 && !loadingMethods) {
-      void loadDeliveryMethods();
+    if (
+      step === 'twoFactor' &&
+      twoFactorPhase === 'requestOtp' &&
+      deliveryMethods.length === 0 &&
+      !loadingMethods
+    ) {
+      void loadPendingTwoFactor();
     }
-  }, [step, deliveryMethods.length, loadingMethods, loadDeliveryMethods]);
+  }, [step, twoFactorPhase, deliveryMethods.length, loadingMethods, loadPendingTwoFactor]);
 
   async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -159,7 +230,14 @@ export function LoginForm({
         setTokenLiveTimeInSec(null);
         setDeliveryMethods([]);
         setSelectedDeliveryMethod('');
-        setStep('twoFactor');
+        applyTwoFactorSession(
+          {
+            deliveryMethod: body.deliveryMethod,
+            totpEnabled: body.totpEnabled,
+            totpEnrollmentRequired: body.totpEnrollmentRequired
+          },
+          []
+        );
         return;
       }
 
@@ -178,8 +256,9 @@ export function LoginForm({
 
   async function handleRequestOtp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedDeliveryMethod) {
-      setSubmitError('Select how to receive your code.');
+    const method = selectedDeliveryMethod || twoFactorContext.deliveryMethod;
+    if (!method) {
+      setSubmitError('Verification method is not available. Sign in again.');
       return;
     }
     setSubmitError(null);
@@ -189,7 +268,7 @@ export function LoginForm({
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deliveryMethod: selectedDeliveryMethod })
+        body: JSON.stringify({ deliveryMethod: method })
       });
       const body = (await response.json().catch(() => null)) as
         | { ok: true; tokenLiveTimeInSec?: number }
@@ -202,6 +281,7 @@ export function LoginForm({
       }
       setTokenLiveTimeInSec(body.tokenLiveTimeInSec ?? null);
       setOtpRequested(true);
+      setTwoFactorPhase('enterCode');
       setIsSubmitting(false);
     } catch {
       setSubmitError('Could not reach the server. Check your connection and try again.');
@@ -209,8 +289,13 @@ export function LoginForm({
     }
   }
 
-  async function handleValidateOtp(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitVerificationCode(token: string) {
+    const trimmed = token.trim();
+    if (trimmed.length !== verificationCodeLength || verifyInFlight.current || isSubmitting) {
+      return;
+    }
+
+    verifyInFlight.current = true;
     setSubmitError(null);
     setIsSubmitting(true);
     try {
@@ -218,7 +303,7 @@ export function LoginForm({
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: otp.trim() })
+        body: JSON.stringify({ token: trimmed })
       });
       const body = (await response.json().catch(() => null)) as
         | { ok: true; redirectTo: string }
@@ -233,7 +318,14 @@ export function LoginForm({
     } catch {
       setIsSubmitting(false);
       setSubmitError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      verifyInFlight.current = false;
     }
+  }
+
+  async function handleValidateOtp(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitVerificationCode(otp);
   }
 
   function backToPassword() {
@@ -242,6 +334,8 @@ export function LoginForm({
       credentials: 'same-origin'
     }).catch(() => undefined);
     setStep('password');
+    setTwoFactorPhase('requestOtp');
+    setTwoFactorContext({});
     setOtpRequested(false);
     setOtp('');
     setSubmitError(null);
@@ -250,7 +344,25 @@ export function LoginForm({
     setTokenLiveTimeInSec(null);
   }
 
+  function handleEnrollmentComplete() {
+    setTwoFactorContext((current) => ({
+      ...current,
+      totpEnrollmentRequired: false,
+      totpEnabled: true,
+      deliveryMethod: 'totp'
+    }));
+    setTwoFactorPhase('enterCode');
+    setOtp('');
+    setSubmitError(null);
+  }
+
   const displayedError = submitError ?? (isSubmitting || step === 'twoFactor' ? null : loginError);
+  const deliveryTarget =
+    deliveryMethods.find(
+      (method) =>
+        method.name === selectedDeliveryMethod ||
+        method.name === twoFactorContext.deliveryMethod
+    )?.target ?? deliveryMethods[0]?.target;
 
   return (
     <div className={cn('grid min-h-svh lg:grid-cols-2', className)}>
@@ -269,7 +381,7 @@ export function LoginForm({
               </h1>
               <p className="text-sm text-muted-foreground">
                 {step === 'twoFactor'
-                  ? 'Enter the verification code sent to you to finish signing in.'
+                  ? twoFactorSubtitle(twoFactorContext, twoFactorPhase)
                   : 'Enter your institution credentials.'}
               </p>
             </div>
@@ -361,82 +473,74 @@ export function LoginForm({
 
               {canSignIn && step === 'twoFactor' ? (
                 <div className={cn('space-y-4', activeServer ? 'mt-5' : 'mt-0')}>
-                  {loadingMethods ? (
-                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="size-4 animate-spin" aria-hidden />
-                      Loading verification options…
-                    </p>
+                  {twoFactorPhase === 'enroll' ? (
+                    <TotpEnrollmentStep onEnrolled={handleEnrollmentComplete} onBack={backToPassword} />
                   ) : null}
 
-                  {!otpRequested && !loadingMethods ? (
-                    <form onSubmit={handleRequestOtp} className="space-y-4" aria-busy={isSubmitting}>
-                      <Field>
-                        <FieldLabel htmlFor="deliveryMethod">Send code via</FieldLabel>
-                        <Select
-                          value={selectedDeliveryMethod}
-                          onValueChange={(value) => setSelectedDeliveryMethod(value ?? '')}
-                          disabled={isSubmitting || deliveryMethods.length === 0}
-                        >
-                          <SelectTrigger id="deliveryMethod" className="h-10 w-full bg-background">
-                            <SelectValue placeholder="Select a delivery method" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {deliveryMethods.map((method) => (
-                              <SelectItem key={method.name} value={method.name}>
-                                {method.target
-                                  ? `${method.name} (${method.target})`
-                                  : method.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
+                  {twoFactorPhase === 'requestOtp' ? (
+                    <>
+                      {loadingMethods ? (
+                        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="size-4 animate-spin" aria-hidden />
+                          Loading verification options…
+                        </p>
+                      ) : null}
 
-                      {submitError ? <FineractErrorAlert message={submitError} /> : null}
+                      {!loadingMethods && !otpRequested ? (
+                        <form onSubmit={handleRequestOtp} className="space-y-4" aria-busy={isSubmitting}>
+                          {deliveryTarget ? (
+                            <p className="text-sm text-muted-foreground">
+                              A code will be sent to{' '}
+                              <span className="font-medium text-foreground">{deliveryTarget}</span>.
+                            </p>
+                          ) : null}
 
-                      <Field className="pt-2">
-                        <Button
-                          type="submit"
-                          size="lg"
-                          className="h-11 w-full text-base font-semibold shadow-sm"
-                          disabled={isSubmitting || !selectedDeliveryMethod}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                              Sending code…
-                            </>
-                          ) : (
-                            'Send code'
-                          )}
-                        </Button>
-                      </Field>
-                    </form>
+                          {submitError ? <FineractErrorAlert message={submitError} /> : null}
+
+                          <Field className="pt-2">
+                            <Button
+                              type="submit"
+                              size="lg"
+                              className="h-11 w-full text-base font-semibold shadow-sm"
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                                  Sending code…
+                                </>
+                              ) : (
+                                'Send code'
+                              )}
+                            </Button>
+                          </Field>
+                        </form>
+                      ) : null}
+                    </>
                   ) : null}
 
-                  {otpRequested ? (
+                  {twoFactorPhase === 'enterCode' ? (
                     <form onSubmit={handleValidateOtp} className="space-y-4" aria-busy={isSubmitting}>
-                      <Field>
-                        <FieldLabel htmlFor="otp">Verification code</FieldLabel>
-                        <Input
-                          id="otp"
-                          name="otp"
-                          type="text"
-                          inputMode="numeric"
-                          autoComplete="one-time-code"
-                          className="h-10 bg-background"
-                          value={otp}
-                          onChange={(event) => setOtp(event.target.value)}
-                          required
-                          disabled={isSubmitting}
-                        />
-                        {tokenLiveTimeInSec ? (
-                          <p className="mt-1.5 text-xs text-muted-foreground">
-                            Code is valid for about {Math.max(1, Math.round(tokenLiveTimeInSec / 60))}{' '}
-                            minutes.
-                          </p>
-                        ) : null}
-                      </Field>
+                      <VerificationCodeField
+                        id="otp"
+                        label={
+                          twoFactorContext.deliveryMethod === 'totp'
+                            ? 'Authenticator code'
+                            : 'Verification code'
+                        }
+                        value={otp}
+                        onChange={setOtp}
+                        length={verificationCodeLength}
+                        disabled={isSubmitting}
+                        autoFocus
+                        onComplete={(value) => void submitVerificationCode(value)}
+                      />
+                      {tokenLiveTimeInSec && twoFactorContext.deliveryMethod !== 'totp' ? (
+                        <p className="text-xs text-muted-foreground">
+                          Code is valid for about {Math.max(1, Math.round(tokenLiveTimeInSec / 60))}{' '}
+                          minutes.
+                        </p>
+                      ) : null}
 
                       {submitError ? <FineractErrorAlert message={submitError} /> : null}
 
@@ -445,7 +549,7 @@ export function LoginForm({
                           type="submit"
                           size="lg"
                           className="h-11 w-full text-base font-semibold shadow-sm"
-                          disabled={isSubmitting || !otp.trim()}
+                          disabled={isSubmitting || otp.length !== verificationCodeLength}
                         >
                           {isSubmitting ? (
                             <>
@@ -458,33 +562,38 @@ export function LoginForm({
                         </Button>
                       </Field>
 
-                      <Field>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="w-full"
-                          disabled={isSubmitting}
-                          onClick={() => {
-                            setOtpRequested(false);
-                            setOtp('');
-                            setSubmitError(null);
-                          }}
-                        >
-                          Resend code
-                        </Button>
-                      </Field>
+                      {twoFactorContext.deliveryMethod !== 'totp' ? (
+                        <Field>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full"
+                            disabled={isSubmitting}
+                            onClick={() => {
+                              setOtpRequested(false);
+                              setOtp('');
+                              setTwoFactorPhase('requestOtp');
+                              setSubmitError(null);
+                            }}
+                          >
+                            Resend code
+                          </Button>
+                        </Field>
+                      ) : null}
                     </form>
                   ) : null}
 
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="h-auto px-0 text-muted-foreground"
-                    disabled={isSubmitting}
-                    onClick={backToPassword}
-                  >
-                    Back to sign in
-                  </Button>
+                  {twoFactorPhase !== 'enroll' ? (
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="h-auto px-0 text-muted-foreground"
+                      disabled={isSubmitting}
+                      onClick={backToPassword}
+                    >
+                      Back to sign in
+                    </Button>
+                  ) : null}
                 </div>
               ) : null}
 

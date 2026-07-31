@@ -57,9 +57,15 @@ export async function POST(request: NextRequest) {
 
   if (result.needsTwoFactor) {
     const pendingAttrs = twoFactorPendingCookieAttributes(TWO_FACTOR_PENDING_MAX_AGE);
+    const twoFactorBody: LoginApiNeedsTwoFactor = {
+      ok: true,
+      needsTwoFactor: true,
+      deliveryMethod: result.pending.deliveryMethod,
+      totpEnabled: result.pending.totpEnabled,
+      totpEnrollmentRequired: result.pending.totpEnrollmentRequired
+    };
     if (jsonResponse) {
-      const body: LoginApiNeedsTwoFactor = { ok: true, needsTwoFactor: true };
-      const response = NextResponse.json(body);
+      const response = NextResponse.json(twoFactorBody);
       response.cookies.set(pendingAttrs.name, JSON.stringify(result.pending), pendingAttrs);
       return response;
     }

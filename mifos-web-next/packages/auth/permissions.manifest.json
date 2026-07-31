@@ -1159,6 +1159,11 @@
       "READ_USER"
     ]
   },
+  "administration.users.resetTotp": {
+    "any": [
+      "RESETTOTP_USER"
+    ]
+  },
   "administration.templates": {
     "any": [
       "READ_TEMPLATE"

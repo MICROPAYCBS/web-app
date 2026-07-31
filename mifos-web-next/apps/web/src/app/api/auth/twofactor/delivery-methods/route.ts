@@ -36,5 +36,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, message: result.message }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true, methods: result.methods });
+  return NextResponse.json({
+    ok: true,
+    methods: result.methods,
+    deliveryMethod: pending.deliveryMethod,
+    totpEnabled: pending.totpEnabled,
+    totpEnrollmentRequired: pending.totpEnrollmentRequired
+  });
 }
