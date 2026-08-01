@@ -7,14 +7,12 @@
  */
 
 import type { FineractEntityDocument } from '@mifos/api-client';
-import { Download, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import type { CollectionDetailMode } from '@/components/composites';
 import { CollectionItemFieldDetails, DetailField, DetailFieldGrid, TextValue } from '@/components/composites';
+import { DocumentAttachmentActions } from '@/components/clients/shared/document-attachment-actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-
-const downloadLinkClassName =
-  'inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted';
 
 export function formatDocumentSummary(document: FineractEntityDocument): string {
   return document.description?.trim() || document.fileName || 'Customer document';
@@ -34,6 +32,10 @@ export function ClientDocumentSections({ document }: { document: FineractEntityD
       </DetailField>
     </DetailFieldGrid>
   );
+}
+
+function documentAttachmentUrl(clientId: string, documentId: number): string {
+  return `/api/clients/${clientId}/documents/${documentId}/attachment`;
 }
 
 export function ClientDocumentListItem({
@@ -70,11 +72,12 @@ export function ClientDocumentListItem({
           {body}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <a href={`/api/clients/${clientId}/documents/${document.id}/attachment`} download className={downloadLinkClassName}>
-          <Download className="size-4" />
-          Download
-        </a>
+      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+        <DocumentAttachmentActions
+          title={document.name}
+          fileName={document.fileName}
+          attachmentUrl={documentAttachmentUrl(clientId, document.id)}
+        />
         {canDelete ? (
           <button
             type="button"
@@ -121,10 +124,11 @@ export function ClientDocumentGridCard({
         </CardTitle>
         {detailMode ? null : <CardDescription>{summary}</CardDescription>}
         <div className="flex flex-wrap items-center gap-2 pt-2">
-          <a href={`/api/clients/${clientId}/documents/${document.id}/attachment`} download className={downloadLinkClassName}>
-            <Download className="size-4" />
-            Download
-          </a>
+          <DocumentAttachmentActions
+            title={document.name}
+            fileName={document.fileName}
+            attachmentUrl={documentAttachmentUrl(clientId, document.id)}
+          />
           {canDelete ? (
             <button
               type="button"

@@ -20,6 +20,12 @@ import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  DOCUMENT_UPLOAD_ACCEPT,
+  DOCUMENT_UPLOAD_ACCEPT_LABEL,
+  DOCUMENT_UPLOAD_REJECTED_MESSAGE,
+  isAllowedDocumentUpload
+} from '@/lib/documents/document-preview';
 import type { FormSubmitResult } from '@/lib/form/submit-result';
 
 const STATUS_OPTIONS = [
@@ -118,6 +124,10 @@ export function ClientIdentifierFormSheet({
     if (!validateForm()) {
       return;
     }
+    if (file && !isAllowedDocumentUpload(file)) {
+      setError(DOCUMENT_UPLOAD_REJECTED_MESSAGE);
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
     try {
@@ -212,14 +222,21 @@ export function ClientIdentifierFormSheet({
           <Input
             id={`${formId}-file`}
             type="file"
+            accept={DOCUMENT_UPLOAD_ACCEPT}
             onChange={(event) => {
               const nextFile = event.target.files?.[0] ?? null;
               setFile(nextFile);
+              if (nextFile && !isAllowedDocumentUpload(nextFile)) {
+                setError(DOCUMENT_UPLOAD_REJECTED_MESSAGE);
+                return;
+              }
+              setError(null);
               if (nextFile && !fileName.trim()) {
                 setFileName(nextFile.name);
               }
             }}
           />
+          <p className="text-xs text-muted-foreground">Accepted: {DOCUMENT_UPLOAD_ACCEPT_LABEL}</p>
           {file ? (
             <TextField
               id={`${formId}-fileName`}

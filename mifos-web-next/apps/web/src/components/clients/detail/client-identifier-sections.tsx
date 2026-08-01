@@ -7,7 +7,8 @@
  */
 
 import type { FineractClientIdentifier, FineractEntityDocument } from '@mifos/api-client';
-import { Download, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { DocumentAttachmentActions } from '@/components/clients/shared/document-attachment-actions';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -87,14 +88,11 @@ function IdentifierDocumentList({
               ) : null}
             </div>
           </div>
-          <a
-            href={`/api/client-identifiers/${identifierId}/documents/${document.id}/attachment`}
-            download
-            className="inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted"
-          >
-            <Download className="size-4" />
-            Download
-          </a>
+          <DocumentAttachmentActions
+            title={document.name}
+            fileName={document.fileName}
+            attachmentUrl={`/api/client-identifiers/${identifierId}/documents/${document.id}/attachment`}
+          />
         </li>
       ))}
     </ul>

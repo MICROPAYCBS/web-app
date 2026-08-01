@@ -9,10 +9,14 @@
 import { assertCan } from '@mifos/auth';
 import { jsonError } from '@/lib/bff/json-response';
 import { requireRoutePermission } from '@/lib/bff/require-session';
+import {
+  buildDocumentContentDisposition,
+  parseDocumentDispositionParam
+} from '@/lib/documents/document-preview';
 import { fetchClientDocumentAttachment } from '@/lib/fineract/client-documents';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ clientId: string; documentId: string }> }
 ) {
   const { session, error } = await requireRoutePermission('/clients');
@@ -23,6 +27,9 @@ export async function GET(
   try {
     assertCan(session, 'READ_DOCUMENT');
     const { clientId, documentId } = await context.params;
+    const disposition = parseDocumentDispositionParam(
+      new URL(request.url).searchParams.get('disposition')
+    );
     const res = await fetchClientDocumentAttachment(clientId, Number(documentId));
     if (!res.ok) {
       return jsonError(new Error('Document not found'));
@@ -33,7 +40,10 @@ export async function GET(
     return new Response(buffer, {
       headers: {
         'Content-Type': contentType,
-        'Content-Disposition': res.headers.get('content-disposition') ?? 'attachment'
+        'Content-Disposition': buildDocumentContentDisposition({
+          disposition,
+          upstreamDisposition: res.headers.get('content-disposition')
+        })
       }
     });
   } catch (err) {

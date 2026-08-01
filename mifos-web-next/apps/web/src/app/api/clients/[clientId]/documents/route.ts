@@ -10,6 +10,10 @@ import { assertCan } from '@mifos/auth';
 import { NextResponse } from 'next/server';
 import { jsonError, jsonOk } from '@/lib/bff/json-response';
 import { requireRoutePermission } from '@/lib/bff/require-session';
+import {
+  DOCUMENT_UPLOAD_REJECTED_MESSAGE,
+  isAllowedDocumentUpload
+} from '@/lib/documents/document-preview';
 import { uploadClientDocument } from '@/lib/fineract/client-documents';
 
 export async function POST(
@@ -34,6 +38,9 @@ export async function POST(
     }
     if (typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ message: 'Name is required' }, { status: 400 });
+    }
+    if (!isAllowedDocumentUpload(file)) {
+      return NextResponse.json({ message: DOCUMENT_UPLOAD_REJECTED_MESSAGE }, { status: 400 });
     }
 
     const result = await uploadClientDocument(

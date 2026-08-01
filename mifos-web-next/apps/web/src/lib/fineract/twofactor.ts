@@ -22,6 +22,8 @@ import {
 import { readFineractJsonBody } from '@/lib/fineract/fineract-response';
 import { fineractFetch } from '@/lib/fineract/fineract-fetch';
 import { getFineractServerConfig } from '@/lib/fineract/server-config';
+import { TOTP_APP_ISSUER } from '@/lib/branding';
+import { rebrandTotpOtpauthUri } from '@/lib/auth/totp-otpauth-uri';
 import type { TwoFactorPendingAuth } from '@/lib/session/pending-twofactor';
 import type { ServerSession } from '@/lib/session/types';
 
@@ -408,7 +410,13 @@ export async function enrollTotp(
     };
   }
 
-  return { ok: true, result };
+  return {
+    ok: true,
+    result: {
+      secret: result.secret,
+      otpauthUri: rebrandTotpOtpauthUri(result.otpauthUri, TOTP_APP_ISSUER)
+    }
+  };
 }
 
 export async function confirmTotpEnrollment(

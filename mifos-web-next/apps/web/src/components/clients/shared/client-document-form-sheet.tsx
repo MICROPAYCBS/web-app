@@ -14,6 +14,12 @@ import { FormSheet } from '@/components/composites/form-sheet';
 import { TextField } from '@/components/composites/text-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  DOCUMENT_UPLOAD_ACCEPT,
+  DOCUMENT_UPLOAD_ACCEPT_LABEL,
+  DOCUMENT_UPLOAD_REJECTED_MESSAGE,
+  isAllowedDocumentUpload
+} from '@/lib/documents/document-preview';
 import type { FormSubmitResult } from '@/lib/form/submit-result';
 
 function defaultForm(): ClientDocumentMetadataInput {
@@ -61,6 +67,10 @@ export function ClientDocumentFormSheet({
       setError('Choose a file to upload.');
       return;
     }
+    if (!isAllowedDocumentUpload(file)) {
+      setError(DOCUMENT_UPLOAD_REJECTED_MESSAGE);
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
     try {
@@ -80,7 +90,7 @@ export function ClientDocumentFormSheet({
       open={open}
       onOpenChange={handleOpenChange}
       title="Upload document"
-      description="Attach a file to this customer record."
+      description="Attach a PDF or image (PNG, JPEG, WebP) to this customer record."
       formId={formId}
       onSubmit={handleSubmit}
       submitLabel="Upload"
@@ -99,15 +109,22 @@ export function ClientDocumentFormSheet({
           <Input
             id={`${formId}-file`}
             type="file"
+            accept={DOCUMENT_UPLOAD_ACCEPT}
             required
             onChange={(event) => {
               const nextFile = event.target.files?.[0] ?? null;
               setFile(nextFile);
+              if (nextFile && !isAllowedDocumentUpload(nextFile)) {
+                setError(DOCUMENT_UPLOAD_REJECTED_MESSAGE);
+                return;
+              }
+              setError(null);
               if (nextFile && !form.name.trim()) {
                 setForm((current) => ({ ...current, name: nextFile.name }));
               }
             }}
           />
+          <p className="text-xs text-muted-foreground">Accepted: {DOCUMENT_UPLOAD_ACCEPT_LABEL}</p>
         </div>
         <TextField
           id={`${formId}-name`}

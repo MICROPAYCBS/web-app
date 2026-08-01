@@ -9,6 +9,9 @@
 /** Product name shown in the browser title, sidebar, and other user-facing chrome. */
 export const APP_NAME = 'MicroPay Banking';
 
+/** Short issuer label for authenticator apps (TOTP otpauth URI). */
+export const TOTP_APP_ISSUER = 'MicroPay';
+
 /** Short label for compact UI (logo mark, etc.). */
 export const APP_LOGO_ABBREV = 'MP';
 
