@@ -11,6 +11,7 @@ import 'server-only';
 import type { FineractExternalServiceName,
   FineractExternalServiceProperty, FineractCommandProcessingResult } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { isSmtpDeliveryConfigured } from '@/lib/fineract/smtp-delivery';
 
 function normalizeExternalServiceProperty(raw: unknown): FineractExternalServiceProperty | null {
   if (!raw || typeof raw !== 'object') {
@@ -47,6 +48,19 @@ export async function getExternalServiceConfiguration(
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(`/externalservice/${serviceName}`);
   return normalizeExternalServiceConfiguration(raw);
+}
+
+/**
+ * Whether outbound email can be used (e.g. send password on user create).
+ * Returns false when unread/unavailable or when host/port/from are empty.
+ */
+export async function getSmtpDeliveryConfigured(): Promise<boolean> {
+  try {
+    const properties = await getExternalServiceConfiguration('SMTP');
+    return isSmtpDeliveryConfigured(properties);
+  } catch {
+    return false;
+  }
 }
 
 export async function updateExternalServiceConfiguration(

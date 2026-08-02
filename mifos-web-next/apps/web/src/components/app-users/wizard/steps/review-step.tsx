@@ -35,7 +35,8 @@ export function ReviewStep({
   template,
   draft,
   staffLabel,
-  submitError
+  submitError,
+  smtpConfigured = true
 }: UserStepProps & {
   staffLabel?: string;
   submitError: string | null;
@@ -45,7 +46,8 @@ export function ReviewStep({
       .filter((role) => draft.roles.includes(role.id))
       .map((role) => role.name)
       .join(', ') || '—';
-  const sendPasswordToEmail = mode === 'create' && canSendPasswordToEmail(draft);
+  const sendPasswordToEmail =
+    mode === 'create' && canSendPasswordToEmail(draft, { smtpConfigured });
 
   return (
     <div className="space-y-6">

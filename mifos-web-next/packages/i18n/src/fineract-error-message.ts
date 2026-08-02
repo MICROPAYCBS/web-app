@@ -104,7 +104,10 @@ export function resolveFineractErrorItemMessage(item?: FineractErrorItem | null)
       if (
         !raw ||
         isGenericFineractValidationMessage(raw) ||
-        code.startsWith('validation.msg.Address.')
+        code.startsWith('validation.msg.Address.') ||
+        // Prefer the curated copy over Fineract's "check server log" wording.
+        /server log/i.test(raw) ||
+        code === 'error.msg.user.email.invalid'
       ) {
         return translated;
       }

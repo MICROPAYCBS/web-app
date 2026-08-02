@@ -37,27 +37,82 @@ export function toFineractActionError(err: unknown, fallback: string): FineractA
   };
 }
 
+const ACTION_ERROR_FIELD_LABELS: Record<string, string> = {
+  email: 'Email',
+  username: 'Login name',
+  firstname: 'First name',
+  lastname: 'Last name',
+  officeId: 'Branch',
+  staffId: 'Staff',
+  roles: 'Roles',
+  password: 'Password',
+  repeatPassword: 'Confirm password'
+};
+
+function fieldLabel(field: string): string {
+  return ACTION_ERROR_FIELD_LABELS[field] ?? field;
+}
+
+/** Expand bare field keys / one-word stubs into a readable sentence. */
+function humanizeActionFieldError(field: string, fieldMessage: string): string {
+  const trimmed = fieldMessage.trim();
+  const label = fieldLabel(field);
+  if (!trimmed || trimmed.toLowerCase() === field.toLowerCase()) {
+    return `${label} needs attention. Go back and check this field.`;
+  }
+  if (trimmed.toLowerCase() === label.toLowerCase()) {
+    return `${label} needs attention. Go back and check this field.`;
+  }
+  // Avoid treating short tokens (e.g. "email") as already covered by a longer message.
+  if (trimmed.split(/\s+/).length <= 2 && !/[.!?]/.test(trimmed)) {
+    return `${label}: ${trimmed}`;
+  }
+  if (!trimmed.toLowerCase().includes(label.toLowerCase()) && !trimmed.toLowerCase().includes(field.toLowerCase())) {
+    return `${label}: ${trimmed}`;
+  }
+  return trimmed;
+}
+
 /** Combine global and field messages for inline UI display. */
 export function formatActionErrorMessage(
   message: string,
   fieldErrors?: Record<string, string>
 ): string {
+  const trimmedMessage = message.trim();
   if (!fieldErrors || !Object.keys(fieldErrors).length) {
-    return message;
-  }
-
-  // Field-level errors render on inputs; keep the form banner to a short summary.
-  if (message === 'Fix the highlighted fields.') {
-    return message;
-  }
-
-  const fieldParts = Object.entries(fieldErrors).map(([field, fieldMessage]) => {
-    if (message.includes(fieldMessage)) {
-      return fieldMessage;
+    if (
+      trimmedMessage &&
+      /^[a-z][a-zA-Z0-9_]*$/.test(trimmedMessage) &&
+      ACTION_ERROR_FIELD_LABELS[trimmedMessage]
+    ) {
+      return humanizeActionFieldError(trimmedMessage, trimmedMessage);
     }
-    return `[${field}] ${fieldMessage}`;
-  });
+    return message;
+  }
 
-  const uniqueParts = [...new Set([message, ...fieldParts].filter(Boolean))];
-  return uniqueParts.join('\n');
+  const fieldParts = Object.entries(fieldErrors).map(([field, fieldMessage]) =>
+    humanizeActionFieldError(field, fieldMessage)
+  );
+
+  const messageLooksLikeBareField =
+    Boolean(trimmedMessage) &&
+    /^[a-z][a-zA-Z0-9_]*$/.test(trimmedMessage) &&
+    Object.prototype.hasOwnProperty.call(fieldErrors, trimmedMessage);
+
+  // Generic “fix fields” banners are only useful when paired with the field sentences.
+  const messageIsGenericFixPrompt =
+    trimmedMessage === 'Fix the highlighted fields.' ||
+    trimmedMessage === 'Please fix the highlighted fields before creating this user.';
+
+  const uniqueParts = [
+    ...new Set(
+      [
+        messageLooksLikeBareField || messageIsGenericFixPrompt ? null : trimmedMessage,
+        ...fieldParts
+      ].filter((part): part is string => Boolean(part))
+    )
+  ];
+  return uniqueParts.length > 0
+    ? uniqueParts.join('\n')
+    : trimmedMessage || 'Please fix the highlighted fields.';
 }

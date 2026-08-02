@@ -11,7 +11,18 @@ export function isValidEmail(value: string) {
   return Boolean(email) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-/** Effective flag for create-user payload when email is missing or invalid. */
-export function canSendPasswordToEmail(draft: { email: string; sendPasswordToEmail: boolean }) {
+export type SendPasswordToEmailOptions = {
+  /** When false, password email is unavailable (outbound email not configured). */
+  smtpConfigured?: boolean;
+};
+
+/** Effective flag for create-user payload when email/SMTP allow sending. */
+export function canSendPasswordToEmail(
+  draft: { email: string; sendPasswordToEmail: boolean },
+  options: SendPasswordToEmailOptions = {}
+) {
+  if (options.smtpConfigured === false) {
+    return false;
+  }
   return isValidEmail(draft.email) && draft.sendPasswordToEmail;
 }

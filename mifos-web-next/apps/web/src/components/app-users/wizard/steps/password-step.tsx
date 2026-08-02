@@ -21,6 +21,7 @@ export function PasswordStep({
   draft,
   errors,
   onChange,
+  smtpConfigured = true,
   policy: policyProp
 }: UserStepProps & {
   onChange: (patch: Partial<UserWizardDraft>) => void;
@@ -29,14 +30,21 @@ export function PasswordStep({
   const { policy: fetchedPolicy, loading } = usePasswordPolicy(!policyProp);
   const policy = policyProp ?? fetchedPolicy;
   const emailAllowsSend = isValidEmail(draft.email);
-  const sendPasswordToEmail = canSendPasswordToEmail(draft);
+  const sendPasswordAllowed = smtpConfigured && emailAllowsSend;
+  const sendPasswordToEmail = canSendPasswordToEmail(draft, { smtpConfigured });
   const manualPassword = !sendPasswordToEmail;
 
   useEffect(() => {
-    if (!emailAllowsSend && draft.sendPasswordToEmail) {
+    if (!sendPasswordAllowed && draft.sendPasswordToEmail) {
       onChange({ sendPasswordToEmail: false, password: '', repeatPassword: '' });
     }
-  }, [emailAllowsSend, draft.sendPasswordToEmail, onChange]);
+  }, [sendPasswordAllowed, draft.sendPasswordToEmail, onChange]);
+
+  const sendPasswordDescription = !smtpConfigured
+    ? 'Outbound email is not configured, so a password must be set here.'
+    : emailAllowsSend
+      ? 'A password will be generated and emailed to the user.'
+      : 'Add a valid email address on the Account step to enable this option.';
 
   return (
     <div className="space-y-6">
@@ -47,12 +55,8 @@ export function PasswordStep({
         <SwitchField
           label="Send password to email"
           checked={sendPasswordToEmail}
-          disabled={!emailAllowsSend}
-          description={
-            emailAllowsSend
-              ? 'A password will be generated and emailed to the user.'
-              : 'Add a valid email address on the Account step to enable this option.'
-          }
+          disabled={!sendPasswordAllowed}
+          description={sendPasswordDescription}
           onCheckedChange={(checked) =>
             onChange({
               sendPasswordToEmail: checked,

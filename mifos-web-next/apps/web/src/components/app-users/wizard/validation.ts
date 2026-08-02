@@ -12,7 +12,7 @@ import {
   type CreateUserInput,
   type UpdateUserInput
 } from '@mifos/validation';
-import { canSendPasswordToEmail, isValidEmail } from './email';
+import { canSendPasswordToEmail, isValidEmail, type SendPasswordToEmailOptions } from './email';
 import type { StepErrors, UserWizardDraft, UserWizardMode } from './types';
 
 const personNamePattern = /^[A-Za-z].*/;
@@ -73,14 +73,19 @@ function validateAccessStep(draft: UserWizardDraft): StepErrors {
   return errors;
 }
 
-function validatePasswordStep(draft: UserWizardDraft): StepErrors {
+function validatePasswordStep(
+  draft: UserWizardDraft,
+  options: SendPasswordToEmailOptions = {}
+): StepErrors {
   const errors: StepErrors = {};
 
-  if (canSendPasswordToEmail(draft)) {
+  if (canSendPasswordToEmail(draft, options)) {
     return errors;
   }
 
-  if (draft.sendPasswordToEmail && !isValidEmail(draft.email)) {
+  if (draft.sendPasswordToEmail && options.smtpConfigured === false) {
+    // Switch is forced off in the UI; still require a manual password.
+  } else if (draft.sendPasswordToEmail && !isValidEmail(draft.email)) {
     errors.email = 'Enter a valid email address on the Account step to send the password by email.';
     return errors;
   }
@@ -104,7 +109,8 @@ function validatePasswordStep(draft: UserWizardDraft): StepErrors {
 export function validateUserStep(
   stepId: string,
   mode: UserWizardMode,
-  draft: UserWizardDraft
+  draft: UserWizardDraft,
+  options: SendPasswordToEmailOptions = {}
 ): StepErrors {
   if (stepId === 'review') {
     return {};
@@ -116,15 +122,19 @@ export function validateUserStep(
     return validateAccessStep(draft);
   }
   if (stepId === 'password' && mode === 'create') {
-    return validatePasswordStep(draft);
+    return validatePasswordStep(draft, options);
   }
   return {};
 }
 
-export function validateUserDraft(mode: UserWizardMode, draft: UserWizardDraft): StepErrors {
+export function validateUserDraft(
+  mode: UserWizardMode,
+  draft: UserWizardDraft,
+  options: SendPasswordToEmailOptions = {}
+): StepErrors {
   const parsed =
     mode === 'create'
-      ? validateCreateUser(draftToCreatePayload(draft))
+      ? validateCreateUser(draftToCreatePayload(draft, options))
       : validateUpdateUser(draftToUpdatePayload(draft));
 
   if (parsed.success) {
@@ -134,7 +144,10 @@ export function validateUserDraft(mode: UserWizardMode, draft: UserWizardDraft):
   return zodIssuesToErrors(parsed.error.issues);
 }
 
-export function draftToCreatePayload(draft: UserWizardDraft): CreateUserInput {
+export function draftToCreatePayload(
+  draft: UserWizardDraft,
+  options: SendPasswordToEmailOptions = {}
+): CreateUserInput {
   return {
     username: draft.username.trim(),
     firstname: draft.firstname.trim(),
@@ -143,7 +156,7 @@ export function draftToCreatePayload(draft: UserWizardDraft): CreateUserInput {
     officeId: Number(draft.officeId),
     staffId: draft.staffId ? Number(draft.staffId) : undefined,
     roles: draft.roles,
-    sendPasswordToEmail: canSendPasswordToEmail(draft),
+    sendPasswordToEmail: canSendPasswordToEmail(draft, options),
     passwordNeverExpires: draft.passwordNeverExpires,
     isLoginRetriesEnabled: draft.isLoginRetriesEnabled,
     password: draft.password,

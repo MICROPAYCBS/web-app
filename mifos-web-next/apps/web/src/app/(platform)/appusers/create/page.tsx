@@ -10,6 +10,7 @@ import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { UserCreatePageContent } from '@/components/app-users/user-create-page-content';
 import { getUserTemplate } from '@/lib/fineract/app-users';
+import { getSmtpDeliveryConfigured } from '@/lib/fineract/external-services';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function CreateAppUserPage() {
@@ -18,7 +19,10 @@ export default async function CreateAppUserPage() {
     notFound();
   }
 
-  const template = await getUserTemplate();
+  const [template, smtpConfigured] = await Promise.all([
+    getUserTemplate(),
+    getSmtpDeliveryConfigured()
+  ]);
 
-  return <UserCreatePageContent template={template} />;
+  return <UserCreatePageContent template={template} smtpConfigured={smtpConfigured} />;
 }

@@ -12,8 +12,19 @@ import type { FineractUserTemplate } from '@mifos/api-client';
 import { UserWizard } from '@/components/app-users/wizard/user-wizard';
 import { defaultUserWizardDraft } from '@/components/app-users/wizard/draft';
 
-export function UserCreatePageContent({ template }: { template: FineractUserTemplate }) {
+export function UserCreatePageContent({
+  template,
+  smtpConfigured
+}: {
+  template: FineractUserTemplate;
+  smtpConfigured: boolean;
+}) {
   return (
-    <UserWizard mode="create" template={template} initialDraft={defaultUserWizardDraft()} />
+    <UserWizard
+      mode="create"
+      template={template}
+      initialDraft={defaultUserWizardDraft()}
+      smtpConfigured={smtpConfigured}
+    />
   );
 }

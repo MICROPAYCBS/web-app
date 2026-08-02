@@ -45,6 +45,18 @@ describe('resolveFineractErrorItemMessage', () => {
     );
   });
 
+  it('maps password-email delivery failures to actionable copy', () => {
+    const message = resolveFineractErrorItemMessage({
+      parameterName: 'email',
+      defaultUserMessage:
+        'Sending email failed; is parameter email is invalid? More details available in server log: Connection refused',
+      userMessageGlobalisationCode: 'error.msg.user.email.invalid'
+    });
+    assert.match(message ?? '', /password email/i);
+    assert.doesNotMatch(message ?? '', /^email$/i);
+    assert.doesNotMatch(message ?? '', /server log/i);
+  });
+
   it('prefers developerMessage when defaultUserMessage is only a permission code', () => {
     assert.equal(
       resolveFineractErrorItemMessage({

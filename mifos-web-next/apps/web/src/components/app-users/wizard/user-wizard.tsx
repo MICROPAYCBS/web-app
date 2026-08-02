@@ -38,7 +38,13 @@ const EDIT_WIZARD_STEPS: FormWizardStep[] = [
   { id: 'review', label: 'Review' }
 ];
 
-export function UserWizard({ mode, template, initialDraft, userId }: UserWizardProps) {
+export function UserWizard({
+  mode,
+  template,
+  initialDraft,
+  userId,
+  smtpConfigured = true
+}: UserWizardProps) {
   const router = useRouter();
   const wizardSteps = mode === 'create' ? CREATE_WIZARD_STEPS : EDIT_WIZARD_STEPS;
   const [draft, setDraft] = useState<UserWizardDraft>(initialDraft);
@@ -52,6 +58,7 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
 
   const currentIndex = wizardSteps.findIndex((step) => step.id === stepId);
   const isReview = stepId === 'review';
+  const emailOptions = useMemo(() => ({ smtpConfigured }), [smtpConfigured]);
 
   useEffect(() => {
     if (!wizardSteps.some((step) => step.id === stepId)) {
@@ -96,16 +103,16 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
       if (id === 'review') {
         return false;
       }
-      return Object.keys(validateUserStep(id, mode, draft)).length > 0;
+      return Object.keys(validateUserStep(id, mode, draft, emailOptions)).length > 0;
     });
-  }, [validationAttemptedStepIds, mode, draft]);
+  }, [validationAttemptedStepIds, mode, draft, emailOptions]);
 
   const stepErrors = useMemo((): StepErrors => {
     if (isReview || !validationAttemptedStepIds.has(stepId)) {
       return {};
     }
-    return validateUserStep(stepId, mode, draft);
-  }, [validationAttemptedStepIds, stepId, mode, draft, isReview]);
+    return validateUserStep(stepId, mode, draft, emailOptions);
+  }, [validationAttemptedStepIds, stepId, mode, draft, isReview, emailOptions]);
 
   const goNext = useCallback(() => {
     const next = wizardSteps[currentIndex + 1];
@@ -125,13 +132,13 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
     if (isReview) {
       return;
     }
-    const errors = validateUserStep(stepId, mode, draft);
+    const errors = validateUserStep(stepId, mode, draft, emailOptions);
     if (Object.keys(errors).length > 0) {
       markValidationAttempted(stepId);
       return;
     }
     goNext();
-  }, [isReview, stepId, mode, draft, goNext, markValidationAttempted]);
+  }, [isReview, stepId, mode, draft, emailOptions, goNext, markValidationAttempted]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -147,7 +154,7 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
 
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = wizardSteps[i].id;
-        const errors = validateUserStep(stepToValidate, mode, draft);
+        const errors = validateUserStep(stepToValidate, mode, draft, emailOptions);
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
           setStepId(stepToValidate);
@@ -157,27 +164,32 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
 
       setStepId(targetStepId);
     },
-    [wizardSteps, currentIndex, mode, draft, markValidationAttempted]
+    [wizardSteps, currentIndex, mode, draft, emailOptions, markValidationAttempted]
   );
 
   function handleSubmit() {
     setSubmitError(null);
-    const errors = validateUserDraft(mode, draft);
+    const errors = validateUserDraft(mode, draft, emailOptions);
     if (Object.keys(errors).length > 0) {
       for (const step of wizardSteps) {
-        if (step.id !== 'review' && Object.keys(validateUserStep(step.id, mode, draft)).length) {
+        if (
+          step.id !== 'review' &&
+          Object.keys(validateUserStep(step.id, mode, draft, emailOptions)).length
+        ) {
           markValidationAttempted(step.id);
         }
       }
       setStepId('review');
-      setSubmitError('Please fix the highlighted fields.');
+      setSubmitError(
+        formatActionErrorMessage('Please fix the highlighted fields before creating this user.', errors)
+      );
       return;
     }
 
     startTransition(async () => {
       const result =
         mode === 'create'
-          ? await createUserAction(draftToCreatePayload(draft))
+          ? await createUserAction(draftToCreatePayload(draft, emailOptions))
           : await updateUserAction(userId!, draftToUpdatePayload(draft));
 
       if (!result.ok) {
@@ -205,7 +217,7 @@ export function UserWizard({ mode, template, initialDraft, userId }: UserWizardP
   const cancelHref =
     mode === 'edit' && userId ? `/appusers/${userId}` : '/appusers';
 
-  const stepProps = { mode, template, draft, errors: stepErrors };
+  const stepProps = { mode, template, draft, errors: stepErrors, smtpConfigured };
 
   return (
     <PlatformRouteLayout>

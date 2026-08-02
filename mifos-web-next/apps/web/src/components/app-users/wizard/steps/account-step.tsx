@@ -16,7 +16,8 @@ export function AccountStep({
   mode,
   draft,
   errors,
-  onChange
+  onChange,
+  smtpConfigured = true
 }: UserStepProps & {
   onChange: (patch: Partial<UserWizardDraft>) => void;
 }) {
@@ -69,7 +70,9 @@ export function AccountStep({
           error={errors.email}
           hint={
             mode === 'create'
-              ? 'Required if you want the initial password emailed on the Sign-in step.'
+              ? smtpConfigured
+                ? 'Required if you want the initial password emailed on the Sign-in step.'
+                : 'Optional. Password email is unavailable until outbound email is configured.'
               : 'Optional on save. Leave blank to keep the current address.'
           }
           hintAriaLabel={mode === 'create' ? 'About email for new users' : 'About email when editing users'}

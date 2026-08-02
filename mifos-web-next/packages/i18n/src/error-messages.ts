@@ -7,7 +7,7 @@
  */
 
 /**
- * Fineract userMessageGlobalisationCode → human-readable message.
+ * Fineract userMessageGlobalisationCode -> human-readable message.
  * Extend from reference web-app translations and Fineract properties files.
  */
 const ERROR_MESSAGES: Record<string, string> = {
@@ -44,6 +44,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'PEP details on the compliance profile are incomplete for the assigned customer class.',
   'validation.msg.client.customerClassId.edd.fatca.required':
     'FATCA registration is required on the compliance profile for the assigned customer class.',
+  'error.msg.user.email.invalid':
+    'Could not send the password email. Confirm the address is correct and that email delivery is configured, or turn off Send password to email and set a password on the Sign-in step.',
   'error.msg.not.authorized': 'You do not have permission to perform this action.',
   'error.msg.clients.must.be.draft.to.submit':
     'Only draft customers can be submitted. Save as draft first, then submit.',
@@ -128,7 +130,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.command.not.waiting.for.approval':
     'This task is not awaiting approval, so it cannot be approved, rejected, or deleted.',
   'error.msg.department.not.mapped.to.office':
-    'The selected department is not mapped to this branch. Choose a department mapped to the branch, or update office–department mappings.',
+    'The selected department is not mapped to this branch. Choose a department mapped to the branch, or update office-department mappings.',
   'insufficient.available.balance.on.linked.savings':
     'The linked savings account does not have enough available balance for this share purchase.',
   'error.msg.shareaccount.insufficient.available.balance.on.linked.savings':

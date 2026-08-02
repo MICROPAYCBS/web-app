@@ -33,6 +33,8 @@ export interface UserWizardProps {
   template: FineractUserTemplate;
   initialDraft: UserWizardDraft;
   userId?: number;
+  /** Create mode: whether outbound email is configured for password delivery. */
+  smtpConfigured?: boolean;
 }
 
 export interface UserStepProps {
@@ -40,4 +42,5 @@ export interface UserStepProps {
   template: FineractUserTemplate;
   draft: UserWizardDraft;
   errors: StepErrors;
+  smtpConfigured?: boolean;
 }
