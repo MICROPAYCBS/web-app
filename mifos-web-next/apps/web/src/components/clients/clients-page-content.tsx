@@ -10,6 +10,7 @@
 
 import type { FineractClientSummary, FineractOfficeOption } from '@mifos/api-client';
 import { Can, resolvePermission } from '@mifos/auth';
+import { Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ClientsFilterSheet } from '@/components/clients/clients-filter-sheet';
@@ -17,6 +18,7 @@ import { ClientsTable } from '@/components/clients/clients-table';
 import { ListFilterTrigger } from '@/components/composites/list-filter-sheet';
 import { ListPage } from '@/components/composites/list-page';
 import { buttonVariants } from '@/components/ui/button';
+import { CLIENTS_IMPORT_PATH } from '@/lib/clients/clients-import';
 import {
   clientListFiltersSignature,
   countActiveClientListFilters,
@@ -63,11 +65,22 @@ export function ClientsPageContent({
         title="Customers"
         description="Browse and manage customers."
         actions={
-          <Can permission={resolvePermission('clients.create')}>
-            <Link href="/clients/create" className={cn(buttonVariants())}>
-              New customer
-            </Link>
-          </Can>
+          <div className="flex flex-wrap items-center gap-2">
+            <Can permission={resolvePermission('clients.create')}>
+              <Link
+                href={CLIENTS_IMPORT_PATH}
+                className={cn(buttonVariants({ variant: 'outline' }))}
+              >
+                <Upload className="mr-2 size-4" />
+                Import
+              </Link>
+            </Can>
+            <Can permission={resolvePermission('clients.create')}>
+              <Link href="/clients/create" className={cn(buttonVariants())}>
+                New customer
+              </Link>
+            </Can>
+          </div>
         }
       >
         <ClientsTable

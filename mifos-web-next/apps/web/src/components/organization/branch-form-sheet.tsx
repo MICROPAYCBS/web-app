@@ -319,9 +319,11 @@ export function BranchFormSheet({
         <SelectField
           id={`${formId}-status`}
           label="Status"
-          value={form.status || 'ACTIVE'}
-          onValueChange={(value) => patchForm({ status: value ?? 'ACTIVE' })}
+          optional
+          value={form.status || undefined}
+          onValueChange={(value) => patchForm({ status: value ?? '' })}
           options={BRANCH_STATUS_OPTIONS.map((value) => ({ value, label: value }))}
+          placeholder="Select status"
         />
 
         <BranchFormSection title="Location & contact" description="Physical address and branch contact details." />

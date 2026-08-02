@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-30T16:58:27.466Z",
+  "generatedAt": "2026-08-02T04:50:05.872Z",
   "summary": {
     "todo": 0,
     "in_progress": 1,
-    "done": 96,
+    "done": 97,
     "n/a": 0
   },
   "routes": [
@@ -81,6 +81,17 @@
       "webAppRef": "clients",
       "fineractApi": "GET /clients",
       "schemaId": "clients.create"
+    },
+    {
+      "id": "clientsImport",
+      "path": "/clients/import",
+      "domain": "clients",
+      "label": "Import customers",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/bulk-import/Clients",
+      "fineractApi": "POST /clients",
+      "notes": "Guided analyze → create flow (person customers); org bulk-import Clients remains as legacy."
     },
     {
       "id": "groups",

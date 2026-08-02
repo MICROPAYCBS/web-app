@@ -55,7 +55,7 @@ export function defaultBranchProfileFormFields(): BranchProfileFormFields {
     longitude: '',
     cashLimit: '',
     workingHours: '',
-    status: 'ACTIVE'
+    status: ''
   };
 }
 
@@ -80,7 +80,7 @@ export function branchProfileFormFromApi(
     longitude: profile.longitude ?? '',
     cashLimit: profile.cashLimit != null ? String(profile.cashLimit) : '',
     workingHours: profile.workingHours ?? '',
-    status: profile.status ?? 'ACTIVE'
+    status: profile.status ?? ''
   };
 }
 
@@ -89,7 +89,7 @@ export function branchProfileInputFromForm(
   options?: { lockedBranchCode?: string }
 ): BranchProfileInput | undefined {
   const lockedCode = options?.lockedBranchCode?.trim();
-  const payload: BranchProfileInput = {
+  const candidates: BranchProfileInput = {
     officeCode: lockedCode || form.officeCode.trim() || undefined,
     branchType: form.branchType.trim() || undefined,
     regionCode: form.regionCode.trim() || undefined,
@@ -104,11 +104,18 @@ export function branchProfileInputFromForm(
     longitude: form.longitude.trim() || undefined,
     cashLimit: form.cashLimit.trim() ? Number(form.cashLimit) : undefined,
     workingHours: form.workingHours.trim() || undefined,
-    status: (form.status as 'ACTIVE' | 'INACTIVE') || 'ACTIVE'
+    status:
+      form.status === 'ACTIVE' || form.status === 'INACTIVE' ? form.status : undefined
   };
 
-  const hasValue = Object.values(payload).some((value) => value !== undefined && value !== '');
-  return hasValue ? payload : undefined;
+  const payload: BranchProfileInput = {};
+  for (const [key, value] of Object.entries(candidates)) {
+    if (value !== undefined && value !== '') {
+      (payload as Record<string, unknown>)[key] = value;
+    }
+  }
+
+  return Object.keys(payload).length > 0 ? payload : undefined;
 }
 
 export function branchCodeLabel(office: { name?: string; branchProfile?: OfficeBranchProfile | null }) {

@@ -117,6 +117,27 @@ const CORE_APP_ROUTES = {
       schemaId: 'clients.create'
     }
   },
+  clientsImport: {
+    id: 'clientsImport',
+    path: '/clients/import',
+    kind: 'page',
+    label: 'Import customers',
+    domain: 'clients',
+    nav: false,
+    navOrder: 11,
+    navGroup: 'portfolio',
+    navIcon: 'upload',
+    keywords: ['customer', 'import', 'excel', 'bulk', 'upload'],
+    permissionKey: 'clients.create',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      webAppRef: 'organization/bulk-import/Clients',
+      fineractApi: 'POST /clients',
+      notes: 'Guided analyze → create flow (person customers); org bulk-import Clients remains as legacy.'
+    }
+  },
   groups: {
     id: 'groups',
     path: '/groups',

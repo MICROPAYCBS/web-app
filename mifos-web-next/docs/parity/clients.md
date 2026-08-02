@@ -32,7 +32,7 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-004 | Show closed clients filter                                   | Checkbox                   | `Show closed clients` + `sqlSearch`  | Done                    |
 | CL-005 | Row → detail                                                 | `/clients/:id/general`     | `/clients/:id` → `/general` | Done                    |
 | CL-006 | Create client CTA                                            | Toolbar                    | Sidebar + `/clients/create` | Done                    |
-| CL-007 | Import clients                                               | Bulk import route          | —                           | Deferred (organization) |
+| CL-007 | Import clients                                               | Bulk import route          | `/clients/import` guided analyze → create | Done                    |
 | CL-008 | Compliance name masking                                      | `complianceHideClientData` | —                           | Planned                 |
 | CL-009 | List columns: name, account no., external id, status, office | Table                      | Partial (verify parity)     | Partial                 |
 
