@@ -8,12 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { BulkImportStaffOption } from '@mifos/api-client';
 import { isPendingCheckerActionResult } from '@mifos/validation';
 import { Download, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { createClientAction, saveClientDraftAction } from '@/actions/clients';
+import {
+  createClientAction,
+  createLegacyImportClientAction,
+  loadClientsImportStaffAction
+} from '@/actions/clients';
 import {
   ClientsImportReview,
   type ClientsImportReviewAnalysis
@@ -23,6 +28,7 @@ import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toastFineractError } from '@/lib/command-outcome-toast';
 import {
   analyzeClientsImportRows,
   CLIENTS_IMPORT_TEMPLATE_HINT,
@@ -35,12 +41,14 @@ import {
   analyzeClientsLegacyImportRows,
   CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT,
   prepareClientsLegacyImportRows,
+  type ClientsLegacyImportLegalForm,
   type ClientsLegacyImportPreparedRow
 } from '@/lib/clients/clients-import-legacy';
 import {
   parseClientsImportFile,
   parseClientsLegacyImportFile
 } from '@/lib/clients/clients-import-workbook';
+import { resolveClientLegalFormTypeFromSelection } from '@/lib/fineract/bulk-import-display';
 import { toSelectOptions } from '@/lib/form/select-options';
 
 const TEMPLATE_API_PATH = '/api/clients/import/template';
@@ -65,6 +73,10 @@ export function ClientsImportPanel({
   const [legacyOfficeId, setLegacyOfficeId] = useState(
     defaultOfficeId != null ? String(defaultOfficeId) : ''
   );
+  const [legacyStaffId, setLegacyStaffId] = useState('');
+  const [legacyLegalForm, setLegacyLegalForm] = useState<ClientsLegacyImportLegalForm>('Person');
+  const [legacySavingsProductId, setLegacySavingsProductId] = useState('');
+  const [staffOptions, setStaffOptions] = useState<BulkImportStaffOption[]>([]);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<ClientsImportReviewAnalysis | null>(null);
@@ -72,12 +84,19 @@ export function ClientsImportPanel({
   const [progressByRow, setProgressByRow] = useState<Record<number, ClientsImportRowProgress>>({});
   const [importing, setImporting] = useState(false);
   const [analyzing, startAnalyzeTransition] = useTransition();
+  const [loadingStaff, startStaffTransition] = useTransition();
 
-  const busy = analyzing || importing;
+  const busy = analyzing || importing || loadingStaff;
   const branchOptions = useMemo(() => toSelectOptions(lookups.offices), [lookups.offices]);
+  const staffSelectOptions = useMemo(() => toSelectOptions(staffOptions), [staffOptions]);
+  const savingsProductOptions = useMemo(
+    () => toSelectOptions(lookups.savingProducts),
+    [lookups.savingProducts]
+  );
+  const hasLegacyBranch = Boolean(legacyOfficeId);
+  const hasLegacyLegalForm = Boolean(legacyLegalForm);
   const selectedLegacyOfficeId = Number(legacyOfficeId);
-  const hasLegacyBranch =
-    Number.isInteger(selectedLegacyOfficeId) && selectedLegacyOfficeId > 0;
+  const selectedLegacySavingsProductId = Number(legacySavingsProductId);
   const importFinished = useMemo(() => {
     if (!importing && Object.keys(progressByRow).length === 0) {
       return false;
@@ -92,16 +111,46 @@ export function ClientsImportPanel({
   const templateHint =
     mode === 'legacy' ? CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT : CLIENTS_IMPORT_TEMPLATE_HINT;
 
+  function handleLegacyOfficeChange(officeId: string) {
+    setLegacyOfficeId(officeId);
+    setLegacyStaffId('');
+    setStaffOptions([]);
+    setAnalysis(null);
+    setPreparedRows([]);
+    setProgressByRow({});
+    if (!officeId) {
+      return;
+    }
+    startStaffTransition(async () => {
+      const result = await loadClientsImportStaffAction(officeId);
+      if (!result.ok) {
+        toastFineractError(result.message);
+        return;
+      }
+      setStaffOptions(result.data);
+    });
+  }
+
   function handleDownloadTemplate() {
     if (mode === 'legacy') {
       if (!hasLegacyBranch) {
         toast.error('Select a branch before downloading the legacy template.');
         return;
       }
-      window.open(
-        `${TEMPLATE_API_PATH}?mode=legacy&officeId=${encodeURIComponent(legacyOfficeId)}`,
-        '_blank'
-      );
+      const legalFormType = resolveClientLegalFormTypeFromSelection(legacyLegalForm);
+      if (!legalFormType) {
+        toast.error('Select a profile type before downloading the legacy template.');
+        return;
+      }
+      const params = new URLSearchParams({
+        mode: 'legacy',
+        officeId: legacyOfficeId,
+        legalFormType
+      });
+      if (legacyStaffId) {
+        params.set('staffId', legacyStaffId);
+      }
+      window.open(`${TEMPLATE_API_PATH}?${params.toString()}`, '_blank');
       return;
     }
     window.open(TEMPLATE_API_PATH, '_blank');
@@ -131,7 +180,18 @@ export function ClientsImportPanel({
 
     startAnalyzeTransition(async () => {
       if (mode === 'legacy') {
-        const parsed = await parseClientsLegacyImportFile(selectedFile);
+        if (!hasLegacyBranch || !Number.isInteger(selectedLegacyOfficeId)) {
+          toast.error('Select a branch before analyzing a legacy import file.');
+          return;
+        }
+        if (!hasLegacyLegalForm) {
+          toast.error('Select a profile type before analyzing a legacy import file.');
+          return;
+        }
+
+        const parsed = await parseClientsLegacyImportFile(selectedFile, {
+          legalForm: legacyLegalForm
+        });
         if (!parsed.ok) {
           setAnalysis(null);
           setPreparedRows([]);
@@ -140,16 +200,11 @@ export function ClientsImportPanel({
           return;
         }
 
-        const nextAnalysis = analyzeClientsLegacyImportRows(parsed.rows, lookups);
-        const officeName =
-          lookups.offices.find((office) => office.id === selectedLegacyOfficeId)?.name ?? '';
-        setAnalysis({
-          ...nextAnalysis,
-          rows: nextAnalysis.rows.map((row) => ({
-            ...row,
-            officeName
-          }))
+        const nextAnalysis = analyzeClientsLegacyImportRows(parsed.rows, lookups, {
+          selectedOfficeId: selectedLegacyOfficeId,
+          legalForm: legacyLegalForm
         });
+        setAnalysis(nextAnalysis);
         setProgressByRow({});
 
         if (!nextAnalysis.canCreate) {
@@ -158,17 +213,14 @@ export function ClientsImportPanel({
           return;
         }
 
-        if (!hasLegacyBranch) {
-          setPreparedRows([]);
-          toast.error('Select a branch before analyzing a legacy import file.');
-          return;
-        }
-
-        const prepared = prepareClientsLegacyImportRows(
-          nextAnalysis,
-          lookups,
-          selectedLegacyOfficeId
-        );
+        const prepared = prepareClientsLegacyImportRows(nextAnalysis, lookups, {
+          selectedOfficeId: selectedLegacyOfficeId,
+          legalForm: legacyLegalForm,
+          savingsProductId:
+            Number.isInteger(selectedLegacySavingsProductId) && selectedLegacySavingsProductId > 0
+              ? selectedLegacySavingsProductId
+              : undefined
+        });
         if (!prepared.ok) {
           setPreparedRows([]);
           toast.error(prepared.message);
@@ -176,7 +228,7 @@ export function ClientsImportPanel({
         }
 
         setPreparedRows(prepared.rows);
-        toast.success('File analyzed. Review the rows below, then create draft customers.');
+        toast.success('File analyzed. Review the rows below, then create customers.');
         return;
       }
 
@@ -235,7 +287,7 @@ export function ClientsImportPanel({
       try {
         const result =
           mode === 'legacy'
-            ? await saveClientDraftAction(row.input)
+            ? await createLegacyImportClientAction(row.input)
             : await createClientAction(row.input);
         if (!result.ok) {
           failureCount += 1;
@@ -276,12 +328,8 @@ export function ClientsImportPanel({
     if (failureCount === 0) {
       toast.success(
         successCount === 1
-          ? mode === 'legacy'
-            ? 'Created 1 draft customer.'
-            : 'Created 1 customer.'
-          : mode === 'legacy'
-            ? `Created ${successCount} draft customers.`
-            : `Created ${successCount} customers.`
+          ? 'Created 1 customer.'
+          : `Created ${successCount} customers.`
       );
     } else if (successCount === 0) {
       toast.error('No customers were created. See the row details below.');
@@ -307,8 +355,7 @@ export function ClientsImportPanel({
             <span className="space-y-1">
               <span className="block text-sm font-medium">Micropay template</span>
               <span className="block text-sm text-muted-foreground">
-                Full person create fields (customer class, officer, nationality, ID type, next of
-                kin structure).
+                Guided analyze and create with Micropay-required customer fields.
               </span>
             </span>
           </label>
@@ -324,8 +371,8 @@ export function ClientsImportPanel({
             <span className="space-y-1">
               <span className="block text-sm font-medium">Legacy template</span>
               <span className="block text-sm text-muted-foreground">
-                Older spreadsheet layout. Only first and last name are required; creates draft
-                customers without Micropay-required fields.
+                Platform Customers Excel (branch-prefilled). Analyze and create active customers with
+                live progress — no bulk import job.
               </span>
             </span>
           </label>
@@ -335,38 +382,82 @@ export function ClientsImportPanel({
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="space-y-4 rounded-lg border border-border p-4">
           <TitleWithHint hint={templateHint} hintAriaLabel="Customer import template help">
-            <h2 className="text-base font-medium">Import template</h2>
+            <h2 className="text-base font-medium">
+              {mode === 'legacy' ? 'Legacy template' : 'Import template'}
+            </h2>
           </TitleWithHint>
           <p className="text-sm text-muted-foreground">
             {mode === 'legacy'
-              ? 'Select the branch for this import, download the legacy template (or use an existing legacy file), then analyze and create draft customers.'
+              ? 'Select branch, profile type, and optionally staff and a savings product. Download the platform template, fill it, then analyze here.'
               : 'Download the template, fill in person customers, then analyze the file here. Customers are created one by one using the same checks as New customer.'}
           </p>
           {mode === 'legacy' ? (
-            <SelectField
-              id="clients-import-legacy-branch"
-              label="Branch"
-              required
-              value={legacyOfficeId || undefined}
-              onValueChange={(value) => {
-                setLegacyOfficeId(value ?? '');
-                setAnalysis(null);
-                setPreparedRows([]);
-                setProgressByRow({});
-              }}
-              options={branchOptions}
-              placeholder="Select branch"
-              disabled={busy}
-            />
+            <>
+              <SelectField
+                id="clients-import-legacy-branch"
+                label="Branch"
+                required
+                value={legacyOfficeId || undefined}
+                onValueChange={(value) => handleLegacyOfficeChange(value ?? '')}
+                options={branchOptions}
+                placeholder="Select branch"
+                disabled={busy}
+              />
+              <SelectField
+                id="clients-import-legacy-staff"
+                label="Staff"
+                optional
+                value={legacyStaffId || undefined}
+                onValueChange={(value) => setLegacyStaffId(value ?? '')}
+                options={staffSelectOptions}
+                placeholder="Select staff"
+                disabled={!hasLegacyBranch || busy}
+              />
+              <SelectField
+                id="clients-import-legacy-legal-form"
+                label="Profile type"
+                required
+                value={legacyLegalForm || undefined}
+                onValueChange={(value) => {
+                  const next = value === 'Entity' ? 'Entity' : 'Person';
+                  setLegacyLegalForm(next);
+                  setAnalysis(null);
+                  setPreparedRows([]);
+                  setProgressByRow({});
+                }}
+                options={[
+                  { value: 'Person', label: 'Person' },
+                  { value: 'Entity', label: 'Entity' }
+                ]}
+                disabled={busy}
+              />
+              <SelectField
+                id="clients-import-legacy-savings-product"
+                label="Savings product"
+                optional
+                value={legacySavingsProductId || undefined}
+                onValueChange={(value) => {
+                  setLegacySavingsProductId(value ?? '');
+                  setAnalysis(null);
+                  setPreparedRows([]);
+                  setProgressByRow({});
+                }}
+                options={savingsProductOptions}
+                placeholder="Select savings product"
+                disabled={busy}
+              />
+            </>
           ) : null}
           {canDownload ? (
             <Button
               type="button"
               onClick={handleDownloadTemplate}
-              disabled={busy || (mode === 'legacy' && !hasLegacyBranch)}
+              disabled={
+                busy || (mode === 'legacy' && (!hasLegacyBranch || !hasLegacyLegalForm))
+              }
             >
               <Download className="mr-2 size-4" />
-              Download {mode === 'legacy' ? 'legacy ' : ''}template
+              Download template
             </Button>
           ) : null}
         </section>
@@ -393,7 +484,11 @@ export function ClientsImportPanel({
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              disabled={!selectedFile || busy || (mode === 'legacy' && !hasLegacyBranch)}
+              disabled={
+                !selectedFile ||
+                busy ||
+                (mode === 'legacy' && (!hasLegacyBranch || !hasLegacyLegalForm))
+              }
               onClick={handleAnalyze}
             >
               <Upload className="mr-2 size-4" />
@@ -429,13 +524,7 @@ export function ClientsImportPanel({
                 void handleCreateCustomers();
               }}
             >
-              {importing
-                ? mode === 'legacy'
-                  ? 'Creating drafts…'
-                  : 'Creating customers…'
-                : mode === 'legacy'
-                  ? 'Create draft customers'
-                  : 'Create customers'}
+              {importing ? 'Creating customers…' : 'Create customers'}
             </Button>
           ) : null}
         </div>

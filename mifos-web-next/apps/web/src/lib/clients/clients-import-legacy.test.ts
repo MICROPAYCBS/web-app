@@ -17,24 +17,27 @@ import {
 
 const lookups: ClientsImportLookups = {
   offices: [{ id: 1, name: 'Head Office' }],
-  staff: [],
+  staff: [{ id: 10, name: 'Jane Officer', officeId: 1, officeName: 'Head Office' }],
   customerClasses: [],
   genders: [
     { id: 1, name: 'Male' },
     { id: 2, name: 'Female' }
   ],
   nationalities: [],
-  maritalStatuses: [{ id: 40, name: 'Single' }],
-  identityTypes: [{ id: 50, name: 'National ID' }],
-  familyRelationships: [{ id: 60, name: 'Spouse' }],
-  addressTypes: [],
+  maritalStatuses: [],
+  identityTypes: [],
+  familyRelationships: [],
+  addressTypes: [{ id: 70, name: 'Home' }],
   countries: [{ id: 80, name: 'Uganda' }],
   clientTypes: [{ id: 90, name: 'Individual' }],
   titles: [],
-  stateProvinces: []
+  stateProvinces: [],
+  savingProducts: [{ id: 200, name: 'Voluntary Savings' }],
+  constitutions: [{ id: 300, name: 'Private Limited Company' }],
+  mainBusinessLines: [{ id: 400, name: 'Agriculture' }]
 };
 
-function legacyRow(
+function legacyPersonRow(
   overrides: Partial<ClientsLegacyImportWorkbookRawRow['values']> = {}
 ): ClientsLegacyImportWorkbookRawRow {
   return {
@@ -42,71 +45,141 @@ function legacyRow(
     values: {
       'First Name': 'John',
       'Last Name': 'Doe',
-      'Phone Number': '+256712345678',
+      'Office Name': 'Head Office',
+      Active: 'TRUE',
+      'Submitted On Date': '01 January 2026',
+      'Activation Date': '02 January 2026',
+      'Mobile Number': '+256712345678',
+      ...overrides
+    }
+  };
+}
+
+function legacyEntityRow(
+  overrides: Partial<ClientsLegacyImportWorkbookRawRow['values']> = {}
+): ClientsLegacyImportWorkbookRawRow {
+  return {
+    rowNumber: 2,
+    values: {
+      Name: 'Acme Holdings',
+      'Office Name': 'Head Office',
+      Constitution: 'Private Limited Company',
+      Active: 'TRUE',
+      'Submitted On Date': '01 January 2026',
+      'Activation Date': '02 January 2026',
+      'Mobile Number': '+256712345678',
       ...overrides
     }
   };
 }
 
 describe('analyzeClientsLegacyImportRows', () => {
-  it('requires only first and last name', () => {
-    const analysis = analyzeClientsLegacyImportRows([legacyRow()], lookups);
+  it('accepts Fineract person columns without Micropay-required fields', () => {
+    const analysis = analyzeClientsLegacyImportRows([legacyPersonRow()], lookups, {
+      selectedOfficeId: 1,
+      legalForm: 'Person'
+    });
     assert.equal(analysis.canCreate, true);
     assert.equal(analysis.errorRowCount, 0);
   });
 
-  it('does not require customer class, staff, or nationality', () => {
+  it('falls back to selected branch when office name is empty', () => {
     const analysis = analyzeClientsLegacyImportRows(
-      [
-        legacyRow({
-          Gender: 'Male',
-          'Marital Status': 'Single',
-          'Identification Number': 'CM1',
-          'Next of Kin Name': 'Mary Doe'
-        })
-      ],
-      lookups
+      [legacyPersonRow({ 'Office Name': '' })],
+      lookups,
+      { selectedOfficeId: 1, legalForm: 'Person' }
     );
     assert.equal(analysis.canCreate, true);
+    assert.match(analysis.rows[0]?.warnings.join(' ') ?? '', /selected branch/);
   });
 
-  it('flags missing names', () => {
+  it('requires Active TRUE and activation date', () => {
+    const inactive = analyzeClientsLegacyImportRows(
+      [legacyPersonRow({ Active: 'FALSE' })],
+      lookups,
+      { selectedOfficeId: 1, legalForm: 'Person' }
+    );
+    assert.equal(inactive.canCreate, false);
+    assert.match(inactive.rows[0]?.errors.join(' ') ?? '', /Active must be TRUE/);
+
+    const missingActivation = analyzeClientsLegacyImportRows(
+      [legacyPersonRow({ 'Activation Date': '' })],
+      lookups,
+      { selectedOfficeId: 1, legalForm: 'Person' }
+    );
+    assert.equal(missingActivation.canCreate, false);
+    assert.match(missingActivation.rows[0]?.errors.join(' ') ?? '', /Activation Date/);
+  });
+
+  it('requires constitution for entity rows', () => {
     const analysis = analyzeClientsLegacyImportRows(
-      [legacyRow({ 'First Name': '', 'Last Name': '' })],
-      lookups
+      [legacyEntityRow({ Constitution: '' })],
+      lookups,
+      { selectedOfficeId: 1, legalForm: 'Entity' }
     );
     assert.equal(analysis.canCreate, false);
-    const messages = analysis.rows[0]?.errors.join(' ') ?? '';
-    assert.match(messages, /First Name/);
-    assert.match(messages, /Last Name/);
+    assert.match(analysis.rows[0]?.errors.join(' ') ?? '', /Constitution/);
   });
 });
 
 describe('prepareClientsLegacyImportRows', () => {
-  it('builds a draft payload without Micropay-required fields', () => {
+  it('builds an active create payload with optional savings product', () => {
     const analysis = analyzeClientsLegacyImportRows(
       [
-        legacyRow({
-          Email: 'john@example.com',
-          'Personal Customer Unique ID': 'LEG-1',
-          'Customer Type': 'Individual'
+        legacyPersonRow({
+          'External ID': 'LEG-1',
+          Gender: 'Male',
+          'Client Type': 'Individual'
         })
       ],
-      lookups
+      lookups,
+      { selectedOfficeId: 1, legalForm: 'Person' }
     );
-    const prepared = prepareClientsLegacyImportRows(analysis, lookups, 1);
+    const prepared = prepareClientsLegacyImportRows(analysis, lookups, {
+      selectedOfficeId: 1,
+      legalForm: 'Person',
+      savingsProductId: 200
+    });
     assert.equal(prepared.ok, true);
     if (!prepared.ok) {
       return;
     }
     const input = prepared.rows[0]?.input;
     assert.ok(input);
-    assert.equal(input.legalFormId, 1);
     assert.equal(input.officeId, 1);
     assert.equal(input.externalId, 'LEG-1');
-    assert.equal(input.customerClassId, undefined);
-    assert.equal(input.staffId, undefined);
-    assert.equal(input.nationalityCountryId, undefined);
+    assert.equal(input.active, true);
+    assert.equal(input.submittedOnDate, '01 January 2026');
+    assert.equal(input.activationDate, '02 January 2026');
+    assert.equal(input.savingsProductId, 200);
     assert.equal(input.clientTypeId, 90);
+    if (input.legalFormId === 1) {
+      assert.equal(input.firstname, 'John');
+      assert.equal(input.lastname, 'Doe');
+    }
+  });
+
+  it('maps entity name and constitution', () => {
+    const analysis = analyzeClientsLegacyImportRows([legacyEntityRow()], lookups, {
+      selectedOfficeId: 1,
+      legalForm: 'Entity'
+    });
+    assert.equal(analysis.canCreate, true);
+    const prepared = prepareClientsLegacyImportRows(analysis, lookups, {
+      selectedOfficeId: 1,
+      legalForm: 'Entity'
+    });
+    assert.equal(prepared.ok, true);
+    if (!prepared.ok) {
+      return;
+    }
+    const input = prepared.rows[0]?.input;
+    assert.ok(input);
+    assert.equal(input.active, true);
+    assert.equal(input.legalFormId, 2);
+    if (input.legalFormId === 2) {
+      assert.equal(input.fullname, 'Acme Holdings');
+      assert.equal(input.clientNonPersonDetails.constitutionId, 300);
+    }
   });
 });

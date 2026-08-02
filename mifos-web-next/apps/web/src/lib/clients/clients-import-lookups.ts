@@ -110,6 +110,18 @@ export function buildClientsImportLookups(input: {
     stateProvinces: (address?.stateProvinceIdOptions ?? []).map((option) => ({
       id: option.id,
       name: option.name ?? option.value ?? String(option.id)
+    })),
+    savingProducts: (template.savingProductOptions ?? []).map((option) => ({
+      id: option.id,
+      name: option.name
+    })),
+    constitutions: (template.clientNonPersonConstitutionOptions ?? []).map((option) => ({
+      id: option.id,
+      name: option.name ?? option.value ?? String(option.id)
+    })),
+    mainBusinessLines: (template.clientNonPersonMainBusinessLineOptions ?? []).map((option) => ({
+      id: option.id,
+      name: option.name ?? option.value ?? String(option.id)
     }))
   };
 }

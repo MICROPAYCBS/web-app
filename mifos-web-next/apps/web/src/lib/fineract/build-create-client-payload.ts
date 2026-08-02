@@ -6,7 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CreateClientPayload, SaveDraftClientPayload } from '@mifos/validation';
+import type {
+  CreateClientPayload,
+  LegacyImportClientPayload,
+  SaveDraftClientPayload
+} from '@mifos/validation';
 import { LEGAL_FORM_ENTITY } from '@mifos/validation';
 import { buildOtherBankAccountsForApi } from '@/lib/fineract/compliance-profile-payload';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
@@ -22,10 +26,13 @@ function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
   return next;
 }
 
+type CreateClientBodyInput =
+  | CreateClientPayload
+  | SaveDraftClientPayload
+  | LegacyImportClientPayload;
+
 /** Maps validated form data to Fineract POST /clients body (draft or full create). */
-export function buildCreateClientPayload(
-  input: CreateClientPayload | SaveDraftClientPayload
-): Record<string, unknown> {
+export function buildCreateClientPayload(input: CreateClientBodyInput): Record<string, unknown> {
   const dateFormat = input.dateFormat ?? FINERACT_DATE_FORMAT;
   const locale = input.locale ?? FINERACT_LOCALE;
 
@@ -35,23 +42,23 @@ export function buildCreateClientPayload(
     locale
   });
 
-  if (input.emailAddress === '') {
+  if ('emailAddress' in input && input.emailAddress === '') {
     delete base.emailAddress;
   }
 
-  if (input.taxIdentificationNumber === '') {
+  if ('taxIdentificationNumber' in input && input.taxIdentificationNumber === '') {
     delete base.taxIdentificationNumber;
   }
 
-  if (input.alternativeMobileNo === '') {
+  if ('alternativeMobileNo' in input && input.alternativeMobileNo === '') {
     delete base.alternativeMobileNo;
   }
 
-  if (input.alternativeEmailAddress === '') {
+  if ('alternativeEmailAddress' in input && input.alternativeEmailAddress === '') {
     delete base.alternativeEmailAddress;
   }
 
-  if (input.familyMembers?.length) {
+  if ('familyMembers' in input && input.familyMembers?.length) {
     base.familyMembers = input.familyMembers.map((member) =>
       stripEmpty({ ...member, dateFormat, locale })
     );
@@ -59,7 +66,7 @@ export function buildCreateClientPayload(
     delete base.familyMembers;
   }
 
-  if (input.incomeSources?.length) {
+  if ('incomeSources' in input && input.incomeSources?.length) {
     base.incomeSources = input.incomeSources.map((source) =>
       stripEmpty({ ...source, dateFormat, locale })
     );
@@ -67,19 +74,19 @@ export function buildCreateClientPayload(
     delete base.incomeSources;
   }
 
-  if (input.clientIdentifiers?.length) {
+  if ('clientIdentifiers' in input && input.clientIdentifiers?.length) {
     base.clientIdentifiers = input.clientIdentifiers.map((identifier) => stripEmpty(identifier));
   } else {
     delete base.clientIdentifiers;
   }
 
-  if (input.contacts?.length) {
+  if ('contacts' in input && input.contacts?.length) {
     base.contacts = input.contacts.map((contact) => stripEmpty({ ...contact }));
   } else {
     delete base.contacts;
   }
 
-  if (input.complianceProfile) {
+  if ('complianceProfile' in input && input.complianceProfile) {
     const profile = input.complianceProfile;
     const accounts = profile.hasOtherBankAccounts
       ? buildOtherBankAccountsForApi(profile.otherBankAccounts)
@@ -99,10 +106,17 @@ export function buildCreateClientPayload(
     delete base.address;
   }
 
-  if (input.datatables?.length) {
+  if ('datatables' in input && input.datatables?.length) {
     base.datatables = input.datatables;
   } else {
     delete base.datatables;
+  }
+
+  if ('active' in input && input.active === true) {
+    base.active = true;
+    if ('activationDate' in input && input.activationDate) {
+      base.activationDate = input.activationDate;
+    }
   }
 
   if (!input.savingsProductId) {

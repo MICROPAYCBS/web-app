@@ -16,7 +16,12 @@ import type {
   FineractClientTemplate,
   FineractCreateClientResponse
 } from '@mifos/api-client';
-import type { CreateClientPayload, SaveDraftClientPayload, UpdateClientPayload } from '@mifos/validation';
+import type {
+  CreateClientPayload,
+  LegacyImportClientPayload,
+  SaveDraftClientPayload,
+  UpdateClientPayload
+} from '@mifos/validation';
 import { buildCreateClientPayload } from '@/lib/fineract/build-create-client-payload';
 import { buildUpdateClientPayload } from '@/lib/fineract/build-update-client-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
@@ -56,9 +61,9 @@ export async function getClientTemplate(officeId?: number): Promise<FineractClie
   return fineract.get<FineractClientTemplate>('/clients/template', searchParams);
 }
 
-/** Create customer as Draft (`POST /clients`, active omitted/false). */
+/** Create customer (`POST /clients` — draft when active omitted, or activated when set). */
 export async function createClient(
-  input: CreateClientPayload | SaveDraftClientPayload
+  input: CreateClientPayload | SaveDraftClientPayload | LegacyImportClientPayload
 ): Promise<FineractCreateClientResponse> {
   const fineract = await createFineractClient();
   const body = buildCreateClientPayload(input);

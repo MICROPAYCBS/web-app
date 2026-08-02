@@ -49,7 +49,7 @@ export default async function ClientsImportPage() {
   return (
     <ListPage
       title="Import customers"
-      description="Choose Micropay or legacy template, analyze your Excel file, then create person customers with live progress."
+      description="Choose Micropay guided import or the platform legacy Customers template with live create progress."
       backLink={<DetailBackLink href="/clients" label="Back to customers" />}
     >
       <ClientsImportPanel

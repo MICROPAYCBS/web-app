@@ -16,7 +16,10 @@ import {
 } from '@/lib/clients/clients-import';
 import {
   CLIENTS_LEGACY_IMPORT_COLUMNS,
+  CLIENTS_LEGACY_IMPORT_SHEET_ENTITY,
+  CLIENTS_LEGACY_IMPORT_SHEET_PERSON,
   type ClientsLegacyImportColumn,
+  type ClientsLegacyImportLegalForm,
   type ClientsLegacyImportWorkbookRawRow
 } from '@/lib/clients/clients-import-legacy';
 
@@ -243,6 +246,16 @@ export async function parseClientsImportFile(
   }
 }
 
+/** Normalize Fineract ClientPerson headers (trailing spaces / asterisks). */
+function normalizeLegacyHeaderKey(value: unknown): string {
+  return String(value ?? '')
+    .replace(/\*/g, '')
+    .replace(/\?/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toUpperCase();
+}
+
 const LEGACY_HEADER_ALIASES: Record<string, ClientsLegacyImportColumn> = {
   'FIRST NAME': 'First Name',
   FIRSTNAME: 'First Name',
@@ -250,62 +263,95 @@ const LEGACY_HEADER_ALIASES: Record<string, ClientsLegacyImportColumn> = {
   LASTNAME: 'Last Name',
   'MIDDLE NAME': 'Middle Name',
   MIDDLENAME: 'Middle Name',
-  'OTHER NAME': 'Other Name',
-  OTHERNAME: 'Other Name',
-  'SHORT NAME': 'Short Name',
-  SHORTNAME: 'Short Name',
-  'PHONE NUMBER': 'Phone Number',
-  PHONENUMBER: 'Phone Number',
-  PHONE: 'Phone Number',
-  MOBILE: 'Phone Number',
-  EMAIL: 'Email',
-  'OPERATION PROFILE': 'Operation Profile',
-  OPERATIONPROFILE: 'Operation Profile',
-  'CUSTOMER TYPE': 'Customer Type',
-  CUSTOMERTYPE: 'Customer Type',
-  'IDENTIFICATION NUMBER': 'Identification Number',
-  IDENTIFICATIONNUMBER: 'Identification Number',
+  NAME: 'Name',
+  'OFFICE NAME': 'Office Name',
+  OFFICENAME: 'Office Name',
+  'STAFF NAME': 'Staff Name',
+  STAFFNAME: 'Staff Name',
+  'EXTERNAL ID': 'External ID',
+  EXTERNALID: 'External ID',
+  ACTIVE: 'Active',
+  'SUBMITTED ON DATE': 'Submitted On Date',
+  SUBMITTEDONDATE: 'Submitted On Date',
+  'SUBMITTED ON': 'Submitted On Date',
+  'ACTIVATION DATE': 'Activation Date',
+  ACTIVATIONDATE: 'Activation Date',
+  'MOBILE NUMBER': 'Mobile Number',
+  MOBILENUMBER: 'Mobile Number',
+  MOBILE: 'Mobile Number',
   'DATE OF BIRTH': 'Date of Birth',
+  DATEOFBIRTH: 'Date of Birth',
   DOB: 'Date of Birth',
-  'CLIENT TAGS': 'Client Tags',
-  CLIENTTAGS: 'Client Tags',
+  'CLIENT TYPE': 'Client Type',
+  CLIENTTYPE: 'Client Type',
   GENDER: 'Gender',
-  'MARITAL STATUS': 'Marital Status',
-  MARITALSTATUS: 'Marital Status',
-  'NEXT OF KIN NAME': 'Next of Kin Name',
-  NEXTOFKINNAME: 'Next of Kin Name',
-  'NEXT OF KIN PHONE': 'Next of Kin Phone',
-  NEXTOFKINPHONE: 'Next of Kin Phone',
-  'POSITION / TITLE': 'Position / Title',
-  'POSITION/TITLE': 'Position / Title',
-  POSITIONTITLE: 'Position / Title',
-  TITLE: 'Position / Title',
-  AREA: 'Area',
-  'ACCOUNT NUMBER': 'Account Number',
-  ACCOUNTNUMBER: 'Account Number',
+  'CLIENT CLASSIFICATION': 'Client Classification',
+  CLIENTCLASSIFICATION: 'Client Classification',
+  'IS A STAFF MEMEBER': 'Is Staff Member',
+  'IS A STAFF MEMBER': 'Is Staff Member',
+  ISSTAFFMEMBER: 'Is Staff Member',
+  CONSTITUTION: 'Constitution',
+  'INCORPORATION NUMBER': 'Incorporation Number',
+  INCORPORATIONNUMBER: 'Incorporation Number',
+  'INCORPORATION VALIDITY TILL DATE': 'Incorporation Validity Till Date',
+  INCORPORATIONVALIDITYTILLDATE: 'Incorporation Validity Till Date',
+  'MAIN BUSINESS LINE': 'Main Business Line',
+  MAINBUSINESSLINE: 'Main Business Line',
+  REMARKS: 'Remarks',
+  'ADDRESS ENABLED': 'Address Enabled',
+  ADDRESSENABLED: 'Address Enabled',
+  'ADDRESS TYPE': 'Address Type',
+  ADDRESSTYPE: 'Address Type',
+  STREET: 'Street',
   'ADDRESS LINE 1': 'Address Line 1',
   ADDRESSLINE1: 'Address Line 1',
+  'ADDRESS LINE 2': 'Address Line 2',
+  ADDRESSLINE2: 'Address Line 2',
+  'ADDRESS LINE 3': 'Address Line 3',
+  ADDRESSLINE3: 'Address Line 3',
   CITY: 'City',
+  'STATE/ PROVINCE': 'State / Province',
   'STATE / PROVINCE': 'State / Province',
   'STATE/PROVINCE': 'State / Province',
   STATEPROVINCE: 'State / Province',
-  STATE: 'State / Province',
   COUNTRY: 'Country',
   'POSTAL CODE': 'Postal Code',
   POSTALCODE: 'Postal Code',
-  'RESIDENTIAL ADDRESS LINE 1': 'Residential Address Line 1',
-  RESIDENTIALADDRESSLINE1: 'Residential Address Line 1',
-  'RESIDENTIAL ADDRESS LINE 2': 'Residential Address Line 2',
-  RESIDENTIALADDRESSLINE2: 'Residential Address Line 2',
-  'PERSONAL CUSTOMER UNIQUE ID': 'Personal Customer Unique ID',
-  PERSONALCUSTOMERUNIQUEID: 'Personal Customer Unique ID'
+  'IS ACTIVE ADDRESS': 'Is Active Address',
+  ISACTIVEADDRESS: 'Is Active Address'
 };
 
-const LEGACY_REQUIRED_COLUMNS: ClientsLegacyImportColumn[] = ['First Name', 'Last Name'];
+function legacyRequiredColumns(
+  legalForm: ClientsLegacyImportLegalForm
+): ClientsLegacyImportColumn[] {
+  return legalForm === 'Entity' ? ['Name', 'Constitution'] : ['First Name', 'Last Name'];
+}
+
+function pickLegacySheetName(
+  sheetNames: string[],
+  legalForm: ClientsLegacyImportLegalForm
+): string | undefined {
+  const preferred =
+    legalForm === 'Entity'
+      ? CLIENTS_LEGACY_IMPORT_SHEET_ENTITY
+      : CLIENTS_LEGACY_IMPORT_SHEET_PERSON;
+  const needle = legalForm === 'Entity' ? 'entity' : 'person';
+  return (
+    sheetNames.find((name) => name.trim().toLowerCase() === preferred.toLowerCase()) ??
+    sheetNames.find((name) => name.trim().toLowerCase().includes(needle)) ??
+    sheetNames[0]
+  );
+}
 
 function mapLegacyHeader(value: unknown): ClientsLegacyImportColumn | null {
-  const spaced = normalizeHeader(value);
-  const compact = spaced.replace(/[\s_]+/g, '');
+  const spaced = normalizeLegacyHeaderKey(value);
+  if (spaced.startsWith('ALL ') && spaced.includes('COMPULSORY')) {
+    return null;
+  }
+  if (spaced.startsWith('LOOKUP ')) {
+    return null;
+  }
+  const compact = spaced.replace(/[\s_/]+/g, '');
   return LEGACY_HEADER_ALIASES[spaced] ?? LEGACY_HEADER_ALIASES[compact] ?? null;
 }
 
@@ -316,36 +362,11 @@ function isBlankLegacyRow(values: Partial<Record<ClientsLegacyImportColumn, unkn
   });
 }
 
-export function buildClientsLegacyImportTemplateWorkbook(lookups: ClientsImportLookups): ArrayBuffer {
-  const workbook = XLSX.utils.book_new();
-  const customersSheet = XLSX.utils.aoa_to_sheet([[...CLIENTS_LEGACY_IMPORT_COLUMNS]]);
-  XLSX.utils.book_append_sheet(workbook, customersSheet, CLIENTS_IMPORT_SHEET_NAME);
-
-  const lookupSections: Array<[string, string[]]> = [
-    ['Genders', lookupNames(lookups.genders)],
-    ['Marital Statuses', lookupNames(lookups.maritalStatuses)],
-    ['Customer Types', lookupNames(lookups.clientTypes)],
-    ['Titles', lookupNames(lookups.titles)],
-    ['ID Types (default used)', lookupNames(lookups.identityTypes)],
-    ['Countries', lookupNames(lookups.countries)],
-    ['States / Provinces', lookupNames(lookups.stateProvinces)]
-  ];
-  const maxLen = Math.max(1, ...lookupSections.map(([, values]) => values.length));
-  const lookupMatrix: string[][] = [
-    lookupSections.map(([title]) => title),
-    ...Array.from({ length: maxLen }, (_, rowIndex) =>
-      lookupSections.map(([, values]) => values[rowIndex] ?? '')
-    )
-  ];
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(lookupMatrix), 'Lookups');
-
-  const written = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }) as number[];
-  return new Uint8Array(written).buffer;
-}
-
 export function parseClientsLegacyImportWorkbook(
-  data: ArrayBuffer
+  data: ArrayBuffer,
+  options?: { legalForm?: ClientsLegacyImportLegalForm }
 ): { ok: true; rows: ClientsLegacyImportWorkbookRawRow[] } | { ok: false; message: string } {
+  const legalForm = options?.legalForm ?? 'Person';
   let workbook: XLSX.WorkBook;
   try {
     workbook = XLSX.read(data, { type: 'array', cellDates: true });
@@ -353,10 +374,7 @@ export function parseClientsLegacyImportWorkbook(
     return { ok: false, message: 'Could not read the Excel file.' };
   }
 
-  const sheetName =
-    workbook.SheetNames.find(
-      (name) => name.trim().toLowerCase() === CLIENTS_IMPORT_SHEET_NAME.toLowerCase()
-    ) ?? workbook.SheetNames[0];
+  const sheetName = pickLegacySheetName(workbook.SheetNames, legalForm);
   if (!sheetName) {
     return { ok: false, message: 'The Excel file has no worksheets.' };
   }
@@ -385,11 +403,11 @@ export function parseClientsLegacyImportWorkbook(
     }
   });
 
-  const missing = LEGACY_REQUIRED_COLUMNS.filter((column) => !columnIndex.has(column));
+  const missing = legacyRequiredColumns(legalForm).filter((column) => !columnIndex.has(column));
   if (missing.length > 0) {
     return {
       ok: false,
-      message: `Missing required column(s): ${missing.join(', ')}. Download the legacy template and keep its header row.`
+      message: `Missing required column(s): ${missing.join(', ')}. Download the legacy platform template and keep its header row.`
     };
   }
 
@@ -418,11 +436,12 @@ export function parseClientsLegacyImportWorkbook(
 }
 
 export async function parseClientsLegacyImportFile(
-  file: File
+  file: File,
+  options?: { legalForm?: ClientsLegacyImportLegalForm }
 ): Promise<{ ok: true; rows: ClientsLegacyImportWorkbookRawRow[] } | { ok: false; message: string }> {
   try {
     const buffer = await file.arrayBuffer();
-    return parseClientsLegacyImportWorkbook(buffer);
+    return parseClientsLegacyImportWorkbook(buffer, options);
   } catch {
     return { ok: false, message: 'Could not read the selected file.' };
   }

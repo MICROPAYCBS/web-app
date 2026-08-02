@@ -38,7 +38,10 @@ const lookups: ClientsImportLookups = {
   countries: [{ id: 80, name: 'Uganda' }],
   clientTypes: [{ id: 90, name: 'Individual' }],
   titles: [{ id: 100, name: 'Mr' }],
-  stateProvinces: [{ id: 110, name: 'Central' }]
+  stateProvinces: [{ id: 110, name: 'Central' }],
+  savingProducts: [],
+  constitutions: [],
+  mainBusinessLines: []
 };
 
 function validRow(

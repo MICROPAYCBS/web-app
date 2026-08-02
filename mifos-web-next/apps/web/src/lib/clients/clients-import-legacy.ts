@@ -10,10 +10,11 @@ import {
   GENDER_FEMALE,
   GENDER_MALE,
   isValidUgandaMobileInternational,
+  LEGAL_FORM_ENTITY,
   LEGAL_FORM_PERSON,
+  legacyImportClientSchema,
   normalizeUgandaMobileInternational,
-  saveDraftClientSchema,
-  type SaveDraftClientPayload
+  type LegacyImportClientPayload
 } from '@mifos/validation';
 import {
   cellText,
@@ -28,37 +29,57 @@ import {
   toFineractDate
 } from '@/lib/fineract/dates';
 
-export const CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT =
-  'Legacy spreadsheet for person customers without Micropay-required fields. Select a branch before downloading. Required columns: First Name and Last Name. Other columns are optional. Customers are saved as drafts under the selected branch.';
+/** Fineract organization bulk-import definition name for customers. */
+export const CLIENTS_LEGACY_BULK_IMPORT_NAME = 'Clients';
 
+export const CLIENTS_LEGACY_IMPORT_SHEET_PERSON = 'ClientPerson';
+export const CLIENTS_LEGACY_IMPORT_SHEET_ENTITY = 'ClientEntity';
+
+/** @deprecated Prefer CLIENTS_LEGACY_IMPORT_SHEET_PERSON. */
+export const CLIENTS_LEGACY_IMPORT_SHEET_NAME = CLIENTS_LEGACY_IMPORT_SHEET_PERSON;
+
+export type ClientsLegacyImportLegalForm = 'Person' | 'Entity';
+
+export const CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT =
+  'Downloads the platform Customers Excel template for the selected branch (submitted/activation dates, office pre-filled). Analyze the filled file here — customers are created active one by one with live progress. Optionally choose a savings product to open an account on create. Micropay-only fields are not required.';
+
+/**
+ * Canonical column keys for Fineract ClientPerson / ClientEntity workbook headers
+ * (trailing spaces / asterisks are normalized when parsing).
+ */
 export const CLIENTS_LEGACY_IMPORT_COLUMNS = [
   'First Name',
   'Last Name',
   'Middle Name',
-  'Other Name',
-  'Short Name',
-  'Phone Number',
-  'Email',
-  'Operation Profile',
-  'Customer Type',
-  'Identification Number',
+  'Name',
+  'Office Name',
+  'Staff Name',
+  'External ID',
+  'Active',
+  'Submitted On Date',
+  'Activation Date',
+  'Mobile Number',
   'Date of Birth',
-  'Client Tags',
+  'Client Type',
   'Gender',
-  'Marital Status',
-  'Next of Kin Name',
-  'Next of Kin Phone',
-  'Position / Title',
-  'Area',
-  'Account Number',
+  'Client Classification',
+  'Is Staff Member',
+  'Constitution',
+  'Incorporation Number',
+  'Incorporation Validity Till Date',
+  'Main Business Line',
+  'Remarks',
+  'Address Enabled',
+  'Address Type',
+  'Street',
   'Address Line 1',
+  'Address Line 2',
+  'Address Line 3',
   'City',
   'State / Province',
   'Country',
   'Postal Code',
-  'Residential Address Line 1',
-  'Residential Address Line 2',
-  'Personal Customer Unique ID'
+  'Is Active Address'
 ] as const;
 
 export type ClientsLegacyImportColumn = (typeof CLIENTS_LEGACY_IMPORT_COLUMNS)[number];
@@ -73,24 +94,33 @@ export type ClientsLegacyImportAnalyzedRow = {
   firstName: string;
   lastName: string;
   middleName: string;
-  phoneNumber: string;
-  email: string;
-  customerType: string;
-  identificationNumber: string;
+  name: string;
+  officeName: string;
+  staffName: string;
+  externalId: string;
+  active: string;
+  submittedOn: string;
+  activationDate: string;
+  mobile: string;
   dateOfBirth: string;
+  clientType: string;
   gender: string;
-  maritalStatus: string;
-  nextOfKinName: string;
-  nextOfKinPhone: string;
-  positionTitle: string;
+  constitution: string;
+  incorporationNumber: string;
+  incorporationValidityTill: string;
+  mainBusinessLine: string;
+  remarks: string;
+  addressEnabled: string;
+  addressType: string;
+  street: string;
   addressLine1: string;
+  addressLine2: string;
+  addressLine3: string;
   city: string;
   stateProvince: string;
   country: string;
   postalCode: string;
-  residentialAddressLine1: string;
-  residentialAddressLine2: string;
-  externalId: string;
+  isActiveAddress: string;
   errors: string[];
   warnings: string[];
 };
@@ -100,7 +130,7 @@ export type ClientsLegacyImportPreparedRow = {
   displayName: string;
   officeName: string;
   externalId: string;
-  input: SaveDraftClientPayload;
+  input: LegacyImportClientPayload;
 };
 
 export type ClientsLegacyImportAnalysis = {
@@ -113,10 +143,17 @@ export type ClientsLegacyImportAnalysis = {
 
 export type ClientsLegacyImportRowProgress = ClientsImportRowProgress;
 
+export type ClientsLegacyImportOptions = {
+  selectedOfficeId?: number;
+  legalForm?: ClientsLegacyImportLegalForm;
+  savingsProductId?: number;
+};
+
 function normalizeKey(value: unknown): string {
   return cellText(value).replace(/\s+/g, ' ').toUpperCase();
 }
 
+/** Match lookup by id, exact name/code, or Fineract "Name-Id" cell values. */
 function findLookup(
   options: ClientsImportLookups[keyof ClientsImportLookups],
   raw: string
@@ -130,6 +167,21 @@ function findLookup(
     const byId = options.find((option) => option.id === asId);
     if (byId) {
       return byId;
+    }
+  }
+  const dashed = raw.trim().match(/^(.*)-(\d+)$/);
+  if (dashed) {
+    const id = Number(dashed[2]);
+    const namePart = normalizeKey(dashed[1]);
+    const byIdAndName = options.find(
+      (option) => option.id === id && normalizeKey(option.name) === namePart
+    );
+    if (byIdAndName) {
+      return byIdAndName;
+    }
+    const byIdOnly = options.find((option) => option.id === id);
+    if (byIdOnly) {
+      return byIdOnly;
     }
   }
   return options.find(
@@ -153,16 +205,39 @@ function findGender(options: ClientsImportLookups['genders'], raw: string): numb
   return findLookup(options, raw)?.id;
 }
 
+function parseBooleanCell(
+  value: string,
+  label: string,
+  required: boolean
+): { ok: true; value?: boolean } | { ok: false; message: string } {
+  if (!value) {
+    return required
+      ? { ok: false, message: `${label} is required.` }
+      : { ok: true, value: undefined };
+  }
+  const normalized = normalizeKey(value);
+  if (['TRUE', 'YES', 'Y', '1'].includes(normalized)) {
+    return { ok: true, value: true };
+  }
+  if (['FALSE', 'NO', 'N', '0'].includes(normalized)) {
+    return { ok: true, value: false };
+  }
+  return { ok: false, message: `${label} must be TRUE or FALSE.` };
+}
+
 function parseDateCell(
   value: unknown,
-  label: string
+  label: string,
+  required: boolean
 ): { ok: true; value?: string } | { ok: false; message: string } {
   if (value instanceof Date) {
     return { ok: true, value: toFineractDate(value) };
   }
   const text = cellText(value);
   if (!text) {
-    return { ok: true, value: undefined };
+    return required
+      ? { ok: false, message: `${label} is required.` }
+      : { ok: true, value: undefined };
   }
   const normalized = normalizeFineractDateField(text);
   if (!normalized || !parseFineractDateString(normalized)) {
@@ -174,180 +249,261 @@ function parseDateCell(
   return { ok: true, value: normalized };
 }
 
-function splitPersonName(fullName: string): { firstName: string; lastName: string } {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) {
-    return { firstName: '', lastName: '' };
+function sharedAddressAndContactChecks(
+  values: ClientsLegacyImportWorkbookRawRow['values'],
+  lookups: ClientsImportLookups,
+  errors: string[],
+  warnings: string[]
+) {
+  const mobile = cellText(values['Mobile Number']);
+  const clientType = cellText(values['Client Type']);
+  const addressEnabled = cellText(values['Address Enabled']);
+  const addressType = cellText(values['Address Type']);
+  const street = cellText(values.Street);
+  const addressLine1 = cellText(values['Address Line 1']);
+  const addressLine2 = cellText(values['Address Line 2']);
+  const addressLine3 = cellText(values['Address Line 3']);
+  const city = cellText(values.City);
+  const stateProvince = cellText(values['State / Province']);
+  const country = cellText(values.Country);
+  const postalCode = cellText(values['Postal Code']);
+  const isActiveAddress = cellText(values['Is Active Address']);
+
+  if (mobile && !isValidUgandaMobileInternational(mobile)) {
+    errors.push('Mobile number must be a Uganda number in international format (e.g. +2567…).');
   }
-  if (parts.length === 1) {
-    return { firstName: parts[0]!, lastName: parts[0]! };
+
+  if (clientType && lookups.clientTypes.length > 0 && !findLookup(lookups.clientTypes, clientType)) {
+    errors.push(`Unknown client type "${clientType}".`);
   }
+
+  if (cellText(values['Client Classification'])) {
+    warnings.push('Client Classification is not imported in guided legacy mode.');
+  }
+
+  const addressEnabledParsed = parseBooleanCell(addressEnabled, 'Address Enabled', false);
+  if (!addressEnabledParsed.ok) {
+    errors.push(addressEnabledParsed.message);
+  }
+  const addressOn =
+    addressEnabledParsed.ok && addressEnabledParsed.value === true
+      ? true
+      : Boolean(addressType || street || addressLine1 || city || country || postalCode);
+
+  if (addressOn) {
+    if (addressType && lookups.addressTypes.length > 0 && !findLookup(lookups.addressTypes, addressType)) {
+      warnings.push(`Address Type "${addressType}" was not matched and will be skipped.`);
+    }
+    if (country && !findLookup(lookups.countries, country)) {
+      warnings.push(`Country "${country}" was not matched and will be skipped.`);
+    }
+    if (
+      stateProvince &&
+      lookups.stateProvinces.length > 0 &&
+      !findLookup(lookups.stateProvinces, stateProvince)
+    ) {
+      warnings.push(`State/Province "${stateProvince}" was not matched and will be skipped.`);
+    }
+    const activeAddressParsed = parseBooleanCell(isActiveAddress, 'Is active Address', false);
+    if (!activeAddressParsed.ok) {
+      errors.push(activeAddressParsed.message);
+    }
+  }
+
   return {
-    firstName: parts[0]!,
-    lastName: parts.slice(1).join(' ')
+    mobile,
+    clientType,
+    addressEnabled,
+    addressType,
+    street,
+    addressLine1,
+    addressLine2,
+    addressLine3,
+    city,
+    stateProvince,
+    country,
+    postalCode,
+    isActiveAddress
   };
 }
 
-const UNMAPPED_COLUMNS: ClientsLegacyImportColumn[] = [
-  'Other Name',
-  'Short Name',
-  'Operation Profile',
-  'Client Tags',
-  'Area'
-];
+function resolveOffice(
+  officeName: string,
+  lookups: ClientsImportLookups,
+  selectedOffice: ClientsImportLookups['offices'][number] | undefined,
+  errors: string[],
+  warnings: string[]
+) {
+  let resolvedOffice = officeName ? findLookup(lookups.offices, officeName) : undefined;
+  if (!officeName && selectedOffice) {
+    resolvedOffice = selectedOffice;
+    warnings.push(`Office Name empty — using selected branch "${selectedOffice.name}".`);
+  } else if (!officeName) {
+    errors.push('Office Name is required.');
+  } else if (!resolvedOffice) {
+    errors.push(`Unknown office "${officeName}".`);
+  }
+  return resolvedOffice;
+}
+
+function validateActiveAndDates(
+  values: ClientsLegacyImportWorkbookRawRow['values'],
+  active: string,
+  errors: string[]
+): { submittedOn: string; activationDate: string } {
+  const activeParsed = parseBooleanCell(active, 'Active', true);
+  if (!activeParsed.ok) {
+    errors.push(activeParsed.message);
+  } else if (activeParsed.value !== true) {
+    errors.push('Active must be TRUE — legacy import creates activated customers.');
+  }
+
+  const submitted = parseDateCell(values['Submitted On Date'], 'Submitted On Date', true);
+  if (!submitted.ok) {
+    errors.push(submitted.message);
+  }
+
+  const activation = parseDateCell(values['Activation Date'], 'Activation Date', true);
+  if (!activation.ok) {
+    errors.push(activation.message);
+  }
+
+  return {
+    submittedOn: submitted.ok && submitted.value ? submitted.value : cellText(values['Submitted On Date']),
+    activationDate:
+      activation.ok && activation.value ? activation.value : cellText(values['Activation Date'])
+  };
+}
 
 export function analyzeClientsLegacyImportRows(
   rawRows: ClientsLegacyImportWorkbookRawRow[],
-  lookups: ClientsImportLookups
+  lookups: ClientsImportLookups,
+  options?: ClientsLegacyImportOptions
 ): ClientsLegacyImportAnalysis {
+  const legalForm = options?.legalForm ?? 'Person';
+  const selectedOffice = options?.selectedOfficeId
+    ? lookups.offices.find((office) => office.id === options.selectedOfficeId)
+    : undefined;
   const externalIdsInFile = new Map<string, number>();
 
   const rows: ClientsLegacyImportAnalyzedRow[] = rawRows.map(({ rowNumber, values }) => {
     const firstName = cellText(values['First Name']);
     const lastName = cellText(values['Last Name']);
     const middleName = cellText(values['Middle Name']);
-    const phoneNumber = cellText(values['Phone Number']);
-    const email = cellText(values.Email);
-    const customerType = cellText(values['Customer Type']);
-    const identificationNumber = cellText(values['Identification Number']);
+    const name = cellText(values.Name);
+    const officeName = cellText(values['Office Name']);
+    const staffName = cellText(values['Staff Name']);
+    const externalId = cellText(values['External ID']);
+    const active = cellText(values.Active);
     const gender = cellText(values.Gender);
-    const maritalStatus = cellText(values['Marital Status']);
-    const nextOfKinName = cellText(values['Next of Kin Name']);
-    const nextOfKinPhone = cellText(values['Next of Kin Phone']);
-    const positionTitle = cellText(values['Position / Title']);
-    const uniqueId = cellText(values['Personal Customer Unique ID']);
-    const accountNumber = cellText(values['Account Number']);
-    const addressLine1 = cellText(values['Address Line 1']);
-    const city = cellText(values.City);
-    const stateProvince = cellText(values['State / Province']);
-    const country = cellText(values.Country);
-    const postalCode = cellText(values['Postal Code']);
-    const residentialAddressLine1 = cellText(values['Residential Address Line 1']);
-    const residentialAddressLine2 = cellText(values['Residential Address Line 2']);
+    const constitution = cellText(values.Constitution);
+    const incorporationNumber = cellText(values['Incorporation Number']);
+    const mainBusinessLine = cellText(values['Main Business Line']);
+    const remarks = cellText(values.Remarks);
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    if (!firstName) {
-      errors.push('First Name is required.');
-    }
-    if (!lastName) {
-      errors.push('Last Name is required.');
+    const resolvedOffice = resolveOffice(officeName, lookups, selectedOffice, errors, warnings);
+
+    if (staffName && !findLookup(lookups.staff, staffName)) {
+      errors.push(`Unknown staff "${staffName}".`);
     }
 
-    if (phoneNumber && !isValidUgandaMobileInternational(phoneNumber)) {
-      errors.push('Phone Number must be a Uganda number in international format (e.g. +2567…).');
-    }
+    const dates = validateActiveAndDates(values, active, errors);
+    const contact = sharedAddressAndContactChecks(values, lookups, errors, warnings);
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.push('Email is not valid.');
-    }
-
-    const dob = parseDateCell(values['Date of Birth'], 'Date of Birth');
+    const dob = parseDateCell(values['Date of Birth'], 'Date of Birth', false);
     if (!dob.ok) {
       errors.push(dob.message);
     }
 
-    if (gender) {
-      const genderId = findGender(lookups.genders, gender);
-      if (genderId !== GENDER_MALE && genderId !== GENDER_FEMALE) {
-        errors.push(`Unknown gender "${gender}".`);
+    const incorpTill = parseDateCell(
+      values['Incorporation Validity Till Date'],
+      'Incorporation Validity Till Date',
+      false
+    );
+    if (!incorpTill.ok) {
+      errors.push(incorpTill.message);
+    }
+
+    if (legalForm === 'Entity') {
+      if (!name) {
+        errors.push('Name is required.');
+      }
+      if (!constitution) {
+        errors.push('Constitution is required.');
+      } else if (
+        lookups.constitutions.length > 0 &&
+        !findLookup(lookups.constitutions, constitution)
+      ) {
+        errors.push(`Unknown constitution "${constitution}".`);
+      }
+      if (
+        mainBusinessLine &&
+        lookups.mainBusinessLines.length > 0 &&
+        !findLookup(lookups.mainBusinessLines, mainBusinessLine)
+      ) {
+        errors.push(`Unknown main business line "${mainBusinessLine}".`);
+      }
+    } else {
+      if (!firstName) {
+        errors.push('First Name is required.');
+      }
+      if (!lastName) {
+        errors.push('Last Name is required.');
+      }
+      if (gender) {
+        const genderId = findGender(lookups.genders, gender);
+        if (genderId !== GENDER_MALE && genderId !== GENDER_FEMALE) {
+          errors.push(`Unknown gender "${gender}".`);
+        }
       }
     }
 
-    if (maritalStatus && !findLookup(lookups.maritalStatuses, maritalStatus)) {
-      errors.push(`Unknown marital status "${maritalStatus}".`);
-    }
-
-    if (customerType && lookups.clientTypes.length > 0 && !findLookup(lookups.clientTypes, customerType)) {
-      errors.push(`Unknown customer type "${customerType}".`);
-    }
-
-    if (positionTitle && lookups.titles.length > 0 && !findLookup(lookups.titles, positionTitle)) {
-      warnings.push(`Position / Title "${positionTitle}" was not matched and will be skipped.`);
-    }
-
-    if (identificationNumber && lookups.identityTypes.length === 0) {
-      warnings.push(
-        'Identification Number is present but no ID types are configured; it will be skipped.'
-      );
-    } else if (identificationNumber) {
-      warnings.push(
-        `Identification Number will use ID type "${lookups.identityTypes[0]?.name ?? 'default'}".`
-      );
-    }
-
-    if (nextOfKinName && lookups.familyRelationships.length === 0) {
-      warnings.push(
-        'Next of Kin Name is present but no relationships are configured; it will be skipped.'
-      );
-    }
-
-    if (nextOfKinPhone && !isValidUgandaMobileInternational(nextOfKinPhone)) {
-      errors.push(
-        'Next of Kin Phone must be a Uganda number in international format (e.g. +2567…).'
-      );
-    }
-
-    if (country && !findLookup(lookups.countries, country)) {
-      warnings.push(`Country "${country}" was not matched and will be skipped.`);
-    }
-
-    if (
-      stateProvince &&
-      lookups.stateProvinces.length > 0 &&
-      !findLookup(lookups.stateProvinces, stateProvince)
-    ) {
-      warnings.push(`State / Province "${stateProvince}" was not matched and will be skipped.`);
-    }
-
-    for (const column of UNMAPPED_COLUMNS) {
-      if (cellText(values[column])) {
-        warnings.push(`${column} is not imported in legacy mode.`);
-      }
-    }
-
-    const externalId = uniqueId || accountNumber;
     if (externalId) {
       const duplicateRow = externalIdsInFile.get(normalizeKey(externalId));
       if (duplicateRow != null) {
-        errors.push(
-          `Duplicate Personal Customer Unique ID / Account Number in file (also on row ${duplicateRow}).`
-        );
+        errors.push(`Duplicate External ID in file (also on row ${duplicateRow}).`);
       } else {
         externalIdsInFile.set(normalizeKey(externalId), rowNumber);
       }
     }
-    if (accountNumber && !uniqueId) {
-      warnings.push('Account Number is stored as external ID.');
-    } else if (accountNumber && uniqueId) {
-      warnings.push(
-        'Account Number is not imported; Personal Customer Unique ID is used as external ID.'
-      );
-    }
 
     return {
       rowNumber,
-      firstName,
-      lastName,
+      firstName: legalForm === 'Entity' ? name : firstName,
+      lastName: legalForm === 'Entity' ? '' : lastName,
       middleName,
-      phoneNumber,
-      email,
-      customerType,
-      identificationNumber,
-      dateOfBirth: dob.ok && dob.value ? dob.value : cellText(values['Date of Birth']),
-      gender,
-      maritalStatus,
-      nextOfKinName,
-      nextOfKinPhone,
-      positionTitle,
-      addressLine1,
-      city,
-      stateProvince,
-      country,
-      postalCode,
-      residentialAddressLine1,
-      residentialAddressLine2,
+      name,
+      officeName: resolvedOffice?.name ?? officeName,
+      staffName,
       externalId,
+      active,
+      submittedOn: dates.submittedOn,
+      activationDate: dates.activationDate,
+      mobile: contact.mobile,
+      dateOfBirth: dob.ok && dob.value ? dob.value : cellText(values['Date of Birth']),
+      clientType: contact.clientType,
+      gender,
+      constitution,
+      incorporationNumber,
+      incorporationValidityTill:
+        incorpTill.ok && incorpTill.value
+          ? incorpTill.value
+          : cellText(values['Incorporation Validity Till Date']),
+      mainBusinessLine,
+      remarks,
+      addressEnabled: contact.addressEnabled,
+      addressType: contact.addressType,
+      street: contact.street,
+      addressLine1: contact.addressLine1,
+      addressLine2: contact.addressLine2,
+      addressLine3: contact.addressLine3,
+      city: contact.city,
+      stateProvince: contact.stateProvince,
+      country: contact.country,
+      postalCode: contact.postalCode,
+      isActiveAddress: contact.isActiveAddress,
       errors,
       warnings
     };
@@ -365,120 +521,142 @@ export function analyzeClientsLegacyImportRows(
   };
 }
 
+function buildAddressPayload(
+  row: ClientsLegacyImportAnalyzedRow,
+  lookups: ClientsImportLookups
+) {
+  const country = row.country ? findLookup(lookups.countries, row.country) : undefined;
+  const state = row.stateProvince
+    ? findLookup(lookups.stateProvinces, row.stateProvince)
+    : undefined;
+  const addressType = row.addressType
+    ? findLookup(lookups.addressTypes, row.addressType)
+    : undefined;
+
+  const addressOn = Boolean(
+    row.street ||
+      row.addressLine1 ||
+      row.addressLine2 ||
+      row.addressLine3 ||
+      row.city ||
+      row.postalCode ||
+      country ||
+      state ||
+      addressType
+  );
+
+  if (!addressOn) {
+    return undefined;
+  }
+
+  const activeAddress = parseBooleanCell(row.isActiveAddress, 'Is active Address', false);
+  return [
+    {
+      addressTypeId: addressType?.id,
+      street: row.street || undefined,
+      addressLine1: row.addressLine1 || undefined,
+      addressLine2: row.addressLine2 || undefined,
+      addressLine3: row.addressLine3 || undefined,
+      city: row.city || undefined,
+      stateProvinceId: state?.id,
+      countryId: country?.id,
+      postalCode: row.postalCode || undefined,
+      isPrimary: true,
+      isActive: activeAddress.ok ? (activeAddress.value ?? true) : true
+    }
+  ];
+}
+
 export function prepareClientsLegacyImportRows(
   analysis: ClientsLegacyImportAnalysis,
   lookups: ClientsImportLookups,
-  defaultOfficeId: number
+  options?: ClientsLegacyImportOptions
 ): { ok: true; rows: ClientsLegacyImportPreparedRow[] } | { ok: false; message: string } {
   if (!analysis.canCreate) {
     return { ok: false, message: 'Fix import errors before creating customers.' };
   }
-  if (!defaultOfficeId || defaultOfficeId <= 0) {
-    return {
-      ok: false,
-      message: 'Your session has no branch office to assign imported customers to.'
-    };
-  }
 
-  const officeName =
-    lookups.offices.find((office) => office.id === defaultOfficeId)?.name ?? 'Your office';
-  const defaultRelationship = lookups.familyRelationships[0];
-  const defaultIdentityType = lookups.identityTypes[0];
-  const submittedOnDate = toFineractDate();
+  const legalForm = options?.legalForm ?? 'Person';
+  const selectedOffice = options?.selectedOfficeId
+    ? lookups.offices.find((office) => office.id === options.selectedOfficeId)
+    : undefined;
   const prepared: ClientsLegacyImportPreparedRow[] = [];
 
   for (const row of analysis.rows) {
-    const genderId = row.gender ? findGender(lookups.genders, row.gender) : undefined;
-    const maritalOption = row.maritalStatus
-      ? findLookup(lookups.maritalStatuses, row.maritalStatus)
-      : undefined;
-    const clientType = row.customerType
-      ? findLookup(lookups.clientTypes, row.customerType)
-      : undefined;
-    const title = row.positionTitle ? findLookup(lookups.titles, row.positionTitle) : undefined;
-    const country = row.country ? findLookup(lookups.countries, row.country) : undefined;
-    const state = row.stateProvince
-      ? findLookup(lookups.stateProvinces, row.stateProvince)
-      : undefined;
+    const office = findLookup(lookups.offices, row.officeName) ?? selectedOffice;
+    if (!office) {
+      return {
+        ok: false,
+        message: `Row ${row.rowNumber}: could not resolve office. Re-analyze after selecting a branch.`
+      };
+    }
 
-    const hasAddress = Boolean(
-      row.addressLine1 ||
-        row.city ||
-        row.postalCode ||
-        row.residentialAddressLine1 ||
-        row.residentialAddressLine2 ||
-        country ||
-        state
-    );
+    const staff = row.staffName ? findLookup(lookups.staff, row.staffName) : undefined;
+    const clientType = row.clientType
+      ? findLookup(lookups.clientTypes, row.clientType)
+      : undefined;
+    const submittedOn = normalizeFineractDateField(row.submittedOn);
+    const activationDate = normalizeFineractDateField(row.activationDate);
+    if (!submittedOn || !activationDate) {
+      return {
+        ok: false,
+        message: `Row ${row.rowNumber}: Submitted On Date and Activation Date are required.`
+      };
+    }
 
-    const nok = row.nextOfKinName && defaultRelationship ? splitPersonName(row.nextOfKinName) : null;
-    const nokGenderId =
-      genderId === GENDER_MALE || genderId === GENDER_FEMALE ? genderId : GENDER_MALE;
-
-    const inputCandidate = {
-      legalFormId: LEGAL_FORM_PERSON as typeof LEGAL_FORM_PERSON,
-      officeId: defaultOfficeId,
-      firstname: row.firstName,
-      lastname: row.lastName,
-      middlename: row.middleName || undefined,
+    const base = {
+      officeId: office.id,
+      staffId: staff?.id,
       externalId: row.externalId || undefined,
-      mobileNo: row.phoneNumber
-        ? normalizeUgandaMobileInternational(row.phoneNumber)
-        : undefined,
-      emailAddress: row.email || undefined,
-      dateOfBirth: row.dateOfBirth ? normalizeFineractDateField(row.dateOfBirth) : undefined,
-      genderId:
-        genderId === GENDER_MALE || genderId === GENDER_FEMALE ? genderId : undefined,
-      maritalStatusId: maritalOption?.id,
+      mobileNo: row.mobile ? normalizeUgandaMobileInternational(row.mobile) : undefined,
       clientTypeId: clientType?.id,
-      titleId: title?.id,
-      submittedOnDate,
+      submittedOnDate: submittedOn,
+      active: true as const,
+      activationDate,
+      savingsProductId: options?.savingsProductId,
       dateFormat: FINERACT_DATE_FORMAT,
       locale: FINERACT_LOCALE,
-      clientIdentifiers:
-        row.identificationNumber && defaultIdentityType
-          ? [
-              {
-                documentTypeId: defaultIdentityType.id,
-                documentKey: row.identificationNumber,
-                status: 'Active' as const
-              }
-            ]
-          : undefined,
-      familyMembers:
-        nok && defaultRelationship
-          ? [
-              {
-                firstName: nok.firstName,
-                lastName: nok.lastName,
-                relationshipId: defaultRelationship.id,
-                genderId: nokGenderId,
-                mobileNumber: row.nextOfKinPhone
-                  ? normalizeUgandaMobileInternational(row.nextOfKinPhone)
-                  : undefined,
-                dateFormat: FINERACT_DATE_FORMAT,
-                locale: FINERACT_LOCALE
-              }
-            ]
-          : undefined,
-      address: hasAddress
-        ? [
-            {
-              street: row.addressLine1 || undefined,
-              addressLine1: row.residentialAddressLine1 || undefined,
-              addressLine2: row.residentialAddressLine2 || undefined,
-              city: row.city || undefined,
-              stateProvinceId: state?.id,
-              countryId: country?.id,
-              postalCode: row.postalCode || undefined,
-              isPrimary: true,
-              isActive: true
-            }
-          ]
-        : undefined
+      address: buildAddressPayload(row, lookups)
     };
 
-    const parsed = saveDraftClientSchema.safeParse(inputCandidate);
+    const inputCandidate =
+      legalForm === 'Entity'
+        ? {
+            ...base,
+            legalFormId: LEGAL_FORM_ENTITY as typeof LEGAL_FORM_ENTITY,
+            fullname: row.name || row.firstName,
+            clientNonPersonDetails: {
+              constitutionId: findLookup(lookups.constitutions, row.constitution)?.id,
+              incorpNumber: row.incorporationNumber || undefined,
+              incorpValidityTillDate: row.incorporationValidityTill
+                ? normalizeFineractDateField(row.incorporationValidityTill)
+                : undefined,
+              mainBusinessLineId: row.mainBusinessLine
+                ? findLookup(lookups.mainBusinessLines, row.mainBusinessLine)?.id
+                : undefined,
+              remarks: row.remarks || undefined,
+              dateFormat: FINERACT_DATE_FORMAT,
+              locale: FINERACT_LOCALE
+            }
+          }
+        : {
+            ...base,
+            legalFormId: LEGAL_FORM_PERSON as typeof LEGAL_FORM_PERSON,
+            firstname: row.firstName,
+            lastname: row.lastName,
+            middlename: row.middleName || undefined,
+            dateOfBirth: row.dateOfBirth
+              ? normalizeFineractDateField(row.dateOfBirth)
+              : undefined,
+            genderId: (() => {
+              const genderId = row.gender ? findGender(lookups.genders, row.gender) : undefined;
+              return genderId === GENDER_MALE || genderId === GENDER_FEMALE
+                ? genderId
+                : undefined;
+            })()
+          };
+
+    const parsed = legacyImportClientSchema.safeParse(inputCandidate);
     if (!parsed.success) {
       const message = parsed.error.issues[0]?.message ?? 'Invalid customer row.';
       return { ok: false, message: `Row ${row.rowNumber}: ${message}` };
@@ -486,8 +664,11 @@ export function prepareClientsLegacyImportRows(
 
     prepared.push({
       rowNumber: row.rowNumber,
-      displayName: `${row.firstName} ${row.lastName}`.trim(),
-      officeName,
+      displayName:
+        legalForm === 'Entity'
+          ? (row.name || row.firstName).trim()
+          : `${row.firstName} ${row.lastName}`.trim(),
+      officeName: office.name,
       externalId: row.externalId,
       input: parsed.data
     });

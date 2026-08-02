@@ -86,6 +86,9 @@ export type ClientsImportLookups = {
   clientTypes: ClientsImportLookupOption[];
   titles: ClientsImportLookupOption[];
   stateProvinces: ClientsImportLookupOption[];
+  savingProducts: ClientsImportLookupOption[];
+  constitutions: ClientsImportLookupOption[];
+  mainBusinessLines: ClientsImportLookupOption[];
 };
 
 export type ClientsImportWorkbookRawRow = {

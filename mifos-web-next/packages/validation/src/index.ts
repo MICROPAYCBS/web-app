@@ -73,6 +73,12 @@ export {
   type SaveDraftClientPayload
 } from './clients/save-draft-client.schema';
 export {
+  legacyImportClientSchema,
+  validateLegacyImportClient,
+  type LegacyImportClientInput,
+  type LegacyImportClientPayload
+} from './clients/legacy-import-client.schema';
+export {
   applyClientAddressActiveChange,
   isClientAddressActive,
   mergeClientAddressEntry,

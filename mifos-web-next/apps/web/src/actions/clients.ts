@@ -8,18 +8,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { BulkImportHistoryItem, BulkImportStaffOption } from '@mifos/api-client';
 import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   actionSuccessFromFineractCommand,
   createClientSchema,
+  legacyImportClientSchema,
   saveDraftClientSchema,
   toFineractActionError,
   validateClientIdentifier,
   type CreateClientPayload,
   type FineractCommandActionMeta,
+  type LegacyImportClientPayload,
   type SaveDraftClientPayload
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
+import { CLIENTS_LEGACY_BULK_IMPORT_NAME } from '@/lib/clients/clients-import-legacy';
+import { getBulkImportDefinition } from '@/lib/fineract/bulk-import-config';
+import { resolveClientLegalFormTypeFromFilename } from '@/lib/fineract/bulk-import-display';
+import {
+  listActiveStaffByOffice,
+  listBulkImportHistory,
+  uploadBulkImportTemplate
+} from '@/lib/fineract/bulk-import';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { createClient } from '@/lib/fineract/clients';
 import { executeClientCommand } from '@/lib/fineract/client-commands';
@@ -71,15 +82,26 @@ async function validateOptionalIdentifiers(
 
 async function finalizeCreatedClient(
   result: Awaited<ReturnType<typeof createClient>>,
-  data: CreateClientPayload | SaveDraftClientPayload
+  data: CreateClientPayload | SaveDraftClientPayload | LegacyImportClientPayload
 ): Promise<ClientActionResult> {
   const clientId = result.clientId ?? result.resourceId;
   revalidatePath('/clients');
   if (clientId != null) {
     revalidatePath(`/clients/${clientId}`);
     revalidatePath(`/clients/${clientId}/contacts`);
-    if (!data.contacts?.length) {
-      const seeded = await seedOnboardingClientContacts(clientId, data as CreateClientPayload);
+    const hasContacts = 'contacts' in data && Boolean(data.contacts?.length);
+    if (!hasContacts) {
+      const seeded = await seedOnboardingClientContacts(clientId, {
+        mobileNo: data.mobileNo,
+        alternativeMobileNo:
+          'alternativeMobileNo' in data ? data.alternativeMobileNo : undefined,
+        emailAddress: 'emailAddress' in data ? data.emailAddress : undefined,
+        alternativeEmailAddress:
+          'alternativeEmailAddress' in data ? data.alternativeEmailAddress : undefined
+      } as Pick<
+        CreateClientPayload,
+        'mobileNo' | 'alternativeMobileNo' | 'emailAddress' | 'alternativeEmailAddress'
+      >);
       const success = actionSuccessFromFineractCommand(result, { clientId });
       if (!seeded.ok) {
         return {
@@ -130,6 +152,39 @@ export async function createClientAction(raw: unknown): Promise<ClientActionResu
 
   try {
     const result = await createClient(parsed.data as CreateClientPayload);
+    return await finalizeCreatedClient(result, parsed.data);
+  } catch (err) {
+    return toFineractActionError(err, 'Failed to create customer.');
+  }
+}
+
+/** Activated create from the platform Customers Excel template (guided legacy import). */
+export async function createLegacyImportClientAction(raw: unknown): Promise<ClientActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+
+  try {
+    assertCan(session, resolvePermission('clients.create'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to create customers.' };
+  }
+
+  const parsed = legacyImportClientSchema.safeParse(raw);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0];
+      if (typeof key === 'string') {
+        fieldErrors[key] = issue.message;
+      }
+    }
+    return { ok: false, message: 'Please fix the highlighted fields.', fieldErrors };
+  }
+
+  try {
+    const result = await createClient(parsed.data);
     return await finalizeCreatedClient(result, parsed.data);
   } catch (err) {
     return toFineractActionError(err, 'Failed to create customer.');
@@ -256,5 +311,97 @@ export async function submitClientFromCreateAction(raw: unknown): Promise<Client
     }
   } catch (err) {
     return toFineractActionError(err, 'Failed to submit customer.');
+  }
+}
+
+export type ClientsImportDataResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; message: string };
+
+export async function loadClientsImportStaffAction(
+  officeId: string | number
+): Promise<ClientsImportDataResult<BulkImportStaffOption[]>> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('clients.create'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to import customers.' };
+  }
+
+  try {
+    const data = await listActiveStaffByOffice(officeId);
+    return { ok: true, data };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to load staff for the selected branch.');
+  }
+}
+
+export async function refreshClientsLegacyImportHistoryAction(): Promise<
+  ClientsImportDataResult<BulkImportHistoryItem[]>
+> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('clients.create'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to import customers.' };
+  }
+
+  const definition = getBulkImportDefinition(CLIENTS_LEGACY_BULK_IMPORT_NAME);
+  if (!definition) {
+    return { ok: false, message: 'Customers bulk import is not configured.' };
+  }
+
+  try {
+    const data = await listBulkImportHistory(definition.entityType);
+    return { ok: true, data };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to refresh import history.');
+  }
+}
+
+export async function uploadClientsLegacyImportAction(
+  formData: FormData
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('clients.create'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to import customers.' };
+  }
+
+  const definition = getBulkImportDefinition(CLIENTS_LEGACY_BULK_IMPORT_NAME);
+  if (!definition) {
+    return { ok: false, message: 'Customers bulk import is not configured.' };
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, message: 'Select an Excel file to upload.' };
+  }
+
+  const legalFormType = resolveClientLegalFormTypeFromFilename(file.name);
+  if (!legalFormType) {
+    return {
+      ok: false,
+      message: 'Keep Person or Entity in the filename before uploading.'
+    };
+  }
+
+  try {
+    const response = await uploadBulkImportTemplate(definition, file, legalFormType);
+    revalidatePath('/clients');
+    revalidatePath('/clients/import');
+    return actionSuccessFromFineractCommand(response, {});
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to upload import file.');
   }
 }
