@@ -16,7 +16,10 @@ import {
 } from '@/lib/clients/clients-import-legacy';
 
 const lookups: ClientsImportLookups = {
-  offices: [{ id: 1, name: 'Head Office' }],
+  offices: [
+    { id: 1, name: 'Head Office' },
+    { id: 2, name: 'Branch East' }
+  ],
   staff: [{ id: 10, name: 'Jane Officer', officeId: 1, officeName: 'Head Office' }],
   customerClasses: [],
   genders: [
@@ -83,14 +86,26 @@ describe('analyzeClientsLegacyImportRows', () => {
     assert.equal(analysis.errorRowCount, 0);
   });
 
-  it('falls back to selected branch when office name is empty', () => {
+  it('uses selected branch when Office Name is empty', () => {
     const analysis = analyzeClientsLegacyImportRows(
       [legacyPersonRow({ 'Office Name': '' })],
       lookups,
       { selectedOfficeId: 1, legalForm: 'Person' }
     );
     assert.equal(analysis.canCreate, true);
+    assert.equal(analysis.rows[0]?.officeName, 'Head Office');
     assert.match(analysis.rows[0]?.warnings.join(' ') ?? '', /selected branch/);
+  });
+
+  it('ignores file office and uses selected branch', () => {
+    const analysis = analyzeClientsLegacyImportRows(
+      [legacyPersonRow({ 'Office Name': 'Branch East' })],
+      lookups,
+      { selectedOfficeId: 1, legalForm: 'Person' }
+    );
+    assert.equal(analysis.canCreate, true);
+    assert.equal(analysis.rows[0]?.officeName, 'Head Office');
+    assert.match(analysis.rows[0]?.warnings.join(' ') ?? '', /file office ignored/);
   });
 
   it('requires Active TRUE and activation date', () => {
@@ -123,21 +138,23 @@ describe('analyzeClientsLegacyImportRows', () => {
 });
 
 describe('prepareClientsLegacyImportRows', () => {
-  it('builds an active create payload with optional savings product', () => {
+  it('backfills branch, profile type, and savings product from UI options', () => {
     const analysis = analyzeClientsLegacyImportRows(
       [
         legacyPersonRow({
+          'Office Name': '',
           'External ID': 'LEG-1',
           Gender: 'Male',
           'Client Type': 'Individual'
         })
       ],
       lookups,
-      { selectedOfficeId: 1, legalForm: 'Person' }
+      { selectedOfficeId: 2, legalForm: 'Person' }
     );
     const prepared = prepareClientsLegacyImportRows(analysis, lookups, {
-      selectedOfficeId: 1,
+      selectedOfficeId: 2,
       legalForm: 'Person',
+      selectedStaffId: 10,
       savingsProductId: 200
     });
     assert.equal(prepared.ok, true);
@@ -146,9 +163,11 @@ describe('prepareClientsLegacyImportRows', () => {
     }
     const input = prepared.rows[0]?.input;
     assert.ok(input);
-    assert.equal(input.officeId, 1);
+    assert.equal(input.officeId, 2);
+    assert.equal(input.staffId, 10);
     assert.equal(input.externalId, 'LEG-1');
     assert.equal(input.active, true);
+    assert.equal(input.legalFormId, 1);
     assert.equal(input.submittedOnDate, '01 January 2026');
     assert.equal(input.activationDate, '02 January 2026');
     assert.equal(input.savingsProductId, 200);
@@ -159,7 +178,7 @@ describe('prepareClientsLegacyImportRows', () => {
     }
   });
 
-  it('maps entity name and constitution', () => {
+  it('maps entity name and constitution with selected profile type', () => {
     const analysis = analyzeClientsLegacyImportRows([legacyEntityRow()], lookups, {
       selectedOfficeId: 1,
       legalForm: 'Entity'
@@ -176,6 +195,7 @@ describe('prepareClientsLegacyImportRows', () => {
     const input = prepared.rows[0]?.input;
     assert.ok(input);
     assert.equal(input.active, true);
+    assert.equal(input.officeId, 1);
     assert.equal(input.legalFormId, 2);
     if (input.legalFormId === 2) {
       assert.equal(input.fullname, 'Acme Holdings');

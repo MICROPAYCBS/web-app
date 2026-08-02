@@ -41,7 +41,7 @@ export const CLIENTS_LEGACY_IMPORT_SHEET_NAME = CLIENTS_LEGACY_IMPORT_SHEET_PERS
 export type ClientsLegacyImportLegalForm = 'Person' | 'Entity';
 
 export const CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT =
-  'Downloads the platform Customers Excel template for the selected branch (submitted/activation dates, office pre-filled). Analyze the filled file here — customers are created active one by one with live progress. Optionally choose a savings product to open an account on create. Micropay-only fields are not required.';
+  'Downloads the stock platform Customers Excel template (original columns only). Branch, profile type, and savings product selected here are applied on create — they backfill the payload even when the file does not carry them. Customers are created active one by one with live progress. Micropay-only fields are not required.';
 
 /**
  * Canonical column keys for Fineract ClientPerson / ClientEntity workbook headers
@@ -144,9 +144,14 @@ export type ClientsLegacyImportAnalysis = {
 export type ClientsLegacyImportRowProgress = ClientsImportRowProgress;
 
 export type ClientsLegacyImportOptions = {
+  /** Required for prepare — always becomes create `officeId` (UI backfill). */
   selectedOfficeId?: number;
+  /** Required — always becomes create `legalFormId` (UI backfill). */
   legalForm?: ClientsLegacyImportLegalForm;
+  /** Optional — when set, applied to every create row as `savingsProductId`. */
   savingsProductId?: number;
+  /** Optional — when set, used when the sheet has no Staff Name. */
+  selectedStaffId?: number;
 };
 
 function normalizeKey(value: unknown): string {
@@ -327,6 +332,10 @@ function sharedAddressAndContactChecks(
   };
 }
 
+/**
+ * Prefer the UI-selected branch. The stock template may omit or mis-match Office Name;
+ * create always uses the selected branch.
+ */
 function resolveOffice(
   officeName: string,
   lookups: ClientsImportLookups,
@@ -334,16 +343,27 @@ function resolveOffice(
   errors: string[],
   warnings: string[]
 ) {
-  let resolvedOffice = officeName ? findLookup(lookups.offices, officeName) : undefined;
-  if (!officeName && selectedOffice) {
-    resolvedOffice = selectedOffice;
-    warnings.push(`Office Name empty — using selected branch "${selectedOffice.name}".`);
-  } else if (!officeName) {
-    errors.push('Office Name is required.');
-  } else if (!resolvedOffice) {
+  if (selectedOffice) {
+    if (officeName) {
+      const fromSheet = findLookup(lookups.offices, officeName);
+      if (!fromSheet || fromSheet.id !== selectedOffice.id) {
+        warnings.push(
+          `Using selected branch "${selectedOffice.name}" (file office ignored).`
+        );
+      }
+    } else {
+      warnings.push(`Using selected branch "${selectedOffice.name}".`);
+    }
+    return selectedOffice;
+  }
+
+  const fromSheet = officeName ? findLookup(lookups.offices, officeName) : undefined;
+  if (!officeName) {
+    errors.push('Office Name is required (or select a branch).');
+  } else if (!fromSheet) {
     errors.push(`Unknown office "${officeName}".`);
   }
-  return resolvedOffice;
+  return fromSheet;
 }
 
 function validateActiveAndDates(
@@ -580,18 +600,27 @@ export function prepareClientsLegacyImportRows(
   const selectedOffice = options?.selectedOfficeId
     ? lookups.offices.find((office) => office.id === options.selectedOfficeId)
     : undefined;
+  if (!selectedOffice) {
+    return {
+      ok: false,
+      message: 'Select a branch before creating customers. Branch is applied to every row on create.'
+    };
+  }
+  if (!options?.legalForm) {
+    return {
+      ok: false,
+      message: 'Select a profile type before creating customers.'
+    };
+  }
+
+  const selectedStaff = options?.selectedStaffId
+    ? lookups.staff.find((staff) => staff.id === options.selectedStaffId)
+    : undefined;
   const prepared: ClientsLegacyImportPreparedRow[] = [];
 
   for (const row of analysis.rows) {
-    const office = findLookup(lookups.offices, row.officeName) ?? selectedOffice;
-    if (!office) {
-      return {
-        ok: false,
-        message: `Row ${row.rowNumber}: could not resolve office. Re-analyze after selecting a branch.`
-      };
-    }
-
-    const staff = row.staffName ? findLookup(lookups.staff, row.staffName) : undefined;
+    const staffFromSheet = row.staffName ? findLookup(lookups.staff, row.staffName) : undefined;
+    const staff = staffFromSheet ?? selectedStaff;
     const clientType = row.clientType
       ? findLookup(lookups.clientTypes, row.clientType)
       : undefined;
@@ -605,7 +634,7 @@ export function prepareClientsLegacyImportRows(
     }
 
     const base = {
-      officeId: office.id,
+      officeId: selectedOffice.id,
       staffId: staff?.id,
       externalId: row.externalId || undefined,
       mobileNo: row.mobile ? normalizeUgandaMobileInternational(row.mobile) : undefined,
@@ -668,7 +697,7 @@ export function prepareClientsLegacyImportRows(
         legalForm === 'Entity'
           ? (row.name || row.firstName).trim()
           : `${row.firstName} ${row.lastName}`.trim(),
-      officeName: office.name,
+      officeName: selectedOffice.name,
       externalId: row.externalId,
       input: parsed.data
     });

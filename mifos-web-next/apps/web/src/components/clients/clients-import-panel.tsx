@@ -96,6 +96,7 @@ export function ClientsImportPanel({
   const hasLegacyBranch = Boolean(legacyOfficeId);
   const hasLegacyLegalForm = Boolean(legacyLegalForm);
   const selectedLegacyOfficeId = Number(legacyOfficeId);
+  const selectedLegacyStaffId = Number(legacyStaffId);
   const selectedLegacySavingsProductId = Number(legacySavingsProductId);
   const importFinished = useMemo(() => {
     if (!importing && Object.keys(progressByRow).length === 0) {
@@ -200,10 +201,20 @@ export function ClientsImportPanel({
           return;
         }
 
-        const nextAnalysis = analyzeClientsLegacyImportRows(parsed.rows, lookups, {
+        const legacyOptions = {
           selectedOfficeId: selectedLegacyOfficeId,
-          legalForm: legacyLegalForm
-        });
+          legalForm: legacyLegalForm,
+          selectedStaffId:
+            Number.isInteger(selectedLegacyStaffId) && selectedLegacyStaffId > 0
+              ? selectedLegacyStaffId
+              : undefined,
+          savingsProductId:
+            Number.isInteger(selectedLegacySavingsProductId) && selectedLegacySavingsProductId > 0
+              ? selectedLegacySavingsProductId
+              : undefined
+        };
+
+        const nextAnalysis = analyzeClientsLegacyImportRows(parsed.rows, lookups, legacyOptions);
         setAnalysis(nextAnalysis);
         setProgressByRow({});
 
@@ -213,14 +224,7 @@ export function ClientsImportPanel({
           return;
         }
 
-        const prepared = prepareClientsLegacyImportRows(nextAnalysis, lookups, {
-          selectedOfficeId: selectedLegacyOfficeId,
-          legalForm: legacyLegalForm,
-          savingsProductId:
-            Number.isInteger(selectedLegacySavingsProductId) && selectedLegacySavingsProductId > 0
-              ? selectedLegacySavingsProductId
-              : undefined
-        });
+        const prepared = prepareClientsLegacyImportRows(nextAnalysis, lookups, legacyOptions);
         if (!prepared.ok) {
           setPreparedRows([]);
           toast.error(prepared.message);
@@ -371,8 +375,8 @@ export function ClientsImportPanel({
             <span className="space-y-1">
               <span className="block text-sm font-medium">Legacy template</span>
               <span className="block text-sm text-muted-foreground">
-                Platform Customers Excel (branch-prefilled). Analyze and create active customers with
-                live progress — no bulk import job.
+                Stock platform Customers Excel. Branch, profile type, and savings product from this
+                form are applied on create. Analyze and create active customers with live progress.
               </span>
             </span>
           </label>
@@ -388,7 +392,7 @@ export function ClientsImportPanel({
           </TitleWithHint>
           <p className="text-sm text-muted-foreground">
             {mode === 'legacy'
-              ? 'Select branch, profile type, and optionally staff and a savings product. Download the platform template, fill it, then analyze here.'
+              ? 'Select branch and profile type (and optionally staff and savings product). Those values backfill create even if the Excel only has the stock columns. Download, fill names/dates, then analyze here.'
               : 'Download the template, fill in person customers, then analyze the file here. Customers are created one by one using the same checks as New customer.'}
           </p>
           {mode === 'legacy' ? (
@@ -408,7 +412,12 @@ export function ClientsImportPanel({
                 label="Staff"
                 optional
                 value={legacyStaffId || undefined}
-                onValueChange={(value) => setLegacyStaffId(value ?? '')}
+                onValueChange={(value) => {
+                  setLegacyStaffId(value ?? '');
+                  setAnalysis(null);
+                  setPreparedRows([]);
+                  setProgressByRow({});
+                }}
                 options={staffSelectOptions}
                 placeholder="Select staff"
                 disabled={!hasLegacyBranch || busy}
