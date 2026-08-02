@@ -35,7 +35,19 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const legacy = searchParams.get('mode') === 'legacy';
-    const defaultOfficeId = session.officeId > 0 ? session.officeId : undefined;
+    const officeIdParam = searchParams.get('officeId');
+    const officeIdFromQuery =
+      officeIdParam && Number.isInteger(Number(officeIdParam)) && Number(officeIdParam) > 0
+        ? Number(officeIdParam)
+        : undefined;
+    if (legacy && officeIdFromQuery == null) {
+      return Response.json(
+        { message: 'Select a branch before downloading the legacy template.' },
+        { status: 400 }
+      );
+    }
+    const defaultOfficeId =
+      officeIdFromQuery ?? (session.officeId > 0 ? session.officeId : undefined);
     const [template, staff, identifierTemplate, customerClasses] = await Promise.all([
       getClientTemplate(defaultOfficeId),
       listStaff().catch(() => []),

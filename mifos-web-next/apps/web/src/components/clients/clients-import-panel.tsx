@@ -19,6 +19,7 @@ import {
   type ClientsImportReviewAnalysis
 } from '@/components/clients/clients-import-review';
 import { TitleWithHint } from '@/components/composites/field-hint-tooltip';
+import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +41,7 @@ import {
   parseClientsImportFile,
   parseClientsLegacyImportFile
 } from '@/lib/clients/clients-import-workbook';
+import { toSelectOptions } from '@/lib/form/select-options';
 
 const TEMPLATE_API_PATH = '/api/clients/import/template';
 
@@ -60,6 +62,9 @@ export function ClientsImportPanel({
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<ClientsImportMode>('micropay');
+  const [legacyOfficeId, setLegacyOfficeId] = useState(
+    defaultOfficeId != null ? String(defaultOfficeId) : ''
+  );
   const [fileInputKey, setFileInputKey] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<ClientsImportReviewAnalysis | null>(null);
@@ -69,6 +74,10 @@ export function ClientsImportPanel({
   const [analyzing, startAnalyzeTransition] = useTransition();
 
   const busy = analyzing || importing;
+  const branchOptions = useMemo(() => toSelectOptions(lookups.offices), [lookups.offices]);
+  const selectedLegacyOfficeId = Number(legacyOfficeId);
+  const hasLegacyBranch =
+    Number.isInteger(selectedLegacyOfficeId) && selectedLegacyOfficeId > 0;
   const importFinished = useMemo(() => {
     if (!importing && Object.keys(progressByRow).length === 0) {
       return false;
@@ -84,9 +93,18 @@ export function ClientsImportPanel({
     mode === 'legacy' ? CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT : CLIENTS_IMPORT_TEMPLATE_HINT;
 
   function handleDownloadTemplate() {
-    const path =
-      mode === 'legacy' ? `${TEMPLATE_API_PATH}?mode=legacy` : TEMPLATE_API_PATH;
-    window.open(path, '_blank');
+    if (mode === 'legacy') {
+      if (!hasLegacyBranch) {
+        toast.error('Select a branch before downloading the legacy template.');
+        return;
+      }
+      window.open(
+        `${TEMPLATE_API_PATH}?mode=legacy&officeId=${encodeURIComponent(legacyOfficeId)}`,
+        '_blank'
+      );
+      return;
+    }
+    window.open(TEMPLATE_API_PATH, '_blank');
   }
 
   function clearReview() {
@@ -123,7 +141,15 @@ export function ClientsImportPanel({
         }
 
         const nextAnalysis = analyzeClientsLegacyImportRows(parsed.rows, lookups);
-        setAnalysis(nextAnalysis);
+        const officeName =
+          lookups.offices.find((office) => office.id === selectedLegacyOfficeId)?.name ?? '';
+        setAnalysis({
+          ...nextAnalysis,
+          rows: nextAnalysis.rows.map((row) => ({
+            ...row,
+            officeName
+          }))
+        });
         setProgressByRow({});
 
         if (!nextAnalysis.canCreate) {
@@ -132,13 +158,17 @@ export function ClientsImportPanel({
           return;
         }
 
-        if (!defaultOfficeId) {
+        if (!hasLegacyBranch) {
           setPreparedRows([]);
-          toast.error('Your session has no branch office to assign imported customers to.');
+          toast.error('Select a branch before analyzing a legacy import file.');
           return;
         }
 
-        const prepared = prepareClientsLegacyImportRows(nextAnalysis, lookups, defaultOfficeId);
+        const prepared = prepareClientsLegacyImportRows(
+          nextAnalysis,
+          lookups,
+          selectedLegacyOfficeId
+        );
         if (!prepared.ok) {
           setPreparedRows([]);
           toast.error(prepared.message);
@@ -309,11 +339,32 @@ export function ClientsImportPanel({
           </TitleWithHint>
           <p className="text-sm text-muted-foreground">
             {mode === 'legacy'
-              ? 'Download the legacy template (or use an existing legacy file), analyze it, then create draft customers with live progress.'
+              ? 'Select the branch for this import, download the legacy template (or use an existing legacy file), then analyze and create draft customers.'
               : 'Download the template, fill in person customers, then analyze the file here. Customers are created one by one using the same checks as New customer.'}
           </p>
+          {mode === 'legacy' ? (
+            <SelectField
+              id="clients-import-legacy-branch"
+              label="Branch"
+              required
+              value={legacyOfficeId || undefined}
+              onValueChange={(value) => {
+                setLegacyOfficeId(value ?? '');
+                setAnalysis(null);
+                setPreparedRows([]);
+                setProgressByRow({});
+              }}
+              options={branchOptions}
+              placeholder="Select branch"
+              disabled={busy}
+            />
+          ) : null}
           {canDownload ? (
-            <Button type="button" onClick={handleDownloadTemplate} disabled={busy}>
+            <Button
+              type="button"
+              onClick={handleDownloadTemplate}
+              disabled={busy || (mode === 'legacy' && !hasLegacyBranch)}
+            >
               <Download className="mr-2 size-4" />
               Download {mode === 'legacy' ? 'legacy ' : ''}template
             </Button>
@@ -340,7 +391,11 @@ export function ClientsImportPanel({
             <p className="text-sm text-muted-foreground">.xlsx and .xls are both accepted.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" disabled={!selectedFile || busy} onClick={handleAnalyze}>
+            <Button
+              type="button"
+              disabled={!selectedFile || busy || (mode === 'legacy' && !hasLegacyBranch)}
+              onClick={handleAnalyze}
+            >
               <Upload className="mr-2 size-4" />
               {analyzing ? 'Analyzing…' : 'Analyze file'}
             </Button>

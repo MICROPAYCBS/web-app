@@ -29,7 +29,7 @@ import {
 } from '@/lib/fineract/dates';
 
 export const CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT =
-  'Legacy spreadsheet for person customers without Micropay-required fields. Required: First Name and Last Name. Other columns are optional. Customers are saved as drafts under your branch office.';
+  'Legacy spreadsheet for person customers without Micropay-required fields. Select a branch before downloading. Required columns: First Name and Last Name. Other columns are optional. Customers are saved as drafts under the selected branch.';
 
 export const CLIENTS_LEGACY_IMPORT_COLUMNS = [
   'First Name',
