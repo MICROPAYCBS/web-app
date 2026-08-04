@@ -40,9 +40,11 @@ import {
 } from '@/components/ui/dialog';
 import {
   CONFIGURE_MC_TASKS_PATH,
+  findActiveWorkflowPeer,
   formatWorkflowTaskDisplay,
   getWorkflowActivateBlockReason,
   isWorkflowActivationMcDisabledError,
+  isWorkflowActivePeerExistsError,
   workflowActivateBlockHint,
   workflowDefinitionStatusLabel,
   workflowDefinitionStatusVariant
@@ -50,16 +52,19 @@ import {
 import {
   APPROVAL_WORKFLOWS_LIST_PATH,
   GLOBAL_CONFIGURATIONS_PATH,
+  approvalWorkflowDetailPath,
   approvalWorkflowEditPath
 } from '@/lib/fineract/approval-workflow-paths';
 import { cn } from '@/lib/utils';
 
 export function ApprovalWorkflowDetailView({
   definition,
+  siblingDefinitions = [],
   taskPermissions,
   makerCheckerGloballyEnabled = null
 }: {
   definition: WorkflowDefinition;
+  siblingDefinitions?: WorkflowDefinition[];
   taskPermissions: FineractRolePermissionUsage[];
   makerCheckerGloballyEnabled?: boolean | null;
 }) {
@@ -77,13 +82,21 @@ export function ApprovalWorkflowDetailView({
   const isActive = definition.status === 'ACTIVE';
   const isInactive = definition.status === 'INACTIVE';
   const taskDisplay = formatWorkflowTaskDisplay(definition.taskPermissionCode, taskPermissions);
+  const peerDefinitions = siblingDefinitions.length > 0 ? siblingDefinitions : [definition];
+  const activePeer = findActiveWorkflowPeer(
+    peerDefinitions,
+    definition.taskPermissionCode,
+    definition.id
+  );
   const activateBlockReason = getWorkflowActivateBlockReason({
     makerCheckerGloballyEnabled,
     taskPermissionCode: definition.taskPermissionCode,
-    taskPermissions
+    taskPermissions,
+    definitions: peerDefinitions,
+    definitionId: definition.id
   });
   const activateBlocked = activateBlockReason != null;
-  const activateHint = workflowActivateBlockHint(activateBlockReason);
+  const activateHint = workflowActivateBlockHint(activateBlockReason, activePeer?.name);
 
   function handleActivate() {
     if (activateBlocked) {
@@ -207,6 +220,18 @@ export function ApprovalWorkflowDetailView({
                         to activate.
                       </p>
                     ) : null}
+                    {activateBlockReason === 'activePeer' && activePeer ? (
+                      <p className="max-w-xs text-right text-xs text-muted-foreground">
+                        Only one active workflow is allowed per task. Deactivate{' '}
+                        <Link
+                          href={approvalWorkflowDetailPath(activePeer.id)}
+                          className="text-foreground underline-offset-4 hover:underline"
+                        >
+                          {activePeer.name}
+                        </Link>{' '}
+                        first.
+                      </p>
+                    ) : null}
                   </div>
                 ) : null}
                 {isActive && canDeactivate ? (
@@ -314,6 +339,26 @@ export function ApprovalWorkflowDetailView({
                     Configure maker-checker tasks
                   </Link>{' '}
                   before activating.
+                </span>
+              ) : null}
+              {activationError && isWorkflowActivePeerExistsError(activationError) ? (
+                <span className="block text-sm text-muted-foreground">
+                  Only one active workflow is allowed per task.
+                  {activePeer ? (
+                    <>
+                      {' '}
+                      Deactivate{' '}
+                      <Link
+                        href={approvalWorkflowDetailPath(activePeer.id)}
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {activePeer.name}
+                      </Link>{' '}
+                      first, then try again.
+                    </>
+                  ) : (
+                    ' Deactivate the current active workflow for this task, then try again.'
+                  )}
                 </span>
               ) : null}
             </DialogDescription>

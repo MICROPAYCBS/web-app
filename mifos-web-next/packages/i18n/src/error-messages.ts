@@ -152,7 +152,55 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.job.sequence.jobShortName.unknown.job':
     'Unknown scheduler job short name. Pick a job from the list.',
   'error.msg.job.sequence.operationCode.unknown.operation':
-    'Unknown platform operation. Use ADVANCE_BUSINESS_DATE.'
+    'Unknown platform operation. Use ADVANCE_BUSINESS_DATE.',
+  'error.msg.workflow.configuration.task.not.maker.checker.enabled':
+    'Maker-checker is not enabled for this task. Enable it under Configure maker-checker tasks before activating the workflow.',
+  'error.msg.workflow.configuration.unknown.task':
+    'Unknown maker-checker task. Choose a task from the list.',
+  'error.msg.workflow.configuration.duplicate.name':
+    'A workflow with this name already exists for the selected task.',
+  'error.msg.workflow.configuration.no.stages': 'Add at least one stage before activating.',
+  'error.msg.workflow.configuration.duplicate.stage.code':
+    'Stage codes must be unique within the workflow.',
+  'error.msg.workflow.configuration.stage.without.actions':
+    'Each stage needs at least one action.',
+  'error.msg.workflow.configuration.stage.without.approve.action':
+    'Each stage must include the Approve action.',
+  'error.msg.workflow.configuration.unknown.role':
+    'A stage role was not found. Choose an existing role or clear the restricting role.',
+  'error.msg.workflow.configuration.role.disabled':
+    'A stage role is disabled. Choose an active role or clear the restricting role.',
+  'error.msg.workflow.configuration.rejection.threshold.missing':
+    'Set a rejection threshold when the rejection policy is Threshold.',
+  'error.msg.workflow.configuration.rejection.threshold.not.applicable':
+    'Rejection threshold applies only when the rejection policy is Threshold.',
+  'error.msg.workflow.configuration.escalation.without.expiry':
+    'Set an expiry period when escalation is enabled.',
+  'error.msg.workflow.configuration.escalation.target.missing':
+    'Choose an escalation target stage when escalation is enabled.',
+  'error.msg.workflow.configuration.escalation.target.self':
+    'Escalation target cannot be the same stage.',
+  'error.msg.workflow.configuration.escalation.target.unknown':
+    'Escalation target stage was not found in this workflow.',
+  'error.msg.workflow.configuration.transition.unknown.stage':
+    'A transition references an unknown stage code.',
+  'error.msg.workflow.configuration.transition.self.reference':
+    'A stage cannot transition to itself.',
+  'error.msg.workflow.configuration.no.entry.stage':
+    'The workflow needs exactly one entry stage.',
+  'error.msg.workflow.configuration.multiple.entry.stages':
+    'The workflow has more than one entry stage. Keep a single entry.',
+  'error.msg.workflow.configuration.unreachable.stage':
+    'A stage is not reachable from the entry stage.',
+  'error.msg.workflow.configuration.circular.transitions':
+    'Stage transitions form a cycle. Remove the loop before activating.',
+  'error.msg.workflow.configuration.active.definition.already.exists.for.task':
+    'Another active workflow already exists for this task. Deactivate it first, then activate this one.',
+  'error.msg.workflow.definition.invalid.state':
+    'This action is not allowed for the current workflow status.',
+  'error.msg.workflow.definition.cannot.be.updated.with.in.progress.instances':
+    'This workflow cannot be updated while approvals are still in progress. Finish or reject open approvals first.',
+  'error.msg.workflow.definition.not.found': 'Approval workflow was not found.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {

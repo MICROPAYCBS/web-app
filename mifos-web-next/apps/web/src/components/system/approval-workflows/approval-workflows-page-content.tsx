@@ -68,7 +68,7 @@ export function ApprovalWorkflowsPageContent({
     <>
       <ListPage
         title="Approval workflows"
-        description="Define multi-stage approval chains for maker-checker tasks. Higher priority wins when multiple active workflows share a task."
+        description="Define multi-stage approval chains for maker-checker tasks. Only one active workflow is allowed per task."
         actions={
           <Can permission="CREATE_WORKFLOW_DEFINITION">
             <Link href={approvalWorkflowCreatePath()} className={cn(buttonVariants())}>
@@ -82,6 +82,17 @@ export function ApprovalWorkflowsPageContent({
             configuration={engineConfiguration}
             canUpdateConfiguration={canUpdateConfiguration}
           />
+          {appliedFilters.taskPermissionCode &&
+          definitions.some(
+            (definition) =>
+              definition.status === 'ACTIVE' &&
+              definition.taskPermissionCode === appliedFilters.taskPermissionCode
+          ) ? (
+            <p className="text-sm text-muted-foreground">
+              This task already has an active workflow. Deactivate it before activating another
+              draft or inactive definition for the same task.
+            </p>
+          ) : null}
           <ApprovalWorkflowsTable
             definitions={definitions}
             appliedFilters={appliedFilters}

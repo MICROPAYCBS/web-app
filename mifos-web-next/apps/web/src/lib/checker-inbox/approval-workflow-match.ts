@@ -51,7 +51,10 @@ export function resolveMakerCheckerTaskPermissionCode(
   return undefined;
 }
 
-/** Highest-priority ACTIVE definition for the task (amount criteria removed). */
+/**
+ * ACTIVE definition for the task. Backend allows at most one ACTIVE per task;
+ * priority sort is only a defensive tie-break if multiples ever appear.
+ */
 export function selectApprovalWorkflowDefinition(
   definitions: WorkflowDefinition[],
   taskPermissionCode: string,

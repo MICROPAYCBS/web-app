@@ -6,12 +6,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractRoleListItem, FineractRolePermissionUsage, WorkflowDefinitionStatus } from '@mifos/api-client';
+import type {
+  FineractRoleListItem,
+  FineractRolePermissionUsage,
+  WorkflowDefinition,
+  WorkflowDefinitionStatus
+} from '@mifos/api-client';
 import type { UpsertWorkflowDefinitionInput } from '@mifos/validation';
 
 export type StepErrors = Record<string, string>;
 
 export type ApprovalWorkflowWizardMode = 'create' | 'edit';
+
+export type WorkflowDefinitionPeer = Pick<
+  WorkflowDefinition,
+  'id' | 'name' | 'status' | 'taskPermissionCode'
+>;
 
 export interface ApprovalWorkflowWizardProps {
   mode?: ApprovalWorkflowWizardMode;
@@ -23,6 +33,8 @@ export interface ApprovalWorkflowWizardProps {
   initialValues: UpsertWorkflowDefinitionInput;
   taskPermissions: FineractRolePermissionUsage[];
   roles: FineractRoleListItem[];
+  /** Existing definitions used to warn when the task already has an ACTIVE workflow. */
+  existingDefinitions?: WorkflowDefinitionPeer[];
 }
 
 export interface WorkflowStepProps {
@@ -31,5 +43,7 @@ export interface WorkflowStepProps {
   roles: FineractRoleListItem[];
   errors: StepErrors;
   disabled?: boolean;
+  definitionId?: number;
+  existingDefinitions?: WorkflowDefinitionPeer[];
   onChange: (patch: Partial<UpsertWorkflowDefinitionInput>) => void;
 }

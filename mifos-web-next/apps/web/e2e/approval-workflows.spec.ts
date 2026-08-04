@@ -35,32 +35,39 @@ test.describe('Approval workflows', () => {
     await expect(page.getByRole('link', { name: /create workflow/i })).toBeVisible();
   });
 
-  test('creates and activates default and higher-priority loan workflows', async ({ page }) => {
-    const defaultPayload = fineract.buildDefaultLoanWorkflow(runSuffix);
-    const largePayload = fineract.buildLargeLoanWorkflow(runSuffix);
+  test('activates one loan workflow and blocks a second until the first is deactivated', async ({
+    page
+  }) => {
+    const firstPayload = fineract.buildDefaultLoanWorkflow(runSuffix);
+    const secondPayload = fineract.buildLargeLoanWorkflow(runSuffix);
 
-    const defaultResult = await fineract.createWorkflowDefinition(defaultPayload);
-    const largeResult = await fineract.createWorkflowDefinition(largePayload);
-    expect(defaultResult.resourceId).toBeTruthy();
-    expect(largeResult.resourceId).toBeTruthy();
+    const firstResult = await fineract.createWorkflowDefinition(firstPayload);
+    const secondResult = await fineract.createWorkflowDefinition(secondPayload);
+    expect(firstResult.resourceId).toBeTruthy();
+    expect(secondResult.resourceId).toBeTruthy();
 
     await page.goto(APPROVAL_WORKFLOWS_PATH);
-    await expect(page.getByRole('link', { name: defaultPayload.name })).toBeVisible();
-    await expect(page.getByRole('link', { name: largePayload.name })).toBeVisible();
+    await expect(page.getByRole('link', { name: firstPayload.name })).toBeVisible();
+    await expect(page.getByRole('link', { name: secondPayload.name })).toBeVisible();
     await expect(page.getByText('CREATE_LOAN').first()).toBeVisible();
 
-    await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${defaultResult.resourceId}`);
-    await expect(page.getByRole('heading', { name: defaultPayload.name })).toBeVisible();
+    await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${firstResult.resourceId}`);
+    await expect(page.getByRole('heading', { name: firstPayload.name })).toBeVisible();
     await expect(page.getByText('Draft', { exact: true })).toBeVisible();
     await expect(page.getByText('CREATE_LOAN_CHECKER').first()).toBeVisible();
 
-    await fineract.activateWorkflowDefinition(defaultResult.resourceId as number);
+    await fineract.activateWorkflowDefinition(firstResult.resourceId as number);
     await page.reload();
     await expect(page.getByText('Active', { exact: true })).toBeVisible();
 
-    await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${largeResult.resourceId}`);
-    await expect(page.getByRole('heading', { name: largePayload.name })).toBeVisible();
-    await fineract.activateWorkflowDefinition(largeResult.resourceId as number);
+    await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${secondResult.resourceId}`);
+    await expect(page.getByRole('heading', { name: secondPayload.name })).toBeVisible();
+    await expect(fineract.activateWorkflowDefinition(secondResult.resourceId as number)).rejects.toThrow(
+      /active\.definition\.already\.exists\.for\.task|already exists.*task/i
+    );
+
+    await fineract.deactivateWorkflowDefinition(firstResult.resourceId as number);
+    await fineract.activateWorkflowDefinition(secondResult.resourceId as number);
     await page.reload();
     await expect(page.getByText('Active', { exact: true })).toBeVisible();
     await expect(page.getByText('BRANCH_MANAGER', { exact: true }).first()).toBeVisible();
@@ -68,13 +75,11 @@ test.describe('Approval workflows', () => {
     await expect(page.getByText('CREDIT_COMMITTEE', { exact: true }).first()).toBeVisible();
   });
 
-  test('rejects activating a second workflow at the same priority for a task', async () => {
-    const first = fineract.buildDefaultLoanWorkflow(`${runSuffix}-prio-a`);
-    first.priority = 55;
-    first.name = e2eWorkflowName('Same Priority A', runSuffix);
-    const second = fineract.buildDefaultLoanWorkflow(`${runSuffix}-prio-b`);
-    second.priority = 55;
-    second.name = e2eWorkflowName('Same Priority B', runSuffix);
+  test('rejects activating a second active workflow for the same task', async () => {
+    const first = fineract.buildDefaultLoanWorkflow(`${runSuffix}-peer-a`);
+    first.name = e2eWorkflowName('Peer A', runSuffix);
+    const second = fineract.buildDefaultLoanWorkflow(`${runSuffix}-peer-b`);
+    second.name = e2eWorkflowName('Peer B', runSuffix);
 
     const firstResult = await fineract.createWorkflowDefinition(first);
     const secondResult = await fineract.createWorkflowDefinition(second);
@@ -83,7 +88,7 @@ test.describe('Approval workflows', () => {
 
     await fineract.activateWorkflowDefinition(firstResult.resourceId as number);
     await expect(fineract.activateWorkflowDefinition(secondResult.resourceId as number)).rejects.toThrow(
-      /duplicate\.priority\.for\.task|same priority/i
+      /active\.definition\.already\.exists\.for\.task|already exists.*task/i
     );
   });
 

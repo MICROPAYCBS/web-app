@@ -15,9 +15,11 @@ import { TextField } from '@/components/composites/text-field';
 import { Badge } from '@/components/ui/badge';
 import {
   CONFIGURE_MC_TASKS_PATH,
+  findActiveWorkflowPeer,
   findWorkflowTaskPermission,
   workflowTaskPermissionSelectOptions
 } from '@/lib/fineract/approval-workflow-display';
+import { approvalWorkflowDetailPath } from '@/lib/fineract/approval-workflow-paths';
 import type { WorkflowStepProps } from '../types';
 
 export function BasicsStep({
@@ -25,6 +27,8 @@ export function BasicsStep({
   taskPermissions,
   errors,
   disabled,
+  definitionId,
+  existingDefinitions = [],
   onChange
 }: WorkflowStepProps) {
   const taskOptions = useMemo(
@@ -32,6 +36,11 @@ export function BasicsStep({
     [taskPermissions]
   );
   const selectedTask = findWorkflowTaskPermission(taskPermissions, draft.taskPermissionCode);
+  const activePeer = findActiveWorkflowPeer(
+    existingDefinitions,
+    draft.taskPermissionCode,
+    definitionId
+  );
 
   return (
     <div className="space-y-4">
@@ -67,6 +76,19 @@ export function BasicsStep({
           <div className="md:col-span-2">
             <Badge variant="secondary">Maker-checker enabled</Badge>
           </div>
+        ) : null}
+        {activePeer ? (
+          <p className="md:col-span-2 text-sm text-muted-foreground">
+            This task already has an active workflow (
+            <Link
+              href={approvalWorkflowDetailPath(activePeer.id)}
+              className="text-foreground underline-offset-4 hover:underline"
+            >
+              {activePeer.name}
+            </Link>
+            ). Only one active workflow is allowed per task — deactivate it before activating this
+            one.
+          </p>
         ) : null}
         <TextField
           label="Name"

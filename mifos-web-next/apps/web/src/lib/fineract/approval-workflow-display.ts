@@ -320,13 +320,36 @@ export function isWorkflowTaskMakerCheckerDisabled(
   return match?.selected !== true;
 }
 
-export type WorkflowActivateBlockReason = 'global' | 'task';
+export type WorkflowActivateBlockReason = 'global' | 'task' | 'activePeer';
 
-/** Prefer the global gate; fall back to per-task maker-checker. */
+/** ACTIVE definition for the same task, excluding the given id when editing/activating. */
+export function findActiveWorkflowPeer(
+  definitions: Array<Pick<WorkflowDefinition, 'id' | 'name' | 'status' | 'taskPermissionCode'>>,
+  taskPermissionCode: string | undefined,
+  excludeId?: number
+): Pick<WorkflowDefinition, 'id' | 'name' | 'status' | 'taskPermissionCode'> | undefined {
+  const code = taskPermissionCode?.trim();
+  if (!code) {
+    return undefined;
+  }
+  return definitions.find(
+    (definition) =>
+      definition.status === 'ACTIVE' &&
+      definition.taskPermissionCode === code &&
+      (excludeId == null || definition.id !== excludeId)
+  );
+}
+
+/**
+ * Prefer global MC gate, then per-task MC, then another ACTIVE definition for the task.
+ * At most one ACTIVE workflow may exist per taskPermissionCode.
+ */
 export function getWorkflowActivateBlockReason(options: {
   makerCheckerGloballyEnabled?: boolean | null;
   taskPermissionCode?: string;
   taskPermissions?: FineractRolePermissionUsage[];
+  definitions?: Array<Pick<WorkflowDefinition, 'id' | 'name' | 'status' | 'taskPermissionCode'>>;
+  definitionId?: number;
 }): WorkflowActivateBlockReason | null {
   if (isWorkflowGlobalMakerCheckerDisabled(options.makerCheckerGloballyEnabled)) {
     return 'global';
@@ -337,6 +360,12 @@ export function getWorkflowActivateBlockReason(options: {
   ) {
     return 'task';
   }
+  if (
+    options.definitions &&
+    findActiveWorkflowPeer(options.definitions, options.taskPermissionCode, options.definitionId)
+  ) {
+    return 'activePeer';
+  }
   return null;
 }
 
@@ -346,12 +375,24 @@ export const WORKFLOW_ACTIVATE_GLOBAL_MC_DISABLED_HINT =
 export const WORKFLOW_ACTIVATE_MC_DISABLED_HINT =
   'Maker-checker is off for this task. Enable it to activate.';
 
-export function workflowActivateBlockHint(reason: WorkflowActivateBlockReason | null): string | null {
+export const WORKFLOW_ACTIVATE_ACTIVE_PEER_HINT =
+  'Another active workflow already exists for this task. Deactivate it before activating this one.';
+
+export function workflowActivateBlockHint(
+  reason: WorkflowActivateBlockReason | null,
+  peerName?: string | null
+): string | null {
   if (reason === 'global') {
     return WORKFLOW_ACTIVATE_GLOBAL_MC_DISABLED_HINT;
   }
   if (reason === 'task') {
     return WORKFLOW_ACTIVATE_MC_DISABLED_HINT;
+  }
+  if (reason === 'activePeer') {
+    if (peerName?.trim()) {
+      return `Deactivate "${peerName.trim()}" first — only one active workflow is allowed per task.`;
+    }
+    return WORKFLOW_ACTIVATE_ACTIVE_PEER_HINT;
   }
   return null;
 }
@@ -361,6 +402,14 @@ export function isWorkflowActivationMcDisabledError(message: string): boolean {
   return (
     normalized.includes('task.not.maker.checker.enabled') ||
     (normalized.includes('maker-checker') && normalized.includes('not enabled'))
+  );
+}
+
+export function isWorkflowActivePeerExistsError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('active.definition.already.exists.for.task') ||
+    (normalized.includes('already exists') && normalized.includes('active') && normalized.includes('task'))
   );
 }
 

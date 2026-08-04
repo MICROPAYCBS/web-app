@@ -12,7 +12,7 @@ import { ApprovalWorkflowDetailView } from '@/components/system/approval-workflo
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
 import { MAKER_CHECKER_GLOBAL_CONFIG_NAME } from '@/lib/fineract/approval-workflow-paths';
-import { getWorkflowDefinition } from '@/lib/fineract/approval-workflows';
+import { getWorkflowDefinition, listWorkflowDefinitions } from '@/lib/fineract/approval-workflows';
 import { getGlobalConfigurationByName } from '@/lib/fineract/global-configurations';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -50,9 +50,15 @@ export default async function ApprovalWorkflowDetailPage({
     notFound();
   }
 
+  const definition = result.data;
+  const siblingDefinitions = await listWorkflowDefinitions({
+    taskPermissionCode: definition.taskPermissionCode
+  }).catch(() => [definition]);
+
   return (
     <ApprovalWorkflowDetailView
-      definition={result.data}
+      definition={definition}
+      siblingDefinitions={siblingDefinitions}
       taskPermissions={taskPermissions}
       makerCheckerGloballyEnabled={makerCheckerConfiguration?.enabled ?? null}
     />

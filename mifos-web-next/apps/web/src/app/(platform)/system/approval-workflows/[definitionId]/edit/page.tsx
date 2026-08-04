@@ -10,7 +10,7 @@ import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { ApprovalWorkflowWizardPageContent } from '@/components/system/approval-workflows/approval-workflow-wizard-page-content';
 import { workflowDefinitionToFormValues } from '@/lib/fineract/approval-workflow-display';
-import { getWorkflowDefinition } from '@/lib/fineract/approval-workflows';
+import { getWorkflowDefinition, listWorkflowDefinitions } from '@/lib/fineract/approval-workflows';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { listRoles } from '@/lib/fineract/system-roles';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -27,10 +27,11 @@ export default async function EditApprovalWorkflowPage({
     notFound();
   }
 
-  const [result, taskPermissions, roles] = await Promise.all([
+  const [result, taskPermissions, roles, existingDefinitions] = await Promise.all([
     tryFineractLoad(() => getWorkflowDefinition(Number(definitionId)), 'Could not load approval workflow.'),
     listMakerCheckerPermissions(),
-    listRoles().catch(() => [])
+    listRoles().catch(() => []),
+    listWorkflowDefinitions().catch(() => [])
   ]);
 
   if (!result.ok || !result.data) {
@@ -46,6 +47,7 @@ export default async function EditApprovalWorkflowPage({
       initialValues={workflowDefinitionToFormValues(result.data)}
       taskPermissions={taskPermissions}
       roles={roles}
+      existingDefinitions={existingDefinitions}
     />
   );
 }

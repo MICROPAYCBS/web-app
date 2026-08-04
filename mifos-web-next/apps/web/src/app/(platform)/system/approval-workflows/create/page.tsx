@@ -10,6 +10,7 @@ import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { ApprovalWorkflowWizardPageContent } from '@/components/system/approval-workflows/approval-workflow-wizard-page-content';
 import { defaultWorkflowDefinitionFormValues } from '@/lib/fineract/approval-workflow-display';
+import { listWorkflowDefinitions } from '@/lib/fineract/approval-workflows';
 import { listMakerCheckerPermissions } from '@/lib/fineract/maker-checker-permissions';
 import { listRoles } from '@/lib/fineract/system-roles';
 import { getServerSession } from '@/lib/session/server';
@@ -20,9 +21,10 @@ export default async function CreateApprovalWorkflowPage() {
     notFound();
   }
 
-  const [taskPermissions, roles] = await Promise.all([
+  const [taskPermissions, roles, existingDefinitions] = await Promise.all([
     listMakerCheckerPermissions(),
-    listRoles().catch(() => [])
+    listRoles().catch(() => []),
+    listWorkflowDefinitions().catch(() => [])
   ]);
 
   return (
@@ -31,6 +33,7 @@ export default async function CreateApprovalWorkflowPage() {
       initialValues={defaultWorkflowDefinitionFormValues()}
       taskPermissions={taskPermissions}
       roles={roles}
+      existingDefinitions={existingDefinitions}
     />
   );
 }

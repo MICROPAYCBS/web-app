@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
+  findActiveWorkflowPeer,
   formatWorkflowTaskDisplay,
   getWorkflowActivateBlockReason,
   workflowActivateBlockHint,
@@ -160,13 +161,23 @@ export function ApprovalWorkflowsTable({
                 const isActive = status === 'ACTIVE';
                 const isInactive = status === 'INACTIVE';
                 const canShowActivate = (isDraft || isInactive) && canActivate;
+                const activePeer = findActiveWorkflowPeer(
+                  definitions,
+                  row.original.taskPermissionCode,
+                  row.original.id
+                );
                 const activateBlockReason = getWorkflowActivateBlockReason({
                   makerCheckerGloballyEnabled,
                   taskPermissionCode: row.original.taskPermissionCode,
-                  taskPermissions
+                  taskPermissions,
+                  definitions,
+                  definitionId: row.original.id
                 });
                 const activateBlocked = activateBlockReason != null;
-                const activateHint = workflowActivateBlockHint(activateBlockReason);
+                const activateHint = workflowActivateBlockHint(
+                  activateBlockReason,
+                  activePeer?.name
+                );
                 const hasRowActions =
                   canUpdate ||
                   (isDraft && canDelete) ||
@@ -198,7 +209,7 @@ export function ApprovalWorkflowsTable({
                               type="button"
                               variant="ghost"
                               size="icon-sm"
-                              aria-label={`Activate ${row.original.name} (maker-checker required)`}
+                              aria-label={`Activate ${row.original.name} (blocked)`}
                               disabled
                             >
                               <Power className="size-4" />

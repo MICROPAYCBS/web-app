@@ -49,7 +49,8 @@ export function ApprovalWorkflowWizard({
   definitionStatus,
   initialValues,
   taskPermissions,
-  roles
+  roles,
+  existingDefinitions = []
 }: ApprovalWorkflowWizardProps) {
   const router = useRouter();
   const isEdit = mode === 'edit';
@@ -218,6 +219,8 @@ export function ApprovalWorkflowWizard({
     roles,
     errors: stepErrors,
     disabled: pending,
+    definitionId,
+    existingDefinitions,
     onChange: (patch: Partial<typeof draft>) => setDraft((current) => ({ ...current, ...patch }))
   };
 
