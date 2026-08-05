@@ -65,10 +65,29 @@ describe('buildSavingsProductPayload', () => {
     assert.deepEqual(payload.charges, [{ id: 3 }, { id: 7 }]);
   });
 
-  it('omits top-level dateFormat (savings products have no date fields)', () => {
+  it('includes dateFormat and availability dates when set', () => {
+    const payload = buildSavingsProductPayload(
+      minimalDraft({
+        details: {
+          name: 'Test Savings',
+          shortName: 'TSV',
+          startDate: '01 January 2024',
+          closeDate: '31 December 2030'
+        }
+      })
+    );
+
+    assert.equal(payload.dateFormat, 'dd MMMM yyyy');
+    assert.equal(payload.locale, 'en');
+    assert.equal(payload.startDate, '01 January 2024');
+    assert.equal(payload.closeDate, '31 December 2030');
+  });
+
+  it('omits empty availability dates', () => {
     const payload = buildSavingsProductPayload(minimalDraft());
 
-    assert.equal('dateFormat' in payload, false);
-    assert.equal(payload.locale, 'en');
+    assert.equal('startDate' in payload, false);
+    assert.equal('closeDate' in payload, false);
+    assert.equal(payload.dateFormat, 'dd MMMM yyyy');
   });
 });

@@ -32,6 +32,7 @@ export function buildDepositProductPayload(
     feesReceivableAccountId: accounting.feesReceivableAccountId,
     penaltiesReceivableAccountId: accounting.penaltiesReceivableAccountId,
     interestPayableAccountId: accounting.interestPayableAccountId,
+    dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE
   };
 

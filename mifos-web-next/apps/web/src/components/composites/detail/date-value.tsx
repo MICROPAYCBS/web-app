@@ -7,11 +7,16 @@
  */
 
 import { EmptyValue } from '@/components/composites/detail/empty-value';
+import { parseFineractDateString } from '@/lib/fineract/dates';
 
-function parseIsoDate(value: string): Date | null {
+function parseDisplayDate(value: string): Date | null {
   const trimmed = value.trim();
   if (!trimmed) {
     return null;
+  }
+  const fineract = parseFineractDateString(trimmed);
+  if (fineract) {
+    return fineract;
   }
   const date = new Date(trimmed.includes('T') ? trimmed : `${trimmed}T00:00:00`);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -30,7 +35,7 @@ export function DateValue({
     return <EmptyValue />;
   }
 
-  const date = value instanceof Date ? value : parseIsoDate(value);
+  const date = value instanceof Date ? value : parseDisplayDate(value);
   if (!date) {
     return <EmptyValue />;
   }

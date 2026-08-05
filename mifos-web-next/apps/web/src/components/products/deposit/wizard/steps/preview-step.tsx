@@ -88,6 +88,8 @@ export function PreviewStep({
         <DetailFieldGrid>
           <DetailField label="Name">{details.name}</DetailField>
           <DetailField label="Short name">{details.shortName}</DetailField>
+          <DetailField label="Start date">{details.startDate || '—'}</DetailField>
+          <DetailField label="Expiry date">{details.closeDate || '—'}</DetailField>
           <DetailField label="Description">{details.description || '—'}</DetailField>
         </DetailFieldGrid>
       </DetailSection>

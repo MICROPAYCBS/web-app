@@ -28,6 +28,9 @@ export interface ClientDepositAccountTemplate {
   clientName?: string;
   savingsProductId?: number;
   savingsProductName?: string;
+  /** Product availability window (from product detail when selected). */
+  startDate?: string;
+  closeDate?: string;
   productOptions?: ClientDepositAccountProductOption[];
   fieldOfficerOptions?: ClientDepositAccountFieldOfficerOption[];
   termFrequencyTypeOptions?: FineractEnumOption[];

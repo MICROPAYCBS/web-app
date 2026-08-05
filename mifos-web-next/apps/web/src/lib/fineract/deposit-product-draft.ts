@@ -24,7 +24,8 @@ import {
   asChargeIncomeMappings,
   asCurrency,
   asEnumOption,
-  asPaymentChannelMappings
+  asPaymentChannelMappings,
+  asProductDateString
 } from '@/lib/fineract/product-normalize';
 import { fineractApiDateToFormString } from '@/lib/fineract/dates';
 import { depositProductConfig } from '@/lib/fineract/deposit-product-config';
@@ -144,7 +145,9 @@ export function depositProductDraftFromTemplate(
     details: {
       name: template.name ?? '',
       shortName: template.shortName ?? '',
-      description: template.description ?? ''
+      description: template.description ?? '',
+      startDate: asProductDateString(template.startDate) ?? '',
+      closeDate: asProductDateString(template.closeDate) ?? ''
     },
     currency: {
       currencyCode: currency?.code ?? template.currencyCode ?? '',
@@ -269,6 +272,8 @@ export function normalizeDepositProductTemplate(raw: unknown): DepositProductTem
 
   return {
     ...(row as DepositProductTemplate),
+    startDate: asProductDateString(row.startDate),
+    closeDate: asProductDateString(row.closeDate),
     currency: asCurrency(row.currency),
     accountingMappings: asAccountingMappings(row.accountingMappings),
     accountingMappingOptions,

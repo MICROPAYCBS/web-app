@@ -9,8 +9,10 @@
  */
 
 import type { DepositProductDetailsInput } from '@mifos/validation';
+import { DateField } from '@/components/composites/date-field';
 import { TextField } from '@/components/composites/text-field';
 import { ProductShortNameField } from '@/components/products/shared/product-short-name-field';
+import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
 import type { DepositProductStepProps } from '../types';
 
 export function DetailsStep({
@@ -43,6 +45,26 @@ export function DetailsStep({
           onChange={(shortName) => onChange({ shortName })}
           error={errors['details.shortName']}
           lockedShortName={lockedShortName}
+        />
+        <DateField
+          id="details.startDate"
+          label="Start date"
+          optional
+          allowFuture
+          dateFormat={FINERACT_DATE_FORMAT}
+          value={details.startDate ?? undefined}
+          onChange={(startDate) => onChange({ startDate: startDate ?? '' })}
+          error={errors['details.startDate']}
+        />
+        <DateField
+          id="details.closeDate"
+          label="Expiry date"
+          optional
+          allowFuture
+          dateFormat={FINERACT_DATE_FORMAT}
+          value={details.closeDate ?? undefined}
+          onChange={(closeDate) => onChange({ closeDate: closeDate ?? '' })}
+          error={errors['details.closeDate']}
         />
         <TextField
           id="details.description"

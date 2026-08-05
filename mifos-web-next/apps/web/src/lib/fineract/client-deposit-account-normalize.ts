@@ -12,6 +12,7 @@ import type {
   ClientDepositAccountTemplate,
   FineractEnumOption
 } from '@mifos/api-client';
+import { asProductDateString } from '@/lib/fineract/product-normalize';
 
 function toNumber(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -119,6 +120,8 @@ export function normalizeClientDepositAccountTemplate(raw: unknown): ClientDepos
         : typeof row.productName === 'string'
           ? row.productName
           : undefined,
+    startDate: asProductDateString(row.startDate),
+    closeDate: asProductDateString(row.closeDate),
     productOptions: asProductOptions(row.productOptions),
     fieldOfficerOptions: asFieldOfficerOptions(row.fieldOfficerOptions),
     termFrequencyTypeOptions: asEnumOptions(row.termFrequencyTypeOptions),

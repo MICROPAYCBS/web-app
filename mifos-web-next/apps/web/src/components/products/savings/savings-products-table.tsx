@@ -20,11 +20,17 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
+import { DateValue } from '@/components/composites/detail/date-value';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   productListAccountingLabel,
   productListCurrencyCode
 } from '@/lib/fineract/product-list-display';
+import {
+  productStatusLabel,
+  productStatusVariant
+} from '@/lib/fineract/product-status-display';
 
 const columns: ColumnDef<SavingsProductListItem>[] = [
   {
@@ -49,6 +55,20 @@ const columns: ColumnDef<SavingsProductListItem>[] = [
     header: 'Currency',
     cell: ({ row }) => (
       <span className="font-medium tabular-nums">{productListCurrencyCode(row.original)}</span>
+    )
+  },
+  {
+    accessorKey: 'closeDate',
+    header: 'Expiry date',
+    cell: ({ row }) => <DateValue value={row.original.closeDate} />
+  },
+  {
+    id: 'status',
+    header: 'Status',
+    cell: ({ row }) => (
+      <Badge variant={productStatusVariant(row.original.status)}>
+        {productStatusLabel(row.original.status)}
+      </Badge>
     )
   },
   {
@@ -79,6 +99,8 @@ export function SavingsProductsTable({
         row.name,
         row.shortName,
         row.currencyCode,
+        row.closeDate,
+        productStatusLabel(row.status),
         productListAccountingLabel(row.accountingRule)
       ]
         .filter(Boolean)

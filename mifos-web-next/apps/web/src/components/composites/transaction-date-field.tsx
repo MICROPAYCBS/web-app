@@ -23,9 +23,20 @@ export type TransactionDateFieldProps = Omit<DateFieldProps, 'onChange'> & {
   onChange: (value: string) => void;
 };
 
+function earlierDate(a: Date | undefined, b: Date | undefined): Date | undefined {
+  if (!a) {
+    return b;
+  }
+  if (!b) {
+    return a;
+  }
+  return a.getTime() <= b.getTime() ? a : b;
+}
+
 /**
  * Transaction / posting date — defaults to the organisation business date when
  * configured, editable for backdated entries, capped at the business date (or today).
+ * Optional `fromDate` / `toDate` further constrain the picker (e.g. product window).
  */
 export function TransactionDateField({
   id,
@@ -38,6 +49,8 @@ export function TransactionDateField({
   required,
   optional,
   dateFormat,
+  fromDate,
+  toDate,
   hint,
   hintAriaLabel,
   contextHelpSectionId
@@ -46,9 +59,14 @@ export function TransactionDateField({
   const hasBusinessDate = hasConfiguredBusinessDate(businessDate);
   const isNotToday = businessDate.isNotToday === true;
 
-  const maxDate = useMemo(
+  const businessMax = useMemo(
     () => fineractDateToDate(businessDate.date, dateFormat),
     [businessDate.date, dateFormat]
+  );
+
+  const effectiveToDate = useMemo(
+    () => earlierDate(hasBusinessDate ? businessMax : undefined, toDate),
+    [businessMax, hasBusinessDate, toDate]
   );
 
   const isBackdated = useMemo(
@@ -82,7 +100,8 @@ export function TransactionDateField({
       disabled={disabled}
       className={className}
       dateFormat={dateFormat}
-      toDate={hasBusinessDate ? maxDate : undefined}
+      fromDate={fromDate}
+      toDate={effectiveToDate}
       hint={resolvedHint}
       hintAriaLabel={hintAriaLabel}
       contextHelpSectionId={contextHelpSectionId}

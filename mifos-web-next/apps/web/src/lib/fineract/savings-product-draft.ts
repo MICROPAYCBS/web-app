@@ -19,7 +19,8 @@ import {
   asChargeIncomeMappings,
   asCurrency,
   asEnumOption,
-  asPaymentChannelMappings
+  asPaymentChannelMappings,
+  asProductDateString
 } from '@/lib/fineract/product-normalize';
 
 function enumId(value: unknown): number | undefined {
@@ -61,7 +62,9 @@ export function savingsProductDraftFromTemplate(
     details: {
       name: template.name ?? '',
       shortName: template.shortName ?? '',
-      description: template.description ?? ''
+      description: template.description ?? '',
+      startDate: asProductDateString(template.startDate) ?? '',
+      closeDate: asProductDateString(template.closeDate) ?? ''
     },
     currency: {
       currencyCode: currency?.code ?? template.currencyCode ?? '',
@@ -184,6 +187,8 @@ export function normalizeSavingsProductTemplate(raw: unknown): SavingsProductTem
 
   return {
     ...(row as SavingsProductTemplate),
+    startDate: asProductDateString(row.startDate),
+    closeDate: asProductDateString(row.closeDate),
     currency: asCurrency(row.currency),
     accountingMappings: asAccountingMappings(row.accountingMappings),
     accountingMappingOptions,

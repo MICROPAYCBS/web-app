@@ -11,7 +11,8 @@ import 'server-only';
 import type {
   ClientDepositAccountKind,
   ClientDepositAccountTemplate,
-  CreateClientDepositAccountResponse
+  CreateClientDepositAccountResponse,
+  DepositProductKind
 } from '@mifos/api-client';
 import type {
   CreateClientFixedDepositAccountInput,
@@ -26,6 +27,40 @@ import {
   buildRecurringDepositAccountPayload,
   buildSavingsAccountPayload
 } from '@/lib/fineract/client-deposit-account-payload';
+import { getDepositProduct } from '@/lib/fineract/deposit-products';
+import { getSavingsProduct } from '@/lib/fineract/savings-products';
+
+function depositProductKindForAccount(
+  kind: ClientDepositAccountKind
+): DepositProductKind | null {
+  if (kind === 'fixedDeposit') {
+    return 'fixed';
+  }
+  if (kind === 'recurringDeposit') {
+    return 'recurring';
+  }
+  return null;
+}
+
+async function loadProductAvailabilityDates(
+  kind: ClientDepositAccountKind,
+  productId: string | number
+): Promise<Pick<ClientDepositAccountTemplate, 'startDate' | 'closeDate'>> {
+  try {
+    if (kind === 'savings') {
+      const product = await getSavingsProduct(productId);
+      return { startDate: product.startDate, closeDate: product.closeDate };
+    }
+    const depositKind = depositProductKindForAccount(kind);
+    if (!depositKind) {
+      return {};
+    }
+    const product = await getDepositProduct(depositKind, productId);
+    return { startDate: product.startDate, closeDate: product.closeDate };
+  } catch {
+    return {};
+  }
+}
 
 export async function getClientDepositAccountTemplate(
   kind: ClientDepositAccountKind,
@@ -39,7 +74,15 @@ export async function getClientDepositAccountTemplate(
     params.productId = String(productId);
   }
   const raw = await fineract.get<unknown>(`${apiPath}/template`, params);
-  return normalizeClientDepositAccountTemplate(raw);
+  const template = normalizeClientDepositAccountTemplate(raw);
+  if (productId == null || String(productId).trim() === '') {
+    return template;
+  }
+  if (template.startDate || template.closeDate) {
+    return template;
+  }
+  const availability = await loadProductAvailabilityDates(kind, productId);
+  return { ...template, ...availability };
 }
 
 export async function createClientSavingsAccountRecord(

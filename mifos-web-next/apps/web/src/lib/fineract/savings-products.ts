@@ -25,6 +25,7 @@ import {
   asCurrency,
   asEnumOption,
   asPaymentChannelMappings,
+  asProductDateString,
   listItemCurrencyCode,
   normalizeFineractList
 } from '@/lib/fineract/product-normalize';
@@ -42,6 +43,8 @@ function normalizeListItem(item: unknown): SavingsProductListItem | null {
     id,
     name: typeof row.name === 'string' ? row.name : undefined,
     shortName: typeof row.shortName === 'string' ? row.shortName : undefined,
+    closeDate: asProductDateString(row.closeDate),
+    status: typeof row.status === 'string' ? row.status : undefined,
     currencyCode: listItemCurrencyCode(row),
     accountingRule: asEnumOption(row.accountingRule)
   };
@@ -56,6 +59,7 @@ function normalizeDetail(raw: unknown): SavingsProductDetail | null {
   return {
     ...item,
     description: typeof row.description === 'string' ? row.description : undefined,
+    startDate: asProductDateString(row.startDate),
     currency: asCurrency(row.currency),
     nominalAnnualInterestRate:
       typeof row.nominalAnnualInterestRate === 'number'

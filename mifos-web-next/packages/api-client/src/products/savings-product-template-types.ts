@@ -15,6 +15,8 @@ export interface SavingsProductTemplate {
   name?: string;
   shortName?: string;
   description?: string;
+  startDate?: string;
+  closeDate?: string;
   currency?: FineractCurrencyOption;
   currencyOptions?: FineractCurrencyOption[];
   currencyCode?: string;

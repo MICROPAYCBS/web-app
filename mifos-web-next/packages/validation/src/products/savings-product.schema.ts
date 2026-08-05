@@ -29,11 +29,31 @@ const chargeIncomeMappingSchema = z.object({
   incomeAccountId: z.coerce.number().int().positive()
 });
 
-export const savingsProductDetailsStepSchema = z.object({
-  name: z.string().trim().min(1, 'Name is required.').max(100),
-  shortName: z.string().trim().min(1, 'Short name is required.').max(4),
-  description: z.string().trim().max(500).optional().or(z.literal(''))
-});
+export const savingsProductDetailsStepSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Name is required.').max(100),
+    shortName: z.string().trim().min(1, 'Short name is required.').max(4),
+    description: z.string().trim().max(500).optional().or(z.literal('')),
+    startDate: z.string().trim().optional().or(z.literal('')),
+    closeDate: z.string().trim().optional().or(z.literal(''))
+  })
+  .superRefine((data, ctx) => {
+    if (!data.startDate?.trim() || !data.closeDate?.trim()) {
+      return;
+    }
+    const start = Date.parse(data.startDate);
+    const close = Date.parse(data.closeDate);
+    if (Number.isNaN(start) || Number.isNaN(close)) {
+      return;
+    }
+    if (close < start) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Close date must be on or after the start date.',
+        path: ['closeDate']
+      });
+    }
+  });
 
 export const savingsProductCurrencyStepSchema = z.object({
   currencyCode: z.string().trim().min(1, 'Select a currency.').max(3),

@@ -11,11 +11,13 @@ export function productStatusLabel(status?: string): string {
   if (!status) {
     return '—';
   }
-  if (status.includes('active')) {
-    return 'Active';
-  }
-  if (status.includes('inactive')) {
+  const normalized = status.toLowerCase();
+  // Check inactive before active — codes use `inActive` / `inactive`.
+  if (normalized.includes('inactive')) {
     return 'Inactive';
+  }
+  if (normalized.includes('active')) {
+    return 'Active';
   }
   const segment = status.split('.').pop();
   if (!segment) {
@@ -30,11 +32,12 @@ export function productStatusVariant(
   if (!status) {
     return 'secondary';
   }
-  if (status.includes('active')) {
-    return 'default';
-  }
-  if (status.includes('inactive')) {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('inactive')) {
     return 'outline';
+  }
+  if (normalized.includes('active')) {
+    return 'default';
   }
   return 'secondary';
 }

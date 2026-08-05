@@ -20,6 +20,8 @@ export interface DepositProductListItem {
   id: number;
   name?: string;
   shortName?: string;
+  closeDate?: string;
+  status?: string;
   currencyCode?: string;
   accountingRule?: FineractEnumOption;
 }
@@ -57,6 +59,7 @@ export interface DepositProductInterestChart {
 
 export interface DepositProductDetail extends DepositProductListItem {
   description?: string;
+  startDate?: string;
   currency?: FineractCurrencyOption;
   minDepositAmount?: number;
   depositAmount?: number;

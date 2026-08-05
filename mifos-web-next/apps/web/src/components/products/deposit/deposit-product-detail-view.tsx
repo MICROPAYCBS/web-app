@@ -22,6 +22,8 @@ import {
   DetailSectionNav,
   MoneyValue
 } from '@/components/composites';
+import { DateValue } from '@/components/composites/detail/date-value';
+import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
   depositProductConfig,
@@ -37,6 +39,10 @@ import {
 } from '@/lib/fineract/deposit-product-sections';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
 import { accountingRuleLabel } from '@/lib/fineract/product-display';
+import {
+  productStatusLabel,
+  productStatusVariant
+} from '@/lib/fineract/product-status-display';
 import { useDetailSection } from '@/hooks/use-detail-section';
 import { ProductChargesTable } from '@/components/products/shared/product-charges-table';
 import { cn } from '@/lib/utils';
@@ -106,6 +112,17 @@ export function DepositProductDetailView({
         <DetailSection title="General">
           <DetailFieldGrid>
             <DetailField label="Short name">{product.shortName ?? '—'}</DetailField>
+            <DetailField label="Status">
+              <Badge variant={productStatusVariant(product.status)}>
+                {productStatusLabel(product.status)}
+              </Badge>
+            </DetailField>
+            <DetailField label="Start date">
+              <DateValue value={product.startDate} />
+            </DetailField>
+            <DetailField label="Expiry date">
+              <DateValue value={product.closeDate} />
+            </DetailField>
             <DetailField label="Currency">{currencyCode}</DetailField>
             <DetailField label="Description">{product.description ?? '—'}</DetailField>
             <DetailField label="Accounting">

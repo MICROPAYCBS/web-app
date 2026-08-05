@@ -15,6 +15,8 @@ import {
   DetailSection,
   MoneyValue
 } from '@/components/composites';
+import { DateValue } from '@/components/composites/detail/date-value';
+import { Badge } from '@/components/ui/badge';
 import { ProductChargesTable } from '@/components/products/shared/product-charges-table';
 import { ProductMappingTable } from '@/components/products/shared/product-mapping-table';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
@@ -22,6 +24,10 @@ import {
   accountingRuleLabel,
   glAccountLabel
 } from '@/lib/fineract/product-display';
+import {
+  productStatusLabel,
+  productStatusVariant
+} from '@/lib/fineract/product-status-display';
 import {
   savingsProductCurrencyCode,
   savingsProductFeeCharges
@@ -46,6 +52,17 @@ function SavingsProductGeneralSection({ product }: { product: SavingsProductDeta
       <DetailSection title="Details">
         <DetailFieldGrid>
           <DetailField label="Short name">{product.shortName ?? '—'}</DetailField>
+          <DetailField label="Status">
+            <Badge variant={productStatusVariant(product.status)}>
+              {productStatusLabel(product.status)}
+            </Badge>
+          </DetailField>
+          <DetailField label="Start date">
+            <DateValue value={product.startDate} />
+          </DetailField>
+          <DetailField label="Expiry date">
+            <DateValue value={product.closeDate} />
+          </DetailField>
           {product.description ? (
             <DetailField label="Description" className="sm:col-span-2">
               {product.description}

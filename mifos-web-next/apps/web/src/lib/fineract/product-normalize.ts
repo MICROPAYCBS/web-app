@@ -14,6 +14,18 @@ import type {
   PaymentChannelFundSourceMapping,
   ProductGlAccountRef
 } from '@mifos/api-client';
+import { fineractApiDateToFormString } from '@/lib/fineract/dates';
+
+/** Normalize product start/close dates from Fineract GET payloads to form strings. */
+export function asProductDateString(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    return fineractApiDateToFormString(value);
+  }
+  if (Array.isArray(value) && value.every((part) => typeof part === 'number')) {
+    return fineractApiDateToFormString(value as number[]);
+  }
+  return undefined;
+}
 
 export function asEnumOption(value: unknown): FineractEnumOption | undefined {
   if (!value || typeof value !== 'object') {

@@ -18,12 +18,15 @@ export interface SavingsProductListItem {
   id: number;
   name?: string;
   shortName?: string;
+  closeDate?: string;
+  status?: string;
   currencyCode?: string;
   accountingRule?: FineractEnumOption;
 }
 
 export interface SavingsProductDetail extends SavingsProductListItem {
   description?: string;
+  startDate?: string;
   currency?: FineractCurrencyOption;
   nominalAnnualInterestRate?: number;
   interestCompoundingPeriodType?: FineractEnumOption;

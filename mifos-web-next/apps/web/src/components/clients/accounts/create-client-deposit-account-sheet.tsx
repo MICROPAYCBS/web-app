@@ -38,6 +38,8 @@ import { isClientDepositAccountTemplate } from '@/lib/fineract/client-account-ac
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import { CLIENT_DEPOSIT_ACCOUNT_CONFIG } from '@/lib/fineract/client-deposit-account-config';
 import { FINERACT_DATE_FORMAT } from '@/lib/fineract/dates';
+import { fineractDateToDate } from '@/lib/fineract/date-input';
+import { clampDateToProductWindow } from '@/lib/fineract/product-availability-dates';
 import { SAVINGS_ACCOUNT_CREATE_TOAST } from '@/lib/fineract/savings-account-command-toasts';
 import { toSelectOptions } from '@/lib/form/select-options';
 
@@ -110,13 +112,33 @@ export function CreateClientDepositAccountSheet({
           return;
         }
         setTemplate(result);
-        setForm((current) => ({
-          ...current,
-          ...applyDepositTemplateDefaults(result, kind)
-        }));
+        setForm((current) => {
+          const next = {
+            ...current,
+            ...applyDepositTemplateDefaults(result, kind)
+          };
+          return {
+            ...next,
+            submittedOnDate: clampDateToProductWindow(
+              next.submittedOnDate || current.submittedOnDate,
+              result.startDate,
+              result.closeDate,
+              FINERACT_DATE_FORMAT
+            )
+          };
+        });
       });
     },
     [kind, clientId]
+  );
+
+  const productStartDate = useMemo(
+    () => fineractDateToDate(template.startDate, FINERACT_DATE_FORMAT),
+    [template.startDate]
+  );
+  const productCloseDate = useMemo(
+    () => fineractDateToDate(template.closeDate, FINERACT_DATE_FORMAT),
+    [template.closeDate]
   );
 
   useEffect(() => {
@@ -231,6 +253,8 @@ export function CreateClientDepositAccountSheet({
         onChange={(submittedOnDate) => patchForm({ submittedOnDate })}
         disabled={disabled}
         error={fieldErrors.submittedOnDate}
+        fromDate={productSelected ? productStartDate : undefined}
+        toDate={productSelected ? productCloseDate : undefined}
       />
 
       {kind === 'savings' ? (

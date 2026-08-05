@@ -200,7 +200,19 @@ const ERROR_MESSAGES: Record<string, string> = {
     'This action is not allowed for the current workflow status.',
   'error.msg.workflow.definition.cannot.be.updated.with.in.progress.instances':
     'This workflow cannot be updated while approvals are still in progress. Finish or reject open approvals first.',
-  'error.msg.workflow.definition.not.found': 'Approval workflow was not found.'
+  'error.msg.workflow.definition.not.found': 'Approval workflow was not found.',
+  'validation.msg.savingsaccount.summital.cannot.be.before.savings.product.start.date':
+    'Submitted date cannot be before the product start date.',
+  'validation.msg.savingsaccount.summital.cannot.be.after.savings.product.close.date':
+    'Submitted date cannot be after the product expiry date.',
+  'validation.msg.fixeddepositaccount.summital.cannot.be.before.savings.product.start.date':
+    'Submitted date cannot be before the product start date.',
+  'validation.msg.fixeddepositaccount.summital.cannot.be.after.savings.product.close.date':
+    'Submitted date cannot be after the product expiry date.',
+  'validation.msg.recurringdepositaccount.summital.cannot.be.before.savings.product.start.date':
+    'Submitted date cannot be before the product start date.',
+  'validation.msg.recurringdepositaccount.summital.cannot.be.after.savings.product.close.date':
+    'Submitted date cannot be after the product expiry date.'
 };
 
 export function translateFineractCode(code: string, fallback?: string): string {
