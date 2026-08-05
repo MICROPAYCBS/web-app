@@ -181,7 +181,7 @@ const chartIncentiveSchema = z.object({
   amount: z.coerce.number().min(0, 'Incentive amount is required.')
 });
 
-const chartSlabSchema = z
+export const depositProductChartSlabSchema = z
   .object({
     id: optionalId,
     periodType: z.coerce.number().int().min(0).optional(),
@@ -217,18 +217,22 @@ const chartSlabSchema = z
     }
   });
 
-const chartSchema = z.object({
+/** Chart header fields only — used by the chart FormSheet before slabs are attached. */
+export const depositProductChartDetailsSchema = z.object({
   id: optionalId,
   name: z.string().trim().optional().or(z.literal('')),
   description: z.string().trim().optional().or(z.literal('')),
   fromDate: z.string().trim().min(1, 'From date is required.'),
   endDate: z.string().trim().optional().or(z.literal('')),
-  isPrimaryGroupingByAmount: z.boolean().default(false),
-  chartSlabs: z.array(chartSlabSchema).min(1, 'Add at least one chart slab.')
+  isPrimaryGroupingByAmount: z.boolean().default(false)
+});
+
+export const depositProductChartSchema = depositProductChartDetailsSchema.extend({
+  chartSlabs: z.array(depositProductChartSlabSchema).min(1, 'Add at least one chart slab.')
 });
 
 export const depositProductInterestRateChartStepSchema = z.object({
-  charts: z.array(chartSchema).min(1, 'Add at least one interest rate chart.')
+  charts: z.array(depositProductChartSchema).min(1, 'Add at least one interest rate chart.')
 });
 
 export const depositProductChargesStepSchema = z.object({
@@ -335,6 +339,9 @@ export type DepositProductSettingsInput = z.infer<typeof depositProductSettingsS
 export type DepositProductInterestRateChartInput = z.infer<
   typeof depositProductInterestRateChartStepSchema
 >;
+export type DepositProductChartInput = z.infer<typeof depositProductChartSchema>;
+export type DepositProductChartDetailsInput = z.infer<typeof depositProductChartDetailsSchema>;
+export type DepositProductChartSlabInput = z.infer<typeof depositProductChartSlabSchema>;
 export type DepositProductChargesInput = z.infer<typeof depositProductChargesStepSchema>;
 export type DepositProductAccountingInput = z.infer<typeof depositProductAccountingStepSchema>;
 export type UpsertDepositProductInput = z.infer<typeof upsertDepositProductSchema>;

@@ -23,6 +23,7 @@ import {
 } from '@/lib/fineract/product-charge-options';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { normalizeDepositProductTemplate } from '@/lib/fineract/deposit-product-draft';
+import { normalizeDepositProductCharts } from '@/lib/fineract/deposit-product-charts';
 import {
   asAccountingMappings,
   asChargeIncomeMappings,
@@ -101,7 +102,14 @@ function normalizeDetail(raw: unknown): DepositProductDetail | null {
     preClosurePenalInterestOnType: asEnumOption(row.preClosurePenalInterestOnType),
     withHoldTax: typeof row.withHoldTax === 'boolean' ? row.withHoldTax : undefined,
     taxGroup: asEnumOption(row.taxGroup),
-    activeChart: row.activeChart as DepositProductDetail['activeChart'],
+    interestRateCharts: normalizeDepositProductCharts(row.interestRateCharts),
+    activeChart: (() => {
+      const charts = normalizeDepositProductCharts(row.activeChart ?? row.interestRateCharts);
+      if (charts.length === 0) {
+        return undefined;
+      }
+      return charts.length === 1 ? charts[0] : charts;
+    })(),
     accountingRule: asEnumOption(row.accountingRule),
     accountingMappings: asAccountingMappings(row.accountingMappings),
     charges: asCharges(row.charges),
@@ -159,6 +167,7 @@ function mergeDepositProductForEdit(
     withHoldTax: product.withHoldTax,
     taxGroup: product.taxGroup ?? baseTemplate.taxGroup,
     activeChart: product.activeChart ?? baseTemplate.activeChart,
+    interestRateCharts: product.interestRateCharts,
     charges: (product.charges ?? baseTemplate.charges) as DepositProductTemplate['charges'],
     accountingRule: product.accountingRule ?? baseTemplate.accountingRule,
     accountingMappings: product.accountingMappings ?? baseTemplate.accountingMappings,

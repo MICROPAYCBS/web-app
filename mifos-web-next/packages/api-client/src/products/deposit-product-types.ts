@@ -84,6 +84,9 @@ export interface DepositProductDetail extends DepositProductListItem {
   preClosurePenalInterestOnType?: FineractEnumOption;
   withHoldTax?: boolean;
   taxGroup?: FineractEnumOption;
+  /** All interest rate charts on the product (when returned by GET). */
+  interestRateCharts?: DepositProductInterestChart[];
+  /** Active chart derived by the API from interestRateCharts. */
   activeChart?: DepositProductInterestChart | DepositProductInterestChart[];
   accountingRule?: FineractEnumOption;
   accountingMappings?: Record<string, ProductGlAccountRef | undefined>;

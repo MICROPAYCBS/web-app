@@ -44,6 +44,7 @@ import {
   productStatusVariant
 } from '@/lib/fineract/product-status-display';
 import { useDetailSection } from '@/hooks/use-detail-section';
+import { DepositProductInterestCharts } from '@/components/products/deposit/deposit-product-interest-charts';
 import { ProductChargesTable } from '@/components/products/shared/product-charges-table';
 import { cn } from '@/lib/utils';
 
@@ -174,14 +175,7 @@ export function DepositProductDetailView({
         </DetailSection>
       ) : null}
 
-      {activeSection === 'chart' ? (
-        <DetailSection title="Interest rate chart">
-          <p className="text-sm text-muted-foreground">
-            Interest rates are configured via charts on this product. Edit the product to view or
-            change chart slabs.
-          </p>
-        </DetailSection>
-      ) : null}
+      {activeSection === 'chart' ? <DepositProductInterestCharts product={product} /> : null}
 
       {activeSection === 'fees' ? (
         <div className="space-y-6">

@@ -7,6 +7,7 @@
  */
 
 import type { DepositProductDetail, DepositProductSectionId } from '@mifos/api-client';
+import { depositProductCharts } from '@/lib/fineract/deposit-product-charts';
 import { isProductAccountingEnabled } from '@/lib/fineract/product-display';
 
 export const DEPOSIT_PRODUCT_DEFAULT_SECTION: DepositProductSectionId = 'general';
@@ -36,22 +37,17 @@ export function depositProductHasCharges(product: DepositProductDetail): boolean
 }
 
 export function depositProductHasChart(product: DepositProductDetail): boolean {
-  const chart = product.activeChart;
-  if (!chart) {
-    return false;
-  }
-  return Array.isArray(chart) ? chart.length > 0 : true;
+  return depositProductCharts(product).length > 0;
 }
 
 export function depositProductSections(product: DepositProductDetail): ProductSectionDefinition[] {
   const items: ProductSectionDefinition[] = [
     { id: 'general', label: 'General' },
-    { id: 'terms', label: 'Terms' }
+    { id: 'terms', label: 'Terms' },
+    // FD/RD products always expose the chart section (empty state when none configured).
+    { id: 'chart', label: 'Interest rate chart' }
   ];
 
-  if (depositProductHasChart(product)) {
-    items.push({ id: 'chart', label: 'Interest rate chart' });
-  }
   if (depositProductHasCharges(product)) {
     items.push({ id: 'fees', label: 'Fees' });
   }

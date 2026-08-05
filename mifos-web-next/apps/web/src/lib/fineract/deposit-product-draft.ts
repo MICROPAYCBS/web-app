@@ -28,6 +28,7 @@ import {
   asProductDateString
 } from '@/lib/fineract/product-normalize';
 import { fineractApiDateToFormString } from '@/lib/fineract/dates';
+import { normalizeDepositProductCharts } from '@/lib/fineract/deposit-product-charts';
 import { depositProductConfig } from '@/lib/fineract/deposit-product-config';
 
 function enumId(value: unknown): number | undefined {
@@ -53,14 +54,6 @@ function mappingAccountId(
   return optionalAccountId(mappings[key]?.id);
 }
 
-function normalizeCharts(raw: unknown): DepositProductInterestChart[] {
-  if (!raw) {
-    return [];
-  }
-  const items = Array.isArray(raw) ? raw : [raw];
-  return items.filter((item) => item && typeof item === 'object') as DepositProductInterestChart[];
-}
-
 function chartSlabsFromChart(chart: DepositProductInterestChart): DepositProductInterestChartSlab[] {
   const slabs = chart.chartSlabs;
   if (!slabs) {
@@ -70,7 +63,7 @@ function chartSlabsFromChart(chart: DepositProductInterestChart): DepositProduct
 }
 
 function draftChartsFromTemplate(template: DepositProductTemplate): UpsertDepositProductInput['interestRateChart'] {
-  const charts = normalizeCharts(template.activeChart);
+  const charts = normalizeDepositProductCharts(template.activeChart);
   if (charts.length === 0) {
     const periodType = enumIdFromOptions(template.chartTemplate?.periodTypes);
     return {
@@ -288,6 +281,12 @@ export function normalizeDepositProductTemplate(raw: unknown): DepositProductTem
     maxDepositTermType: asEnumOption(row.maxDepositTermType),
     preClosurePenalInterestOnType: asEnumOption(row.preClosurePenalInterestOnType),
     taxGroup: asEnumOption(row.taxGroup),
-    activeChart: normalizeCharts(row.activeChart)
+    activeChart: (() => {
+      const charts = normalizeDepositProductCharts(row.activeChart);
+      if (charts.length === 0) {
+        return undefined;
+      }
+      return charts.length === 1 ? charts[0] : charts;
+    })()
   };
 }

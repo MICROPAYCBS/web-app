@@ -392,6 +392,9 @@ export {
   depositProductTermsStepSchema,
   depositProductSettingsStepSchema,
   depositProductInterestRateChartStepSchema,
+  depositProductChartDetailsSchema,
+  depositProductChartSchema,
+  depositProductChartSlabSchema,
   depositProductChargesStepSchema,
   depositProductAccountingStepSchema,
   depositProductAccountingCoreStepSchema,
@@ -402,6 +405,9 @@ export {
   type DepositProductTermsInput,
   type DepositProductSettingsInput,
   type DepositProductInterestRateChartInput,
+  type DepositProductChartInput,
+  type DepositProductChartDetailsInput,
+  type DepositProductChartSlabInput,
   type DepositProductChargesInput,
   type DepositProductAccountingInput
 } from './products/deposit-product.schema';

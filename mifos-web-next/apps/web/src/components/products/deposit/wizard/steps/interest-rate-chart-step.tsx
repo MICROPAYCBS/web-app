@@ -9,22 +9,42 @@
  */
 
 import type {
-  DepositProductInterestRateChartInput,
+  DepositProductChartDetailsInput,
+  DepositProductChartInput,
+  DepositProductChartSlabInput,
+  DepositProductInterestRateChartInput
 } from '@mifos/validation';
-import { DetailSection } from '@/components/composites';
-import { DateField } from '@/components/composites/date-field';
-import { NumericField } from '@/components/composites/numeric-field';
-import { SelectField } from '@/components/composites/select-field';
-import { SwitchField } from '@/components/composites/switch-field';
-import { TextField } from '@/components/composites/text-field';
+import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { EmptyState } from '@/components/composites';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toSelectOptions } from '@/lib/form/select-options';
-import { Plus, Trash2 } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
+import { formatYesNo } from '@/lib/fineract/client-detail-labels';
+import { fineractOptionLabel, toSelectOptions } from '@/lib/form/select-options';
+import { cn } from '@/lib/utils';
 import type { DepositProductStepProps } from '../types';
+import {
+  InterestRateChartFormSheet,
+  PRIMARY_GROUPING_BY_AMOUNT_DESCRIPTION
+} from './interest-rate-chart-form-sheet';
+import { InterestRateSlabFormSheet } from './interest-rate-slab-form-sheet';
 
-type Chart = DepositProductInterestRateChartInput['charts'][number];
-type Slab = Chart['chartSlabs'][number];
+type Chart = DepositProductChartInput;
+type Slab = DepositProductChartSlabInput;
+
+type ChartSheetState =
+  | { mode: 'closed' }
+  | { mode: 'create' }
+  | { mode: 'edit'; chartIndex: number };
+
+type SlabSheetState =
+  | { mode: 'closed' }
+  | { mode: 'create'; chartIndex: number }
+  | { mode: 'edit'; chartIndex: number; slabIndex: number };
 
 function defaultSlab(template: DepositProductStepProps['template']): Slab {
   const periodType = template.chartTemplate?.periodTypes?.[0]?.id;
@@ -37,12 +57,32 @@ function defaultSlab(template: DepositProductStepProps['template']): Slab {
   };
 }
 
-function defaultChart(template: DepositProductStepProps['template']): Chart {
-  return {
-    fromDate: '',
-    isPrimaryGroupingByAmount: false,
-    chartSlabs: [defaultSlab(template)]
-  };
+function chartTitle(chart: Chart, index: number): string {
+  return chart.name?.trim() || `Chart ${index + 1}`;
+}
+
+function formatSlabPeriod(
+  slab: Slab,
+  periodOptions: { id: number; name?: string; value?: string }[]
+): string {
+  if (slab.fromPeriod == null && slab.toPeriod == null) {
+    return '—';
+  }
+  const option = periodOptions.find((item) => item.id === slab.periodType);
+  const periodLabel = option ? fineractOptionLabel(option) : undefined;
+  const range =
+    slab.toPeriod != null ? `${slab.fromPeriod ?? '—'} – ${slab.toPeriod}` : String(slab.fromPeriod);
+  return periodLabel ? `${range} ${periodLabel}` : range;
+}
+
+function formatSlabAmount(slab: Slab): string {
+  if (slab.amountRangeFrom == null && slab.amountRangeTo == null) {
+    return '—';
+  }
+  if (slab.amountRangeTo == null) {
+    return String(slab.amountRangeFrom);
+  }
+  return `${slab.amountRangeFrom ?? '—'} – ${slab.amountRangeTo}`;
 }
 
 export function InterestRateChartStep({
@@ -54,7 +94,16 @@ export function InterestRateChartStep({
   onChange: (patch: Partial<DepositProductInterestRateChartInput>) => void;
 }) {
   const charts = draft.interestRateChart.charts;
-  const periodOptions = toSelectOptions(template.chartTemplate?.periodTypes);
+  const periodOptions = useMemo(
+    () => toSelectOptions(template.chartTemplate?.periodTypes),
+    [template.chartTemplate?.periodTypes]
+  );
+  const periodTypeOptions = template.chartTemplate?.periodTypes ?? [];
+  const defaultPeriodType = periodTypeOptions[0]?.id;
+
+  const [expandedCharts, setExpandedCharts] = useState<Record<number, boolean>>({ 0: true });
+  const [chartSheet, setChartSheet] = useState<ChartSheetState>({ mode: 'closed' });
+  const [slabSheet, setSlabSheet] = useState<SlabSheetState>({ mode: 'closed' });
 
   function updateCharts(next: Chart[]) {
     onChange({ charts: next });
@@ -64,35 +113,21 @@ export function InterestRateChartStep({
     updateCharts(charts.map((chart, i) => (i === index ? { ...chart, ...patch } : chart)));
   }
 
-  function updateSlab(chartIndex: number, slabIndex: number, patch: Partial<Slab>) {
-    const chart = charts[chartIndex];
-    if (!chart) {
-      return;
-    }
-    const nextSlabs = chart.chartSlabs.map((slab, i) =>
-      i === slabIndex ? { ...slab, ...patch } : slab
-    );
-    updateChart(chartIndex, { chartSlabs: nextSlabs });
-  }
-
-  function addChart() {
-    updateCharts([...charts, defaultChart(template)]);
-  }
-
   function removeChart(index: number) {
     if (charts.length <= 1) {
       return;
     }
     updateCharts(charts.filter((_, i) => i !== index));
-  }
-
-  function addSlab(chartIndex: number) {
-    const chart = charts[chartIndex];
-    if (!chart) {
-      return;
-    }
-    updateChart(chartIndex, {
-      chartSlabs: [...chart.chartSlabs, defaultSlab(template)]
+    setExpandedCharts((current) => {
+      const next: Record<number, boolean> = {};
+      for (const [key, open] of Object.entries(current)) {
+        const idx = Number(key);
+        if (idx === index) {
+          continue;
+        }
+        next[idx > index ? idx - 1 : idx] = open;
+      }
+      return next;
     });
   }
 
@@ -106,199 +141,286 @@ export function InterestRateChartStep({
     });
   }
 
+  function handleSaveChart(details: DepositProductChartDetailsInput) {
+    if (chartSheet.mode === 'edit') {
+      updateChart(chartSheet.chartIndex, details);
+      return;
+    }
+    const nextIndex = charts.length;
+    updateCharts([
+      ...charts,
+      {
+        ...details,
+        chartSlabs: [defaultSlab(template)]
+      }
+    ]);
+    setExpandedCharts((current) => ({ ...current, [nextIndex]: true }));
+  }
+
+  function handleSaveSlab(slab: Slab) {
+    if (slabSheet.mode === 'closed') {
+      return;
+    }
+    const chart = charts[slabSheet.chartIndex];
+    if (!chart) {
+      return;
+    }
+    if (slabSheet.mode === 'edit') {
+      updateChart(slabSheet.chartIndex, {
+        chartSlabs: chart.chartSlabs.map((row, i) =>
+          i === slabSheet.slabIndex ? { ...slab, incentives: slab.incentives ?? [] } : row
+        )
+      });
+      return;
+    }
+    updateChart(slabSheet.chartIndex, {
+      chartSlabs: [...chart.chartSlabs, { ...slab, incentives: slab.incentives ?? [] }]
+    });
+  }
+
+  const editingChart =
+    chartSheet.mode === 'edit' ? charts[chartSheet.chartIndex] : undefined;
+  const editingSlab =
+    slabSheet.mode === 'edit'
+      ? charts[slabSheet.chartIndex]?.chartSlabs[slabSheet.slabIndex]
+      : undefined;
+  const activeSlabChartIndex =
+    slabSheet.mode === 'create' || slabSheet.mode === 'edit' ? slabSheet.chartIndex : 0;
+  const activeSlabChart = charts[activeSlabChartIndex];
+
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">
-        Define interest rate charts with slabs for amount and period ranges.
-      </p>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Add interest rate charts, then expand a chart to manage its rate slabs. Charts and slabs
+          open in a side panel so the list stays easy to scan.
+        </p>
+        <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Primary grouping: </span>
+          {PRIMARY_GROUPING_BY_AMOUNT_DESCRIPTION}
+        </p>
+      </div>
 
       {errors['interestRateChart.charts'] ? (
         <p className="text-sm text-destructive">{errors['interestRateChart.charts']}</p>
       ) : null}
 
-      {charts.map((chart, chartIndex) => (
-        <Card key={chartIndex}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-base">Chart {chartIndex + 1}</CardTitle>
-            {charts.length > 1 ? (
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeChart(chartIndex)}>
-                <Trash2 className="mr-1 size-4" />
-                Remove chart
-              </Button>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                id={`chart-${chartIndex}-name`}
-                label="Name"
-                optional
-                value={chart.name ?? ''}
-                onChange={(name) => updateChart(chartIndex, { name })}
-              />
-              <DateField
-                id={`chart-${chartIndex}-fromDate`}
-                label="From date"
-                required
-                allowFuture
-                value={chart.fromDate || undefined}
-                onChange={(fromDate) => updateChart(chartIndex, { fromDate: fromDate ?? '' })}
-                error={errors[`interestRateChart.charts.${chartIndex}.fromDate`]}
-              />
-              <DateField
-                id={`chart-${chartIndex}-endDate`}
-                label="End date"
-                optional
-                allowFuture
-                value={chart.endDate || undefined}
-                onChange={(endDate) => updateChart(chartIndex, { endDate: endDate ?? '' })}
-              />
-              <SwitchField
-                id={`chart-${chartIndex}-groupByAmount`}
-                label="Primary grouping by amount"
-                checked={chart.isPrimaryGroupingByAmount ?? false}
-                onCheckedChange={(isPrimaryGroupingByAmount) =>
-                  updateChart(chartIndex, { isPrimaryGroupingByAmount })
+      {charts.length === 0 ? (
+        <EmptyState
+          title="No interest rate charts yet"
+          description="Add a chart to define when rates apply, then add slabs for term and amount ranges."
+          action={
+            <Button type="button" size="sm" onClick={() => setChartSheet({ mode: 'create' })}>
+              <Plus className="mr-1 size-4" />
+              Add chart
+            </Button>
+          }
+        />
+      ) : (
+        <div className="space-y-3">
+          {charts.map((chart, chartIndex) => {
+            const open = expandedCharts[chartIndex] ?? false;
+            const chartError =
+              errors[`interestRateChart.charts.${chartIndex}.fromDate`] ||
+              errors[`interestRateChart.charts.${chartIndex}.chartSlabs`];
+
+            return (
+              <Collapsible
+                key={chart.id ?? chartIndex}
+                open={open}
+                onOpenChange={(next) =>
+                  setExpandedCharts((current) => ({ ...current, [chartIndex]: next }))
                 }
-              />
-            </div>
-
-            <DetailSection title="Chart slabs">
-              {chart.chartSlabs.map((slab, slabIndex) => (
-                <div
-                  key={slabIndex}
-                  className="mb-4 rounded-lg border border-border p-4 last:mb-0"
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-sm font-medium">Slab {slabIndex + 1}</p>
-                    {chart.chartSlabs.length > 1 ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeSlab(chartIndex, slabIndex)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <SelectField
-                      id={`slab-${chartIndex}-${slabIndex}-periodType`}
-                      label="Period type"
-                      required
-                      value={
-                        slab.periodType != null ? String(slab.periodType) : undefined
-                      }
-                      onValueChange={(value) =>
-                        updateSlab(chartIndex, slabIndex, {
-                          periodType: value ? Number(value) : undefined
-                        })
-                      }
-                      options={periodOptions}
-                      error={
-                        errors[
-                          `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.periodType`
-                        ]
-                      }
+                className="rounded-lg border border-border"
+              >
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <CollapsibleTrigger
+                    className={cn(
+                      'flex min-w-0 flex-1 items-center gap-2 rounded-md text-left text-sm hover:bg-muted/50',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    )}
+                  >
+                    <ChevronDown
+                      className={cn(
+                        'size-4 shrink-0 text-muted-foreground transition-transform',
+                        open && 'rotate-180'
+                      )}
                     />
-                    <NumericField
-                      id={`slab-${chartIndex}-${slabIndex}-fromPeriod`}
-                      label="Period from"
-                      required
-                      integer
-                      value={slab.fromPeriod != null ? String(slab.fromPeriod) : ''}
-                      onChange={(value) =>
-                        updateSlab(chartIndex, slabIndex, {
-                          fromPeriod: value === '' ? undefined : Number(value)
-                        })
-                      }
-                      error={
-                        errors[
-                          `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.fromPeriod`
-                        ]
-                      }
-                    />
-                    <NumericField
-                      id={`slab-${chartIndex}-${slabIndex}-toPeriod`}
-                      label="Period to"
-                      optional
-                      integer
-                      value={slab.toPeriod != null ? String(slab.toPeriod) : ''}
-                      onChange={(value) =>
-                        updateSlab(chartIndex, slabIndex, {
-                          toPeriod: value === '' ? undefined : Number(value)
-                        })
-                      }
-                    />
-                    <NumericField
-                      id={`slab-${chartIndex}-${slabIndex}-amountFrom`}
-                      label="Amount from"
-                      optional
-                      value={slab.amountRangeFrom != null ? String(slab.amountRangeFrom) : ''}
-                      onChange={(value) =>
-                        updateSlab(chartIndex, slabIndex, {
-                          amountRangeFrom: value === '' ? undefined : Number(value)
-                        })
-                      }
-                    />
-                    <NumericField
-                      id={`slab-${chartIndex}-${slabIndex}-amountTo`}
-                      label="Amount to"
-                      optional
-                      value={slab.amountRangeTo != null ? String(slab.amountRangeTo) : ''}
-                      onChange={(value) =>
-                        updateSlab(chartIndex, slabIndex, {
-                          amountRangeTo: value === '' ? undefined : Number(value)
-                        })
-                      }
-                    />
-                    <NumericField
-                      id={`slab-${chartIndex}-${slabIndex}-rate`}
-                      label="Annual interest rate"
-                      required
-                      value={
-                        slab.annualInterestRate != null ? String(slab.annualInterestRate) : ''
-                      }
-                      onChange={(value) =>
-                        updateSlab(chartIndex, slabIndex, {
-                          annualInterestRate: value === '' ? undefined : Number(value)
-                        })
-                      }
-                      error={
-                        errors[
-                          `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.annualInterestRate`
-                        ]
-                      }
-                    />
-                    <TextField
-                      id={`slab-${chartIndex}-${slabIndex}-description`}
-                      label="Description"
-                      required
-                      value={slab.description}
-                      onChange={(description) => updateSlab(chartIndex, slabIndex, { description })}
-                      error={
-                        errors[
-                          `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.description`
-                        ]
-                      }
-                    />
-                  </div>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{chartTitle(chart, chartIndex)}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {chart.fromDate || 'Valid from not set'}
+                        {chart.endDate ? ` – ${chart.endDate}` : ''}
+                        {' · '}
+                        {chart.chartSlabs.length} slab
+                        {chart.chartSlabs.length === 1 ? '' : 's'}
+                        {' · '}
+                        Group by amount: {formatYesNo(chart.isPrimaryGroupingByAmount)}
+                      </span>
+                    </span>
+                  </CollapsibleTrigger>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setChartSheet({ mode: 'edit', chartIndex })}
+                  >
+                    <Pencil className="size-4" />
+                    <span className="sr-only">Edit chart</span>
+                  </Button>
+                  {charts.length > 1 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeChart(chartIndex)}
+                    >
+                      <Trash2 className="size-4" />
+                      <span className="sr-only">Remove chart</span>
+                    </Button>
+                  ) : null}
                 </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => addSlab(chartIndex)}>
-                <Plus className="mr-1 size-4" />
-                Add slab
-              </Button>
-            </DetailSection>
-          </CardContent>
-        </Card>
-      ))}
 
-      <Button type="button" variant="outline" onClick={addChart}>
+                {chartError ? (
+                  <p className="px-3 pb-2 text-sm text-destructive">{chartError}</p>
+                ) : null}
+
+                <CollapsibleContent className="border-t border-border px-3 py-3">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">Rate slabs</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSlabSheet({ mode: 'create', chartIndex })}
+                    >
+                      <Plus className="mr-1 size-4" />
+                      Add slab
+                    </Button>
+                  </div>
+
+                  {chart.chartSlabs.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No slabs on this chart yet.</p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-border">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/50 text-left text-muted-foreground">
+                          <tr>
+                            <th className="px-3 py-2 font-medium">Period</th>
+                            <th className="px-3 py-2 font-medium">Amount range</th>
+                            <th className="px-3 py-2 text-right font-medium">Interest %</th>
+                            <th className="px-3 py-2 font-medium">Description</th>
+                            <th className="px-3 py-2 text-right font-medium">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {chart.chartSlabs.map((slab, slabIndex) => {
+                            const slabError =
+                              errors[
+                                `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.periodType`
+                              ] ||
+                              errors[
+                                `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.fromPeriod`
+                              ] ||
+                              errors[
+                                `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.annualInterestRate`
+                              ] ||
+                              errors[
+                                `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.description`
+                              ];
+
+                            return (
+                              <tr key={slab.id ?? slabIndex} className="border-t border-border">
+                                <td className="px-3 py-2 align-top">
+                                  {formatSlabPeriod(slab, periodTypeOptions)}
+                                  {slabError ? (
+                                    <p className="mt-1 text-xs text-destructive">{slabError}</p>
+                                  ) : null}
+                                </td>
+                                <td className="px-3 py-2 align-top tabular-nums">
+                                  {formatSlabAmount(slab)}
+                                </td>
+                                <td className="px-3 py-2 align-top text-right tabular-nums">
+                                  {slab.annualInterestRate != null
+                                    ? String(slab.annualInterestRate)
+                                    : '—'}
+                                </td>
+                                <td className="px-3 py-2 align-top">
+                                  {slab.description?.trim() || '—'}
+                                </td>
+                                <td className="px-3 py-2 align-top">
+                                  <div className="flex justify-end gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        setSlabSheet({
+                                          mode: 'edit',
+                                          chartIndex,
+                                          slabIndex
+                                        })
+                                      }
+                                    >
+                                      <Pencil className="size-4" />
+                                      <span className="sr-only">Edit slab</span>
+                                    </Button>
+                                    {chart.chartSlabs.length > 1 ? (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeSlab(chartIndex, slabIndex)}
+                                      >
+                                        <Trash2 className="size-4" />
+                                        <span className="sr-only">Remove slab</span>
+                                      </Button>
+                                    ) : null}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
+        </div>
+      )}
+
+      <Button type="button" variant="outline" onClick={() => setChartSheet({ mode: 'create' })}>
         <Plus className="mr-1 size-4" />
         Add chart
       </Button>
+
+      <InterestRateChartFormSheet
+        open={chartSheet.mode !== 'closed'}
+        onOpenChange={(next) => {
+          if (!next) {
+            setChartSheet({ mode: 'closed' });
+          }
+        }}
+        chart={editingChart}
+        onSave={handleSaveChart}
+      />
+
+      <InterestRateSlabFormSheet
+        open={slabSheet.mode !== 'closed'}
+        onOpenChange={(next) => {
+          if (!next) {
+            setSlabSheet({ mode: 'closed' });
+          }
+        }}
+        slab={editingSlab}
+        periodOptions={periodOptions}
+        defaultPeriodType={defaultPeriodType}
+        primaryGroupingByAmount={activeSlabChart?.isPrimaryGroupingByAmount ?? false}
+        onSave={handleSaveSlab}
+      />
     </div>
   );
 }
