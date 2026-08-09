@@ -11,6 +11,7 @@
 import { assertCan } from '@mifos/auth';
 import type {
   FineractAvailableWorkflowStep,
+  FineractSchedulerJob,
   FineractSchedulerJobRunHistory,
   FineractWorkflowJobStep
 } from '@mifos/api-client';
@@ -28,7 +29,9 @@ import { revalidatePath } from 'next/cache';
 import {
   executeSchedulerJob,
   getAvailableWorkflowSteps,
+  getSchedulerJob,
   getWorkflowJobSteps,
+  listSchedulerJobs,
   listWorkflowJobNames,
   runInlineJob,
   runSchedulerCommand,
@@ -107,6 +110,45 @@ export async function runSchedulerCommandAction(command: 'start' | 'stop'): Prom
     return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Failed to update scheduler status.');
+  }
+}
+
+export async function fetchSchedulerJobsAction(): Promise<
+  { ok: true; jobs: FineractSchedulerJob[] } | { ok: false; message: string }
+> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'READ_SCHEDULER');
+  } catch {
+    return { ok: false, message: 'You do not have permission to view scheduler jobs.' };
+  }
+
+  try {
+    const jobs = await listSchedulerJobs();
+    return { ok: true, jobs };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to load scheduler jobs.');
+  }
+}
+
+export async function fetchSchedulerJobAction(
+  jobId: number
+): Promise<{ ok: true; job: FineractSchedulerJob } | { ok: false; message: string }> {
+  const session = await getServerSession();
+  try {
+    assertCan(session, 'READ_SCHEDULER');
+  } catch {
+    return { ok: false, message: 'You do not have permission to view scheduler jobs.' };
+  }
+
+  try {
+    const job = await getSchedulerJob(jobId);
+    if (job == null) {
+      return { ok: false, message: 'Scheduler job not found.' };
+    }
+    return { ok: true, job };
+  } catch (error) {
+    return toFineractActionError(error, 'Failed to load scheduler job.');
   }
 }
 

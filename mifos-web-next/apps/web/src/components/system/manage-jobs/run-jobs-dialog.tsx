@@ -28,11 +28,13 @@ import {
 export function RunJobsDialog({
   open,
   onOpenChange,
-  jobs
+  jobs,
+  onJobsStarted
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   jobs: FineractSchedulerJob[];
+  onJobsStarted?: () => void;
 }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<number[]>(jobs.map((job) => job.jobId));
@@ -61,6 +63,7 @@ export function RunJobsDialog({
       }
       toastCommandOutcome(result, { completed: 'Selected jobs started.', pending: 'Selected jobs started sent for approval.' });
       onOpenChange(false);
+      onJobsStarted?.();
       router.refresh();
     });
   }

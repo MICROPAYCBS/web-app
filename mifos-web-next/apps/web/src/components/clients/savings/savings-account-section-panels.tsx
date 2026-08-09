@@ -212,13 +212,16 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
       </div>
 
       {summary &&
-      (summary.totalInterestEarned !== undefined ||
+      ((summary.totalInterestEarned !== undefined && summary.totalInterestEarned >= 0) ||
         summary.totalInterestPosted !== undefined ||
+        summary.interestNotPosted !== undefined ||
+        (summary.totalOverdraftInterestDerived !== undefined &&
+          summary.totalOverdraftInterestDerived !== 0) ||
         summary.totalFeeCharge !== undefined ||
         summary.totalPenaltyCharge !== undefined) ? (
         <DetailSection title="Interest and charges">
           <DetailFieldGrid>
-            {summary.totalInterestEarned !== undefined ? (
+            {summary.totalInterestEarned !== undefined && summary.totalInterestEarned >= 0 ? (
               <DetailField label="Interest earned">
                 <MoneyValue amount={summary.totalInterestEarned} currencyCode={currency} />
               </DetailField>
@@ -228,8 +231,22 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
                 <MoneyValue amount={summary.totalInterestPosted} currencyCode={currency} />
               </DetailField>
             ) : null}
-            {summary.interestNotPosted !== undefined ? (
+            {summary.interestNotPosted !== undefined && summary.interestNotPosted >= 0 ? (
               <DetailField label="Interest not posted">
+                <MoneyValue amount={summary.interestNotPosted} currencyCode={currency} />
+              </DetailField>
+            ) : null}
+            {summary.totalOverdraftInterestDerived !== undefined &&
+            summary.totalOverdraftInterestDerived !== 0 ? (
+              <DetailField label="Interest on overdraft">
+                <MoneyValue
+                  amount={summary.totalOverdraftInterestDerived}
+                  currencyCode={currency}
+                />
+              </DetailField>
+            ) : null}
+            {summary.interestNotPosted !== undefined && summary.interestNotPosted < 0 ? (
+              <DetailField label="Overdraft interest not posted">
                 <MoneyValue amount={summary.interestNotPosted} currencyCode={currency} />
               </DetailField>
             ) : null}

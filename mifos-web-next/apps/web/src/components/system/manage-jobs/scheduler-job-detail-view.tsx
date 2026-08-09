@@ -9,7 +9,7 @@
  */
 
 import type { FineractSchedulerJob } from '@mifos/api-client';
-import { History, Pencil } from 'lucide-react';
+import { History, Pencil, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -19,13 +19,20 @@ import {
   DetailHeader,
   DetailPage
 } from '@/components/composites';
+import { JobRunningStatus } from '@/components/system/manage-jobs/job-running-status';
 import { SchedulerJobEditSheet } from '@/components/system/manage-jobs/scheduler-job-edit-sheet';
+import { useSchedulerJobPolling } from '@/components/system/manage-jobs/use-scheduler-job-polling';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { formatJobDateTime, describeJobCronExpression, formatJobRunDuration, yesNoLabel } from '@/lib/fineract/jobs-display';
+import {
+  describeJobCronExpression,
+  formatJobDateTime,
+  formatJobRunDuration,
+  yesNoLabel
+} from '@/lib/fineract/jobs-display';
 import { cn } from '@/lib/utils';
 
 export function SchedulerJobDetailView({
-  job,
+  job: initialJob,
   canUpdate
 }: {
   job: FineractSchedulerJob;
@@ -34,6 +41,7 @@ export function SchedulerJobDetailView({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { job } = useSchedulerJobPolling(initialJob);
   const editOpen = canUpdate && searchParams.get('edit') === '1';
   const basePath = `/system/manage-jobs/${job.jobId}`;
 
@@ -67,6 +75,10 @@ export function SchedulerJobDetailView({
                     Edit
                   </Button>
                 ) : null}
+                <Button type="button" variant="outline" onClick={() => router.refresh()}>
+                  <RefreshCw className="mr-2 size-4" />
+                  Refresh
+                </Button>
                 <Link href={`${basePath}/history`} className={cn(buttonVariants({ variant: 'outline' }))}>
                   <History className="mr-2 size-4" />
                   View history
@@ -84,7 +96,9 @@ export function SchedulerJobDetailView({
               </div>
             </DetailField>
             <DetailField label="Active">{yesNoLabel(job.active)}</DetailField>
-            <DetailField label="Currently running">{yesNoLabel(job.currentlyRunning)}</DetailField>
+            <DetailField label="Currently running">
+              <JobRunningStatus running={job.currentlyRunning} />
+            </DetailField>
             <DetailField label="Next run">{formatJobDateTime(job.nextRunTime)}</DetailField>
             <DetailField label="Last run started">
               {formatJobDateTime(job.lastRunHistory?.jobRunStartTime)}
@@ -101,7 +115,8 @@ export function SchedulerJobDetailView({
       >
         <p className="text-sm text-muted-foreground">
           Next run and last run times reflect the server scheduler. Duration is calculated from the
-          last run start and end times when both are available.
+          last run start and end times when both are available. Status updates automatically while
+          the job is running.
         </p>
       </DetailPage>
 

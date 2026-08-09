@@ -14,6 +14,26 @@ import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
+import {
+  SAVINGS_PRODUCT_ALLOW_OVERDRAFT_HINT,
+  SAVINGS_PRODUCT_DAYS_TO_DORMANCY_HINT,
+  SAVINGS_PRODUCT_DAYS_TO_ESCHEAT_HINT,
+  SAVINGS_PRODUCT_DAYS_TO_INACTIVE_HINT,
+  SAVINGS_PRODUCT_DORMANCY_TRACKING_HINT,
+  SAVINGS_PRODUCT_ENABLE_LOCKIN_HINT,
+  SAVINGS_PRODUCT_ENFORCE_MIN_BALANCE_HINT,
+  SAVINGS_PRODUCT_LOCKIN_FREQUENCY_HINT,
+  SAVINGS_PRODUCT_LOCKIN_PERIOD_TYPE_HINT,
+  SAVINGS_PRODUCT_MIN_BALANCE_FOR_INTEREST_HINT,
+  SAVINGS_PRODUCT_MIN_OPENING_BALANCE_HINT,
+  SAVINGS_PRODUCT_MIN_OVERDRAFT_FOR_INTEREST_HINT,
+  SAVINGS_PRODUCT_MIN_REQUIRED_BALANCE_HINT,
+  SAVINGS_PRODUCT_OVERDRAFT_INTEREST_RATE_HINT,
+  SAVINGS_PRODUCT_OVERDRAFT_LIMIT_HINT,
+  SAVINGS_PRODUCT_TAX_GROUP_HINT,
+  SAVINGS_PRODUCT_WITHDRAWAL_FEE_FOR_TRANSFERS_HINT,
+  SAVINGS_PRODUCT_WITHHOLD_TAX_HINT
+} from '@/lib/fineract/savings-product-field-hints';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { SavingsProductStepProps } from '../types';
 
@@ -40,6 +60,8 @@ export function SettingsStep({
             id="settings.minRequiredOpeningBalance"
             label="Minimum opening balance"
             optional
+            hint={SAVINGS_PRODUCT_MIN_OPENING_BALANCE_HINT}
+            hintAriaLabel="About minimum opening balance"
             currencyCode={currencyCode}
             value={
               settings.minRequiredOpeningBalance != null
@@ -57,6 +79,8 @@ export function SettingsStep({
             id="settings.minBalanceForInterestCalculation"
             label="Minimum balance for interest"
             optional
+            hint={SAVINGS_PRODUCT_MIN_BALANCE_FOR_INTEREST_HINT}
+            hintAriaLabel="About minimum balance for interest"
             currencyCode={currencyCode}
             value={
               settings.minBalanceForInterestCalculation != null
@@ -73,6 +97,7 @@ export function SettingsStep({
           <SwitchField
             id="settings.enforceMinRequiredBalance"
             label="Enforce minimum required balance"
+            description={SAVINGS_PRODUCT_ENFORCE_MIN_BALANCE_HINT}
             checked={settings.enforceMinRequiredBalance ?? false}
             onCheckedChange={(enforceMinRequiredBalance) =>
               onChange({ enforceMinRequiredBalance })
@@ -84,6 +109,8 @@ export function SettingsStep({
               id="settings.minRequiredBalance"
               label="Minimum required balance"
               optional
+              hint={SAVINGS_PRODUCT_MIN_REQUIRED_BALANCE_HINT}
+              hintAriaLabel="About minimum required balance"
               currencyCode={currencyCode}
               value={
                 settings.minRequiredBalance != null
@@ -106,6 +133,7 @@ export function SettingsStep({
           <SwitchField
             id="settings.enableLockinPeriod"
             label="Enable lock-in period"
+            description={SAVINGS_PRODUCT_ENABLE_LOCKIN_HINT}
             checked={settings.enableLockinPeriod ?? false}
             onCheckedChange={(enableLockinPeriod) => {
               if (!enableLockinPeriod) {
@@ -127,6 +155,8 @@ export function SettingsStep({
                 label="Lock-in frequency"
                 required
                 integer
+                hint={SAVINGS_PRODUCT_LOCKIN_FREQUENCY_HINT}
+                hintAriaLabel="About lock-in frequency"
                 value={
                   settings.lockinPeriodFrequency != null
                     ? String(settings.lockinPeriodFrequency)
@@ -143,6 +173,8 @@ export function SettingsStep({
                 id="settings.lockinPeriodFrequencyType"
                 label="Lock-in period type"
                 required
+                hint={SAVINGS_PRODUCT_LOCKIN_PERIOD_TYPE_HINT}
+                hintAriaLabel="About lock-in period type"
                 value={
                   settings.lockinPeriodFrequencyType != null
                     ? String(settings.lockinPeriodFrequencyType)
@@ -166,6 +198,7 @@ export function SettingsStep({
           <SwitchField
             id="settings.withdrawalFeeForTransfers"
             label="Withdrawal fee for transfers"
+            description={SAVINGS_PRODUCT_WITHDRAWAL_FEE_FOR_TRANSFERS_HINT}
             checked={settings.withdrawalFeeForTransfers ?? false}
             onCheckedChange={(withdrawalFeeForTransfers) =>
               onChange({ withdrawalFeeForTransfers })
@@ -175,6 +208,7 @@ export function SettingsStep({
           <SwitchField
             id="settings.allowOverdraft"
             label="Allow overdraft"
+            description={SAVINGS_PRODUCT_ALLOW_OVERDRAFT_HINT}
             checked={settings.allowOverdraft ?? false}
             onCheckedChange={(allowOverdraft) => {
               if (!allowOverdraft) {
@@ -196,6 +230,8 @@ export function SettingsStep({
                 id="settings.overdraftLimit"
                 label="Overdraft limit"
                 optional
+                hint={SAVINGS_PRODUCT_OVERDRAFT_LIMIT_HINT}
+                hintAriaLabel="About overdraft limit"
                 currencyCode={currencyCode}
                 value={
                   settings.overdraftLimit != null ? String(settings.overdraftLimit) : ''
@@ -209,6 +245,8 @@ export function SettingsStep({
                 id="settings.minOverdraftForInterestCalculation"
                 label="Minimum overdraft for interest"
                 optional
+                hint={SAVINGS_PRODUCT_MIN_OVERDRAFT_FOR_INTEREST_HINT}
+                hintAriaLabel="About minimum overdraft for interest"
                 currencyCode={currencyCode}
                 value={
                   settings.minOverdraftForInterestCalculation != null
@@ -227,6 +265,8 @@ export function SettingsStep({
                 id="settings.nominalAnnualInterestRateOverdraft"
                 label="Nominal annual interest rate (overdraft)"
                 optional
+                hint={SAVINGS_PRODUCT_OVERDRAFT_INTEREST_RATE_HINT}
+                hintAriaLabel="About overdraft interest rate"
                 value={
                   settings.nominalAnnualInterestRateOverdraft != null
                     ? String(settings.nominalAnnualInterestRateOverdraft)
@@ -250,6 +290,7 @@ export function SettingsStep({
           <SwitchField
             id="settings.withHoldTax"
             label="Withhold tax"
+            description={SAVINGS_PRODUCT_WITHHOLD_TAX_HINT}
             checked={settings.withHoldTax ?? false}
             onCheckedChange={(withHoldTax) => {
               if (!withHoldTax) {
@@ -265,6 +306,8 @@ export function SettingsStep({
               id="settings.taxGroupId"
               label="Tax group"
               required
+              hint={SAVINGS_PRODUCT_TAX_GROUP_HINT}
+              hintAriaLabel="About tax group"
               value={settings.taxGroupId ? String(settings.taxGroupId) : undefined}
               onValueChange={(value) =>
                 onChange({ taxGroupId: value ? Number(value) : undefined })
@@ -276,6 +319,7 @@ export function SettingsStep({
           <SwitchField
             id="settings.isDormancyTrackingActive"
             label="Dormancy tracking"
+            description={SAVINGS_PRODUCT_DORMANCY_TRACKING_HINT}
             checked={settings.isDormancyTrackingActive ?? false}
             onCheckedChange={(isDormancyTrackingActive) => {
               if (!isDormancyTrackingActive) {
@@ -298,6 +342,8 @@ export function SettingsStep({
                 label="Days to inactive"
                 required
                 integer
+                hint={SAVINGS_PRODUCT_DAYS_TO_INACTIVE_HINT}
+                hintAriaLabel="About days to inactive"
                 value={settings.daysToInactive != null ? String(settings.daysToInactive) : ''}
                 onChange={(value) =>
                   onChange({ daysToInactive: value === '' ? undefined : Number(value) })
@@ -309,6 +355,8 @@ export function SettingsStep({
                 label="Days to dormancy"
                 required
                 integer
+                hint={SAVINGS_PRODUCT_DAYS_TO_DORMANCY_HINT}
+                hintAriaLabel="About days to dormancy"
                 value={settings.daysToDormancy != null ? String(settings.daysToDormancy) : ''}
                 onChange={(value) =>
                   onChange({ daysToDormancy: value === '' ? undefined : Number(value) })
@@ -320,6 +368,8 @@ export function SettingsStep({
                 label="Days to escheat"
                 required
                 integer
+                hint={SAVINGS_PRODUCT_DAYS_TO_ESCHEAT_HINT}
+                hintAriaLabel="About days to escheat"
                 value={settings.daysToEscheat != null ? String(settings.daysToEscheat) : ''}
                 onChange={(value) =>
                   onChange({ daysToEscheat: value === '' ? undefined : Number(value) })

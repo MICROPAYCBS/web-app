@@ -37,11 +37,13 @@ function emptyParameter(): JobParameterInput {
 export function CustomParametersDialog({
   open,
   onOpenChange,
-  jobs
+  jobs,
+  onJobsStarted
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   jobs: FineractSchedulerJob[];
+  onJobsStarted?: () => void;
 }) {
   const router = useRouter();
   const [parameters, setParameters] = useState<JobParametersState>(() =>
@@ -94,6 +96,7 @@ export function CustomParametersDialog({
       }
       toastCommandOutcome(result, { completed: 'Jobs started with custom parameters.', pending: 'Jobs started with custom parameters sent for approval.' });
       onOpenChange(false);
+      onJobsStarted?.();
       router.refresh();
     });
   }

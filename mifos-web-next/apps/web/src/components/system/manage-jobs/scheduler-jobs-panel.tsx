@@ -16,10 +16,11 @@ import { CustomParametersDialog } from '@/components/system/manage-jobs/custom-p
 import { RunJobsDialog } from '@/components/system/manage-jobs/run-jobs-dialog';
 import { SchedulerJobsTable } from '@/components/system/manage-jobs/scheduler-jobs-table';
 import { SchedulerStatusBanner } from '@/components/system/manage-jobs/scheduler-status-banner';
+import { useSchedulerJobsPolling } from '@/components/system/manage-jobs/use-scheduler-job-polling';
 import { Button } from '@/components/ui/button';
 
 export function SchedulerJobsPanel({
-  jobs,
+  jobs: initialJobs,
   scheduler,
   canUpdate,
   canExecute
@@ -30,6 +31,7 @@ export function SchedulerJobsPanel({
   canExecute: boolean;
 }) {
   const router = useRouter();
+  const { jobs, startWatching } = useSchedulerJobsPolling(initialJobs);
   const [selectedJobs, setSelectedJobs] = useState<FineractSchedulerJob[]>([]);
   const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [customDialogOpen, setCustomDialogOpen] = useState(false);
@@ -70,11 +72,17 @@ export function SchedulerJobsPanel({
         canExecute={canExecute}
         onSelectedJobsChange={setSelectedJobs}
       />
-      <RunJobsDialog open={runDialogOpen} onOpenChange={setRunDialogOpen} jobs={selectedJobs} />
+      <RunJobsDialog
+        open={runDialogOpen}
+        onOpenChange={setRunDialogOpen}
+        jobs={selectedJobs}
+        onJobsStarted={startWatching}
+      />
       <CustomParametersDialog
         open={customDialogOpen}
         onOpenChange={setCustomDialogOpen}
         jobs={selectedJobs}
+        onJobsStarted={startWatching}
       />
     </div>
   );

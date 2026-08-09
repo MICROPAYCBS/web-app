@@ -24,6 +24,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { JobErrorLogDialog } from '@/components/system/manage-jobs/job-error-log-dialog';
+import { JobRunningStatus } from '@/components/system/manage-jobs/job-running-status';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -126,15 +127,18 @@ export function SchedulerJobsTable({
           if (!history?.jobRunStartTime) {
             return '—';
           }
+          const running = row.original.currentlyRunning;
           const succeeded = jobRunSucceeded(history);
           return (
             <div className="flex items-center gap-2">
-              {succeeded ? (
+              {running ? null : succeeded ? (
                 <CheckCircle2 className="size-4 text-primary" aria-hidden />
               ) : (
                 <AlertCircle className="size-4 text-destructive" aria-hidden />
               )}
-              <span>{formatJobDateTime(history.jobRunStartTime)}</span>
+              <span className={running ? 'text-muted-foreground' : undefined}>
+                {formatJobDateTime(history.jobRunStartTime)}
+              </span>
             </div>
           );
         }
@@ -142,7 +146,7 @@ export function SchedulerJobsTable({
       {
         accessorKey: 'currentlyRunning',
         header: 'Running',
-        cell: ({ row }) => yesNoLabel(row.original.currentlyRunning)
+        cell: ({ row }) => <JobRunningStatus running={row.original.currentlyRunning} />
       },
       {
         id: 'nextRunTime',
