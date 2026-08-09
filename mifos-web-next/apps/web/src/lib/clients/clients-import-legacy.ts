@@ -41,7 +41,7 @@ export const CLIENTS_LEGACY_IMPORT_SHEET_NAME = CLIENTS_LEGACY_IMPORT_SHEET_PERS
 export type ClientsLegacyImportLegalForm = 'Person' | 'Entity';
 
 export const CLIENTS_LEGACY_IMPORT_TEMPLATE_HINT =
-  'Downloads the stock platform Customers Excel template (original columns only). Branch, profile type, and savings product selected here are applied on create — they backfill the payload even when the file does not carry them. Customers are created active one by one with live progress. Micropay-only fields are not required.';
+  'Downloads the stock platform Customers Excel template (original columns only). Branch, profile type, and deposit product selected here are applied on create — they backfill the payload even when the file does not carry them. Customers are created active one by one with live progress. Micropay-only fields are not required.';
 
 /**
  * Canonical column keys for Fineract ClientPerson / ClientEntity workbook headers

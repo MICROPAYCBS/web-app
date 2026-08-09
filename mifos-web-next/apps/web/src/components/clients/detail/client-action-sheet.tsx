@@ -344,7 +344,7 @@ export function ClientActionSheet({
               />
               {sheetData?.sheetId === 'activate' && sheetData.savingsProductName ? (
                 <p className="text-sm text-muted-foreground">
-                  Savings product on activation:{' '}
+                  Deposit product on activation:{' '}
                   <span className="text-foreground">{sheetData.savingsProductName}</span>
                 </p>
               ) : null}

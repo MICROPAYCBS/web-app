@@ -29,7 +29,7 @@ export function DetailsStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Name and identification for this savings product.
+        Name and identification for this deposit product.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">

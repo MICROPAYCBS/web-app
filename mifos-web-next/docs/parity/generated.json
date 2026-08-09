@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-02T04:50:05.872Z",
+  "generatedAt": "2026-08-09T11:52:32.661Z",
   "summary": {
     "todo": 0,
     "in_progress": 1,
@@ -145,7 +145,7 @@
       "id": "savingsProducts",
       "path": "/products/savings-products",
       "domain": "products",
-      "label": "Savings products",
+      "label": "Deposit products",
       "kind": "page",
       "status": "done",
       "webAppRef": "products/saving-products",

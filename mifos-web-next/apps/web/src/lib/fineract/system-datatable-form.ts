@@ -24,7 +24,7 @@ export const APPLICATION_TABLE_OPTIONS: SelectOption[] = [
   { value: 'm_savings_account', label: 'Savings account' },
   { value: 'm_product_loan', label: 'Loan product' },
   { value: 'm_savings_account_transaction', label: 'Savings account transaction' },
-  { value: 'm_savings_product', label: 'Savings product' },
+  { value: 'm_savings_product', label: 'Deposit product' },
   { value: 'm_share_product', label: 'Share product' }
 ];
 
@@ -34,7 +34,7 @@ export const ENTITY_SUB_TYPE_OPTIONS: SelectOption[] = [
 ];
 
 export const SAVINGS_SUB_TYPE_OPTIONS: SelectOption[] = [
-  { value: 'Savings Product', label: 'Savings product' },
+  { value: 'Savings Product', label: 'Deposit product' },
   { value: 'Fixed Deposit', label: 'Fixed deposit' },
   { value: 'Recurring Deposit', label: 'Recurring deposit' }
 ];

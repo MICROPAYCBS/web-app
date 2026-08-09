@@ -24,12 +24,12 @@ export function SavingsProductsPageContent({
 }) {
   return (
     <ListPage
-      title="Savings products"
-      description="Savings product definitions used when opening new savings accounts."
+      title="Deposit products"
+      description="Deposit product definitions used when opening new savings accounts."
       actions={
         <Can permission="CREATE_SAVINGSPRODUCT">
           <Link href={savingsProductCreatePath()} className={cn(buttonVariants())}>
-            Create savings product
+            Create deposit product
           </Link>
         </Can>
       }

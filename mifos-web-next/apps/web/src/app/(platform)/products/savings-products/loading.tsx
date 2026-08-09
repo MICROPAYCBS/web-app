@@ -11,8 +11,8 @@ import { ProductListPageSkeleton } from '@/components/products/shared/product-pa
 export default function SavingsProductsLoading() {
   return (
     <ProductListPageSkeleton
-      title="Savings products"
-      description="Savings product definitions used when opening new savings accounts."
+      title="Deposit products"
+      description="Deposit product definitions used when opening new savings accounts."
     />
   );
 }

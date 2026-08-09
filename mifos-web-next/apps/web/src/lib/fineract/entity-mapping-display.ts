@@ -50,11 +50,11 @@ export const ENTITY_MAPPING_GLOBAL_CONFIGS = [
 
 const MAPPING_TYPE_LABELS: Record<string, string> = {
   office_access_to_loan_products: 'Offices → Loan products',
-  office_access_to_savings_products: 'Offices → Savings products',
+  office_access_to_savings_products: 'Offices → Deposit products',
   'office_access_to_fees/charges': 'Offices → Charges/fees',
   office_access_to_departments: 'Offices → Departments',
   role_access_to_loan_products: 'Roles → Loan products',
-  role_access_to_savings_products: 'Roles → Savings products'
+  role_access_to_savings_products: 'Roles → Deposit products'
 };
 
 export function formatEntityMappingTypeLabel(mappingTypes: string): string {
@@ -106,7 +106,7 @@ function entityMappingToEntityLabel(mappingTypes: string): string {
       return 'Loan product';
     case 'office_access_to_savings_products':
     case 'role_access_to_savings_products':
-      return 'Savings product';
+      return 'Deposit product';
     case 'office_access_to_fees/charges':
       return 'Charge/fee';
     case 'office_access_to_departments':
@@ -166,7 +166,7 @@ export const ENTITY_MAPPING_REQUIRED_GLOBAL_CONFIGS = [
     name: 'office-specific-products-enabled',
     label: 'Office-specific products enabled',
     description:
-      'Turns on office-based restrictions for loan products, savings products, and charges.'
+      'Turns on office-based restrictions for loan products, deposit products, and charges.'
   },
   {
     name: 'restrict-products-to-user-office',

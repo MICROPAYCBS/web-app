@@ -15,7 +15,7 @@ const APPLICATION_TABLE_LABELS: Record<string, string> = {
   m_savings_account: 'Savings account',
   m_product_loan: 'Loan product',
   m_savings_account_transaction: 'Savings account transaction',
-  m_savings_product: 'Savings product',
+  m_savings_product: 'Deposit product',
   m_share_product: 'Share product'
 };
 

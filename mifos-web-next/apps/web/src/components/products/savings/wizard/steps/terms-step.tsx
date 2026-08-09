@@ -27,7 +27,7 @@ export function TermsStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Interest rate and calculation rules for this savings product.
+        Interest rate and calculation rules for this deposit product.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">

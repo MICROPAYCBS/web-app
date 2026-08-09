@@ -60,9 +60,9 @@ export function SavingsProductDetailView({
       header={
         <DetailHeader
           backLink={
-            <DetailBackLink href="/products/savings-products" label="Back to savings products" />
+            <DetailBackLink href="/products/savings-products" label="Back to deposit products" />
           }
-          title={product.name ?? `Savings product #${product.id}`}
+          title={product.name ?? `Deposit product #${product.id}`}
           actions={
             <Can permission="UPDATE_SAVINGSPRODUCT">
               <Link

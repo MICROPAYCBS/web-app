@@ -122,7 +122,7 @@ export function SavingsProductsTable({
   return (
     <div className="space-y-4">
       <Input
-        placeholder="Filter savings products…"
+        placeholder="Filter deposit products…"
         value={filter}
         onChange={(event) => {
           setFilter(event.target.value);
@@ -133,7 +133,7 @@ export function SavingsProductsTable({
       <DataTable
         table={table}
         stickyHeader={false}
-        emptyMessage="No savings products match your filter."
+        emptyMessage="No deposit products match your filter."
       />
       <DataTablePagination table={table} totalRecords={filteredRows.length} />
     </div>

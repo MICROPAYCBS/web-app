@@ -349,7 +349,7 @@ export function EntityToEntityMappingView({
                 <EntityToEntityMappingGuidance />
               </span>
             }
-            meta="Control which offices and roles can access loan products, savings products, and charges."
+            meta="Control which offices and roles can access loan products, deposit products, and charges."
           />
         }
         sidebar={

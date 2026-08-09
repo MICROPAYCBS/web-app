@@ -375,7 +375,7 @@ export function ClientsImportPanel({
             <span className="space-y-1">
               <span className="block text-sm font-medium">Legacy template</span>
               <span className="block text-sm text-muted-foreground">
-                Stock platform Customers Excel. Branch, profile type, and savings product from this
+                Stock platform Customers Excel. Branch, profile type, and deposit product from this
                 form are applied on create. Analyze and create active customers with live progress.
               </span>
             </span>
@@ -392,7 +392,7 @@ export function ClientsImportPanel({
           </TitleWithHint>
           <p className="text-sm text-muted-foreground">
             {mode === 'legacy'
-              ? 'Select branch and profile type (and optionally staff and savings product). Those values backfill create even if the Excel only has the stock columns. Download, fill names/dates, then analyze here.'
+              ? 'Select branch and profile type (and optionally staff and deposit product). Those values backfill create even if the Excel only has the stock columns. Download, fill names/dates, then analyze here.'
               : 'Download the template, fill in person customers, then analyze the file here. Customers are created one by one using the same checks as New customer.'}
           </p>
           {mode === 'legacy' ? (
@@ -442,7 +442,7 @@ export function ClientsImportPanel({
               />
               <SelectField
                 id="clients-import-legacy-savings-product"
-                label="Savings product"
+                label="Deposit product"
                 optional
                 value={legacySavingsProductId || undefined}
                 onValueChange={(value) => {
@@ -452,7 +452,7 @@ export function ClientsImportPanel({
                   setProgressByRow({});
                 }}
                 options={savingsProductOptions}
-                placeholder="Select savings product"
+                placeholder="Select deposit product"
                 disabled={busy}
               />
             </>

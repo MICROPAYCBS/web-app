@@ -12,20 +12,20 @@ import { waitForPageReady } from '../helpers/interactions';
 
 const SAVINGS_PRODUCTS_PATH = '/products/savings-products';
 
-test.describe('Docs screenshots — savings products', () => {
-  test('captures savings products list and create wizard', async ({ page }) => {
+test.describe('Docs screenshots — deposit products', () => {
+  test('captures deposit products list and create wizard', async ({ page }) => {
     await page.goto(SAVINGS_PRODUCTS_PATH);
     await waitForPageReady(page);
 
-    await expect(page.getByRole('heading', { name: 'Savings products' })).toBeVisible();
-    const createLink = page.getByRole('link', { name: 'Create savings product' });
+    await expect(page.getByRole('heading', { name: 'Deposit products' })).toBeVisible();
+    const createLink = page.getByRole('link', { name: 'Create deposit product' });
     await expect(createLink).toBeVisible();
 
     await captureDocsScreenshot(page, 'administrators/products/savings-products-list.png');
 
     await createLink.click();
     await waitForPageReady(page);
-    await expect(page.getByRole('heading', { name: 'Create savings product' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Create deposit product' })).toBeVisible({
       timeout: 30_000
     });
 

@@ -200,10 +200,10 @@ export function SavingsProductWizard({
     });
   }
 
-  const title = mode === 'create' ? 'Create savings product' : 'Edit savings product';
+  const title = mode === 'create' ? 'Create deposit product' : 'Edit deposit product';
   const description =
     mode === 'create'
-      ? 'Complete each step to define a new savings product.'
+      ? 'Complete each step to define a new deposit product.'
       : 'Update the product configuration and save your changes.';
 
   return (

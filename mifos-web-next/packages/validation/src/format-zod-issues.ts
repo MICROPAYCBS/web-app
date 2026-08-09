@@ -27,7 +27,7 @@ const FIELD_LABELS: Record<string, string> = {
   complianceProfile: 'Compliance profile',
   submittedOnDate: 'Submitted on',
   activationDate: 'Activation date',
-  savingsProductId: 'Savings product',
+  savingsProductId: 'Deposit product',
   email: 'Email',
   emailAddress: 'Email',
   alternativeEmailAddress: 'Alternative email',

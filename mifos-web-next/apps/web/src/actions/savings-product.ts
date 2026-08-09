@@ -85,7 +85,7 @@ export async function createSavingsProductAction(
   try {
     assertCan(session, resolvePermission('products.savings.create'));
   } catch {
-    return { ok: false, message: 'You do not have permission to create savings products.' };
+    return { ok: false, message: 'You do not have permission to create deposit products.' };
   }
 
   const parsed = parseInput(raw);
@@ -102,7 +102,7 @@ export async function createSavingsProductAction(
     }
     return actionSuccessFromFineractCommand(response, { resourceId: response.resourceId });
   } catch (err) {
-    return toFineractActionError(err, 'Could not create savings product.');
+    return toFineractActionError(err, 'Could not create deposit product.');
   }
 }
 
@@ -117,7 +117,7 @@ export async function updateSavingsProductAction(
   try {
     assertCan(session, resolvePermission('products.savings.update'));
   } catch {
-    return { ok: false, message: 'You do not have permission to update savings products.' };
+    return { ok: false, message: 'You do not have permission to update deposit products.' };
   }
 
   const parsed = parseInput(raw);
@@ -135,6 +135,6 @@ export async function updateSavingsProductAction(
     revalidatePath(`${savingsProductDetailPath(productId)}/edit`);
     return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
-    return toFineractActionError(err, 'Could not update savings product.');
+    return toFineractActionError(err, 'Could not update deposit product.');
   }
 }

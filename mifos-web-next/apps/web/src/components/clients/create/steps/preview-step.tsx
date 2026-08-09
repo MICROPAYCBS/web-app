@@ -374,7 +374,7 @@ export function PreviewStep({
         <Field label="Status" value={isReview ? 'Awaiting approval' : 'Pending'} />
         {g.savingsProductId ? (
           <Field
-            label="Savings product on activation"
+            label="Deposit product on activation"
             value={
               template.savingProductOptions?.find((p) => p.id === g.savingsProductId)?.name ??
               String(g.savingsProductId)

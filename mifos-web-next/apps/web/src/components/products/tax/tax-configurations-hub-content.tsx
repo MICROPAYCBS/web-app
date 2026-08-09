@@ -19,7 +19,7 @@ export function TaxConfigurationsHubContent() {
   return (
     <ListPage
       title="Tax configurations"
-      description="Define tax components and group them for use on loan and savings products."
+      description="Define tax components and group them for use on loan and deposit products."
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Can permission="READ_TAXCOMPONENT">

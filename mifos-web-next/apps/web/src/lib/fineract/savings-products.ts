@@ -112,7 +112,7 @@ export async function getSavingsProduct(
   const raw = await fineract.get<unknown>(`${SAVINGS_PRODUCTS_API_PATH}/${productId}`);
   const product = normalizeDetail(raw);
   if (!product) {
-    throw new Error('Savings product not found.');
+    throw new Error('Deposit product not found.');
   }
   return product;
 }

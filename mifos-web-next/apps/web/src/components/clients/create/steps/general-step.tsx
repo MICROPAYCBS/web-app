@@ -87,7 +87,7 @@ export function GeneralStep({
         <SelectField
           id="savingsProductId"
           className="sm:col-span-2"
-          label="Savings product on activation"
+          label="Deposit product on activation"
           optional
           value={g.savingsProductId ? String(g.savingsProductId) : undefined}
           onValueChange={(v) =>
@@ -96,7 +96,7 @@ export function GeneralStep({
           options={toSelectOptions(
             template.savingProductOptions?.map((p) => ({ id: p.id, name: p.name }))
           )}
-          placeholder="Select savings product"
+          placeholder="Select deposit product"
           hint="Optional. When this customer is activated, a savings account is opened for the selected product."
           error={errors.savingsProductId}
         />

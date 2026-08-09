@@ -85,7 +85,7 @@ export function ChargesStep({
     <div className="space-y-6">
 
       <p className="text-sm text-muted-foreground">
-        Select fees to attach to this savings product.
+        Select fees to attach to this deposit product.
         {currencyCode
           ? ` Only charges in ${currencyCode} are shown.`
           : ' Choose a currency on the previous step to see matching charges.'}
