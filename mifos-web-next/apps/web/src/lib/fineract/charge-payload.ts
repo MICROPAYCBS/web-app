@@ -9,35 +9,74 @@
 import type { UpsertChargeInput } from '@mifos/validation';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 
+/** Locale-friendly decimal string for Fineract BigDecimal extraction. */
+function fineractDecimal(value: number): string {
+  return String(value);
+}
+
 export function buildChargePayload(input: UpsertChargeInput): Record<string, unknown> {
-  const { addFeeFrequency, ...rest } = input;
+  const useChargeTiers = input.useChargeTiers === true;
+  const chargeTiers = Array.isArray(input.chargeTiers) ? input.chargeTiers : [];
+
   const payload: Record<string, unknown> = {
-    ...rest,
+    name: input.name,
+    currencyCode: input.currencyCode,
+    chargeAppliesTo: input.chargeAppliesTo,
+    chargeTimeType: input.chargeTimeType,
+    chargeCalculationType: input.chargeCalculationType,
+    // Fineract charge APIs expect locale-aware decimal strings.
+    amount: useChargeTiers ? '0' : fineractDecimal(input.amount),
+    active: input.active,
+    penalty: input.penalty,
+    useChargeTiers,
     locale: FINERACT_LOCALE,
     monthDayFormat: 'dd MMM'
   };
 
-  if (!payload.taxGroupId) {
-    delete payload.taxGroupId;
+  if (input.taxGroupId) {
+    payload.taxGroupId = input.taxGroupId;
   }
-  if (payload.minCap == null) {
-    delete payload.minCap;
+
+  if (useChargeTiers) {
+    payload.chargeTiers = chargeTiers.map((tier) => {
+      const row: Record<string, unknown> = {
+        amountRangeFrom: fineractDecimal(tier.amountRangeFrom),
+        amount: fineractDecimal(tier.amount)
+      };
+      // Omit open-ended upper bound (null) — matches Fineract integration fixtures.
+      if (tier.amountRangeTo != null) {
+        row.amountRangeTo = fineractDecimal(tier.amountRangeTo);
+      }
+      return row;
+    });
+  } else {
+    if (input.minCap != null) {
+      payload.minCap = fineractDecimal(input.minCap);
+    }
+    if (input.maxCap != null) {
+      payload.maxCap = fineractDecimal(input.maxCap);
+    }
   }
-  if (payload.maxCap == null) {
-    delete payload.maxCap;
+
+  if (input.addFeeFrequency && input.chargeTimeType === 9) {
+    if (input.feeFrequency != null) {
+      payload.feeFrequency = input.feeFrequency;
+    }
+    if (input.feeInterval != null) {
+      payload.feeInterval = input.feeInterval;
+    }
   }
-  if (!addFeeFrequency || input.chargeTimeType !== 9) {
-    delete payload.feeFrequency;
-    delete payload.feeInterval;
+
+  if (input.feeOnMonthDay) {
+    payload.feeOnMonthDay = input.feeOnMonthDay;
   }
-  if (!payload.feeOnMonthDay) {
-    delete payload.feeOnMonthDay;
+
+  if (showChargePaymentMode(input.chargeAppliesTo) && input.chargePaymentMode != null) {
+    payload.chargePaymentMode = input.chargePaymentMode;
   }
-  if (!showChargePaymentMode(input.chargeAppliesTo)) {
-    delete payload.chargePaymentMode;
-  }
-  if (!showIncomeAccountField(input.chargeAppliesTo)) {
-    delete payload.incomeAccountId;
+
+  if (showIncomeAccountField(input.chargeAppliesTo) && input.incomeAccountId != null) {
+    payload.incomeAccountId = input.incomeAccountId;
   }
 
   return payload;

@@ -16,6 +16,7 @@ function minimalDraft(
     settings?: Partial<UpsertLoanProductInput['settings']>;
     currency?: Partial<UpsertLoanProductInput['currency']>;
     accounting?: Partial<UpsertLoanProductInput['accounting']>;
+    charges?: Partial<UpsertLoanProductInput['charges']>;
   } = {}
 ): UpsertLoanProductInput {
   return {
@@ -48,12 +49,22 @@ function minimalDraft(
       allowAccrualPostingInArrears: false,
       ...overrides.settings
     },
-    charges: { chargeIds: [] },
+    charges: { chargeIds: [], chargeAmounts: {}, ...overrides.charges },
     accounting: { accountingRule: 1, ...overrides.accounting }
   };
 }
 
 describe('buildLoanProductPayload', () => {
+  it('includes optional product charge amount overrides', () => {
+    const payload = buildLoanProductPayload(
+      minimalDraft({
+        charges: { chargeIds: [10, 11], chargeAmounts: { '11': 1.5 } }
+      })
+    );
+
+    assert.deepEqual(payload.charges, [{ id: 10 }, { id: 11, amount: 1.5 }]);
+  });
+
   it('omits wizard-only repayment configuration flags', () => {
     const payload = buildLoanProductPayload(minimalDraft());
 

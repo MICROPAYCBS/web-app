@@ -16,7 +16,10 @@ import {
 } from '@/components/composites';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
 import { fineractOptionLabel } from '@/lib/form/select-options';
-import { productChargeLabelById } from '@/lib/fineract/charge-display';
+import {
+  productChargeLabelById,
+  productChargePreviewLabelById
+} from '@/lib/fineract/charge-display';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
 import type { SavingsProductStepProps, WizardMode } from '../types';
 
@@ -64,7 +67,14 @@ export function PreviewStep({
   ];
 
   const selectedCharges = (charges.chargeIds ?? [])
-    .map((id) => productChargeLabelById(template.chargeOptions, id, currencyCode))
+    .map((id) =>
+      productChargePreviewLabelById(
+        template.chargeOptions,
+        id,
+        charges.chargeAmounts,
+        currencyCode
+      )
+    )
     .join(', ');
 
   return (

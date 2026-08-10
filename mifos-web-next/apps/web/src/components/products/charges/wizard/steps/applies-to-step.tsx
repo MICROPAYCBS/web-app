@@ -53,7 +53,9 @@ function appliesToResetPatch(chargeAppliesTo: number): Partial<ChargeWizardDraft
     feeInterval: undefined,
     feeFrequency: undefined,
     feeOnMonthDay: undefined,
-    addFeeFrequency: false
+    addFeeFrequency: false,
+    useChargeTiers: false,
+    chargeTiers: []
   };
 }
 

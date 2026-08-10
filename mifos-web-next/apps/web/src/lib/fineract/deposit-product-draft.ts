@@ -18,6 +18,7 @@ import {
   getOrganizationSelectedCurrencies
 } from '@/lib/fineract/organization-currencies';
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
+import { productChargeAmountsFromTemplate } from '@/lib/fineract/product-charge-links';
 import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import {
   asAccountingMappings,
@@ -196,7 +197,12 @@ export function depositProductDraftFromTemplate(
     },
     interestRateChart: draftChartsFromTemplate(template),
     charges: {
-      chargeIds: (template.charges ?? []).map((c) => c.id).filter((id) => Number.isFinite(id))
+      chargeIds: (template.charges ?? []).map((c) => c.id).filter((id) => Number.isFinite(id)),
+      chargeAmounts: productChargeAmountsFromTemplate(
+        template.charges,
+        template.chargeOptions,
+        template.penaltyOptions
+      )
     },
     accounting: {
       accountingRule: accountingRuleId,

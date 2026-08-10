@@ -346,7 +346,22 @@ export {
   type CreateDelinquencyBucketInput,
   type UpdateDelinquencyBucketInput
 } from './products/delinquency-bucket.schema';
-export { upsertChargeSchema, type UpsertChargeInput } from './products/upsert-charge.schema';
+export {
+  upsertChargeSchema,
+  chargeTierSchema,
+  isChargeTiersAllowed,
+  validateChargeTiersContiguous,
+  LOAN_CHARGE_TIER_TIME_TYPES,
+  SAVINGS_CHARGE_TIER_TIME_TYPES,
+  type UpsertChargeInput,
+  type ChargeTierInput
+} from './products/upsert-charge.schema';
+export {
+  validateLookupRangeBands,
+  collectLookupRangeBandIssues,
+  type LookupRangeBand,
+  type LookupRangeBandIssue
+} from './products/lookup-range-bands';
 export {
   upsertSavingsProductSchema,
   savingsProductDetailsStepSchema,

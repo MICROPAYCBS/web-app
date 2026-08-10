@@ -16,8 +16,8 @@ import {
 } from '@/components/composites';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
 import {
-  formatProductChargeOptionLabel,
-  productChargeLabelById
+  productChargeLabelById,
+  productChargePreviewLabelById
 } from '@/lib/fineract/charge-display';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
 import { loanProductAttributeOverrideFields } from '@/lib/fineract/loan-product-attribute-overrides';
@@ -83,15 +83,16 @@ export function PreviewStep({
     ...(accountingOptions.liabilityAccountOptions ?? [])
   ];
 
+  const chargeAmounts = charges.chargeAmounts ?? {};
   const selectedCharges = (charges.chargeIds ?? [])
     .map((id) => {
       const fee = template.chargeOptions?.find((option) => option.id === id);
       if (fee) {
-        return `${formatProductChargeOptionLabel(fee, currencyCode)} (fee)`;
+        return `${productChargePreviewLabelById(template.chargeOptions, id, chargeAmounts, currencyCode)} (fee)`;
       }
       const penalty = template.penaltyOptions?.find((option) => option.id === id);
       if (penalty) {
-        return `${formatProductChargeOptionLabel(penalty, currencyCode)} (penalty)`;
+        return `${productChargePreviewLabelById(template.penaltyOptions, id, chargeAmounts, currencyCode)} (penalty)`;
       }
       return `Charge #${id}`;
     })

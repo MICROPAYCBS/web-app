@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { validateLookupRangeBands } from './lookup-range-bands';
 import { optionalInMultiplesOf } from './product-currency.schema';
 
 const optionalId = z.coerce
@@ -227,16 +228,71 @@ export const depositProductChartDetailsSchema = z.object({
   isPrimaryGroupingByAmount: z.boolean().default(false)
 });
 
-export const depositProductChartSchema = depositProductChartDetailsSchema.extend({
-  chartSlabs: z.array(depositProductChartSlabSchema).min(1, 'Add at least one chart slab.')
-});
+export const depositProductChartSchema = depositProductChartDetailsSchema
+  .extend({
+    chartSlabs: z.array(depositProductChartSlabSchema).min(1, 'Add at least one chart slab.')
+  })
+  .superRefine((chart, ctx) => {
+    const addIssue = (path: (string | number)[], message: string) => {
+      ctx.addIssue({ code: 'custom', message, path });
+    };
+
+    if (chart.isPrimaryGroupingByAmount) {
+      let missingAmountFrom = false;
+      for (let index = 0; index < chart.chartSlabs.length; index++) {
+        if (chart.chartSlabs[index].amountRangeFrom == null) {
+          missingAmountFrom = true;
+          addIssue(
+            ['chartSlabs', index, 'amountRangeFrom'],
+            'Amount from is required when primary grouping is by amount.'
+          );
+        }
+      }
+      if (!missingAmountFrom) {
+        validateLookupRangeBands(
+          chart.chartSlabs.map((slab) => ({
+            from: slab.amountRangeFrom as number,
+            to: slab.amountRangeTo ?? null
+          })),
+          addIssue,
+          {
+            pathPrefix: ['chartSlabs'],
+            fromField: 'amountRangeFrom',
+            toField: 'amountRangeTo',
+            entityLabel: 'slab',
+            emptyMessage: 'Add at least one chart slab.'
+          }
+        );
+      }
+      return;
+    }
+
+    if (chart.chartSlabs.every((slab) => slab.fromPeriod != null)) {
+      validateLookupRangeBands(
+        chart.chartSlabs.map((slab) => ({
+          from: slab.fromPeriod as number,
+          to: slab.toPeriod ?? null
+        })),
+        addIssue,
+        {
+          pathPrefix: ['chartSlabs'],
+          fromField: 'fromPeriod',
+          toField: 'toPeriod',
+          entityLabel: 'slab',
+          emptyMessage: 'Add at least one chart slab.'
+        }
+      );
+    }
+  });
 
 export const depositProductInterestRateChartStepSchema = z.object({
   charts: z.array(depositProductChartSchema).min(1, 'Add at least one interest rate chart.')
 });
 
 export const depositProductChargesStepSchema = z.object({
-  chargeIds: z.array(z.coerce.number().int().positive()).default([])
+  chargeIds: z.array(z.coerce.number().int().positive()).default([]),
+  /** Optional product-level amount overrides keyed by charge id string. */
+  chargeAmounts: z.record(z.string(), z.coerce.number().positive()).default({})
 });
 
 function refineDepositAccounting(

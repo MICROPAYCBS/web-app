@@ -212,9 +212,45 @@ const ERROR_MESSAGES: Record<string, string> = {
   'validation.msg.recurringdepositaccount.summital.cannot.be.before.savings.product.start.date':
     'Submitted date cannot be before the product start date.',
   'validation.msg.recurringdepositaccount.summital.cannot.be.after.savings.product.close.date':
-    'Submitted date cannot be after the product expiry date.'
+    'Submitted date cannot be after the product expiry date.',
+
+  // Charge lookup tiers (useChargeTiers)
+  'validation.msg.charge.chargeTiers.required.when.useChargeTiers':
+    'Add at least one charge tier when Use charge tiers is on.',
+  'validation.msg.charge.chargeTiers.not.allowed.when.useChargeTiers.false':
+    'Remove charge tiers when Use charge tiers is off.',
+  'validation.msg.charge.chargeTiers.not.supported.for.charge.applies.to':
+    'Charge tiers are only supported for loan and savings charges.',
+  'validation.msg.charge.useChargeTiers.not.supported.for.charge.applies.to':
+    'Charge tiers are only supported for loan and savings charges.',
+  'validation.msg.charge.useChargeTiers.not.supported.for.charge.time.type':
+    'Charge tiers are not available for this charge time type.',
+  'validation.msg.charge.minCap.not.supported.when.useChargeTiers':
+    'Minimum cap cannot be used with charge tiers.',
+  'validation.msg.charge.maxCap.not.supported.when.useChargeTiers':
+    'Maximum cap cannot be used with charge tiers.',
+  'validation.msg.charge.chargeTiers[].amountRangeFrom.must.start.at.zero':
+    'The first charge tier must start at 0.',
+  'validation.msg.charge.chargeTiers[].amountRangeFrom.must.equal.previous.to':
+    'Charge tiers must be contiguous with no overlaps or gaps.',
+  'validation.msg.charge.chargeTiers[].amountRangeTo.only.last.tier.may.be.open.ended':
+    'Only the last charge tier may be open-ended (leave To blank).',
+  'validation.msg.charge.chargeTiers[].amountRangeTo.must.be.greater.than.from':
+    'Each charge tier’s To must be greater than its From.'
 };
 
+/** Normalize indexed Fineract params: chargeTiers[0].x → chargeTiers[].x */
+function normalizeFineractErrorCode(code: string): string {
+  return code.replace(/\[\d+\]/g, '[]');
+}
+
 export function translateFineractCode(code: string, fallback?: string): string {
-  return ERROR_MESSAGES[code] ?? fallback ?? code;
+  if (ERROR_MESSAGES[code]) {
+    return ERROR_MESSAGES[code];
+  }
+  const normalized = normalizeFineractErrorCode(code);
+  if (normalized !== code && ERROR_MESSAGES[normalized]) {
+    return ERROR_MESSAGES[normalized];
+  }
+  return fallback ?? code;
 }

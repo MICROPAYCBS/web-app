@@ -13,6 +13,7 @@ import type {
   ChargeListItem,
   ChargeMutationResponse,
   ChargeTemplate,
+  ChargeTier,
   FineractCurrencyOption,
   FineractCommandProcessingResult
 } from '@mifos/api-client';
@@ -25,6 +26,47 @@ import {
   getOrganizationSelectedCurrencies
 } from '@/lib/fineract/organization-currencies';
 import { asCurrency, asEnumOption } from '@/lib/fineract/product-normalize';
+
+function asNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+function normalizeChargeTiers(value: unknown): ChargeTier[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const tiers: ChargeTier[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    const row = item as Record<string, unknown>;
+    const amountRangeFrom = asNumber(row.amountRangeFrom);
+    const amount = asNumber(row.amount);
+    if (amountRangeFrom == null || amount == null) {
+      continue;
+    }
+    const amountRangeTo =
+      row.amountRangeTo === null || row.amountRangeTo === undefined
+        ? null
+        : asNumber(row.amountRangeTo);
+    const id = asNumber(row.id);
+    tiers.push({
+      id: id != null && Number.isInteger(id) ? id : undefined,
+      amountRangeFrom,
+      amountRangeTo: amountRangeTo ?? null,
+      amount
+    });
+  }
+  return tiers;
+}
 
 function asCurrencyOptions(value: unknown): FineractCurrencyOption[] {
   if (!Array.isArray(value)) {
@@ -162,6 +204,8 @@ export function normalizeChargeTemplate(raw: unknown): ChargeTemplate {
       row.taxGroup && typeof row.taxGroup === 'object'
         ? (row.taxGroup as ChargeTemplate['taxGroup'])
         : undefined,
+    useChargeTiers: row.useChargeTiers === true,
+    chargeTiers: normalizeChargeTiers(row.chargeTiers),
     chargeAppliesToOptions: asEnumOptions(row.chargeAppliesToOptions),
     currencyOptions: asCurrencyOptions(row.currencyOptions),
     loanChargeCalculationTypeOptions: asEnumOptions(row.loanChargeCalculationTypeOptions),
@@ -232,7 +276,9 @@ export async function getCharge(chargeId: string | number): Promise<ChargeDetail
     taxGroup:
       row.taxGroup && typeof row.taxGroup === 'object'
         ? (row.taxGroup as ChargeDetail['taxGroup'])
-        : undefined
+        : undefined,
+    useChargeTiers: row.useChargeTiers === true,
+    chargeTiers: normalizeChargeTiers(row.chargeTiers)
   };
 }
 
@@ -283,25 +329,34 @@ export async function deleteChargeRecord(chargeId: string | number): Promise<Fin
 }
 
 export function chargeInputFromTemplate(template: ChargeTemplate): UpsertChargeInput {
+  const useChargeTiers = template.useChargeTiers === true;
   return {
     chargeAppliesTo: template.chargeAppliesTo?.id ?? 0,
     name: template.name ?? '',
     currencyCode: template.currencyCode ?? template.currency?.code ?? '',
     chargeTimeType: template.chargeTimeType?.id ?? 0,
     chargeCalculationType: template.chargeCalculationType?.id ?? 0,
-    amount: template.amount ?? 0,
+    amount: useChargeTiers ? 0 : (template.amount ?? 0),
     active: template.active ?? false,
     penalty: template.penalty ?? false,
     chargePaymentMode: template.chargePaymentMode?.id,
     incomeAccountId: template.incomeOrLiabilityAccount?.id,
     taxGroupId: template.taxGroup?.id,
-    minCap: template.minCap,
-    maxCap: template.maxCap,
+    minCap: useChargeTiers ? undefined : template.minCap,
+    maxCap: useChargeTiers ? undefined : template.maxCap,
     feeInterval: template.feeInterval,
     feeFrequency: template.feeFrequency?.id,
     feeOnMonthDay:
       typeof template.feeOnMonthDay === 'string' ? template.feeOnMonthDay : undefined,
-    addFeeFrequency: Boolean(template.feeInterval && template.feeFrequency)
+    addFeeFrequency: Boolean(template.feeInterval && template.feeFrequency),
+    useChargeTiers,
+    chargeTiers: useChargeTiers
+      ? (template.chargeTiers ?? []).map((tier) => ({
+          amountRangeFrom: tier.amountRangeFrom ?? 0,
+          amountRangeTo: tier.amountRangeTo ?? null,
+          amount: tier.amount ?? 0
+        }))
+      : []
   };
 }
 
@@ -318,7 +373,9 @@ export function chargeWizardDraftFromTemplate(
       penalty: false,
       name: '',
       currencyCode: '',
-      addFeeFrequency: false
+      addFeeFrequency: false,
+      useChargeTiers: false,
+      chargeTiers: []
     };
   }
   const input = chargeInputFromTemplate(template);

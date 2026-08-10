@@ -24,8 +24,20 @@ import {
 } from '@/lib/fineract/charges';
 import { getServerSession } from '@/lib/session/server';
 
+/** Accept plain objects or JSON strings (avoids Flight dropping nested chargeTiers). */
+function coerceRawPayload(raw: unknown): unknown {
+  if (typeof raw !== 'string') {
+    return raw;
+  }
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return raw;
+  }
+}
+
 function parseInput(raw: unknown): ChargeActionResult | ReturnType<typeof upsertChargeSchema.parse> {
-  const parsed = upsertChargeSchema.safeParse(raw);
+  const parsed = upsertChargeSchema.safeParse(coerceRawPayload(raw));
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {

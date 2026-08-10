@@ -17,6 +17,7 @@ import {
   chargePaymentModeOptions,
   chargeTimeTypeOptions,
   filteredChargeCalculationTypeOptions,
+  isChargeTiersAllowed,
   showChargePaymentMode
 } from '@/lib/fineract/charge-form-logic';
 import { toSelectOptions } from '@/lib/form/select-options';
@@ -73,16 +74,22 @@ export function TermsStep({
           label="Charge time type"
           required
           value={chargeTimeType != null ? String(chargeTimeType) : undefined}
-          onValueChange={(value) =>
-            onChange({
-              chargeTimeType: value ? Number(value) : undefined,
+          onValueChange={(value) => {
+            const nextTimeType = value ? Number(value) : undefined;
+            const patch: Partial<ChargeWizardDraft> = {
+              chargeTimeType: nextTimeType,
               chargeCalculationType: undefined,
               feeInterval: undefined,
               feeFrequency: undefined,
               feeOnMonthDay: undefined,
               addFeeFrequency: false
-            })
-          }
+            };
+            if (!isChargeTiersAllowed(chargeAppliesTo, nextTimeType)) {
+              patch.useChargeTiers = false;
+              patch.chargeTiers = [];
+            }
+            onChange(patch);
+          }}
           options={timeOptions}
           error={errors.chargeTimeType}
         />
@@ -98,7 +105,8 @@ export function TermsStep({
           onValueChange={(value) =>
             onChange({
               chargeCalculationType: value ? Number(value) : undefined,
-              amount: undefined,
+              // Keep parent amount at 0 when tiers stay enabled (Amount field is hidden).
+              amount: draft.useChargeTiers ? 0 : undefined,
               minCap: undefined,
               maxCap: undefined
             })

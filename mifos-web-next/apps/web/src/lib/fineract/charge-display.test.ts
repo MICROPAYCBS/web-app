@@ -6,54 +6,79 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import {
   formatChargeAmountDisplay,
   formatProductChargeOptionLabel,
   isFlatChargeCalculation,
-  isPercentageChargeCalculation
+  isPercentageChargeCalculation,
+  productChargePreviewLabelById
 } from './charge-display';
 
 describe('charge amount display', () => {
   it('formats flat charges with ISO currency code', () => {
-    expect(
+    assert.equal(
       formatChargeAmountDisplay({
         amount: 1234.5,
         currency: { code: 'ugx' },
         chargeCalculationType: { id: 1 }
-      })
-    ).toBe('UGX\u00a01,234.50');
+      }),
+      'UGX\u00a01,234.50'
+    );
   });
 
   it('formats percentage charges without currency', () => {
-    expect(
+    assert.equal(
       formatChargeAmountDisplay({
         amount: 2.5,
         currency: { code: 'UGX' },
         chargeCalculationType: { id: 2 }
-      })
-    ).toBe('2.5%');
+      }),
+      '2.5%'
+    );
   });
 
   it('combines name and amount for product charge labels', () => {
-    expect(
+    assert.equal(
       formatProductChargeOptionLabel({
         name: 'Processing fee',
         amount: 500,
         currency: { code: 'USD' },
         chargeCalculationType: { id: 1 }
-      })
-    ).toBe('Processing fee · USD\u00a0500.00');
+      }),
+      'Processing fee · USD\u00a0500.00'
+    );
   });
 
   it('identifies flat calculation type', () => {
-    expect(isFlatChargeCalculation(1)).toBe(true);
-    expect(isFlatChargeCalculation(2)).toBe(false);
+    assert.equal(isFlatChargeCalculation(1), true);
+    assert.equal(isFlatChargeCalculation(2), false);
   });
 
   it('identifies percentage calculation types', () => {
-    expect(isPercentageChargeCalculation(1)).toBe(false);
-    expect(isPercentageChargeCalculation(2)).toBe(true);
-    expect(isPercentageChargeCalculation(5)).toBe(true);
+    assert.equal(isPercentageChargeCalculation(1), false);
+    assert.equal(isPercentageChargeCalculation(2), true);
+    assert.equal(isPercentageChargeCalculation(5), true);
+  });
+
+  it('shows product amount override on preview labels', () => {
+    const options = [
+      {
+        id: 7,
+        name: 'Withdrawal fee',
+        amount: 1000,
+        currency: { code: 'UGX' },
+        chargeCalculationType: { id: 1 }
+      }
+    ];
+    assert.equal(
+      productChargePreviewLabelById(options, 7, undefined, 'UGX'),
+      'Withdrawal fee · UGX\u00a01,000.00'
+    );
+    assert.equal(
+      productChargePreviewLabelById(options, 7, { '7': 1500 }, 'UGX'),
+      'Withdrawal fee · UGX\u00a01,500.00 (overridden)'
+    );
   });
 });

@@ -99,8 +99,8 @@ export function InterestRateSlabFormSheet({
       title={isEdit ? 'Edit rate slab' : 'Add rate slab'}
       description={
         primaryGroupingByAmount
-          ? 'Define the amount range (and optional term) for this interest rate.'
-          : 'Define the term range (and optional amount) for this interest rate.'
+          ? 'Define the amount range (and optional term). First slab amount from must be 0; the last slab amount to must be blank (open-ended). No overlaps.'
+          : 'Define the term range (and optional amount). First slab period from must be 0; the last slab period to must be blank (open-ended). No overlaps.'
       }
       formId={formId}
       onSubmit={handleSubmit}

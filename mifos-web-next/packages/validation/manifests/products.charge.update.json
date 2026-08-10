@@ -1,7 +1,9 @@
 {
   "command": "products.charge.update",
   "fineractSources": [
-    "org.apache.fineract.portfolio.charge.api.ChargesApiResource"
+    "org.apache.fineract.portfolio.charge.api.ChargesApiResource",
+    "org.apache.fineract.portfolio.charge.domain.Charge",
+    "org.apache.fineract.portfolio.charge.domain.ChargeTier"
   ],
   "fields": {
     "name": { "required": true },
@@ -10,6 +12,10 @@
     "chargeCalculationType": { "required": true },
     "amount": { "required": true },
     "active": { "required": false },
-    "penalty": { "required": false }
+    "penalty": { "required": false },
+    "useChargeTiers": { "required": false },
+    "chargeTiers": { "required": false },
+    "minCap": { "required": false },
+    "maxCap": { "required": false }
   }
 }

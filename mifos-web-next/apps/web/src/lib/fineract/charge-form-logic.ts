@@ -7,6 +7,7 @@
  */
 
 import type { ChargeTemplate, FineractEnumOption } from '@mifos/api-client';
+import { isChargeTiersAllowed } from '@mifos/validation';
 
 export const CHARGE_APPLIES_TO = {
   LOAN: 1,
@@ -15,6 +16,8 @@ export const CHARGE_APPLIES_TO = {
   SHARES: 4,
   WORKING_CAPITAL: 5
 } as const;
+
+export { isChargeTiersAllowed };
 
 /** Client-level charges are not offered in the create wizard. */
 export function chargeAppliesToOptionsForWizard(
@@ -132,8 +135,12 @@ export function penaltyDisabled(chargeAppliesTo?: number): boolean {
 export function showMinMaxCap(
   chargeAppliesTo?: number,
   chargeTimeType?: number,
-  chargeCalculationType?: number
+  chargeCalculationType?: number,
+  useChargeTiers?: boolean
 ): boolean {
+  if (useChargeTiers) {
+    return false;
+  }
   if (chargeAppliesTo === CHARGE_APPLIES_TO.LOAN) {
     return [2, 3, 4, 5].includes(chargeCalculationType ?? -1);
   }
@@ -148,6 +155,13 @@ export function showMinMaxCap(
     );
   }
   return false;
+}
+
+export function showChargeTiersToggle(
+  chargeAppliesTo?: number,
+  chargeTimeType?: number
+): boolean {
+  return isChargeTiersAllowed(chargeAppliesTo, chargeTimeType);
 }
 
 export function incomeAccountOptions(template: ChargeTemplate) {

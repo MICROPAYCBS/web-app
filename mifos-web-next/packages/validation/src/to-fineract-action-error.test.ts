@@ -25,4 +25,10 @@ describe('formatActionErrorMessage', () => {
     assert.match(message, /Could not send the password email/);
     assert.doesNotMatch(message, /^\[email\]/);
   });
+
+  it('does not duplicate the same global and field charge-tier message', () => {
+    const copy = 'Add at least one charge tier when Use charge tiers is on.';
+    const message = formatActionErrorMessage(copy, { chargeTiers: copy });
+    assert.equal(message, copy);
+  });
 });

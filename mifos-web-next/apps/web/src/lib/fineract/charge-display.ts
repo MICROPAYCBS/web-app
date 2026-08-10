@@ -22,6 +22,7 @@ export interface ChargeAmountLike {
   currency?: { code?: string };
   currencyCode?: string;
   chargeCalculationType?: { id?: number };
+  useChargeTiers?: boolean;
 }
 
 export function chargeCurrencyCode(charge: ChargeListItem | ChargeDetail): string {
@@ -111,10 +112,35 @@ function formatPercentageAmount(amount: number): string {
   }).format(amount)}%`;
 }
 
+/** Format a lookup tier base-amount range using the charge currency ISO code. */
+export function formatChargeTierRange(
+  amountRangeFrom: number | undefined,
+  amountRangeTo: number | null | undefined,
+  currencyCode?: string
+): string {
+  if (amountRangeFrom == null) {
+    return '—';
+  }
+  const code = currencyCode?.trim().toUpperCase() ?? '';
+  const fromLabel = code
+    ? (formatMoney(amountRangeFrom, code) ?? String(amountRangeFrom))
+    : String(amountRangeFrom);
+  if (amountRangeTo == null) {
+    return `${fromLabel} – ∞`;
+  }
+  const toLabel = code
+    ? (formatMoney(amountRangeTo, code) ?? String(amountRangeTo))
+    : String(amountRangeTo);
+  return `${fromLabel} – ${toLabel}`;
+}
+
 export function formatChargeAmountDisplay(
   charge: ChargeAmountLike,
   fallbackCurrencyCode?: string
 ): string {
+  if (charge.useChargeTiers) {
+    return 'Tiered';
+  }
   const amount = charge.amount;
   if (amount == null) {
     return '—';
@@ -151,6 +177,38 @@ export function productChargeLabelById(
   }
   const match = options?.find((option) => option.id === id);
   return match ? formatProductChargeOptionLabel(match, fallbackCurrencyCode) : String(id);
+}
+
+/**
+ * Review/preview label for a product charge, using an optional product-level amount override.
+ * When overridden: `Name · <override amount> (overridden)`.
+ */
+export function productChargePreviewLabelById(
+  options: ChargeAmountLike[] | undefined,
+  id: number | undefined,
+  chargeAmounts: Record<string, number> | undefined,
+  fallbackCurrencyCode?: string
+): string {
+  if (id == null) {
+    return '—';
+  }
+  const match = options?.find((option) => option.id === id);
+  if (!match) {
+    return String(id);
+  }
+  const override = chargeAmounts?.[String(id)];
+  if (
+    override != null &&
+    Number.isFinite(override) &&
+    override > 0 &&
+    match.useChargeTiers !== true
+  ) {
+    return `${formatProductChargeOptionLabel(
+      { ...match, amount: override },
+      fallbackCurrencyCode
+    )} (overridden)`;
+  }
+  return formatProductChargeOptionLabel(match, fallbackCurrencyCode);
 }
 
 export function chargeAppliesToLabel(charge: ChargeListItem | ChargeDetail): string {

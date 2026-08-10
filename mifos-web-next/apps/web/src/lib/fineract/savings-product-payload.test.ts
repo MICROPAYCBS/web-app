@@ -37,7 +37,7 @@ function minimalDraft(
       isDormancyTrackingActive: false,
       ...overrides.settings
     },
-    charges: { chargeIds: [], ...overrides.charges },
+    charges: { chargeIds: [], chargeAmounts: {}, ...overrides.charges },
     accounting: { accountingRule: 1, ...overrides.accounting }
   };
 }
@@ -63,6 +63,14 @@ describe('buildSavingsProductPayload', () => {
     );
 
     assert.deepEqual(payload.charges, [{ id: 3 }, { id: 7 }]);
+  });
+
+  it('includes optional product charge amount overrides', () => {
+    const payload = buildSavingsProductPayload(
+      minimalDraft({ charges: { chargeIds: [3, 7], chargeAmounts: { '7': 2.5 } } })
+    );
+
+    assert.deepEqual(payload.charges, [{ id: 3 }, { id: 7, amount: 2.5 }]);
   });
 
   it('includes dateFormat and availability dates when set', () => {

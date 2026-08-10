@@ -8,6 +8,7 @@
 
 import type { UpsertDepositProductInput } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, normalizeFineractDateField } from '@/lib/fineract/dates';
+import { buildProductChargesPayload } from '@/lib/fineract/product-charge-links';
 
 /** Build Fineract POST/PUT body from wizard draft. */
 export function buildDepositProductPayload(
@@ -108,7 +109,7 @@ export function buildDepositProductPayload(
   }
 
   if (charges.chargeIds.length) {
-    payload.charges = charges.chargeIds.map((id) => ({ id }));
+    payload.charges = buildProductChargesPayload(charges.chargeIds, charges.chargeAmounts);
   }
 
   const charts = interestRateChart.charts.map((chart) => {

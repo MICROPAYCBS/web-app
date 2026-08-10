@@ -33,13 +33,23 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import {
   chargeAppliesToLabel,
   chargeCalculationTypeLabel,
   chargeCurrencyCode,
   chargePaymentModeLabel,
   chargeTimeTypeLabel,
   formatChargeAmountDisplay,
-  glAccountLabel
+  formatChargeTierRange,
+  glAccountLabel,
+  isFlatChargeCalculation
 } from '@/lib/fineract/charge-display';
 import { chargeEditPath, chargeListPath } from '@/lib/fineract/charge-paths';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
@@ -59,6 +69,9 @@ export function ChargeDetailView({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const currencyCode = chargeCurrencyCode(charge);
+  const useChargeTiers = charge.useChargeTiers === true;
+  const tiers = charge.chargeTiers ?? [];
+  const flatAmount = isFlatChargeCalculation(charge.chargeCalculationType?.id);
   const amountLabel = formatChargeAmountDisplay(
     charge,
     currencyCode === '—' ? undefined : currencyCode
@@ -123,12 +136,13 @@ export function ChargeDetailView({
             <DetailField label="Applies to">{chargeAppliesToLabel(charge)}</DetailField>
             <DetailField label="Penalty">{formatYesNo(charge.penalty)}</DetailField>
             <DetailField label="Currency">{currencyCode}</DetailField>
-            <DetailField label="Amount">{amountLabel}</DetailField>
+            <DetailField label="Use charge tiers">{formatYesNo(useChargeTiers)}</DetailField>
+            {useChargeTiers ? null : <DetailField label="Amount">{amountLabel}</DetailField>}
             <DetailField label="Charge time type">{chargeTimeTypeLabel(charge)}</DetailField>
             <DetailField label="Calculation type">{chargeCalculationTypeLabel(charge)}</DetailField>
             <DetailField label="Payment mode">{chargePaymentModeLabel(charge)}</DetailField>
             <DetailField label="Active">{formatYesNo(charge.active)}</DetailField>
-            {charge.minCap != null ? (
+            {!useChargeTiers && charge.minCap != null ? (
               <DetailField label="Minimum cap">
                 {formatChargeAmountDisplay(
                   { ...capDisplayContext, amount: charge.minCap },
@@ -136,7 +150,7 @@ export function ChargeDetailView({
                 )}
               </DetailField>
             ) : null}
-            {charge.maxCap != null ? (
+            {!useChargeTiers && charge.maxCap != null ? (
               <DetailField label="Maximum cap">
                 {formatChargeAmountDisplay(
                   { ...capDisplayContext, amount: charge.maxCap },
@@ -162,6 +176,58 @@ export function ChargeDetailView({
             ) : null}
           </DetailFieldGrid>
         </DetailSection>
+
+        {useChargeTiers ? (
+          <DetailSection
+            title="Charge tiers"
+            description="Lookup bands: one matching range applies for the base amount."
+          >
+            <div className="rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>From – To</TableHead>
+                    <TableHead className="text-right">
+                      {flatAmount ? 'Amount' : 'Rate (%)'}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tiers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-muted-foreground">
+                        No tiers
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    tiers.map((tier, index) => (
+                      <TableRow key={tier.id ?? index}>
+                        <TableCell className="tabular-nums">
+                          {formatChargeTierRange(
+                            tier.amountRangeFrom,
+                            tier.amountRangeTo,
+                            codeForCaps
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {tier.amount != null
+                            ? formatChargeAmountDisplay(
+                                {
+                                  ...capDisplayContext,
+                                  amount: tier.amount
+                                },
+                                codeForCaps
+                              )
+                            : '—'}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </DetailSection>
+        ) : null}
       </DetailPage>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

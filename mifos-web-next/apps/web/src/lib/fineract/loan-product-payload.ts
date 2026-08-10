@@ -8,6 +8,7 @@
 
 import type { UpsertLoanProductInput } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { buildProductChargesPayload } from '@/lib/fineract/product-charge-links';
 
 /** Fineract option list ids are 1-based; API expects enum name strings. */
 const LOAN_SCHEDULE_TYPE_CODES = ['CUMULATIVE', 'PROGRESSIVE'] as const;
@@ -58,7 +59,7 @@ export function buildLoanProductPayload(input: UpsertLoanProductInput): Record<s
     incomeFromGoodwillCreditInterestAccountId: accounting.incomeFromGoodwillCreditInterestAccountId,
     incomeFromGoodwillCreditFeesAccountId: accounting.incomeFromGoodwillCreditFeesAccountId,
     incomeFromGoodwillCreditPenaltyAccountId: accounting.incomeFromGoodwillCreditPenaltyAccountId,
-    charges: charges.chargeIds.map((id) => ({ id })),
+    charges: buildProductChargesPayload(charges.chargeIds, charges.chargeAmounts),
     dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE
   };

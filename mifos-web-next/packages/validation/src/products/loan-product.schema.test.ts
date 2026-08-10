@@ -123,7 +123,7 @@ describe('upsertLoanProductSchema', () => {
         ...baseSettings,
         graceOnPrincipalPayment: 12
       },
-      charges: { chargeIds: [] },
+      charges: { chargeIds: [], chargeAmounts: {} },
       accounting: {
         accountingRule: 2,
         fundSourceAccountId: 1,

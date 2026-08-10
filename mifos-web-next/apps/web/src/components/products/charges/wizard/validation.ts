@@ -22,7 +22,15 @@ const STEP_FIELDS: Record<string, readonly string[]> = {
     'feeFrequency',
     'feeOnMonthDay'
   ],
-  amount: ['amount', 'minCap', 'maxCap', 'incomeAccountId', 'taxGroupId']
+  amount: [
+    'amount',
+    'minCap',
+    'maxCap',
+    'incomeAccountId',
+    'taxGroupId',
+    'useChargeTiers',
+    'chargeTiers'
+  ]
 };
 
 export function validateChargeStep(stepId: string, draft: ChargeWizardDraft): StepErrors {
@@ -47,7 +55,10 @@ export function validateChargeStep(stepId: string, draft: ChargeWizardDraft): St
   for (const issue of parsed.error.issues) {
     const key = String(issue.path[0] ?? '');
     if (key && fields.includes(key)) {
-      errors[key] = issue.message;
+      const pathKey = issue.path.join('.');
+      if (pathKey && !errors[pathKey]) {
+        errors[pathKey] = issue.message;
+      }
     }
   }
   return errors;
@@ -61,7 +72,7 @@ export function validateChargeDraft(draft: ChargeWizardDraft): StepErrors {
   const errors: StepErrors = {};
   for (const issue of parsed.error.issues) {
     const key = issue.path.join('.');
-    if (key) {
+    if (key && !errors[key]) {
       errors[key] = issue.message;
     }
   }
@@ -69,23 +80,34 @@ export function validateChargeDraft(draft: ChargeWizardDraft): StepErrors {
 }
 
 export function draftToPayload(draft: ChargeWizardDraft): UpsertChargeInput {
+  const useChargeTiers = draft.useChargeTiers === true;
+  const chargeTiers = useChargeTiers
+    ? (draft.chargeTiers ?? []).map((tier) => ({
+        amountRangeFrom: Number(tier.amountRangeFrom),
+        amountRangeTo: tier.amountRangeTo == null ? null : Number(tier.amountRangeTo),
+        amount: Number(tier.amount)
+      }))
+    : [];
+
   return {
     chargeAppliesTo: draft.chargeAppliesTo ?? 0,
     name: draft.name ?? '',
     currencyCode: draft.currencyCode ?? '',
     chargeTimeType: draft.chargeTimeType ?? 0,
     chargeCalculationType: draft.chargeCalculationType ?? 0,
-    amount: draft.amount ?? 0,
+    amount: useChargeTiers ? 0 : (draft.amount ?? 0),
     active: draft.active ?? false,
     penalty: draft.penalty ?? false,
     chargePaymentMode: draft.chargePaymentMode,
     incomeAccountId: draft.incomeAccountId,
     taxGroupId: draft.taxGroupId,
-    minCap: draft.minCap,
-    maxCap: draft.maxCap,
+    minCap: useChargeTiers ? undefined : draft.minCap,
+    maxCap: useChargeTiers ? undefined : draft.maxCap,
     feeInterval: draft.feeInterval,
     feeFrequency: draft.feeFrequency,
     feeOnMonthDay: draft.feeOnMonthDay,
-    addFeeFrequency: draft.addFeeFrequency
+    addFeeFrequency: draft.addFeeFrequency,
+    useChargeTiers,
+    chargeTiers
   };
 }

@@ -381,7 +381,9 @@ export const loanProductSettingsStepSchema = z
   });
 
 export const loanProductChargesStepSchema = z.object({
-  chargeIds: z.array(z.coerce.number().int().positive()).default([])
+  chargeIds: z.array(z.coerce.number().int().positive()).default([]),
+  /** Optional product-level amount overrides keyed by charge id string. */
+  chargeAmounts: z.record(z.string(), z.coerce.number().positive()).default({})
 });
 
 const glAccountId = z.coerce.number().int().positive().optional();

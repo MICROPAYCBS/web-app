@@ -203,6 +203,36 @@ describe('getFineractErrorMessage', () => {
     );
   });
 
+  it('translates charge tier required.when.useChargeTiers over generic Fineract text', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        defaultUserMessage: 'Validation errors exist.',
+        userMessageGlobalisationCode: 'validation.msg.validation.errors.exist',
+        errors: [
+          {
+            parameterName: 'chargeTiers',
+            defaultUserMessage: 'Failed data validation due to: required.when.useChargeTiers.',
+            userMessageGlobalisationCode:
+              'validation.msg.charge.chargeTiers.required.when.useChargeTiers'
+          }
+        ]
+      }),
+      'Add at least one charge tier when Use charge tiers is on.'
+    );
+  });
+
+  it('translates indexed charge tier codes', () => {
+    assert.equal(
+      resolveFineractErrorItemMessage({
+        parameterName: 'chargeTiers[0].amountRangeFrom',
+        defaultUserMessage: 'Failed data validation due to: must.start.at.zero.',
+        userMessageGlobalisationCode:
+          'validation.msg.charge.chargeTiers[0].amountRangeFrom.must.start.at.zero'
+      }),
+      'The first charge tier must start at 0.'
+    );
+  });
+
   it('skips generic top-level text when nested errors carry specifics', () => {
     assert.equal(
       getFineractErrorMessage({

@@ -10,6 +10,14 @@ import type { FineractCurrencyOption, FineractEnumOption } from '../clients/type
 import type { LoanProductGlAccountOption } from './loan-product-template-types';
 import type { ProductGlAccountRef } from './loan-product-types';
 
+export interface ChargeTier {
+  id?: number;
+  amountRangeFrom?: number;
+  /** Exclusive upper bound; null/omitted = open-ended. */
+  amountRangeTo?: number | null;
+  amount?: number;
+}
+
 export interface ChargeListItem {
   id: number;
   name?: string;
@@ -22,6 +30,7 @@ export interface ChargeListItem {
   chargeTimeType?: FineractEnumOption;
   chargeCalculationType?: FineractEnumOption;
   chargePaymentMode?: FineractEnumOption;
+  useChargeTiers?: boolean;
 }
 
 export interface ChargeDetail extends ChargeListItem {
@@ -32,6 +41,8 @@ export interface ChargeDetail extends ChargeListItem {
   feeOnMonthDay?: string | number[];
   incomeOrLiabilityAccount?: ProductGlAccountRef;
   taxGroup?: { id?: number; name?: string };
+  useChargeTiers?: boolean;
+  chargeTiers?: ChargeTier[];
 }
 
 export interface ChargeIncomeAccountOptions {
@@ -58,6 +69,8 @@ export interface ChargeTemplate {
   chargePaymentMode?: FineractEnumOption;
   incomeOrLiabilityAccount?: ProductGlAccountRef;
   taxGroup?: { id?: number; name?: string };
+  useChargeTiers?: boolean;
+  chargeTiers?: ChargeTier[];
   chargeAppliesToOptions?: FineractEnumOption[];
   currencyOptions?: FineractCurrencyOption[];
   loanChargeCalculationTypeOptions?: FineractEnumOption[];

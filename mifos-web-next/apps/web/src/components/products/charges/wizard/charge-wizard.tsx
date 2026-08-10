@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage } from '@mifos/validation';
+import { formatActionErrorMessage, upsertChargeSchema } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
@@ -17,7 +17,7 @@ import { createChargeAction, updateChargeAction } from '@/actions/charge';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
-import { penaltyDisabled } from '@/lib/fineract/charge-form-logic';
+import { isChargeTiersAllowed, penaltyDisabled } from '@/lib/fineract/charge-form-logic';
 import { chargeDetailPath, chargeListPath } from '@/lib/fineract/charge-paths';
 import { AppliesToStep } from './steps/applies-to-step';
 import { AmountSettingsStep } from './steps/amount-settings-step';
@@ -54,6 +54,42 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
       setDraft((current) => (current.penalty ? { ...current, penalty: true } : current));
     }
   }, [draft.chargeAppliesTo, draft.chargeTimeType, draft.penalty]);
+
+  useEffect(() => {
+    if (
+      draft.useChargeTiers &&
+      !isChargeTiersAllowed(draft.chargeAppliesTo, draft.chargeTimeType)
+    ) {
+      setDraft((current) => ({
+        ...current,
+        useChargeTiers: false,
+        chargeTiers: []
+      }));
+    }
+  }, [draft.useChargeTiers, draft.chargeAppliesTo, draft.chargeTimeType]);
+
+  useEffect(() => {
+    if (draft.useChargeTiers && draft.amount == null) {
+      setDraft((current) => ({ ...current, amount: 0 }));
+    }
+  }, [draft.useChargeTiers, draft.amount]);
+
+  const patchDraft = useCallback((patch: Partial<ChargeWizardDraft>) => {
+    setDraft((current) => {
+      const next = { ...current, ...patch };
+      // Only allow clearing bands when tiers are being turned off. Accidental
+      // `{ chargeTiers: [] }` patches (stale Switch enable) wiped Review/submit.
+      const clearingTiers =
+        Object.prototype.hasOwnProperty.call(patch, 'chargeTiers') &&
+        Array.isArray(patch.chargeTiers) &&
+        patch.chargeTiers.length === 0 &&
+        (current.chargeTiers?.length ?? 0) > 0;
+      if (clearingTiers && patch.useChargeTiers !== false) {
+        next.chargeTiers = current.chargeTiers;
+      }
+      return next;
+    });
+  }, []);
 
   const markValidationAttempted = useCallback((id: string) => {
     setValidationAttemptedStepIds((prev) => {
@@ -146,17 +182,27 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
       return;
     }
 
-    const payload = draftToPayload({
+    const prepared = draftToPayload({
       ...draft,
       taxGroupId:
         mode === 'edit' && template.taxGroup?.id ? template.taxGroup.id : draft.taxGroupId
     });
+    const parsed = upsertChargeSchema.safeParse(prepared);
+    if (!parsed.success) {
+      markValidationAttempted('terms');
+      markValidationAttempted('amount');
+      setStepId('preview');
+      setSubmitError('Please fix the highlighted fields.');
+      return;
+    }
+    // Pass a JSON string so nested chargeTiers are not dropped by the Server Action Flight serializer.
+    const actionPayload = JSON.stringify(parsed.data);
 
     startTransition(async () => {
       const result =
         mode === 'create'
-          ? await createChargeAction(payload)
-          : await updateChargeAction(chargeId ?? '', payload);
+          ? await createChargeAction(actionPayload)
+          : await updateChargeAction(chargeId ?? '', actionPayload);
 
       if (!result.ok) {
 
@@ -206,24 +252,15 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
         }
       >
         {stepId === 'appliesTo' ? (
-          <AppliesToStep
-            {...stepProps}
-            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-          />
+          <AppliesToStep {...stepProps} onChange={patchDraft} />
         ) : null}
 
         {stepId === 'terms' ? (
-          <TermsStep
-            {...stepProps}
-            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-          />
+          <TermsStep {...stepProps} onChange={patchDraft} />
         ) : null}
 
         {stepId === 'amount' ? (
-          <AmountSettingsStep
-            {...stepProps}
-            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-          />
+          <AmountSettingsStep {...stepProps} onChange={patchDraft} />
         ) : null}
 
         {isPreview ? (

@@ -22,6 +22,7 @@ export interface LoanProductCharge {
   name?: string;
   amount?: number;
   penalty?: boolean;
+  useChargeTiers?: boolean;
   chargeCalculationType?: FineractEnumOption;
   chargeTimeType?: FineractEnumOption;
   currency?: FineractCurrencyOption;

@@ -11,8 +11,18 @@
 import {
   DetailField,
   DetailFieldGrid,
-  DetailSection
+  DetailSection,
+  EmptyState
 } from '@/components/composites';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { Layers } from 'lucide-react';
 import {
   chargePaymentModeOptions,
   chargeTimeTypeOptions,
@@ -23,7 +33,11 @@ import {
   showMinMaxCap,
   showTaxGroupField
 } from '@/lib/fineract/charge-form-logic';
-import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
+import {
+  formatChargeAmountDisplay,
+  formatChargeTierRange,
+  isFlatChargeCalculation
+} from '@/lib/fineract/charge-display';
 import { fineractOptionLabel } from '@/lib/form/select-options';
 import { glAccountLabel } from '@/lib/fineract/product-display';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
@@ -50,6 +64,9 @@ export function PreviewStep({
 }) {
   const currencyCode = draft.currencyCode ?? '';
   const chargeAppliesTo = draft.chargeAppliesTo;
+  const useChargeTiers = draft.useChargeTiers === true;
+  const tiers = draft.chargeTiers ?? [];
+  const flatAmount = isFlatChargeCalculation(draft.chargeCalculationType);
   const amountLabel = formatChargeAmountDisplay(
     {
       amount: draft.amount,
@@ -123,8 +140,15 @@ export function PreviewStep({
 
       <DetailSection title="Amount & settings">
         <DetailFieldGrid>
-          <DetailField label="Amount">{amountLabel}</DetailField>
-          {showMinMaxCap(chargeAppliesTo, draft.chargeTimeType, draft.chargeCalculationType) &&
+          <DetailField label="Use charge tiers">{formatYesNo(useChargeTiers)}</DetailField>
+          {useChargeTiers ? null : <DetailField label="Amount">{amountLabel}</DetailField>}
+          {!useChargeTiers &&
+          showMinMaxCap(
+            chargeAppliesTo,
+            draft.chargeTimeType,
+            draft.chargeCalculationType,
+            useChargeTiers
+          ) &&
           draft.minCap != null ? (
             <DetailField label="Minimum cap">
               {formatChargeAmountDisplay(
@@ -137,7 +161,13 @@ export function PreviewStep({
               )}
             </DetailField>
           ) : null}
-          {showMinMaxCap(chargeAppliesTo, draft.chargeTimeType, draft.chargeCalculationType) &&
+          {!useChargeTiers &&
+          showMinMaxCap(
+            chargeAppliesTo,
+            draft.chargeTimeType,
+            draft.chargeCalculationType,
+            useChargeTiers
+          ) &&
           draft.maxCap != null ? (
             <DetailField label="Maximum cap">
               {formatChargeAmountDisplay(
@@ -150,6 +180,59 @@ export function PreviewStep({
               )}
             </DetailField>
           ) : null}
+        </DetailFieldGrid>
+
+        {useChargeTiers ? (
+          <div className="mt-4 space-y-2">
+            <p className="text-sm font-medium">Charge tiers</p>
+            {tiers.length === 0 ? (
+              <EmptyState
+                icon={Layers}
+                title="No charge tiers added"
+                description="Go back to Amount & settings and add at least one lookup band before creating this charge."
+                className="border-destructive/40"
+              />
+            ) : (
+              <div className="rounded-lg border border-border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>From – To</TableHead>
+                      <TableHead className="text-right">
+                        {flatAmount ? 'Amount' : 'Rate (%)'}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tiers.map((tier, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="tabular-nums">
+                          {formatChargeTierRange(
+                            tier.amountRangeFrom,
+                            tier.amountRangeTo,
+                            currencyCode
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatChargeAmountDisplay(
+                            {
+                              amount: tier.amount,
+                              currencyCode,
+                              chargeCalculationType: { id: draft.chargeCalculationType }
+                            },
+                            currencyCode
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <DetailFieldGrid className="mt-4">
           {showIncomeAccountField(chargeAppliesTo) ? (
             <DetailField label="Income from charge">
               {draft.incomeAccountId

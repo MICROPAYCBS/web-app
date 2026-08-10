@@ -129,6 +129,7 @@ export function asCharges(value: unknown): LoanProductCharge[] {
       name: typeof row.name === 'string' ? row.name : undefined,
       amount: typeof row.amount === 'number' ? row.amount : undefined,
       penalty: typeof row.penalty === 'boolean' ? row.penalty : undefined,
+      useChargeTiers: typeof row.useChargeTiers === 'boolean' ? row.useChargeTiers : undefined,
       chargeCalculationType: asEnumOption(row.chargeCalculationType),
       chargeTimeType: asEnumOption(row.chargeTimeType),
       currency: asCurrency(row.currency)

@@ -206,7 +206,8 @@ export type {
   ChargeIncomeAccountOptions,
   ChargeListItem,
   ChargeMutationResponse,
-  ChargeTemplate
+  ChargeTemplate,
+  ChargeTier
 } from './products/charge-types';
 
 export type {

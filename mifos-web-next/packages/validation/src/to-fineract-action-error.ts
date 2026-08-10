@@ -102,13 +102,33 @@ export function formatActionErrorMessage(
   // Generic “fix fields” banners are only useful when paired with the field sentences.
   const messageIsGenericFixPrompt =
     trimmedMessage === 'Fix the highlighted fields.' ||
-    trimmedMessage === 'Please fix the highlighted fields before creating this user.';
+    trimmedMessage === 'Please fix the highlighted fields before creating this user.' ||
+    trimmedMessage === 'Please fix the highlighted fields.';
+
+  const normalizedGlobal = trimmedMessage.toLowerCase();
+  const dedupedFieldParts = fieldParts.filter((part) => {
+    const normalizedPart = part.toLowerCase();
+    if (!trimmedMessage) {
+      return true;
+    }
+    // Avoid "Message. field: Message" when global + field carry the same copy.
+    if (normalizedPart === normalizedGlobal) {
+      return false;
+    }
+    if (normalizedPart.endsWith(`: ${normalizedGlobal}`)) {
+      return false;
+    }
+    if (normalizedGlobal.includes(normalizedPart)) {
+      return false;
+    }
+    return true;
+  });
 
   const uniqueParts = [
     ...new Set(
       [
         messageLooksLikeBareField || messageIsGenericFixPrompt ? null : trimmedMessage,
-        ...fieldParts
+        ...dedupedFieldParts
       ].filter((part): part is string => Boolean(part))
     )
   ];

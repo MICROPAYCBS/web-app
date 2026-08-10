@@ -36,8 +36,8 @@ const baseDraft: UpsertDepositProductInput = {
         chartSlabs: [
           {
             periodType: 0,
-            fromPeriod: 1,
-            toPeriod: 12,
+            fromPeriod: 0,
+            toPeriod: undefined,
             annualInterestRate: 5.5,
             description: '1 year',
             incentives: []
@@ -46,7 +46,7 @@ const baseDraft: UpsertDepositProductInput = {
       }
     ]
   },
-  charges: { chargeIds: [] },
+  charges: { chargeIds: [], chargeAmounts: {} },
   accounting: {
     accountingRule: 1,
     paymentChannelToFundSourceMappings: [],

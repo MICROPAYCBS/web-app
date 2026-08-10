@@ -17,7 +17,7 @@ import {
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
 import { fineractOptionLabel } from '@/lib/form/select-options';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
-import { productChargeLabelById } from '@/lib/fineract/charge-display';
+import { productChargePreviewLabelById } from '@/lib/fineract/charge-display';
 import type { DepositProductStepProps, WizardMode } from '../types';
 
 function optionLabelById(
@@ -163,7 +163,14 @@ export function PreviewStep({
             {charges.chargeIds.length
               ? charges.chargeIds
                   .filter((id) => template.chargeOptions?.some((option) => option.id === id))
-                  .map((id) => productChargeLabelById(template.chargeOptions, id, currencyCode))
+                  .map((id) =>
+                    productChargePreviewLabelById(
+                      template.chargeOptions,
+                      id,
+                      charges.chargeAmounts,
+                      currencyCode
+                    )
+                  )
                   .join(', ') || 'None'
               : 'None'}
           </DetailField>
@@ -171,7 +178,14 @@ export function PreviewStep({
             {charges.chargeIds.length
               ? charges.chargeIds
                   .filter((id) => template.penaltyOptions?.some((option) => option.id === id))
-                  .map((id) => productChargeLabelById(template.penaltyOptions, id, currencyCode))
+                  .map((id) =>
+                    productChargePreviewLabelById(
+                      template.penaltyOptions,
+                      id,
+                      charges.chargeAmounts,
+                      currencyCode
+                    )
+                  )
                   .join(', ') || 'None'
               : 'None'}
           </DetailField>

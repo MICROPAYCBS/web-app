@@ -8,6 +8,7 @@
 
 import type { UpsertSavingsProductInput } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { buildProductChargesPayload } from '@/lib/fineract/product-charge-links';
 
 /** Build Fineract POST/PUT body from wizard draft. */
 export function buildSavingsProductPayload(
@@ -36,7 +37,7 @@ export function buildSavingsProductPayload(
     interestReceivableAccountId: accounting.interestReceivableAccountId,
     interestPayableAccountId: accounting.interestPayableAccountId,
     escheatLiabilityId: accounting.escheatLiabilityId,
-    charges: charges.chargeIds.map((id) => ({ id })),
+    charges: buildProductChargesPayload(charges.chargeIds, charges.chargeAmounts),
     dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE
   };

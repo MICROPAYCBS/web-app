@@ -323,6 +323,15 @@ export function InterestRateChartStep({
                                 `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.fromPeriod`
                               ] ||
                               errors[
+                                `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.toPeriod`
+                              ] ||
+                              errors[
+                                `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.amountRangeFrom`
+                              ] ||
+                              errors[
+                                `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.amountRangeTo`
+                              ] ||
+                              errors[
                                 `interestRateChart.charts.${chartIndex}.chartSlabs.${slabIndex}.annualInterestRate`
                               ] ||
                               errors[

@@ -132,7 +132,9 @@ export const savingsProductSettingsStepSchema = z
   });
 
 export const savingsProductChargesStepSchema = z.object({
-  chargeIds: z.array(z.coerce.number().int().positive()).default([])
+  chargeIds: z.array(z.coerce.number().int().positive()).default([]),
+  /** Optional product-level amount overrides keyed by charge id string. */
+  chargeAmounts: z.record(z.string(), z.coerce.number().positive()).default({})
 });
 
 function refineSavingsAccounting(

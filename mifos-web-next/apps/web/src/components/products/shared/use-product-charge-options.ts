@@ -11,6 +11,10 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect } from 'react';
 import { pruneProductChargeIds } from '@/lib/fineract/product-charge-options';
+import {
+  pruneProductChargeAmounts,
+  type ProductChargeAmounts
+} from '@/lib/fineract/product-charge-links';
 
 type LoadedChargeOptions = {
   chargeOptions?: { id?: number }[];
@@ -22,7 +26,7 @@ type FetchChargeOptionsResult =
   | { ok: false; message?: string };
 
 type DraftWithCharges = {
-  charges: { chargeIds?: number[] };
+  charges: { chargeIds?: number[]; chargeAmounts?: ProductChargeAmounts };
 };
 
 type TemplateWithChargeOptions = {
@@ -73,12 +77,16 @@ export function useProductChargeOptions<
           result.chargeOptions,
           result.penaltyOptions
         );
-        if (nextIds.length === (current.charges.chargeIds ?? []).length) {
+        const nextAmounts = pruneProductChargeAmounts(nextIds, current.charges.chargeAmounts);
+        if (
+          nextIds.length === (current.charges.chargeIds ?? []).length &&
+          Object.keys(nextAmounts).length === Object.keys(current.charges.chargeAmounts ?? {}).length
+        ) {
           return current;
         }
         return {
           ...current,
-          charges: { ...current.charges, chargeIds: nextIds }
+          charges: { ...current.charges, chargeIds: nextIds, chargeAmounts: nextAmounts }
         };
       });
     });
