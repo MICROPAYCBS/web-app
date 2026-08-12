@@ -8,6 +8,10 @@
 
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
+import {
+  formatIdleWarningDescription,
+  remainingIdleWarningSeconds
+} from './idle-warning-copy';
 import { getInactivityTimeoutConfig } from './inactivity-timeout-config';
 import { createInactivityTimerController } from './inactivity-timer';
 
@@ -132,5 +136,29 @@ describe('inactivity timer controller', () => {
     mock.timers.tick(2000);
     assert.deepEqual(events, ['warning', 'reset', 'warning', 'timeout']);
     controller.dispose();
+  });
+});
+
+describe('idle warning copy', () => {
+  it('computes whole seconds remaining from a deadline', () => {
+    assert.equal(remainingIdleWarningSeconds(10_000, 0), 10);
+    assert.equal(remainingIdleWarningSeconds(10_000, 9_001), 1);
+    assert.equal(remainingIdleWarningSeconds(10_000, 10_000), 0);
+    assert.equal(remainingIdleWarningSeconds(10_000, 12_000), 0);
+  });
+
+  it('pluralizes the warning description', () => {
+    assert.equal(
+      formatIdleWarningDescription(60),
+      'You will be signed out in 60 seconds due to inactivity.'
+    );
+    assert.equal(
+      formatIdleWarningDescription(1),
+      'You will be signed out in 1 second due to inactivity.'
+    );
+    assert.equal(
+      formatIdleWarningDescription(0),
+      'You will be signed out in 0 seconds due to inactivity.'
+    );
   });
 });
