@@ -9,7 +9,10 @@
 import { FineractHttpError } from '@mifos/api-client';
 import { captureAppError } from '@/lib/errors/capture-sentry-error';
 import { formatErrorMessage } from '@/lib/errors/format-error-details';
-import { emitStructuredErrorLog } from '@/lib/errors/serialize-error-for-log';
+import {
+  emitStructuredErrorLog,
+  isNextNavigationError
+} from '@/lib/errors/serialize-error-for-log';
 
 export type FineractLoadResult<T> =
   | { ok: true; data: T }
@@ -49,6 +52,9 @@ export async function tryFineractLoad<T>(
   try {
     return { ok: true, data: await loader() };
   } catch (error) {
+    if (isNextNavigationError(error)) {
+      throw error;
+    }
     logFineractLoadFailure(error);
     const message = formatErrorMessage(error);
     return {

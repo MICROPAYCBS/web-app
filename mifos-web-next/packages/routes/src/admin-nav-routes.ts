@@ -861,6 +861,18 @@ export const ADMIN_NAV_ROUTE_ENTRIES: AdminRouteInput[] = [
     parityStatus: 'done'
   },
   {
+    id: 'adminLoginHistory',
+    path: '/appusers/login-history',
+    label: 'Login history',
+    navGroup: 'administration',
+    webAppRef: 'appusers',
+    permissionKey: 'administration.users.sessions',
+    navOrder: 25,
+    navIcon: 'clock',
+    keywords: ['session', 'sign in', 'device', 'login history'],
+    parityStatus: 'done'
+  },
+  {
     id: 'adminTemplates',
     path: '/templates',
     label: 'Templates',

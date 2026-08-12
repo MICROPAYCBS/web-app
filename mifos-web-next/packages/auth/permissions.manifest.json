@@ -1164,6 +1164,16 @@
       "RESETTOTP_USER"
     ]
   },
+  "administration.users.sessions": {
+    "any": [
+      "READ_USERSESSION"
+    ]
+  },
+  "administration.users.sessions.revoke": {
+    "any": [
+      "REVOKE_USERSESSION"
+    ]
+  },
   "administration.templates": {
     "any": [
       "READ_TEMPLATE"

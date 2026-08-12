@@ -33,4 +33,13 @@ export interface FineractClientConfig {
   getAuthHeader: () => Promise<string | null>;
   /** Optional fetch override (e.g. dev self-signed TLS in apps/web). */
   fetch?: typeof fetch;
+  /**
+   * Called after a non-OK response with HTTP 401, before the error is thrown.
+   * Use this for central session-ended handling. Do not wrap `fetch` in a catch
+   * that swallows Next.js `redirect()` (`NEXT_REDIRECT`).
+   */
+  onUnauthorized?: (error: {
+    status: number;
+    platformReason?: string | null;
+  }) => void | Promise<void>;
 }

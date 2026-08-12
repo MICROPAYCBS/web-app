@@ -21,13 +21,22 @@ export const dynamic = 'force-dynamic';
  * Prefer this over server-action logout; Set-Cookie is reliable on Route Handlers.
  */
 async function logoutRedirect(request: NextRequest) {
+  const reason = request.nextUrl.searchParams.get('reason');
+  const sessionEnded = reason === 'sessionSuperseded' || reason === 'sessionExpired';
   const session = parseServerSessionJson(request.cookies.get(SESSION_COOKIE_NAME)?.value);
-  if (session?.twoFactorAccessToken) {
+  // Dead TFA tokens 401; skip invalidate so we do not loop through the client.
+  if (!sessionEnded && session?.twoFactorAccessToken) {
     await invalidateTwoFactorAccessToken(session);
   }
 
   const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('signedOut', '1');
+  if (reason === 'sessionSuperseded') {
+    loginUrl.searchParams.set('sessionSuperseded', '1');
+  } else if (reason === 'sessionExpired') {
+    loginUrl.searchParams.set('sessionExpired', '1');
+  } else {
+    loginUrl.searchParams.set('signedOut', '1');
+  }
   const response = NextResponse.redirect(loginUrl);
 
   const attrs = sessionCookieAttributes(0);

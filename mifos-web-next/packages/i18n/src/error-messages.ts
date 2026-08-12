@@ -46,6 +46,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'FATCA registration is required on the compliance profile for the assigned customer class.',
   'error.msg.user.email.invalid':
     'Could not send the password email. Confirm the address is correct and that email delivery is configured, or turn off Send password to email and set a password on the Sign-in step.',
+  'error.msg.usersession.not.found': 'Session no longer active.',
+  'validation.msg.usersession.history.invalid.date': 'Enter a valid date range.',
   'error.msg.not.authorized': 'You do not have permission to perform this action.',
   'error.msg.clients.must.be.draft.to.submit':
     'Only draft customers can be submitted. Save as draft first, then submit.',

@@ -10,6 +10,8 @@ import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { UserDetailView } from '@/components/app-users/user-detail-view';
 import { getUser } from '@/lib/fineract/app-users';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
+import { listUserSessions } from '@/lib/fineract/user-sessions';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function AppUserDetailPage({
@@ -33,12 +35,21 @@ export default async function AppUserDetailPage({
     notFound();
   }
 
+  const canViewSessions = can(session, resolvePermission('administration.users.sessions'));
+  const sessionsResult = canViewSessions
+    ? await tryFineractLoad(() => listUserSessions(id), 'Could not load sessions.')
+    : null;
+
   return (
     <UserDetailView
       user={user}
       canUpdate={can(session, 'UPDATE_USER')}
       canDelete={can(session, 'DELETE_USER')}
       canResetTotp={can(session, resolvePermission('administration.users.resetTotp'))}
+      canViewSessions={canViewSessions}
+      canRevokeSessions={can(session, resolvePermission('administration.users.sessions.revoke'))}
+      sessions={sessionsResult?.ok ? sessionsResult.data : []}
+      sessionsError={sessionsResult && !sessionsResult.ok ? sessionsResult.message : null}
     />
   );
 }

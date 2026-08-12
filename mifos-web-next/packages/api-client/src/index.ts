@@ -339,6 +339,13 @@ export type {
 } from './administration/user-types';
 
 export type {
+  FineractUserSession,
+  FineractUserSessionsPage,
+  UserSession,
+  UserSessionRevocationReason
+} from './administration/user-session-types';
+
+export type {
   FineractTemplateDetail,
   FineractTemplateFormTemplate,
   FineractTemplateListItem,

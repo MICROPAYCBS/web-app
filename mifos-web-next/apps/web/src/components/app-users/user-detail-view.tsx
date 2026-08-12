@@ -8,17 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractUserDetail } from '@mifos/api-client';
+import type { FineractUserDetail, FineractUserSession } from '@mifos/api-client';
 import { Can, resolvePermission } from '@mifos/auth';
 import { KeyRound, Pencil, ShieldOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
 import { deleteUserAction, resetUserTotpAction } from '@/actions/app-users';
 import { ChangePasswordDialog } from '@/components/app-users/change-password-dialog';
 import { UserRolesBadges } from '@/components/app-users/user-roles-badges';
+import { UserSessionsTable } from '@/components/app-users/user-sessions-table';
 import {
   DetailBackLink,
   DetailField,
@@ -27,6 +27,7 @@ import {
   DetailPage,
   DetailSection
 } from '@/components/composites';
+import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
@@ -43,12 +44,20 @@ export function UserDetailView({
   user,
   canUpdate,
   canDelete,
-  canResetTotp
+  canResetTotp,
+  canViewSessions = false,
+  canRevokeSessions = false,
+  sessions = [],
+  sessionsError = null
 }: {
   user: FineractUserDetail;
   canUpdate: boolean;
   canDelete: boolean;
   canResetTotp: boolean;
+  canViewSessions?: boolean;
+  canRevokeSessions?: boolean;
+  sessions?: FineractUserSession[];
+  sessionsError?: string | null;
 }) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -182,6 +191,22 @@ export function UserDetailView({
         >
           <UserRolesBadges roles={user.selectedRoles} />
         </DetailSection>
+        {canViewSessions ? (
+          <DetailSection
+            title="Sessions"
+            description="Active two-factor sign-ins for this user. Revoking a session signs that device out on its next action."
+          >
+            {sessionsError ? (
+              <LoadErrorAlert title="Could not load sessions" message={sessionsError} />
+            ) : (
+              <UserSessionsTable
+                sessions={sessions}
+                canRevoke={canRevokeSessions}
+                emptyMessage="No active sessions."
+              />
+            )}
+          </DetailSection>
+        ) : null}
       </DetailPage>
 
       <ChangePasswordDialog

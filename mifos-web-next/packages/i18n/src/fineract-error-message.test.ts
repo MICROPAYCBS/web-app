@@ -14,6 +14,7 @@ import {
   resolveFineractErrorItemMessage,
   sanitizeRawDatabaseErrorMessage
 } from './fineract-error-message';
+import { translateFineractCode } from './error-messages';
 
 describe('normalizeFineractMessage', () => {
   it('unescapes dotted field names', () => {
@@ -275,5 +276,11 @@ describe('getFineractErrorMessage', () => {
       }),
       'The command ACTIVATE_SAVINGSACCOUNT is not supported. Can not be checked by the same user.'
     );
+  });
+});
+
+describe('translateFineractCode', () => {
+  it('maps a missing user session to operator copy', () => {
+    assert.equal(translateFineractCode('error.msg.usersession.not.found'), 'Session no longer active.');
   });
 });

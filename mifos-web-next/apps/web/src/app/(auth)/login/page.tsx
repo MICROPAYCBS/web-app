@@ -8,6 +8,10 @@
 
 import { LoginShell } from '@/components/auth/login-shell';
 import { mergeLoginErrors, readLoginErrorFlash } from '@/lib/auth/login-error-flash';
+import {
+  SESSION_EXPIRED_LOGIN_MESSAGE,
+  SESSION_SUPERSEDED_LOGIN_MESSAGE
+} from '@/lib/auth/session-terminated';
 import { getServerCatalog } from '@/lib/servers/catalog-store';
 import { isDemoSessionEnabled } from '@/lib/session/demo-session';
 import { getServerSession } from '@/lib/session/server';
@@ -43,12 +47,28 @@ function buildLoginQuery(params: { from?: string; servers?: string; error?: stri
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams: Promise<{ from?: string; servers?: string; error?: string; passwordChanged?: string }>;
+  searchParams: Promise<{
+    from?: string;
+    servers?: string;
+    error?: string;
+    passwordChanged?: string;
+    sessionSuperseded?: string;
+    sessionExpired?: string;
+  }>;
 }) {
   const params = await searchParams;
   const redirectTo = safeRedirectPath(params.from);
   const flashError = await readLoginErrorFlash();
-  const loginError = mergeLoginErrors(params.error?.trim() || null, flashError);
+  const sessionMessage =
+    params.sessionSuperseded === '1'
+      ? SESSION_SUPERSEDED_LOGIN_MESSAGE
+      : params.sessionExpired === '1'
+        ? SESSION_EXPIRED_LOGIN_MESSAGE
+        : null;
+  const loginError = mergeLoginErrors(
+    sessionMessage ?? (params.error?.trim() || null),
+    flashError
+  );
   const hadFlashError = Boolean(flashError);
   const loginSuccess =
     params.passwordChanged === '1'

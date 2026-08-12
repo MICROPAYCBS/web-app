@@ -19,6 +19,14 @@ export function readErrorDigest(error: unknown): string | undefined {
   return typeof digest === 'string' ? digest : undefined;
 }
 
+/** Next.js `redirect()` / `notFound()` — must be rethrown from catch-all handlers. */
+export function isNextNavigationError(error: unknown): boolean {
+  const digest = readErrorDigest(error);
+  return Boolean(
+    digest && (digest.startsWith('NEXT_REDIRECT') || digest.startsWith('NEXT_NOT_FOUND'))
+  );
+}
+
 /** Walk `error.cause` and return the first FineractHttpError, if any. */
 export function findFineractHttpError(error: unknown): FineractHttpError | undefined {
   let current: unknown = error;

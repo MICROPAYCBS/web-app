@@ -1,6 +1,11 @@
 import 'server-only';
 
 import { FineractClient } from '@mifos/api-client';
+import { redirect } from 'next/navigation';
+import {
+  sessionTerminatedLoginReason,
+  sessionTerminatedLogoutPath
+} from '@/lib/auth/session-terminated';
 import { fineractFetch } from '@/lib/fineract/fineract-fetch';
 import { getServerSession } from '@/lib/session/server';
 import { getFineractServerConfig } from './server-config';
@@ -11,6 +16,7 @@ import { getFineractServerConfig } from './server-config';
 export async function createFineractClient(): Promise<FineractClient> {
   const { baseUrl, tenantId } = await getFineractServerConfig();
   const session = await getServerSession();
+  const hadTfaToken = Boolean(session?.twoFactorAccessToken);
 
   return new FineractClient({
     baseUrl,
@@ -34,6 +40,19 @@ export async function createFineractClient(): Promise<FineractClient> {
         return `Basic ${session.base64EncodedAuthenticationKey}`;
       }
       return null;
+    },
+    onUnauthorized: (error) => {
+      const reason = sessionTerminatedLoginReason(
+        error.status,
+        error.platformReason,
+        hadTfaToken
+      );
+      if (!reason) {
+        return;
+      }
+      // Route Handler logout clears cookies reliably. Do not invalidate the dead
+      // TFA token through this client — that would 401-loop.
+      redirect(sessionTerminatedLogoutPath(reason));
     }
   });
 }

@@ -16,8 +16,22 @@ export type FineractActionError = {
   fieldErrors?: Record<string, string>;
 };
 
+function isNextNavigationError(err: unknown): boolean {
+  if (!err || typeof err !== 'object' || !('digest' in err)) {
+    return false;
+  }
+  const digest = (err as { digest?: unknown }).digest;
+  return (
+    typeof digest === 'string' &&
+    (digest.startsWith('NEXT_REDIRECT') || digest.startsWith('NEXT_NOT_FOUND'))
+  );
+}
+
 /** Map a caught error to a server-action failure result with Fineract messages preserved. */
 export function toFineractActionError(err: unknown, fallback: string): FineractActionError {
+  if (isNextNavigationError(err)) {
+    throw err;
+  }
   if (err instanceof FineractHttpError) {
     const mapped = mapFineractErrors(err.body);
     const fieldErrors = Object.fromEntries(mapped.fieldErrors.map((e) => [e.field, e.message]));

@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { KeyRoundIcon } from 'lucide-react';
+import { KeyRoundIcon, MonitorSmartphoneIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { parseSessionRoles, useSession } from '@mifos/auth';
 import { ChangePasswordDialog } from '@/components/auth/change-password-dialog';
@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 function userInitials(displayName: string): string {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
@@ -38,6 +39,7 @@ function userInitials(displayName: string): string {
 /** Account menu for the platform header (top-right). */
 export function MifosNavUser() {
   const { user } = useSession();
+  const router = useRouter();
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const roles = useMemo(() => parseSessionRoles(user?.roles), [user?.roles]);
 
@@ -91,6 +93,10 @@ export function MifosNavUser() {
           <ThemeMenuGroup />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => router.push('/account/sessions')}>
+              <MonitorSmartphoneIcon className="size-4" />
+              My sessions
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setChangePasswordOpen(true)}>
               <KeyRoundIcon className="size-4" />
               Change password

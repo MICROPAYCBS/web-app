@@ -469,6 +469,23 @@ const CORE_APP_ROUTES = {
     requiresAuth: true,
     parity: { status: 'done', notes: 'Greenfield multi-server' }
   },
+  accountSessions: {
+    id: 'accountSessions',
+    path: '/account/sessions',
+    kind: 'page',
+    label: 'My sessions',
+    domain: 'account',
+    nav: false,
+    quickFind: true,
+    keywords: ['session', 'device', 'sign in', 'my sessions'],
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      fineractApi: 'GET /users/{userId}/sessions',
+      notes: 'Self-view of two-factor sessions; no READ_USERSESSION required'
+    }
+  },
   clientsApi: {
     id: 'clientsApi',
     path: '/api/clients',

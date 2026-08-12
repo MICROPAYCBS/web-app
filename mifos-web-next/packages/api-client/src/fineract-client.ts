@@ -28,7 +28,9 @@ export class FineractHttpError extends Error {
   constructor(
     public readonly status: number,
     public readonly body: FineractApiError | null,
-    public readonly request?: FineractRequestInfo
+    public readonly request?: FineractRequestInfo,
+    /** Value of the `Fineract-Platform-Reason` response header, when present. */
+    public readonly platformReason?: string | null
   ) {
     super(getFineractErrorMessage(body, status));
     this.name = 'FineractHttpError';
@@ -118,7 +120,12 @@ export class FineractClient {
           })
         );
       }
-      throw new FineractHttpError(res.status, body, requestInfo);
+      const platformReason = res.headers.get('Fineract-Platform-Reason');
+      const error = new FineractHttpError(res.status, body, requestInfo, platformReason);
+      if (res.status === 401 && this.config.onUnauthorized) {
+        await this.config.onUnauthorized(error);
+      }
+      throw error;
     }
 
     if (res.status === 204 || !raw.trim()) {
