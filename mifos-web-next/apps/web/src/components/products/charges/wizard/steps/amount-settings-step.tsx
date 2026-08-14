@@ -254,7 +254,7 @@ export function AmountSettingsStep({
               <EmptyState
                 icon={Layers}
                 title="No charge tiers yet"
-                description="Add lookup bands by base amount. The first band starts at 0, each next band starts where the previous ends, and the last stays open-ended (blank To)."
+                description="Add lookup bands by base amount. The first band starts at 0 with no upper limit. Each next band starts where the previous ends, and the last always stays open-ended."
                 action={
                   <Button type="button" size="sm" onClick={() => setTierSheet({ mode: 'create' })} disabled={!canAddTier}>
                     <Plus className="mr-1 size-4" />
@@ -269,8 +269,8 @@ export function AmountSettingsStep({
                 <div>
                   <p className="text-sm font-medium">Charge tiers</p>
                   <p className="text-sm text-muted-foreground">
-                    Bands chain automatically with no gaps or overlaps. The last band stays
-                    open-ended.
+                    Bands chain automatically with no gaps or overlaps. The last band is
+                    listed as "and above" (no upper limit).
                   </p>
                 </div>
                 <Button

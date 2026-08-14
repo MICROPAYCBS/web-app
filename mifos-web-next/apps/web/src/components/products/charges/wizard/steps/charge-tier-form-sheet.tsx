@@ -13,6 +13,8 @@ import { useEffect, useId, useState } from 'react';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
+import { TextField } from '@/components/composites/text-field';
+import { OPEN_ENDED_CHARGE_TIER_TO_LABEL } from '@/lib/fineract/charge-display';
 
 export type ChargeTierDraft = {
   amountRangeFrom?: number;
@@ -150,11 +152,14 @@ export function ChargeTierFormSheet({
     onOpenChange(false);
   }
 
-  const fromHint = lockFrom
-    ? 'Locked so bands stay contiguous (no gaps or overlaps).'
-    : 'Start of this band and exclusive end of the previous band.';
+  const fromHint =
+    lockFrom && parseOptionalNumber(fromInput) === 0
+      ? 'The first band always starts at 0.'
+      : lockFrom
+        ? 'Locked so bands stay contiguous (no gaps or overlaps).'
+        : 'Start of this band and exclusive end of the previous band.';
   const toHint = lockTo
-    ? 'The last band is always open-ended.'
+    ? 'This band has no maximum. It applies from the start amount upward until you add another band.'
     : 'Exclusive upper bound. The next band starts here.';
 
   return (
@@ -162,7 +167,7 @@ export function ChargeTierFormSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={isEdit ? 'Edit charge tier' : 'Add charge tier'}
-      description="Lookup band: the charge uses the single matching range (from inclusive, to exclusive). Bands chain automatically with no gaps or overlaps. The last band stays open-ended."
+      description="Lookup band: the charge uses the single matching range (from inclusive, to exclusive). Bands chain automatically with no gaps or overlaps. The last band has no upper limit."
       formId={formId}
       onSubmit={handleSubmit}
       submitLabel={isEdit ? 'Save tier' : 'Add tier'}
@@ -188,18 +193,28 @@ export function ChargeTierFormSheet({
           hint={fromHint}
           disabled={lockFrom}
         />
-        <MoneyField
-          id={`${formId}-to`}
-          label="To"
-          optional={lockTo}
-          required={!lockTo}
-          currencyCode={currencyCode}
-          value={toInput}
-          onChange={setToInput}
-          error={fieldErrors.amountRangeTo}
-          hint={toHint}
-          disabled={lockTo}
-        />
+        {lockTo ? (
+          <TextField
+            id={`${formId}-to`}
+            label="To"
+            optional={false}
+            value={OPEN_ENDED_CHARGE_TIER_TO_LABEL}
+            onChange={() => undefined}
+            hint={toHint}
+            disabled
+          />
+        ) : (
+          <MoneyField
+            id={`${formId}-to`}
+            label="To"
+            required
+            currencyCode={currencyCode}
+            value={toInput}
+            onChange={setToInput}
+            error={fieldErrors.amountRangeTo}
+            hint={toHint}
+          />
+        )}
         {flatAmount ? (
           <MoneyField
             id={`${formId}-amount`}

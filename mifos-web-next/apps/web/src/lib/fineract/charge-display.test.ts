@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   formatChargeAmountDisplay,
+  formatChargeTierRange,
   formatProductChargeOptionLabel,
   isFlatChargeCalculation,
   isPercentageChargeCalculation,
@@ -60,6 +61,18 @@ describe('charge amount display', () => {
     assert.equal(isPercentageChargeCalculation(1), false);
     assert.equal(isPercentageChargeCalculation(2), true);
     assert.equal(isPercentageChargeCalculation(5), true);
+  });
+
+  it('labels an open-ended tier as and above instead of zero or infinity', () => {
+    assert.equal(formatChargeTierRange(0, null, 'UGX'), 'UGX\u00a00.00 and above');
+    assert.equal(formatChargeTierRange(0, undefined, 'USD'), 'USD\u00a00.00 and above');
+  });
+
+  it('formats a closed tier range with ISO currency codes', () => {
+    assert.equal(
+      formatChargeTierRange(0, 100_000, 'UGX'),
+      'UGX\u00a00.00 – UGX\u00a0100,000.00'
+    );
   });
 
   it('shows product amount override on preview labels', () => {

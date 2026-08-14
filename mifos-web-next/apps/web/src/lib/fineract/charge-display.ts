@@ -112,6 +112,15 @@ function formatPercentageAmount(amount: number): string {
   }).format(amount)}%`;
 }
 
+/** Visible value for a locked, open-ended To field (null/undefined in data). */
+export const OPEN_ENDED_CHARGE_TIER_TO_LABEL = 'No upper limit';
+
+function formatTierBound(amount: number, currencyCode: string): string {
+  return currencyCode
+    ? (formatMoney(amount, currencyCode) ?? String(amount))
+    : String(amount);
+}
+
 /** Format a lookup tier base-amount range using the charge currency ISO code. */
 export function formatChargeTierRange(
   amountRangeFrom: number | undefined,
@@ -122,16 +131,11 @@ export function formatChargeTierRange(
     return '—';
   }
   const code = currencyCode?.trim().toUpperCase() ?? '';
-  const fromLabel = code
-    ? (formatMoney(amountRangeFrom, code) ?? String(amountRangeFrom))
-    : String(amountRangeFrom);
+  const fromLabel = formatTierBound(amountRangeFrom, code);
   if (amountRangeTo == null) {
-    return `${fromLabel} – ∞`;
+    return `${fromLabel} and above`;
   }
-  const toLabel = code
-    ? (formatMoney(amountRangeTo, code) ?? String(amountRangeTo))
-    : String(amountRangeTo);
-  return `${fromLabel} – ${toLabel}`;
+  return `${fromLabel} – ${formatTierBound(amountRangeTo, code)}`;
 }
 
 export function formatChargeAmountDisplay(
