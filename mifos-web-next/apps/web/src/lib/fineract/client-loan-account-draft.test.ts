@@ -11,20 +11,25 @@ import { loanAccountDraftFromTemplate } from '@/lib/fineract/client-loan-account
 
 describe('loanAccountDraftFromTemplate', () => {
   it('defaults term and repayment units from the product template', () => {
-    const draft = loanAccountDraftFromTemplate({
-      product: { id: 3, name: 'Term loan' },
-      loanTermFrequency: 12,
-      loanTermFrequencyType: { id: 2, value: 'Months' },
-      numberOfRepayments: 12,
-      repaymentEvery: 1,
-      repaymentFrequencyType: { id: 2, value: 'Months' },
-      principal: 200_000,
-      currency: { code: 'UGX', name: 'Ugandan Shilling' }
-    });
+    const draft = loanAccountDraftFromTemplate(
+      {
+        product: { id: 3, name: 'Term loan' },
+        loanTermFrequency: 12,
+        loanTermFrequencyType: { id: 2, value: 'Months' },
+        numberOfRepayments: 12,
+        repaymentEvery: 1,
+        repaymentFrequencyType: { id: 2, value: 'Months' },
+        principal: 200_000,
+        currency: { code: 'UGX', name: 'Ugandan Shilling' }
+      },
+      '14 August 2026'
+    );
 
     expect(draft.loanTermFrequencyType).toBe(2);
     expect(draft.repaymentFrequencyType).toBe(2);
     expect(draft.loanTermFrequency).toBe(12);
+    expect(draft.submittedOnDate).toBe('14 August 2026');
+    expect(draft.expectedDisbursementDate).toBe('14 August 2026');
   });
 
   it('falls repayment interval unit back to the loan term unit', () => {

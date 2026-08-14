@@ -109,11 +109,12 @@ export function emptyLoanAccountDraft(defaultTransactionDate?: string): LoanAcco
 
 export function loanAccountDraftFromTemplate(
 
-  template: ClientLoanAccountTemplate
+  template: ClientLoanAccountTemplate,
+  defaultTransactionDate?: string
 
 ): LoanAccountDraft {
 
-  const base = emptyLoanAccountDraft();
+  const base = emptyLoanAccountDraft(defaultTransactionDate);
 
   const loanTermFrequencyTypeId =
     template.loanTermFrequencyType?.id ?? base.loanTermFrequencyType;

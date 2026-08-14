@@ -21,9 +21,11 @@ import {
   loadCenterStaffAction
 } from '@/actions/centers';
 import { DetailBackLink } from '@/components/composites';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { ListPage } from '@/components/composites/list-page';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -40,21 +42,22 @@ type CreateCenterFormState = {
   activationDate: string;
 };
 
-function defaultFormState(): CreateCenterFormState {
+function defaultFormState(initialDate: string): CreateCenterFormState {
   return {
     name: '',
     officeId: '',
     staffId: '',
     externalId: '',
-    submittedOnDate: '',
+    submittedOnDate: initialDate,
     active: false,
-    activationDate: ''
+    activationDate: initialDate
   };
 }
 
 export function CreateCenterPageContent({ offices }: { offices: FineractOfficeOption[] }) {
   const router = useRouter();
-  const [form, setForm] = useState<CreateCenterFormState>(defaultFormState);
+  const initialDate = useInitialTransactionDate();
+  const [form, setForm] = useState<CreateCenterFormState>(() => defaultFormState(initialDate));
   const [staffOptions, setStaffOptions] = useState<Array<{ id: number; displayName: string }>>([]);
   const [groupOptions, setGroupOptions] = useState<CenterGroupOption[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
@@ -182,17 +185,23 @@ export function CreateCenterPageContent({ offices }: { offices: FineractOfficeOp
               id="center-active"
               checked={form.active}
               onCheckedChange={(value) =>
-                setForm((current) => ({ ...current, active: value === true }))
+                setForm((current) => ({
+                  ...current,
+                  active: value === true,
+                  activationDate:
+                    value === true && !current.activationDate.trim()
+                      ? current.submittedOnDate || initialDate
+                      : current.activationDate
+                }))
               }
               disabled={pending}
             />
             <Label htmlFor="center-active">Active</Label>
           </div>
           {form.active ? (
-            <TextField
+            <TransactionDateField
               id="center-activation-date"
               label="Activation date"
-              type="date"
               required
               value={form.activationDate}
               onChange={(value) => setForm((current) => ({ ...current, activationDate: value }))}
@@ -207,10 +216,9 @@ export function CreateCenterPageContent({ offices }: { offices: FineractOfficeOp
             onChange={(value) => setForm((current) => ({ ...current, externalId: value }))}
             disabled={pending}
           />
-          <TextField
+          <TransactionDateField
             id="center-submitted-on"
             label="Submitted on"
-            type="date"
             required
             value={form.submittedOnDate}
             onChange={(value) => setForm((current) => ({ ...current, submittedOnDate: value }))}

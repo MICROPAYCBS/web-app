@@ -58,10 +58,10 @@ export type SavingsAccountFormState = Pick<
   | 'minRequiredBalance'
 >;
 
-export function emptyDepositForm(): DepositFormState {
+export function emptyDepositForm(submittedOnDate = ''): DepositFormState {
   return {
     productId: '',
-    submittedOnDate: '',
+    submittedOnDate,
     externalId: '',
     fieldOfficerId: '',
     depositAmount: '',

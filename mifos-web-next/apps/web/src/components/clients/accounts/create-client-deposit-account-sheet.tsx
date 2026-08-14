@@ -64,10 +64,9 @@ export function CreateClientDepositAccountSheet({
   const config = CLIENT_DEPOSIT_ACCOUNT_CONFIG[kind];
   const initialTransactionDate = useInitialTransactionDate();
   const [template, setTemplate] = useState(initialTemplate);
-  const [form, setForm] = useState<DepositFormState>(() => ({
-    ...emptyDepositForm(),
-    submittedOnDate: initialTransactionDate
-  }));
+  const [form, setForm] = useState<DepositFormState>(() =>
+    emptyDepositForm(initialTransactionDate)
+  );
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -146,7 +145,7 @@ export function CreateClientDepositAccountSheet({
       return;
     }
     setTemplate(initialTemplate);
-    setForm({ ...emptyDepositForm(), submittedOnDate: initialTransactionDate });
+    setForm(emptyDepositForm(initialTransactionDate));
     setActiveTab('basic');
     setFieldErrors({});
     setSubmitError(null);

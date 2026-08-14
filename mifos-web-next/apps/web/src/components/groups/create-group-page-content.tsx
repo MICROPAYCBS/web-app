@@ -21,9 +21,11 @@ import {
   searchGroupClientsAction
 } from '@/actions/groups';
 import { DetailBackLink } from '@/components/composites';
+import { TransactionDateField } from '@/components/composites/transaction-date-field';
 import { ListPage } from '@/components/composites/list-page';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -40,15 +42,15 @@ type CreateGroupFormState = {
   activationDate: string;
 };
 
-function defaultFormState(): CreateGroupFormState {
+function defaultFormState(initialDate: string): CreateGroupFormState {
   return {
     name: '',
     officeId: '',
     staffId: '',
     externalId: '',
-    submittedOnDate: '',
+    submittedOnDate: initialDate,
     active: false,
-    activationDate: ''
+    activationDate: initialDate
   };
 }
 
@@ -56,7 +58,8 @@ const CLIENT_SEARCH_DEBOUNCE_MS = 400;
 
 export function CreateGroupPageContent({ offices }: { offices: FineractOfficeOption[] }) {
   const router = useRouter();
-  const [form, setForm] = useState<CreateGroupFormState>(defaultFormState);
+  const initialDate = useInitialTransactionDate();
+  const [form, setForm] = useState<CreateGroupFormState>(() => defaultFormState(initialDate));
   const [staffOptions, setStaffOptions] = useState<Array<{ id: number; displayName: string }>>([]);
   const [clientSearch, setClientSearch] = useState('');
   const [debouncedClientSearch, setDebouncedClientSearch] = useState('');
@@ -201,17 +204,23 @@ export function CreateGroupPageContent({ offices }: { offices: FineractOfficeOpt
               id="group-active"
               checked={form.active}
               onCheckedChange={(value) =>
-                setForm((current) => ({ ...current, active: value === true }))
+                setForm((current) => ({
+                  ...current,
+                  active: value === true,
+                  activationDate:
+                    value === true && !current.activationDate.trim()
+                      ? current.submittedOnDate || initialDate
+                      : current.activationDate
+                }))
               }
               disabled={pending}
             />
             <Label htmlFor="group-active">Active</Label>
           </div>
           {form.active ? (
-            <TextField
+            <TransactionDateField
               id="group-activation-date"
               label="Activation date"
-              type="date"
               required
               value={form.activationDate}
               onChange={(value) => setForm((current) => ({ ...current, activationDate: value }))}
@@ -226,10 +235,9 @@ export function CreateGroupPageContent({ offices }: { offices: FineractOfficeOpt
             onChange={(value) => setForm((current) => ({ ...current, externalId: value }))}
             disabled={pending}
           />
-          <TextField
+          <TransactionDateField
             id="group-submitted-on"
             label="Submitted on"
-            type="date"
             required
             value={form.submittedOnDate}
             onChange={(value) => setForm((current) => ({ ...current, submittedOnDate: value }))}

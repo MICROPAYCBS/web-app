@@ -38,6 +38,7 @@ import {
 
 import { useLoanSchedulePreview } from '@/components/clients/loan-account/use-loan-schedule-preview';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
@@ -150,11 +151,12 @@ export function LoanAccountWizard({
   const isEdit = mode === 'edit';
 
   const router = useRouter();
+  const initialTransactionDate = useInitialTransactionDate();
 
   const [template, setTemplate] = useState(initialTemplate);
 
   const [draft, setDraft] = useState<LoanAccountDraft>(
-    initialDraft ?? emptyLoanAccountDraft()
+    () => initialDraft ?? emptyLoanAccountDraft(initialTransactionDate)
   );
 
   const [stepId, setStepId] = useState('core');
@@ -263,7 +265,7 @@ export function LoanAccountWizard({
 
   const applyProductTemplate = useCallback(
     (productId: number, result: ClientLoanAccountTemplate) => {
-      const seededDraft = loanAccountDraftFromTemplate(result);
+      const seededDraft = loanAccountDraftFromTemplate(result, initialTransactionDate);
 
       setTemplate(result);
       setDraft((current) => ({
@@ -286,7 +288,7 @@ export function LoanAccountWizard({
             : undefined
       }));
     },
-    [clientId]
+    [clientId, initialTransactionDate]
   );
 
   const loadProductTemplate = useCallback(
