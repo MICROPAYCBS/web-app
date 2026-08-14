@@ -42,11 +42,31 @@ export function MappingSection<T extends Record<string, number>>({
   rightErrorPrefix?: string;
   errors?: Record<string, string>;
 }) {
+  const usedLeftIds = new Set(
+    rows.map((row) => row[leftKey]).filter((id) => id > 0).map(String)
+  );
+  const canAdd =
+    leftOptions.length > 0 && leftOptions.some((option) => !usedLeftIds.has(option.value));
+
+  function leftOptionsForRow(index: number) {
+    const current = rows[index]?.[leftKey];
+    const currentValue = current > 0 ? String(current) : undefined;
+    return leftOptions.filter((option) => {
+      if (option.value === currentValue) {
+        return true;
+      }
+      return !usedLeftIds.has(option.value);
+    });
+  }
+
   function updateRow(index: number, patch: Partial<T>) {
     onChange(rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   }
 
   function addRow() {
+    if (!canAdd) {
+      return;
+    }
     onChange([...rows, { [leftKey]: 0, [rightKey]: 0 } as T]);
   }
 
@@ -71,7 +91,7 @@ export function MappingSection<T extends Record<string, number>>({
                 onValueChange={(value) =>
                   updateRow(index, { [leftKey]: value ? Number(value) : 0 } as Partial<T>)
                 }
-                options={leftOptions}
+                options={leftOptionsForRow(index)}
                 error={leftErrorPrefix ? errors?.[`${leftErrorPrefix}.${index}.${leftKey}`] : undefined}
               />
               <SelectField
@@ -97,7 +117,7 @@ export function MappingSection<T extends Record<string, number>>({
             </div>
           ))
         )}
-        <Button type="button" variant="outline" size="sm" onClick={addRow}>
+        <Button type="button" variant="outline" size="sm" onClick={addRow} disabled={!canAdd}>
           <Plus className="mr-1 size-4" />
           Add mapping
         </Button>

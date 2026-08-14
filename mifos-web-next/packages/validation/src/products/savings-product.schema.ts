@@ -8,6 +8,11 @@
 
 import { z } from 'zod';
 import { optionalInMultiplesOf } from './product-currency.schema';
+import {
+  productMappingsObjectSchema,
+  productMappingsStepSchema,
+  refineProductMappingUniqueness
+} from './product-mapping.schema';
 
 const optionalId = z.coerce
   .number()
@@ -17,17 +22,7 @@ const optionalId = z.coerce
   .or(z.literal(''))
   .transform((v) => (v === '' ? undefined : v));
 
-const glAccountId = z.coerce.number().int().positive().optional();
-
-const paymentChannelMappingSchema = z.object({
-  paymentTypeId: z.coerce.number().int().positive(),
-  fundSourceAccountId: z.coerce.number().int().positive()
-});
-
-const chargeIncomeMappingSchema = z.object({
-  chargeId: z.coerce.number().int().positive(),
-  incomeAccountId: z.coerce.number().int().positive()
-});
+const   glAccountId = z.coerce.number().int().positive().optional();
 
 export const savingsProductDetailsStepSchema = z
   .object({
@@ -227,19 +222,16 @@ const savingsProductAccountingCoreSchema = z.object({
   escheatLiabilityId: glAccountId
 });
 
-export const savingsProductMappingsStepSchema = z.object({
-  paymentChannelToFundSourceMappings: z.array(paymentChannelMappingSchema).optional(),
-  feeToIncomeAccountMappings: z.array(chargeIncomeMappingSchema).optional(),
-  penaltyToIncomeAccountMappings: z.array(chargeIncomeMappingSchema).optional()
-});
+export const savingsProductMappingsStepSchema = productMappingsStepSchema;
 
 /** Wizard accounting step — GL accounts and rule only (mappings are a separate step). */
 export const savingsProductAccountingCoreStepSchema =
   savingsProductAccountingCoreSchema.superRefine((data, ctx) => refineSavingsAccounting(data, ctx));
 
 export const savingsProductAccountingStepSchema = savingsProductAccountingCoreSchema
-  .merge(savingsProductMappingsStepSchema)
-  .superRefine((data, ctx) => refineSavingsAccounting(data, ctx));
+  .merge(productMappingsObjectSchema)
+  .superRefine((data, ctx) => refineSavingsAccounting(data, ctx))
+  .superRefine((data, ctx) => refineProductMappingUniqueness(data, ctx));
 
 export function validateSavingsProductAccounting(
   accounting: z.infer<typeof savingsProductAccountingCoreSchema>,

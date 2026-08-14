@@ -9,6 +9,11 @@
 import { z } from 'zod';
 import { validateLookupRangeBands } from './lookup-range-bands';
 import { optionalInMultiplesOf } from './product-currency.schema';
+import {
+  chargeIncomeMappingSchema,
+  paymentChannelMappingSchema,
+  refineProductMappingUniqueness
+} from './product-mapping.schema';
 
 const optionalId = z.coerce
   .number()
@@ -19,16 +24,6 @@ const optionalId = z.coerce
   .transform((v) => (v === '' ? undefined : v));
 
 const glAccountId = z.coerce.number().int().positive().optional();
-
-const paymentChannelMappingSchema = z.object({
-  paymentTypeId: z.coerce.number().int().positive(),
-  fundSourceAccountId: z.coerce.number().int().positive()
-});
-
-const chargeIncomeMappingSchema = z.object({
-  chargeId: z.coerce.number().int().positive(),
-  incomeAccountId: z.coerce.number().int().positive()
-});
 
 export const depositProductDetailsStepSchema = z
   .object({
@@ -367,9 +362,9 @@ const depositProductAccountingCoreSchema = z.object({
   penaltyToIncomeAccountMappings: z.array(chargeIncomeMappingSchema).default([])
 });
 
-export const depositProductAccountingStepSchema = depositProductAccountingCoreSchema.superRefine(
-  refineDepositAccounting
-);
+export const depositProductAccountingStepSchema = depositProductAccountingCoreSchema
+  .superRefine(refineDepositAccounting)
+  .superRefine((data, ctx) => refineProductMappingUniqueness(data, ctx));
 
 export const depositProductAccountingCoreStepSchema = depositProductAccountingCoreSchema;
 

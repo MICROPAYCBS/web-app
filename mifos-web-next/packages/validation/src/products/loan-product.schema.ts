@@ -18,6 +18,11 @@ import {
   refineMinMaxNumberRange
 } from './loan-product-fineract-rules';
 import { optionalInMultiplesOf } from './product-currency.schema';
+import {
+  productMappingsObjectSchema,
+  productMappingsStepSchema,
+  refineProductMappingUniqueness
+} from './product-mapping.schema';
 
 const optionalId = z.coerce.number().int().positive().optional().or(z.literal('')).transform((v) => (v === '' ? undefined : v));
 
@@ -388,21 +393,7 @@ export const loanProductChargesStepSchema = z.object({
 
 const glAccountId = z.coerce.number().int().positive().optional();
 
-const paymentChannelMappingSchema = z.object({
-  paymentTypeId: z.coerce.number().int().positive(),
-  fundSourceAccountId: z.coerce.number().int().positive()
-});
-
-const chargeIncomeMappingSchema = z.object({
-  chargeId: z.coerce.number().int().positive(),
-  incomeAccountId: z.coerce.number().int().positive()
-});
-
-export const loanProductMappingsStepSchema = z.object({
-  paymentChannelToFundSourceMappings: z.array(paymentChannelMappingSchema).optional(),
-  feeToIncomeAccountMappings: z.array(chargeIncomeMappingSchema).optional(),
-  penaltyToIncomeAccountMappings: z.array(chargeIncomeMappingSchema).optional()
-});
+export const loanProductMappingsStepSchema = productMappingsStepSchema;
 
 function refineAccountingCore(
   data: {
@@ -485,8 +476,9 @@ export const loanProductAccountingCoreStepSchema =
   loanProductAccountingCoreSchema.superRefine(refineAccountingCore);
 
 export const loanProductAccountingStepSchema = loanProductAccountingCoreSchema
-  .merge(loanProductMappingsStepSchema)
-  .superRefine(refineAccountingCore);
+  .merge(productMappingsObjectSchema)
+  .superRefine(refineAccountingCore)
+  .superRefine((data, ctx) => refineProductMappingUniqueness(data, ctx));
 
 function refineUpsertLoanProductCrossStep(
   data: {
