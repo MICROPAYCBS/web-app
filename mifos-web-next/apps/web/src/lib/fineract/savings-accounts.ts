@@ -289,6 +289,7 @@ export function normalizeDepositAccountDetail(raw: unknown): FineractSavingsAcco
           ? Number(row.nominalAnnualInterestRate)
           : undefined,
     interestCompoundingPeriodType: normalizeEnumOption(row.interestCompoundingPeriodType),
+    interestPostingPeriodType: normalizeEnumOption(row.interestPostingPeriodType),
     interestCalculationType: normalizeEnumOption(row.interestCalculationType),
     interestCalculationDaysInYearType: normalizeEnumOption(row.interestCalculationDaysInYearType),
     lastActiveTransactionDate: row.lastActiveTransactionDate as

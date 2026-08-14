@@ -169,6 +169,11 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
                 {enumOptionLabel(account.interestCompoundingPeriodType) ?? '—'}
               </DetailField>
             ) : null}
+            {account.interestPostingPeriodType ? (
+              <DetailField label="Interest posting period">
+                {enumOptionLabel(account.interestPostingPeriodType) ?? '—'}
+              </DetailField>
+            ) : null}
             {account.interestCalculationType ? (
               <DetailField label="Interest calculation">
                 {enumOptionLabel(account.interestCalculationType) ?? '—'}

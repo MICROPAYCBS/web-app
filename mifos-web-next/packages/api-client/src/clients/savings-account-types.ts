@@ -130,6 +130,7 @@ export interface FineractSavingsAccountDetail {
   depositType?: FineractEnumOption;
   nominalAnnualInterestRate?: number;
   interestCompoundingPeriodType?: FineractEnumOption;
+  interestPostingPeriodType?: FineractEnumOption;
   interestCalculationType?: FineractEnumOption;
   interestCalculationDaysInYearType?: FineractEnumOption;
   lastActiveTransactionDate?: number[] | string;
