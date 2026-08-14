@@ -8,7 +8,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ChargeTierInput } from '@mifos/validation';
+import {
+  appendOpenEndedChargeTier,
+  removeChargeTierAndRechain,
+  replaceChargeTierAndRechain,
+  type ChargeTierInput
+} from '@mifos/validation';
 import { Layers, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { ChargeWizardDraft } from '../types';
@@ -42,10 +47,7 @@ import {
 import { glAccountLabel } from '@/lib/fineract/product-display';
 import { useDraftNumericInput } from '@/lib/form/use-draft-numeric-input';
 import type { ChargeStepProps } from '../types';
-import {
-  ChargeTierFormSheet,
-  type ChargeTierDraft
-} from './charge-tier-form-sheet';
+import { ChargeTierFormSheet } from './charge-tier-form-sheet';
 
 type TierSheetState =
   | { mode: 'closed' }
@@ -105,21 +107,37 @@ export function AmountSettingsStep({
     return tiers[tierSheet.index];
   }, [tierSheet, tiers]);
 
-  const defaultFrom = useMemo(() => {
-    if (tiers.length === 0) {
-      return 0;
-    }
-    const last = tiers[tiers.length - 1];
-    return last.amountRangeTo ?? last.amountRangeFrom ?? 0;
-  }, [tiers]);
+  const lastFrom = tiers[tiers.length - 1]?.amountRangeFrom;
+  const canAddTier = tiers.length === 0 || lastFrom != null;
+  const isCreating = tierSheet.mode === 'create';
+  const isFirstCreate = isCreating && tiers.length === 0;
+  const isEditingLast =
+    tierSheet.mode === 'edit' && tierSheet.index === tiers.length - 1;
+  const lockFrom = !isCreating || isFirstCreate;
+  const lockTo = isCreating || isEditingLast;
+  const minFrom =
+    isCreating && !isFirstCreate && lastFrom != null ? lastFrom : undefined;
+  const maxTo =
+    tierSheet.mode === 'edit' &&
+    tierSheet.index < tiers.length - 1 &&
+    tiers[tierSheet.index + 1]?.amountRangeTo != null
+      ? (tiers[tierSheet.index + 1]?.amountRangeTo ?? undefined)
+      : undefined;
 
-  function setTiers(next: ChargeTierDraft[]) {
-    // Always pass a new plain array so nested tiers survive draft merges / Server Actions.
+  function asChainRows(): ChargeTierInput[] {
+    return tiers.map((tier) => ({
+      amountRangeFrom: tier.amountRangeFrom ?? 0,
+      amountRangeTo: tier.amountRangeTo ?? null,
+      amount: tier.amount ?? 0
+    }));
+  }
+
+  function setTiers(next: ChargeTierInput[]) {
     onChange({
       chargeTiers: next.map((tier) => ({
-        amountRangeFrom: tier.amountRangeFrom as number,
+        amountRangeFrom: tier.amountRangeFrom,
         amountRangeTo: tier.amountRangeTo ?? null,
-        amount: tier.amount as number
+        amount: tier.amount
       }))
     });
   }
@@ -149,14 +167,14 @@ export function AmountSettingsStep({
 
   function handleSaveTier(tier: ChargeTierInput) {
     if (tierSheet.mode === 'edit') {
-      setTiers(tiers.map((row, index) => (index === tierSheet.index ? tier : row)));
+      setTiers(replaceChargeTierAndRechain(asChainRows(), tierSheet.index, tier));
       return;
     }
-    setTiers([...tiers, tier]);
+    setTiers(appendOpenEndedChargeTier(asChainRows(), tier.amountRangeFrom, tier.amount));
   }
 
   function removeTier(index: number) {
-    setTiers(tiers.filter((_, i) => i !== index));
+    setTiers(removeChargeTierAndRechain(asChainRows(), index));
   }
 
   const capFields = flatAmount ? (
@@ -236,9 +254,9 @@ export function AmountSettingsStep({
               <EmptyState
                 icon={Layers}
                 title="No charge tiers yet"
-                description="Add lookup bands for the base amount. The first tier must start at 0, the last must be open-ended (blank To), and bands must be contiguous with no overlaps."
+                description="Add lookup bands by base amount. The first band starts at 0, each next band starts where the previous ends, and the last stays open-ended (blank To)."
                 action={
-                  <Button type="button" size="sm" onClick={() => setTierSheet({ mode: 'create' })}>
+                  <Button type="button" size="sm" onClick={() => setTierSheet({ mode: 'create' })} disabled={!canAddTier}>
                     <Plus className="mr-1 size-4" />
                     Add tier
                   </Button>
@@ -251,8 +269,8 @@ export function AmountSettingsStep({
                 <div>
                   <p className="text-sm font-medium">Charge tiers</p>
                   <p className="text-sm text-muted-foreground">
-                    Ranges are [from, to). The first tier must start at 0, the last must be
-                    open-ended (blank To), and bands must be contiguous with no overlaps.
+                    Bands chain automatically with no gaps or overlaps. The last band stays
+                    open-ended.
                   </p>
                 </div>
                 <Button
@@ -260,6 +278,7 @@ export function AmountSettingsStep({
                   variant="outline"
                   size="sm"
                   onClick={() => setTierSheet({ mode: 'create' })}
+                  disabled={!canAddTier}
                 >
                   <Plus className="mr-1 size-4" />
                   Add tier
@@ -435,7 +454,11 @@ export function AmountSettingsStep({
           }
         }}
         tier={editingTier}
-        defaultFrom={defaultFrom}
+        defaultFrom={isFirstCreate ? 0 : undefined}
+        lockFrom={lockFrom}
+        lockTo={lockTo}
+        minFrom={minFrom}
+        maxTo={maxTo}
         flatAmount={flatAmount}
         currencyCode={currencyCode}
         onSave={handleSaveTier}

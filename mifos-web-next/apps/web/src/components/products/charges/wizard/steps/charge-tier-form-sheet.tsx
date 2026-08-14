@@ -20,7 +20,7 @@ export type ChargeTierDraft = {
   amount?: number;
 };
 
-function emptyTier(amountRangeFrom = 0): ChargeTierDraft {
+function emptyTier(amountRangeFrom?: number): ChargeTierDraft {
   return {
     amountRangeFrom,
     amountRangeTo: null,
@@ -51,6 +51,10 @@ export function ChargeTierFormSheet({
   onOpenChange,
   tier,
   defaultFrom,
+  lockFrom,
+  lockTo,
+  minFrom,
+  maxTo,
   flatAmount,
   currencyCode,
   onSave
@@ -59,6 +63,12 @@ export function ChargeTierFormSheet({
   onOpenChange: (open: boolean) => void;
   tier?: ChargeTierDraft;
   defaultFrom?: number;
+  lockFrom?: boolean;
+  lockTo?: boolean;
+  /** Exclusive: this band’s From must be greater than the previous From. */
+  minFrom?: number;
+  /** Exclusive: this band’s To must be less than the next band’s To. */
+  maxTo?: number;
   flatAmount: boolean;
   currencyCode?: string;
   onSave: (tier: ChargeTierInput) => void;
@@ -75,19 +85,19 @@ export function ChargeTierFormSheet({
     if (!open) {
       return;
     }
-    const next = tier ? { ...tier } : emptyTier(defaultFrom ?? 0);
+    const next = tier ? { ...tier } : emptyTier(lockFrom ? (defaultFrom ?? 0) : undefined);
     setFromInput(formatNumeric(next.amountRangeFrom));
-    setToInput(formatNumeric(next.amountRangeTo));
+    setToInput(lockTo ? '' : formatNumeric(next.amountRangeTo));
     setAmountInput(formatNumeric(next.amount));
     setFieldErrors({});
     setError(null);
-  }, [open, tier, defaultFrom]);
+  }, [open, tier, defaultFrom, lockFrom, lockTo]);
 
   function handleSubmit() {
     const normalizedTo = normalizeNumericInput(toInput);
     const parsed = chargeTierSchema.safeParse({
       amountRangeFrom: parseOptionalNumber(fromInput),
-      amountRangeTo: normalizedTo === '' ? null : parseOptionalNumber(normalizedTo),
+      amountRangeTo: lockTo || normalizedTo === '' ? null : parseOptionalNumber(normalizedTo),
       amount: parseOptionalNumber(amountInput)
     });
     if (!parsed.success) {
@@ -102,28 +112,57 @@ export function ChargeTierFormSheet({
       setError('Please fix the highlighted fields.');
       return;
     }
-    if (
-      parsed.data.amountRangeTo != null &&
-      parsed.data.amountRangeTo <= parsed.data.amountRangeFrom
-    ) {
+
+    const from = parsed.data.amountRangeFrom;
+    const to = parsed.data.amountRangeTo;
+    if (!lockTo && to == null) {
+      setFieldErrors({
+        amountRangeTo: 'To is required so the next band can start here.'
+      });
+      setError('Please fix the highlighted fields.');
+      return;
+    }
+    if (minFrom != null && from <= minFrom) {
+      setFieldErrors({
+        amountRangeFrom: `From must be greater than ${minFrom}.`
+      });
+      setError('Please fix the highlighted fields.');
+      return;
+    }
+    if (to != null && to <= from) {
       setFieldErrors({
         amountRangeTo: 'Range to must be greater than range from.'
       });
       setError('Please fix the highlighted fields.');
       return;
     }
+    if (to != null && maxTo != null && to >= maxTo) {
+      setFieldErrors({
+        amountRangeTo: `To must be less than ${maxTo}.`
+      });
+      setError('Please fix the highlighted fields.');
+      return;
+    }
+
     setFieldErrors({});
     setError(null);
     onSave(parsed.data);
     onOpenChange(false);
   }
 
+  const fromHint = lockFrom
+    ? 'Locked so bands stay contiguous (no gaps or overlaps).'
+    : 'Start of this band and exclusive end of the previous band.';
+  const toHint = lockTo
+    ? 'The last band is always open-ended.'
+    : 'Exclusive upper bound. The next band starts here.';
+
   return (
     <FormSheet
       open={open}
       onOpenChange={onOpenChange}
       title={isEdit ? 'Edit charge tier' : 'Add charge tier'}
-      description="Lookup band: the charge uses the single matching range (from inclusive, to exclusive). The first tier must start at 0 and the last tier must leave To blank (open-ended)."
+      description="Lookup band: the charge uses the single matching range (from inclusive, to exclusive). Bands chain automatically with no gaps or overlaps. The last band stays open-ended."
       formId={formId}
       onSubmit={handleSubmit}
       submitLabel={isEdit ? 'Save tier' : 'Add tier'}
@@ -146,17 +185,20 @@ export function ChargeTierFormSheet({
           value={fromInput}
           onChange={setFromInput}
           error={fieldErrors.amountRangeFrom}
-          hint="Inclusive lower bound of the base amount."
+          hint={fromHint}
+          disabled={lockFrom}
         />
         <MoneyField
           id={`${formId}-to`}
           label="To"
-          optional
+          optional={lockTo}
+          required={!lockTo}
           currencyCode={currencyCode}
           value={toInput}
           onChange={setToInput}
           error={fieldErrors.amountRangeTo}
-          hint="Exclusive upper bound. Blank = open-ended."
+          hint={toHint}
+          disabled={lockTo}
         />
         {flatAmount ? (
           <MoneyField

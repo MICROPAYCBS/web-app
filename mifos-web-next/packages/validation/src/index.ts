@@ -363,6 +363,13 @@ export {
   type LookupRangeBandIssue
 } from './products/lookup-range-bands';
 export {
+  appendOpenEndedChargeTier,
+  rechainChargeTiers,
+  removeChargeTierAndRechain,
+  replaceChargeTierAndRechain,
+  type ChargeTierChainRow
+} from './products/charge-tier-chain';
+export {
   upsertSavingsProductSchema,
   savingsProductDetailsStepSchema,
   savingsProductCurrencyStepSchema,
