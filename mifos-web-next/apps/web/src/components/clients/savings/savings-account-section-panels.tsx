@@ -154,6 +154,36 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
             <DetailField label="Currency">{account.currency.name ?? currency}</DetailField>
             <DetailField label="Branch">{account.officeName ?? '—'}</DetailField>
             <DetailField label="Field officer">{account.fieldOfficerName ?? '—'}</DetailField>
+            {timeline?.submittedOnDate ? (
+              <DetailField label="Submitted on">
+                {formatSavingsAccountDate(timeline.submittedOnDate)}
+              </DetailField>
+            ) : null}
+            {timeline?.approvedOnDate ? (
+              <DetailField label="Approved on">
+                {formatSavingsAccountDate(timeline.approvedOnDate)}
+              </DetailField>
+            ) : null}
+            {timeline?.activatedOnDate ? (
+              <DetailField label="Activated on">
+                {formatSavingsAccountDate(timeline.activatedOnDate)}
+              </DetailField>
+            ) : null}
+            {timeline?.rejectedOnDate ? (
+              <DetailField label="Rejected on">
+                {formatSavingsAccountDate(timeline.rejectedOnDate)}
+              </DetailField>
+            ) : null}
+            {timeline?.withdrawnOnDate ? (
+              <DetailField label="Withdrawn on">
+                {formatSavingsAccountDate(timeline.withdrawnOnDate)}
+              </DetailField>
+            ) : null}
+            {timeline?.closedOnDate ? (
+              <DetailField label="Closed on">
+                {formatSavingsAccountDate(timeline.closedOnDate)}
+              </DetailField>
+            ) : null}
             {account.depositType ? (
               <DetailField label="Deposit type">
                 {enumOptionLabel(account.depositType) ?? '—'}
