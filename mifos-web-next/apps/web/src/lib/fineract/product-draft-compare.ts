@@ -19,40 +19,13 @@ export type ProductDraftWithAccounting = {
   accounting: ProductAccountingMappings;
 };
 
-export function filterProductMappings<T extends Record<string, number>>(
-  rows: T[] | undefined,
-  keys: [keyof T, keyof T]
-): T[] {
-  return (rows ?? []).filter((row) => row[keys[0]] > 0 && row[keys[1]] > 0);
-}
-
-/** Drop empty accounting mapping rows and preserve locked short names before compare/submit. */
+/** Preserve locked short names before compare/submit. Incomplete mapping rows stay on the draft. */
 export function sanitizeProductDraftAccountingMappings<T extends ProductDraftWithAccounting>(
   draft: T,
   lockedShortName?: string
 ): T {
-  const accounting = draft.accounting;
-  const withFilteredMappings = {
-    ...draft,
-    accounting: {
-      ...accounting,
-      paymentChannelToFundSourceMappings: filterProductMappings(
-        accounting.paymentChannelToFundSourceMappings,
-        ['paymentTypeId', 'fundSourceAccountId']
-      ),
-      feeToIncomeAccountMappings: filterProductMappings(accounting.feeToIncomeAccountMappings, [
-        'chargeId',
-        'incomeAccountId'
-      ]),
-      penaltyToIncomeAccountMappings: filterProductMappings(
-        accounting.penaltyToIncomeAccountMappings,
-        ['chargeId', 'incomeAccountId']
-      )
-    }
-  };
-
   return preserveEstablishedProductShortName(
-    withFilteredMappings as T & { details: { shortName: string } },
+    draft as T & { details: { shortName: string } },
     lockedShortName
   );
 }

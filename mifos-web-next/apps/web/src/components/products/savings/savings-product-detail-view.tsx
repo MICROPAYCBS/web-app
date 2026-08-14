@@ -11,6 +11,7 @@
 import type { SavingsProductDetail, SavingsProductSectionId } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import {
+  AlertCircle,
   ArrowLeftRight,
   Calculator,
   CircleDollarSign,
@@ -37,7 +38,9 @@ const SAVINGS_SECTION_ICONS: Record<SavingsProductSectionId, LucideIcon> = {
   terms: Landmark,
   fees: CircleDollarSign,
   accounting: Calculator,
-  mappings: ArrowLeftRight
+  channelMapping: ArrowLeftRight,
+  feeGlMappings: CircleDollarSign,
+  penaltyGlMappings: AlertCircle
 };
 
 export function SavingsProductDetailView({

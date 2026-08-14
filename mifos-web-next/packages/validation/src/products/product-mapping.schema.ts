@@ -11,15 +11,19 @@ import { z } from 'zod';
 export const DUPLICATE_PAYMENT_CHANNEL_MAPPING_MESSAGE =
   'This payment channel is already mapped.';
 export const DUPLICATE_CHARGE_MAPPING_MESSAGE = 'This charge is already mapped.';
+export const PAYMENT_TYPE_REQUIRED_MESSAGE = 'Select a payment type.';
+export const FUND_SOURCE_REQUIRED_MESSAGE = 'Select a fund source.';
+export const CHARGE_REQUIRED_MESSAGE = 'Select a charge.';
+export const INCOME_ACCOUNT_REQUIRED_MESSAGE = 'Select an income account.';
 
 export const paymentChannelMappingSchema = z.object({
-  paymentTypeId: z.coerce.number().int().positive(),
-  fundSourceAccountId: z.coerce.number().int().positive()
+  paymentTypeId: z.coerce.number().int().positive(PAYMENT_TYPE_REQUIRED_MESSAGE),
+  fundSourceAccountId: z.coerce.number().int().positive(FUND_SOURCE_REQUIRED_MESSAGE)
 });
 
 export const chargeIncomeMappingSchema = z.object({
-  chargeId: z.coerce.number().int().positive(),
-  incomeAccountId: z.coerce.number().int().positive()
+  chargeId: z.coerce.number().int().positive(CHARGE_REQUIRED_MESSAGE),
+  incomeAccountId: z.coerce.number().int().positive(INCOME_ACCOUNT_REQUIRED_MESSAGE)
 });
 
 /** Plain object so product accounting schemas can `.merge()` it (ZodEffects cannot merge). */

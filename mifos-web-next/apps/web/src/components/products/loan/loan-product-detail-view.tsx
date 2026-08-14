@@ -46,7 +46,9 @@ const LOAN_SECTION_ICONS: Record<LoanProductSectionId, LucideIcon> = {
   fees: CircleDollarSign,
   penalties: AlertCircle,
   accounting: Calculator,
-  mappings: ArrowLeftRight
+  channelMapping: ArrowLeftRight,
+  feeGlMappings: CircleDollarSign,
+  penaltyGlMappings: AlertCircle
 };
 
 export function LoanProductDetailView({

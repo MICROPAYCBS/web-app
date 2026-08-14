@@ -116,7 +116,7 @@ describe('loanProductDraftHasUnsavedChanges', () => {
     assert.equal(loanProductDraftHasUnsavedChanges(current, baseline), true);
   });
 
-  it('ignores empty mapping rows when comparing drafts', () => {
+  it('treats an incomplete mapping row as unsaved work', () => {
     const baseline = minimalLoanProductDraft();
     const current = {
       ...structuredClone(baseline),
@@ -126,6 +126,6 @@ describe('loanProductDraftHasUnsavedChanges', () => {
       }
     };
 
-    assert.equal(loanProductDraftHasUnsavedChanges(current, baseline), false);
+    assert.equal(loanProductDraftHasUnsavedChanges(current, baseline), true);
   });
 });

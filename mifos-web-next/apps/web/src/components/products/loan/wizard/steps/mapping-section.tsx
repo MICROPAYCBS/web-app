@@ -87,6 +87,7 @@ export function MappingSection<T extends Record<string, number>>({
             >
               <SelectField
                 label={leftLabel}
+                required
                 value={row[leftKey] ? String(row[leftKey]) : undefined}
                 onValueChange={(value) =>
                   updateRow(index, { [leftKey]: value ? Number(value) : 0 } as Partial<T>)
@@ -96,6 +97,7 @@ export function MappingSection<T extends Record<string, number>>({
               />
               <SelectField
                 label={rightLabel}
+                required
                 value={row[rightKey] ? String(row[rightKey]) : undefined}
                 onValueChange={(value) =>
                   updateRow(index, { [rightKey]: value ? Number(value) : 0 } as Partial<T>)

@@ -58,4 +58,23 @@ describe('productDraftHasUnsavedChanges', () => {
       true
     );
   });
+
+  it('treats an incomplete mapping row as unsaved work', () => {
+    const baseline = sampleDraft();
+    const current = {
+      ...structuredClone(baseline),
+      accounting: {
+        feeToIncomeAccountMappings: [{ chargeId: 0, incomeAccountId: 0 }]
+      }
+    };
+
+    assert.equal(
+      productDraftHasUnsavedChanges(
+        current,
+        baseline,
+        sanitizeProductDraftAccountingMappings
+      ),
+      true
+    );
+  });
 });

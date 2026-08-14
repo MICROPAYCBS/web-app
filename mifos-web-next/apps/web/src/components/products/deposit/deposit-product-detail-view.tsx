@@ -10,7 +10,17 @@
 
 import type { DepositProductDetail, DepositProductKind, DepositProductSectionId } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { Calculator, CircleDollarSign, Landmark, LineChart, Pencil, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeftRight,
+  Calculator,
+  CircleDollarSign,
+  Landmark,
+  LineChart,
+  Pencil,
+  SlidersHorizontal,
+  type LucideIcon
+} from 'lucide-react';
 import Link from 'next/link';
 import {
   DetailBackLink,
@@ -38,7 +48,7 @@ import {
   depositProductSections
 } from '@/lib/fineract/deposit-product-sections';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
-import { accountingRuleLabel } from '@/lib/fineract/product-display';
+import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
 import {
   productStatusLabel,
   productStatusVariant
@@ -46,6 +56,7 @@ import {
 import { useDetailSection } from '@/hooks/use-detail-section';
 import { DepositProductInterestCharts } from '@/components/products/deposit/deposit-product-interest-charts';
 import { ProductChargesTable } from '@/components/products/shared/product-charges-table';
+import { ProductMappingTable } from '@/components/products/shared/product-mapping-table';
 import { cn } from '@/lib/utils';
 
 const SECTION_ICONS: Record<DepositProductSectionId, LucideIcon> = {
@@ -53,7 +64,10 @@ const SECTION_ICONS: Record<DepositProductSectionId, LucideIcon> = {
   terms: Landmark,
   chart: LineChart,
   fees: CircleDollarSign,
-  accounting: Calculator
+  accounting: Calculator,
+  channelMapping: ArrowLeftRight,
+  feeGlMappings: CircleDollarSign,
+  penaltyGlMappings: AlertCircle
 };
 
 export function DepositProductDetailView({
@@ -201,6 +215,54 @@ export function DepositProductDetailView({
           <DetailField label="Accounting rule">
             {accountingRuleLabel(product.accountingRule)}
           </DetailField>
+        </DetailSection>
+      ) : null}
+
+      {activeSection === 'channelMapping' ? (
+        <DetailSection title="Channel mapping">
+          <ProductMappingTable
+            rows={
+              product.paymentChannelToFundSourceMappings?.map((row) => ({
+                left: row.paymentType?.name ?? '—',
+                right: glAccountLabel(row.fundSourceAccount)
+              })) ?? []
+            }
+            leftHeader="Payment type"
+            rightHeader="Fund source"
+            emptyMessage="No channel mappings."
+          />
+        </DetailSection>
+      ) : null}
+
+      {activeSection === 'feeGlMappings' ? (
+        <DetailSection title="Fee GL mappings">
+          <ProductMappingTable
+            rows={
+              product.feeToIncomeAccountMappings?.map((row) => ({
+                left: row.charge?.name ?? '—',
+                right: glAccountLabel(row.incomeAccount)
+              })) ?? []
+            }
+            leftHeader="Fee"
+            rightHeader="Income account"
+            emptyMessage="No fee mappings."
+          />
+        </DetailSection>
+      ) : null}
+
+      {activeSection === 'penaltyGlMappings' ? (
+        <DetailSection title="Penalty GL mappings">
+          <ProductMappingTable
+            rows={
+              product.penaltyToIncomeAccountMappings?.map((row) => ({
+                left: row.charge?.name ?? '—',
+                right: glAccountLabel(row.incomeAccount)
+              })) ?? []
+            }
+            leftHeader="Penalty"
+            rightHeader="Income account"
+            emptyMessage="No penalty mappings."
+          />
         </DetailSection>
       ) : null}
     </DetailPage>

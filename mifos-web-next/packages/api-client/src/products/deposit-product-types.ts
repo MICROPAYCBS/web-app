@@ -96,7 +96,15 @@ export interface DepositProductDetail extends DepositProductListItem {
   paymentChannelToFundSourceMappings?: PaymentChannelFundSourceMapping[];
 }
 
-export type DepositProductSectionId = 'general' | 'terms' | 'chart' | 'fees' | 'accounting';
+export type DepositProductSectionId =
+  | 'general'
+  | 'terms'
+  | 'chart'
+  | 'fees'
+  | 'accounting'
+  | 'channelMapping'
+  | 'feeGlMappings'
+  | 'penaltyGlMappings';
 
 export interface DepositProductMutationResponse {
   resourceId: number;

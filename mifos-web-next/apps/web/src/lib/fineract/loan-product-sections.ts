@@ -33,12 +33,16 @@ export function loanProductPenaltyCharges(product: LoanProductDetail) {
   return (product.charges ?? []).filter((charge) => charge.penalty === true);
 }
 
-export function loanProductHasMappings(product: LoanProductDetail): boolean {
-  return (
-    (product.paymentChannelToFundSourceMappings?.length ?? 0) > 0 ||
-    (product.feeToIncomeAccountMappings?.length ?? 0) > 0 ||
-    (product.penaltyToIncomeAccountMappings?.length ?? 0) > 0
-  );
+export function loanProductHasChannelMappings(product: LoanProductDetail): boolean {
+  return (product.paymentChannelToFundSourceMappings?.length ?? 0) > 0;
+}
+
+export function loanProductHasFeeGlMappings(product: LoanProductDetail): boolean {
+  return (product.feeToIncomeAccountMappings?.length ?? 0) > 0;
+}
+
+export function loanProductHasPenaltyGlMappings(product: LoanProductDetail): boolean {
+  return (product.penaltyToIncomeAccountMappings?.length ?? 0) > 0;
 }
 
 export function loanProductSections(
@@ -64,8 +68,14 @@ export function loanProductSections(
   if (isProductAccountingEnabled(product.accountingRule)) {
     items.push({ id: 'accounting', label: 'Accounting' });
   }
-  if (loanProductHasMappings(product)) {
-    items.push({ id: 'mappings', label: 'Channel mappings' });
+  if (loanProductHasChannelMappings(product)) {
+    items.push({ id: 'channelMapping', label: 'Channel mapping' });
+  }
+  if (loanProductHasFeeGlMappings(product)) {
+    items.push({ id: 'feeGlMappings', label: 'Fee GL mappings' });
+  }
+  if (loanProductHasPenaltyGlMappings(product)) {
+    items.push({ id: 'penaltyGlMappings', label: 'Penalty GL mappings' });
   }
 
   return items;

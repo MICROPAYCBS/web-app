@@ -7,7 +7,6 @@
  */
 
 import type { DepositProductDetail, DepositProductSectionId } from '@mifos/api-client';
-import { depositProductCharts } from '@/lib/fineract/deposit-product-charts';
 import { isProductAccountingEnabled } from '@/lib/fineract/product-display';
 
 export const DEPOSIT_PRODUCT_DEFAULT_SECTION: DepositProductSectionId = 'general';
@@ -36,8 +35,16 @@ export function depositProductHasCharges(product: DepositProductDetail): boolean
   );
 }
 
-export function depositProductHasChart(product: DepositProductDetail): boolean {
-  return depositProductCharts(product).length > 0;
+export function depositProductHasChannelMappings(product: DepositProductDetail): boolean {
+  return (product.paymentChannelToFundSourceMappings?.length ?? 0) > 0;
+}
+
+export function depositProductHasFeeGlMappings(product: DepositProductDetail): boolean {
+  return (product.feeToIncomeAccountMappings?.length ?? 0) > 0;
+}
+
+export function depositProductHasPenaltyGlMappings(product: DepositProductDetail): boolean {
+  return (product.penaltyToIncomeAccountMappings?.length ?? 0) > 0;
 }
 
 export function depositProductSections(product: DepositProductDetail): ProductSectionDefinition[] {
@@ -53,6 +60,15 @@ export function depositProductSections(product: DepositProductDetail): ProductSe
   }
   if (isProductAccountingEnabled(product.accountingRule)) {
     items.push({ id: 'accounting', label: 'Accounting' });
+  }
+  if (depositProductHasChannelMappings(product)) {
+    items.push({ id: 'channelMapping', label: 'Channel mapping' });
+  }
+  if (depositProductHasFeeGlMappings(product)) {
+    items.push({ id: 'feeGlMappings', label: 'Fee GL mappings' });
+  }
+  if (depositProductHasPenaltyGlMappings(product)) {
+    items.push({ id: 'penaltyGlMappings', label: 'Penalty GL mappings' });
   }
 
   return items;

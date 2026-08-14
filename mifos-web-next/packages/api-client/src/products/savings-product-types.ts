@@ -48,4 +48,11 @@ export interface SavingsProductDetail extends SavingsProductListItem {
   paymentChannelToFundSourceMappings?: PaymentChannelFundSourceMapping[];
 }
 
-export type SavingsProductSectionId = 'general' | 'terms' | 'fees' | 'accounting' | 'mappings';
+export type SavingsProductSectionId =
+  | 'general'
+  | 'terms'
+  | 'fees'
+  | 'accounting'
+  | 'channelMapping'
+  | 'feeGlMappings'
+  | 'penaltyGlMappings';

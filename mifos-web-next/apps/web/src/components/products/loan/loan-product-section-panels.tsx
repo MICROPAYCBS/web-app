@@ -299,60 +299,60 @@ function LoanProductAccountingSection({ product }: { product: LoanProductDetail 
   );
 }
 
-function LoanProductMappingsSection({ product }: { product: LoanProductDetail }) {
-  const channelRows =
+function LoanProductChannelMappingSection({ product }: { product: LoanProductDetail }) {
+  const rows =
     product.paymentChannelToFundSourceMappings?.map((row) => ({
       left: row.paymentType?.name ?? '—',
       right: glAccountLabel(row.fundSourceAccount)
     })) ?? [];
 
-  const feeRows =
+  return (
+    <DetailSection title="Channel mapping">
+      <ProductMappingTable
+        rows={rows}
+        leftHeader="Payment type"
+        rightHeader="Fund source"
+        emptyMessage="No channel mappings."
+      />
+    </DetailSection>
+  );
+}
+
+function LoanProductFeeGlMappingsSection({ product }: { product: LoanProductDetail }) {
+  const rows =
     product.feeToIncomeAccountMappings?.map((row) => ({
       left: row.charge?.name ?? '—',
       right: glAccountLabel(row.incomeAccount)
     })) ?? [];
 
-  const penaltyRows =
+  return (
+    <DetailSection title="Fee GL mappings">
+      <ProductMappingTable
+        rows={rows}
+        leftHeader="Fee"
+        rightHeader="Income account"
+        emptyMessage="No fee mappings."
+      />
+    </DetailSection>
+  );
+}
+
+function LoanProductPenaltyGlMappingsSection({ product }: { product: LoanProductDetail }) {
+  const rows =
     product.penaltyToIncomeAccountMappings?.map((row) => ({
       left: row.charge?.name ?? '—',
       right: glAccountLabel(row.incomeAccount)
     })) ?? [];
 
   return (
-    <>
-      {channelRows.length > 0 ? (
-        <DetailSection title="Payment channel to fund source">
-          <ProductMappingTable
-            rows={channelRows}
-            leftHeader="Payment channel"
-            rightHeader="Fund source account"
-            emptyMessage="No channel mappings."
-          />
-        </DetailSection>
-      ) : null}
-
-      {feeRows.length > 0 ? (
-        <DetailSection title="Fees to income account">
-          <ProductMappingTable
-            rows={feeRows}
-            leftHeader="Fee"
-            rightHeader="Income account"
-            emptyMessage="No fee mappings."
-          />
-        </DetailSection>
-      ) : null}
-
-      {penaltyRows.length > 0 ? (
-        <DetailSection title="Penalties to income account">
-          <ProductMappingTable
-            rows={penaltyRows}
-            leftHeader="Penalty"
-            rightHeader="Income account"
-            emptyMessage="No penalty mappings."
-          />
-        </DetailSection>
-      ) : null}
-    </>
+    <DetailSection title="Penalty GL mappings">
+      <ProductMappingTable
+        rows={rows}
+        leftHeader="Penalty"
+        rightHeader="Income account"
+        emptyMessage="No penalty mappings."
+      />
+    </DetailSection>
   );
 }
 
@@ -401,8 +401,12 @@ export function LoanProductSectionPanel({
       );
     case 'accounting':
       return <LoanProductAccountingSection product={product} />;
-    case 'mappings':
-      return <LoanProductMappingsSection product={product} />;
+    case 'channelMapping':
+      return <LoanProductChannelMappingSection product={product} />;
+    case 'feeGlMappings':
+      return <LoanProductFeeGlMappingsSection product={product} />;
+    case 'penaltyGlMappings':
+      return <LoanProductPenaltyGlMappingsSection product={product} />;
     default:
       return null;
   }

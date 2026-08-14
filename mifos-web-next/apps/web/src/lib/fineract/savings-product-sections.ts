@@ -24,12 +24,16 @@ export function savingsProductFeeCharges(product: SavingsProductDetail) {
   return (product.charges ?? []).filter((charge) => charge.penalty !== true);
 }
 
-export function savingsProductHasMappings(product: SavingsProductDetail): boolean {
-  return (
-    (product.paymentChannelToFundSourceMappings?.length ?? 0) > 0 ||
-    (product.feeToIncomeAccountMappings?.length ?? 0) > 0 ||
-    (product.penaltyToIncomeAccountMappings?.length ?? 0) > 0
-  );
+export function savingsProductHasChannelMappings(product: SavingsProductDetail): boolean {
+  return (product.paymentChannelToFundSourceMappings?.length ?? 0) > 0;
+}
+
+export function savingsProductHasFeeGlMappings(product: SavingsProductDetail): boolean {
+  return (product.feeToIncomeAccountMappings?.length ?? 0) > 0;
+}
+
+export function savingsProductHasPenaltyGlMappings(product: SavingsProductDetail): boolean {
+  return (product.penaltyToIncomeAccountMappings?.length ?? 0) > 0;
 }
 
 export function savingsProductSections(product: SavingsProductDetail): ProductSectionDefinition[] {
@@ -44,8 +48,14 @@ export function savingsProductSections(product: SavingsProductDetail): ProductSe
   if (isProductAccountingEnabled(product.accountingRule)) {
     items.push({ id: 'accounting', label: 'Accounting' });
   }
-  if (savingsProductHasMappings(product)) {
-    items.push({ id: 'mappings', label: 'Channel mappings' });
+  if (savingsProductHasChannelMappings(product)) {
+    items.push({ id: 'channelMapping', label: 'Channel mapping' });
+  }
+  if (savingsProductHasFeeGlMappings(product)) {
+    items.push({ id: 'feeGlMappings', label: 'Fee GL mappings' });
+  }
+  if (savingsProductHasPenaltyGlMappings(product)) {
+    items.push({ id: 'penaltyGlMappings', label: 'Penalty GL mappings' });
   }
 
   return items;

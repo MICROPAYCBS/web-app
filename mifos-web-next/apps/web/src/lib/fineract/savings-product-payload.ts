@@ -91,33 +91,14 @@ export function buildSavingsProductPayload(
     delete payload.interestReceivableAccountId;
   }
 
-  const filterMappings = <T extends Record<string, number>>(
-    rows: T[] | undefined,
-    keys: [keyof T, keyof T]
-  ) => (rows ?? []).filter((row) => row[keys[0]] > 0 && row[keys[1]] > 0);
-
-  const paymentChannelToFundSourceMappings = filterMappings(
-    accounting.paymentChannelToFundSourceMappings,
-    ['paymentTypeId', 'fundSourceAccountId']
-  );
-  if (paymentChannelToFundSourceMappings.length) {
-    payload.paymentChannelToFundSourceMappings = paymentChannelToFundSourceMappings;
+  if (accounting.paymentChannelToFundSourceMappings?.length) {
+    payload.paymentChannelToFundSourceMappings = accounting.paymentChannelToFundSourceMappings;
   }
-
-  const feeToIncomeAccountMappings = filterMappings(accounting.feeToIncomeAccountMappings, [
-    'chargeId',
-    'incomeAccountId'
-  ]);
-  if (feeToIncomeAccountMappings.length) {
-    payload.feeToIncomeAccountMappings = feeToIncomeAccountMappings;
+  if (accounting.feeToIncomeAccountMappings?.length) {
+    payload.feeToIncomeAccountMappings = accounting.feeToIncomeAccountMappings;
   }
-
-  const penaltyToIncomeAccountMappings = filterMappings(
-    accounting.penaltyToIncomeAccountMappings,
-    ['chargeId', 'incomeAccountId']
-  );
-  if (penaltyToIncomeAccountMappings.length) {
-    payload.penaltyToIncomeAccountMappings = penaltyToIncomeAccountMappings;
+  if (accounting.penaltyToIncomeAccountMappings?.length) {
+    payload.penaltyToIncomeAccountMappings = accounting.penaltyToIncomeAccountMappings;
   }
 
   if (currency.inMultiplesOf == null || currency.inMultiplesOf <= 0) {

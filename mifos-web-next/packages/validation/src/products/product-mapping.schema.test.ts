@@ -11,8 +11,12 @@ import { describe, it } from 'node:test';
 import { z } from 'zod';
 import { loanProductMappingsStepSchema } from './loan-product.schema';
 import {
+  CHARGE_REQUIRED_MESSAGE,
   DUPLICATE_CHARGE_MAPPING_MESSAGE,
   DUPLICATE_PAYMENT_CHANNEL_MAPPING_MESSAGE,
+  FUND_SOURCE_REQUIRED_MESSAGE,
+  INCOME_ACCOUNT_REQUIRED_MESSAGE,
+  PAYMENT_TYPE_REQUIRED_MESSAGE,
   refineProductMappingUniqueness
 } from './product-mapping.schema';
 
@@ -117,5 +121,35 @@ describe('loanProductMappingsStepSchema uniqueness', () => {
       penaltyToIncomeAccountMappings: [{ chargeId: 9, incomeAccountId: 21 }]
     });
     assert.equal(parsed.success, true);
+  });
+
+  it('rejects an empty channel mapping row', () => {
+    const parsed = loanProductMappingsStepSchema.safeParse({
+      paymentChannelToFundSourceMappings: [{ paymentTypeId: 0, fundSourceAccountId: 0 }]
+    });
+    assert.equal(parsed.success, false);
+    if (parsed.success) {
+      return;
+    }
+    const messages = parsed.error.issues.map((issue) => issue.message);
+    assert.ok(messages.includes(PAYMENT_TYPE_REQUIRED_MESSAGE));
+    assert.ok(messages.includes(FUND_SOURCE_REQUIRED_MESSAGE));
+  });
+
+  it('rejects a half-filled fee mapping row', () => {
+    const parsed = loanProductMappingsStepSchema.safeParse({
+      feeToIncomeAccountMappings: [{ chargeId: 4, incomeAccountId: 0 }]
+    });
+    assert.equal(parsed.success, false);
+    if (parsed.success) {
+      return;
+    }
+    assert.ok(
+      parsed.error.issues.some((issue) => issue.message === INCOME_ACCOUNT_REQUIRED_MESSAGE)
+    );
+    assert.equal(
+      parsed.error.issues.some((issue) => issue.message === CHARGE_REQUIRED_MESSAGE),
+      false
+    );
   });
 });

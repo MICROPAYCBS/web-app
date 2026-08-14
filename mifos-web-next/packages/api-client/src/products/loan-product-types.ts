@@ -110,4 +110,6 @@ export type LoanProductSectionId =
   | 'fees'
   | 'penalties'
   | 'accounting'
-  | 'mappings';
+  | 'channelMapping'
+  | 'feeGlMappings'
+  | 'penaltyGlMappings';
