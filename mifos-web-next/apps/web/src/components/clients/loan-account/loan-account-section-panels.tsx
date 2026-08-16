@@ -72,6 +72,7 @@ import {
   loanAccountStandingInstructionAtDisbursementLabel,
   loanTransactionDate,
   loanTransactionRowClassName,
+  sortLoanAccountTransactions,
   type LoanAccountSectionId
 } from '@/lib/fineract/loan-account-display';
 import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
@@ -633,10 +634,10 @@ function LoanAccountTransactionsSection({
     pageSize: 50
   });
 
-  const allRows = useMemo(() => {
-    const transactions = account.transactions ?? [];
-    return [...transactions].sort((a, b) => b.id - a.id);
-  }, [account.transactions]);
+  const allRows = useMemo(
+    () => sortLoanAccountTransactions(account.transactions ?? []),
+    [account.transactions]
+  );
 
   const rows = useMemo(
     () => filterLoanTransactions(allRows, hideReversed, hideAccruals),

@@ -12,6 +12,7 @@ import { describe, it } from 'node:test';
 import {
   formatSavingsTransactionType,
   isSavingsTransactionDebit,
+  sortSavingsAccountTransactions,
   sumSavingsCashMovementTotals
 } from './savings-account-display';
 
@@ -138,5 +139,21 @@ describe('sumSavingsCashMovementTotals', () => {
     assert.equal(totals.totalWithdrawals, 1_000_000);
     assert.equal(totals.totalInwardTransfers, 200_000);
     assert.equal(totals.totalOutwardTransfers, 500_000);
+  });
+});
+
+describe('sortSavingsAccountTransactions', () => {
+  it('orders by date then id, newest first', () => {
+    const sorted = sortSavingsAccountTransactions([
+      transaction({ id: 4, date: [2026, 3, 1] }),
+      transaction({ id: 1, date: [2026, 3, 10] }),
+      transaction({ id: 3, date: [2026, 3, 10] }),
+      transaction({ id: 2, date: [2026, 3, 5] })
+    ]);
+
+    assert.deepEqual(
+      sorted.map((item) => item.id),
+      [3, 1, 2, 4]
+    );
   });
 });

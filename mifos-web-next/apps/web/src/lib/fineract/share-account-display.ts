@@ -12,6 +12,7 @@ import type {
 } from '@mifos/api-client';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
+import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 
 export const SHARE_ACCOUNT_SECTIONS = [
   { id: 'summary', label: 'Summary' },
@@ -67,6 +68,17 @@ export function formatShareAccountMoney(
 
 export function formatShareAccountDate(value: number[] | string | undefined): string {
   return formatFineractDateArray(value, FINERACT_LOCALE) ?? '—';
+}
+
+/** Newest first: purchased date, then id. */
+export function sortShareAccountTransactions(
+  transactions: readonly FineractShareAccountTransaction[]
+): FineractShareAccountTransaction[] {
+  return sortByDateThenId(
+    transactions,
+    (transaction) => transaction.purchasedDate,
+    (transaction) => transaction.id
+  );
 }
 
 export function shareAccountStatusVariant(

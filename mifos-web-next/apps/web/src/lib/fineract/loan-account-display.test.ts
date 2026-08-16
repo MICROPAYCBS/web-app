@@ -8,8 +8,8 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel } from '@/lib/fineract/loan-account-display';
-import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
+import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel, sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
+import type { FineractLoanAccountDetail, FineractLoanAccountTransaction } from '@/lib/fineract/loan-account-types';
 
 function sampleAccount(summary: FineractLoanAccountDetail['summary']): FineractLoanAccountDetail {
   return {
@@ -151,6 +151,22 @@ describe('loanAccountHasLoanTerms', () => {
         graceOnPrincipalPayment: 1
       }),
       true
+    );
+  });
+});
+
+describe('sortLoanAccountTransactions', () => {
+  it('orders by date then id, newest first', () => {
+    const sorted = sortLoanAccountTransactions([
+      { id: 4, amount: 1, date: [2026, 3, 1] },
+      { id: 1, amount: 1, date: [2026, 3, 10] },
+      { id: 3, amount: 1, date: [2026, 3, 10] },
+      { id: 2, amount: 1, date: [2026, 3, 5] }
+    ] as FineractLoanAccountTransaction[]);
+
+    assert.deepEqual(
+      sorted.map((item) => item.id),
+      [3, 1, 2, 4]
     );
   });
 });

@@ -19,6 +19,7 @@ import type {
   FineractSavingsAccountTransaction
 } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { sortSavingsAccountTransactions } from '@/lib/fineract/savings-account-display';
 
 const SAVINGS_ACCOUNTS_PATH = '/savingsaccounts';
 
@@ -310,9 +311,11 @@ export function normalizeDepositAccountDetail(raw: unknown): FineractSavingsAcco
     summary: normalizeSummary(row.summary),
     timeline: normalizeTimeline(row.timeline),
     transactions: Array.isArray(row.transactions)
-      ? row.transactions
-          .map((item) => normalizeTransaction(item))
-          .filter((item): item is FineractSavingsAccountTransaction => item !== null)
+      ? sortSavingsAccountTransactions(
+          row.transactions
+            .map((item) => normalizeTransaction(item))
+            .filter((item): item is FineractSavingsAccountTransaction => item !== null)
+        )
       : undefined,
     charges: Array.isArray(row.charges)
       ? row.charges

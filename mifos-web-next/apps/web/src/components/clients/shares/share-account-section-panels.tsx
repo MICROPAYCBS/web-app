@@ -41,6 +41,7 @@ import {
   shareAccountCurrencyCode,
   shareAccountLinkedSavingsId,
   shareAccountLinkedSavingsLabel,
+  sortShareAccountTransactions,
   type ShareAccountSectionId
 } from '@/lib/fineract/share-account-display';
 import { sharePurchaseFundingLabel } from '@/lib/fineract/share-account-use-savings';
@@ -168,7 +169,10 @@ function ShareAccountSummarySection({ account }: { account: FineractShareAccount
 
 function ShareAccountPurchasesSection({ account }: { account: FineractShareAccountDetail }) {
   const currency = shareAccountCurrencyCode(account);
-  const rows = account.purchasedShares ?? [];
+  const rows = useMemo(
+    () => sortShareAccountTransactions(account.purchasedShares ?? []),
+    [account.purchasedShares]
+  );
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
 
   const columns = useMemo<ColumnDef<(typeof rows)[number]>[]>(

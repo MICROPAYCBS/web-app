@@ -49,6 +49,7 @@ import {
   savingsAccountProductName,
   savingsTransactionDate,
   savingsTransactionRowClassName,
+  sortSavingsAccountTransactions,
   sumSavingsCashMovementTotals,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
@@ -502,10 +503,10 @@ function SavingsAccountTransactionsSection({
     pageSize: 50
   });
 
-  const allRows = useMemo(() => {
-    const transactions = account.transactions ?? [];
-    return [...transactions].sort((a, b) => b.id - a.id);
-  }, [account.transactions]);
+  const allRows = useMemo(
+    () => sortSavingsAccountTransactions(account.transactions ?? []),
+    [account.transactions]
+  );
 
   const rows = useMemo(
     () => filterSavingsTransactions(allRows, hideReversed, hideAccruals),

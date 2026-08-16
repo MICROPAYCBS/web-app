@@ -14,6 +14,7 @@ import type {
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import { formatTimelineActor } from '@/lib/fineract/account-timeline-display';
+import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 
 export const SAVINGS_ACCOUNT_SECTIONS = [
   { id: 'summary', label: 'Summary' },
@@ -108,6 +109,13 @@ export function savingsTransactionDate(
   transaction: FineractSavingsAccountTransaction
 ): number[] | string | undefined {
   return transaction.date ?? transaction.submittedOnDate;
+}
+
+/** Newest first: transaction date, then id. */
+export function sortSavingsAccountTransactions(
+  transactions: readonly FineractSavingsAccountTransaction[]
+): FineractSavingsAccountTransaction[] {
+  return sortByDateThenId(transactions, savingsTransactionDate, (transaction) => transaction.id);
 }
 
 /** Debit column — matches Fineract `transactionType.isDebit()` and legacy `isDebit`. */

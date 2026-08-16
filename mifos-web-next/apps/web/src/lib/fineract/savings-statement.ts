@@ -22,6 +22,7 @@ import {
   isSavingsTransactionDebit,
   savingsTransactionDate
 } from '@/lib/fineract/savings-account-display';
+import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 
 export type SavingsStatementResult = {
   transactions: FineractSavingsAccountTransaction[];
@@ -71,19 +72,12 @@ export function buildSavingsStatement(
     (transaction) => !isReversedSavingsStatementTransaction(transaction)
   );
 
-  const sorted = [...effectiveTransactions].sort((left, right) => {
-    const leftDate = savingsStatementTransactionDate(left);
-    const rightDate = savingsStatementTransactionDate(right);
-    if (!leftDate || !rightDate) {
-      return 0;
-    }
-    const leftTime = leftDate.getTime();
-    const rightTime = rightDate.getTime();
-    if (leftTime === rightTime) {
-      return left.id - right.id;
-    }
-    return leftTime - rightTime;
-  });
+  const sorted = sortByDateThenId(
+    effectiveTransactions,
+    savingsTransactionDate,
+    (transaction) => transaction.id,
+    'asc'
+  );
 
   const start = startOfDay(fromDate);
   const end = endOfDay(toDate);

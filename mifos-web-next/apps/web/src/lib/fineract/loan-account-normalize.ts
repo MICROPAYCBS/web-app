@@ -22,6 +22,7 @@ import type {
   FineractLoanAccountTimeline,
   FineractLoanAccountTransaction
 } from '@/lib/fineract/loan-account-types';
+import { sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
 import { normalizeLoanScheduleData } from '@/lib/fineract/loan-schedule-normalize';
 
 function toNumber(value: unknown): number | undefined {
@@ -307,9 +308,11 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
   }
 
   const transactions = Array.isArray(row.transactions)
-    ? row.transactions
-        .map((item) => normalizeTransaction(item))
-        .filter((item): item is FineractLoanAccountTransaction => item != null)
+    ? sortLoanAccountTransactions(
+        row.transactions
+          .map((item) => normalizeTransaction(item))
+          .filter((item): item is FineractLoanAccountTransaction => item != null)
+      )
     : undefined;
 
   const charges = Array.isArray(row.charges)

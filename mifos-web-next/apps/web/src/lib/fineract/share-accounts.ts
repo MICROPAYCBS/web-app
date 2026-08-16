@@ -32,6 +32,7 @@ import {
 } from '@/lib/fineract/share-account-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { asCurrency, asEnumOption } from '@/lib/fineract/product-normalize';
+import { sortShareAccountTransactions } from '@/lib/fineract/share-account-display';
 
 function asNumber(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -276,6 +277,8 @@ export function normalizeShareAccountDetail(raw: unknown): FineractShareAccountD
     return null;
   }
 
+  const purchasedShares = mapList(row.purchasedShares, normalizeTransaction);
+
   return {
     id,
     accountNo,
@@ -290,7 +293,9 @@ export function normalizeShareAccountDetail(raw: unknown): FineractShareAccountD
     timeline: normalizeTimeline(row.timeline),
     currency,
     summary: normalizeSummary(row.summary),
-    purchasedShares: mapList(row.purchasedShares, normalizeTransaction),
+    purchasedShares: purchasedShares
+      ? sortShareAccountTransactions(purchasedShares)
+      : undefined,
     savingsAccountId: asNumber(row.savingsAccountId),
     currentMarketPrice: asNumber(row.currentMarketPrice),
     lockinPeriod: asNumber(row.lockinPeriod),

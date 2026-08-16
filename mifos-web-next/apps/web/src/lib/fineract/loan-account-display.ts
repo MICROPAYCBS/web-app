@@ -15,6 +15,7 @@ import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { LOAN_ACCOUNT_STATUS } from '@/lib/fineract/account-field-officer-config';
+import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 
 export const LOAN_ACCOUNT_SECTIONS = [
   { id: 'summary', label: 'Summary' },
@@ -194,6 +195,13 @@ export function loanTransactionDate(
   transaction: FineractLoanAccountTransaction
 ): number[] | string | undefined {
   return transaction.date ?? transaction.submittedOnDate;
+}
+
+/** Newest first: transaction date, then id. */
+export function sortLoanAccountTransactions(
+  transactions: readonly FineractLoanAccountTransaction[]
+): FineractLoanAccountTransaction[] {
+  return sortByDateThenId(transactions, loanTransactionDate, (transaction) => transaction.id);
 }
 
 export function isLoanTransactionAccrual(transaction: FineractLoanAccountTransaction) {
