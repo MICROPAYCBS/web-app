@@ -66,12 +66,7 @@ export function SchedulerJobDetailView({
           <DetailHeader
             backLink={<DetailBackLink href="/system/manage-jobs" label="Back to manage jobs" />}
             title={job.displayName}
-            meta={
-              <div className="space-y-1">
-                {job.description?.trim() ? <p>{job.description.trim()}</p> : null}
-                <p>Job ID {job.jobId}</p>
-              </div>
-            }
+            meta={`Job ID ${job.jobId}`}
             actions={
               <div className="flex flex-wrap gap-2">
                 {canUpdate ? (
