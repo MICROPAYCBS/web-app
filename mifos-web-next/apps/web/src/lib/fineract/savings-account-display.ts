@@ -74,6 +74,10 @@ export function savingsAccountStatusVariant(
   return 'outline';
 }
 
+export function savingsAccountAllowsOverdraft(account: FineractSavingsAccountDetail): boolean {
+  return account.allowOverdraft === true;
+}
+
 export function savingsAccountBlockedMessage(account: FineractSavingsAccountDetail): string | null {
   const sub = account.subStatus;
   if (!sub) {

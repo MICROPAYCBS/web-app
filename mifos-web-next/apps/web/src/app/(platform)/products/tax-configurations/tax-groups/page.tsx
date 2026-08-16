@@ -8,8 +8,9 @@
 
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
-import { TaxGroupsPageContent } from '@/components/products/tax/tax-groups-page-content';
-import { listTaxGroups } from '@/lib/fineract/tax-groups';
+import { Suspense } from 'react';
+import { TaxGroupsPageClient } from '@/components/products/tax/tax-groups-page-client';
+import { getTaxGroupTemplate, listTaxGroups } from '@/lib/fineract/tax-groups';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function TaxGroupsPage() {
@@ -18,6 +19,19 @@ export default async function TaxGroupsPage() {
     notFound();
   }
 
-  const groups = await listTaxGroups();
-  return <TaxGroupsPageContent groups={groups} />;
+  const canCreate = can(session, resolvePermission('products.tax.groups.create'));
+  const [groups, template] = await Promise.all([
+    listTaxGroups(),
+    canCreate ? getTaxGroupTemplate() : Promise.resolve({ taxComponents: [] })
+  ]);
+
+  return (
+    <Suspense fallback={null}>
+      <TaxGroupsPageClient
+        groups={groups}
+        componentOptions={template.taxComponents}
+        canCreate={canCreate}
+      />
+    </Suspense>
+  );
 }

@@ -17,7 +17,8 @@ import {
   DetailFieldGrid,
   DetailHeader,
   DetailPage,
-  DetailSection
+  DetailSection,
+  EmptyState
 } from '@/components/composites';
 import { buttonVariants } from '@/components/ui/button';
 import { formatTaxDate } from '@/lib/fineract/tax-display';
@@ -84,7 +85,10 @@ export function TaxGroupDetailView({
             </table>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No tax components in this group.</p>
+          <EmptyState
+            title="No tax components in this group"
+            description="Edit the group to add tax components with effective dates."
+          />
         )}
       </DetailSection>
     </DetailPage>

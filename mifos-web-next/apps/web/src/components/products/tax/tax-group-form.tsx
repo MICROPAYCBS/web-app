@@ -10,36 +10,42 @@
 
 import type { TaxComponentOption } from '@mifos/api-client';
 import type { TaxGroupMemberInput } from '@mifos/validation';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { updateTaxGroupAction } from '@/actions/tax-group';
-import { DetailBackLink } from '@/components/composites';
-import { ListPage } from '@/components/composites/list-page';
+import { useEffect, useState, useTransition } from 'react';
+import { createTaxGroupAction } from '@/actions/tax-group';
+import { FormSheet } from '@/components/composites/form-sheet';
 import { TextField } from '@/components/composites/text-field';
 import { TaxGroupMembersEditor } from '@/components/products/tax/tax-group-members-editor';
-import { Button, buttonVariants } from '@/components/ui/button';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
-import { taxGroupDetailPath } from '@/lib/fineract/tax-paths';
-import { cn } from '@/lib/utils';
+import { taxGroupDetailPath, taxGroupsListPath } from '@/lib/fineract/tax-paths';
 
-export function TaxGroupFormPage({
-  taxGroupId,
-  initialName,
-  initialMembers,
-  componentOptions
+export const CREATE_TAX_GROUP_FORM_ID = 'create-tax-group-form';
+
+export function TaxGroupCreateSheet({
+  componentOptions,
+  open,
+  onOpenChange
 }: {
-  taxGroupId: number;
-  initialName?: string;
-  initialMembers?: TaxGroupMemberInput[];
   componentOptions: TaxComponentOption[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [name, setName] = useState(initialName ?? '');
-  const [members, setMembers] = useState<TaxGroupMemberInput[]>(initialMembers ?? []);
+  const [name, setName] = useState('');
+  const [members, setMembers] = useState<TaxGroupMemberInput[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setName('');
+    setMembers([]);
+    setFieldErrors({});
+    setSubmitError(null);
+  }, [open]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -47,10 +53,7 @@ export function TaxGroupFormPage({
     setFieldErrors({});
 
     startTransition(async () => {
-      const result = await updateTaxGroupAction(String(taxGroupId), {
-        name,
-        taxComponents: members
-      });
+      const result = await createTaxGroupAction({ name, taxComponents: members });
 
       if (!result.ok) {
         setSubmitError(result.message);
@@ -61,31 +64,36 @@ export function TaxGroupFormPage({
       }
 
       toastCommandOutcome(result, {
-        completed: 'Tax group updated.',
-        pending: 'Tax group updated. sent for approval.'
+        completed: 'Tax group created.',
+        pending: 'Tax group created. sent for approval.'
       });
-      router.push(taxGroupDetailPath(taxGroupId));
+      onOpenChange(false);
+      const id = result.resourceId;
+      router.push(id ? taxGroupDetailPath(id) : taxGroupsListPath());
       router.refresh();
     });
   }
 
   return (
-    <ListPage
-      title="Edit tax group"
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create tax group"
       description="Name the group and assign tax components with effective dates."
-      backLink={
-        <DetailBackLink href={taxGroupDetailPath(taxGroupId)} label="Back to tax group" />
-      }
+      formId={CREATE_TAX_GROUP_FORM_ID}
+      submitLabel="Create"
+      submitLoading={pending}
+      className="data-[side=right]:sm:max-w-xl"
     >
-      <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-6">
-        {submitError ? (
-          <p
-            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-            role="alert"
-          >
-            {submitError}
-          </p>
-        ) : null}
+      {submitError ? (
+        <p
+          className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          role="alert"
+        >
+          {submitError}
+        </p>
+      ) : null}
+      <form id={CREATE_TAX_GROUP_FORM_ID} onSubmit={handleSubmit} className="space-y-4">
         <TextField
           label="Name"
           required
@@ -98,7 +106,7 @@ export function TaxGroupFormPage({
           members={members}
           onChange={setMembers}
           componentOptions={componentOptions}
-          mode="edit"
+          mode="create"
           disabled={pending}
         />
         {fieldErrors.taxComponents ? (
@@ -106,18 +114,7 @@ export function TaxGroupFormPage({
             {fieldErrors.taxComponents}
           </p>
         ) : null}
-        <div className="flex flex-wrap gap-3">
-          <Button type="submit" disabled={pending}>
-            Save changes
-          </Button>
-          <Link
-            href={taxGroupDetailPath(taxGroupId)}
-            className={cn(buttonVariants({ variant: 'outline' }))}
-          >
-            Cancel
-          </Link>
-        </div>
       </form>
-    </ListPage>
+    </FormSheet>
   );
 }

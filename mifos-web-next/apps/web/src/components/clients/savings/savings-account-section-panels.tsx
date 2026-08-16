@@ -35,7 +35,7 @@ import { DataTablePagination } from '@/components/composites/data-table/data-tab
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
+import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
 import { savingsAccountTransactionPath } from '@/lib/fineract/client-account-links';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import {
@@ -45,6 +45,7 @@ import {
   formatSavingsTransactionType,
   isSavingsTransactionAccrual,
   isSavingsTransactionDebit,
+  savingsAccountAllowsOverdraft,
   savingsAccountCurrencyCode,
   savingsAccountProductName,
   savingsTransactionDate,
@@ -247,6 +248,8 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
         </DetailSection>
       </div>
 
+      <SavingsAccountOverdraftSection account={account} />
+
       {summary &&
       ((summary.totalInterestEarned !== undefined && summary.totalInterestEarned >= 0) ||
         summary.totalInterestPosted !== undefined ||
@@ -300,6 +303,37 @@ function SavingsAccountSummarySection({ account }: { account: FineractSavingsAcc
         </DetailSection>
       ) : null}
     </div>
+  );
+}
+
+function SavingsAccountOverdraftSection({ account }: { account: FineractSavingsAccountDetail }) {
+  const currency = savingsAccountCurrencyCode(account);
+  const allowed = savingsAccountAllowsOverdraft(account);
+
+  return (
+    <DetailSection title="Overdraft">
+      <DetailFieldGrid>
+        <DetailField label="Overdraft allowed">{formatYesNo(account.allowOverdraft)}</DetailField>
+        {allowed ? (
+          <>
+            <DetailField label="Maximum overdraft limit">
+              <MoneyValue amount={account.overdraftLimit} currencyCode={currency} />
+            </DetailField>
+            <DetailField label="Minimum overdraft for interest calculation">
+              <MoneyValue
+                amount={account.minOverdraftForInterestCalculation}
+                currencyCode={currency}
+              />
+            </DetailField>
+            <DetailField label="Nominal annual interest on overdraft">
+              {account.nominalAnnualInterestRateOverdraft !== undefined
+                ? `${account.nominalAnnualInterestRateOverdraft}%`
+                : '—'}
+            </DetailField>
+          </>
+        ) : null}
+      </DetailFieldGrid>
+    </DetailSection>
   );
 }
 

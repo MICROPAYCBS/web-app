@@ -133,6 +133,10 @@ export interface FineractSavingsAccountDetail {
   interestPostingPeriodType?: FineractEnumOption;
   interestCalculationType?: FineractEnumOption;
   interestCalculationDaysInYearType?: FineractEnumOption;
+  allowOverdraft?: boolean;
+  overdraftLimit?: number;
+  minOverdraftForInterestCalculation?: number;
+  nominalAnnualInterestRateOverdraft?: number;
   lastActiveTransactionDate?: number[] | string;
   onHoldFunds?: number;
   savingsAmountOnHold?: number;

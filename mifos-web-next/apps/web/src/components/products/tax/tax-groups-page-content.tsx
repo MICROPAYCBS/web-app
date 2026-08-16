@@ -11,12 +11,22 @@
 import type { TaxGroupListItem } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
 import Link from 'next/link';
-import { DetailBackLink } from '@/components/composites';
+import { DetailBackLink, EmptyState } from '@/components/composites';
 import { ListPage } from '@/components/composites/list-page';
 import { TaxGroupsTable } from '@/components/products/tax/tax-groups-table';
 import { buttonVariants } from '@/components/ui/button';
 import { taxConfigurationsPath, taxGroupCreatePath } from '@/lib/fineract/tax-paths';
 import { cn } from '@/lib/utils';
+
+function CreateTaxGroupLink({ size }: { size?: 'default' | 'sm' }) {
+  return (
+    <Can permission="CREATE_TAXGROUP">
+      <Link href={taxGroupCreatePath()} className={cn(buttonVariants({ size }))}>
+        Create tax group
+      </Link>
+    </Can>
+  );
+}
 
 export function TaxGroupsPageContent({ groups }: { groups: TaxGroupListItem[] }) {
   return (
@@ -26,15 +36,17 @@ export function TaxGroupsPageContent({ groups }: { groups: TaxGroupListItem[] })
       backLink={
         <DetailBackLink href={taxConfigurationsPath()} label="Back to tax configurations" />
       }
-      actions={
-        <Can permission="CREATE_TAXGROUP">
-          <Link href={taxGroupCreatePath()} className={cn(buttonVariants())}>
-            Create tax group
-          </Link>
-        </Can>
-      }
+      actions={<CreateTaxGroupLink />}
     >
-      <TaxGroupsTable groups={groups} />
+      {groups.length === 0 ? (
+        <EmptyState
+          title="No tax groups yet"
+          description="Bundle tax components into a group so products can withhold tax."
+          action={<CreateTaxGroupLink size="sm" />}
+        />
+      ) : (
+        <TaxGroupsTable groups={groups} />
+      )}
     </ListPage>
   );
 }

@@ -11,23 +11,20 @@
 import type { TaxComponentOption } from '@mifos/api-client';
 import type { TaxGroupMemberInput } from '@mifos/validation';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { EmptyState } from '@/components/composites';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   formatTaxDate,
   taxComponentName,
   taxComponentSelectOptions,
   taxDateToFormString
 } from '@/lib/fineract/tax-display';
+import { taxComponentsListPath } from '@/lib/fineract/tax-paths';
+import { cn } from '@/lib/utils';
 
 function emptyMember(): TaxGroupMemberInput {
   return { taxComponentId: 0, startDate: '', isNew: true };
@@ -96,125 +93,150 @@ export function TaxGroupMembersEditor({
     setDialogOpen(false);
   }
 
+  const addButton = (
+    <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={openCreate}>
+      <Plus className="mr-1 size-4" />
+      Add component
+    </Button>
+  );
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-medium">Tax components</h3>
-        <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={openCreate}>
-          <Plus className="mr-1 size-4" />
-          Add component
-        </Button>
-      </div>
-
       {members.length ? (
-        <div className="overflow-hidden rounded-lg border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-3 py-2 text-left font-medium">Component</th>
-                <th className="px-3 py-2 text-left font-medium">Start date</th>
-                <th className="px-3 py-2 text-left font-medium">End date</th>
-                <th className="px-3 py-2 text-right font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((member, index) => (
-                <tr key={`${member.id ?? 'new'}-${member.taxComponentId}-${index}`} className="border-t border-border">
-                  <td className="px-3 py-2">
-                    {taxComponentName(componentOptions, member.taxComponentId)}
-                  </td>
-                  <td className="px-3 py-2">{member.startDate ? formatTaxDate(member.startDate) : '—'}</td>
-                  <td className="px-3 py-2">{member.endDate ? formatTaxDate(member.endDate) : '—'}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        disabled={disabled}
-                        onClick={() => openEdit(index)}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="text-destructive"
-                        disabled={disabled}
-                        onClick={() => removeMember(index)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  </td>
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-medium">Tax components</h3>
+            {addButton}
+          </div>
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">Component</th>
+                  <th className="px-3 py-2 text-left font-medium">Start date</th>
+                  <th className="px-3 py-2 text-left font-medium">End date</th>
+                  <th className="px-3 py-2 text-right font-medium">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {members.map((member, index) => (
+                  <tr
+                    key={`${member.id ?? 'new'}-${member.taxComponentId}-${index}`}
+                    className="border-t border-border"
+                  >
+                    <td className="px-3 py-2">
+                      {taxComponentName(componentOptions, member.taxComponentId)}
+                    </td>
+                    <td className="px-3 py-2">
+                      {member.startDate ? formatTaxDate(member.startDate) : '—'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {member.endDate ? formatTaxDate(member.endDate) : '—'}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          disabled={disabled}
+                          onClick={() => openEdit(index)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive"
+                          disabled={disabled}
+                          onClick={() => removeMember(index)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : dialogOpen ? null : componentOptions.length === 0 ? (
+        <EmptyState
+          title="No tax components available"
+          description="Create a tax component first, then add it to this group."
+          action={
+            <Link
+              href={taxComponentsListPath()}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+            >
+              Go to tax components
+            </Link>
+          }
+        />
       ) : (
-        <p className="text-sm text-muted-foreground">Add at least one tax component to this group.</p>
+        <EmptyState
+          title="No tax components in this group"
+          description="Add at least one tax component with an effective start date."
+          action={addButton}
+        />
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingIndex === null ? 'Add tax component' : 'Edit tax component'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <SelectField
-              label="Tax component"
+      {dialogOpen ? (
+        <div className="space-y-4 rounded-lg border border-border p-4">
+          <h4 className="text-sm font-medium">
+            {editingIndex === null ? 'Add tax component' : 'Edit tax component'}
+          </h4>
+          <SelectField
+            label="Tax component"
+            required
+            value={draft.taxComponentId ? String(draft.taxComponentId) : undefined}
+            onValueChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                taxComponentId: value ? Number(value) : 0
+              }))
+            }
+            options={selectOptions}
+            placeholder="Select component"
+            disabled={disabled || (!draft.isNew && mode === 'edit')}
+          />
+          {!draft.endDate || draft.isNew || mode === 'create' ? (
+            <DateField
+              label="Start date"
               required
-              value={draft.taxComponentId ? String(draft.taxComponentId) : undefined}
-              onValueChange={(value) =>
-                setDraft((current) => ({
-                  ...current,
-                  taxComponentId: value ? Number(value) : 0
-                }))
-              }
-              options={selectOptions}
-              placeholder="Select component"
-              disabled={disabled || (!draft.isNew && mode === 'edit')}
+              value={draft.startDate}
+              onChange={(value) => setDraft((current) => ({ ...current, startDate: value }))}
+              allowFuture
+              disabled={disabled}
             />
-            {!draft.endDate || draft.isNew || mode === 'create' ? (
-              <DateField
-                label="Start date"
-                required
-                value={draft.startDate}
-                onChange={(value) => setDraft((current) => ({ ...current, startDate: value }))}
-                allowFuture
-                disabled={disabled}
-              />
-            ) : null}
-            {mode === 'edit' && !draft.isNew ? (
-              <DateField
-                label="End date"
-                optional
-                value={draft.endDate}
-                onChange={(value) => setDraft((current) => ({ ...current, endDate: value }))}
-                allowFuture
-                disabled={disabled}
-              />
-            ) : null}
-            {dialogError ? (
-              <p className="text-sm text-destructive" role="alert">
-                {dialogError}
-              </p>
-            ) : null}
-          </div>
-          <DialogFooter>
+          ) : null}
+          {mode === 'edit' && !draft.isNew ? (
+            <DateField
+              label="End date"
+              optional
+              value={draft.endDate}
+              onChange={(value) => setDraft((current) => ({ ...current, endDate: value }))}
+              allowFuture
+              disabled={disabled}
+            />
+          ) : null}
+          {dialogError ? (
+            <p className="text-sm text-destructive" role="alert">
+              {dialogError}
+            </p>
+          ) : null}
+          <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
             <Button type="button" onClick={saveMember} disabled={disabled}>
               Save
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

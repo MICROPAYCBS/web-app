@@ -34,7 +34,6 @@ export default async function TaxGroupEditPage({
 
   return (
     <TaxGroupFormPage
-      mode="edit"
       taxGroupId={group.id}
       initialName={group.name}
       initialMembers={taxGroupMembersFromDetail(group.taxAssociations)}

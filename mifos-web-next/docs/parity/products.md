@@ -22,7 +22,7 @@ Reference: `openMF/web-app` → `src/app/products/`
 | `/products/tax-configurations/tax-components/[id]` | GET | ViewTaxComponentComponent | `GET /taxes/component/{id}` | — | — | done |
 | `/products/tax-configurations/tax-components/[id]?edit=1` | PUT | EditTaxComponentComponent | `PUT /taxes/component/{id}` | `products.tax-component.update` | — | done |
 | `/products/tax-configurations/tax-groups` | GET | ManageTaxGroupsComponent | `GET /taxes/group` | — | — | done |
-| `/products/tax-configurations/tax-groups/create` | POST | CreateTaxGroupComponent | `POST /taxes/group` | `products.tax-group.create` | — | done |
+| `/products/tax-configurations/tax-groups?create=1` | POST | CreateTaxGroupComponent | `POST /taxes/group` | `products.tax-group.create` | — | done |
 | `/products/tax-configurations/tax-groups/[id]` | GET | ViewTaxGroupComponent | `GET /taxes/group/{id}` | — | — | done |
 | `/products/tax-configurations/tax-groups/[id]/edit` | PUT | EditTaxGroupComponent | `PUT /taxes/group/{id}` | `products.tax-group.update` | — | done |
 

@@ -6,12 +6,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractSavingsAccountTransaction } from '@mifos/api-client';
+import type {
+  FineractSavingsAccountDetail,
+  FineractSavingsAccountTransaction
+} from '@mifos/api-client';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   formatSavingsTransactionType,
   isSavingsTransactionDebit,
+  savingsAccountAllowsOverdraft,
   sortSavingsAccountTransactions,
   sumSavingsCashMovementTotals
 } from './savings-account-display';
@@ -139,6 +143,20 @@ describe('sumSavingsCashMovementTotals', () => {
     assert.equal(totals.totalWithdrawals, 1_000_000);
     assert.equal(totals.totalInwardTransfers, 200_000);
     assert.equal(totals.totalOutwardTransfers, 500_000);
+  });
+});
+
+describe('savingsAccountAllowsOverdraft', () => {
+  it('is true only when the account flag is true', () => {
+    assert.equal(
+      savingsAccountAllowsOverdraft({ allowOverdraft: true } as FineractSavingsAccountDetail),
+      true
+    );
+    assert.equal(
+      savingsAccountAllowsOverdraft({ allowOverdraft: false } as FineractSavingsAccountDetail),
+      false
+    );
+    assert.equal(savingsAccountAllowsOverdraft({} as FineractSavingsAccountDetail), false);
   });
 });
 

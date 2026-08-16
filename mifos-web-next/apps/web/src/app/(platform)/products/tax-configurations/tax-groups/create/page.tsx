@@ -7,17 +7,16 @@
  */
 
 import { can, resolvePermission } from '@mifos/auth';
-import { notFound } from 'next/navigation';
-import { TaxGroupFormPage } from '@/components/products/tax/tax-group-form-page';
-import { getTaxGroupTemplate } from '@/lib/fineract/tax-groups';
+import { notFound, redirect } from 'next/navigation';
+import { taxGroupCreatePath } from '@/lib/fineract/tax-paths';
 import { getServerSession } from '@/lib/session/server';
 
-export default async function TaxGroupCreatePage() {
+/** Legacy create route — creation now uses the sidebar on the tax groups list. */
+export default async function TaxGroupCreateRedirectPage() {
   const session = await getServerSession();
   if (!can(session, resolvePermission('products.tax.groups.create'))) {
     notFound();
   }
 
-  const template = await getTaxGroupTemplate();
-  return <TaxGroupFormPage mode="create" componentOptions={template.taxComponents} />;
+  return redirect(taxGroupCreatePath());
 }

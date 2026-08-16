@@ -104,6 +104,21 @@ function readOptionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value : undefined;
 }
 
+function asOptionalNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (value == null || value === '') {
+    return undefined;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function asOptionalBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
 function normalizeTimeline(raw: unknown): FineractSavingsAccountTimeline | undefined {
   if (!raw || typeof raw !== 'object') {
     return undefined;
@@ -293,6 +308,10 @@ export function normalizeDepositAccountDetail(raw: unknown): FineractSavingsAcco
     interestPostingPeriodType: normalizeEnumOption(row.interestPostingPeriodType),
     interestCalculationType: normalizeEnumOption(row.interestCalculationType),
     interestCalculationDaysInYearType: normalizeEnumOption(row.interestCalculationDaysInYearType),
+    allowOverdraft: asOptionalBoolean(row.allowOverdraft),
+    overdraftLimit: asOptionalNumber(row.overdraftLimit),
+    minOverdraftForInterestCalculation: asOptionalNumber(row.minOverdraftForInterestCalculation),
+    nominalAnnualInterestRateOverdraft: asOptionalNumber(row.nominalAnnualInterestRateOverdraft),
     lastActiveTransactionDate: row.lastActiveTransactionDate as
       | FineractSavingsAccountDetail['lastActiveTransactionDate']
       | undefined,

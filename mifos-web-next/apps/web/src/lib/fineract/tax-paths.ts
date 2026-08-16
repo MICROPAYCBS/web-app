@@ -39,7 +39,7 @@ export function taxGroupDetailPath(taxGroupId: string | number): string {
 }
 
 export function taxGroupCreatePath(): string {
-  return `${TAX_GROUPS_PATH}/create`;
+  return `${TAX_GROUPS_PATH}?create=1`;
 }
 
 export function taxGroupEditPath(taxGroupId: string | number): string {
