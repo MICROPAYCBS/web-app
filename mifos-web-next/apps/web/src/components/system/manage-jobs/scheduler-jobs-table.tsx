@@ -95,14 +95,22 @@ export function SchedulerJobsTable({
       {
         accessorKey: 'displayName',
         header: 'Job name',
-        cell: ({ row }) => (
-          <Link
-            href={`/system/manage-jobs/${row.original.jobId}`}
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {row.original.displayName}
-          </Link>
-        )
+        cell: ({ row }) => {
+          const description = row.original.description?.trim();
+          return (
+            <div className="max-w-md space-y-1">
+              <Link
+                href={`/system/manage-jobs/${row.original.jobId}`}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {row.original.displayName}
+              </Link>
+              {description ? (
+                <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p>
+              ) : null}
+            </div>
+          );
+        }
       },
       {
         accessorKey: 'shortName',
@@ -192,7 +200,10 @@ export function SchedulerJobsTable({
       const needle = String(value).toLowerCase();
       const displayName = row.original.displayName.toLowerCase();
       const shortName = row.original.shortName?.toLowerCase() ?? '';
-      return displayName.includes(needle) || shortName.includes(needle);
+      const description = row.original.description?.toLowerCase() ?? '';
+      return (
+        displayName.includes(needle) || shortName.includes(needle) || description.includes(needle)
+      );
     },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -208,7 +219,7 @@ export function SchedulerJobsTable({
       <Input
         value={filter}
         onChange={(event) => setFilter(event.target.value)}
-        placeholder="Filter by job name or short name..."
+        placeholder="Filter by job name, short name, or description..."
         className="max-w-sm"
       />
       <DataTable<FineractSchedulerJob>

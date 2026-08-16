@@ -111,7 +111,12 @@ export function CustomParametersDialog({
         <div className="space-y-6">
           {jobs.map((job) => (
             <div key={job.jobId} className="space-y-3 rounded-lg border border-border p-4">
-              <p className="text-sm font-medium">{job.displayName}</p>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{job.displayName}</p>
+                {job.description?.trim() ? (
+                  <p className="text-xs text-muted-foreground">{job.description.trim()}</p>
+                ) : null}
+              </div>
               {(parameters[job.jobId] ?? [emptyParameter()]).map((row, index) => (
                 <div key={`${job.jobId}-${index}`} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
                   <div className="space-y-1">

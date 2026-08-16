@@ -82,7 +82,12 @@ export function RunJobsDialog({
                 checked={selectedIds.includes(job.jobId)}
                 onCheckedChange={(checked) => toggleJob(job.jobId, checked === true)}
               />
-              <span className="text-sm">{job.displayName}</span>
+              <div className="min-w-0">
+                <p className="text-sm">{job.displayName}</p>
+                {job.description?.trim() ? (
+                  <p className="text-xs text-muted-foreground">{job.description.trim()}</p>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

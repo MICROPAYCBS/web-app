@@ -34,7 +34,8 @@ import {
   jobSequenceRunStatusLabel,
   jobSequenceRunStatusVariant,
   jobSequenceStepTargetLabel,
-  jobSequenceStepTypeLabel
+  jobSequenceStepTypeLabel,
+  schedulerJobDescription
 } from '@/lib/fineract/job-sequence-display';
 import { jobSequenceDetailPath } from '@/lib/fineract/job-sequence-paths';
 
@@ -205,14 +206,26 @@ export function JobSequenceRunDetailView({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {run.steps.map((step) => (
+              {run.steps.map((step) => {
+                const jobDescription =
+                  step.stepType === 'SCHEDULER_JOB'
+                    ? schedulerJobDescription(
+                        jobsByShortName.get(step.jobShortName?.trim() ?? '')
+                      )
+                    : undefined;
+                return (
                 <TableRow key={step.id}>
                   <TableCell className="tabular-nums">{step.stepOrder}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{jobSequenceStepTypeLabel(step.stepType)}</Badge>
                   </TableCell>
                   <TableCell>
-                    {jobSequenceStepTargetLabel(step, jobsByShortName)}
+                    <div className="space-y-1">
+                      <div>{jobSequenceStepTargetLabel(step, jobsByShortName)}</div>
+                      {jobDescription ? (
+                        <p className="text-xs text-muted-foreground">{jobDescription}</p>
+                      ) : null}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={jobSequenceRunStatusVariant(step.status)}>
@@ -234,7 +247,8 @@ export function JobSequenceRunDetailView({
                       : step.errorMessage?.trim() || '—'}
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         )}

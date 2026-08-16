@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { updateSchedulerJobAction } from '@/actions/jobs';
 import { FormSheet } from '@/components/composites/form-sheet';
+import { TextField } from '@/components/composites/text-field';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,7 @@ export function SchedulerJobEditSheet({
   const router = useRouter();
   const formId = useId();
   const [displayName, setDisplayName] = useState(job.displayName);
+  const [description, setDescription] = useState(job.description ?? '');
   const [cronExpression, setCronExpression] = useState(job.cronExpression);
   const [active, setActive] = useState(job.active);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -41,6 +43,7 @@ export function SchedulerJobEditSheet({
       return;
     }
     setDisplayName(job.displayName);
+    setDescription(job.description ?? '');
     setCronExpression(job.cronExpression);
     setActive(job.active);
     setFieldErrors({});
@@ -48,7 +51,7 @@ export function SchedulerJobEditSheet({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const parsed = validateUpdateSchedulerJob({ displayName, cronExpression, active });
+    const parsed = validateUpdateSchedulerJob({ displayName, description, cronExpression, active });
     if (!parsed.success) {
       const flattened = parsed.error.flatten().fieldErrors;
       const nextErrors: Record<string, string> = {};
@@ -84,7 +87,7 @@ export function SchedulerJobEditSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={`Edit ${job.displayName}`}
-      description="Update the schedule and activation state for this job."
+      description="Update the description, schedule, and activation state for this job."
       formId={formId}
       submitLabel="Save changes"
       submitLoading={pending}
@@ -103,6 +106,17 @@ export function SchedulerJobEditSheet({
             <p className="text-sm text-destructive">{fieldErrors.displayName}</p>
           ) : null}
         </div>
+        <TextField
+          id={`${formId}-description`}
+          label="Description"
+          value={description}
+          onChange={setDescription}
+          error={fieldErrors.description}
+          optional
+          multiline
+          rows={3}
+          hint="What this job does. Max 500 characters."
+        />
         <div className="space-y-2">
           <Label htmlFor={`${formId}-cronExpression`}>Cron expression</Label>
           <Input

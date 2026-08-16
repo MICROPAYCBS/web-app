@@ -19,6 +19,7 @@ import {
   isSchedulerJobInactive,
   jobSequenceStepTargetLabel,
   jobSequenceStepTypeLabel,
+  schedulerJobDescription,
   schedulerJobSelectOptions
 } from '@/lib/fineract/job-sequence-display';
 
@@ -63,6 +64,11 @@ export function JobSequenceStepFormSheet({
   const [error, setError] = useState<string | null>(null);
 
   const jobOptions = useMemo(() => schedulerJobSelectOptions(jobs), [jobs]);
+  const selectedJob = useMemo(
+    () => jobs.find((job) => job.shortName?.trim() === draft.jobShortName.trim()),
+    [draft.jobShortName, jobs]
+  );
+  const selectedJobDescription = schedulerJobDescription(selectedJob);
   const operationOptions = JOB_SEQUENCE_OPERATION_CODES.map((code) => ({
     value: code,
     label: code
@@ -135,6 +141,9 @@ export function JobSequenceStepFormSheet({
               required
               emptyMessage="No scheduler jobs with a short name were returned. Check Manage jobs."
             />
+            {selectedJobDescription ? (
+              <p className="text-sm text-muted-foreground">{selectedJobDescription}</p>
+            ) : null}
             {isSchedulerJobInactive(draft.jobShortName, jobs) ? (
               <p className="text-sm text-muted-foreground" role="status">
                 This job is inactive (or missing). At run time it will be skipped until you activate
@@ -207,6 +216,10 @@ export function JobSequenceStepSummaryCard({
   }, [jobs]);
 
   const target = jobSequenceStepTargetLabel(step, jobsByShortName);
+  const jobDescription =
+    step.stepType === 'SCHEDULER_JOB'
+      ? schedulerJobDescription(jobsByShortName.get(step.jobShortName.trim()))
+      : undefined;
 
   return (
     <div
@@ -227,6 +240,9 @@ export function JobSequenceStepSummaryCard({
             <Badge variant="outline">{jobSequenceStepTypeLabel(step.stepType)}</Badge>
             <span className="truncate font-medium">{target}</span>
           </div>
+          {jobDescription ? (
+            <p className="line-clamp-2 text-xs text-muted-foreground">{jobDescription}</p>
+          ) : null}
           <p className="text-xs text-muted-foreground">
             {step.enabled ? 'Enabled' : 'Disabled'}
             {' · '}

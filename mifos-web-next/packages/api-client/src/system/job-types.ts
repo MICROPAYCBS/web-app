@@ -21,6 +21,8 @@ export interface FineractSchedulerJob {
   displayName: string;
   /** Present on Micropay / some Fineract builds; used by job-sequence step editors. */
   shortName?: string;
+  /** Operator-facing summary of what the job does (max 500). */
+  description?: string | null;
   cronExpression: string;
   active: boolean;
   currentlyRunning: boolean;

@@ -61,6 +61,8 @@ function normalizeSchedulerJob(raw: unknown): FineractSchedulerJob | null {
     jobId,
     displayName,
     shortName: typeof row.shortName === 'string' && row.shortName.trim() ? row.shortName.trim() : undefined,
+    description:
+      typeof row.description === 'string' && row.description.trim() ? row.description.trim() : null,
     cronExpression,
     active: row.active === true,
     currentlyRunning: row.currentlyRunning === true,

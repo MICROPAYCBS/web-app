@@ -97,13 +97,28 @@ export function schedulerJobSelectOptions(jobs: FineractSchedulerJob[]) {
     .map((job) => {
       const shortName = job.shortName!.trim();
       const base = `${job.displayName} (${shortName})`;
+      const description = job.description?.trim() || undefined;
       return {
         value: shortName,
         label: job.active ? base : `${base} - inactive`,
-        keywords: [job.displayName, shortName, String(job.jobId), job.active ? 'active' : 'inactive']
+        description,
+        keywords: [
+          job.displayName,
+          shortName,
+          String(job.jobId),
+          job.active ? 'active' : 'inactive',
+          ...(description ? [description] : [])
+        ]
       };
     })
     .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+export function schedulerJobDescription(
+  job: FineractSchedulerJob | undefined | null
+): string | undefined {
+  const description = job?.description?.trim();
+  return description || undefined;
 }
 
 export function buildJobsByShortName(

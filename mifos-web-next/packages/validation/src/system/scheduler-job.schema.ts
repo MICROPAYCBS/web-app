@@ -10,6 +10,12 @@ import { z } from 'zod';
 
 export const updateSchedulerJobSchema = z.object({
   displayName: z.string().trim().min(1, 'Job name is required.'),
+  description: z
+    .string()
+    .trim()
+    .max(500, 'Description must be at most 500 characters.')
+    .optional()
+    .or(z.literal('')),
   cronExpression: z.string().trim().min(1, 'Cron expression is required.'),
   active: z.boolean()
 });

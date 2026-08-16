@@ -66,7 +66,12 @@ export function SchedulerJobDetailView({
           <DetailHeader
             backLink={<DetailBackLink href="/system/manage-jobs" label="Back to manage jobs" />}
             title={job.displayName}
-            meta={`Job ID ${job.jobId}`}
+            meta={
+              <div className="space-y-1">
+                {job.description?.trim() ? <p>{job.description.trim()}</p> : null}
+                <p>Job ID {job.jobId}</p>
+              </div>
+            }
             actions={
               <div className="flex flex-wrap gap-2">
                 {canUpdate ? (
@@ -89,6 +94,7 @@ export function SchedulerJobDetailView({
         }
         summary={
           <DetailFieldGrid columns={2}>
+            <DetailField label="Description">{job.description?.trim() || '—'}</DetailField>
             <DetailField label="Schedule">
               <div className="space-y-1">
                 <p>{cronSchedule ?? 'Could not interpret this cron expression.'}</p>

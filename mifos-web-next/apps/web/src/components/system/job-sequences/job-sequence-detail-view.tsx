@@ -57,7 +57,8 @@ import {
   jobSequenceRunStatusLabel,
   jobSequenceRunStatusVariant,
   jobSequenceStepTargetLabel,
-  jobSequenceStepTypeLabel
+  jobSequenceStepTypeLabel,
+  schedulerJobDescription
 } from '@/lib/fineract/job-sequence-display';
 import {
   JOB_SEQUENCES_LIST_PATH,
@@ -228,7 +229,14 @@ export function JobSequenceDetailView({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sequence.steps.map((step) => (
+                  {sequence.steps.map((step) => {
+                    const jobDescription =
+                      step.stepType === 'SCHEDULER_JOB'
+                        ? schedulerJobDescription(
+                            jobsByShortName.get(step.jobShortName?.trim() ?? '')
+                          )
+                        : undefined;
+                    return (
                     <TableRow key={`${step.stepOrder}-${step.stepType}-${step.jobShortName ?? step.operationCode}`}>
                       <TableCell className="tabular-nums">{step.stepOrder}</TableCell>
                       <TableCell>
@@ -237,6 +245,9 @@ export function JobSequenceDetailView({
                       <TableCell>
                         <div className="space-y-1">
                           <div>{jobSequenceStepTargetLabel(step, jobsByShortName)}</div>
+                          {jobDescription ? (
+                            <p className="text-xs text-muted-foreground">{jobDescription}</p>
+                          ) : null}
                           {step.stepType === 'SCHEDULER_JOB' &&
                           isSchedulerJobInactive(step.jobShortName, jobs) ? (
                             <p className="text-xs text-muted-foreground">
@@ -249,7 +260,8 @@ export function JobSequenceDetailView({
                       <TableCell>{step.enabled ? 'Yes' : 'No'}</TableCell>
                       <TableCell>{step.stopOnFailure ? 'Yes' : 'No'}</TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}

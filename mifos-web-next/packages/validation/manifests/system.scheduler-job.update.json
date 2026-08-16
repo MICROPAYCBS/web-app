@@ -1,10 +1,13 @@
 {
   "command": "system.scheduler-job.update",
   "fineractSources": [
-    "org.apache.fineract.infrastructure.jobs.api.SchedulerJobApiResource"
+    "org.apache.fineract.infrastructure.jobs.api.SchedulerJobApiResource",
+    "org.apache.fineract.infrastructure.jobs.data.JobDetailDataValidator",
+    "org.apache.fineract.infrastructure.jobs.domain.ScheduledJobDetail"
   ],
   "fields": {
     "displayName": { "required": true },
+    "description": { "required": false, "maxLength": 500 },
     "cronExpression": { "required": true },
     "active": { "required": true }
   }
