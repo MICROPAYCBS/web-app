@@ -18,11 +18,19 @@ import {
   useState,
   type ReactNode
 } from 'react';
+import {
+  COLOR_PRESETS,
+  DEFAULT_COLOR_PRESET,
+  isColorPreset,
+  type ColorPreset
+} from '@/lib/theme-config';
 
 const STORAGE_KEY = 'theme';
+const PRESET_STORAGE_KEY = 'color-preset';
 
 export type ThemeSetting = 'light' | 'dark' | 'system';
 export type ResolvedTheme = 'light' | 'dark';
+export type { ColorPreset };
 
 export interface ThemeProviderProps {
   children: ReactNode;
@@ -30,22 +38,37 @@ export interface ThemeProviderProps {
   defaultTheme?: ThemeSetting;
   /** @default true */
   enableSystem?: boolean;
+  /** @default "heritage" */
+  defaultColorPreset?: ColorPreset;
 }
 
 interface ThemeContextValue {
   theme: ThemeSetting;
   setTheme: (theme: ThemeSetting) => void;
   resolvedTheme: ResolvedTheme | undefined;
+  colorPreset: ColorPreset;
+  setColorPreset: (preset: ColorPreset) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+const ALLOWED_PRESETS_JSON = JSON.stringify(COLOR_PRESETS.map((preset) => preset.id));
+
 /** Runs before paint to avoid theme flash (injected via useServerInsertedHTML). */
-const THEME_BLOCKING_SCRIPT = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}')||'system';var d=document.documentElement;var r=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';d.classList.remove('light','dark');d.classList.add(r);d.style.colorScheme=r}catch(e){}})();`;
+const THEME_BLOCKING_SCRIPT = `(function(){try{var d=document.documentElement;var t=localStorage.getItem('${STORAGE_KEY}')||'system';var r=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';d.classList.remove('light','dark');d.classList.add(r);d.style.colorScheme=r;var allowed=${ALLOWED_PRESETS_JSON};var p=localStorage.getItem('${PRESET_STORAGE_KEY}')||'${DEFAULT_COLOR_PRESET}';if(allowed.indexOf(p)<0)p='${DEFAULT_COLOR_PRESET}';d.setAttribute('data-preset',p)}catch(e){}})();`;
 
 function readStoredTheme(): ThemeSetting | null {
   try {
     return localStorage.getItem(STORAGE_KEY) as ThemeSetting | null;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredColorPreset(): ColorPreset | null {
+  try {
+    const stored = localStorage.getItem(PRESET_STORAGE_KEY);
+    return isColorPreset(stored) ? stored : null;
   } catch {
     return null;
   }
@@ -68,12 +91,18 @@ function applyResolvedTheme(resolved: ResolvedTheme) {
   root.style.colorScheme = resolved;
 }
 
+function applyColorPreset(preset: ColorPreset) {
+  document.documentElement.setAttribute('data-preset', preset);
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
-  enableSystem = true
+  enableSystem = true,
+  defaultColorPreset = DEFAULT_COLOR_PRESET
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<ThemeSetting>(defaultTheme);
+  const [colorPreset, setColorPresetState] = useState<ColorPreset>(defaultColorPreset);
   const [systemPrefersDark, setSystemPrefersDark] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -87,10 +116,12 @@ export function ThemeProvider({
   useEffect(() => {
     queueMicrotask(() => {
       const stored = readStoredTheme();
+      const storedPreset = readStoredColorPreset();
       setThemeState(stored ?? defaultTheme);
+      setColorPresetState(storedPreset ?? defaultColorPreset);
       setHydrated(true);
     });
-  }, [defaultTheme]);
+  }, [defaultTheme, defaultColorPreset]);
 
   useEffect(() => {
     if (!enableSystem) {
@@ -124,13 +155,29 @@ export function ThemeProvider({
     }
   }, [resolvedTheme, theme]);
 
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+    applyColorPreset(colorPreset);
+    try {
+      localStorage.setItem(PRESET_STORAGE_KEY, colorPreset);
+    } catch {
+      /* private mode */
+    }
+  }, [hydrated, colorPreset]);
+
   const setTheme = useCallback((next: ThemeSetting) => {
     setThemeState(next);
   }, []);
 
+  const setColorPreset = useCallback((next: ColorPreset) => {
+    setColorPresetState(next);
+  }, []);
+
   const value = useMemo(
-    () => ({ theme, setTheme, resolvedTheme }),
-    [theme, setTheme, resolvedTheme]
+    () => ({ theme, setTheme, resolvedTheme, colorPreset, setColorPreset }),
+    [theme, setTheme, resolvedTheme, colorPreset, setColorPreset]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

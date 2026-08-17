@@ -17,7 +17,7 @@ Instructions for AI agents working in this repository.
 | `@mifos/validation` | Zod schemas + `manifests/*.json` (Fineract-sourced rules) |
 | `@mifos/domain` | Pure TS (money, permissions helpers) |
 | `@mifos/i18n` | Fineract globalisation codes |
-| `@mifos/themes` | CSS presets — swap LAF via `data-preset` on `<html>` |
+| `@mifos/themes` | CSS presets — swap LAF via `data-preset` on `<html>` (`heritage`, `neutral`, `micropay`) |
 | `@mifos/auth` | RBAC: `can`, `<Can>`, nav/route manifests |
 | `@mifos/ui` | Composite UI (AppShell, DataTable, …) |
 

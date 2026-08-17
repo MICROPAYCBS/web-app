@@ -7,17 +7,23 @@
  */
 
 import type { Metadata } from 'next';
-import { Geist_Mono, Inter } from 'next/font/google';
+import { Geist_Mono, IBM_Plex_Sans, Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { AppProviders } from '@/providers/app-providers';
 import { APP_DESCRIPTION, APP_NAME } from '@/lib/branding';
-import { SHADCN_PRESET_CODE } from '@/lib/theme-config';
+import { DEFAULT_COLOR_PRESET, SHADCN_PRESET_CODE } from '@/lib/theme-config';
 import { cn } from '@/lib/utils';
 import './globals.css';
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans'
+});
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm-plex-sans'
 });
 
 const geistMono = Geist_Mono({
@@ -41,7 +47,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn('h-svh overflow-hidden antialiased font-sans', inter.variable, geistMono.variable)}
+      className={cn(
+        'h-svh overflow-hidden antialiased font-sans',
+        inter.variable,
+        ibmPlexSans.variable,
+        geistMono.variable
+      )}
+      data-preset={DEFAULT_COLOR_PRESET}
       data-shadcn-preset={SHADCN_PRESET_CODE}
       suppressHydrationWarning
     >

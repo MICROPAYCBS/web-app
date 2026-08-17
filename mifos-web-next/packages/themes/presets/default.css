@@ -1,4 +1,4 @@
 /**
- * Default preset — uses shadcn tokens from apps/web globals.css.
- * Apply data-preset="default" on <html> (no overrides required).
+ * Default preset — alias for Heritage. Tokens live in heritage.css
+ * (`data-preset="heritage"`). Import `@mifos/themes/presets/heritage.css`.
  */

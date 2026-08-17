@@ -13,7 +13,7 @@ export function LoginMarketingPanel({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center overflow-hidden bg-muted px-8 py-12 lg:px-12',
+        'relative flex items-center justify-center overflow-hidden bg-muted px-6 py-8 lg:px-12 lg:py-12',
         className
       )}
     >
@@ -34,7 +34,7 @@ export function LoginMarketingPanel({ className }: { className?: string }) {
         <div className="mx-auto flex size-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-sm">
           {APP_LOGO_ABBREV}
         </div>
-        <p className="mt-10 text-balance text-2xl font-semibold leading-snug tracking-tight text-foreground lg:text-3xl">
+        <p className="mt-6 text-balance text-xl font-semibold leading-snug tracking-tight text-foreground lg:mt-10 lg:text-3xl">
           {LOGIN_HEADLINE}
         </p>
       </div>

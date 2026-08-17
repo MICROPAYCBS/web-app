@@ -58,9 +58,9 @@ Request guards run in `apps/web/src/proxy.ts` (Next.js 16; replaces deprecated `
 
 ## Theming
 
-- `next-themes` — `class` strategy for light/dark
-- `data-preset` on `<html>` — `default`, `ocean`, `finance`, …
-- Presets live in `packages/themes/presets/*.css`
+- Custom `ThemeProvider` — `class` strategy for light/dark; `data-preset` for named palettes
+- `data-preset` on `<html>` — `heritage` (default), `neutral`, `micropay`
+- Presets live in `packages/themes/presets/*.css`; the choice persists in `localStorage` (`color-preset`)
 
 ## Delivery waves
 

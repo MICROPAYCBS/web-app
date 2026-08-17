@@ -1,0 +1,84 @@
+/**
+ * MicroPay preset — brand tokens from micropay.co.ug (contact form + site theme).
+ * ink #70137D · ink-soft #8a2a97 · marigold #e6ae48 · paper-deep #ede0ef
+ * moss #3E5C49 · text-main #2d3436 · bg #f4f7f6 · form radius 10px
+ * Apply data-preset="micropay" on <html>.
+ */
+:root {
+  --swatch-micropay: hsl(293 74% 28%);
+}
+
+[data-preset='micropay'] {
+  --background: hsl(160 16% 96%);
+  --foreground: hsl(193 9% 19%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(193 9% 19%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(193 9% 19%);
+  --primary: hsl(293 74% 28%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(292 32% 91%);
+  --secondary-foreground: hsl(293 74% 28%);
+  --muted: hsl(292 24% 94%);
+  --muted-foreground: hsl(196 7% 42%);
+  --accent: hsl(39 76% 59%);
+  --accent-foreground: hsl(143 21% 21%);
+  --destructive: hsl(0 72% 51%);
+  --success: hsl(142 19% 30%);
+  --border: hsl(293 18% 86%);
+  --input: hsl(293 18% 86%);
+  --ring: hsl(293 74% 28%);
+  --chart-1: hsl(293 74% 28%);
+  --chart-2: hsl(39 76% 59%);
+  --chart-3: hsl(142 19% 30%);
+  --chart-4: hsl(293 56% 38%);
+  --chart-5: hsl(41 77% 45%);
+  --radius: 0.625rem;
+  --sidebar: hsl(292 32% 94%);
+  --sidebar-foreground: hsl(193 9% 19%);
+  --sidebar-primary: hsl(293 74% 28%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(292 32% 91%);
+  --sidebar-accent-foreground: hsl(293 74% 28%);
+  --sidebar-border: hsl(293 18% 86%);
+  --sidebar-ring: hsl(293 74% 28%);
+}
+
+html[data-preset='micropay'] {
+  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+[data-preset='micropay'].dark {
+  --background: hsl(293 28% 8%);
+  --foreground: hsl(292 20% 96%);
+  --card: hsl(293 24% 11%);
+  --card-foreground: hsl(292 20% 96%);
+  --popover: hsl(293 24% 11%);
+  --popover-foreground: hsl(292 20% 96%);
+  --primary: hsl(293 55% 72%);
+  --primary-foreground: hsl(293 40% 12%);
+  --secondary: hsl(293 20% 16%);
+  --secondary-foreground: hsl(292 20% 96%);
+  --muted: hsl(293 16% 16%);
+  --muted-foreground: hsl(196 8% 70%);
+  --accent: hsl(39 76% 59%);
+  --accent-foreground: hsl(143 21% 12%);
+  --destructive: hsl(0 62% 45%);
+  --success: hsl(142 25% 48%);
+  --border: hsl(293 18% 20%);
+  --input: hsl(293 18% 20%);
+  --ring: hsl(293 55% 72%);
+  --chart-1: hsl(293 55% 72%);
+  --chart-2: hsl(39 76% 59%);
+  --chart-3: hsl(142 25% 48%);
+  --chart-4: hsl(293 45% 58%);
+  --chart-5: hsl(41 70% 55%);
+  --sidebar: hsl(293 26% 10%);
+  --sidebar-foreground: hsl(292 20% 96%);
+  --sidebar-primary: hsl(293 55% 72%);
+  --sidebar-primary-foreground: hsl(293 40% 12%);
+  --sidebar-accent: hsl(293 20% 16%);
+  --sidebar-accent-foreground: hsl(292 20% 96%);
+  --sidebar-border: hsl(293 18% 20%);
+  --sidebar-ring: hsl(293 55% 72%);
+}

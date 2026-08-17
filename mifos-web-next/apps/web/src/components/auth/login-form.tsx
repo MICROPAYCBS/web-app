@@ -18,6 +18,7 @@ import { LoginActiveServer } from '@/components/auth/login-active-server';
 import { TotpEnrollmentStep } from '@/components/auth/totp-enrollment-step';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { VerificationCodeField } from '@/components/composites/verification-code-field';
+import { ThemePresetToggle } from '@/components/theme/theme-preset-toggle';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { PasswordInput } from '@/components/composites/password-input';
 import { Button } from '@/components/ui/button';
@@ -365,11 +366,17 @@ export function LoginForm({
     )?.target ?? deliveryMethods[0]?.target;
 
   return (
-    <div className={cn('grid min-h-svh lg:grid-cols-2', className)}>
-      <LoginMarketingPanel className="min-h-48 lg:min-h-svh" />
+    <div
+      className={cn(
+        'grid min-h-svh grid-cols-1 grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1',
+        className
+      )}
+    >
+      <LoginMarketingPanel className="max-lg:min-h-0 lg:min-h-svh" />
 
       <div className="relative flex flex-col bg-background">
-        <div className="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
+        <div className="absolute top-4 right-4 z-10 flex flex-wrap items-center justify-end gap-2 sm:top-6 sm:right-6">
+          <ThemePresetToggle />
           <ThemeToggle variant="icon" />
         </div>
 
