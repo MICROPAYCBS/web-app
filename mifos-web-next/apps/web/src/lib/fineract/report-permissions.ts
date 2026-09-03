@@ -51,7 +51,9 @@ export function isMissingReportReadPermissionError(
   if (!(error instanceof FineractHttpError)) {
     return false;
   }
-  const message = getFineractErrorMessage(error.body, error.status) ?? error.message;
+  const message = getFineractErrorMessage(error.body, error.status, {
+    requestPath: error.request?.path
+  }) ?? error.message;
   return isMissingReportReadPermissionMessage(message, reportName);
 }
 

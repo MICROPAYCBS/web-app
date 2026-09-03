@@ -8,9 +8,15 @@
 
 export { translateFineractCode } from './error-messages';
 export {
+  formatMissingPermissionMessage,
+  extractFineractPermissionCode,
+  resolveFineractPermissionDeniedMessage
+} from './fineract-permission-errors';
+export {
   getFineractErrorMessage,
   normalizeFineractMessage,
   resolveFineractErrorItemMessage,
   type FineractErrorBody,
-  type FineractErrorItem
+  type FineractErrorItem,
+  type FineractErrorMessageContext
 } from './fineract-error-message';

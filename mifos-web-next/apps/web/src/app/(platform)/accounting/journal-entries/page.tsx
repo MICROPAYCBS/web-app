@@ -15,6 +15,7 @@ import { listDepartments } from '@/lib/fineract/departments';
 import { listJournalEntryGlAccounts, listJournalEntries } from '@/lib/fineract/journal-entries';
 import { listOfficeOptions } from '@/lib/fineract/offices';
 import { getOrganizationSelectedCurrencies } from '@/lib/fineract/organization-currencies';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function JournalEntriesPage({
@@ -28,10 +29,15 @@ export default async function JournalEntriesPage({
   }
 
   const params = await searchParams;
-  const [defaultTransactionDate, currencies] = await Promise.all([
+  const [defaultTransactionDate, currenciesResult] = await Promise.all([
     getDefaultTransactionDate().catch(() => undefined),
-    getOrganizationSelectedCurrencies()
+    tryFineractLoad(
+      () => getOrganizationSelectedCurrencies(),
+      'Could not load organization currencies.'
+    )
   ]);
+  const currencies = currenciesResult.ok ? currenciesResult.data : [];
+  const currenciesLoadError = currenciesResult.ok ? undefined : currenciesResult.message;
   const defaultCurrencyCode = currencies[0]?.code?.trim().toUpperCase() || undefined;
   const currentUserId = String(session.userId);
   const query = parseJournalEntryListQuery(params, {
@@ -59,6 +65,7 @@ export default async function JournalEntriesPage({
       glAccounts={glAccounts}
       departments={departments}
       currencies={currencies}
+      currenciesLoadError={currenciesLoadError}
       openTransactionId={openTransactionId}
       currentUserId={currentUserId}
       defaultCurrencyCode={defaultCurrencyCode}

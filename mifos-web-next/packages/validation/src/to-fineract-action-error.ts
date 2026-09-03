@@ -36,7 +36,9 @@ export function toFineractActionError(err: unknown, fallback: string): FineractA
     const mapped = mapFineractErrors(err.body);
     const fieldErrors = Object.fromEntries(mapped.fieldErrors.map((e) => [e.field, e.message]));
     const message =
-      mapped.globalMessage ?? getFineractErrorMessage(err.body, err.status) ?? err.message;
+      mapped.globalMessage ??
+      getFineractErrorMessage(err.body, err.status, { requestPath: err.request?.path }) ??
+      err.message;
 
     return {
       ok: false,

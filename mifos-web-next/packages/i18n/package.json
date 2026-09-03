@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/fineract-error-message.test.ts"
+    "test": "node --import tsx --test src/fineract-error-message.test.ts src/fineract-permission-errors.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.22.4",

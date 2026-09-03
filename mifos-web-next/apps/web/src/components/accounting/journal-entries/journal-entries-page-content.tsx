@@ -15,7 +15,7 @@ import type {
   FineractOfficeOption
 } from '@mifos/api-client';
 import { Can } from '@mifos/auth';
-import { Layers, Plus } from 'lucide-react';
+import { AlertTriangle, Layers, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
@@ -76,6 +76,7 @@ export function JournalEntriesPageContent({
   glAccounts,
   departments,
   currencies = [],
+  currenciesLoadError,
   openTransactionId,
   currentUserId,
   defaultCurrencyCode
@@ -86,6 +87,7 @@ export function JournalEntriesPageContent({
   glAccounts: FineractJournalEntryGlAccountOption[];
   departments: Department[];
   currencies?: FineractCurrencyOption[];
+  currenciesLoadError?: string;
   openTransactionId?: string;
   currentUserId: string;
   defaultCurrencyCode?: string;
@@ -213,6 +215,23 @@ export function JournalEntriesPageContent({
           </div>
         }
       >
+        {currenciesLoadError ? (
+          <div
+            className="mb-4 flex items-start gap-3 rounded-md border border-border bg-muted/50 px-4 py-3"
+            role="status"
+          >
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">Currency filter unavailable</p>
+              <p>{currenciesLoadError}</p>
+              <p>
+                Ask an administrator to add the required permission to your role. You can still
+                search journal entries without filtering by currency.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <JournalEntriesTableView
           table={table}
           page={page}

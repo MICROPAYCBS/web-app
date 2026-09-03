@@ -7,6 +7,7 @@
  */
 
 import { translateFineractCode } from './error-messages';
+import { resolveFineractPermissionDeniedMessage } from './fineract-permission-errors';
 
 /** Subset of a Fineract API error payload used for user-facing messages. */
 export interface FineractErrorItem {
@@ -182,46 +183,63 @@ function collectNestedErrorMessages(errors: FineractErrorItem[]): string[] {
 /**
  * Extract the user-facing message Fineract intended, aligned with legacy web-app behavior.
  */
+export interface FineractErrorMessageContext {
+  requestPath?: string;
+}
+
 export function getFineractErrorMessage(
   body: FineractErrorBody | null | undefined,
-  httpStatus?: number
+  httpStatus?: number,
+  context?: FineractErrorMessageContext
 ): string {
-  if (!body) {
-    return getHttpStatusFallbackMessage(httpStatus);
-  }
-
-  const topLevel = resolveFineractErrorItemMessage({
-    defaultUserMessage: body.defaultUserMessage,
-    developerMessage: body.developerMessage,
-    userMessageGlobalisationCode: body.userMessageGlobalisationCode
-  });
-
-  if (body.errors?.length) {
-    const nestedMessages = collectNestedErrorMessages(body.errors);
-    if (nestedMessages.length > 1) {
-      return nestedMessages.join('\n');
-    }
-    if (nestedMessages.length === 1) {
-      return nestedMessages[0];
+  const resolved = (() => {
+    if (!body) {
+      return getHttpStatusFallbackMessage(httpStatus);
     }
 
-    const nestedPrimary = resolvePrimaryNestedMessage(body.errors);
-    if (nestedPrimary) {
-      return nestedPrimary;
+    const topLevel = resolveFineractErrorItemMessage({
+      defaultUserMessage: body.defaultUserMessage,
+      developerMessage: body.developerMessage,
+      userMessageGlobalisationCode: body.userMessageGlobalisationCode
+    });
+
+    if (body.errors?.length) {
+      const nestedMessages = collectNestedErrorMessages(body.errors);
+      if (nestedMessages.length > 1) {
+        return nestedMessages.join('\n');
+      }
+      if (nestedMessages.length === 1) {
+        return nestedMessages[0];
+      }
+
+      const nestedPrimary = resolvePrimaryNestedMessage(body.errors);
+      if (nestedPrimary) {
+        return nestedPrimary;
+      }
     }
-  }
 
-  if (topLevel && !isGenericTopLevelMessage(topLevel)) {
-    return topLevel;
-  }
+    if (topLevel && !isGenericTopLevelMessage(topLevel)) {
+      return topLevel;
+    }
 
-  if (body.developerMessage && !isGenericTopLevelMessage(normalizeFineractMessage(body.developerMessage))) {
-    return sanitizeRawDatabaseErrorMessage(body.developerMessage);
-  }
+    if (
+      body.developerMessage &&
+      !isGenericTopLevelMessage(normalizeFineractMessage(body.developerMessage))
+    ) {
+      return sanitizeRawDatabaseErrorMessage(body.developerMessage);
+    }
 
-  if (topLevel) {
-    return topLevel;
-  }
+    if (topLevel) {
+      return topLevel;
+    }
 
-  return getHttpStatusFallbackMessage(httpStatus, body);
+    return getHttpStatusFallbackMessage(httpStatus, body);
+  })();
+
+  return resolveFineractPermissionDeniedMessage(
+    body,
+    httpStatus,
+    context?.requestPath,
+    resolved
+  );
 }

@@ -186,6 +186,28 @@ describe('getFineractErrorMessage', () => {
     );
   });
 
+  it('names the required permission for generic 403 responses when the request path is known', () => {
+    assert.equal(
+      getFineractErrorMessage(null, 403, { requestPath: '/currencies' }),
+      'You do not have permission to perform this action. Required permission: READ_CURRENCY.'
+    );
+  });
+
+  it('names the required permission from nested authority errors on 403', () => {
+    assert.equal(
+      getFineractErrorMessage(
+        {
+          defaultUserMessage: 'Insufficient privileges to perform this action.',
+          userMessageGlobalisationCode: 'error.msg.not.authorized',
+          errors: [{ defaultUserMessage: 'User has no authority to: READ_CURRENCY' }]
+        },
+        403,
+        { requestPath: '/journalentries' }
+      ),
+      'You do not have permission to perform this action. Required permission: READ_CURRENCY.'
+    );
+  });
+
   it('prefers translated compliance profile codes over generic Fineract text', () => {
     assert.equal(
       getFineractErrorMessage({

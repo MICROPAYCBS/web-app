@@ -36,6 +36,7 @@ export function LoginActiveServer({
       <span className="min-w-0">
         <span className="block truncate text-xs font-medium uppercase tracking-wide">Server</span>
         <span className="block truncate text-sm font-medium text-foreground">{server.name}</span>
+        <span className="block truncate text-xs text-muted-foreground">Tenant: {server.tenantId}</span>
         <span
           className={cn(
             'block truncate text-xs text-muted-foreground',

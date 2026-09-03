@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import type { FineractServerProfile } from '@mifos/servers';
+import { getFineractApiHost, type FineractServerProfile } from '@mifos/servers';
 import { Button } from '@/components/ui/button';
 import { ServerListRowActions } from '@/components/servers/server-list-row-actions';
 import { ServerForm, type ServerFormValues } from '@/components/servers/server-form';
@@ -47,11 +47,19 @@ export function ServerSettingsRow({
       {!editing ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <ServerRowDetailsTooltip server={server} isActive={isActive}>
-            <span className="min-w-0 truncate font-medium">
-              {server.name}
-              {isActive ? (
-                <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
-              ) : null}
+            <span className="min-w-0">
+              <span className="block truncate font-medium">
+                {server.name}
+                {isActive ? (
+                  <span className="ml-1.5 text-xs font-normal text-primary">(active)</span>
+                ) : null}
+              </span>
+              <span className="block truncate text-xs text-muted-foreground">
+                Tenant: {server.tenantId}
+              </span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {getFineractApiHost(server.baseUrl)}
+              </span>
             </span>
           </ServerRowDetailsTooltip>
           <ServerListRowActions

@@ -14,7 +14,9 @@ export function jsonError(error: unknown) {
     throw error;
   }
   if (error instanceof FineractHttpError) {
-    const message = getFineractErrorMessage(error.body, error.status);
+    const message = getFineractErrorMessage(error.body, error.status, {
+      requestPath: error.request?.path
+    });
     return NextResponse.json(
       {
         ...(error.body ?? {}),

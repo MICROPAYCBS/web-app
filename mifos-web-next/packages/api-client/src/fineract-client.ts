@@ -32,7 +32,7 @@ export class FineractHttpError extends Error {
     /** Value of the `Fineract-Platform-Reason` response header, when present. */
     public readonly platformReason?: string | null
   ) {
-    super(getFineractErrorMessage(body, status));
+    super(getFineractErrorMessage(body, status, { requestPath: request?.path }));
     this.name = 'FineractHttpError';
   }
 }

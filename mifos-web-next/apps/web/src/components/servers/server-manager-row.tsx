@@ -53,6 +53,9 @@ export function ServerManagerRow({
                 ) : null}
               </span>
               <span className="block truncate text-xs text-muted-foreground">
+                Tenant: {server.tenantId}
+              </span>
+              <span className="block truncate text-xs text-muted-foreground">
                 {getFineractApiHost(server.baseUrl)}
               </span>
               <ServerHealthBadge health={health} className="mt-1.5" />
