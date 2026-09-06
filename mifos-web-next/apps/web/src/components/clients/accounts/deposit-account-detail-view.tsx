@@ -9,28 +9,40 @@
  */
 
 import type { ClientDepositAccountKind, FineractSavingsAccountDetail } from '@mifos/api-client';
+import { ArrowRightLeft, PiggyBank, Receipt, type LucideIcon } from 'lucide-react';
+import { useMemo } from 'react';
 import {
   DetailBackLink,
-  DetailField,
-  DetailFieldGrid,
   DetailHeader,
   DetailPage,
-  DetailSection
+  DetailSectionNav
 } from '@/components/composites';
 import {
   AccountOfficerActions,
   type AccountOfficerPermissions
 } from '@/components/clients/accounts/actions/account-officer-actions';
+import {
+  DepositAccountActions,
+  type DepositAccountActionPermissions
+} from '@/components/clients/accounts/actions/deposit-account-actions';
+import { AccountCustomerMeta } from '@/components/clients/accounts/account-customer-meta';
 import { AccountOfficerMeta } from '@/components/clients/accounts/account-officer-meta';
 import { AccountExternalIdMeta } from '@/components/clients/accounts/account-external-id-meta';
-import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
+import { DepositAccountSectionPanel } from '@/components/clients/accounts/deposit-account-section-panels';
+import { useDetailSection } from '@/hooks/use-detail-section';
 import { clientGeneralPath } from '@/lib/fineract/client-action-paths';
 import {
   clientAccountListPath,
   type ClientAccountProductKind
 } from '@/lib/fineract/client-account-links';
 import {
-  formatSavingsAccountDate,
+  DEPOSIT_ACCOUNT_DEFAULT_SECTION,
+  DEPOSIT_ACCOUNT_SECTIONS,
+  isTermDepositAccountKind,
+  type DepositAccountSectionId
+} from '@/lib/fineract/deposit-account-display';
+import {
+  savingsAccountClientBackLabel,
   savingsAccountProductName
 } from '@/lib/fineract/savings-account-display';
 
@@ -52,41 +64,63 @@ const LIST_KIND: Record<ClientDepositAccountKind, ClientAccountProductKind> = {
   recurringDeposit: 'recurringDeposit'
 };
 
+const SECTION_ICONS: Record<DepositAccountSectionId, LucideIcon> = {
+  summary: PiggyBank,
+  transactions: ArrowRightLeft,
+  charges: Receipt
+};
+
 export function DepositAccountDetailView({
   account,
   clientId,
   kind,
-  permissions
+  permissions,
+  lifecyclePermissions,
+  reportOrgName
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
   kind: ClientDepositAccountKind;
   permissions: AccountOfficerPermissions;
+  lifecyclePermissions?: DepositAccountActionPermissions;
+  reportOrgName?: string;
 }) {
   const listKind = LIST_KIND[kind];
-  const timeline = account.timeline;
-  const timelineRows = [
-    {
-      label: 'Submitted',
-      date: timeline?.submittedOnDate,
-      by: formatTimelineActorByRole(timeline, 'submitted')
-    },
-    {
-      label: 'Approved',
-      date: timeline?.approvedOnDate,
-      by: formatTimelineActorByRole(timeline, 'approved')
-    },
-    {
-      label: 'Activated',
-      date: timeline?.activatedOnDate,
-      by: formatTimelineActorByRole(timeline, 'activated')
-    },
-    {
-      label: 'Closed',
-      date: timeline?.closedOnDate,
-      by: formatTimelineActorByRole(timeline, 'closed')
-    }
-  ].filter((row) => row.date);
+  const sectionIds = useMemo(
+    () => DEPOSIT_ACCOUNT_SECTIONS.map((section) => section.id),
+    []
+  );
+  const navItems = useMemo(
+    () =>
+      DEPOSIT_ACCOUNT_SECTIONS.map((section) => ({
+        ...section,
+        icon: SECTION_ICONS[section.id]
+      })),
+    []
+  );
+  const { activeSection, setSection } = useDetailSection(
+    sectionIds,
+    DEPOSIT_ACCOUNT_DEFAULT_SECTION
+  );
+
+  const headerActions =
+    isTermDepositAccountKind(kind) && lifecyclePermissions ? (
+      <DepositAccountActions
+        kind={kind}
+        account={account}
+        clientId={clientId}
+        permissions={lifecyclePermissions}
+        reportOrgName={reportOrgName}
+      />
+    ) : (
+      <AccountOfficerActions
+        kind={kind}
+        account={account}
+        clientId={clientId}
+        permissions={permissions}
+        presentation="standalone"
+      />
+    );
 
   return (
     <DetailPage
@@ -94,7 +128,10 @@ export function DepositAccountDetailView({
         <DetailHeader
           backLink={
             <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-              <DetailBackLink href={clientGeneralPath(clientId)} label="Back to customer" />
+              <DetailBackLink
+                href={clientGeneralPath(clientId)}
+                label={savingsAccountClientBackLabel(account)}
+              />
               <span className="text-muted-foreground" aria-hidden>
                 ·
               </span>
@@ -108,6 +145,7 @@ export function DepositAccountDetailView({
           status={{ label: account.status.value ?? 'Unknown' }}
           meta={
             <div className="space-y-1">
+              <AccountCustomerMeta name={account.clientName} />
               <p>
                 {KIND_LABELS[kind]} · {account.accountNo}
               </p>
@@ -115,50 +153,21 @@ export function DepositAccountDetailView({
               <AccountOfficerMeta label="Field officer" name={account.fieldOfficerName} />
             </div>
           }
-          actions={
-            <AccountOfficerActions
-              kind={kind}
-              account={account}
-              clientId={clientId}
-              permissions={permissions}
-              presentation="standalone"
-            />
-          }
+          actions={headerActions}
+        />
+      }
+      sidebar={
+        <DetailSectionNav
+          items={navItems}
+          activeId={activeSection}
+          onSelect={(id) => setSection(id)}
         />
       }
     >
-      <div className="grid gap-6 lg:grid-cols-2">
-        <DetailSection title="Summary">
-          <DetailFieldGrid>
-            <DetailField label="Account number">{account.accountNo}</DetailField>
-            <DetailField label="External ID">{account.externalId?.trim() || '—'}</DetailField>
-            <DetailField label="Status">{account.status.value}</DetailField>
-            <DetailField label="Field officer">{account.fieldOfficerName ?? '—'}</DetailField>
-            <DetailField label="Currency">{account.currency.code}</DetailField>
-          </DetailFieldGrid>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Additional account details and transactions will be added in a future update.
-          </p>
-        </DetailSection>
-
-        <DetailSection title="Timeline">
-          {timelineRows.length ? (
-            <ul className="space-y-4">
-              {timelineRows.map((row) => (
-                <li key={row.label} className="flex flex-col gap-0.5 text-sm">
-                  <span className="font-medium">{row.label}</span>
-                  <span className="text-muted-foreground">
-                    {formatSavingsAccountDate(row.date)}
-                    {row.by ? ` · ${row.by}` : ''}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">No timeline events recorded.</p>
-          )}
-        </DetailSection>
-      </div>
+      <DepositAccountSectionPanel
+        section={activeSection as DepositAccountSectionId}
+        account={account}
+      />
     </DetailPage>
   );
 }

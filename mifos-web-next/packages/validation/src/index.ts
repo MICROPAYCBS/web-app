@@ -178,6 +178,29 @@ export {
   type UndoAccountTransferCommandInput
 } from './clients/savings-account-command.schema';
 export {
+  DEPOSIT_ACCOUNT_CLOSURE_TRANSFER_TO_SAVINGS_ID,
+  depositAccountActivateCommandSchema,
+  depositAccountApproveCommandSchema,
+  depositAccountCalculatePrematureAmountSchema,
+  depositAccountCloseCommandSchema,
+  depositAccountPrematureCloseCommandSchema,
+  depositAccountRejectCommandSchema,
+  depositAccountTransactionCommandSchema,
+  depositAccountUndoActivationCommandSchema,
+  depositAccountUndoApprovalCommandSchema,
+  depositAccountWithdrawnByApplicantCommandSchema,
+  type DepositAccountActivateCommandInput,
+  type DepositAccountApproveCommandInput,
+  type DepositAccountCalculatePrematureAmountInput,
+  type DepositAccountCloseCommandInput,
+  type DepositAccountPrematureCloseCommandInput,
+  type DepositAccountRejectCommandInput,
+  type DepositAccountTransactionCommandInput,
+  type DepositAccountUndoActivationCommandInput,
+  type DepositAccountUndoApprovalCommandInput,
+  type DepositAccountWithdrawnByApplicantCommandInput
+} from './clients/deposit-account-command.schema';
+export {
   loanAccountAssignOfficerSchema,
   loanAccountUnassignOfficerSchema,
   loanAccountApproveCommandSchema,

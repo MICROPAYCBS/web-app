@@ -11,9 +11,10 @@ import type {
   FineractSavingsAccountDetail,
   FineractSavingsAccountTransaction
 } from '@mifos/api-client';
-import { formatAccountMoney } from '@/lib/fineract/format-account-money';
-import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import { formatTimelineActor } from '@/lib/fineract/account-timeline-display';
+import { clientAccountBackLabel } from '@/lib/fineract/clients-display';
+import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 
 export const SAVINGS_ACCOUNT_SECTIONS = [
@@ -33,8 +34,7 @@ export function savingsAccountProductName(account: FineractSavingsAccountDetail)
 }
 
 export function savingsAccountClientBackLabel(account: FineractSavingsAccountDetail): string {
-  const name = account.clientName?.trim();
-  return name ? `Back to ${name}` : 'Back to customer';
+  return clientAccountBackLabel(account.clientName);
 }
 
 export function savingsAccountCurrencyCode(account: FineractSavingsAccountDetail): string {

@@ -183,7 +183,7 @@ function SavingsProductChannelMappingSection({ product }: { product: SavingsProd
       <ProductMappingTable
         rows={rows}
         leftHeader="Payment type"
-        rightHeader="Fund source"
+        rightHeader="Debit GL (fund source)"
         emptyMessage="No channel mappings."
       />
     </DetailSection>

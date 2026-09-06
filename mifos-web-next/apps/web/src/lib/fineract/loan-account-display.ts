@@ -11,10 +11,11 @@ import type {
   FineractLoanAccountTransaction,
   LoanAccountSummaryMatrixRow
 } from '@/lib/fineract/loan-account-types';
+import { LOAN_ACCOUNT_STATUS } from '@/lib/fineract/account-field-officer-config';
 import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
+import { clientAccountBackLabel } from '@/lib/fineract/clients-display';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
-import { LOAN_ACCOUNT_STATUS } from '@/lib/fineract/account-field-officer-config';
 import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 
 export const LOAN_ACCOUNT_SECTIONS = [
@@ -35,8 +36,7 @@ export function loanAccountProductName(account: FineractLoanAccountDetail) {
 }
 
 export function loanAccountClientBackLabel(account: FineractLoanAccountDetail): string {
-  const name = account.clientName?.trim();
-  return name ? `Back to ${name}` : 'Back to customer';
+  return clientAccountBackLabel(account.clientName);
 }
 
 export function loanAccountCurrencyCode(account: FineractLoanAccountDetail): string {

@@ -20,6 +20,7 @@ import {
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForShareAccount } from '@/lib/fineract/audit-trails';
 import { getShareAccount } from '@/lib/fineract/share-accounts';
+import { loadClientAccountBackLabel } from '@/lib/fineract/load-client-account-back-label';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -62,11 +63,12 @@ export default async function ShareAccountGeneralPage({
   ]);
 
   if (!result.ok) {
+    const customerBackLabel = await loadClientAccountBackLabel(clientId);
     return (
       <ListPage
         backLink={
           <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-            <DetailBackLink href={clientGeneralPath(clientId)} label="Back to customer" />
+            <DetailBackLink href={clientGeneralPath(clientId)} label={customerBackLabel} />
             <span className="text-muted-foreground" aria-hidden>
               ·
             </span>

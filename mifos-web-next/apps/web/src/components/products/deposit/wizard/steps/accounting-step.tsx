@@ -235,10 +235,10 @@ export function AccountingStep({
             <div className="mt-4 space-y-6">
               <MappingSection
                 title="Payment channels"
-                description="Map each payment channel to a fund source account."
+                description="Map each payment channel to the GL account to debit (asset, expense, liability, or income)."
                 rows={accounting.paymentChannelToFundSourceMappings ?? []}
                 leftLabel="Payment channel"
-                rightLabel="Fund source account"
+                rightLabel="Debit GL account (fund source)"
                 leftOptions={toSelectOptions(template.paymentTypeOptions)}
                 rightOptions={combinedGlOptions}
                 leftKey="paymentTypeId"

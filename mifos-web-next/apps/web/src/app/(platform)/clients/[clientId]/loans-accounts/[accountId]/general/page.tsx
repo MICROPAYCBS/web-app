@@ -61,6 +61,7 @@ import { loadLoanAccountPendingCheckerActions, resolveLoanPendingApprovalWorkflo
 
 import { loadLoanAccountStandingInstructionContext } from '@/lib/fineract/load-loan-account-standing-instruction-context';
 
+import { loadClientAccountBackLabel } from '@/lib/fineract/load-client-account-back-label';
 import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { getLoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -165,6 +166,8 @@ export default async function LoanAccountGeneralPage({
 
   if (!result.ok) {
 
+    const customerBackLabel = await loadClientAccountBackLabel(clientId);
+
     return (
 
       <ListPage
@@ -173,7 +176,7 @@ export default async function LoanAccountGeneralPage({
 
           <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
 
-            <DetailBackLink href={clientGeneralPath(clientId)} label="Back to customer" />
+            <DetailBackLink href={clientGeneralPath(clientId)} label={customerBackLabel} />
 
             <span className="text-muted-foreground" aria-hidden>
 

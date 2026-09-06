@@ -27,6 +27,7 @@ import {
   resolveResourcePendingWorkflowContext
 } from '@/lib/fineract/resource-pending-checker';
 import { savingsAccountPendingCheckerScope } from '@/lib/fineract/resource-pending-checker-display';
+import { loadClientAccountBackLabel } from '@/lib/fineract/load-client-account-back-label';
 import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
@@ -87,11 +88,12 @@ export default async function SavingsAccountGeneralPage({
   ]);
 
   if (!result.ok) {
+    const customerBackLabel = await loadClientAccountBackLabel(clientId);
     return (
       <ListPage
         backLink={
           <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-            <DetailBackLink href={clientGeneralPath(clientId)} label="Back to customer" />
+            <DetailBackLink href={clientGeneralPath(clientId)} label={customerBackLabel} />
             <span className="text-muted-foreground" aria-hidden>
               ·
             </span>

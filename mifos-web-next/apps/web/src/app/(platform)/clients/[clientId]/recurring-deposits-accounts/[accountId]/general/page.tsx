@@ -6,10 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { can } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { DepositAccountDetailView } from '@/components/clients/accounts/deposit-account-detail-view';
-import type { AccountOfficerPermissions } from '@/components/clients/accounts/actions/account-officer-actions';
 import { DetailBackLink } from '@/components/composites';
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { ListPage } from '@/components/composites/list-page';
@@ -19,19 +17,14 @@ import {
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { getDepositAccount } from '@/lib/fineract/deposit-account-officer-commands';
+import {
+  termDepositLifecyclePermissions,
+  termDepositOfficerPermissions
+} from '@/lib/fineract/deposit-account-permissions';
+import { loadClientAccountBackLabel } from '@/lib/fineract/load-client-account-back-label';
+import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
-
-function depositOfficerPermissions(
-  session: Awaited<ReturnType<typeof getServerSession>>
-): AccountOfficerPermissions {
-  return {
-    assign: can(session, 'UPDATESAVINGSOFFICER_SAVINGSACCOUNT'),
-    reassign: can(session, {
-      all: ['UPDATESAVINGSOFFICER_SAVINGSACCOUNT', 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT']
-    })
-  };
-}
 
 export default async function RecurringDepositAccountGeneralPage({
   params
@@ -45,17 +38,21 @@ export default async function RecurringDepositAccountGeneralPage({
     notFound();
   }
 
-  const result = await tryFineractLoad(
-    () => getDepositAccount('recurringDeposit', accountId),
-    'Could not load recurring deposit account.'
-  );
+  const [result, reportOrgName] = await Promise.all([
+    tryFineractLoad(
+      () => getDepositAccount('recurringDeposit', accountId),
+      'Could not load recurring deposit account.'
+    ),
+    loadReportOrganisationName()
+  ]);
 
   if (!result.ok) {
+    const customerBackLabel = await loadClientAccountBackLabel(clientId);
     return (
       <ListPage
         backLink={
           <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-            <DetailBackLink href={clientGeneralPath(clientId)} label="Back to customer" />
+            <DetailBackLink href={clientGeneralPath(clientId)} label={customerBackLabel} />
             <span className="text-muted-foreground" aria-hidden>
               ·
             </span>
@@ -84,7 +81,9 @@ export default async function RecurringDepositAccountGeneralPage({
       account={result.data}
       clientId={clientId}
       kind="recurringDeposit"
-      permissions={depositOfficerPermissions(session)}
+      permissions={termDepositOfficerPermissions(session)}
+      lifecyclePermissions={termDepositLifecyclePermissions(session, 'recurringDeposit')}
+      reportOrgName={reportOrgName}
     />
   );
 }

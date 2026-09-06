@@ -78,8 +78,8 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-036 | Notes                 | `/notes`                              | Notes                         | Done   |
 | CL-037 | Loans                 | `/loans`                              | General → loans + WC loans    | Partial  |
 | CL-038 | Savings               | `/savings`                            | General → savings             | Partial  |
-| CL-039 | Fixed deposits        | `/fixed-deposits`                     | General → FD                  | Partial  |
-| CL-040 | Recurring deposits    | `/recurring-deposits`                 | General → RD                  | Partial  |
+| CL-039 | Fixed deposits        | `/fixed-deposits`                     | General → FD                  | Partial (list + create + detail panels + lifecycle, modify, add charge)  |
+| CL-040 | Recurring deposits    | `/recurring-deposits`                 | General → RD                  | Partial (list + create + detail panels + lifecycle, cashier deposit/withdrawal, modify, add charge)  |
 | CL-041 | Shares                | `/shares`                             | List + FormSheet create; detail at `shares-accounts/:id/general` | Done     |
 | CL-042 | Charges               | `/charges` (+ nested)                 | General → upcoming + overview | Planned  |
 | CL-043 | Collateral            | `/collateral`                         | List + add (side panel)       | Partial  |

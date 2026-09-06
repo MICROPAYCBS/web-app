@@ -105,16 +105,16 @@ export function MappingsStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Optionally map payment channels, fees, and penalties to specific ledger accounts. Incomplete
-        rows are ignored when you save.
+        Optionally map payment channels, fees, and penalties to specific ledger accounts. Every
+        mapping row needs both sides filled before you save.
       </p>
 
       <MappingSection<PaymentChannelMapping>
         title="Payment channels"
-        description="Map each payment channel to a fund source account."
+        description="Map each payment channel to the GL account to debit (asset, expense, liability, or income)."
         rows={accounting.paymentChannelToFundSourceMappings ?? []}
         leftLabel="Payment channel"
-        rightLabel="Fund source account"
+        rightLabel="Debit GL account (fund source)"
         leftOptions={toSelectOptions(template.paymentTypeOptions)}
         rightOptions={combinedGlOptions}
         onChange={(paymentChannelToFundSourceMappings) =>

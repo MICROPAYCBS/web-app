@@ -1,0 +1,19 @@
+{
+  "schemaId": "clients.deposit-account.transaction",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.RecurringDepositAccountTransactionsApiResource"
+  ],
+  "fields": {
+    "transactionDate": { "required": true, "type": "date" },
+    "transactionAmount": { "required": true, "type": "decimal" },
+    "paymentTypeId": { "required": true, "type": "integer" },
+    "entryMode": { "required": false, "type": "string" },
+    "legalTenderLines": { "required": false, "type": "array" },
+    "accountNumber": { "required": false, "type": "string" },
+    "checkNumber": { "required": false, "type": "string" },
+    "routingCode": { "required": false, "type": "string" },
+    "receiptNumber": { "required": false, "type": "string" },
+    "bankNumber": { "required": false, "type": "string" },
+    "note": { "required": false, "type": "string" }
+  }
+}

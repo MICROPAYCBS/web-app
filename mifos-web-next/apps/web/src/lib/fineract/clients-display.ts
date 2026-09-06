@@ -22,6 +22,12 @@ export function clientDisplayName(client: {
   return [client.firstname, client.lastname].filter(Boolean).join(' ').trim() || 'Customer';
 }
 
+/** Back-link label for account detail pages (savings, loans, deposits, shares). */
+export function clientAccountBackLabel(clientName?: string | null): string {
+  const name = clientName?.trim();
+  return name ? `Back to ${name}` : 'Back to customer';
+}
+
 export function clientInitials(client: {
   displayName?: string;
   firstname?: string;

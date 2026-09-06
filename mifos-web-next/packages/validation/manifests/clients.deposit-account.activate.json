@@ -1,0 +1,10 @@
+{
+  "schemaId": "clients.deposit-account.activate",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.FixedDepositAccountsApiResource",
+    "org.apache.fineract.portfolio.savings.api.RecurringDepositAccountsApiResource"
+  ],
+  "fields": {
+    "activatedOnDate": { "required": true, "type": "date" }
+  }
+}

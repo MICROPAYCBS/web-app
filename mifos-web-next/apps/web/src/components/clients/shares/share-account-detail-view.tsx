@@ -16,6 +16,7 @@ import {
   MoneyValue
 } from '@/components/composites';
 import { AccountDetailActionsBar } from '@/components/clients/accounts/actions/account-detail-actions-bar';
+import { AccountCustomerMeta } from '@/components/clients/accounts/account-customer-meta';
 import { AccountExternalIdMeta } from '@/components/clients/accounts/account-external-id-meta';
 import {
   ShareAccountActions,
@@ -99,6 +100,7 @@ export function ShareAccountDetailView({
           }
           meta={
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <AccountCustomerMeta name={account.clientName} />
               <span>Account {account.accountNo}</span>
               <AccountExternalIdMeta externalId={account.externalId} />
               {linkedSavingsLabel ? (

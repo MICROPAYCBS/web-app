@@ -10,6 +10,7 @@ import type {
   FineractShareAccountDetail,
   FineractShareAccountTransaction
 } from '@mifos/api-client';
+import { clientAccountBackLabel } from '@/lib/fineract/clients-display';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import { sortByDateThenId } from '@/lib/fineract/transaction-order';
@@ -31,8 +32,7 @@ export function shareAccountProductName(account: FineractShareAccountDetail) {
 }
 
 export function shareAccountClientBackLabel(account: FineractShareAccountDetail): string {
-  const name = account.clientName?.trim();
-  return name ? `Back to ${name}` : 'Back to customer';
+  return clientAccountBackLabel(account.clientName);
 }
 
 export function shareAccountCurrencyCode(account: FineractShareAccountDetail): string {

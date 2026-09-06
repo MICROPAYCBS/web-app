@@ -228,7 +228,7 @@ export function DepositProductDetailView({
               })) ?? []
             }
             leftHeader="Payment type"
-            rightHeader="Fund source"
+            rightHeader="Debit GL (fund source)"
             emptyMessage="No channel mappings."
           />
         </DetailSection>

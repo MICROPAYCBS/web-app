@@ -1,0 +1,11 @@
+{
+  "schemaId": "clients.deposit-account.approve",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.FixedDepositAccountsApiResource",
+    "org.apache.fineract.portfolio.savings.api.RecurringDepositAccountsApiResource"
+  ],
+  "fields": {
+    "approvedOnDate": { "required": true, "type": "date" },
+    "note": { "required": false, "type": "string" }
+  }
+}

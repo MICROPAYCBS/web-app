@@ -148,3 +148,61 @@ export async function createClientDepositAccountRecord(
     }
   }
 }
+
+export async function updateClientFixedDepositAccountRecord(
+  clientId: string | number,
+  accountId: string | number,
+  input: CreateClientFixedDepositAccountInput
+): Promise<CreateClientDepositAccountResponse> {
+  const fineract = await createFineractClient();
+  const payload = buildFixedDepositAccountPayload(clientId, input);
+  return fineract.put<CreateClientDepositAccountResponse>(
+    `${CLIENT_DEPOSIT_ACCOUNT_CONFIG.fixedDeposit.apiPath}/${accountId}`,
+    payload
+  );
+}
+
+export async function updateClientRecurringDepositAccountRecord(
+  clientId: string | number,
+  accountId: string | number,
+  input: CreateClientRecurringDepositAccountInput
+): Promise<CreateClientDepositAccountResponse> {
+  const fineract = await createFineractClient();
+  const payload = buildRecurringDepositAccountPayload(clientId, input);
+  return fineract.put<CreateClientDepositAccountResponse>(
+    `${CLIENT_DEPOSIT_ACCOUNT_CONFIG.recurringDeposit.apiPath}/${accountId}`,
+    payload
+  );
+}
+
+export async function updateClientDepositAccountRecord(
+  kind: Extract<ClientDepositAccountKind, 'fixedDeposit' | 'recurringDeposit'>,
+  clientId: string | number,
+  accountId: string | number,
+  input: CreateClientFixedDepositAccountInput | CreateClientRecurringDepositAccountInput
+): Promise<CreateClientDepositAccountResponse> {
+  if (kind === 'fixedDeposit') {
+    return updateClientFixedDepositAccountRecord(
+      clientId,
+      accountId,
+      input as CreateClientFixedDepositAccountInput
+    );
+  }
+  return updateClientRecurringDepositAccountRecord(
+    clientId,
+    accountId,
+    input as CreateClientRecurringDepositAccountInput
+  );
+}
+
+export async function getClientDepositAccountAndTemplate(
+  kind: Extract<ClientDepositAccountKind, 'fixedDeposit' | 'recurringDeposit'>,
+  accountId: string | number
+): Promise<unknown> {
+  const fineract = await createFineractClient();
+  const { apiPath } = CLIENT_DEPOSIT_ACCOUNT_CONFIG[kind];
+  return fineract.get<unknown>(`${apiPath}/${accountId}`, {
+    associations: 'charges',
+    template: 'true'
+  });
+}

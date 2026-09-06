@@ -1,0 +1,14 @@
+{
+  "schemaId": "clients.deposit-account.close",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.FixedDepositAccountsApiResource",
+    "org.apache.fineract.portfolio.savings.api.RecurringDepositAccountsApiResource"
+  ],
+  "fields": {
+    "closedOnDate": { "required": true, "type": "date" },
+    "onAccountClosureId": { "required": true, "type": "integer" },
+    "toSavingsAccountId": { "required": false, "type": "integer" },
+    "transferDescription": { "required": false, "type": "string" },
+    "note": { "required": false, "type": "string" }
+  }
+}
