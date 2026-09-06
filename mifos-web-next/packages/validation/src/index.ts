@@ -105,10 +105,14 @@ export {
   type ClientNoteInput
 } from './clients/client-details.schema';
 export {
+  CLIENT_IDENTIFIER_DOCUMENT_KEY_MAX_LENGTH,
   CLIENT_IDENTIFIERS_REQUIRED_MESSAGE,
+  clampDocumentKeyInput,
   clientIdentifierSchema,
   countValidClientIdentifiers,
+  documentKeyMaxLengthForIdentityRule,
   findIdentityTypeRule,
+  maxLengthFromValidationRegex,
   validateClientIdentifier,
   validateDocumentKeyAgainstIdentityRule,
   type ClientIdentifierIdentityTypeOption,

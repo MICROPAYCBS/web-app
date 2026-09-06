@@ -9,6 +9,8 @@
  */
 
 import {
+  clampDocumentKeyInput,
+  documentKeyMaxLengthForIdentityRule,
   findIdentityTypeRule,
   validateClientIdentifier,
   type ClientIdentifierIdentityTypeOption,
@@ -79,6 +81,11 @@ export function ClientIdentifierFormSheet({
   const selectedRule = useMemo(
     () => findIdentityTypeRule(form.documentTypeId, identityTypeOptions),
     [form.documentTypeId, identityTypeOptions]
+  );
+
+  const documentKeyMaxLength = useMemo(
+    () => documentKeyMaxLengthForIdentityRule(selectedRule),
+    [selectedRule]
   );
 
   function handleOpenChange(next: boolean) {
@@ -177,7 +184,14 @@ export function ClientIdentifierFormSheet({
           required
           value={form.documentTypeId ? String(form.documentTypeId) : ''}
           onValueChange={(value) => {
-            setForm((current) => ({ ...current, documentTypeId: Number(value) || 0 }));
+            const documentTypeId = Number(value) || 0;
+            const nextRule = findIdentityTypeRule(documentTypeId, identityTypeOptions);
+            const maxLength = documentKeyMaxLengthForIdentityRule(nextRule);
+            setForm((current) => ({
+              ...current,
+              documentTypeId,
+              documentKey: clampDocumentKeyInput(current.documentKey, maxLength)
+            }));
             setFieldErrors((current) => {
               const next = { ...current };
               delete next.documentTypeId;
@@ -197,8 +211,10 @@ export function ClientIdentifierFormSheet({
           label="Document number"
           required
           value={form.documentKey}
+          maxLength={documentKeyMaxLength}
           onChange={(value) => {
-            setForm((current) => ({ ...current, documentKey: value }));
+            const nextValue = clampDocumentKeyInput(value, documentKeyMaxLength);
+            setForm((current) => ({ ...current, documentKey: nextValue }));
             if (fieldErrors.documentKey) {
               setFieldErrors((current) => {
                 const next = { ...current };
