@@ -25,6 +25,7 @@ import {
   DetailSummary,
   MoneyValue
 } from '@/components/composites';
+import { DepositTransactionActionsMenu } from '@/components/clients/accounts/actions/deposit-transaction-actions-menu';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
@@ -33,7 +34,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
-import type { DepositAccountSectionId } from '@/lib/fineract/deposit-account-display';
+import type {
+  DepositAccountSectionId,
+  TermDepositAccountKind
+} from '@/lib/fineract/deposit-account-display';
+import type { DepositTransactionActionPermissions } from '@/lib/fineract/deposit-transaction-actions';
 import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
 import {
   formatSavingsAccountDate,
@@ -290,7 +295,21 @@ function TransactionCell({
   return <span className={cn(savingsTransactionRowClassName(transaction))}>{children}</span>;
 }
 
-function buildDepositTransactionColumns(): ColumnDef<TransactionRow>[] {
+function buildDepositTransactionColumns({
+  kind,
+  account,
+  clientId,
+  reportOrgName,
+  transactionActionPermissions
+}: {
+  kind: TermDepositAccountKind;
+  account: FineractSavingsAccountDetail;
+  clientId: string;
+  reportOrgName: string;
+  transactionActionPermissions: DepositTransactionActionPermissions;
+}): ColumnDef<TransactionRow>[] {
+  const currency = savingsAccountCurrencyCode(account);
+
   return [
     {
       id: 'row',
@@ -386,6 +405,25 @@ function buildDepositTransactionColumns(): ColumnDef<TransactionRow>[] {
           {row.original.submittedByUsername?.trim() || '—'}
         </TransactionCell>
       )
+    },
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">Actions</span>,
+      enableHiding: false,
+      meta: { sticky: 'right' },
+      cell: ({ row }) => (
+        <DepositTransactionActionsMenu
+          kind={kind}
+          clientId={clientId}
+          accountId={account.id}
+          accountNo={account.accountNo}
+          clientName={account.clientName}
+          orgName={reportOrgName}
+          transaction={row.original}
+          currencyCode={currency}
+          permissions={transactionActionPermissions}
+        />
+      )
     }
   ];
 }
@@ -406,7 +444,19 @@ function filterDepositTransactions(
   });
 }
 
-function DepositAccountTransactionsSection({ account }: { account: FineractSavingsAccountDetail }) {
+function DepositAccountTransactionsSection({
+  kind,
+  account,
+  clientId,
+  reportOrgName,
+  transactionActionPermissions
+}: {
+  kind: TermDepositAccountKind;
+  account: FineractSavingsAccountDetail;
+  clientId: string;
+  reportOrgName: string;
+  transactionActionPermissions: DepositTransactionActionPermissions;
+}) {
   const [hideReversed, setHideReversed] = useState(false);
   const [hideAccruals, setHideAccruals] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -431,7 +481,17 @@ function DepositAccountTransactionsSection({ account }: { account: FineractSavin
     setPagination((current) => ({ ...current, pageIndex: 0 }));
   }, [hideAccruals, hideReversed]);
 
-  const columns = useMemo(() => buildDepositTransactionColumns(), []);
+  const columns = useMemo(
+    () =>
+      buildDepositTransactionColumns({
+        kind,
+        account,
+        clientId,
+        reportOrgName,
+        transactionActionPermissions
+      }),
+    [account, clientId, kind, reportOrgName, transactionActionPermissions]
+  );
   const table = useReactTable({
     data: rows,
     columns,
@@ -569,16 +629,35 @@ function DepositAccountChargesSection({ account }: { account: FineractSavingsAcc
 
 export function DepositAccountSectionPanel({
   section,
-  account
+  account,
+  kind,
+  clientId,
+  reportOrgName,
+  transactionActionPermissions = {
+    undoTransaction: false,
+    viewJournal: false
+  }
 }: {
   section: DepositAccountSectionId;
   account: FineractSavingsAccountDetail;
+  kind: TermDepositAccountKind;
+  clientId: string;
+  reportOrgName: string;
+  transactionActionPermissions?: DepositTransactionActionPermissions;
 }) {
   switch (section) {
     case 'summary':
       return <DepositAccountSummarySection account={account} />;
     case 'transactions':
-      return <DepositAccountTransactionsSection account={account} />;
+      return (
+        <DepositAccountTransactionsSection
+          kind={kind}
+          account={account}
+          clientId={clientId}
+          reportOrgName={reportOrgName}
+          transactionActionPermissions={transactionActionPermissions}
+        />
+      );
     case 'charges':
       return <DepositAccountChargesSection account={account} />;
     default: {

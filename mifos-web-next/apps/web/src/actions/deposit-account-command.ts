@@ -21,6 +21,7 @@ import {
   depositAccountUndoApprovalCommandSchema,
   depositAccountWithdrawnByApplicantCommandSchema,
   savingsAccountAddChargeSchema,
+  savingsAccountUndoTransactionSchema,
   toFineractActionError,
   actionSuccessFromFineractCommand,
   validateSavingsAccountCashTransaction
@@ -44,6 +45,7 @@ import { findCurrentUserCashierAssignment } from '@/lib/fineract/current-user-ca
 import {
   calculateDepositAccountPrematureAmount,
   deleteDepositAccount,
+  executeDepositAccountExistingTransaction,
   executeDepositAccountLifecycleCommand,
   executeDepositAccountTransaction,
   getDepositAccountCloseTemplate,
@@ -682,5 +684,49 @@ export async function executeDepositAccountAddChargeAction(
     return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not add charge.');
+  }
+}
+
+export async function undoDepositAccountTransactionAction(
+  kind: TermDepositAccountKind,
+  raw: unknown
+): Promise<DepositAccountActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+
+  const parsed = savingsAccountUndoTransactionSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, message: 'Invalid transaction undo request.' };
+  }
+
+  try {
+    assertCan(session, 'ADJUSTTRANSACTION_SAVINGSACCOUNT');
+  } catch {
+    try {
+      assertCan(session, 'UNDOTRANSACTION_SAVINGSACCOUNT');
+    } catch {
+      return { ok: false, message: 'You do not have permission to undo this transaction.' };
+    }
+  }
+
+  const { clientId, accountId, transactionId, transactionDate } = parsed.data;
+
+  try {
+    const response = await executeDepositAccountExistingTransaction(
+      kind,
+      accountId,
+      transactionId,
+      'undo',
+      buildFineractCommandBody({
+        transactionDate,
+        transactionAmount: 0
+      })
+    );
+    revalidateDepositAccountPaths(kind, clientId, accountId);
+    return actionSuccessFromFineractCommand(response, {});
+  } catch (error) {
+    return toFineractActionError(error, 'Could not undo transaction.');
   }
 }

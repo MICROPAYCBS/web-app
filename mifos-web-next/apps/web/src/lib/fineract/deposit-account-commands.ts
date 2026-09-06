@@ -111,6 +111,30 @@ export async function executeDepositAccountTransaction(
   );
 }
 
+export async function executeDepositAccountExistingTransaction(
+  kind: TermDepositAccountKind,
+  accountId: string | number,
+  transactionId: string | number,
+  command: 'undo' | 'modify',
+  body: Record<string, unknown> = {}
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.post<FineractCommandProcessingResult>(
+    `/${apiPath(kind)}/${accountId}/transactions/${transactionId}`,
+    body,
+    { command }
+  );
+}
+
+export async function getDepositAccountTransaction(
+  kind: TermDepositAccountKind,
+  accountId: string | number,
+  transactionId: string | number
+): Promise<unknown> {
+  const fineract = await createFineractClient();
+  return fineract.get<unknown>(`/${apiPath(kind)}/${accountId}/transactions/${transactionId}`);
+}
+
 export async function getDepositAccountTransactionTemplate(
   kind: TermDepositAccountKind,
   accountId: string | number,

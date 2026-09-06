@@ -39,8 +39,10 @@ import {
   DEPOSIT_ACCOUNT_DEFAULT_SECTION,
   DEPOSIT_ACCOUNT_SECTIONS,
   isTermDepositAccountKind,
-  type DepositAccountSectionId
+  type DepositAccountSectionId,
+  type TermDepositAccountKind
 } from '@/lib/fineract/deposit-account-display';
+import type { DepositTransactionActionPermissions } from '@/lib/fineract/deposit-transaction-actions';
 import {
   savingsAccountClientBackLabel,
   savingsAccountProductName
@@ -76,7 +78,11 @@ export function DepositAccountDetailView({
   kind,
   permissions,
   lifecyclePermissions,
-  reportOrgName
+  reportOrgName = '',
+  transactionActionPermissions = {
+    undoTransaction: false,
+    viewJournal: false
+  }
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -84,6 +90,7 @@ export function DepositAccountDetailView({
   permissions: AccountOfficerPermissions;
   lifecyclePermissions?: DepositAccountActionPermissions;
   reportOrgName?: string;
+  transactionActionPermissions?: DepositTransactionActionPermissions;
 }) {
   const listKind = LIST_KIND[kind];
   const sectionIds = useMemo(
@@ -167,6 +174,10 @@ export function DepositAccountDetailView({
       <DepositAccountSectionPanel
         section={activeSection as DepositAccountSectionId}
         account={account}
+        kind={(isTermDepositAccountKind(kind) ? kind : 'fixedDeposit') as TermDepositAccountKind}
+        clientId={clientId}
+        reportOrgName={reportOrgName}
+        transactionActionPermissions={transactionActionPermissions}
       />
     </DetailPage>
   );

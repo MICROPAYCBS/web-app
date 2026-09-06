@@ -21,6 +21,7 @@ import {
   termDepositLifecyclePermissions,
   termDepositOfficerPermissions
 } from '@/lib/fineract/deposit-account-permissions';
+import { depositTransactionActionPermissions } from '@/lib/fineract/deposit-transaction-action-permissions';
 import { loadClientAccountBackLabel } from '@/lib/fineract/load-client-account-back-label';
 import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -81,6 +82,7 @@ export default async function FixedDepositAccountGeneralPage({
       permissions={termDepositOfficerPermissions(session)}
       lifecyclePermissions={termDepositLifecyclePermissions(session, 'fixedDeposit')}
       reportOrgName={reportOrgName}
+      transactionActionPermissions={depositTransactionActionPermissions(session)}
     />
   );
 }
