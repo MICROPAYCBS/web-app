@@ -44,12 +44,15 @@ export function ClientSignatureDrawDialog({
   clientId,
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
+  onCapture
 }: {
-  clientId: string;
+  clientId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  /** When set, return the file instead of uploading. */
+  onCapture?: (file: File) => void | Promise<void>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -168,6 +171,15 @@ export function ClientSignatureDrawDialog({
         setError('Could not save the signature. Try again.');
         return;
       }
+      if (onCapture) {
+        await onCapture(file);
+        handleOpenChange(false);
+        return;
+      }
+      if (!clientId) {
+        setError('Could not save the signature. Try again.');
+        return;
+      }
       const result = await uploadClientSignatureFile(clientId, file);
       if (!result.ok) {
         setError(result.message);
@@ -178,7 +190,7 @@ export function ClientSignatureDrawDialog({
         pending: 'Signature save sent for approval.'
       });
       handleOpenChange(false);
-      onSuccess();
+      onSuccess?.();
     });
   }
 

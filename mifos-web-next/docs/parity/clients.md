@@ -46,6 +46,7 @@ Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 | CL-013 | Address step (when enabled)                                  | `client-address-step`        | `AddressStep`           | Done   |
 | CL-014 | Datatable steps by legal form                                | `client-datatable-step`      | `DatatableStep`         | Done   |
 | CL-015 | Preview + submit                                             | `client-preview-step`        | `PreviewStep`           | Done   |
+| CL-015a | KYC photo/signature capture when class enforces flags      | After create (detail only)   | `KycCaptureStep` + post-create attach | Done   |
 | CL-016 | `@mifos/validation` schema                                   | Reactive forms               | `createClientSchema`    | Done   |
 | CL-017 | Clickable wizard steps + invalid rail hints                  | —                            | `FormWizard`            | Done   |
 | CL-018 | Sticky wizard footer (Cancel / Prev / Next)                  | —                            | Card scroll + footer    | Done   |

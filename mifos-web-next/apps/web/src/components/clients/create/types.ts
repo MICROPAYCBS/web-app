@@ -8,6 +8,7 @@
 
 import type { FineractAddressFieldConfig, FineractClientTemplate, FineractEntityDatatableCheck, FineractIncomeSourceOptions, ContactType } from '@mifos/api-client';
 import type { ClientAddressEntry, ClientContactInput, ClientIdentifierIdentityTypeOption, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
+import type { StagedKycCapture } from '@/lib/clients/kyc-capture';
 
 export type DatatableFormValues = Record<string, Record<string, unknown>>;
 export type MultiRowDatatableDraft = Record<string, Record<string, unknown>[]>;
@@ -60,6 +61,9 @@ export interface CreateClientDraft {
   addresses: ClientAddressEntry[];
   datatables: DatatableFormValues;
   multiRowDatatables: MultiRowDatatableDraft;
+  /** In-memory only — attached after Fineract returns a customer id. */
+  kycPhoto?: StagedKycCapture | null;
+  kycSignature?: StagedKycCapture | null;
 }
 
 export interface CreateClientWizardProps {

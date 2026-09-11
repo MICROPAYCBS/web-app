@@ -106,6 +106,8 @@ export function PreviewStep({
         <h2 className="text-sm font-medium">Biodata</h2>
         <Field label="Profile type" value={legalForm?.value ?? legalForm?.name} />
         <Field label="Customer class" value={customerClassLabel} />
+        {draft.kycPhoto ? <Field label="Photo" value="Photo captured" /> : null}
+        {draft.kycSignature ? <Field label="Signature" value="Signature captured" /> : null}
         {isPerson ? (
           <Field label="Gender" value={gender?.name ?? gender?.value} />
         ) : null}

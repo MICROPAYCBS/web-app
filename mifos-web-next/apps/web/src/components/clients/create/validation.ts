@@ -22,6 +22,7 @@ import {
   multiRowDatatablesForLegalForm,
   singleRowDatatablesForLegalForm
 } from './datatable-payloads';
+import { customerClassKycRequirements } from '@/lib/clients/kyc-capture';
 import { validateCustomerClassFormFields } from '@/lib/fineract/customer-class-eligibility';
 import type { CreateClientDraft } from './types';
 
@@ -279,7 +280,41 @@ export type CreateClientValidationContext = {
   dateFormat?: string;
   locale?: string;
   identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
+  canCreateImage?: boolean;
+  canCreateDocument?: boolean;
 };
+
+export function validateKycCaptureStep(
+  draft: CreateClientDraft,
+  template: FineractClientTemplate,
+  context: CreateClientValidationContext = {}
+): StepErrors {
+  const customerClass = template.customerClassOptions?.find(
+    (option) => option.id === draft.general.customerClassId
+  );
+  const { requirePhoto, requireSignature } = customerClassKycRequirements(customerClass);
+  const errors: StepErrors = {};
+
+  if (requirePhoto) {
+    if (context.canCreateImage === false) {
+      errors.kycPhoto =
+        'Your role cannot save a customer photo. Ask an administrator for the required permission.';
+    } else if (!draft.kycPhoto) {
+      errors.kycPhoto = 'Capture or upload a customer photo before saving.';
+    }
+  }
+
+  if (requireSignature) {
+    if (context.canCreateDocument === false) {
+      errors.kycSignature =
+        'Your role cannot save a customer signature. Ask an administrator for the required permission.';
+    } else if (!draft.kycSignature) {
+      errors.kycSignature = 'Draw or upload a customer signature before saving.';
+    }
+  }
+
+  return errors;
+}
 
 export function validateIdentifiersStep(
   draft: CreateClientDraft,
@@ -383,6 +418,9 @@ export function validateStep(
   if (stepId === 'address') {
     return validateAddressStep(draft);
   }
+  if (stepId === 'kyc-capture') {
+    return validateKycCaptureStep(draft, template, context);
+  }
   if (stepId.startsWith('datatable:')) {
     const tableName = stepId.replace('datatable:', '');
     const datatable = singleRowDatatablesForLegalForm(template, legalFormId).find(
@@ -433,13 +471,21 @@ export function findFirstInvalidCreateClientStep(
   return null;
 }
 
-/** Soft validation for Save draft — biodata names + office/submitted date only. */
+/** Soft validation for Save draft — biodata names + office/submitted date + required KYC. */
 export function findFirstInvalidSaveProgressStep(
-  draft: CreateClientDraft
+  draft: CreateClientDraft,
+  template?: FineractClientTemplate,
+  context: CreateClientValidationContext = {}
 ): { stepId: string; errors: StepErrors } | null {
   const biodataErrors = validateSaveProgressBiodataStep(draft);
   if (Object.keys(biodataErrors).length > 0) {
     return { stepId: 'biodata', errors: biodataErrors };
+  }
+  if (template) {
+    const kycErrors = validateKycCaptureStep(draft, template, context);
+    if (Object.keys(kycErrors).length > 0) {
+      return { stepId: 'kyc-capture', errors: kycErrors };
+    }
   }
   const generalErrors = validateSaveProgressGeneralStep(draft);
   if (Object.keys(generalErrors).length > 0) {

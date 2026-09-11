@@ -15,6 +15,30 @@ export const CREATE_CLIENT_WIZARD_START_STEPS: FormWizardStep[] = [
   { id: 'identifiers', label: 'Identification' }
 ];
 
+export const CREATE_CLIENT_KYC_STEP: FormWizardStep = {
+  id: 'kyc-capture',
+  label: 'Photo and signature'
+};
+
+export function insertCreateClientKycStep(
+  steps: FormWizardStep[],
+  includeKyc: boolean
+): FormWizardStep[] {
+  const withoutKyc = steps.filter((step) => step.id !== CREATE_CLIENT_KYC_STEP.id);
+  if (!includeKyc) {
+    return withoutKyc;
+  }
+  const biodataIndex = withoutKyc.findIndex((step) => step.id === 'biodata');
+  if (biodataIndex < 0) {
+    return [CREATE_CLIENT_KYC_STEP, ...withoutKyc];
+  }
+  return [
+    ...withoutKyc.slice(0, biodataIndex + 1),
+    CREATE_CLIENT_KYC_STEP,
+    ...withoutKyc.slice(biodataIndex + 1)
+  ];
+}
+
 /** Steps shown only for individual (person) customers — hidden for entity onboarding. */
 export const CREATE_CLIENT_PERSON_ONLY_STEP_IDS = new Set(['family']);
 

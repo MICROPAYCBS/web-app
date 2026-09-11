@@ -29,12 +29,15 @@ export function ClientSignatureUploadDialog({
   clientId,
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
+  onCapture
 }: {
-  clientId: string;
+  clientId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  /** When set, return the file instead of uploading. */
+  onCapture?: (file: File) => void | Promise<void>;
 }) {
   const inputId = useId();
   const [file, setFile] = useState<File | null>(null);
@@ -59,6 +62,15 @@ export function ClientSignatureUploadDialog({
     }
     setError(null);
     startTransition(async () => {
+      if (onCapture) {
+        await onCapture(file);
+        handleOpenChange(false);
+        return;
+      }
+      if (!clientId) {
+        setError('Choose an image file for the signature.');
+        return;
+      }
       const result = await uploadClientSignatureFile(clientId, file);
       if (!result.ok) {
         setError(result.message);
@@ -69,7 +81,7 @@ export function ClientSignatureUploadDialog({
         pending: 'Signature upload sent for approval.'
       });
       handleOpenChange(false);
-      onSuccess();
+      onSuccess?.();
     });
   }
 

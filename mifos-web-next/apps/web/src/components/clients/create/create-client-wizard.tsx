@@ -23,6 +23,12 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { toast } from 'sonner';
 import { addClientDatatableRowAction } from '@/actions/client-datatable';
 import { saveClientDraftAction, submitClientFromCreateAction } from '@/actions/clients';
+import {
+  customerClassKycRequirements,
+  customerClassNeedsKycStep,
+  persistStagedKycCaptures,
+  revokeStagedKycCapture
+} from '@/lib/clients/kyc-capture';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
@@ -45,6 +51,7 @@ import {
 } from './steps/compliance-profile-step';
 import { GeneralStep } from './steps/general-step';
 import { MultiRowDatatableStep } from './steps/multi-row-datatable-step';
+import { KycCaptureStep } from './steps/kyc-capture-step';
 import { PreviewStep } from './steps/preview-step';
 import {
   datatablesForLegalForm,
@@ -62,7 +69,8 @@ import {
   CREATE_CLIENT_WIZARD_END_STEPS,
   CREATE_CLIENT_WIZARD_MIDDLE_STEPS,
   CREATE_CLIENT_WIZARD_START_STEPS,
-  filterCreateClientStepsForLegalForm
+  filterCreateClientStepsForLegalForm,
+  insertCreateClientKycStep
 } from './create-client-wizard-steps';
 import {
   findFirstInvalidCreateClientStep,
@@ -74,7 +82,8 @@ import {
 
 function buildSteps(
   template: CreateClientWizardProps['initialTemplate'],
-  legalFormId: number
+  legalFormId: number,
+  includeKyc: boolean
 ): FormWizardStep[] {
   const steps: FormWizardStep[] = [...CREATE_CLIENT_WIZARD_START_STEPS];
   if (template.isAddressEnabled) {
@@ -94,7 +103,10 @@ function buildSteps(
     });
   }
   steps.push(...CREATE_CLIENT_WIZARD_END_STEPS);
-  return filterCreateClientStepsForLegalForm(steps, legalFormId);
+  return insertCreateClientKycStep(
+    filterCreateClientStepsForLegalForm(steps, legalFormId),
+    includeKyc
+  );
 }
 
 function emptyDraft(
@@ -137,6 +149,8 @@ export function CreateClientWizard({
 }: CreateClientWizardProps) {
   const router = useRouter();
   const canCreate = useCan(resolvePermission('clients.create'));
+  const canCreateImage = useCan('CREATE_CLIENTIMAGE');
+  const canCreateDocument = useCan('CREATE_DOCUMENT');
   const initialSubmittedOnDate = useInitialTransactionDate();
   const [template] = useState(initialTemplate);
   const [draft, setDraft] = useState<CreateClientDraft>(() =>
@@ -151,7 +165,14 @@ export function CreateClientWizard({
   const [pendingMode, setPendingMode] = useState<'save' | 'submit' | null>(null);
 
   const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
-  const steps = useMemo(() => buildSteps(template, legalFormId), [template, legalFormId]);
+  const selectedCustomerClass = template.customerClassOptions?.find(
+    (option) => option.id === draft.general.customerClassId
+  );
+  const includeKycStep = customerClassNeedsKycStep(selectedCustomerClass);
+  const steps = useMemo(
+    () => buildSteps(template, legalFormId, includeKycStep),
+    [template, legalFormId, includeKycStep]
+  );
   const resolvedStepId = steps.some((s) => s.id === stepId) ? stepId : 'biodata';
   const currentIndex = steps.findIndex((s) => s.id === resolvedStepId);
 
@@ -167,9 +188,11 @@ export function CreateClientWizard({
   const validationContext = useMemo(
     (): CreateClientValidationContext => ({
       mandatoryDatatableNames,
-      identityTypeOptions: identifierIdentityTypeOptions
+      identityTypeOptions: identifierIdentityTypeOptions,
+      canCreateImage,
+      canCreateDocument
     }),
-    [mandatoryDatatableNames, identifierIdentityTypeOptions]
+    [mandatoryDatatableNames, identifierIdentityTypeOptions, canCreateImage, canCreateDocument]
   );
 
   const markValidationAttempted = useCallback((id: string) => {
@@ -273,11 +296,34 @@ export function CreateClientWizard({
         );
       }
 
+      let nextPhoto = d.kycPhoto;
+      let nextSignature = d.kycSignature;
+      const classChanged =
+        patch.customerClassId !== undefined && patch.customerClassId !== d.general.customerClassId;
+      const legalFormChanged =
+        patch.legalFormId != null && patch.legalFormId !== d.general.legalFormId;
+      if (classChanged || legalFormChanged) {
+        const nextClass = template.customerClassOptions?.find(
+          (option) => option.id === nextGeneral.customerClassId
+        );
+        const requirements = customerClassKycRequirements(nextClass);
+        if (!requirements.requirePhoto) {
+          revokeStagedKycCapture(nextPhoto);
+          nextPhoto = null;
+        }
+        if (!requirements.requireSignature) {
+          revokeStagedKycCapture(nextSignature);
+          nextSignature = null;
+        }
+      }
+
       return {
         ...d,
         general: nextGeneral,
         datatables: nextDatatables,
-        multiRowDatatables: nextMultiRowDatatables
+        multiRowDatatables: nextMultiRowDatatables,
+        kycPhoto: nextPhoto,
+        kycSignature: nextSignature
       };
     });
   }
@@ -346,9 +392,22 @@ export function CreateClientWizard({
     return true;
   }
 
+  async function persistStagedKyc(clientId: string): Promise<boolean> {
+    const result = await persistStagedKycCaptures(clientId, {
+      photo: draft.kycPhoto,
+      signature: draft.kycSignature
+    });
+    if (!result.ok) {
+      setSubmitError(result.message);
+      toast.error(result.message);
+      return false;
+    }
+    return true;
+  }
+
   function handleSaveDraft() {
     setSubmitError(null);
-    const invalidStep = findFirstInvalidSaveProgressStep(draft);
+    const invalidStep = findFirstInvalidSaveProgressStep(draft, template, validationContext);
     if (invalidStep) {
       markValidationAttempted(invalidStep.stepId);
       const summary = Object.values(invalidStep.errors).join(' ');
@@ -384,6 +443,7 @@ export function CreateClientWizard({
         if (result.contactSeedWarning) {
           toast.message(result.contactSeedWarning);
         }
+        await persistStagedKyc(clientId);
         await persistExtraMultiRowDatatables(clientId);
         router.push(`/clients/${clientId}`);
         router.refresh();
@@ -421,6 +481,7 @@ export function CreateClientWizard({
         if (!result.ok) {
           setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
           if (result.clientId != null) {
+            await persistStagedKyc(String(result.clientId));
             toast.error(result.message);
             router.push(`/clients/${result.clientId}`);
             router.refresh();
@@ -443,6 +504,7 @@ export function CreateClientWizard({
         if (result.contactSeedWarning) {
           toast.message(result.contactSeedWarning);
         }
+        await persistStagedKyc(clientId);
         await persistExtraMultiRowDatatables(clientId);
         router.push(`/clients/${clientId}`);
         router.refresh();
@@ -471,7 +533,10 @@ export function CreateClientWizard({
     if (resolvedStepId.startsWith('multi-row-datatable:') && !activeMultiRowDatatable) {
       setStepId('biodata');
     }
-  }, [resolvedStepId, activeDatatable, activeMultiRowDatatable]);
+    if (resolvedStepId === 'kyc-capture' && !includeKycStep) {
+      setStepId('biodata');
+    }
+  }, [resolvedStepId, activeDatatable, activeMultiRowDatatable, includeKycStep]);
 
   const previewValidationIssues = useMemo((): string[] => {
     const invalidStep = findFirstInvalidCreateClientStep(
@@ -526,6 +591,18 @@ export function CreateClientWizard({
           draft={draft}
           errors={stepErrors}
           onDraftChange={patchGeneral}
+        />
+      ) : null}
+
+      {resolvedStepId === 'kyc-capture' ? (
+        <KycCaptureStep
+          template={template}
+          draft={draft}
+          errors={stepErrors}
+          canCreateImage={canCreateImage}
+          canCreateDocument={canCreateDocument}
+          onPhotoChange={(kycPhoto) => setDraft((d) => ({ ...d, kycPhoto }))}
+          onSignatureChange={(kycSignature) => setDraft((d) => ({ ...d, kycSignature }))}
         />
       ) : null}
 
