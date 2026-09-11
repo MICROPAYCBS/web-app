@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-12T12:51:28.987Z",
+  "generatedAt": "2026-09-11T13:01:31.207Z",
   "summary": {
     "todo": 0,
     "in_progress": 1,
-    "done": 99,
+    "done": 100,
     "n/a": 0
   },
   "routes": [
@@ -130,6 +130,18 @@
       "status": "done",
       "webAppRef": "savings",
       "fineractApi": "GET /savingsaccounts"
+    },
+    {
+      "id": "savingsImport",
+      "path": "/savings/import",
+      "domain": "savings",
+      "label": "Import savings transactions",
+      "kind": "page",
+      "status": "done",
+      "webAppRef": "organization/bulk-import/Savings Transactions",
+      "fineractApi": "POST /savingsaccounts/{id}/transactions?command=deposit|withdrawal",
+      "schemaId": "clients.savings-account.deposit",
+      "notes": "Guided analyze → post deposits/withdrawals; org bulk-import Savings Transactions remains as legacy."
     },
     {
       "id": "loanProducts",

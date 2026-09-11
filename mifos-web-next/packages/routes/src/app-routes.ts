@@ -205,6 +205,29 @@ const CORE_APP_ROUTES = {
     requiresAuth: true,
     parity: { status: 'done', webAppRef: 'savings', fineractApi: 'GET /savingsaccounts' }
   },
+  savingsImport: {
+    id: 'savingsImport',
+    path: '/savings/import',
+    kind: 'page',
+    label: 'Import savings transactions',
+    domain: 'savings',
+    nav: false,
+    navOrder: 51,
+    navGroup: 'portfolio',
+    navIcon: 'upload',
+    keywords: ['savings', 'import', 'excel', 'bulk', 'deposit', 'withdrawal'],
+    permissionKey: 'savings.importTransactions',
+    requiresServer: true,
+    requiresAuth: true,
+    parity: {
+      status: 'done',
+      webAppRef: 'organization/bulk-import/Savings Transactions',
+      fineractApi: 'POST /savingsaccounts/{id}/transactions?command=deposit|withdrawal',
+      schemaId: 'clients.savings-account.deposit',
+      notes:
+        'Guided analyze → post deposits/withdrawals; org bulk-import Savings Transactions remains as legacy.'
+    }
+  },
   loanProducts: {
     id: 'loanProducts',
     path: '/products/loan-products',

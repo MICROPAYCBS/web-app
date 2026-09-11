@@ -200,6 +200,12 @@
       "READ_SAVINGSACCOUNT"
     ]
   },
+  "savings.importTransactions": {
+    "any": [
+      "DEPOSIT_SAVINGSACCOUNT",
+      "WITHDRAWAL_SAVINGSACCOUNT"
+    ]
+  },
   "organization.offices": {
     "any": [
       "READ_OFFICE"

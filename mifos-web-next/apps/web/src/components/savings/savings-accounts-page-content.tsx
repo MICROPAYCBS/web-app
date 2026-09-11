@@ -9,9 +9,15 @@
  */
 
 import type { SavingsAccountsPage } from '@mifos/api-client';
+import { Can, resolvePermission } from '@mifos/auth';
+import { Upload } from 'lucide-react';
+import Link from 'next/link';
 import { SavingsAccountsTable } from '@/components/savings/savings-accounts-table';
 import { ListPage } from '@/components/composites/list-page';
+import { buttonVariants } from '@/components/ui/button';
 import type { PortfolioListQuery } from '@/lib/fineract/portfolio-list-query';
+import { SAVINGS_TRANSACTIONS_IMPORT_PATH } from '@/lib/savings/savings-transactions-import';
+import { cn } from '@/lib/utils';
 
 export function SavingsAccountsPageContent({
   initialPage,
@@ -24,6 +30,17 @@ export function SavingsAccountsPageContent({
     <ListPage
       title="Savings accounts"
       description="Browse standard savings accounts across customers and branches."
+      actions={
+        <Can permission={resolvePermission('savings.importTransactions')}>
+          <Link
+            href={SAVINGS_TRANSACTIONS_IMPORT_PATH}
+            className={cn(buttonVariants({ variant: 'outline' }))}
+          >
+            <Upload className="mr-2 size-4" />
+            Import
+          </Link>
+        </Can>
+      }
     >
       <SavingsAccountsTable initialPage={initialPage} initialQuery={initialQuery} />
     </ListPage>
