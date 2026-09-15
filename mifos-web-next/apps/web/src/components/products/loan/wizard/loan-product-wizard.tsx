@@ -10,6 +10,7 @@
 
 import type { UpsertLoanProductInput } from '@mifos/validation';
 import { formatActionErrorMessage } from '@mifos/validation';
+import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import {
@@ -18,8 +19,14 @@ import {
   updateLoanProductAction
 } from '@/actions/loan-product';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
+import { LookupLoadError } from '@/components/composites/lookup-load-error';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import { useProductChargeOptions } from '@/components/products/shared/use-product-charge-options';
 import {
   loanProductDetailPath,
@@ -32,6 +39,7 @@ import {
 import {
   isProductShortNameLocked
 } from '@/lib/fineract/product-short-name';
+import { wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';
 import { CurrencyStep } from './steps/currency-step';
@@ -44,6 +52,7 @@ import type { LoanProductWizardProps, StepErrors } from './types';
 import { validateLoanProductStep } from './validation';
 
 const LOAN_CHARGE_OPTION_STEPS = ['charges', 'accounting', 'mappings'] as const;
+const LOAN_PRODUCT_WIZARD_SESSION_VERSION = 1;
 
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'details', label: 'Details' },
@@ -64,6 +73,7 @@ export function LoanProductWizard({
   productId
 }: LoanProductWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const [template, setTemplate] = useState(initialTemplate);
   const [draft, setDraft] = useState<UpsertLoanProductInput>(initialDraft);
   const [stepId, setStepId] = useState('details');
@@ -72,8 +82,9 @@ export function LoanProductWizard({
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
-  useProductChargeOptions({
+  const chargeOptions = useProductChargeOptions({
     currencyCode: draft.currency.currencyCode,
     stepId,
     stepsWithChargeOptions: LOAN_CHARGE_OPTION_STEPS,
@@ -82,6 +93,9 @@ export function LoanProductWizard({
     setTemplate,
     setDraft
   });
+  const chargeLookupBlocked =
+    (Boolean(chargeOptions.loadError) || chargeOptions.loading) &&
+    (LOAN_CHARGE_OPTION_STEPS as readonly string[]).includes(stepId);
 
   const lockedShortName = useMemo(() => {
     if (mode !== 'edit') {
@@ -95,6 +109,22 @@ export function LoanProductWizard({
     () => loanProductDraftHasUnsavedChanges(draft, initialDraft, lockedShortName),
     [draft, initialDraft, lockedShortName]
   );
+
+  const isSessionDraftDirty = useCallback(
+    (value: UpsertLoanProductInput) =>
+      loanProductDraftHasUnsavedChanges(value, initialDraft, lockedShortName),
+    [initialDraft, lockedShortName]
+  );
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: `loan-product:${productKind}`,
+    entityKey: mode === 'edit' && productId ? productId : 'new',
+    schemaVersion: LOAN_PRODUCT_WIZARD_SESSION_VERSION,
+    draft,
+    stepId,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(hasUnsavedChanges);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
@@ -145,13 +175,16 @@ export function LoanProductWizard({
     if (isPreview) {
       return;
     }
+    if (chargeLookupBlocked) {
+      return;
+    }
     const errors = validateLoanProductStep(stepId, draft);
     if (Object.keys(errors).length > 0) {
       markValidationAttempted(stepId);
       return;
     }
     goNext();
-  }, [isPreview, stepId, draft, goNext, markValidationAttempted]);
+  }, [isPreview, chargeLookupBlocked, stepId, draft, goNext, markValidationAttempted]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -167,6 +200,13 @@ export function LoanProductWizard({
 
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = WIZARD_STEPS[i].id;
+        if (
+          chargeOptions.loadError &&
+          (LOAN_CHARGE_OPTION_STEPS as readonly string[]).includes(stepToValidate)
+        ) {
+          setStepId(stepToValidate);
+          return;
+        }
         const errors = validateLoanProductStep(stepToValidate, draft);
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
@@ -177,7 +217,7 @@ export function LoanProductWizard({
 
       setStepId(targetStepId);
     },
-    [currentIndex, draft, markValidationAttempted]
+    [currentIndex, draft, markValidationAttempted, chargeOptions.loadError]
   );
 
   function handleSubmit() {
@@ -195,14 +235,34 @@ export function LoanProductWizard({
           : await updateLoanProductAction(productId ?? '', productKind, payload);
 
       if (!result.ok) {
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setSubmitError(
+          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
+        );
         return;
       }
 
+      sessionDraft.clear();
       const id = result.resourceId ?? productId;
       router.push(id ? loanProductDetailPath(id, productKind) : cancelHref);
       router.refresh();
     });
+  }
+
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setDraft(snapshot.draft);
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (hasUnsavedChanges) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push(cancelHref);
   }
 
   const title = mode === 'create' ? 'Create loan product' : 'Edit loan product';
@@ -220,20 +280,44 @@ export function LoanProductWizard({
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        banner={
+          <>
+            {sessionDraft.pendingSnapshot ? (
+              <WizardDraftRestoreBanner
+                onResume={handleResumeDraft}
+                onDiscard={sessionDraft.discard}
+              />
+            ) : null}
+            {submitError ? (
+              <FineractErrorAlert message={submitError} onRetry={handleSubmit} />
+            ) : null}
+          </>
+        }
         footer={
           <FormWizardFooter
             cancelHref={cancelHref}
+            onCancel={handleCancel}
             showBack={currentIndex > 0}
             onBack={goBack}
             backDisabled={pending}
             primaryLabel={isPreview ? (mode === 'create' ? 'Create product' : 'Save changes') : 'Next'}
             onPrimary={isPreview ? handleSubmit : tryNext}
-            primaryDisabled={pending || (isPreview && mode === 'edit' && !hasUnsavedChanges)}
+            primaryDisabled={
+              pending ||
+              chargeLookupBlocked ||
+              (isPreview && mode === 'edit' && !hasUnsavedChanges)
+            }
             primaryLoading={isPreview && pending}
             primaryLoadingLabel={mode === 'create' ? 'Creating…' : 'Saving…'}
           />
         }
       >
+        {chargeOptions.loadError &&
+        (LOAN_CHARGE_OPTION_STEPS as readonly string[]).includes(stepId) ? (
+          <div className="mb-4">
+            <LookupLoadError message={chargeOptions.loadError} onRetry={chargeOptions.retry} />
+          </div>
+        ) : null}
         {stepId === 'details' ? (
           <DetailsStep
             template={template}
@@ -327,10 +411,17 @@ export function LoanProductWizard({
             errors={{}}
             mode={mode}
             hasUnsavedChanges={hasUnsavedChanges}
-            submitError={submitError}
           />
         ) : null}
       </FormWizard>
+      <WizardLeaveConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        onConfirmLeave={() => {
+          setLeaveOpen(false);
+          router.push(cancelHref);
+        }}
+      />
     </PlatformRouteLayout>
   );
 }

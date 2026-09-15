@@ -10,7 +10,7 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
-import { platformInset, platformInsetX, platformPageShell, platformSidebarRowLayout } from '@/lib/platform-layout';
+import { platformInset, platformPageShell, platformSidebarRowLayout } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
 export interface FormWizardStep {
@@ -26,6 +26,8 @@ export interface FormWizardProps {
   /** Optional header actions (e.g. secondary links beside the title). */
   actions?: ReactNode;
   children: ReactNode;
+  /** Optional notice above step content (restore draft, lookup errors). */
+  banner?: ReactNode;
   /** Sticky Cancel / Previous / Next (or submit) actions below step content */
   footer?: ReactNode;
   /** When set, step labels in the rail are buttons and invoke this handler */
@@ -82,6 +84,7 @@ export function FormWizard({
   description,
   actions,
   children,
+  banner,
   footer,
   onStepClick,
   invalidStepIds,
@@ -162,7 +165,10 @@ export function FormWizard({
         </nav>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className={cn('min-h-0 flex-1 overflow-y-auto', platformInset)}>{children}</div>
+          <div className={cn('min-h-0 flex-1 overflow-y-auto', platformInset)}>
+            {banner ? <div className="mb-4 space-y-3">{banner}</div> : null}
+            {children}
+          </div>
           {footer}
         </div>
       </div>

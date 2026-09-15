@@ -10,6 +10,7 @@
 
 import type { UpsertShareProductInput } from '@mifos/validation';
 import { formatActionErrorMessage } from '@mifos/validation';
+import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import {
@@ -18,8 +19,14 @@ import {
   updateShareProductAction
 } from '@/actions/share-product';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
+import { LookupLoadError } from '@/components/composites/lookup-load-error';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import { useProductChargeOptions } from '@/components/products/shared/use-product-charge-options';
 import {
   shareProductDetailPath,
@@ -30,6 +37,7 @@ import {
   sanitizeShareProductDraftForSubmit
 } from '@/lib/fineract/product-wizard-draft-compare';
 import { isProductShortNameLocked } from '@/lib/fineract/product-short-name';
+import { wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { AccountingStep } from './steps/accounting-step';
 import { ChargesStep } from './steps/charges-step';
 import { CurrencyStep } from './steps/currency-step';
@@ -42,6 +50,7 @@ import type { ShareProductWizardProps, StepErrors } from './types';
 import { validateShareProductStep } from './validation';
 
 const SHARE_CHARGE_OPTION_STEPS = ['charges', 'accounting'] as const;
+const SHARE_PRODUCT_WIZARD_SESSION_VERSION = 1;
 
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'details', label: 'Details' },
@@ -61,6 +70,7 @@ export function ShareProductWizard({
   productId
 }: ShareProductWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const [template, setTemplate] = useState(initialTemplate);
   const [draft, setDraft] = useState<UpsertShareProductInput>(initialDraft);
   const [stepId, setStepId] = useState('details');
@@ -69,8 +79,9 @@ export function ShareProductWizard({
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
-  useProductChargeOptions({
+  const chargeOptions = useProductChargeOptions({
     currencyCode: draft.currency.currencyCode,
     stepId,
     stepsWithChargeOptions: SHARE_CHARGE_OPTION_STEPS,
@@ -78,6 +89,9 @@ export function ShareProductWizard({
     setTemplate,
     setDraft
   });
+  const chargeLookupBlocked =
+    (Boolean(chargeOptions.loadError) || chargeOptions.loading) &&
+    (SHARE_CHARGE_OPTION_STEPS as readonly string[]).includes(stepId);
 
   const lockedShortName = useMemo(() => {
     if (mode !== 'edit') {
@@ -91,6 +105,22 @@ export function ShareProductWizard({
     () => shareProductDraftHasUnsavedChanges(draft, initialDraft, lockedShortName),
     [draft, initialDraft, lockedShortName]
   );
+
+  const isSessionDraftDirty = useCallback(
+    (value: UpsertShareProductInput) =>
+      shareProductDraftHasUnsavedChanges(value, initialDraft, lockedShortName),
+    [initialDraft, lockedShortName]
+  );
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: 'share-product',
+    entityKey: mode === 'edit' && productId ? productId : 'new',
+    schemaVersion: SHARE_PRODUCT_WIZARD_SESSION_VERSION,
+    draft,
+    stepId,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(hasUnsavedChanges);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
@@ -140,13 +170,16 @@ export function ShareProductWizard({
     if (isPreview) {
       return;
     }
+    if (chargeLookupBlocked) {
+      return;
+    }
     const errors = validateShareProductStep(stepId, draft);
     if (Object.keys(errors).length > 0) {
       markValidationAttempted(stepId);
       return;
     }
     goNext();
-  }, [isPreview, stepId, draft, goNext, markValidationAttempted]);
+  }, [isPreview, chargeLookupBlocked, stepId, draft, goNext, markValidationAttempted]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -162,6 +195,13 @@ export function ShareProductWizard({
 
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = WIZARD_STEPS[i].id;
+        if (
+          chargeOptions.loadError &&
+          (SHARE_CHARGE_OPTION_STEPS as readonly string[]).includes(stepToValidate)
+        ) {
+          setStepId(stepToValidate);
+          return;
+        }
         const errors = validateShareProductStep(stepToValidate, draft);
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
@@ -172,7 +212,7 @@ export function ShareProductWizard({
 
       setStepId(targetStepId);
     },
-    [currentIndex, draft, markValidationAttempted]
+    [currentIndex, draft, markValidationAttempted, chargeOptions.loadError]
   );
 
   function handleSubmit() {
@@ -190,14 +230,34 @@ export function ShareProductWizard({
           : await updateShareProductAction(productId ?? '', payload);
 
       if (!result.ok) {
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setSubmitError(
+          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
+        );
         return;
       }
 
+      sessionDraft.clear();
       const id = result.resourceId ?? productId;
       router.push(id ? shareProductDetailPath(id) : SHARE_PRODUCTS_LIST_PATH);
       router.refresh();
     });
+  }
+
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setDraft(snapshot.draft);
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (hasUnsavedChanges) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push(SHARE_PRODUCTS_LIST_PATH);
   }
 
   const title = mode === 'create' ? 'Create share product' : 'Edit share product';
@@ -215,9 +275,23 @@ export function ShareProductWizard({
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        banner={
+          <>
+            {sessionDraft.pendingSnapshot ? (
+              <WizardDraftRestoreBanner
+                onResume={handleResumeDraft}
+                onDiscard={sessionDraft.discard}
+              />
+            ) : null}
+            {submitError ? (
+              <FineractErrorAlert message={submitError} onRetry={handleSubmit} />
+            ) : null}
+          </>
+        }
         footer={
           <FormWizardFooter
             cancelHref={SHARE_PRODUCTS_LIST_PATH}
+            onCancel={handleCancel}
             showBack={currentIndex > 0}
             onBack={goBack}
             backDisabled={pending}
@@ -225,12 +299,22 @@ export function ShareProductWizard({
               isPreview ? (mode === 'create' ? 'Create product' : 'Save changes') : 'Next'
             }
             onPrimary={isPreview ? handleSubmit : tryNext}
-            primaryDisabled={pending || (isPreview && mode === 'edit' && !hasUnsavedChanges)}
+            primaryDisabled={
+              pending ||
+              chargeLookupBlocked ||
+              (isPreview && mode === 'edit' && !hasUnsavedChanges)
+            }
             primaryLoading={isPreview && pending}
             primaryLoadingLabel={mode === 'create' ? 'Creating…' : 'Saving…'}
           />
         }
       >
+        {chargeOptions.loadError &&
+        (SHARE_CHARGE_OPTION_STEPS as readonly string[]).includes(stepId) ? (
+          <div className="mb-4">
+            <LookupLoadError message={chargeOptions.loadError} onRetry={chargeOptions.retry} />
+          </div>
+        ) : null}
         {stepId === 'details' ? (
           <DetailsStep
             template={template}
@@ -322,10 +406,17 @@ export function ShareProductWizard({
             errors={{}}
             mode={mode}
             hasUnsavedChanges={hasUnsavedChanges}
-            submitError={submitError}
           />
         ) : null}
       </FormWizard>
+      <WizardLeaveConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        onConfirmLeave={() => {
+          setLeaveOpen(false);
+          router.push(SHARE_PRODUCTS_LIST_PATH);
+        }}
+      />
     </PlatformRouteLayout>
   );
 }

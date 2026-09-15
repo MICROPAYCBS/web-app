@@ -23,14 +23,12 @@ import type { ReportStepProps } from '../types';
 
 export function ReportPreviewStep({
   draft,
-  submitError,
   mode,
   coreReport = false,
   saveDisabled = false,
   hasUnsavedChanges = true
 }: {
   draft: ReportStepProps['draft'];
-  submitError: string | null;
   mode: 'create' | 'edit';
   coreReport?: boolean;
   saveDisabled?: boolean;
@@ -57,12 +55,6 @@ export function ReportPreviewStep({
       {saveDisabled && hasUnsavedChanges ? (
         <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
           Fix validation issues on earlier steps before saving.
-        </p>
-      ) : null}
-
-      {submitError ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {submitError}
         </p>
       ) : null}
 

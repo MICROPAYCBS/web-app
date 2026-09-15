@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 
 export interface FormWizardFooterProps {
   cancelHref: string;
+  /** When set, Cancel calls this instead of navigating immediately (unsaved-leave confirm). */
+  onCancel?: () => void;
   cancelLabel?: string;
   showBack?: boolean;
   onBack?: () => void;
@@ -40,6 +42,7 @@ export interface FormWizardFooterProps {
  */
 export function FormWizardFooter({
   cancelHref,
+  onCancel,
   cancelLabel = 'Cancel',
   showBack = false,
   onBack,
@@ -68,12 +71,18 @@ export function FormWizardFooter({
         className
       )}
     >
-      <Link
-        href={cancelHref}
-        className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-      >
-        {cancelLabel}
-      </Link>
+      {onCancel ? (
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={busy}>
+          {cancelLabel}
+        </Button>
+      ) : (
+        <Link
+          href={cancelHref}
+          className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+        >
+          {cancelLabel}
+        </Link>
+      )}
       <div className="flex flex-wrap items-center justify-end gap-2">
         {showBack ? (
           <Button

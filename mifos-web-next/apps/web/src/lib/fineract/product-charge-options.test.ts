@@ -10,6 +10,8 @@ import { describe, expect, it } from 'vitest';
 import {
   filterChargeOptionsByCurrency,
   filterTemplateChargeOptionsByCurrency,
+  interpretProductChargeOptionsResult,
+  PRODUCT_CHARGE_OPTIONS_FALLBACK_ERROR,
   pruneProductChargeIds
 } from './product-charge-options';
 
@@ -57,6 +59,27 @@ describe('product charge options', () => {
       currencyCode: 'UGX',
       chargeOptions: [{ id: 1, currency: { code: 'UGX' } }],
       penaltyOptions: [{ id: 3, currency: { code: 'UGX' } }]
+    });
+  });
+
+  it('keeps a failed charge-option fetch distinct from an empty list', () => {
+    expect(interpretProductChargeOptionsResult({ ok: false })).toEqual({
+      ok: false,
+      message: PRODUCT_CHARGE_OPTIONS_FALLBACK_ERROR
+    });
+    expect(
+      interpretProductChargeOptionsResult({ ok: false, message: '  Timed out.  ' })
+    ).toEqual({ ok: false, message: 'Timed out.' });
+    expect(
+      interpretProductChargeOptionsResult({
+        ok: true,
+        chargeOptions: [{ id: 1 }],
+        penaltyOptions: []
+      })
+    ).toEqual({
+      ok: true,
+      chargeOptions: [{ id: 1 }],
+      penaltyOptions: []
     });
   });
 });

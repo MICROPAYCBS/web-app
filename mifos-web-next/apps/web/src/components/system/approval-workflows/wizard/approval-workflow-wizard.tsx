@@ -9,12 +9,18 @@
  */
 
 import { formatActionErrorMessage } from '@mifos/validation';
+import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { createApprovalWorkflowAction, updateApprovalWorkflowAction } from '@/actions/approval-workflows';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import {
   APPROVAL_WORKFLOWS_LIST_PATH,
@@ -24,6 +30,7 @@ import {
   isWorkflowInProgressUpdateError,
   WORKFLOW_IN_PROGRESS_UPDATE_HINT
 } from '@/lib/fineract/approval-workflow-display';
+import { wizardDraftsEqual, wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { BasicsStep } from './steps/basics-step';
 import { ReviewStep } from './steps/review-step';
 import { StagesStep } from './steps/stages-step';
@@ -41,6 +48,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'transitions', label: 'Transitions' },
   { id: 'review', label: 'Review' }
 ];
+const APPROVAL_WORKFLOW_WIZARD_SESSION_VERSION = 1;
 
 export function ApprovalWorkflowWizard({
   mode = 'create',
@@ -53,6 +61,7 @@ export function ApprovalWorkflowWizard({
   existingDefinitions = []
 }: ApprovalWorkflowWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const isEdit = mode === 'edit';
   const cancelHref =
     isEdit && definitionId != null
@@ -75,9 +84,28 @@ export function ApprovalWorkflowWizard({
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isReview = stepId === 'review';
+  const isSessionDraftDirty = useCallback(
+    (value: typeof initialValues) => !wizardDraftsEqual(value, initialValues),
+    [initialValues]
+  );
+  const sessionDirty = useMemo(
+    () => !wizardDraftsEqual(draft, initialValues),
+    [draft, initialValues]
+  );
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: 'approval-workflow',
+    entityKey: isEdit && definitionId != null ? String(definitionId) : 'new',
+    schemaVersion: APPROVAL_WORKFLOW_WIZARD_SESSION_VERSION,
+    draft,
+    stepId,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(sessionDirty);
 
   const markValidationAttempted = useCallback((id: string) => {
     setValidationAttemptedStepIds((prev) => {
@@ -187,9 +215,11 @@ export function ApprovalWorkflowWizard({
       if (!result.ok) {
         const baseMessage = formatActionErrorMessage(result.message, result.fieldErrors);
         setSubmitError(
-          isWorkflowInProgressUpdateError(baseMessage)
-            ? `${baseMessage}\n\n${WORKFLOW_IN_PROGRESS_UPDATE_HINT}`
-            : baseMessage
+          wizardSubmitRecoveryMessage(
+            isWorkflowInProgressUpdateError(baseMessage)
+              ? `${baseMessage}\n\n${WORKFLOW_IN_PROGRESS_UPDATE_HINT}`
+              : baseMessage
+          )
         );
         if (result.fieldErrors) {
           const firstField = Object.keys(result.fieldErrors)[0];
@@ -201,6 +231,7 @@ export function ApprovalWorkflowWizard({
         return;
       }
 
+      sessionDraft.clear();
       toast.success(isEdit ? 'Workflow updated.' : 'Workflow created.');
       if (isEdit && definitionId != null) {
         router.push(approvalWorkflowDetailPath(definitionId));
@@ -224,6 +255,23 @@ export function ApprovalWorkflowWizard({
     onChange: (patch: Partial<typeof draft>) => setDraft((current) => ({ ...current, ...patch }))
   };
 
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setDraft(snapshot.draft);
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (sessionDirty) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push(cancelHref);
+  }
+
   return (
     <PlatformRouteLayout>
       <FormWizard
@@ -233,9 +281,23 @@ export function ApprovalWorkflowWizard({
         description={wizardDescription}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        banner={
+          <>
+            {sessionDraft.pendingSnapshot ? (
+              <WizardDraftRestoreBanner
+                onResume={handleResumeDraft}
+                onDiscard={sessionDraft.discard}
+              />
+            ) : null}
+            {submitError ? (
+              <FineractErrorAlert message={submitError} onRetry={handleSubmit} />
+            ) : null}
+          </>
+        }
         footer={
           <FormWizardFooter
             cancelHref={cancelHref}
+            onCancel={handleCancel}
             showBack={currentIndex > 0}
             onBack={goBack}
             backDisabled={pending}
@@ -254,10 +316,17 @@ export function ApprovalWorkflowWizard({
             {...stepProps}
             mode={mode}
             definitionStatus={definitionStatus}
-            submitError={submitError}
           />
         ) : null}
       </FormWizard>
+      <WizardLeaveConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        onConfirmLeave={() => {
+          setLeaveOpen(false);
+          router.push(cancelHref);
+        }}
+      />
     </PlatformRouteLayout>
   );
 }

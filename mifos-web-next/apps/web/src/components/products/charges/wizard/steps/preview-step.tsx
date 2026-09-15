@@ -57,11 +57,8 @@ function optionLabelById(
 export function PreviewStep({
   mode,
   template,
-  draft,
-  submitError
-}: ChargeStepProps & {
-  submitError: string | null;
-}) {
+  draft
+}: ChargeStepProps) {
   const currencyCode = draft.currencyCode ?? '';
   const chargeAppliesTo = draft.chargeAppliesTo;
   const useChargeTiers = draft.useChargeTiers === true;
@@ -81,12 +78,6 @@ export function PreviewStep({
       <p className="text-sm text-muted-foreground">
         Review the charge before {mode === 'create' ? 'creating' : 'saving'}.
       </p>
-
-      {submitError ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {submitError}
-        </p>
-      ) : null}
 
       <DetailSection title="Applies to">
         <DetailFieldGrid>

@@ -35,11 +35,9 @@ export function ReviewStep({
   template,
   draft,
   staffLabel,
-  submitError,
   smtpConfigured = true
 }: UserStepProps & {
   staffLabel?: string;
-  submitError: string | null;
 }) {
   const roleNames =
     template.availableRoles
@@ -106,8 +104,6 @@ export function ReviewStep({
           </DetailFieldGrid>
         </DetailSection>
       )}
-
-      {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
     </div>
   );
 }

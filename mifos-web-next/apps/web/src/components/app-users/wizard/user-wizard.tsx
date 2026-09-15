@@ -9,15 +9,22 @@
  */
 
 import { formatActionErrorMessage } from '@mifos/validation';
+import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
 import { createUserAction, fetchStaffByOfficeAction, updateUserAction } from '@/actions/app-users';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import { formatUserDisplayName } from '@/lib/fineract/user-display';
+import { wizardDraftsEqual, wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
+import { sanitizeUserSessionDraft } from './session-draft';
 import { AccountStep } from './steps/account-step';
 import { AccessStep } from './steps/access-step';
 import { PasswordStep } from './steps/password-step';
@@ -37,6 +44,7 @@ const EDIT_WIZARD_STEPS: FormWizardStep[] = [
   { id: 'access', label: 'Access' },
   { id: 'review', label: 'Review' }
 ];
+const USER_WIZARD_SESSION_VERSION = 1;
 
 export function UserWizard({
   mode,
@@ -46,19 +54,49 @@ export function UserWizard({
   smtpConfigured = true
 }: UserWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const wizardSteps = mode === 'create' ? CREATE_WIZARD_STEPS : EDIT_WIZARD_STEPS;
   const [draft, setDraft] = useState<UserWizardDraft>(initialDraft);
   const [stepId, setStepId] = useState('account');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
     () => new Set()
   );
-  const [staffLabel, setStaffLabel] = useState<string | undefined>();
+  const [staffOptions, setStaffOptions] = useState<Array<{ id: number; name: string }>>([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffLoadError, setStaffLoadError] = useState<string | null>(null);
+  const [staffRetryToken, setStaffRetryToken] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const currentIndex = wizardSteps.findIndex((step) => step.id === stepId);
   const isReview = stepId === 'review';
   const emailOptions = useMemo(() => ({ smtpConfigured }), [smtpConfigured]);
+  const emptySessionDraft = useMemo(
+    () => sanitizeUserSessionDraft(initialDraft),
+    [initialDraft]
+  );
+  const isSessionDraftDirty = useCallback(
+    (value: UserWizardDraft) => !wizardDraftsEqual(value, emptySessionDraft),
+    [emptySessionDraft]
+  );
+  const sessionDirty = useMemo(
+    () => !wizardDraftsEqual(sanitizeUserSessionDraft(draft), emptySessionDraft),
+    [draft, emptySessionDraft]
+  );
+  const leaveDirty = sessionDirty || Boolean(draft.password || draft.repeatPassword);
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: 'app-user',
+    entityKey: mode === 'edit' && userId != null ? String(userId) : 'new',
+    schemaVersion: USER_WIZARD_SESSION_VERSION,
+    draft,
+    stepId,
+    sanitize: sanitizeUserSessionDraft,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(leaveDirty);
+  const staffLookupBlocked = stepId === 'access' && Boolean(staffLoadError);
 
   useEffect(() => {
     if (!wizardSteps.some((step) => step.id === stepId)) {
@@ -67,25 +105,43 @@ export function UserWizard({
   }, [wizardSteps, stepId]);
 
   useEffect(() => {
-    if (!draft.staffId || !draft.officeId) {
-      setStaffLabel(undefined);
+    if (!draft.officeId) {
+      setStaffOptions([]);
+      setStaffLoadError(null);
+      setStaffLoading(false);
       return;
     }
 
     let cancelled = false;
+    setStaffLoading(true);
+    setStaffLoadError(null);
     void (async () => {
       const result = await fetchStaffByOfficeAction(Number(draft.officeId));
-      if (cancelled || !result.ok) {
+      if (cancelled) {
         return;
       }
-      const match = result.data.find((item) => String(item.id) === draft.staffId);
-      setStaffLabel(match?.name);
+      if (!result.ok) {
+        setStaffOptions([]);
+        setStaffLoadError(result.message.trim() || 'Could not load staff for this branch.');
+        setStaffLoading(false);
+        return;
+      }
+      setStaffOptions(result.data);
+      setStaffLoadError(null);
+      setStaffLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [draft.officeId, draft.staffId]);
+  }, [draft.officeId, staffRetryToken]);
+
+  const staffLabel = useMemo(() => {
+    if (!draft.staffId) {
+      return undefined;
+    }
+    return staffOptions.find((item) => String(item.id) === draft.staffId)?.name;
+  }, [draft.staffId, staffOptions]);
 
   const markValidationAttempted = useCallback((id: string) => {
     setValidationAttemptedStepIds((prev) => {
@@ -132,13 +188,16 @@ export function UserWizard({
     if (isReview) {
       return;
     }
+    if (staffLookupBlocked) {
+      return;
+    }
     const errors = validateUserStep(stepId, mode, draft, emailOptions);
     if (Object.keys(errors).length > 0) {
       markValidationAttempted(stepId);
       return;
     }
     goNext();
-  }, [isReview, stepId, mode, draft, emailOptions, goNext, markValidationAttempted]);
+  }, [isReview, staffLookupBlocked, stepId, mode, draft, emailOptions, goNext, markValidationAttempted]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -154,6 +213,10 @@ export function UserWizard({
 
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = wizardSteps[i].id;
+        if (stepToValidate === 'access' && staffLoadError) {
+          setStepId(stepToValidate);
+          return;
+        }
         const errors = validateUserStep(stepToValidate, mode, draft, emailOptions);
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
@@ -164,7 +227,7 @@ export function UserWizard({
 
       setStepId(targetStepId);
     },
-    [wizardSteps, currentIndex, mode, draft, emailOptions, markValidationAttempted]
+    [wizardSteps, currentIndex, mode, draft, emailOptions, markValidationAttempted, staffLoadError]
   );
 
   function handleSubmit() {
@@ -193,10 +256,12 @@ export function UserWizard({
           : await updateUserAction(userId!, draftToUpdatePayload(draft));
 
       if (!result.ok) {
-
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setSubmitError(
+          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
+        );
         return;
       }
+      sessionDraft.clear();
       toastCommandOutcome(result, { completed: mode === 'create' ? 'User created.' : 'User updated.', pending: mode === 'create' ? 'User created. sent for approval.' : 'User updated. sent for approval.' });
       const id = result.resourceId ?? userId;
       router.push(id ? `/appusers/${id}` : '/appusers');
@@ -217,6 +282,27 @@ export function UserWizard({
   const cancelHref =
     mode === 'edit' && userId ? `/appusers/${userId}` : '/appusers';
 
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setDraft({
+      ...snapshot.draft,
+      password: '',
+      repeatPassword: ''
+    });
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (leaveDirty) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push(cancelHref);
+  }
+
   const stepProps = { mode, template, draft, errors: stepErrors, smtpConfigured };
 
   return (
@@ -228,9 +314,24 @@ export function UserWizard({
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        banner={
+          <>
+            {sessionDraft.pendingSnapshot ? (
+              <WizardDraftRestoreBanner
+                hint="Passwords are not kept in this browser tab."
+                onResume={handleResumeDraft}
+                onDiscard={sessionDraft.discard}
+              />
+            ) : null}
+            {submitError ? (
+              <FineractErrorAlert message={submitError} onRetry={handleSubmit} />
+            ) : null}
+          </>
+        }
         footer={
           <FormWizardFooter
             cancelHref={cancelHref}
+            onCancel={handleCancel}
             showBack={currentIndex > 0}
             onBack={goBack}
             backDisabled={pending}
@@ -238,6 +339,7 @@ export function UserWizard({
               isReview ? (mode === 'create' ? 'Create user' : 'Save changes') : 'Next'
             }
             onPrimary={isReview ? handleSubmit : tryNext}
+            primaryDisabled={pending || staffLookupBlocked}
             primaryLoading={isReview && pending}
             primaryLoadingLabel={mode === 'create' ? 'Creating…' : 'Saving…'}
           />
@@ -248,7 +350,14 @@ export function UserWizard({
         ) : null}
 
         {stepId === 'access' ? (
-          <AccessStep {...stepProps} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
+          <AccessStep
+            {...stepProps}
+            staffOptions={staffOptions}
+            staffLoading={staffLoading}
+            staffLoadError={staffLoadError}
+            onRetryStaff={() => setStaffRetryToken((current) => current + 1)}
+            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+          />
         ) : null}
 
         {stepId === 'password' && mode === 'create' ? (
@@ -259,10 +368,17 @@ export function UserWizard({
           <ReviewStep
             {...stepProps}
             staffLabel={staffLabel ?? (draft.staffId ? `Staff #${draft.staffId}` : undefined)}
-            submitError={submitError}
           />
         ) : null}
       </FormWizard>
+      <WizardLeaveConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        onConfirmLeave={() => {
+          setLeaveOpen(false);
+          router.push(cancelHref);
+        }}
+      />
     </PlatformRouteLayout>
   );
 }

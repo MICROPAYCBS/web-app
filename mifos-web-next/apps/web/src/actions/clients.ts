@@ -31,8 +31,17 @@ import {
   listBulkImportHistory,
   uploadBulkImportTemplate
 } from '@/lib/fineract/bulk-import';
+import { getClientIncomeSourceTemplate } from '@/lib/fineract/client-income-source';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
-import { createClient } from '@/lib/fineract/clients';
+import { createClient, getAddressFieldConfiguration } from '@/lib/fineract/clients';
+import { listContactTypes } from '@/lib/fineract/contact-types';
+import {
+  emptyCreateClientWizardLookups,
+  mapIdentifierTemplateForCreateWizard,
+  type CreateClientWizardLookupErrors,
+  type CreateClientWizardLookups
+} from '@/lib/fineract/create-client-wizard-lookups';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { executeClientCommand } from '@/lib/fineract/client-commands';
 import { seedOnboardingClientContacts } from '@/lib/fineract/seed-onboarding-client-contacts';
 import { getServerSession } from '@/lib/session/server';
@@ -404,4 +413,72 @@ export async function uploadClientsLegacyImportAction(
   } catch (error) {
     return toFineractActionError(error, 'Failed to upload import file.');
   }
+}
+
+export type CreateClientWizardLookupsActionResult =
+  | {
+      ok: true;
+      data: CreateClientWizardLookups;
+      errors: CreateClientWizardLookupErrors;
+    }
+  | { ok: false; message: string };
+
+export async function fetchCreateClientWizardLookupsAction(): Promise<CreateClientWizardLookupsActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('clients.create'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to create customers.' };
+  }
+
+  const [address, income, identifier, contact] = await Promise.all([
+    tryFineractLoad(() => getAddressFieldConfiguration(), 'Could not load address fields.'),
+    tryFineractLoad(
+      () => getClientIncomeSourceTemplate(1),
+      'Could not load income source options.'
+    ),
+    tryFineractLoad(
+      () => getClientIdentifierTemplate(1),
+      'Could not load identifier options.'
+    ),
+    tryFineractLoad(() => listContactTypes(), 'Could not load contact types.')
+  ]);
+
+  const mappedIdentifiers = identifier.ok
+    ? mapIdentifierTemplateForCreateWizard(identifier.data)
+    : {
+        identifierDocumentTypes: [] as CreateClientWizardLookups['identifierDocumentTypes'],
+        identifierIdentityTypeOptions:
+          [] as CreateClientWizardLookups['identifierIdentityTypeOptions']
+      };
+
+  const errors: CreateClientWizardLookupErrors = {};
+  if (!address.ok) {
+    errors.address = address.message;
+  }
+  if (!income.ok) {
+    errors.income = income.message;
+  }
+  if (!identifier.ok) {
+    errors.identifiers = identifier.message;
+  }
+  if (!contact.ok) {
+    errors.contact = contact.message;
+  }
+
+  const empty = emptyCreateClientWizardLookups();
+  return {
+    ok: true,
+    data: {
+      addressFieldConfig: address.ok ? address.data : empty.addressFieldConfig,
+      incomeSourceOptions: income.ok ? income.data : empty.incomeSourceOptions,
+      identifierDocumentTypes: mappedIdentifiers.identifierDocumentTypes,
+      identifierIdentityTypeOptions: mappedIdentifiers.identifierIdentityTypeOptions,
+      contactTypeOptions: contact.ok ? contact.data : empty.contactTypeOptions
+    },
+    errors
+  };
 }

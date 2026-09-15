@@ -10,19 +10,25 @@
 
 import { formatActionErrorMessage } from '@mifos/validation';
 import type { UpsertReportFormInput } from '@mifos/validation';
+import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
 import { createReportAction, updateReportAction } from '@/actions/reports';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import type { ReportParameterRow } from '@/components/system/report-parameters-editor';
 import {
   isSqlDisabledForReportType,
   isSubTypeEnabledForReportType
 } from '@/lib/fineract/report-display';
+import { wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { ReportCoreSettingsStep } from './steps/core-settings-step';
 import { ReportDetailsStep } from './steps/details-step';
 import { ReportParametersStep } from './steps/parameters-step';
@@ -52,9 +58,11 @@ function buildCustomWizardSteps(showQueryStep: boolean): FormWizardStep[] {
     { id: 'review', label: 'Review' }
   ];
 }
+const REPORT_WIZARD_SESSION_VERSION = 1;
 
 export function ReportWizard({ mode, reportId, template, report, initialDraft }: ReportWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const coreReport = report?.coreReport === true;
   const allowedReportTypes =
     mode === 'edit' && report ? report.allowedReportTypes : template.allowedReportTypes;
@@ -70,6 +78,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const customShowQueryStep =
     !coreReport && !isSqlDisabledForReportType(draft.form.reportType);
@@ -90,6 +99,21 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
     () => reportDraftHasUnsavedChanges(draft, initialDraft, { coreReport }),
     [draft, initialDraft, coreReport]
   );
+  const isSessionDraftDirty = useCallback(
+    (value: ReportWizardDraft) =>
+      reportDraftHasUnsavedChanges(value, initialDraft, { coreReport }),
+    [initialDraft, coreReport]
+  );
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: 'report',
+    entityKey: mode === 'edit' && reportId != null ? String(reportId) : 'new',
+    schemaVersion: REPORT_WIZARD_SESSION_VERSION,
+    draft,
+    stepId,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(hasUnsavedChanges);
 
   const canSave = useMemo(() => {
     if (!hasUnsavedChanges) {
@@ -250,11 +274,13 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
           : await updateReportAction(reportId as number, payload);
 
       if (!result.ok) {
-
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setSubmitError(
+          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
+        );
         toastFineractError(result.message);
         return;
       }
+      sessionDraft.clear();
       toastCommandOutcome(result, { completed: mode === 'create' ? 'Report created.' : 'Report updated.', pending: mode === 'create' ? 'Report created. sent for approval.' : 'Report updated. sent for approval.' });
       router.push(`/system/reports/${result.resourceId ?? reportId}`);
       router.refresh();
@@ -281,6 +307,23 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
     onReportTypeChange: handleReportTypeChange
   };
 
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setDraft(snapshot.draft);
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (hasUnsavedChanges) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push(cancelHref);
+  }
+
   return (
     <PlatformRouteLayout>
       <FormWizard
@@ -290,9 +333,23 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        banner={
+          <>
+            {sessionDraft.pendingSnapshot ? (
+              <WizardDraftRestoreBanner
+                onResume={handleResumeDraft}
+                onDiscard={sessionDraft.discard}
+              />
+            ) : null}
+            {submitError ? (
+              <FineractErrorAlert message={submitError} onRetry={handleSubmit} />
+            ) : null}
+          </>
+        }
         footer={
           <FormWizardFooter
             cancelHref={cancelHref}
+            onCancel={handleCancel}
             showBack={currentIndex > 0}
             onBack={goBack}
             backDisabled={pending}
@@ -324,7 +381,6 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
         {isReview ? (
           <ReportPreviewStep
             draft={draft}
-            submitError={submitError}
             mode={mode}
             coreReport={coreReport}
             saveDisabled={!canSave}
@@ -332,6 +388,14 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
           />
         ) : null}
       </FormWizard>
+      <WizardLeaveConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        onConfirmLeave={() => {
+          setLeaveOpen(false);
+          router.push(cancelHref);
+        }}
+      />
     </PlatformRouteLayout>
   );
 }

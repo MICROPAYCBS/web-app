@@ -10,12 +10,18 @@ import { assertCan, resolvePermission } from '@mifos/auth';
 import { LEGAL_FORM_ENTITY } from '@mifos/validation';
 import { redirect } from 'next/navigation';
 import { CreateClientWizard } from '@/components/clients/create/create-client-wizard';
-import type { FineractClientIdentifierTemplate } from '@mifos/api-client';
 import { getClientIncomeSourceTemplate } from '@/lib/fineract/client-income-source';
 import { getClientIdentifierTemplate } from '@/lib/fineract/client-identifiers';
 import { getAddressFieldConfiguration, getClientTemplate } from '@/lib/fineract/clients';
 import { listContactTypes } from '@/lib/fineract/contact-types';
+import {
+  emptyCreateClientWizardLookups,
+  mapIdentifierTemplateForCreateWizard,
+  type CreateClientWizardLookupErrors,
+  type CreateClientWizardLookups
+} from '@/lib/fineract/create-client-wizard-lookups';
 import { listEntityDatatableChecks } from '@/lib/fineract/entity-datatable-checks';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
 export default async function CreateClientPage({
@@ -41,48 +47,68 @@ export default async function CreateClientPage({
 
   const defaultOfficeId = session.officeId > 0 ? session.officeId : undefined;
 
-  const [template, addressFieldConfig, entityDatatableChecks, incomeSourceOptions, identifierTemplate, contactTypeOptions] =
-    await Promise.all([
+  const [
+    template,
+    addressResult,
+    entityDatatableChecks,
+    incomeResult,
+    identifierResult,
+    contactResult
+  ] = await Promise.all([
     getClientTemplate(defaultOfficeId),
-    getAddressFieldConfiguration().catch(() => [] as Awaited<ReturnType<typeof getAddressFieldConfiguration>>),
+    tryFineractLoad(() => getAddressFieldConfiguration(), 'Could not load address fields.'),
     listEntityDatatableChecks()
       .then((page) => page.pageItems ?? [])
       .catch(() => []),
-    getClientIncomeSourceTemplate(1).catch(() => ({})),
-    getClientIdentifierTemplate(1).catch(
-      (): FineractClientIdentifierTemplate => ({ allowedDocumentTypes: [], identityTypeOptions: [] })
+    tryFineractLoad(
+      () => getClientIncomeSourceTemplate(1),
+      'Could not load income source options.'
     ),
-    listContactTypes().catch(() => [])
+    tryFineractLoad(
+      () => getClientIdentifierTemplate(1),
+      'Could not load identifier options.'
+    ),
+    tryFineractLoad(() => listContactTypes(), 'Could not load contact types.')
   ]);
 
-  const identifierDocumentTypes =
-    identifierTemplate.allowedDocumentTypes?.map((type) => ({
-      id: type.id,
-      name: type.name
-    })) ?? [];
+  const emptyLookups = emptyCreateClientWizardLookups();
+  const mappedIdentifiers = identifierResult.ok
+    ? mapIdentifierTemplateForCreateWizard(identifierResult.data)
+    : {
+        identifierDocumentTypes: emptyLookups.identifierDocumentTypes,
+        identifierIdentityTypeOptions: emptyLookups.identifierIdentityTypeOptions
+      };
 
-  const identifierIdentityTypeOptions =
-    identifierTemplate.identityTypeOptions?.map((option) => ({
-      codeValueId: option.codeValueId,
-      codeValueName: option.codeValueName,
-      example: option.example,
-      formatDescription: option.formatDescription,
-      validationMessage: option.validationMessage,
-      validationRegex: option.validationRegex,
-      status: option.status
-    })) ?? [];
+  const initialLookups: CreateClientWizardLookups = {
+    addressFieldConfig: addressResult.ok ? addressResult.data : emptyLookups.addressFieldConfig,
+    incomeSourceOptions: incomeResult.ok ? incomeResult.data : emptyLookups.incomeSourceOptions,
+    identifierDocumentTypes: mappedIdentifiers.identifierDocumentTypes,
+    identifierIdentityTypeOptions: mappedIdentifiers.identifierIdentityTypeOptions,
+    contactTypeOptions: contactResult.ok ? contactResult.data : emptyLookups.contactTypeOptions
+  };
+
+  const initialLookupErrors: CreateClientWizardLookupErrors = {};
+  if (!addressResult.ok) {
+    initialLookupErrors.address = addressResult.message;
+  }
+  if (!incomeResult.ok) {
+    initialLookupErrors.income = incomeResult.message;
+  }
+  if (!identifierResult.ok) {
+    initialLookupErrors.identifiers = identifierResult.message;
+  }
+  if (!contactResult.ok) {
+    initialLookupErrors.contact = contactResult.message;
+  }
 
   return (
     <CreateClientWizard
       initialTemplate={template}
       defaultOfficeId={defaultOfficeId}
       defaultLegalFormId={defaultLegalFormId}
-      addressFieldConfig={addressFieldConfig}
       entityDatatableChecks={entityDatatableChecks}
-      incomeSourceOptions={incomeSourceOptions}
-      identifierDocumentTypes={identifierDocumentTypes}
-      identifierIdentityTypeOptions={identifierIdentityTypeOptions}
-      contactTypeOptions={contactTypeOptions}
+      initialLookups={initialLookups}
+      initialLookupErrors={initialLookupErrors}
     />
   );
 }

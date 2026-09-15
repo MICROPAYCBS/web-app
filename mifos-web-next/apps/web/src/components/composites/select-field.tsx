@@ -9,7 +9,7 @@
  */
 
 import type { VariantProps } from 'class-variance-authority';
-import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
+import { CheckIcon, ChevronsUpDownIcon, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { FormLabel } from '@/components/composites/form-label';
 import { Badge, badgeVariants } from '@/components/ui/badge';
@@ -138,6 +138,11 @@ export interface SelectFieldProps {
   placeholder?: string;
   error?: string;
   disabled?: boolean;
+  /** Lookup is still fetching options. */
+  loading?: boolean;
+  /** Lookup failed. Prefer this over a required-field error. */
+  loadError?: string;
+  onRetry?: () => void;
   className?: string;
   emptyMessage?: string;
   hint?: string;
@@ -171,6 +176,9 @@ export function SelectField({
   placeholder = 'Select…',
   error,
   disabled = false,
+  loading = false,
+  loadError,
+  onRetry,
   className,
   emptyMessage = 'No results found.',
   hint,
@@ -181,6 +189,9 @@ export function SelectField({
 }: SelectFieldProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const lookupBlocked = loading || Boolean(loadError);
+  const fieldError = loadError ? undefined : error;
+  const triggerPlaceholder = loading ? 'Loading…' : placeholder;
 
   const selected = useMemo(
     () => options.find((opt) => opt.value === value),
@@ -200,7 +211,7 @@ export function SelectField({
   }
 
   return (
-    <Field className={className} data-invalid={!!error}>
+    <Field className={className} data-invalid={!!fieldError}>
       <FormLabel
         htmlFor={id}
         required={required}
@@ -220,8 +231,8 @@ export function SelectField({
                 id={id}
                 type="button"
                 variant="outline"
-                disabled={disabled}
-                aria-invalid={!!error}
+                disabled={disabled || lookupBlocked}
+                aria-invalid={!!fieldError}
                 className={cn(
                   triggerClassName,
                   !selected && 'text-muted-foreground'
@@ -232,9 +243,13 @@ export function SelectField({
             {selected ? (
               <SelectOptionContent option={selected} layout="trigger" />
             ) : (
-              <span className="flex-1 truncate text-left">{placeholder}</span>
+              <span className="flex-1 truncate text-left">{triggerPlaceholder}</span>
             )}
-            <ChevronsUpDownIcon className="size-4 shrink-0 opacity-50" />
+            {loading ? (
+              <Loader2 className="size-4 shrink-0 animate-spin opacity-50" aria-hidden />
+            ) : (
+              <ChevronsUpDownIcon className="size-4 shrink-0 opacity-50" />
+            )}
           </PopoverTrigger>
           <PopoverContent
             className="flex w-[var(--anchor-width)] max-h-[min(20rem,var(--available-height,20rem))] flex-col overflow-hidden p-0"
@@ -274,7 +289,18 @@ export function SelectField({
             </Command>
           </PopoverContent>
         </Popover>
-        <FieldError>{error}</FieldError>
+        {loadError ? (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">{loadError}</p>
+            {onRetry ? (
+              <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+                Try again
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          <FieldError>{fieldError}</FieldError>
+        )}
       </FieldContent>
     </Field>
   );

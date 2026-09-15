@@ -9,21 +9,17 @@
  */
 
 import type { Dispatch, SetStateAction } from 'react';
-import { useEffect } from 'react';
-import { pruneProductChargeIds } from '@/lib/fineract/product-charge-options';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  interpretProductChargeOptionsResult,
+  PRODUCT_CHARGE_OPTIONS_FALLBACK_ERROR,
+  pruneProductChargeIds,
+  type ProductChargeOptionsFetchResult
+} from '@/lib/fineract/product-charge-options';
 import {
   pruneProductChargeAmounts,
   type ProductChargeAmounts
 } from '@/lib/fineract/product-charge-links';
-
-type LoadedChargeOptions = {
-  chargeOptions?: { id?: number }[];
-  penaltyOptions?: { id?: number }[];
-};
-
-type FetchChargeOptionsResult =
-  | ({ ok: true } & LoadedChargeOptions)
-  | { ok: false; message?: string };
 
 type DraftWithCharges = {
   charges: { chargeIds?: number[]; chargeAmounts?: ProductChargeAmounts };
@@ -48,53 +44,85 @@ export function useProductChargeOptions<
   currencyCode?: string;
   stepId: string;
   stepsWithChargeOptions: readonly string[];
-  fetchOptions: (code: string) => Promise<FetchChargeOptionsResult>;
+  fetchOptions: (code: string) => Promise<ProductChargeOptionsFetchResult>;
   setTemplate: Dispatch<SetStateAction<TTemplate>>;
   setDraft: Dispatch<SetStateAction<TDraft>>;
-}) {
+}): {
+  loading: boolean;
+  loadError: string | null;
+  retry: () => void;
+} {
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
+  const needsChargeOptions = stepsWithChargeOptions.includes(stepId);
+
+  const retry = useCallback(() => {
+    setRetryToken((current) => current + 1);
+  }, []);
+
   useEffect(() => {
     const code = currencyCode?.trim();
-    if (!code || !stepsWithChargeOptions.includes(stepId)) {
+    if (!code || !needsChargeOptions) {
       return;
     }
 
     let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
 
-    void fetchOptions(code).then((result) => {
-      if (cancelled || !result.ok) {
-        return;
-      }
-
-      setTemplate((current) => ({
-        ...current,
-        chargeOptions: result.chargeOptions,
-        penaltyOptions: result.penaltyOptions
-      }));
-
-      setDraft((current) => {
-        const nextIds = pruneProductChargeIds(
-          current.charges.chargeIds ?? [],
-          result.chargeOptions,
-          result.penaltyOptions
-        );
-        const nextAmounts = pruneProductChargeAmounts(nextIds, current.charges.chargeAmounts);
-        if (
-          nextIds.length === (current.charges.chargeIds ?? []).length &&
-          Object.keys(nextAmounts).length === Object.keys(current.charges.chargeAmounts ?? {}).length
-        ) {
-          return current;
+    void fetchOptions(code)
+      .then((result) => {
+        if (cancelled) {
+          return;
         }
-        return {
+        const interpreted = interpretProductChargeOptionsResult(result);
+        setLoading(false);
+        if (!interpreted.ok) {
+          setLoadError(interpreted.message);
+          return;
+        }
+
+        setLoadError(null);
+        setTemplate((current) => ({
           ...current,
-          charges: { ...current.charges, chargeIds: nextIds, chargeAmounts: nextAmounts }
-        };
+          chargeOptions: interpreted.chargeOptions,
+          penaltyOptions: interpreted.penaltyOptions
+        }));
+
+        setDraft((current) => {
+          const nextIds = pruneProductChargeIds(
+            current.charges.chargeIds ?? [],
+            interpreted.chargeOptions,
+            interpreted.penaltyOptions
+          );
+          const nextAmounts = pruneProductChargeAmounts(nextIds, current.charges.chargeAmounts);
+          if (
+            nextIds.length === (current.charges.chargeIds ?? []).length &&
+            Object.keys(nextAmounts).length === Object.keys(current.charges.chargeAmounts ?? {}).length
+          ) {
+            return current;
+          }
+          return {
+            ...current,
+            charges: { ...current.charges, chargeIds: nextIds, chargeAmounts: nextAmounts }
+          };
+        });
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+        setLoading(false);
+        setLoadError(PRODUCT_CHARGE_OPTIONS_FALLBACK_ERROR);
       });
-    });
 
     return () => {
       cancelled = true;
     };
-    // fetchOptions is a stable server action reference.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh when currency or step changes
-  }, [currencyCode, stepId, setDraft, setTemplate, stepsWithChargeOptions]);
+    // fetchOptions is a stable server action reference or a thin wrapper around one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh when currency, step, or retry changes
+  }, [currencyCode, needsChargeOptions, retryToken, setDraft, setTemplate]);
+
+  return { loading, loadError, retry };
 }

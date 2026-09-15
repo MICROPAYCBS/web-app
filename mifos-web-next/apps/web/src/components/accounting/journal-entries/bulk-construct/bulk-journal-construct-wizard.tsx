@@ -9,17 +9,23 @@
  */
 
 import { formatActionErrorMessage } from '@mifos/validation';
+import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 import { createBulkJournalEntriesAction } from '@/actions/journal-entries';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
-import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-toast';
 import {
   defaultBulkConstructRow,
   isBulkConstructEligibleRule
 } from '@/lib/accounting/bulk-journal-construct';
+import { wizardDraftsEqual, wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { BulkConstructReviewStep } from './steps/review-step';
 import { BulkConstructTemplateStep } from './steps/template-step';
 import { BulkConstructVariationsStep } from './steps/variations-step';
@@ -37,9 +43,11 @@ const WIZARD_STEPS: FormWizardStep[] = [
 ];
 
 const JOURNAL_ENTRIES_LIST_PATH = '/accounting/journal-entries';
+const BULK_JOURNAL_WIZARD_SESSION_VERSION = 1;
 
 export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const [form, setForm] = useState(props.initialValues);
   const formRef = useRef(form);
   formRef.current = form;
@@ -56,9 +64,28 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
     | null
   >(null);
   const [pending, startTransition] = useTransition();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isReview = stepId === 'review';
+  const isSessionDraftDirty = useCallback(
+    (value: typeof props.initialValues) => !wizardDraftsEqual(value, props.initialValues),
+    [props.initialValues]
+  );
+  const sessionDirty = useMemo(
+    () => !wizardDraftsEqual(form, props.initialValues),
+    [form, props.initialValues]
+  );
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: 'bulk-journal-construct',
+    entityKey: 'new',
+    schemaVersion: BULK_JOURNAL_WIZARD_SESSION_VERSION,
+    draft: form,
+    stepId,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(sessionDirty);
 
   const stepErrors = useMemo(() => {
     if (!validationAttemptedStepIds.has(stepId)) {
@@ -206,7 +233,9 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
     startTransition(async () => {
       const result = await createBulkJournalEntriesAction(formRef.current);
       if (!result.ok) {
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setSubmitError(
+          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
+        );
         toastFineractError(result.message);
         return;
       }
@@ -214,6 +243,7 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
       setPostResults(result.results);
 
       if (result.failureCount === 0) {
+        sessionDraft.clear();
         toastCommandOutcome(
           {
             ok: true,
@@ -253,7 +283,25 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
     onPatchRows: patchRows
   };
 
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setForm(snapshot.draft);
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (sessionDirty) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push(JOURNAL_ENTRIES_LIST_PATH);
+  }
+
   return (
+    <>
     <FormWizard
       embedded={props.embedded}
       steps={WIZARD_STEPS}
@@ -262,9 +310,23 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
       description="Build multiple similar journal entries from one posting template, then post them together."
       onStepClick={goToStep}
       invalidStepIds={invalidStepIdsForRail}
+      banner={
+        <>
+          {sessionDraft.pendingSnapshot ? (
+            <WizardDraftRestoreBanner
+              onResume={handleResumeDraft}
+              onDiscard={sessionDraft.discard}
+            />
+          ) : null}
+          {submitError ? (
+            <FineractErrorAlert message={submitError} onRetry={handleSubmit} />
+          ) : null}
+        </>
+      }
       footer={
         <FormWizardFooter
           cancelHref={JOURNAL_ENTRIES_LIST_PATH}
+          onCancel={handleCancel}
           showBack={currentIndex > 0}
           onBack={goBack}
           backDisabled={pending}
@@ -280,10 +342,18 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
       {stepId === 'review' ? (
         <BulkConstructReviewStep
           {...stepProps}
-          submitError={submitError}
           postResults={postResults}
         />
       ) : null}
     </FormWizard>
+    <WizardLeaveConfirmDialog
+      open={leaveOpen}
+      onOpenChange={setLeaveOpen}
+      onConfirmLeave={() => {
+        setLeaveOpen(false);
+        router.push(JOURNAL_ENTRIES_LIST_PATH);
+      }}
+    />
+    </>
   );
 }

@@ -46,11 +46,9 @@ function glLabelFromOptions(
 export function PreviewStep({
   template,
   draft,
-  submitError,
   mode,
   hasUnsavedChanges = true
 }: ShareProductStepProps & {
-  submitError: string | null;
   mode: WizardMode;
   hasUnsavedChanges?: boolean;
 }) {
@@ -80,12 +78,6 @@ export function PreviewStep({
       {mode === 'edit' && !hasUnsavedChanges ? (
         <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
           No changes to save. Update a field to enable save.
-        </p>
-      ) : null}
-
-      {submitError ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {submitError}
         </p>
       ) : null}
 

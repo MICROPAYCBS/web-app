@@ -31,12 +31,10 @@ export function ReviewStep({
   taskPermissions,
   roles,
   mode = 'create',
-  definitionStatus,
-  submitError
+  definitionStatus
 }: WorkflowStepProps & {
   mode?: 'create' | 'edit';
   definitionStatus?: WorkflowDefinitionStatus;
-  submitError: string | null;
 }) {
   const task = findWorkflowTaskPermission(taskPermissions, draft.taskPermissionCode);
   const taskLabel = task
@@ -60,12 +58,6 @@ export function ReviewStep({
       {editingPublished ? (
         <p className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           {WORKFLOW_IN_PROGRESS_UPDATE_HINT}
-        </p>
-      ) : null}
-
-      {submitError ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive whitespace-pre-wrap">
-          {submitError}
         </p>
       ) : null}
 

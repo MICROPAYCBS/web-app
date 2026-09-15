@@ -15,6 +15,7 @@ import {
   fetchSmsCampaignTemplateColumnsAction
 } from '@/actions/sms-campaign';
 import { ReportParameterForm } from '@/components/reports/report-parameter-form';
+import { LookupLoadError } from '@/components/composites/lookup-load-error';
 import { SelectField } from '@/components/composites/select-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -56,15 +57,23 @@ export function CampaignStep({
   template,
   draft,
   onChange,
-  errors
+  errors,
+  onLookupErrorChange
 }: {
   template: SmsCampaignTemplate;
   draft: SmsCampaignWizardDraft;
   onChange: (patch: Partial<SmsCampaignWizardDraft>) => void;
   errors: StepErrors;
+  onLookupErrorChange?: (message: string | null) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
+
+  function reportLookupError(message: string | null) {
+    setLoadError(message);
+    onLookupErrorChange?.(message);
+  }
 
   const businessRules = useMemo(() => {
     if (draft.triggerType === '') {
@@ -108,6 +117,7 @@ export function CampaignStep({
         businessRuleValues: {},
         templateColumns: []
       });
+      reportLookupError(null);
       return;
     }
 
@@ -115,14 +125,18 @@ export function CampaignStep({
     if (!rule) {
       return;
     }
+    if (draft.reportName === rule.reportName && draft.businessRuleMetadata.length > 0) {
+      reportLookupError(null);
+      return;
+    }
 
     startTransition(async () => {
       const result = await fetchSmsCampaignReportParametersAction(rule.reportName);
       if (!result.ok) {
-        setLoadError(result.message);
+        reportLookupError(result.message.trim() || 'Could not load campaign options.');
         return;
       }
-      setLoadError(null);
+      reportLookupError(null);
       onChange({
         reportName: rule.reportName,
         businessRuleMetadata: result.data,
@@ -130,13 +144,14 @@ export function CampaignStep({
         templateColumns: []
       });
     });
-  }, [draft.runReportId, businessRules, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- retryToken retriggers the same report load
+  }, [draft.runReportId, businessRules, onChange, retryToken]);
 
   function handleLoadPlaceholders(values: Record<string, string>) {
     if (!draft.reportName) {
       return;
     }
-    setLoadError(null);
+    reportLookupError(null);
     startTransition(async () => {
       const result = await fetchSmsCampaignTemplateColumnsAction({
         reportName: draft.reportName,
@@ -144,7 +159,7 @@ export function CampaignStep({
         values
       });
       if (!result.ok) {
-        setLoadError(result.message);
+        reportLookupError(result.message.trim() || 'Could not load message placeholders.');
         return;
       }
       onChange({
@@ -281,8 +296,33 @@ export function CampaignStep({
           options={businessRuleOptions}
           placeholder="Select business rule"
           error={errors.runReportId}
+          loading={pending && draft.runReportId !== '' && !draft.businessRuleMetadata.length}
+          onRetry={
+            draft.runReportId !== ''
+              ? () => {
+                  reportLookupError(null);
+                  setRetryToken((current) => current + 1);
+                }
+              : undefined
+          }
         />
       </div>
+
+      {loadError ? (
+        <LookupLoadError
+          message={loadError}
+          onRetry={() => {
+            reportLookupError(null);
+            if (draft.businessRuleMetadata.length && draft.reportName) {
+              handleLoadPlaceholders(draft.businessRuleValues);
+              return;
+            }
+            if (draft.runReportId !== '') {
+              setRetryToken((current) => current + 1);
+            }
+          }}
+        />
+      ) : null}
 
       {draft.businessRuleMetadata.length ? (
         <div className="space-y-4 rounded-lg border border-border p-4">
@@ -301,7 +341,6 @@ export function CampaignStep({
           <Button type="submit" form="sms-campaign-business-rule" disabled={pending}>
             {pending ? 'Loading…' : 'Load template placeholders'}
           </Button>
-          {loadError ? <p className="text-sm text-destructive">{loadError}</p> : null}
           {errors.businessRule ? (
             <p className="text-sm text-destructive">{errors.businessRule}</p>
           ) : null}

@@ -42,6 +42,33 @@ export function filterProductChargeOptions(
   };
 }
 
+export const PRODUCT_CHARGE_OPTIONS_FALLBACK_ERROR = 'Could not load charge options.';
+
+export type ProductChargeOptionsFetchResult =
+  | { ok: true; chargeOptions?: { id?: number }[]; penaltyOptions?: { id?: number }[] }
+  | { ok: false; message?: string };
+
+export type InterpretedProductChargeOptions =
+  | { ok: true; chargeOptions?: { id?: number }[]; penaltyOptions?: { id?: number }[] }
+  | { ok: false; message: string };
+
+/** Failed fetches must not look like an empty option list. */
+export function interpretProductChargeOptionsResult(
+  result: ProductChargeOptionsFetchResult
+): InterpretedProductChargeOptions {
+  if (result.ok) {
+    return {
+      ok: true,
+      chargeOptions: result.chargeOptions,
+      penaltyOptions: result.penaltyOptions
+    };
+  }
+  return {
+    ok: false,
+    message: result.message?.trim() || PRODUCT_CHARGE_OPTIONS_FALLBACK_ERROR
+  };
+}
+
 export function pruneProductChargeIds(
   chargeIds: number[],
   chargeOptions: { id?: number }[] | undefined,

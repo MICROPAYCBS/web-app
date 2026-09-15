@@ -8,8 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { fetchStaffByOfficeAction } from '@/actions/app-users';
+import { useMemo } from 'react';
 import { RoleCheckboxGroup } from '@/components/app-users/role-checkbox-group';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
@@ -21,13 +20,18 @@ export function AccessStep({
   template,
   draft,
   errors,
-  onChange
+  onChange,
+  staffOptions,
+  staffLoading,
+  staffLoadError,
+  onRetryStaff
 }: UserStepProps & {
   onChange: (patch: Partial<UserWizardDraft>) => void;
+  staffOptions: Array<{ id: number; name: string }>;
+  staffLoading: boolean;
+  staffLoadError: string | null;
+  onRetryStaff: () => void;
 }) {
-  const [staffOptions, setStaffOptions] = useState<Array<{ id: number; name: string }>>([]);
-  const [staffLoading, setStaffLoading] = useState(false);
-
   const officeOptions = useMemo(
     () => toSelectOptions(template.allowedOffices),
     [template.allowedOffices]
@@ -39,28 +43,6 @@ export function AccessStep({
     }
     return options;
   }, [mode, staffOptions]);
-
-  useEffect(() => {
-    if (!draft.officeId) {
-      setStaffOptions([]);
-      return;
-    }
-
-    let cancelled = false;
-    setStaffLoading(true);
-    void (async () => {
-      const result = await fetchStaffByOfficeAction(Number(draft.officeId));
-      if (cancelled) {
-        return;
-      }
-      setStaffOptions(result.ok ? result.data : []);
-      setStaffLoading(false);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [draft.officeId]);
 
   return (
     <div className="space-y-6">
@@ -83,7 +65,10 @@ export function AccessStep({
           value={draft.staffId}
           onValueChange={(value) => onChange({ staffId: value ?? '' })}
           options={staffSelectOptions}
-          disabled={!draft.officeId || staffLoading}
+          disabled={!draft.officeId || staffLoading || Boolean(staffLoadError)}
+          loading={staffLoading}
+          loadError={staffLoadError ?? undefined}
+          onRetry={draft.officeId ? onRetryStaff : undefined}
           placeholder={
             !draft.officeId
               ? 'Select a branch first'

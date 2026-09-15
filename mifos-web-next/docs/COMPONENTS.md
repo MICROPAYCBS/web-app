@@ -215,7 +215,7 @@ Use a **right-side shadcn Sheet** when:
 Do **not** use FormSheet for:
 
 - Confirm-only actions → `AlertDialog`.
-- Large or multi-step flows → full page + `StepperForm`.
+- Large or multi-step flows → full page + `FormWizard`.
 - More than 7 logical fields → full page (or split into steps).
 
 **Field counting (logical fields):**
@@ -249,6 +249,22 @@ A checkbox group for one decision = 1 field. A dynamic list of charges = N field
 ```
 
 Implementation: `FormSheet` in `apps/web/src/components/composites/form-sheet.tsx`.
+
+### FormWizard (full-page steppers)
+
+Use `FormWizard` + `FormWizardFooter` for 8+ fields or multi-step create/edit (ADR-006 exception). Layout: title, vertical step rail, scrollable step body, sticky footer.
+
+| Concern | Rule |
+|---------|------|
+| **Lookups** | `SelectField` may take `loading`, `loadError`, and `onRetry`. A failed option load is **not** “this field is required”. Gate **Next** until retry succeeds. |
+| **Submit failure** | Keep the in-memory draft. Show a retryable error. If the browser is offline, say the answers are still here. |
+| **Session resume** | Long FormWizard screens persist JSON to `sessionStorage` via `useWizardSessionDraft` (ADR-015). Show **Resume** / **Discard**; do not auto-apply. Strip KYC blobs and passwords. Clear on successful submit. Create uses entity key `new`; edit keys by resource id so two records do not share a draft. |
+| **Leave** | Dirty Cancel confirms. `beforeunload` warns on refresh/tab close. Cancel does **not** clear the session snapshot. |
+| **Customer Save draft** | Fineract draft customer is separate from session resume. Offer **Save draft** once save-progress validation passes (not only on Preview), because photos cannot go in `sessionStorage`. |
+
+All `FormWizard` screens use this pattern: create customer, loan application (create), loan / savings / share / deposit products, charges, approval workflows, users, reports, bulk journal construct, and SMS campaigns. Loan application **edit** stays on the CBS record and does not restore a session snapshot.
+
+Implementation: `apps/web/src/components/composites/form-wizard.tsx`, `use-wizard-session-draft.ts`, `apps/web/src/lib/wizard-session-draft.ts`.
 
 ## Field composites (planned / in progress)
 
@@ -338,6 +354,7 @@ New transaction forms **must** follow this pattern. Prefer extending existing sh
 |-----|-------|
 | [005](adr/005-ui-composites.md) | Composites-only in features |
 | [006](adr/006-form-sheet-pattern.md) | FormSheet |
+| [015](adr/015-wizard-session-drafts.md) | Wizard session drafts |
 | [010](adr/010-vercel-style-navigation.md) | Sidebar, Find, featured links |
 | [011](adr/011-data-tables-list-screens.md) | Data tables & list screens |
 | [012](adr/012-quick-create-client.md) | Quick Create / Create client |

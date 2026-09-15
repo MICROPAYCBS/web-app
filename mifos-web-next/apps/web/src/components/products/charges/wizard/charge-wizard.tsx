@@ -9,16 +9,22 @@
  */
 
 import { formatActionErrorMessage, upsertChargeSchema } from '@mifos/validation';
+import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
-import { toast } from 'sonner';
 import { createChargeAction, updateChargeAction } from '@/actions/charge';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import { isChargeTiersAllowed, penaltyDisabled } from '@/lib/fineract/charge-form-logic';
 import { chargeDetailPath, chargeListPath } from '@/lib/fineract/charge-paths';
+import { wizardDraftsEqual, wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { AppliesToStep } from './steps/applies-to-step';
 import { AmountSettingsStep } from './steps/amount-settings-step';
 import { PreviewStep } from './steps/preview-step';
@@ -32,9 +38,11 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'amount', label: 'Amount & settings' },
   { id: 'preview', label: 'Review' }
 ];
+const CHARGE_WIZARD_SESSION_VERSION = 1;
 
 export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const [draft, setDraft] = useState<ChargeWizardDraft>(initialDraft);
   const [stepId, setStepId] = useState('appliesTo');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
@@ -42,9 +50,30 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
+  const cancelHref =
+    mode === 'edit' && chargeId ? chargeDetailPath(chargeId) : chargeListPath();
+  const isSessionDraftDirty = useCallback(
+    (value: ChargeWizardDraft) => !wizardDraftsEqual(value, initialDraft),
+    [initialDraft]
+  );
+  const sessionDirty = useMemo(
+    () => !wizardDraftsEqual(draft, initialDraft),
+    [draft, initialDraft]
+  );
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: 'charge',
+    entityKey: mode === 'edit' && chargeId ? chargeId : 'new',
+    schemaVersion: CHARGE_WIZARD_SESSION_VERSION,
+    draft,
+    stepId,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(sessionDirty);
 
   useEffect(() => {
     if (penaltyDisabled(draft.chargeAppliesTo)) {
@@ -205,10 +234,12 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
           : await updateChargeAction(chargeId ?? '', actionPayload);
 
       if (!result.ok) {
-
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+        setSubmitError(
+          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
+        );
         return;
       }
+      sessionDraft.clear();
       toastCommandOutcome(result, { completed: mode === 'create' ? 'Charge created.' : 'Charge updated.', pending: mode === 'create' ? 'Charge created. sent for approval.' : 'Charge updated. sent for approval.' });
       const id = result.resourceId ?? chargeId;
       router.push(id ? chargeDetailPath(id) : chargeListPath());
@@ -222,8 +253,22 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
       ? 'Define a fee or penalty for loans, savings, deposits, or shares.'
       : (template.name ?? 'Update charge configuration.');
 
-  const cancelHref =
-    mode === 'edit' && chargeId ? chargeDetailPath(chargeId) : chargeListPath();
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setDraft(snapshot.draft);
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (sessionDirty) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push(cancelHref);
+  }
 
   const stepProps = { mode, template, draft, errors: stepErrors };
 
@@ -236,9 +281,23 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        banner={
+          <>
+            {sessionDraft.pendingSnapshot ? (
+              <WizardDraftRestoreBanner
+                onResume={handleResumeDraft}
+                onDiscard={sessionDraft.discard}
+              />
+            ) : null}
+            {submitError ? (
+              <FineractErrorAlert message={submitError} onRetry={handleSubmit} />
+            ) : null}
+          </>
+        }
         footer={
           <FormWizardFooter
             cancelHref={cancelHref}
+            onCancel={handleCancel}
             showBack={currentIndex > 0}
             onBack={goBack}
             backDisabled={pending}
@@ -264,9 +323,17 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
         ) : null}
 
         {isPreview ? (
-          <PreviewStep {...stepProps} submitError={submitError} />
+          <PreviewStep {...stepProps} />
         ) : null}
       </FormWizard>
+      <WizardLeaveConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        onConfirmLeave={() => {
+          setLeaveOpen(false);
+          router.push(cancelHref);
+        }}
+      />
     </PlatformRouteLayout>
   );
 }

@@ -17,12 +17,22 @@ import {
   type CreateClientPayload,
   type SaveDraftClientPayload
 } from '@mifos/validation';
-import { resolvePermission, useCan } from '@mifos/auth';
+import { resolvePermission, useCan, useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { addClientDatatableRowAction } from '@/actions/client-datatable';
-import { saveClientDraftAction, submitClientFromCreateAction } from '@/actions/clients';
+import {
+  fetchCreateClientWizardLookupsAction,
+  saveClientDraftAction,
+  submitClientFromCreateAction
+} from '@/actions/clients';
+import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
+import { LookupLoadError } from '@/components/composites/lookup-load-error';
+import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
+import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
+import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
+import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
 import {
   customerClassKycRequirements,
   customerClassNeedsKycStep,
@@ -35,7 +45,15 @@ import { FormWizard, type FormWizardStep } from '@/components/composites/form-wi
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { formatDatatableTableTitle } from '@/lib/fineract/client-datatable-utils';
+import {
+  CREATE_CLIENT_WIZARD_ID,
+  CREATE_CLIENT_WIZARD_SESSION_VERSION,
+  lookupErrorForCreateClientStep,
+  type CreateClientWizardLookupErrors,
+  type CreateClientWizardLookups
+} from '@/lib/fineract/create-client-wizard-lookups';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { wizardDraftsEqual, wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { mandatoryClientDatatableNames } from '@/lib/fineract/mandatory-client-datatables';
 import { AddressStep } from './steps/address-step';
 import { DatatableStep } from './steps/datatable-step';
@@ -64,6 +82,7 @@ import {
   parseSaveDraftClientPayload
 } from './build-create-client-raw';
 import type { CreateClientDraft, CreateClientWizardProps } from './types';
+import { sanitizeCreateClientSessionDraft } from './session-draft';
 import {
   CREATE_CLIENT_ADDRESS_STEP,
   CREATE_CLIENT_WIZARD_END_STEPS,
@@ -140,14 +159,12 @@ export function CreateClientWizard({
   initialTemplate,
   defaultOfficeId,
   defaultLegalFormId = LEGAL_FORM_PERSON,
-  addressFieldConfig,
   entityDatatableChecks = [],
-  incomeSourceOptions,
-  identifierDocumentTypes = [],
-  identifierIdentityTypeOptions = [],
-  contactTypeOptions = []
+  initialLookups,
+  initialLookupErrors = {}
 }: CreateClientWizardProps) {
   const router = useRouter();
+  const { user } = useSession();
   const canCreate = useCan(resolvePermission('clients.create'));
   const canCreateImage = useCan('CREATE_CLIENTIMAGE');
   const canCreateDocument = useCan('CREATE_DOCUMENT');
@@ -161,8 +178,52 @@ export function CreateClientWizard({
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [lastFailedAction, setLastFailedAction] = useState<'save' | 'submit' | null>(null);
   const [pending, startTransition] = useTransition();
   const [pendingMode, setPendingMode] = useState<'save' | 'submit' | null>(null);
+  const [lookups, setLookups] = useState<CreateClientWizardLookups>(initialLookups);
+  const [lookupErrors, setLookupErrors] = useState<CreateClientWizardLookupErrors>(
+    initialLookupErrors
+  );
+  const [lookupRetryPending, setLookupRetryPending] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+
+  const emptySessionDraft = useMemo(
+    () =>
+      sanitizeCreateClientSessionDraft(
+        emptyDraft(defaultOfficeId, initialSubmittedOnDate, defaultLegalFormId)
+      ),
+    [defaultLegalFormId, defaultOfficeId, initialSubmittedOnDate]
+  );
+  const sessionDirty = useMemo(
+    () =>
+      !wizardDraftsEqual(sanitizeCreateClientSessionDraft(draft), emptySessionDraft),
+    [draft, emptySessionDraft]
+  );
+  const isSessionDraftDirty = useCallback(
+    (value: CreateClientDraft) => !wizardDraftsEqual(value, emptySessionDraft),
+    [emptySessionDraft]
+  );
+  const leaveDirty = sessionDirty || Boolean(draft.kycPhoto || draft.kycSignature);
+  const sessionDraft = useWizardSessionDraft({
+    userId: user?.userId,
+    wizardId: CREATE_CLIENT_WIZARD_ID,
+    entityKey: 'new',
+    schemaVersion: CREATE_CLIENT_WIZARD_SESSION_VERSION,
+    draft,
+    stepId,
+    sanitize: sanitizeCreateClientSessionDraft,
+    isDirty: isSessionDraftDirty
+  });
+  useUnsavedWizardLeave(leaveDirty);
+
+  const {
+    addressFieldConfig,
+    incomeSourceOptions,
+    identifierDocumentTypes,
+    identifierIdentityTypeOptions,
+    contactTypeOptions
+  } = lookups;
 
   const legalFormId = draft.general.legalFormId ?? LEGAL_FORM_PERSON;
   const selectedCustomerClass = template.customerClassOptions?.find(
@@ -241,13 +302,25 @@ export function CreateClientWizard({
     if (resolvedStepId === 'preview') {
       return;
     }
+    const lookupError = lookupErrorForCreateClientStep(resolvedStepId, lookupErrors);
+    if (lookupError) {
+      return;
+    }
     const errors = validateStep(resolvedStepId, draft, template, validationContext);
     if (Object.keys(errors).length > 0) {
       markValidationAttempted(resolvedStepId);
       return;
     }
     goNext();
-  }, [resolvedStepId, draft, template, validationContext, goNext, markValidationAttempted]);
+  }, [
+    resolvedStepId,
+    lookupErrors,
+    draft,
+    template,
+    validationContext,
+    goNext,
+    markValidationAttempted
+  ]);
 
   const goToStep = useCallback(
     (targetStepId: string) => {
@@ -263,6 +336,10 @@ export function CreateClientWizard({
 
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = steps[i].id;
+        if (lookupErrorForCreateClientStep(stepToValidate, lookupErrors)) {
+          setStepId(stepToValidate);
+          return;
+        }
         const errors = validateStep(stepToValidate, draft, template, validationContext);
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
@@ -273,7 +350,7 @@ export function CreateClientWizard({
 
       setStepId(targetStepId);
     },
-    [currentIndex, draft, steps, template, validationContext, markValidationAttempted]
+    [currentIndex, draft, lookupErrors, steps, template, validationContext, markValidationAttempted]
   );
 
   function patchGeneral(patch: Partial<import('./types').ClientGeneralFormState>) {
@@ -407,6 +484,7 @@ export function CreateClientWizard({
 
   function handleSaveDraft() {
     setSubmitError(null);
+    setLastFailedAction('save');
     const invalidStep = findFirstInvalidSaveProgressStep(draft, template, validationContext);
     if (invalidStep) {
       markValidationAttempted(invalidStep.stepId);
@@ -429,10 +507,16 @@ export function CreateClientWizard({
             pending: 'Customer draft sent for approval.'
           })
         ) {
-          setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+          setLastFailedAction('save');
+          setSubmitError(
+            wizardSubmitRecoveryMessage(
+              formatActionErrorMessage(result.message, result.fieldErrors)
+            )
+          );
           return;
         }
 
+        sessionDraft.clear();
         if (result.clientId == null) {
           router.push('/clients');
           router.refresh();
@@ -455,6 +539,7 @@ export function CreateClientWizard({
 
   function handleSubmit() {
     setSubmitError(null);
+    setLastFailedAction('submit');
     const invalidStep = findFirstInvalidCreateClientStep(
       steps,
       draft,
@@ -479,15 +564,23 @@ export function CreateClientWizard({
       try {
         const result = await submitClientFromCreateAction(payload);
         if (!result.ok) {
-          setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
+          setLastFailedAction('submit');
+          setSubmitError(
+            wizardSubmitRecoveryMessage(
+              formatActionErrorMessage(result.message, result.fieldErrors)
+            )
+          );
           if (result.clientId != null) {
             await persistStagedKyc(String(result.clientId));
             toast.error(result.message);
+            sessionDraft.clear();
             router.push(`/clients/${result.clientId}`);
             router.refresh();
           }
           return;
         }
+
+        sessionDraft.clear();
 
         toastCommandOutcome(result, {
           completed: 'Customer submitted.',
@@ -538,6 +631,49 @@ export function CreateClientWizard({
     }
   }, [resolvedStepId, activeDatatable, activeMultiRowDatatable, includeKycStep]);
 
+  const retryLookups = useCallback(() => {
+    setLookupRetryPending(true);
+    startTransition(async () => {
+      try {
+        const result = await fetchCreateClientWizardLookupsAction();
+        if (!result.ok) {
+          setLookupErrors({
+            address: result.message,
+            income: result.message,
+            identifiers: result.message,
+            contact: result.message
+          });
+          return;
+        }
+        setLookups(result.data);
+        setLookupErrors(result.errors);
+      } finally {
+        setLookupRetryPending(false);
+      }
+    });
+  }, []);
+
+  function handleResumeDraft() {
+    const snapshot = sessionDraft.resume();
+    if (!snapshot) {
+      return;
+    }
+    setDraft({
+      ...snapshot.draft,
+      kycPhoto: undefined,
+      kycSignature: undefined
+    });
+    setStepId(snapshot.stepId);
+  }
+
+  function handleCancel() {
+    if (leaveDirty) {
+      setLeaveOpen(true);
+      return;
+    }
+    router.push('/clients');
+  }
+
   const previewValidationIssues = useMemo((): string[] => {
     const invalidStep = findFirstInvalidCreateClientStep(
       steps,
@@ -557,6 +693,10 @@ export function CreateClientWizard({
 
   const isPreview = resolvedStepId === 'preview';
   const showPreviewActions = isPreview && canCreate;
+  const showSaveDraft =
+    canCreate && findFirstInvalidSaveProgressStep(draft, template, validationContext) == null;
+  const currentLookupError = lookupErrorForCreateClientStep(resolvedStepId, lookupErrors);
+  const retryFailedSubmit = lastFailedAction === 'save' ? handleSaveDraft : handleSubmit;
 
   return (
     <PlatformRouteLayout>
@@ -567,21 +707,43 @@ export function CreateClientWizard({
       description="Complete each step to register a new customer."
       onStepClick={goToStep}
       invalidStepIds={invalidStepIdsForRail}
+      banner={
+        <>
+          {sessionDraft.pendingSnapshot ? (
+            <WizardDraftRestoreBanner
+              hint="Photo and signature are not kept until you save a draft."
+              onResume={handleResumeDraft}
+              onDiscard={sessionDraft.discard}
+            />
+          ) : null}
+          {submitError ? (
+            <FineractErrorAlert
+              message={submitError}
+              onRetry={retryFailedSubmit}
+            />
+          ) : null}
+        </>
+      }
       footer={
         <FormWizardFooter
           cancelHref="/clients"
+          onCancel={handleCancel}
           showBack={currentIndex > 0}
           onBack={goBack}
           backDisabled={pending}
-          secondaryLabel={showPreviewActions ? 'Save draft' : undefined}
-          onSecondary={showPreviewActions ? handleSaveDraft : undefined}
+          secondaryLabel={showSaveDraft ? 'Save draft' : undefined}
+          onSecondary={showSaveDraft ? handleSaveDraft : undefined}
           secondaryLoading={pending && pendingMode === 'save'}
           secondaryLoadingLabel="Saving…"
           primaryLabel={showPreviewActions ? 'Submit' : 'Next'}
           onPrimary={showPreviewActions ? handleSubmit : tryNext}
           primaryLoading={pending && pendingMode === 'submit'}
           primaryLoadingLabel="Submitting…"
-          primaryDisabled={isPreview && !showPreviewActions}
+          primaryDisabled={
+            (isPreview && !showPreviewActions) ||
+            Boolean(currentLookupError) ||
+            lookupRetryPending
+          }
         />
       }
     >
@@ -607,17 +769,26 @@ export function CreateClientWizard({
       ) : null}
 
       {resolvedStepId === 'contact' ? (
-        <ContactStep
+        <>
+          {currentLookupError ? (
+            <LookupLoadError message={currentLookupError} onRetry={retryLookups} />
+          ) : null}
+          <ContactStep
           draft={draft}
           errors={stepErrors}
           contactTypeOptions={contactTypeOptions}
           onDraftChange={patchGeneral}
           onContactsChange={(contacts) => setDraft((d) => ({ ...d, contacts }))}
         />
+        </>
       ) : null}
 
       {resolvedStepId === 'identifiers' ? (
-        <IdentifiersStep
+        <>
+          {currentLookupError ? (
+            <LookupLoadError message={currentLookupError} onRetry={retryLookups} />
+          ) : null}
+          <IdentifiersStep
           documentTypes={identifierDocumentTypes}
           identityTypeOptions={identifierIdentityTypeOptions}
           draft={draft}
@@ -626,16 +797,22 @@ export function CreateClientWizard({
             setDraft((d) => ({ ...d, clientIdentifiers }))
           }
         />
+        </>
       ) : null}
 
       {resolvedStepId === 'address' && template.isAddressEnabled ? (
-        <AddressStep
+        <>
+          {currentLookupError ? (
+            <LookupLoadError message={currentLookupError} onRetry={retryLookups} />
+          ) : null}
+          <AddressStep
           template={template}
           fieldConfig={addressFieldConfig}
           draft={draft}
           errors={stepErrors}
           onAddressesChange={(addresses) => setDraft((d) => ({ ...d, addresses }))}
         />
+        </>
       ) : null}
 
       {resolvedStepId === 'customer-profiling' ? (
@@ -657,11 +834,16 @@ export function CreateClientWizard({
       ) : null}
 
       {resolvedStepId === 'income-sources' ? (
-        <IncomeSourceStep
+        <>
+          {currentLookupError ? (
+            <LookupLoadError message={currentLookupError} onRetry={retryLookups} />
+          ) : null}
+          <IncomeSourceStep
           incomeSourceOptions={incomeSourceOptions}
           draft={draft}
           onIncomeSourcesChange={(incomeSources) => setDraft((d) => ({ ...d, incomeSources }))}
         />
+        </>
       ) : null}
 
       {resolvedStepId === 'compliance' ? (
@@ -722,7 +904,7 @@ export function CreateClientWizard({
         <PreviewStep
           template={template}
           draft={draft}
-          submitError={submitError}
+          submitError={null}
           validationIssues={previewValidationIssues}
           incomeSourceOptions={incomeSourceOptions}
           identifierDocumentTypes={identifierDocumentTypes}
@@ -730,6 +912,14 @@ export function CreateClientWizard({
         />
       ) : null}
     </FormWizard>
+      <WizardLeaveConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        onConfirmLeave={() => {
+          setLeaveOpen(false);
+          router.push('/clients');
+        }}
+      />
     </PlatformRouteLayout>
   );
 }

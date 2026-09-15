@@ -6,9 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAddressFieldConfig, FineractClientTemplate, FineractEntityDatatableCheck, FineractIncomeSourceOptions, ContactType } from '@mifos/api-client';
-import type { ClientAddressEntry, ClientContactInput, ClientIdentifierIdentityTypeOption, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
+import type { FineractClientTemplate, FineractEntityDatatableCheck } from '@mifos/api-client';
+import type { ClientAddressEntry, ClientContactInput, ClientIdentifierInput, ComplianceProfileInput, FamilyMemberInput, IncomeSourceInput } from '@mifos/validation';
 import type { StagedKycCapture } from '@/lib/clients/kyc-capture';
+import type {
+  CreateClientWizardLookupErrors,
+  CreateClientWizardLookups
+} from '@/lib/fineract/create-client-wizard-lookups';
 
 export type DatatableFormValues = Record<string, Record<string, unknown>>;
 export type MultiRowDatatableDraft = Record<string, Record<string, unknown>[]>;
@@ -72,10 +76,7 @@ export interface CreateClientWizardProps {
   defaultOfficeId?: number;
   /** Pre-select profile type (e.g. entity onboarding via `?profile=entity`). */
   defaultLegalFormId?: number;
-  addressFieldConfig: FineractAddressFieldConfig[];
   entityDatatableChecks?: FineractEntityDatatableCheck[];
-  incomeSourceOptions?: FineractIncomeSourceOptions;
-  identifierDocumentTypes?: { id: number; name: string }[];
-  identifierIdentityTypeOptions?: ClientIdentifierIdentityTypeOption[];
-  contactTypeOptions?: ContactType[];
+  initialLookups: CreateClientWizardLookups;
+  initialLookupErrors?: CreateClientWizardLookupErrors;
 }

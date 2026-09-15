@@ -29,10 +29,8 @@ export function BulkConstructReviewStep({
   currencies,
   offices,
   departments,
-  submitError,
   postResults
 }: BulkConstructStepProps & {
-  submitError: string | null;
   postResults: Array<
     | { rowIndex: number; ok: true; transactionId?: string; pending?: boolean }
     | { rowIndex: number; ok: false; message: string }
@@ -70,12 +68,6 @@ export function BulkConstructReviewStep({
         Review each constructed entry before posting. Entries are submitted one at a time; successful
         posts are kept even if a later row fails.
       </p>
-
-      {submitError ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {submitError}
-        </p>
-      ) : null}
 
       <DetailSection title="Shared template">
         <DetailFieldGrid>
