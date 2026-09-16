@@ -32,6 +32,9 @@ export function resolveCreateClientErrorField(
     if (trimmedParameter === 'clientNonPersonDetails.incorpValidityTillDate') {
       return 'incorpValidityTillDate';
     }
+    if (trimmedParameter === 'clientNonPersonDetails.incorpNumber') {
+      return 'incorpNumber';
+    }
     return trimmedParameter;
   }
   if (code && CREATE_CLIENT_ERROR_FIELD_BY_CODE[code]) {

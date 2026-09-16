@@ -226,7 +226,7 @@ export function BiodataStep({
         <DateField
           id="dateOfBirth"
           label={isPerson ? 'Date of birth' : 'Incorporation date'}
-          required={isPerson}
+          required
           value={g.dateOfBirth}
           onChange={(v) => {
             const nextEligibleClasses = filterEligibleCustomerClasses(template.customerClassOptions, {
@@ -294,7 +294,7 @@ export function BiodataStep({
             <TextField
               id="incorpNumber"
               label="Incorporation number"
-              optional
+              required
               value={nonPerson.incorpNumber ?? ''}
               onChange={(v) =>
                 onDraftChange({

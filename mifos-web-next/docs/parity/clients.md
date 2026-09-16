@@ -154,7 +154,7 @@ Legacy **Personal Data** tab content is delivered on **General** (`ClientGeneral
 | ID     | Section / feature                   | Notes                                                         | Status  |
 | ------ | ----------------------------------- | ------------------------------------------------------------- | ------- |
 | CL-070 | Personal information grid           | first/middle/last, DOB, gender, is staff, legal form          | Done (`/general`) |
-| CL-071 | Entity details                      | fullname, constitution, incorporation, business line, remarks | Done (`/general`) |
+| CL-071 | Entity details                      | fullname, constitution, incorporation date/number (required on create), business line, remarks | Done (`/general`) |
 | CL-072 | Account information                 | account no., external id, office, staff, default savings      | Done (`/general`) |
 | CL-073 | Contact information                 | mobile, email (addresses → CL-032)                            | Done (header + general) |
 | CL-074 | Classification                      | client type, classification                                   | Done (`/general`) |

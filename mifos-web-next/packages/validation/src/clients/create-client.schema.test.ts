@@ -85,7 +85,29 @@ describe('createClientSchema clientIdentifiers', () => {
     assert.equal(result.success, true);
   });
 
-  it('does not require identifiers, next of kin, or incorporation date for entity customers', () => {
+  it('does not require identifiers or next of kin for entity customers', () => {
+    const result = createClientSchema.safeParse({
+      officeId: 1,
+      staffId: 1,
+      legalFormId: LEGAL_FORM_ENTITY,
+      fullname: 'Acme Ltd',
+      mobileNo: '+256700000000',
+      customerClassId: 1,
+      dateOfBirth: '01 January 2010',
+      submittedOnDate: '01 July 2026',
+      dateFormat: 'dd MMMM yyyy',
+      locale: 'en',
+      clientNonPersonDetails: {
+        constitutionId: 1,
+        incorpNumber: 'PVT-12345'
+      },
+      clientIdentifiers: [],
+      familyMembers: []
+    });
+    assert.equal(result.success, true);
+  });
+
+  it('requires incorporation date and number for entity customers', () => {
     const result = createClientSchema.safeParse({
       officeId: 1,
       staffId: 1,
@@ -98,32 +120,23 @@ describe('createClientSchema clientIdentifiers', () => {
       locale: 'en',
       clientNonPersonDetails: {
         constitutionId: 1
-      },
-      clientIdentifiers: [],
-      familyMembers: []
-    });
-    assert.equal(result.success, true);
-  });
-
-  it('requires incorporation date when entity validity till date is set', () => {
-    const result = createClientSchema.safeParse({
-      officeId: 1,
-      staffId: 1,
-      legalFormId: LEGAL_FORM_ENTITY,
-      fullname: 'Acme Ltd',
-      mobileNo: '+256700000000',
-      customerClassId: 1,
-      submittedOnDate: '01 July 2026',
-      dateFormat: 'dd MMMM yyyy',
-      locale: 'en',
-      clientNonPersonDetails: {
-        constitutionId: 1,
-        incorpValidityTillDate: '01 January 2030'
       }
     });
     assert.equal(result.success, false);
     if (!result.success) {
-      assert.ok(result.error.issues.some((issue) => issue.path[0] === 'dateOfBirth'));
+      assert.ok(
+        result.error.issues.some(
+          (issue) => issue.path[0] === 'dateOfBirth' && issue.message === 'Incorporation date is required'
+        )
+      );
+      assert.ok(
+        result.error.issues.some(
+          (issue) =>
+            issue.path[0] === 'clientNonPersonDetails' &&
+            issue.path[1] === 'incorpNumber' &&
+            issue.message === 'Incorporation number is required'
+        )
+      );
     }
   });
 });

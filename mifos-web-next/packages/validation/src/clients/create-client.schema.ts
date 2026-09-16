@@ -196,15 +196,18 @@ export const createClientSchema = z
         path: ['dateOfBirth']
       });
     }
-    if (
-      data.legalFormId === LEGAL_FORM_ENTITY &&
-      data.clientNonPersonDetails.incorpValidityTillDate?.trim() &&
-      !data.dateOfBirth?.trim()
-    ) {
+    if (data.legalFormId === LEGAL_FORM_ENTITY && !data.dateOfBirth?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Incorporation date is required when validity till date is set',
+        message: 'Incorporation date is required',
         path: ['dateOfBirth']
+      });
+    }
+    if (data.legalFormId === LEGAL_FORM_ENTITY && !data.clientNonPersonDetails.incorpNumber?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Incorporation number is required',
+        path: ['clientNonPersonDetails', 'incorpNumber']
       });
     }
     if (!data.staffId) {

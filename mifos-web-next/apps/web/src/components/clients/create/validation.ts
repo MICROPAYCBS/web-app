@@ -145,15 +145,17 @@ export function validateBiodataStep(
     if (!g.clientNonPersonDetails?.constitutionId) {
       errors.constitutionId = 'Constitution is required';
     }
+    if (!g.dateOfBirth?.trim()) {
+      errors.dateOfBirth = 'Incorporation date is required';
+    }
     const nonPerson = g.clientNonPersonDetails;
-    if (nonPerson?.incorpNumber && nonPerson.incorpNumber.trim().length > 50) {
+    if (!nonPerson?.incorpNumber?.trim()) {
+      errors.incorpNumber = 'Incorporation number is required';
+    } else if (nonPerson.incorpNumber.trim().length > 50) {
       errors.incorpNumber = 'Incorporation number must be at most 50 characters';
     }
     if (nonPerson?.remarks && nonPerson.remarks.trim().length > ENTITY_CLIENT_REMARKS_MAX_LENGTH) {
       errors.remarks = `Remarks must be at most ${ENTITY_CLIENT_REMARKS_MAX_LENGTH} characters`;
-    }
-    if (nonPerson?.incorpValidityTillDate?.trim() && !g.dateOfBirth?.trim()) {
-      errors.dateOfBirth = 'Incorporation date is required when validity till date is set';
     }
   }
 
