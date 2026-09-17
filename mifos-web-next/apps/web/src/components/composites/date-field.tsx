@@ -50,6 +50,8 @@ export interface DateFieldProps {
   hint?: string;
   hintAriaLabel?: string;
   contextHelpSectionId?: string;
+  /** Visually hide the label (kept for screen readers). */
+  hideLabel?: boolean;
 }
 
 function addYears(date: Date, years: number): Date {
@@ -102,7 +104,8 @@ export function DateField({
   dateFormat,
   hint,
   hintAriaLabel,
-  contextHelpSectionId
+  contextHelpSectionId,
+  hideLabel = false
 }: DateFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = useMemo(() => fineractDateToDate(value, dateFormat), [value, dateFormat]);
@@ -132,10 +135,11 @@ export function DateField({
       <FormLabel
         htmlFor={id}
         required={required}
-        optional={optional ?? !required}
+        optional={hideLabel ? false : (optional ?? !required)}
         hint={hint}
         hintAriaLabel={hintAriaLabel}
         contextHelpSectionId={contextHelpSectionId}
+        className={hideLabel ? 'sr-only' : undefined}
       >
         {label}
       </FormLabel>

@@ -11,6 +11,7 @@
 import {
   Banknote,
   CalendarClock,
+  CalendarRange,
   Check,
   DoorClosed,
   HandCoins,
@@ -40,6 +41,7 @@ import {
 } from '@/components/clients/loan-account/actions/loan-account-lifecycle-dialog';
 import { LoanAccountInboundPaymentSheet } from '@/components/clients/loan-account/actions/loan-account-inbound-payment-sheet';
 import { LoanAccountRescheduleSheet } from '@/components/clients/loan-account/actions/loan-account-reschedule-sheet';
+import { LoanAccountVariableInstallmentsSheet } from '@/components/clients/loan-account/actions/loan-account-variable-installments-sheet';
 import { LoanAccountTransactionSheet } from '@/components/clients/loan-account/actions/loan-account-transaction-sheet';
 import { Button } from '@/components/ui/button';
 import {
@@ -82,6 +84,8 @@ export interface LoanAccountActionPermissions {
   close: boolean;
   closeAsRescheduled: boolean;
   reschedule: boolean;
+  editVariableInstallments: boolean;
+  resetVariableInstallments: boolean;
   recoveryPayment: boolean;
   undoWriteOff: boolean;
   assignOfficer: boolean;
@@ -124,6 +128,7 @@ export function LoanAccountActions({
   );
   const [addChargeOpen, setAddChargeOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [variableInstallmentsOpen, setVariableInstallmentsOpen] = useState(false);
   const [inboundPaymentKind, setInboundPaymentKind] = useState<LoanInboundPaymentKind | null>(null);
   const [inboundInitialMethod, setInboundInitialMethod] =
     useState<LoanInboundPaymentMethod>('savings');
@@ -159,6 +164,8 @@ export function LoanAccountActions({
     !hasLoanPendingCheckerAction(pendingCheckerActions, 'DISBURSE');
   const showModifyApplication =
     visibility.modifyApplication && permissions.modifyApplication;
+  const showEditInstallments =
+    visibility.editVariableInstallments && permissions.editVariableInstallments;
 
   const menuItems: MenuItem[] = [];
 
@@ -273,7 +280,8 @@ export function LoanAccountActions({
     });
   }
 
-  const hasPrimary = showApprove || showDisburse || showMakeRepayment || showModifyApplication;
+  const hasPrimary =
+    showApprove || showDisburse || showMakeRepayment || showModifyApplication || showEditInstallments;
   const hasMenu = menuItems.length > 0;
 
   if (!hasPrimary && !hasMenu) {
@@ -311,6 +319,12 @@ export function LoanAccountActions({
           <Button type="button" nativeButton={false} render={<Link href={clientAccountEditPath(clientId, 'loan', account.id)} />}>
             <Pencil className="mr-1 size-4" aria-hidden />
             Modify application
+          </Button>
+        ) : null}
+        {showEditInstallments ? (
+          <Button type="button" variant="outline" onClick={() => setVariableInstallmentsOpen(true)}>
+            <CalendarRange className="mr-1 size-4" aria-hidden />
+            Edit installments
           </Button>
         ) : null}
         {hasMenu ? (
@@ -401,6 +415,13 @@ export function LoanAccountActions({
         account={account}
         open={rescheduleOpen}
         onOpenChange={setRescheduleOpen}
+      />
+      <LoanAccountVariableInstallmentsSheet
+        clientId={clientId}
+        account={account}
+        canReset={permissions.resetVariableInstallments}
+        open={variableInstallmentsOpen}
+        onOpenChange={setVariableInstallmentsOpen}
       />
       <LoanAccountInboundPaymentSheet
         clientId={clientId}

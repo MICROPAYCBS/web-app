@@ -19,3 +19,4 @@ User-facing label for offices in detail views: **Branch** (route path unchanged 
 - Detail view shows command JSON fields and uses `GET /audits/{id}` (legacy parity).
 - Other pending-task tabs (client approval, loan approval, bulk loan reschedule, etc.) are not yet migrated.
 - Loan reschedule create / list / approve / reject is on the loan account **Reschedules** section (`GET/POST /rescheduleloans`).
+- Variable installment edits (pending loans only) use **Edit installments** (`POST /loans/{id}/schedule` with `calculateLoanSchedule` / `addVariations` / `deleteVariations`).

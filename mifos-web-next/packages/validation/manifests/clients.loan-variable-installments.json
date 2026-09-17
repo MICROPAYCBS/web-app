@@ -1,0 +1,19 @@
+{
+  "command": "clients.loan-variable-installments",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoanScheduleApiResource",
+    "org.apache.fineract.portfolio.loanaccount.serialization.VariableLoanScheduleFromApiJsonValidator",
+    "org.apache.fineract.portfolio.loanaccount.api.LoanApiConstants"
+  ],
+  "fields": {
+    "loanId": { "required": true, "type": "number" },
+    "amountKind": { "required": true, "type": "string" },
+    "dueDate": { "required": true, "type": "date" },
+    "modifiedDueDate": { "required": false, "type": "date" },
+    "principal": { "required": false, "type": "number" },
+    "installmentAmount": { "required": false, "type": "number" },
+    "modifiedinstallments": { "required": false, "type": "array" },
+    "newinstallments": { "required": false, "type": "array" },
+    "deletedinstallments": { "required": false, "type": "array" }
+  }
+}

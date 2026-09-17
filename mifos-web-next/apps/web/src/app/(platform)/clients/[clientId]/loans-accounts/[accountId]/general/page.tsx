@@ -112,6 +112,10 @@ function loanAccountPermissions(
 
     reschedule: can(session, resolvePermission('loans.reschedule.create')),
 
+    editVariableInstallments: can(session, resolvePermission('loans.schedule.adjust')),
+
+    resetVariableInstallments: can(session, resolvePermission('loans.schedule.reset')),
+
     recoveryPayment: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.recoverypayment),
 
     undoWriteOff: can(session, 'UNDOWRITEOFF_LOAN'),

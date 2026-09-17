@@ -240,6 +240,13 @@ export {
   type RejectLoanRescheduleRequestInput
 } from './clients/loan-reschedule.schema';
 export {
+  loanVariableScheduleExceptionsSchema,
+  loanVariableInstallmentAmountKindSchema,
+  LOAN_VARIABLE_SCHEDULE_CHANGE_REQUIRED_MESSAGE,
+  type LoanVariableScheduleExceptionsInput,
+  type LoanVariableInstallmentAmountKind
+} from './clients/loan-variable-installments.schema';
+export {
   createSystemDatatableSchema,
   updateSystemDatatableSchema,
   validateCreateSystemDatatable,

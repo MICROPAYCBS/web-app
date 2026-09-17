@@ -407,6 +407,11 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
     graceOnArrearsAgeing: toNumber(row.graceOnArrearsAgeing),
     inArrears: row.inArrears === true,
     chargedOff: row.chargedOff === true,
+    isVariableInstallmentsAllowed:
+      row.isVariableInstallmentsAllowed === true ||
+      row.isvariableInstallmentsAllowed === true,
+    minimumGap: toNumber(row.minimumGap),
+    maximumGap: toNumber(row.maximumGap),
     totalOverpaid: toNumber(row.totalOverpaid),
     summary,
     timeline: normalizeTimeline(row.timeline),

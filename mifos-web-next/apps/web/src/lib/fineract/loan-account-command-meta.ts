@@ -66,6 +66,7 @@ export interface LoanAccountActionVisibility {
   close: boolean;
   closeAsRescheduled: boolean;
   reschedule: boolean;
+  editVariableInstallments: boolean;
   recoveryPayment: boolean;
   undoWriteOff: boolean;
   assignOfficer: boolean;
@@ -90,6 +91,7 @@ export function loanAccountActionVisibility(account: {
   loanOfficerId?: number;
   loanOfficerName?: string;
   chargedOff?: boolean;
+  isVariableInstallmentsAllowed?: boolean;
   status: { code?: string; value?: string; active?: boolean };
 }): LoanAccountActionVisibility {
   const value = statusValue(account.status);
@@ -119,6 +121,7 @@ export function loanAccountActionVisibility(account: {
     close: active,
     closeAsRescheduled: active,
     reschedule: active && account.chargedOff !== true,
+    editVariableInstallments: pending && account.isVariableInstallmentsAllowed === true,
     recoveryPayment: closedWrittenOff,
     undoWriteOff: closedWrittenOff,
     assignOfficer: canManageOfficer && !hasOfficer,
