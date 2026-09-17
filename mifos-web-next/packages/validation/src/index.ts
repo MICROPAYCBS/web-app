@@ -231,6 +231,15 @@ export {
   type LoanAccountAddChargeInput
 } from './clients/loan-account-command.schema';
 export {
+  createLoanRescheduleRequestSchema,
+  approveLoanRescheduleRequestSchema,
+  rejectLoanRescheduleRequestSchema,
+  LOAN_RESCHEDULE_CHANGE_REQUIRED_MESSAGE,
+  type CreateLoanRescheduleRequestInput,
+  type ApproveLoanRescheduleRequestInput,
+  type RejectLoanRescheduleRequestInput
+} from './clients/loan-reschedule.schema';
+export {
   createSystemDatatableSchema,
   updateSystemDatatableSchema,
   validateCreateSystemDatatable,

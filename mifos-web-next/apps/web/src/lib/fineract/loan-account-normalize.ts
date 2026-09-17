@@ -406,6 +406,7 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
     graceOnInterestCharged: toNumber(row.graceOnInterestCharged),
     graceOnArrearsAgeing: toNumber(row.graceOnArrearsAgeing),
     inArrears: row.inArrears === true,
+    chargedOff: row.chargedOff === true,
     totalOverpaid: toNumber(row.totalOverpaid),
     summary,
     timeline: normalizeTimeline(row.timeline),

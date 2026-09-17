@@ -165,6 +165,7 @@ export interface FineractLoanAccountDetail {
   graceOnInterestCharged?: number;
   graceOnArrearsAgeing?: number;
   inArrears?: boolean;
+  chargedOff?: boolean;
   totalOverpaid?: number;
   summary?: FineractLoanAccountSummary;
   timeline?: FineractLoanAccountTimeline;

@@ -5,7 +5,8 @@
     "org.apache.fineract.portfolio.loanaccount.api.LoanChargesApiResource",
     "org.apache.fineract.portfolio.loanaccount.api.LoanTransactionsApiResource",
     "org.apache.fineract.portfolio.loanaccount.command.LoanApplicationApprovalCommandHandler",
-    "org.apache.fineract.portfolio.loanaccount.command.LoanApplicationDisbursementCommandHandler"
+    "org.apache.fineract.portfolio.loanaccount.command.LoanApplicationDisbursementCommandHandler",
+    "org.apache.fineract.portfolio.loanaccount.rescheduleloan.api.RescheduleLoansApiResource"
   ],
   "fields": {
     "approvedOnDate": { "required": true },

@@ -17,4 +17,5 @@ User-facing label for offices in detail views: **Branch** (route path unchanged 
 - List supports quick filter by user (client-side) and advanced search (date range, action, entity, resource ID).
 - Bulk and single approve, reject, and delete with confirmation dialogs.
 - Detail view shows command JSON fields and uses `GET /audits/{id}` (legacy parity).
-- Other pending-task tabs (client approval, loan approval, etc.) are not yet migrated.
+- Other pending-task tabs (client approval, loan approval, bulk loan reschedule, etc.) are not yet migrated.
+- Loan reschedule create / list / approve / reject is on the loan account **Reschedules** section (`GET/POST /rescheduleloans`).

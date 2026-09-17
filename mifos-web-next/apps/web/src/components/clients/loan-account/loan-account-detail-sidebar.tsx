@@ -10,6 +10,7 @@
 
 import {
   ArrowRightLeft,
+  CalendarClock,
   CalendarDays,
   Landmark,
   Receipt,
@@ -36,16 +37,23 @@ const SECTION_ICONS: Record<LoanAccountSectionId, LucideIcon> = {
   schedule: CalendarDays,
   transactions: ArrowRightLeft,
   charges: Receipt,
+  reschedules: CalendarClock,
   standingInstructions: Repeat,
   audit: ScrollText
 };
 
 export function loanAccountSectionIds(
   account: FineractLoanAccountDetail,
-  options?: { includeCashier?: boolean; standingInstructions?: boolean; canViewAudits?: boolean }
+  options?: {
+    includeCashier?: boolean;
+    standingInstructions?: boolean;
+    reschedules?: boolean;
+    canViewAudits?: boolean;
+  }
 ): string[] {
   const ids = loanAccountVisibleSections(account, {
-    standingInstructions: options?.standingInstructions
+    standingInstructions: options?.standingInstructions,
+    reschedules: options?.reschedules
   }).filter((id) => id !== 'audit' || options?.canViewAudits);
   return options?.includeCashier ? [...ids, LOAN_ACCOUNT_CASHIER_SECTION_ID] : ids;
 }
@@ -54,11 +62,13 @@ export function LoanAccountDetailSidebar({
   account,
   includeCashier = false,
   standingInstructions = false,
+  reschedules = false,
   canViewAudits = false
 }: {
   account: FineractLoanAccountDetail;
   includeCashier?: boolean;
   standingInstructions?: boolean;
+  reschedules?: boolean;
   canViewAudits?: boolean;
 }) {
   const sectionIds = useMemo(
@@ -66,9 +76,10 @@ export function LoanAccountDetailSidebar({
       loanAccountSectionIds(account, {
         includeCashier,
         standingInstructions,
+        reschedules,
         canViewAudits
       }),
-    [account, canViewAudits, includeCashier, standingInstructions]
+    [account, canViewAudits, includeCashier, reschedules, standingInstructions]
   );
 
   const navItems = useMemo(() => {
@@ -110,16 +121,28 @@ export function LoanAccountDetailSidebar({
 
 export function useLoanAccountDetailSection(
   account: FineractLoanAccountDetail,
-  options?: { includeCashier?: boolean; standingInstructions?: boolean; canViewAudits?: boolean }
+  options?: {
+    includeCashier?: boolean;
+    standingInstructions?: boolean;
+    reschedules?: boolean;
+    canViewAudits?: boolean;
+  }
 ) {
   const sectionIds = useMemo(
     () =>
       loanAccountSectionIds(account, {
         includeCashier: options?.includeCashier,
         standingInstructions: options?.standingInstructions,
+        reschedules: options?.reschedules,
         canViewAudits: options?.canViewAudits
       }),
-    [account, options?.canViewAudits, options?.includeCashier, options?.standingInstructions]
+    [
+      account,
+      options?.canViewAudits,
+      options?.includeCashier,
+      options?.reschedules,
+      options?.standingInstructions
+    ]
   );
   return useDetailSection(sectionIds, LOAN_ACCOUNT_DEFAULT_SECTION);
 }

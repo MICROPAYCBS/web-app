@@ -16,6 +16,7 @@ import {
   useLoanAccountDetailSection
 } from '@/components/clients/loan-account/loan-account-detail-sidebar';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
+import type { LoanAccountRescheduleContext } from '@/components/clients/loan-account/loan-account-reschedules-section';
 import type { LoanAccountSectionId } from '@/lib/fineract/loan-account-display';
 import { AccountCashierPanel } from '@/components/accounts/account-cashier-panel';
 import type { AccountCashierSnapshot } from '@/lib/fineract/cashier-display';
@@ -26,6 +27,7 @@ export function LoanAccountDetailPanel({
   cashierSnapshot = null,
   reportOrgName,
   standingInstructions = null,
+  reschedules = null,
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
@@ -36,6 +38,7 @@ export function LoanAccountDetailPanel({
   cashierSnapshot?: AccountCashierSnapshot | null;
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
+  reschedules?: LoanAccountRescheduleContext | null;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
@@ -43,9 +46,11 @@ export function LoanAccountDetailPanel({
 }) {
   const includeCashier = Boolean(cashierSnapshot);
   const standingInstructionsEnabled = standingInstructions != null;
+  const reschedulesEnabled = reschedules != null;
   const { activeSection } = useLoanAccountDetailSection(account, {
     includeCashier,
     standingInstructions: standingInstructionsEnabled,
+    reschedules: reschedulesEnabled,
     canViewAudits
   });
 
@@ -60,6 +65,7 @@ export function LoanAccountDetailPanel({
       clientId={clientId}
       reportOrgName={reportOrgName}
       standingInstructions={standingInstructions}
+      reschedules={reschedules}
       canViewAudits={canViewAudits}
       auditEntries={auditEntries}
       auditLoadFailed={auditLoadFailed}

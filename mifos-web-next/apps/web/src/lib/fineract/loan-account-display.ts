@@ -23,6 +23,7 @@ export const LOAN_ACCOUNT_SECTIONS = [
   { id: 'schedule', label: 'Repayment schedule' },
   { id: 'transactions', label: 'Transactions' },
   { id: 'charges', label: 'Charges' },
+  { id: 'reschedules', label: 'Reschedules' },
   { id: 'standingInstructions', label: 'Standing instructions' },
   { id: 'audit', label: 'Audit trail' }
 ] as const;
@@ -311,7 +312,7 @@ export function loanAccountStandingInstructionAtDisbursementLabel(
 
 export function loanAccountVisibleSections(
   account: FineractLoanAccountDetail,
-  options?: { standingInstructions?: boolean }
+  options?: { standingInstructions?: boolean; reschedules?: boolean }
 ): LoanAccountSectionId[] {
   return LOAN_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) => {
     if (id === 'schedule') {
@@ -322,6 +323,9 @@ export function loanAccountVisibleSections(
     }
     if (id === 'charges') {
       return true;
+    }
+    if (id === 'reschedules') {
+      return Boolean(options?.reschedules);
     }
     if (id === 'standingInstructions') {
       return Boolean(options?.standingInstructions) && loanAccountHasSummary(account);

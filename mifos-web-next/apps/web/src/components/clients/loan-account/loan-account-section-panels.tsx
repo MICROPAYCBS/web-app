@@ -24,6 +24,10 @@ import { LoanAccountSchedulePreview } from '@/components/clients/loan-account/lo
 import { LoanAccountStandingInstructionsSection } from '@/components/clients/loan-account/loan-account-standing-instructions-section';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
 import {
+  LoanAccountReschedulesSection,
+  type LoanAccountRescheduleContext
+} from '@/components/clients/loan-account/loan-account-reschedules-section';
+import {
   DetailField,
   DetailFieldGrid,
   DetailSection,
@@ -783,6 +787,7 @@ export function LoanAccountSectionPanel({
   clientId,
   reportOrgName,
   standingInstructions = null,
+  reschedules = null,
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
@@ -793,6 +798,7 @@ export function LoanAccountSectionPanel({
   clientId: string;
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
+  reschedules?: LoanAccountRescheduleContext | null;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
@@ -807,6 +813,14 @@ export function LoanAccountSectionPanel({
       return <LoanAccountTransactionsSection account={account} clientId={clientId} />;
     case 'charges':
       return <LoanAccountChargesSection account={account} />;
+    case 'reschedules':
+      return reschedules ? (
+        <LoanAccountReschedulesSection
+          account={account}
+          clientId={clientId}
+          context={reschedules}
+        />
+      ) : null;
     case 'audit':
       return canViewAudits ? (
         <LoanAccountAuditView

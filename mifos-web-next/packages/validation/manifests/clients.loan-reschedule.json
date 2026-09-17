@@ -1,0 +1,22 @@
+{
+  "command": "clients.loan-reschedule",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.rescheduleloan.api.RescheduleLoansApiResource",
+    "org.apache.fineract.portfolio.loanaccount.rescheduleloan.data.LoanRescheduleRequestDataValidatorImpl",
+    "org.apache.fineract.portfolio.loanaccount.rescheduleloan.RescheduleLoansApiConstants"
+  ],
+  "fields": {
+    "loanId": { "required": true, "type": "number" },
+    "rescheduleFromDate": { "required": true, "type": "date" },
+    "rescheduleReasonId": { "required": true, "type": "number" },
+    "submittedOnDate": { "required": true, "type": "date" },
+    "rescheduleReasonComment": { "required": false, "maxLength": 500 },
+    "adjustedDueDate": { "required": false, "type": "date" },
+    "graceOnPrincipal": { "required": false, "type": "number" },
+    "graceOnInterest": { "required": false, "type": "number" },
+    "extraTerms": { "required": false, "type": "number" },
+    "newInterestRate": { "required": false, "type": "number" },
+    "approvedOnDate": { "required": true, "type": "date" },
+    "rejectedOnDate": { "required": true, "type": "date" }
+  }
+}

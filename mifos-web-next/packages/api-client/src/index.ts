@@ -108,6 +108,13 @@ export type {
 } from './clients/deposit-account-types';
 
 export type { LoanScheduleData, LoanSchedulePeriod } from './clients/loan-schedule-types';
+export type {
+  FineractLoanRescheduleReasonOption,
+  FineractLoanRescheduleRequest,
+  FineractLoanRescheduleRequestStatus,
+  FineractLoanRescheduleRequestTimeline,
+  FineractLoanRescheduleTemplate
+} from './clients/loan-reschedule-types';
 
 export type {
   FineractCreateEntityDatatableCheckPayload,

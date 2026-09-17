@@ -154,6 +154,26 @@
       "UPDATE_LOAN"
     ]
   },
+  "loans.reschedule": {
+    "any": [
+      "READ_RESCHEDULELOAN"
+    ]
+  },
+  "loans.reschedule.create": {
+    "any": [
+      "CREATE_RESCHEDULELOAN"
+    ]
+  },
+  "loans.reschedule.approve": {
+    "any": [
+      "APPROVE_RESCHEDULELOAN"
+    ]
+  },
+  "loans.reschedule.reject": {
+    "any": [
+      "REJECT_RESCHEDULELOAN"
+    ]
+  },
   "products.loan": {
     "any": [
       "READ_LOANPRODUCT"

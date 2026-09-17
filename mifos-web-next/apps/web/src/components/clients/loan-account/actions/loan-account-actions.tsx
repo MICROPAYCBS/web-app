@@ -10,6 +10,7 @@
 
 import {
   Banknote,
+  CalendarClock,
   Check,
   DoorClosed,
   HandCoins,
@@ -38,6 +39,7 @@ import {
   type LoanAccountLifecycleDialogKind
 } from '@/components/clients/loan-account/actions/loan-account-lifecycle-dialog';
 import { LoanAccountInboundPaymentSheet } from '@/components/clients/loan-account/actions/loan-account-inbound-payment-sheet';
+import { LoanAccountRescheduleSheet } from '@/components/clients/loan-account/actions/loan-account-reschedule-sheet';
 import { LoanAccountTransactionSheet } from '@/components/clients/loan-account/actions/loan-account-transaction-sheet';
 import { Button } from '@/components/ui/button';
 import {
@@ -79,6 +81,7 @@ export interface LoanAccountActionPermissions {
   writeOff: boolean;
   close: boolean;
   closeAsRescheduled: boolean;
+  reschedule: boolean;
   recoveryPayment: boolean;
   undoWriteOff: boolean;
   assignOfficer: boolean;
@@ -120,6 +123,7 @@ export function LoanAccountActions({
     null
   );
   const [addChargeOpen, setAddChargeOpen] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [inboundPaymentKind, setInboundPaymentKind] = useState<LoanInboundPaymentKind | null>(null);
   const [inboundInitialMethod, setInboundInitialMethod] =
     useState<LoanInboundPaymentMethod>('savings');
@@ -216,6 +220,14 @@ export function LoanAccountActions({
       label: 'Waive interest',
       icon: HandCoins,
       onSelect: () => setTransactionCommand('waiveinterest')
+    });
+  }
+  if (visibility.reschedule && permissions.reschedule) {
+    menuItems.push({
+      id: 'reschedule',
+      label: 'Reschedule',
+      icon: CalendarClock,
+      onSelect: () => setRescheduleOpen(true)
     });
   }
   if (visibility.writeOff && permissions.writeOff) {
@@ -383,6 +395,12 @@ export function LoanAccountActions({
         currencyCode={currencyCode}
         open={addChargeOpen}
         onOpenChange={setAddChargeOpen}
+      />
+      <LoanAccountRescheduleSheet
+        clientId={clientId}
+        account={account}
+        open={rescheduleOpen}
+        onOpenChange={setRescheduleOpen}
       />
       <LoanAccountInboundPaymentSheet
         clientId={clientId}

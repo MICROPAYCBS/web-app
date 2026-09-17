@@ -54,6 +54,8 @@ import { listAuditTrailsForLoanAccount } from '@/lib/fineract/audit-trails';
 
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
 
+import { listLoanRescheduleRequests } from '@/lib/fineract/loan-reschedule';
+
 import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashier';
 
 import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
@@ -107,6 +109,8 @@ function loanAccountPermissions(
     close: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.close),
 
     closeAsRescheduled: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS['close-rescheduled']),
+
+    reschedule: can(session, resolvePermission('loans.reschedule.create')),
 
     recoveryPayment: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.recoverypayment),
 
@@ -248,6 +252,24 @@ export default async function LoanAccountGeneralPage({
     workflowRuntime
   );
 
+  const permissions = loanAccountPermissions(session);
+  const canReadReschedules = can(session, resolvePermission('loans.reschedule'));
+  const loanAccountId = result.data.id;
+  const rescheduleResult = canReadReschedules
+    ? await tryFineractLoad(
+        () => listLoanRescheduleRequests(loanAccountId),
+        'Could not load reschedule requests.'
+      )
+    : null;
+  const reschedules = canReadReschedules
+    ? {
+        requests: rescheduleResult?.ok ? rescheduleResult.data : [],
+        canCreate: permissions.reschedule,
+        canApprove: can(session, resolvePermission('loans.reschedule.approve')),
+        canReject: can(session, resolvePermission('loans.reschedule.reject'))
+      }
+    : null;
+
   return (
 
     <LoanAccountDetailView
@@ -256,7 +278,7 @@ export default async function LoanAccountGeneralPage({
 
       clientId={clientId}
 
-      permissions={loanAccountPermissions(session)}
+      permissions={permissions}
 
       repaymentPolicy={repaymentPolicy}
 
@@ -265,6 +287,8 @@ export default async function LoanAccountGeneralPage({
       reportOrgName={reportOrgName}
 
       standingInstructions={standingInstructions}
+
+      reschedules={reschedules}
 
       canViewAudits={canViewAudits}
 
