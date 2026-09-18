@@ -49,6 +49,7 @@ import {
 import { loanAccountSectionIds } from '@/components/clients/loan-account/loan-account-detail-sidebar';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
 import type { LoanAccountRescheduleContext } from '@/components/clients/loan-account/loan-account-reschedules-section';
+import type { LoanAccountRelatedRecordsContext } from '@/components/clients/loan-account/loan-account-related-context';
 import type { LoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy-paths';
 import type { LoanAccountPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
 import type { LoanPendingApprovalWorkflowContext } from '@/lib/fineract/loan-account-pending-checker';
@@ -63,6 +64,7 @@ export function LoanAccountDetailView({
   reportOrgName,
   standingInstructions = null,
   reschedules = null,
+  relatedRecords,
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
@@ -79,6 +81,7 @@ export function LoanAccountDetailView({
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
   reschedules?: LoanAccountRescheduleContext | null;
+  relatedRecords: LoanAccountRelatedRecordsContext;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
@@ -93,15 +96,27 @@ export function LoanAccountDetailView({
   const includeCashier = Boolean(cashierSnapshot);
   const standingInstructionsEnabled = standingInstructions != null;
   const reschedulesEnabled = reschedules != null;
+  const notesEnabled = relatedRecords.notes != null;
+  const canCreateInterestPause = Boolean(relatedRecords.interestPauses?.canManage);
   const showSidebar = useMemo(
     () =>
       loanAccountSectionIds(account, {
         includeCashier,
         standingInstructions: standingInstructionsEnabled,
         reschedules: reschedulesEnabled,
+        notes: notesEnabled,
+        canCreateInterestPause,
         canViewAudits
       }).length > 1,
-    [account, canViewAudits, includeCashier, reschedulesEnabled, standingInstructionsEnabled]
+    [
+      account,
+      canCreateInterestPause,
+      canViewAudits,
+      includeCashier,
+      notesEnabled,
+      reschedulesEnabled,
+      standingInstructionsEnabled
+    ]
   );
 
   return (
@@ -231,6 +246,8 @@ export function LoanAccountDetailView({
                 includeCashier={includeCashier}
                 standingInstructions={standingInstructionsEnabled}
                 reschedules={reschedulesEnabled}
+                notes={notesEnabled}
+                canCreateInterestPause={canCreateInterestPause}
                 canViewAudits={canViewAudits}
               />
             </Suspense>
@@ -246,6 +263,7 @@ export function LoanAccountDetailView({
           reportOrgName={reportOrgName}
           standingInstructions={standingInstructions}
           reschedules={reschedules}
+          relatedRecords={relatedRecords}
           canViewAudits={canViewAudits}
           auditEntries={auditEntries}
           auditLoadFailed={auditLoadFailed}

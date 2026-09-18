@@ -9,6 +9,7 @@
 import type {
   FineractLoanAccountDetail,
   FineractLoanAccountTransaction,
+  FineractLoanTermVariation,
   LoanAccountSummaryMatrixRow
 } from '@/lib/fineract/loan-account-types';
 import { LOAN_ACCOUNT_STATUS } from '@/lib/fineract/account-field-officer-config';
@@ -21,9 +22,18 @@ import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 export const LOAN_ACCOUNT_SECTIONS = [
   { id: 'summary', label: 'Summary' },
   { id: 'schedule', label: 'Repayment schedule' },
+  { id: 'originalSchedule', label: 'Original schedule' },
   { id: 'transactions', label: 'Transactions' },
   { id: 'charges', label: 'Charges' },
+  { id: 'overdueCharges', label: 'Overdue charges' },
+  { id: 'collateral', label: 'Collateral' },
+  { id: 'guarantors', label: 'Guarantors' },
+  { id: 'tranches', label: 'Tranches' },
+  { id: 'termVariations', label: 'Term variations' },
+  { id: 'delinquency', label: 'Delinquency' },
   { id: 'reschedules', label: 'Reschedules' },
+  { id: 'documents', label: 'Documents' },
+  { id: 'notes', label: 'Notes' },
   { id: 'standingInstructions', label: 'Standing instructions' },
   { id: 'audit', label: 'Audit trail' }
 ] as const;
@@ -281,9 +291,100 @@ export function loanAccountHasPayoutConfiguration(account: FineractLoanAccountDe
   return (
     Boolean(account.linkedAccount) ||
     (account.linkAccountId != null && account.linkAccountId > 0) ||
-    account.createStandingInstructionAtDisbursement === true ||
-    (account.disbursementDetails?.length ?? 0) > 0
+    account.createStandingInstructionAtDisbursement === true
   );
+}
+
+export function loanAccountIsActive(account: FineractLoanAccountDetail): boolean {
+  const value = account.status.value ?? '';
+  return value === 'Active' || account.status.active === true;
+}
+
+export function loanAccountHasOriginalSchedule(account: FineractLoanAccountDetail): boolean {
+  return Boolean(account.originalSchedule?.periods?.length);
+}
+
+export function loanAccountHasOverdueCharges(account: FineractLoanAccountDetail): boolean {
+  return (account.overdueCharges?.length ?? 0) > 0;
+}
+
+export function loanAccountIsMultiDisburse(account: FineractLoanAccountDetail): boolean {
+  return account.multiDisburseLoan === true;
+}
+
+export function loanAccountHasTermVariations(account: FineractLoanAccountDetail): boolean {
+  return (account.loanTermVariations?.length ?? 0) > 0;
+}
+
+export type LoanTermVariationGroupId =
+  | 'emiAmount'
+  | 'interestRate'
+  | 'dueDate'
+  | 'deleteInstallment'
+  | 'insertInstallment'
+  | 'principalAmount'
+  | 'graceOnInterest'
+  | 'graceOnPrincipal'
+  | 'extendRepaymentPeriod'
+  | 'interestRateForInstallment'
+  | 'interestPause'
+  | 'other';
+
+export const LOAN_TERM_VARIATION_GROUP_LABELS: Record<LoanTermVariationGroupId, string> = {
+  emiAmount: 'EMI amount',
+  interestRate: 'Interest rate',
+  dueDate: 'Due date',
+  deleteInstallment: 'Deleted installments',
+  insertInstallment: 'Inserted installments',
+  principalAmount: 'Principal amount',
+  graceOnInterest: 'Interest grace',
+  graceOnPrincipal: 'Principal grace',
+  extendRepaymentPeriod: 'Extended repayment period',
+  interestRateForInstallment: 'Interest rate from installment',
+  interestPause: 'Interest pauses',
+  other: 'Other variations'
+};
+
+export function loanTermVariationGroupId(
+  variation: FineractLoanTermVariation
+): LoanTermVariationGroupId {
+  const value = variation.termType?.value ?? '';
+  switch (value) {
+    case 'emiAmount':
+    case 'interestRate':
+    case 'dueDate':
+    case 'deleteInstallment':
+    case 'insertInstallment':
+    case 'principalAmount':
+    case 'graceOnInterest':
+    case 'graceOnPrincipal':
+    case 'extendRepaymentPeriod':
+    case 'interestRateForInstallment':
+    case 'interestPause':
+      return value;
+    default:
+      return 'other';
+  }
+}
+
+export function groupLoanTermVariations(
+  variations: FineractLoanTermVariation[]
+): Array<{ id: LoanTermVariationGroupId; label: string; rows: FineractLoanTermVariation[] }> {
+  const buckets = new Map<LoanTermVariationGroupId, FineractLoanTermVariation[]>();
+  for (const variation of variations) {
+    const id = loanTermVariationGroupId(variation);
+    const existing = buckets.get(id);
+    if (existing) {
+      existing.push(variation);
+    } else {
+      buckets.set(id, [variation]);
+    }
+  }
+  return Array.from(buckets.entries()).map(([id, rows]) => ({
+    id,
+    label: LOAN_TERM_VARIATION_GROUP_LABELS[id],
+    rows
+  }));
 }
 
 export function loanAccountLinkedAccountLabel(
@@ -310,19 +411,47 @@ export function loanAccountStandingInstructionAtDisbursementLabel(
   return account.createStandingInstructionAtDisbursement === true ? 'Yes' : 'No';
 }
 
+export type LoanAccountSectionVisibilityOptions = {
+  standingInstructions?: boolean;
+  reschedules?: boolean;
+  notes?: boolean;
+  canCreateInterestPause?: boolean;
+};
+
 export function loanAccountVisibleSections(
   account: FineractLoanAccountDetail,
-  options?: { standingInstructions?: boolean; reschedules?: boolean }
+  options?: LoanAccountSectionVisibilityOptions
 ): LoanAccountSectionId[] {
   return LOAN_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) => {
     if (id === 'schedule') {
       return Boolean(account.repaymentSchedule?.periods?.length);
     }
+    if (id === 'originalSchedule') {
+      return loanAccountHasOriginalSchedule(account);
+    }
     if (id === 'transactions') {
       return (account.transactions?.length ?? 0) > 0 || loanAccountHasSummary(account);
     }
-    if (id === 'charges') {
+    if (id === 'charges' || id === 'collateral' || id === 'guarantors' || id === 'documents') {
       return true;
+    }
+    if (id === 'overdueCharges') {
+      return loanAccountHasOverdueCharges(account);
+    }
+    if (id === 'tranches') {
+      return loanAccountIsMultiDisburse(account);
+    }
+    if (id === 'termVariations') {
+      return (
+        loanAccountHasTermVariations(account) ||
+        (loanAccountIsActive(account) && Boolean(options?.canCreateInterestPause))
+      );
+    }
+    if (id === 'delinquency') {
+      return loanAccountIsActive(account);
+    }
+    if (id === 'notes') {
+      return Boolean(options?.notes);
     }
     if (id === 'reschedules') {
       return Boolean(options?.reschedules);

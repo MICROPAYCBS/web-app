@@ -17,6 +17,7 @@ import {
 } from '@/components/clients/loan-account/loan-account-detail-sidebar';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
 import type { LoanAccountRescheduleContext } from '@/components/clients/loan-account/loan-account-reschedules-section';
+import type { LoanAccountRelatedRecordsContext } from '@/components/clients/loan-account/loan-account-related-context';
 import type { LoanAccountSectionId } from '@/lib/fineract/loan-account-display';
 import { AccountCashierPanel } from '@/components/accounts/account-cashier-panel';
 import type { AccountCashierSnapshot } from '@/lib/fineract/cashier-display';
@@ -28,6 +29,7 @@ export function LoanAccountDetailPanel({
   reportOrgName,
   standingInstructions = null,
   reschedules = null,
+  relatedRecords,
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
@@ -39,6 +41,7 @@ export function LoanAccountDetailPanel({
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
   reschedules?: LoanAccountRescheduleContext | null;
+  relatedRecords: LoanAccountRelatedRecordsContext;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
@@ -51,6 +54,8 @@ export function LoanAccountDetailPanel({
     includeCashier,
     standingInstructions: standingInstructionsEnabled,
     reschedules: reschedulesEnabled,
+    notes: relatedRecords.notes != null,
+    canCreateInterestPause: Boolean(relatedRecords.interestPauses?.canManage),
     canViewAudits
   });
 
@@ -66,6 +71,7 @@ export function LoanAccountDetailPanel({
       reportOrgName={reportOrgName}
       standingInstructions={standingInstructions}
       reschedules={reschedules}
+      relatedRecords={relatedRecords}
       canViewAudits={canViewAudits}
       auditEntries={auditEntries}
       auditLoadFailed={auditLoadFailed}

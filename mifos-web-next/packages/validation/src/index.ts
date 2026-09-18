@@ -247,6 +247,18 @@ export {
   type LoanVariableInstallmentAmountKind
 } from './clients/loan-variable-installments.schema';
 export {
+  loanInterestPauseSchema,
+  loanDelinquencyPauseSchema,
+  loanDelinquencyResumeSchema,
+  loanTrancheRowSchema,
+  loanTrancheEditSchema,
+  type LoanInterestPauseInput,
+  type LoanDelinquencyPauseInput,
+  type LoanDelinquencyResumeInput,
+  type LoanTrancheRowInput,
+  type LoanTrancheEditInput
+} from './clients/loan-account-related.schema';
+export {
   createSystemDatatableSchema,
   updateSystemDatatableSchema,
   validateCreateSystemDatatable,

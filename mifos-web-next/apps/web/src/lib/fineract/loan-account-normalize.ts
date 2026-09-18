@@ -20,7 +20,11 @@ import type {
   FineractLoanAccountLinkedAccount,
   FineractLoanAccountSummary,
   FineractLoanAccountTimeline,
-  FineractLoanAccountTransaction
+  FineractLoanAccountTransaction,
+  FineractLoanInstallmentDelinquency,
+  FineractLoanOverdueCharge,
+  FineractLoanPledgedCollateral,
+  FineractLoanTermVariation
 } from '@/lib/fineract/loan-account-types';
 import { sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
 import { normalizeLoanScheduleData } from '@/lib/fineract/loan-schedule-normalize';
@@ -266,6 +270,111 @@ function normalizeDisbursementDetails(raw: unknown): FineractLoanAccountDisburse
   return details.length ? details : undefined;
 }
 
+function normalizeOverdueCharge(raw: unknown): FineractLoanOverdueCharge | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = Number(row.id);
+  const name = typeof row.name === 'string' ? row.name : undefined;
+  if (!Number.isFinite(id) || !name) {
+    return null;
+  }
+  return {
+    id,
+    name,
+    penalty: row.penalty === true,
+    chargeTimeType: normalizeEnumOption(row.chargeTimeType),
+    chargeCalculationType: normalizeEnumOption(row.chargeCalculationType),
+    amount: toNumber(row.amount)
+  };
+}
+
+function normalizeTermVariation(raw: unknown): FineractLoanTermVariation | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = toNumber(row.id);
+  const termType = normalizeEnumOption(row.termType);
+  const termVariationApplicableFrom = normalizeDateField(row.termVariationApplicableFrom);
+  const dateValue = normalizeDateField(row.dateValue);
+  const decimalValue = toNumber(row.decimalValue);
+  if (
+    id == null &&
+    !termType &&
+    !termVariationApplicableFrom &&
+    !dateValue &&
+    decimalValue == null
+  ) {
+    return null;
+  }
+  return {
+    id: id != null && Number.isFinite(id) ? id : undefined,
+    termType,
+    termVariationApplicableFrom,
+    dateValue,
+    decimalValue,
+    isSpecificToInstallment: row.isSpecificToInstallment === true
+  };
+}
+
+function normalizePledgedCollateral(raw: unknown): FineractLoanPledgedCollateral | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const id = toNumber(row.id);
+  const clientCollateralId = toNumber(row.clientCollateralId);
+  const quantity = toNumber(row.quantity);
+  const total = toNumber(row.total);
+  const totalCollateral = toNumber(row.totalCollateral);
+  if (
+    id == null &&
+    clientCollateralId == null &&
+    quantity == null &&
+    total == null &&
+    totalCollateral == null
+  ) {
+    return null;
+  }
+  return {
+    id: id != null && Number.isFinite(id) ? id : undefined,
+    clientCollateralId,
+    quantity,
+    total,
+    totalCollateral
+  };
+}
+
+function normalizeInstallmentDelinquency(raw: unknown): FineractLoanInstallmentDelinquency | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const classification =
+    typeof row.classification === 'string'
+      ? row.classification
+      : typeof (row.delinquencyRange as Record<string, unknown> | undefined)?.classification ===
+          'string'
+        ? ((row.delinquencyRange as Record<string, unknown>).classification as string)
+        : undefined;
+  const minimumAgeDays = toNumber(row.minimumAgeDays);
+  const amount = toNumber(row.amount);
+  if (!classification && minimumAgeDays == null && amount == null) {
+    return null;
+  }
+  return { classification, minimumAgeDays, amount };
+}
+
+function mapArray<T>(raw: unknown, map: (item: unknown) => T | null): T[] | undefined {
+  if (!Array.isArray(raw)) {
+    return undefined;
+  }
+  const items = raw.map(map).filter((item): item is T => item != null);
+  return items.length ? items : undefined;
+}
+
 function normalizeCharge(raw: unknown): FineractLoanAccountCharge | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -326,7 +435,11 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
     delinquentRaw && typeof delinquentRaw === 'object'
       ? {
           pastDueDays: toNumber((delinquentRaw as Record<string, unknown>).pastDueDays),
-          delinquentDays: toNumber((delinquentRaw as Record<string, unknown>).delinquentDays)
+          delinquentDays: toNumber((delinquentRaw as Record<string, unknown>).delinquentDays),
+          installmentLevelDelinquency: mapArray(
+            (delinquentRaw as Record<string, unknown>).installmentLevelDelinquency,
+            normalizeInstallmentDelinquency
+          )
         }
       : undefined;
 
@@ -423,6 +536,11 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
     linkedAccount,
     linkAccountId,
     createStandingInstructionAtDisbursement,
-    disbursementDetails
+    disbursementDetails,
+    multiDisburseLoan: row.multiDisburseLoan === true,
+    overdueCharges: mapArray(row.overdueCharges, normalizeOverdueCharge),
+    loanTermVariations: mapArray(row.loanTermVariations, normalizeTermVariation),
+    originalSchedule: normalizeLoanScheduleData(row.originalSchedule),
+    collateral: mapArray(row.collateral, normalizePledgedCollateral)
   };
 }

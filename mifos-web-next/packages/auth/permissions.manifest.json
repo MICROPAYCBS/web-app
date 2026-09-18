@@ -184,6 +184,81 @@
       "DELETESCHEDULEEXCEPTIONS_LOAN"
     ]
   },
+  "loans.notes": {
+    "any": [
+      "READ_LOANNOTE"
+    ]
+  },
+  "loans.notes.create": {
+    "any": [
+      "CREATE_LOANNOTE"
+    ]
+  },
+  "loans.notes.update": {
+    "any": [
+      "UPDATE_LOANNOTE"
+    ]
+  },
+  "loans.notes.delete": {
+    "any": [
+      "DELETE_LOANNOTE"
+    ]
+  },
+  "loans.documents": {
+    "any": [
+      "READ_DOCUMENT"
+    ]
+  },
+  "loans.documents.create": {
+    "any": [
+      "CREATE_DOCUMENT"
+    ]
+  },
+  "loans.documents.delete": {
+    "any": [
+      "DELETE_DOCUMENT"
+    ]
+  },
+  "loans.collateral": {
+    "any": [
+      "READ_COLLATERAL"
+    ]
+  },
+  "loans.collateral.create": {
+    "any": [
+      "CREATE_COLLATERAL"
+    ]
+  },
+  "loans.guarantors": {
+    "any": [
+      "READ_GUARANTOR"
+    ]
+  },
+  "loans.guarantors.create": {
+    "any": [
+      "CREATE_GUARANTOR"
+    ]
+  },
+  "loans.guarantors.update": {
+    "any": [
+      "UPDATE_GUARANTOR"
+    ]
+  },
+  "loans.guarantors.delete": {
+    "any": [
+      "DELETE_GUARANTOR"
+    ]
+  },
+  "loans.interest-pause.create": {
+    "any": [
+      "CREATE_INTEREST_PAUSE"
+    ]
+  },
+  "loans.delinquency-action.create": {
+    "any": [
+      "CREATE_DELINQUENCY_ACTION"
+    ]
+  },
   "products.loan": {
     "any": [
       "READ_LOANPRODUCT"

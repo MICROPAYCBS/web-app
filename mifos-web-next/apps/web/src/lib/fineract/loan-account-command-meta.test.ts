@@ -18,6 +18,8 @@ describe('loanAccountActionVisibility', () => {
     });
     assert.equal(visibility.editVariableInstallments, true);
     assert.equal(visibility.reschedule, false);
+    assert.equal(visibility.addCollateral, true);
+    assert.equal(visibility.addGuarantor, true);
   });
 
   it('hides installment editing after approval', () => {

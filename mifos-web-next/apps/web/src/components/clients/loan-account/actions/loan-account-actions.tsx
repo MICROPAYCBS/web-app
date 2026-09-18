@@ -29,6 +29,8 @@ import {
 import Link from 'next/link';
 import { Fragment, useState } from 'react';
 import { LoanAccountAddChargeSheet } from '@/components/clients/loan-account/actions/loan-account-add-charge-sheet';
+import { LoanAccountCollateralSheet } from '@/components/clients/loan-account/loan-account-collateral-section';
+import { LoanAccountGuarantorSheet } from '@/components/clients/loan-account/loan-account-guarantors-section';
 import { LoanAccountApproveSheet } from '@/components/clients/loan-account/actions/loan-account-approve-sheet';
 import { LoanAccountConfirmDialog } from '@/components/clients/loan-account/actions/loan-account-confirm-dialog';
 import {
@@ -78,6 +80,8 @@ export interface LoanAccountActionPermissions {
   undoDisbursal: boolean;
   makeRepayment: boolean;
   addCharge: boolean;
+  addCollateral: boolean;
+  addGuarantor: boolean;
   foreclosure: boolean;
   waiveInterest: boolean;
   writeOff: boolean;
@@ -127,6 +131,8 @@ export function LoanAccountActions({
     null
   );
   const [addChargeOpen, setAddChargeOpen] = useState(false);
+  const [addCollateralOpen, setAddCollateralOpen] = useState(false);
+  const [addGuarantorOpen, setAddGuarantorOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [variableInstallmentsOpen, setVariableInstallmentsOpen] = useState(false);
   const [inboundPaymentKind, setInboundPaymentKind] = useState<LoanInboundPaymentKind | null>(null);
@@ -219,6 +225,22 @@ export function LoanAccountActions({
       label: 'Add charge',
       icon: PlusCircle,
       onSelect: () => setAddChargeOpen(true)
+    });
+  }
+  if (visibility.addCollateral && permissions.addCollateral) {
+    menuItems.push({
+      id: 'add-collateral',
+      label: 'Add collateral',
+      icon: PlusCircle,
+      onSelect: () => setAddCollateralOpen(true)
+    });
+  }
+  if (visibility.addGuarantor && permissions.addGuarantor) {
+    menuItems.push({
+      id: 'add-guarantor',
+      label: 'Add guarantor',
+      icon: PlusCircle,
+      onSelect: () => setAddGuarantorOpen(true)
     });
   }
   if (visibility.waiveInterest && permissions.waiveInterest) {
@@ -409,6 +431,18 @@ export function LoanAccountActions({
         currencyCode={currencyCode}
         open={addChargeOpen}
         onOpenChange={setAddChargeOpen}
+      />
+      <LoanAccountCollateralSheet
+        clientId={clientId}
+        accountId={account.id}
+        open={addCollateralOpen}
+        onOpenChange={setAddCollateralOpen}
+      />
+      <LoanAccountGuarantorSheet
+        clientId={clientId}
+        accountId={account.id}
+        open={addGuarantorOpen}
+        onOpenChange={setAddGuarantorOpen}
       />
       <LoanAccountRescheduleSheet
         clientId={clientId}

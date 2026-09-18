@@ -8,7 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel, sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
+import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel, loanAccountVisibleSections, sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
 import type { FineractLoanAccountDetail, FineractLoanAccountTransaction } from '@/lib/fineract/loan-account-types';
 
 function sampleAccount(summary: FineractLoanAccountDetail['summary']): FineractLoanAccountDetail {
@@ -152,6 +152,30 @@ describe('loanAccountHasLoanTerms', () => {
       }),
       true
     );
+  });
+});
+
+describe('loanAccountVisibleSections', () => {
+  it('always includes documents, collateral, and guarantors', () => {
+    const ids = loanAccountVisibleSections(sampleAccount(undefined));
+    assert.ok(ids.includes('documents'));
+    assert.ok(ids.includes('collateral'));
+    assert.ok(ids.includes('guarantors'));
+    assert.equal(ids.includes('notes'), false);
+    assert.equal(ids.includes('delinquency'), true);
+  });
+
+  it('shows notes only when allowed', () => {
+    const ids = loanAccountVisibleSections(sampleAccount(undefined), { notes: true });
+    assert.ok(ids.includes('notes'));
+  });
+
+  it('shows tranches for multi-disburse loans', () => {
+    const ids = loanAccountVisibleSections({
+      ...sampleAccount(undefined),
+      multiDisburseLoan: true
+    });
+    assert.ok(ids.includes('tranches'));
   });
 });
 

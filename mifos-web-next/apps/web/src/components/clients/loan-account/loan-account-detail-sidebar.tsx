@@ -9,13 +9,21 @@
  */
 
 import {
+  AlertTriangle,
   ArrowRightLeft,
   CalendarClock,
   CalendarDays,
+  CalendarRange,
+  FileText,
   Landmark,
+  Layers,
+  NotebookPen,
   Receipt,
   Repeat,
   ScrollText,
+  Shield,
+  SlidersHorizontal,
+  Users,
   Wallet,
   type LucideIcon
 } from 'lucide-react';
@@ -35,9 +43,18 @@ export const LOAN_ACCOUNT_CASHIER_SECTION_ID = 'cashier';
 const SECTION_ICONS: Record<LoanAccountSectionId, LucideIcon> = {
   summary: Landmark,
   schedule: CalendarDays,
+  originalSchedule: CalendarRange,
   transactions: ArrowRightLeft,
   charges: Receipt,
+  overdueCharges: Receipt,
+  collateral: Shield,
+  guarantors: Users,
+  tranches: Layers,
+  termVariations: SlidersHorizontal,
+  delinquency: AlertTriangle,
   reschedules: CalendarClock,
+  documents: FileText,
+  notes: NotebookPen,
   standingInstructions: Repeat,
   audit: ScrollText
 };
@@ -48,12 +65,16 @@ export function loanAccountSectionIds(
     includeCashier?: boolean;
     standingInstructions?: boolean;
     reschedules?: boolean;
+    notes?: boolean;
+    canCreateInterestPause?: boolean;
     canViewAudits?: boolean;
   }
 ): string[] {
   const ids = loanAccountVisibleSections(account, {
     standingInstructions: options?.standingInstructions,
-    reschedules: options?.reschedules
+    reschedules: options?.reschedules,
+    notes: options?.notes,
+    canCreateInterestPause: options?.canCreateInterestPause
   }).filter((id) => id !== 'audit' || options?.canViewAudits);
   return options?.includeCashier ? [...ids, LOAN_ACCOUNT_CASHIER_SECTION_ID] : ids;
 }
@@ -63,12 +84,16 @@ export function LoanAccountDetailSidebar({
   includeCashier = false,
   standingInstructions = false,
   reschedules = false,
+  notes = false,
+  canCreateInterestPause = false,
   canViewAudits = false
 }: {
   account: FineractLoanAccountDetail;
   includeCashier?: boolean;
   standingInstructions?: boolean;
   reschedules?: boolean;
+  notes?: boolean;
+  canCreateInterestPause?: boolean;
   canViewAudits?: boolean;
 }) {
   const sectionIds = useMemo(
@@ -77,9 +102,19 @@ export function LoanAccountDetailSidebar({
         includeCashier,
         standingInstructions,
         reschedules,
+        notes,
+        canCreateInterestPause,
         canViewAudits
       }),
-    [account, canViewAudits, includeCashier, reschedules, standingInstructions]
+    [
+      account,
+      canCreateInterestPause,
+      canViewAudits,
+      includeCashier,
+      notes,
+      reschedules,
+      standingInstructions
+    ]
   );
 
   const navItems = useMemo(() => {
@@ -125,6 +160,8 @@ export function useLoanAccountDetailSection(
     includeCashier?: boolean;
     standingInstructions?: boolean;
     reschedules?: boolean;
+    notes?: boolean;
+    canCreateInterestPause?: boolean;
     canViewAudits?: boolean;
   }
 ) {
@@ -134,12 +171,16 @@ export function useLoanAccountDetailSection(
         includeCashier: options?.includeCashier,
         standingInstructions: options?.standingInstructions,
         reschedules: options?.reschedules,
+        notes: options?.notes,
+        canCreateInterestPause: options?.canCreateInterestPause,
         canViewAudits: options?.canViewAudits
       }),
     [
       account,
+      options?.canCreateInterestPause,
       options?.canViewAudits,
       options?.includeCashier,
+      options?.notes,
       options?.reschedules,
       options?.standingInstructions
     ]

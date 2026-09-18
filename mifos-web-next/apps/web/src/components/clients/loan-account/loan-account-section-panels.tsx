@@ -27,6 +27,14 @@ import {
   LoanAccountReschedulesSection,
   type LoanAccountRescheduleContext
 } from '@/components/clients/loan-account/loan-account-reschedules-section';
+import { LoanAccountNotesSection } from '@/components/clients/loan-account/loan-account-notes-section';
+import { LoanAccountDocumentsSection } from '@/components/clients/loan-account/loan-account-documents-section';
+import { LoanAccountCollateralSection } from '@/components/clients/loan-account/loan-account-collateral-section';
+import { LoanAccountGuarantorsSection } from '@/components/clients/loan-account/loan-account-guarantors-section';
+import { LoanAccountTranchesSection } from '@/components/clients/loan-account/loan-account-tranches-section';
+import { LoanAccountTermVariationsSection } from '@/components/clients/loan-account/loan-account-term-variations-section';
+import { LoanAccountDelinquencySection } from '@/components/clients/loan-account/loan-account-delinquency-section';
+import type { LoanAccountRelatedRecordsContext } from '@/components/clients/loan-account/loan-account-related-context';
 import {
   DetailField,
   DetailFieldGrid,
@@ -52,8 +60,8 @@ import { clientAccountGeneralPath, loanAccountTransactionPath } from '@/lib/fine
 import type {
   FineractLoanAccountCharge,
   FineractLoanAccountDetail,
-  FineractLoanAccountDisbursementDetail,
   FineractLoanAccountTransaction,
+  FineractLoanOverdueCharge,
   LoanAccountSummaryMatrixRow
 } from '@/lib/fineract/loan-account-types';
 import {
@@ -149,11 +157,9 @@ function LoanAccountPayoutSetupSection({ account }: { account: FineractLoanAccou
     return null;
   }
 
-  const currency = loanAccountCurrencyCode(account);
   const linkedLabel = loanAccountLinkedAccountLabel(account);
   const linkedAccountId = loanAccountLinkedAccountId(account);
   const standingInstructionLabel = loanAccountStandingInstructionAtDisbursementLabel(account);
-  const disbursementDetails = account.disbursementDetails ?? [];
   const clientId = account.clientId != null ? String(account.clientId) : undefined;
   const linkedHref =
     clientId && linkedAccountId
@@ -178,57 +184,7 @@ function LoanAccountPayoutSetupSection({ account }: { account: FineractLoanAccou
           {standingInstructionLabel}
         </DetailField>
       </DetailFieldGrid>
-
-      {disbursementDetails.length ? (
-        <div className="mt-4 overflow-x-auto">
-          <p className="mb-3 text-sm font-medium">Planned disbursements</p>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Expected date</TableHead>
-                <TableHead>Disbursed date</TableHead>
-                <TableHead className="text-right">Principal</TableHead>
-                <TableHead className="text-right">Net disbursal</TableHead>
-                <TableHead>Note</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {disbursementDetails.map((row, index) => (
-                <LoanAccountDisbursementDetailRow
-                  key={row.id ?? `disbursement-${index}`}
-                  row={row}
-                  currency={currency}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : null}
     </DetailSection>
-  );
-}
-
-function LoanAccountDisbursementDetailRow({
-  row,
-  currency
-}: {
-  row: FineractLoanAccountDisbursementDetail;
-  currency: string;
-}) {
-  return (
-    <TableRow>
-      <TableCell>{formatLoanAccountDate(row.expectedDisbursementDate)}</TableCell>
-      <TableCell>{formatLoanAccountDate(row.actualDisbursementDate)}</TableCell>
-      <TableCell className="text-right tabular-nums">
-        <MoneyValue amount={row.principal} currencyCode={currency} />
-      </TableCell>
-      <TableCell className="text-right tabular-nums">
-        <MoneyValue amount={row.netDisbursalAmount} currencyCode={currency} />
-      </TableCell>
-      <TableCell className="max-w-xs truncate text-muted-foreground">
-        {row.note?.trim() || '—'}
-      </TableCell>
-    </TableRow>
   );
 }
 
@@ -781,6 +737,64 @@ function LoanAccountChargesSection({ account }: { account: FineractLoanAccountDe
   );
 }
 
+function buildOverdueChargeColumns(account: FineractLoanAccountDetail): ColumnDef<FineractLoanOverdueCharge>[] {
+  const currency = loanAccountCurrencyCode(account);
+  return [
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {row.original.name}
+          {row.original.penalty ? (
+            <Badge variant="outline" className="ml-2">
+              Penalty
+            </Badge>
+          ) : null}
+        </span>
+      )
+    },
+    {
+      id: 'time',
+      header: 'Charge time',
+      cell: ({ row }) => enumOptionLabel(row.original.chargeTimeType) ?? '—'
+    },
+    {
+      id: 'calculation',
+      header: 'Calculation',
+      cell: ({ row }) => enumOptionLabel(row.original.chargeCalculationType) ?? '—'
+    },
+    {
+      id: 'amount',
+      header: () => <span className="block w-full text-right">Amount</span>,
+      cell: ({ row }) => (
+        <span className="block w-full text-right tabular-nums">
+          <MoneyValue amount={row.original.amount} currencyCode={currency} />
+        </span>
+      )
+    }
+  ];
+}
+
+function LoanAccountOverdueChargesSection({ account }: { account: FineractLoanAccountDetail }) {
+  const rows = account.overdueCharges ?? [];
+  const columns = useMemo(() => buildOverdueChargeColumns(account), [account]);
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel()
+  });
+  return (
+    <DetailSection title="Overdue charges">
+      <DataTable
+        table={table}
+        stickyHeader={false}
+        emptyMessage="No overdue charge definitions on this loan."
+      />
+    </DetailSection>
+  );
+}
+
 export function LoanAccountSectionPanel({
   section,
   account,
@@ -788,6 +802,7 @@ export function LoanAccountSectionPanel({
   reportOrgName,
   standingInstructions = null,
   reschedules = null,
+  relatedRecords,
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
@@ -799,6 +814,7 @@ export function LoanAccountSectionPanel({
   reportOrgName: string;
   standingInstructions?: LoanAccountStandingInstructionContext | null;
   reschedules?: LoanAccountRescheduleContext | null;
+  relatedRecords: LoanAccountRelatedRecordsContext;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
@@ -809,10 +825,82 @@ export function LoanAccountSectionPanel({
       return <LoanAccountSummarySection account={account} />;
     case 'schedule':
       return <LoanAccountScheduleSection account={account} reportOrgName={reportOrgName} />;
+    case 'originalSchedule':
+      return (
+        <LoanAccountSchedulePreview
+          schedule={account.originalSchedule ?? null}
+          layout="page"
+          canPreview={Boolean(account.originalSchedule)}
+          idleMessage="No original schedule is available for this loan."
+          exportContext={
+            account.originalSchedule
+              ? { account, reportOrgName }
+              : undefined
+          }
+        />
+      );
     case 'transactions':
       return <LoanAccountTransactionsSection account={account} clientId={clientId} />;
     case 'charges':
       return <LoanAccountChargesSection account={account} />;
+    case 'overdueCharges':
+      return <LoanAccountOverdueChargesSection account={account} />;
+    case 'collateral':
+      return (
+        <LoanAccountCollateralSection
+          account={account}
+          clientId={clientId}
+          context={relatedRecords.collateral}
+        />
+      );
+    case 'guarantors':
+      return (
+        <LoanAccountGuarantorsSection
+          account={account}
+          clientId={clientId}
+          context={relatedRecords.guarantors}
+        />
+      );
+    case 'tranches':
+      return (
+        <LoanAccountTranchesSection
+          account={account}
+          clientId={clientId}
+          canEdit={relatedRecords.canEditTranches}
+        />
+      );
+    case 'termVariations':
+      return (
+        <LoanAccountTermVariationsSection
+          account={account}
+          clientId={clientId}
+          interestPauses={relatedRecords.interestPauses}
+        />
+      );
+    case 'delinquency':
+      return relatedRecords.delinquency ? (
+        <LoanAccountDelinquencySection
+          account={account}
+          clientId={clientId}
+          context={relatedRecords.delinquency}
+        />
+      ) : null;
+    case 'notes':
+      return relatedRecords.notes ? (
+        <LoanAccountNotesSection
+          clientId={clientId}
+          accountId={account.id}
+          context={relatedRecords.notes}
+        />
+      ) : null;
+    case 'documents':
+      return (
+        <LoanAccountDocumentsSection
+          clientId={clientId}
+          accountId={account.id}
+          context={relatedRecords.documents}
+        />
+      );
     case 'reschedules':
       return reschedules ? (
         <LoanAccountReschedulesSection

@@ -114,6 +114,89 @@ export interface FineractLoanAccountCharge {
 export interface FineractLoanAccountDelinquent {
   pastDueDays?: number;
   delinquentDays?: number;
+  installmentLevelDelinquency?: FineractLoanInstallmentDelinquency[];
+}
+
+export interface FineractLoanInstallmentDelinquency {
+  classification?: string;
+  minimumAgeDays?: number;
+  amount?: number;
+}
+
+export interface FineractLoanOverdueCharge {
+  id: number;
+  name: string;
+  penalty?: boolean;
+  chargeTimeType?: FineractEnumOption;
+  chargeCalculationType?: FineractEnumOption;
+  amount?: number;
+}
+
+export interface FineractLoanTermVariation {
+  id?: number;
+  termType?: FineractEnumOption;
+  termVariationApplicableFrom?: number[] | string;
+  dateValue?: number[] | string;
+  decimalValue?: number;
+  isSpecificToInstallment?: boolean;
+}
+
+export interface FineractLoanPledgedCollateral {
+  id?: number;
+  clientCollateralId?: number;
+  quantity?: number;
+  total?: number;
+  totalCollateral?: number;
+}
+
+export interface LoanCollateralRecord {
+  id: number;
+  typeName?: string;
+  description?: string;
+  value?: number;
+  currencyCode?: string;
+}
+
+export interface LoanCollateralTypeOption {
+  id: number;
+  name: string;
+}
+
+export interface LoanGuarantorRecord {
+  id: number;
+  guarantorTypeId?: number;
+  guarantorTypeName?: string;
+  entityId?: number;
+  firstname?: string;
+  lastname?: string;
+  displayName?: string;
+  status?: string;
+}
+
+export interface LoanGuarantorTypeOption {
+  id: number;
+  value: string;
+}
+
+export interface LoanInterestPauseRecord {
+  id: number;
+  startDate?: number[] | string;
+  endDate?: number[] | string;
+}
+
+export interface LoanDelinquencyTagRecord {
+  id: number;
+  classification?: string;
+  addedOnDate?: number[] | string;
+  liftedOnDate?: number[] | string;
+}
+
+export interface LoanDelinquencyActionRecord {
+  id: number;
+  action?: string;
+  startDate?: number[] | string;
+  endDate?: number[] | string;
+  createdOn?: number[] | string;
 }
 
 export interface FineractLoanAccountLinkedAccount {
@@ -181,6 +264,11 @@ export interface FineractLoanAccountDetail {
   linkAccountId?: number;
   createStandingInstructionAtDisbursement: boolean;
   disbursementDetails?: FineractLoanAccountDisbursementDetail[];
+  multiDisburseLoan?: boolean;
+  overdueCharges?: FineractLoanOverdueCharge[];
+  loanTermVariations?: FineractLoanTermVariation[];
+  originalSchedule?: LoanScheduleData | null;
+  collateral?: FineractLoanPledgedCollateral[];
 }
 
 export interface LoanAccountSummaryMatrixRow {

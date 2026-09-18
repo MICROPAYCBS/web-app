@@ -60,6 +60,8 @@ export interface LoanAccountActionVisibility {
   undoDisbursal: boolean;
   makeRepayment: boolean;
   addCharge: boolean;
+  addCollateral: boolean;
+  addGuarantor: boolean;
   foreclosure: boolean;
   waiveInterest: boolean;
   writeOff: boolean;
@@ -115,6 +117,8 @@ export function loanAccountActionVisibility(account: {
     undoDisbursal: active,
     makeRepayment: active || overpaid,
     addCharge: pending || approved || active || overpaid,
+    addCollateral: pending,
+    addGuarantor: pending,
     foreclosure: active,
     waiveInterest: active,
     writeOff: active,

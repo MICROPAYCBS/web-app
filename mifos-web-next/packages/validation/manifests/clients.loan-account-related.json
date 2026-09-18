@@ -1,0 +1,29 @@
+{
+  "command": "clients.loan-account-related",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.note.api.NotesApiResource",
+    "org.apache.fineract.portfolio.collateral.api.CollateralsApiResource",
+    "org.apache.fineract.portfolio.collateral.serialization.CollateralCommandFromApiJsonDeserializer",
+    "org.apache.fineract.portfolio.guarantor.api.GuarantorsApiResource",
+    "org.apache.fineract.portfolio.interestpauses.api.LoanInterestPauseApiResource",
+    "org.apache.fineract.portfolio.interestpauses.data.InterestPauseRequestDto",
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
+    "org.apache.fineract.portfolio.delinquency.api.DelinquencyApiResourceSwagger",
+    "org.apache.fineract.portfolio.loanaccount.api.LoanDisbursementDetailApiResource"
+  ],
+  "fields": {
+    "note": { "required": true, "maxLength": 65535 },
+    "collateralTypeId": { "required": true, "type": "number" },
+    "value": { "required": true, "type": "number" },
+    "description": { "required": false, "maxLength": 500 },
+    "guarantorTypeId": { "required": true, "type": "number" },
+    "entityId": { "required": false, "type": "number" },
+    "firstname": { "required": false, "maxLength": 100 },
+    "lastname": { "required": false, "maxLength": 100 },
+    "startDate": { "required": true, "type": "date" },
+    "endDate": { "required": true, "type": "date" },
+    "expectedDisbursementDate": { "required": true, "type": "date" },
+    "principal": { "required": true, "type": "number" },
+    "disbursementData": { "required": true, "type": "array" }
+  }
+}
