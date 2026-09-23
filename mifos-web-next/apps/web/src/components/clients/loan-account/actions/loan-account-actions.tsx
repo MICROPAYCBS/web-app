@@ -31,6 +31,7 @@ import { Fragment, useState } from 'react';
 import { LoanAccountAddChargeSheet } from '@/components/clients/loan-account/actions/loan-account-add-charge-sheet';
 import { LoanAccountCollateralSheet } from '@/components/clients/loan-account/loan-account-collateral-section';
 import { LoanAccountGuarantorSheet } from '@/components/clients/loan-account/loan-account-guarantors-section';
+import { LoanAccountOriginatorSheet } from '@/components/clients/loan-account/loan-account-originators-section';
 import { LoanAccountApproveSheet } from '@/components/clients/loan-account/actions/loan-account-approve-sheet';
 import { LoanAccountConfirmDialog } from '@/components/clients/loan-account/actions/loan-account-confirm-dialog';
 import {
@@ -82,6 +83,7 @@ export interface LoanAccountActionPermissions {
   addCharge: boolean;
   addCollateral: boolean;
   addGuarantor: boolean;
+  attachOriginator: boolean;
   foreclosure: boolean;
   waiveInterest: boolean;
   writeOff: boolean;
@@ -133,6 +135,7 @@ export function LoanAccountActions({
   const [addChargeOpen, setAddChargeOpen] = useState(false);
   const [addCollateralOpen, setAddCollateralOpen] = useState(false);
   const [addGuarantorOpen, setAddGuarantorOpen] = useState(false);
+  const [attachOriginatorOpen, setAttachOriginatorOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [variableInstallmentsOpen, setVariableInstallmentsOpen] = useState(false);
   const [inboundPaymentKind, setInboundPaymentKind] = useState<LoanInboundPaymentKind | null>(null);
@@ -241,6 +244,14 @@ export function LoanAccountActions({
       label: 'Add guarantor',
       icon: PlusCircle,
       onSelect: () => setAddGuarantorOpen(true)
+    });
+  }
+  if (visibility.attachOriginator && permissions.attachOriginator) {
+    menuItems.push({
+      id: 'attach-originator',
+      label: 'Attach originator',
+      icon: PlusCircle,
+      onSelect: () => setAttachOriginatorOpen(true)
     });
   }
   if (visibility.waiveInterest && permissions.waiveInterest) {
@@ -443,6 +454,12 @@ export function LoanAccountActions({
         accountId={account.id}
         open={addGuarantorOpen}
         onOpenChange={setAddGuarantorOpen}
+      />
+      <LoanAccountOriginatorSheet
+        clientId={clientId}
+        accountId={account.id}
+        open={attachOriginatorOpen}
+        onOpenChange={setAttachOriginatorOpen}
       />
       <LoanAccountRescheduleSheet
         clientId={clientId}

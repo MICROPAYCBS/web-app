@@ -156,11 +156,12 @@ describe('loanAccountHasLoanTerms', () => {
 });
 
 describe('loanAccountVisibleSections', () => {
-  it('always includes documents, collateral, and guarantors', () => {
+  it('always includes documents, collateral, guarantors, and originators', () => {
     const ids = loanAccountVisibleSections(sampleAccount(undefined));
     assert.ok(ids.includes('documents'));
     assert.ok(ids.includes('collateral'));
     assert.ok(ids.includes('guarantors'));
+    assert.ok(ids.includes('originators'));
     assert.equal(ids.includes('notes'), false);
     assert.equal(ids.includes('delinquency'), true);
   });

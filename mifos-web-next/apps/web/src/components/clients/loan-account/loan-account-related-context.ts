@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractClientNote, FineractEntityDocument } from '@mifos/api-client';
+import type { FineractClientNote, FineractEntityDocument, LoanOriginatorListItem } from '@mifos/api-client';
 import type {
   LoanCollateralRecord,
   LoanDelinquencyActionRecord,
@@ -40,6 +40,12 @@ export type LoanAccountGuarantorsContext = {
   canDelete: boolean;
 };
 
+export type LoanAccountOriginatorsContext = {
+  items: LoanOriginatorListItem[];
+  canAttach: boolean;
+  canDetach: boolean;
+};
+
 export type LoanAccountDelinquencyContext = {
   tags: LoanDelinquencyTagRecord[];
   actions: LoanDelinquencyActionRecord[];
@@ -56,6 +62,7 @@ export type LoanAccountRelatedRecordsContext = {
   documents: LoanAccountDocumentsContext;
   collateral: LoanAccountCollateralContext;
   guarantors: LoanAccountGuarantorsContext;
+  originators: LoanAccountOriginatorsContext;
   delinquency: LoanAccountDelinquencyContext | null;
   interestPauses: LoanAccountInterestPausesContext | null;
   canEditTranches: boolean;

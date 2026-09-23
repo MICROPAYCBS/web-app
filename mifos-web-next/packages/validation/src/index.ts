@@ -252,11 +252,13 @@ export {
   loanDelinquencyResumeSchema,
   loanTrancheRowSchema,
   loanTrancheEditSchema,
+  loanOriginatorAttachSchema,
   type LoanInterestPauseInput,
   type LoanDelinquencyPauseInput,
   type LoanDelinquencyResumeInput,
   type LoanTrancheRowInput,
-  type LoanTrancheEditInput
+  type LoanTrancheEditInput,
+  type LoanOriginatorAttachInput
 } from './clients/loan-account-related.schema';
 export {
   createSystemDatatableSchema,

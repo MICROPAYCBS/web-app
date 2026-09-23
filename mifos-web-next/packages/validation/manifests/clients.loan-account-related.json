@@ -9,7 +9,9 @@
     "org.apache.fineract.portfolio.interestpauses.data.InterestPauseRequestDto",
     "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
     "org.apache.fineract.portfolio.delinquency.api.DelinquencyApiResourceSwagger",
-    "org.apache.fineract.portfolio.loanaccount.api.LoanDisbursementDetailApiResource"
+    "org.apache.fineract.portfolio.loanaccount.api.LoanDisbursementDetailApiResource",
+    "org.apache.fineract.portfolio.loanorigination.api.LoanOriginatorsApiResource",
+    "org.apache.fineract.portfolio.loanorigination.service.LoanOriginatorWritePlatformServiceImpl"
   ],
   "fields": {
     "note": { "required": true, "maxLength": 65535 },
@@ -24,6 +26,7 @@
     "endDate": { "required": true, "type": "date" },
     "expectedDisbursementDate": { "required": true, "type": "date" },
     "principal": { "required": true, "type": "number" },
-    "disbursementData": { "required": true, "type": "array" }
+    "disbursementData": { "required": true, "type": "array" },
+    "originatorId": { "required": true, "type": "number" }
   }
 }

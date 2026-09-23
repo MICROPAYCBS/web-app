@@ -31,6 +31,7 @@ import { LoanAccountNotesSection } from '@/components/clients/loan-account/loan-
 import { LoanAccountDocumentsSection } from '@/components/clients/loan-account/loan-account-documents-section';
 import { LoanAccountCollateralSection } from '@/components/clients/loan-account/loan-account-collateral-section';
 import { LoanAccountGuarantorsSection } from '@/components/clients/loan-account/loan-account-guarantors-section';
+import { LoanAccountOriginatorsSection } from '@/components/clients/loan-account/loan-account-originators-section';
 import { LoanAccountTranchesSection } from '@/components/clients/loan-account/loan-account-tranches-section';
 import { LoanAccountTermVariationsSection } from '@/components/clients/loan-account/loan-account-term-variations-section';
 import { LoanAccountDelinquencySection } from '@/components/clients/loan-account/loan-account-delinquency-section';
@@ -859,6 +860,14 @@ export function LoanAccountSectionPanel({
           account={account}
           clientId={clientId}
           context={relatedRecords.guarantors}
+        />
+      );
+    case 'originators':
+      return (
+        <LoanAccountOriginatorsSection
+          clientId={clientId}
+          accountId={account.id}
+          context={relatedRecords.originators}
         />
       );
     case 'tranches':

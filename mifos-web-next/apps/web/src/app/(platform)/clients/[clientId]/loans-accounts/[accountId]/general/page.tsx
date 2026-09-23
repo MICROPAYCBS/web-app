@@ -44,6 +44,7 @@ import { getLoanNotes } from '@/lib/fineract/loan-notes';
 import { getLoanDocuments } from '@/lib/fineract/loan-documents';
 import { getLoanCollaterals } from '@/lib/fineract/loan-collaterals';
 import { getLoanGuarantors } from '@/lib/fineract/loan-guarantors';
+import { getLoanAccountOriginators } from '@/lib/fineract/loan-account-originators';
 import { getLoanInterestPauses } from '@/lib/fineract/loan-interest-pauses';
 import {
   getLoanDelinquencyActions,
@@ -70,6 +71,7 @@ function loanAccountPermissions(
     addCharge: can(session, 'CREATE_LOANCHARGE'),
     addCollateral: can(session, resolvePermission('loans.collateral.create')),
     addGuarantor: can(session, resolvePermission('loans.guarantors.create')),
+    attachOriginator: can(session, resolvePermission('loans.originators.attach')),
     foreclosure: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.foreclosure),
     waiveInterest: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.waiveinterest),
     writeOff: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.writeoff),
@@ -148,6 +150,7 @@ export default async function LoanAccountGeneralPage({
     documentsResult,
     collateralsResult,
     guarantorsResult,
+    originatorsResult,
     delinquencyTagsResult,
     delinquencyActionsResult,
     interestPausesResult
@@ -172,6 +175,7 @@ export default async function LoanAccountGeneralPage({
       : Promise.resolve(null),
     tryFineractLoad(() => getLoanCollaterals(account.id), 'Could not load collateral.'),
     tryFineractLoad(() => getLoanGuarantors(account.id), 'Could not load guarantors.'),
+    tryFineractLoad(() => getLoanAccountOriginators(account.id), 'Could not load originators.'),
     isActive
       ? tryFineractLoad(() => getLoanDelinquencyTags(account.id), 'Could not load delinquency tags.')
       : Promise.resolve(null),
@@ -252,6 +256,14 @@ export default async function LoanAccountGeneralPage({
       canCreate: permissions.addGuarantor,
       canUpdate: can(session, resolvePermission('loans.guarantors.update')),
       canDelete: can(session, resolvePermission('loans.guarantors.delete'))
+    },
+    originators: {
+      items: originatorsResult?.ok ? originatorsResult.data : [],
+      canAttach:
+        permissions.attachOriginator && statusValue === 'Submitted and pending approval',
+      canDetach:
+        can(session, resolvePermission('loans.originators.detach')) &&
+        statusValue === 'Submitted and pending approval'
     },
     delinquency: isActive
       ? {

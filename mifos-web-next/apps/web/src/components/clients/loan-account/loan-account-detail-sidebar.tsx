@@ -24,6 +24,7 @@ import {
   Shield,
   SlidersHorizontal,
   Users,
+  Handshake,
   Wallet,
   type LucideIcon
 } from 'lucide-react';
@@ -49,6 +50,7 @@ const SECTION_ICONS: Record<LoanAccountSectionId, LucideIcon> = {
   overdueCharges: Receipt,
   collateral: Shield,
   guarantors: Users,
+  originators: Handshake,
   tranches: Layers,
   termVariations: SlidersHorizontal,
   delinquency: AlertTriangle,

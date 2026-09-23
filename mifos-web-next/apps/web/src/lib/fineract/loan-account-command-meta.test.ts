@@ -20,6 +20,7 @@ describe('loanAccountActionVisibility', () => {
     assert.equal(visibility.reschedule, false);
     assert.equal(visibility.addCollateral, true);
     assert.equal(visibility.addGuarantor, true);
+    assert.equal(visibility.attachOriginator, true);
   });
 
   it('hides installment editing after approval', () => {
@@ -28,5 +29,6 @@ describe('loanAccountActionVisibility', () => {
       status: { value: 'Approved' }
     });
     assert.equal(visibility.editVariableInstallments, false);
+    assert.equal(visibility.attachOriginator, false);
   });
 });

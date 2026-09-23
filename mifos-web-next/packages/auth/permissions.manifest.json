@@ -249,6 +249,16 @@
       "DELETE_GUARANTOR"
     ]
   },
+  "loans.originators.attach": {
+    "any": [
+      "ATTACH_LOAN_ORIGINATOR"
+    ]
+  },
+  "loans.originators.detach": {
+    "any": [
+      "DETACH_LOAN_ORIGINATOR"
+    ]
+  },
   "loans.interest-pause.create": {
     "any": [
       "CREATE_INTEREST_PAUSE"

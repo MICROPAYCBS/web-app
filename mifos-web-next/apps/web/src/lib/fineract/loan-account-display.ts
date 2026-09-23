@@ -28,6 +28,7 @@ export const LOAN_ACCOUNT_SECTIONS = [
   { id: 'overdueCharges', label: 'Overdue charges' },
   { id: 'collateral', label: 'Collateral' },
   { id: 'guarantors', label: 'Guarantors' },
+  { id: 'originators', label: 'Originators' },
   { id: 'tranches', label: 'Tranches' },
   { id: 'termVariations', label: 'Term variations' },
   { id: 'delinquency', label: 'Delinquency' },
@@ -432,7 +433,13 @@ export function loanAccountVisibleSections(
     if (id === 'transactions') {
       return (account.transactions?.length ?? 0) > 0 || loanAccountHasSummary(account);
     }
-    if (id === 'charges' || id === 'collateral' || id === 'guarantors' || id === 'documents') {
+    if (
+      id === 'charges' ||
+      id === 'collateral' ||
+      id === 'guarantors' ||
+      id === 'originators' ||
+      id === 'documents'
+    ) {
       return true;
     }
     if (id === 'overdueCharges') {

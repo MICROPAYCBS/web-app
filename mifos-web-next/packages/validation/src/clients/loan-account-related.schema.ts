@@ -33,8 +33,13 @@ export const loanTrancheEditSchema = z.object({
     .min(1, 'Add at least one expected disbursement.')
 });
 
+export const loanOriginatorAttachSchema = z.object({
+  originatorId: z.coerce.number().int().positive('Select an originator.')
+});
+
 export type LoanInterestPauseInput = z.infer<typeof loanInterestPauseSchema>;
 export type LoanDelinquencyPauseInput = z.infer<typeof loanDelinquencyPauseSchema>;
 export type LoanDelinquencyResumeInput = z.infer<typeof loanDelinquencyResumeSchema>;
 export type LoanTrancheRowInput = z.infer<typeof loanTrancheRowSchema>;
 export type LoanTrancheEditInput = z.infer<typeof loanTrancheEditSchema>;
+export type LoanOriginatorAttachInput = z.infer<typeof loanOriginatorAttachSchema>;

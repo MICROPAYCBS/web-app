@@ -16,6 +16,7 @@ import { clientNoteSchema } from './client-details.schema';
 import {
   loanDelinquencyPauseSchema,
   loanInterestPauseSchema,
+  loanOriginatorAttachSchema,
   loanTrancheEditSchema
 } from './loan-account-related.schema';
 
@@ -91,5 +92,15 @@ describe('loan related-record write schemas', () => {
       ]
     });
     assert.equal(result.success, true);
+  });
+
+  it('accepts an originator id for attach', () => {
+    const result = loanOriginatorAttachSchema.safeParse({ originatorId: 4 });
+    assert.equal(result.success, true);
+  });
+
+  it('rejects a missing originator id', () => {
+    const result = loanOriginatorAttachSchema.safeParse({});
+    assert.equal(result.success, false);
   });
 });
