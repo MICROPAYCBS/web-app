@@ -36,6 +36,7 @@ function baseInput(overrides: Partial<CreateLoanAccountInput> = {}): CreateLoanA
     charges: [],
     collateral: [],
     guarantors: [],
+    originators: [],
     createStandingInstructionAtDisbursement: false,
     ...overrides
   };
@@ -59,5 +60,31 @@ describe('buildLoanAccountPayload enableDownPayment', () => {
   it('omits enableDownPayment when undefined', () => {
     const payload = buildLoanAccountPayload(baseInput(), { clientId: 42 });
     assert.equal('enableDownPayment' in payload, false);
+  });
+});
+
+describe('buildLoanAccountPayload originators', () => {
+  it('includes originator ids on create', () => {
+    const payload = buildLoanAccountPayload(
+      baseInput({ originators: [{ id: 7 }, { id: 7 }, { id: 9 }] }),
+      { clientId: 42 }
+    );
+    assert.deepEqual(payload.originators, [{ id: 7 }, { id: 9 }]);
+  });
+
+  it('omits originators on modify', () => {
+    const payload = buildLoanAccountPayload(baseInput({ originators: [{ id: 7 }] }), {
+      clientId: 42,
+      forUpdate: true
+    });
+    assert.equal('originators' in payload, false);
+  });
+
+  it('omits originators on schedule preview', () => {
+    const payload = buildLoanAccountPayload(baseInput({ originators: [{ id: 7 }] }), {
+      clientId: 42,
+      forSchedulePreview: true
+    });
+    assert.equal('originators' in payload, false);
   });
 });

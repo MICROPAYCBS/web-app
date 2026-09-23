@@ -219,13 +219,23 @@ export const loanAccountChargesStepSchema = z.object({
 
 
 
-/** Step 4 — Collateral & guarantors (optional) */
+/** Step 4 — Collateral, guarantors & originators (optional) */
+
+export const loanApplicationOriginatorItemSchema = z.object({
+
+  id: z.coerce.number().int().positive('Select an originator.')
+
+});
+
+
 
 export const loanAccountSecurityStepSchema = z.object({
 
   collateral: z.array(loanCollateralItemSchema).default([]),
 
-  guarantors: z.array(loanGuarantorItemSchema).default([])
+  guarantors: z.array(loanGuarantorItemSchema).default([]),
+
+  originators: z.array(loanApplicationOriginatorItemSchema).default([])
 
 });
 
@@ -307,6 +317,8 @@ export type LoanAccountPayoutStepInput = z.infer<typeof loanAccountPayoutStepSch
 export type LoanCollateralItemInput = z.infer<typeof loanCollateralItemSchema>;
 
 export type LoanGuarantorItemInput = z.infer<typeof loanGuarantorItemSchema>;
+
+export type LoanApplicationOriginatorItemInput = z.infer<typeof loanApplicationOriginatorItemSchema>;
 
 
 

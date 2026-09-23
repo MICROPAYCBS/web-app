@@ -38,6 +38,7 @@ function baseInput(overrides: Partial<CreateLoanAccountInput> = {}): CreateLoanA
     transactionProcessingStrategyCode: 'mifos-standard-strategy',
     charges: [],
     collateral: [],
+    originators: [],
     guarantors: [],
     createStandingInstructionAtDisbursement: false,
     ...overrides

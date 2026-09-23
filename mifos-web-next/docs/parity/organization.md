@@ -79,7 +79,7 @@ User-facing label for offices: **Branches** (route path unchanged for legacy par
 ### Notes
 
 - Full CRUD for loan originators attached to loan accounts.
-- Attach/detach on a loan account is pending-only (loan **Actions** and the Originators sidebar). Create-loan wizard does not set originators.
+- Attach/detach on a loan account is pending-only (loan **Actions** and the Originators sidebar). Create-loan wizard can attach originators on the Security step (`originators[]` on `POST /loans`). Modify application does not update originators.
 - Create and edit use `FormSheet` side panels (`?create=1` on list, `?edit=1` on detail). Legacy `/create` and `/[id]/edit` routes redirect.
 - List table: ID, name, external ID (copy), status, originator type, channel type, delete action.
 - Form fields: name, external ID (create only), status, originator type, channel type.

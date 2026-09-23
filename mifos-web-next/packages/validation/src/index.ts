@@ -329,6 +329,7 @@ export {
   loanAccountChargeItemSchema,
   loanCollateralItemSchema,
   loanGuarantorItemSchema,
+  loanApplicationOriginatorItemSchema,
   type CreateLoanAccountInput,
   updateLoanAccountSchema,
   type UpdateLoanAccountInput,
@@ -341,6 +342,7 @@ export {
   type LoanAccountPayoutStepInput,
   type LoanCollateralItemInput,
   type LoanGuarantorItemInput,
+  type LoanApplicationOriginatorItemInput,
   type LoanAccountProductStepInput,
   type LoanAccountTermsStepInput
 } from './clients/create-loan-account.schema';

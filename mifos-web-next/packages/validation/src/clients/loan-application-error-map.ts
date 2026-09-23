@@ -154,7 +154,7 @@ export function loanApplicationStepForField(field: string): string | undefined {
     'interestCalculationPeriodType',
     'transactionProcessingStrategyCode'
   ]);
-  const security = new Set(['collateral', 'guarantors']);
+  const security = new Set(['collateral', 'guarantors', 'originators']);
   const payout = new Set([
     'linkAccountId',
     'createStandingInstructionAtDisbursement'
@@ -163,7 +163,7 @@ export function loanApplicationStepForField(field: string): string | undefined {
   if (field.startsWith('charges')) {
     return 'charges';
   }
-  if (field.startsWith('collateral') || field.startsWith('guarantors')) {
+  if (field.startsWith('collateral') || field.startsWith('guarantors') || field.startsWith('originators')) {
     return 'security';
   }
   if (core.has(field)) {

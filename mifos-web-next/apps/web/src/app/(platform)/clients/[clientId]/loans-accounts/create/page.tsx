@@ -33,6 +33,8 @@ import { getClient } from '@/lib/fineract/clients';
 import { getClientLoanAccountTemplate } from '@/lib/fineract/client-loan-accounts';
 import { emptyLoanAccountDraft } from '@/lib/fineract/client-loan-account-draft';
 import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
+import { listLoanOriginators } from '@/lib/fineract/loan-originators';
+import { tryFineractLoad } from '@/lib/fineract/safe-load';
 
 import { platformInset, platformScrollRegion } from '@/lib/platform-layout';
 
@@ -137,6 +139,14 @@ export default async function NewLoanAccountPage({
 
   const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
 
+  const originatorsResult = await tryFineractLoad(
+    () => listLoanOriginators(),
+    'Could not load originators.'
+  );
+  const originatorOptions = originatorsResult.ok
+    ? originatorsResult.data.filter((row) => row.status === 'ACTIVE')
+    : [];
+
   return (
 
     <CreateLoanAccountWizard
@@ -148,6 +158,8 @@ export default async function NewLoanAccountPage({
       initialTemplate={template}
 
       initialDraft={emptyLoanAccountDraft(defaultTransactionDate)}
+
+      originatorOptions={originatorOptions}
 
     />
 

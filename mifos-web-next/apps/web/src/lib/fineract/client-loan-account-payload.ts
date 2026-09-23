@@ -104,6 +104,24 @@ export function buildLoanAccountPayload(
     dateFormat: FINERACT_DATE_FORMAT
   };
 
+  if (
+    !options.forUpdate &&
+    !options.forSchedulePreview &&
+    input.originators &&
+    input.originators.length > 0
+  ) {
+    const seen = new Set<number>();
+    payload.originators = input.originators
+      .filter((item) => {
+        if (seen.has(item.id)) {
+          return false;
+        }
+        seen.add(item.id);
+        return true;
+      })
+      .map((item) => ({ id: item.id }));
+  }
+
   if (floating) {
     payload.isFloatingInterestRate = input.isFloatingInterestRate ?? true;
     payload.interestRateDifferential = input.interestRateDifferential;

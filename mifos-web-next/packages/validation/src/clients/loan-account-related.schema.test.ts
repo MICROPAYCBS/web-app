@@ -10,7 +10,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   loanCollateralItemSchema,
-  loanGuarantorItemSchema
+  loanGuarantorItemSchema,
+  loanApplicationOriginatorItemSchema
 } from './create-loan-account.schema';
 import { clientNoteSchema } from './client-details.schema';
 import {
@@ -102,5 +103,10 @@ describe('loan related-record write schemas', () => {
   it('rejects a missing originator id', () => {
     const result = loanOriginatorAttachSchema.safeParse({});
     assert.equal(result.success, false);
+  });
+
+  it('accepts an originator id on the loan application', () => {
+    const result = loanApplicationOriginatorItemSchema.safeParse({ id: 4 });
+    assert.equal(result.success, true);
   });
 });

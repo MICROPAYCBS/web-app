@@ -163,9 +163,26 @@ function mapCollateral(raw: unknown): CreateLoanAccountInput['collateral'] {
     .filter((item): item is NonNullable<typeof item> => item != null);
 }
 
+function mapOriginators(raw: unknown): CreateLoanAccountInput['originators'] {
+  return asArray(raw)
+    .map((item) => {
+      const row = asRecord(item);
+      if (!row) {
+        return null;
+      }
+      const id = asNumber(row.id);
+      if (id == null) {
+        return null;
+      }
+      return { id };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+}
+
 /**
  * Inverse of {@link buildLoanAccountPayload} for CREATE LOAN checker review.
  * Guarantors are not in the create body — they stay empty in the draft.
+ * Originators are in the create body when the applicant selected them.
  */
 export function loanAccountDraftFromCommandPayload(
   payload: Record<string, unknown>
@@ -219,7 +236,8 @@ export function loanAccountDraftFromCommandPayload(
     enableDownPayment: asBoolean(payload.enableDownPayment),
     charges: mapCharges(payload.charges),
     collateral: mapCollateral(payload.collateral),
-    guarantors: []
+    guarantors: [],
+    originators: mapOriginators(payload.originators)
   };
 }
 

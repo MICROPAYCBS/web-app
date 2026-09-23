@@ -217,6 +217,7 @@ export function loanAccountDraftFromEditTemplate(
     charges: mapChargesToDraft(row.charges),
     collateral: mapCollateralToDraft(row.collateral),
     guarantors: [],
+    originators: [],
     linkAccountId: toNumber(row.linkAccountId),
     createStandingInstructionAtDisbursement:
       row.createStandingInstructionAtDisbursement === true

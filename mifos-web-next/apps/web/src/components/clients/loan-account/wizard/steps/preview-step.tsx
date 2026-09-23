@@ -18,7 +18,7 @@
 
 
 
-import type { ClientLoanAccountTemplate } from '@mifos/api-client';
+import type { ClientLoanAccountTemplate, LoanOriginatorListItem } from '@mifos/api-client';
 
 import type { LoanAccountDraft } from '@/lib/fineract/client-loan-account-draft';
 
@@ -91,6 +91,8 @@ export function LoanAccountPreviewStep({
 
   draft,
 
+  originatorOptions = [],
+
   mode = 'wizard'
 
 }: {
@@ -98,6 +100,8 @@ export function LoanAccountPreviewStep({
   template: ClientLoanAccountTemplate;
 
   draft: LoanAccountDraft;
+
+  originatorOptions?: LoanOriginatorListItem[];
 
   /** `review` uses checker-oriented copy. */
 
@@ -378,9 +382,11 @@ export function LoanAccountPreviewStep({
         </DetailSection>
       ) : null}
 
-      {(draft.collateral?.length ?? 0) > 0 || (draft.guarantors?.length ?? 0) > 0 ? (
+      {(draft.collateral?.length ?? 0) > 0 ||
+      (draft.guarantors?.length ?? 0) > 0 ||
+      (draft.originators?.length ?? 0) > 0 ? (
 
-        <DetailSection title="Collateral & guarantors">
+        <DetailSection title="Collateral, guarantors & originators">
 
           {(draft.collateral?.length ?? 0) > 0 ? (
 
@@ -431,6 +437,32 @@ export function LoanAccountPreviewStep({
                     {item.entityId != null ? ` · ID ${item.entityId}` : ''}
 
                     {item.firstname ? ` · ${item.firstname} ${item.lastname ?? ''}` : ''}
+
+                  </li>
+
+                ))}
+
+              </ul>
+
+            </div>
+
+          ) : null}
+
+          {(draft.originators?.length ?? 0) > 0 ? (
+
+            <div className="mt-4">
+
+              <p className="mb-2 text-sm font-medium">Originators</p>
+
+              <ul className="space-y-2 text-sm">
+
+                {draft.originators?.map((item, index) => (
+
+                  <li key={`originator-preview-${index}`}>
+
+                    {originatorOptions.find((option) => option.id === item.id)?.name ??
+
+                      `Originator #${item.id}`}
 
                   </li>
 

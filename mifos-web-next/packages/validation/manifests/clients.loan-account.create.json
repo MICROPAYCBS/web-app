@@ -2,7 +2,9 @@
   "command": "clients.loan-account.create",
   "fineractSources": [
     "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
-    "org.apache.fineract.portfolio.loanaccount.data.LoanApplicationDataValidator"
+    "org.apache.fineract.portfolio.loanaccount.data.LoanApplicationDataValidator",
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResourceSwagger",
+    "org.apache.fineract.portfolio.loanaccount.service.LoanApplicationWritePlatformServiceJpaRepositoryImpl"
   ],
   "fields": {
     "productId": { "required": true },
@@ -25,6 +27,7 @@
     "collateral": { "required": false },
     "charges": { "required": false },
     "guarantors": { "required": false },
+    "originators": { "required": false },
     "linkAccountId": { "required": false },
     "createStandingInstructionAtDisbursement": { "required": false, "default": false }
   }

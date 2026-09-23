@@ -32,7 +32,8 @@ const SAMPLE_CREATE_PAYLOAD = {
   submittedOnDate: '11 July 2026',
   expectedDisbursementDate: '15 July 2026',
   charges: [{ chargeId: 9, amount: 10000 }],
-  collateral: [{ clientCollateralId: 5, quantity: 2 }]
+  collateral: [{ clientCollateralId: 5, quantity: 2 }],
+  originators: [{ id: 11 }]
 };
 
 describe('loan-command-review', () => {
@@ -59,5 +60,6 @@ describe('loan-command-review', () => {
     assert.equal(draft?.charges[0]?.chargeId, 9);
     assert.equal(draft?.collateral[0]?.collateralTypeId, 5);
     assert.equal(draft?.collateral[0]?.value, 2);
+    assert.equal(draft?.originators[0]?.id, 11);
   });
 });

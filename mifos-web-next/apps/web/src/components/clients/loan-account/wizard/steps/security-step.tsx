@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ClientLoanAccountTemplate } from '@mifos/api-client';
+import type { ClientLoanAccountTemplate, LoanOriginatorListItem } from '@mifos/api-client';
 import type {
   LoanAccountSecurityStepInput,
   LoanCollateralItemInput,
@@ -39,18 +39,26 @@ function emptyGuarantorRow(): LoanGuarantorItemInput {
   return { guarantorTypeId: 1, entityId: undefined, firstname: '', lastname: '' };
 }
 
+function emptyOriginatorRow(): { id: number } {
+  return { id: 0 };
+}
+
 export function LoanAccountSecurityStep({
   template,
   draft,
   errors,
   onChange,
-  principal = 0
+  principal = 0,
+  originatorOptions = [],
+  isEdit = false
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountSecurityStepInput;
   errors: LoanAccountStepErrors;
   onChange: (patch: Partial<LoanAccountSecurityStepInput>) => void;
   principal?: number;
+  originatorOptions?: LoanOriginatorListItem[];
+  isEdit?: boolean;
 }) {
   const collateralOptions = toSelectOptions(
     template.loanCollateralOptions?.map((option) => ({
@@ -61,6 +69,7 @@ export function LoanAccountSecurityStep({
 
   const collateral = draft.collateral ?? [];
   const guarantors = draft.guarantors ?? [];
+  const originators = draft.originators ?? [];
   const coverageTotal = collateralCoverageTotal(template, collateral);
   const currencyCode = template.currency?.code ?? 'USD';
 
@@ -81,7 +90,7 @@ export function LoanAccountSecurityStep({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Optionally add collateral and guarantors to support this loan application.
+        Optionally add collateral, guarantors, and originators to support this loan application.
       </p>
       <DetailSection title="Collateral">
         {coverageTotal != null && principal > 0 ? (
@@ -291,6 +300,93 @@ export function LoanAccountSecurityStep({
               <Plus className="size-4" />
               Add another
             </Button>
+          </div>
+        )}
+      </DetailSection>
+      <DetailSection title="Originators">
+        {isEdit ? (
+          <p className="text-sm text-muted-foreground">
+            Originators are attached on the loan after it is submitted. Use the loan Originators
+            section to attach or remove them while the application is pending.
+          </p>
+        ) : originators.length === 0 ? (
+          <EmptyState
+            title="No originators added"
+            description="Link an originator from the organization registry when this loan is sourced by a third party."
+            action={
+              originatorOptions.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onChange({ originators: [emptyOriginatorRow()] })}
+                >
+                  <Plus className="size-4" />
+                  Add originator
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <div className="space-y-4">
+            {originators.map((row, index) => {
+              const selectedIds = new Set(
+                originators
+                  .map((item, itemIndex) => (itemIndex === index ? undefined : item.id))
+                  .filter((id): id is number => id != null && id > 0)
+              );
+              const options = toSelectOptions(
+                originatorOptions.filter((option) => !selectedIds.has(option.id) || option.id === row.id)
+              );
+              return (
+                <div
+                  key={`originator-${index}`}
+                  className="grid gap-4 rounded-lg border border-border p-4 sm:grid-cols-[1fr_auto]"
+                >
+                  <SelectField
+                    label="Originator"
+                    required
+                    value={row.id > 0 ? String(row.id) : undefined}
+                    onValueChange={(value) => {
+                      const next = originators.map((item, itemIndex) =>
+                        itemIndex === index ? { id: value ? Number(value) : 0 } : item
+                      );
+                      onChange({ originators: next });
+                    }}
+                    options={options}
+                    placeholder="Select originator"
+                    error={errors[`originators.${index}.id`]}
+                    emptyMessage="No active originators available."
+                  />
+                  <div className="flex items-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        onChange({
+                          originators: originators.filter((_, rowIndex) => rowIndex !== index)
+                        })
+                      }
+                    >
+                      <Trash2 className="size-4" />
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+            {originatorOptions.length > originators.length ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onChange({ originators: [...originators, emptyOriginatorRow()] })}
+              >
+                <Plus className="size-4" />
+                Add another
+              </Button>
+            ) : null}
           </div>
         )}
       </DetailSection>

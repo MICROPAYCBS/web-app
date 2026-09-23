@@ -99,6 +99,8 @@ export function emptyLoanAccountDraft(defaultTransactionDate?: string): LoanAcco
 
     guarantors: [],
 
+    originators: [],
+
     createStandingInstructionAtDisbursement: false
 
   };

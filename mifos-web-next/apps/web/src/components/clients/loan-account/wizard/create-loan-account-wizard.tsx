@@ -7,7 +7,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import type { ClientLoanAccountTemplate } from '@mifos/api-client';
+import type { ClientLoanAccountTemplate, LoanOriginatorListItem } from '@mifos/api-client';
 import { formatActionErrorMessage, loanApplicationStepForField } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
@@ -65,7 +65,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
 ];
 const SCHEDULE_STEP_INDEX = WIZARD_STEPS.findIndex((step) => step.id === 'schedule');
 const CREATE_LOAN_ACCOUNT_WIZARD_ID = 'create-loan-account';
-const CREATE_LOAN_ACCOUNT_WIZARD_SESSION_VERSION = 1;
+const CREATE_LOAN_ACCOUNT_WIZARD_SESSION_VERSION = 2;
 export type LoanAccountWizardMode = 'create' | 'edit';
 export function LoanAccountWizard({
   mode = 'create',
@@ -73,7 +73,8 @@ export function LoanAccountWizard({
   clientId,
   clientDisplayName,
   initialTemplate,
-  initialDraft
+  initialDraft,
+  originatorOptions = []
 }: {
   mode?: LoanAccountWizardMode;
   loanId?: string;
@@ -81,6 +82,7 @@ export function LoanAccountWizard({
   clientDisplayName?: string;
   initialTemplate: ClientLoanAccountTemplate;
   initialDraft?: LoanAccountDraft;
+  originatorOptions?: LoanOriginatorListItem[];
 }) {
   const isEdit = mode === 'edit';
   const router = useRouter();
@@ -193,6 +195,7 @@ export function LoanAccountWizard({
         charges: seededDraft.charges,
         collateral: current.collateral,
         guarantors: current.guarantors,
+        originators: current.originators,
         enableDownPayment:
           result.enableDownPayment === true
             ? (seededDraft.enableDownPayment ?? true)
@@ -526,6 +529,8 @@ export function LoanAccountWizard({
             draft={draft}
             errors={stepErrors}
             principal={draft.principal}
+            originatorOptions={originatorOptions}
+            isEdit={isEdit}
             onChange={(patch) =>
               setDraft((current) => mergeLoanAccountSecurityStep(current, patch))
             }
@@ -571,7 +576,11 @@ export function LoanAccountWizard({
           />
         ) : null}
         {stepId === 'preview' ? (
-          <LoanAccountPreviewStep template={template} draft={draft} />
+          <LoanAccountPreviewStep
+            template={template}
+            draft={draft}
+            originatorOptions={originatorOptions}
+          />
         ) : null}
       </FormWizard>
       <WizardLeaveConfirmDialog
@@ -589,12 +598,14 @@ export function CreateLoanAccountWizard({
   clientId,
   clientDisplayName,
   initialTemplate,
-  initialDraft
+  initialDraft,
+  originatorOptions
 }: {
   clientId: string;
   clientDisplayName?: string;
   initialTemplate: ClientLoanAccountTemplate;
   initialDraft?: LoanAccountDraft;
+  originatorOptions?: LoanOriginatorListItem[];
 }) {
   return (
     <LoanAccountWizard
@@ -603,6 +614,7 @@ export function CreateLoanAccountWizard({
       clientDisplayName={clientDisplayName}
       initialTemplate={initialTemplate}
       initialDraft={initialDraft}
+      originatorOptions={originatorOptions}
     />
   );
 }
