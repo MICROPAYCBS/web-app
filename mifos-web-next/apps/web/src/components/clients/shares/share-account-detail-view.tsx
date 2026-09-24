@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractShareAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractShareAccountDetail } from '@mifos/api-client';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import {
@@ -45,7 +45,11 @@ export function ShareAccountDetailView({
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
-  auditTotalRecords
+  auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords
 }: {
   account: FineractShareAccountDetail;
   clientId: string;
@@ -54,6 +58,10 @@ export function ShareAccountDetailView({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
 }) {
   const currency = shareAccountCurrencyCode(account);
   const linkedSavingsLabel = shareAccountLinkedSavingsLabel(account);
@@ -130,7 +138,10 @@ export function ShareAccountDetailView({
       }
       sidebar={
         <Suspense fallback={null}>
-          <ShareAccountDetailSidebar canViewAudits={canViewAudits} />
+          <ShareAccountDetailSidebar
+            canViewAudits={canViewAudits}
+            canViewJournals={canViewJournals}
+          />
         </Suspense>
       }
     >
@@ -141,6 +152,10 @@ export function ShareAccountDetailView({
           auditEntries={auditEntries}
           auditLoadFailed={auditLoadFailed}
           auditTotalRecords={auditTotalRecords}
+          canViewJournals={canViewJournals}
+          journalEntries={journalEntries}
+          journalLoadFailed={journalLoadFailed}
+          journalTotalRecords={journalTotalRecords}
         />
       </Suspense>
     </DetailPage>

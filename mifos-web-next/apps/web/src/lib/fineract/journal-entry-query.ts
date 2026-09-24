@@ -10,6 +10,9 @@ import { FINERACT_DATE_FORMAT, FINERACT_LOCALE, toFineractDate } from '@/lib/fin
 
 export const JOURNAL_ENTRIES_DEFAULT_LIMIT = 50;
 
+/** Account-detail journal lists: enough lines for typical product history without a date filter. */
+export const ACCOUNT_JOURNAL_ENTRIES_LIMIT = 200;
+
 /** URL/API value meaning “do not filter by creator”. */
 export const JOURNAL_ENTRIES_CREATED_BY_ALL = 'all';
 
@@ -36,6 +39,15 @@ export type JournalEntryListQuery = JournalEntrySearchFilters & {
   limit: number;
   orderBy: string;
   sortOrder: string;
+  /** Loan account id — Fineract `loanId` (journals via loan transactions). */
+  loanId?: string;
+  /** Savings, FD, or RD account id — Fineract `savingsId`. */
+  savingsId?: string;
+  /**
+   * When true, omit `fromDate` / `toDate` so the API returns the full account history.
+   * Accounting search always sends a date range; account-detail lists do not.
+   */
+  omitDateRange?: boolean;
 };
 
 function readParam(
@@ -155,10 +167,20 @@ export function buildJournalEntrySearchParams(query: JournalEntryListQuery): Rec
     sortOrder: query.sortOrder,
     orderBy: journalEntryOrderByForApi(query.orderBy, query.sortOrder),
     dateFormat: query.dateFormat,
-    locale: query.locale,
-    fromDate: query.fromDate ?? toFineractDate(new Date()),
-    toDate: query.toDate ?? toFineractDate(new Date())
+    locale: query.locale
   };
+
+  if (!query.omitDateRange) {
+    params.fromDate = query.fromDate ?? toFineractDate(new Date());
+    params.toDate = query.toDate ?? toFineractDate(new Date());
+  }
+
+  if (query.loanId) {
+    params.loanId = query.loanId;
+  }
+  if (query.savingsId) {
+    params.savingsId = query.savingsId;
+  }
 
   if (query.officeId) {
     params.officeId = query.officeId;

@@ -20,6 +20,7 @@ import {
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForSavingsAccount } from '@/lib/fineract/audit-trails';
+import { listJournalEntriesForSavingsAccount } from '@/lib/fineract/journal-entries';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
 import {
@@ -73,17 +74,24 @@ export default async function SavingsAccountGeneralPage({
   const { clientId, accountId } = await params;
   const session = await getServerSession();
   const canViewAudits = can(session, resolvePermission('system.audit'));
+  const canViewJournals = can(session, resolvePermission('accounting.journal'));
 
   if (CLIENT_ACCOUNT_RESERVED_IDS.has(accountId)) {
     notFound();
   }
 
-  const [result, auditResult, reportOrgName] = await Promise.all([
+  const [result, auditResult, journalResult, reportOrgName] = await Promise.all([
     tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
     tryFineractLoad(
       () => listAuditTrailsForSavingsAccount(accountId, { limit: canViewAudits ? 100 : 25 }),
       'Could not load audit trail.'
     ),
+    canViewJournals
+      ? tryFineractLoad(
+          () => listJournalEntriesForSavingsAccount(accountId),
+          'Could not load journal entries.'
+        )
+      : Promise.resolve(null),
     loadReportOrganisationName()
   ]);
 
@@ -120,6 +128,15 @@ export default async function SavingsAccountGeneralPage({
   const auditTotalRecords =
     auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
 
+  const journalEntries =
+    canViewJournals && journalResult?.ok && journalResult.data
+      ? journalResult.data.pageItems
+      : [];
+  const journalTotalRecords =
+    canViewJournals && journalResult?.ok && journalResult.data
+      ? journalResult.data.totalFilteredRecords
+      : undefined;
+
   const workflowRuntime = await loadApprovalWorkflowRuntimeContext();
   const pendingCheckerActions = await loadResourcePendingCheckerActions(
     savingsAccountPendingCheckerScope(result.data.id),
@@ -144,6 +161,10 @@ export default async function SavingsAccountGeneralPage({
       auditEntries={auditEntries}
       auditLoadFailed={canViewAudits && auditResult != null && !auditResult.ok}
       auditTotalRecords={auditTotalRecords}
+      canViewJournals={canViewJournals}
+      journalEntries={journalEntries}
+      journalLoadFailed={canViewJournals && journalResult != null && !journalResult.ok}
+      journalTotalRecords={journalTotalRecords}
       transactionActionPermissions={savingsTransactionActionPermissions(session)}
       pendingCheckerActions={pendingCheckerActions}
       pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}

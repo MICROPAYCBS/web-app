@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
 import { useMemo } from 'react';
 import { SavingsAccountSectionPanel } from '@/components/clients/savings/savings-account-section-panels';
 import { useDetailSection } from '@/hooks/use-detail-section';
@@ -17,6 +17,7 @@ import {
   SAVINGS_ACCOUNT_SECTIONS,
   type SavingsAccountSectionId
 } from '@/lib/fineract/savings-account-display';
+import { isAccountPermissionedSectionVisible } from '@/lib/fineract/account-detail-section-visibility';
 import type { SavingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-actions';
 
 export function SavingsAccountDetailPanel({
@@ -27,6 +28,10 @@ export function SavingsAccountDetailPanel({
   auditEntries = [],
   auditLoadFailed = false,
   auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords,
   transactionActionPermissions = {
     undoTransaction: false,
     undoTransfer: false,
@@ -41,12 +46,17 @@ export function SavingsAccountDetailPanel({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
 }) {
   const sectionIds = useMemo(() => {
-    const ids = SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id);
-    return ids.filter((id) => id !== 'audit' || canViewAudits);
-  }, [canViewAudits]);
+    return SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) =>
+      isAccountPermissionedSectionVisible(id, { canViewAudits, canViewJournals })
+    );
+  }, [canViewAudits, canViewJournals]);
 
   const { activeSection } = useDetailSection(sectionIds, SAVINGS_ACCOUNT_DEFAULT_SECTION);
 
@@ -60,6 +70,10 @@ export function SavingsAccountDetailPanel({
       auditEntries={auditEntries}
       auditLoadFailed={auditLoadFailed}
       auditTotalRecords={auditTotalRecords}
+      canViewJournals={canViewJournals}
+      journalEntries={journalEntries}
+      journalLoadFailed={journalLoadFailed}
+      journalTotalRecords={journalTotalRecords}
       transactionActionPermissions={transactionActionPermissions}
     />
   );

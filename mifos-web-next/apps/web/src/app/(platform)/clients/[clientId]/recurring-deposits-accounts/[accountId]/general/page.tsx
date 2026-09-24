@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { DepositAccountDetailView } from '@/components/clients/accounts/deposit-account-detail-view';
 import { DetailBackLink } from '@/components/composites';
@@ -17,6 +18,7 @@ import {
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { getDepositAccount } from '@/lib/fineract/deposit-account-officer-commands';
+import { listJournalEntriesForSavingsAccount } from '@/lib/fineract/journal-entries';
 import {
   termDepositLifecyclePermissions,
   termDepositOfficerPermissions
@@ -34,16 +36,23 @@ export default async function RecurringDepositAccountGeneralPage({
 }) {
   const { clientId, accountId } = await params;
   const session = await getServerSession();
+  const canViewJournals = can(session, resolvePermission('accounting.journal'));
 
   if (CLIENT_ACCOUNT_RESERVED_IDS.has(accountId)) {
     notFound();
   }
 
-  const [result, reportOrgName] = await Promise.all([
+  const [result, journalResult, reportOrgName] = await Promise.all([
     tryFineractLoad(
       () => getDepositAccount('recurringDeposit', accountId),
       'Could not load recurring deposit account.'
     ),
+    canViewJournals
+      ? tryFineractLoad(
+          () => listJournalEntriesForSavingsAccount(accountId),
+          'Could not load journal entries.'
+        )
+      : Promise.resolve(null),
     loadReportOrganisationName()
   ]);
 
@@ -86,6 +95,18 @@ export default async function RecurringDepositAccountGeneralPage({
       lifecyclePermissions={termDepositLifecyclePermissions(session, 'recurringDeposit')}
       reportOrgName={reportOrgName}
       transactionActionPermissions={depositTransactionActionPermissions(session)}
+      canViewJournals={canViewJournals}
+      journalEntries={
+        canViewJournals && journalResult?.ok && journalResult.data
+          ? journalResult.data.pageItems
+          : []
+      }
+      journalLoadFailed={canViewJournals && journalResult != null && !journalResult.ok}
+      journalTotalRecords={
+        canViewJournals && journalResult?.ok && journalResult.data
+          ? journalResult.data.totalFilteredRecords
+          : undefined
+      }
     />
   );
 }

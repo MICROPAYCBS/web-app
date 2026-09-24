@@ -35,7 +35,7 @@ Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accou
 | ACCT-015 | `/accounting/departments`                      | Departments                  | **Done** | List, create, edit cost centers              |
 | ACCT-018 | `/accounting/gl-account-enquiry/[id]`          | GL account enquiry details   | **Done** | Period history (branch/currency/dates) from enquiry results |
 | ACCT-019 | `/accounting/gl-account-enquiry`               | GL account enquiry           | **Done** | Prefix/ledger/description/branch/dept/currency/status; exclude zero-balance (default on); hybrid balances; View details → enquiry details |
-| ACCT-020 | `/accounting/journal-entries`                   | Journal entries              | **Done** | Search, create (incl. inter-branch), transaction view, reverse |
+| ACCT-020 | `/accounting/journal-entries`                   | Journal entries              | **Done** | Search, create (incl. inter-branch), transaction view, reverse; account-detail **Journal entries** on loans/savings/shares/FD/RD |
 | ACCT-025 | `/accounting/journal-entries/frequent-postings` | Frequent postings            | **Done** | Shortcut journal form with accounting rules |
 | ACCT-030 | `/accounting/financial-activity-mappings`       | Financial activity mappings  | **Done** | List, create, edit via FormSheet           |
 | ACCT-040 | `/accounting/migrate-opening-balances`          | Migrate opening balances     | **Done** | Retrieve by office, define balanced entry  |

@@ -85,3 +85,37 @@ describe('journalEntryOrderByForApi', () => {
     assert.equal(journalEntryOrderByForApi('submittedOnDate', 'desc'), 'submittedOnDate DESC, id');
   });
 });
+
+describe('buildJournalEntrySearchParams account scope', () => {
+  it('omits date range and sends loanId for account history', () => {
+    const params = buildJournalEntrySearchParams({
+      offset: 0,
+      limit: 200,
+      orderBy: 'transactionDate',
+      sortOrder: 'DESC',
+      dateFormat: 'dd MMMM yyyy',
+      locale: 'en',
+      loanId: '18',
+      omitDateRange: true
+    });
+    assert.equal(params.loanId, '18');
+    assert.equal(params.fromDate, undefined);
+    assert.equal(params.toDate, undefined);
+    assert.equal(params.orderBy, 'transactionDate DESC, id');
+  });
+
+  it('sends savingsId without a date range', () => {
+    const params = buildJournalEntrySearchParams({
+      offset: 0,
+      limit: 200,
+      orderBy: 'transactionDate',
+      sortOrder: 'DESC',
+      dateFormat: 'dd MMMM yyyy',
+      locale: 'en',
+      savingsId: '24',
+      omitDateRange: true
+    });
+    assert.equal(params.savingsId, '24');
+    assert.equal(params.fromDate, undefined);
+  });
+});

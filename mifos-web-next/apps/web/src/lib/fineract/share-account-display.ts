@@ -20,6 +20,7 @@ export const SHARE_ACCOUNT_SECTIONS = [
   { id: 'purchases', label: 'Purchased shares' },
   { id: 'charges', label: 'Charges' },
   { id: 'dividends', label: 'Dividends' },
+  { id: 'journalEntries', label: 'Journal entries' },
   { id: 'audit', label: 'Audit trail' }
 ] as const;
 

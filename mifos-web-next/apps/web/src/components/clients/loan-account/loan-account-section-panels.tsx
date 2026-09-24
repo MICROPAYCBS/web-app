@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem } from '@mifos/api-client';
 import Link from 'next/link';
 
 import {
@@ -20,6 +20,7 @@ import {
 } from '@tanstack/react-table';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { LoanAccountAuditView } from '@/components/clients/loan-account/loan-account-audit-view';
+import { AccountJournalEntriesView } from '@/components/clients/accounts/account-journal-entries-view';
 import { LoanAccountSchedulePreview } from '@/components/clients/loan-account/loan-account-schedule-preview';
 import { LoanAccountStandingInstructionsSection } from '@/components/clients/loan-account/loan-account-standing-instructions-section';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
@@ -807,7 +808,11 @@ export function LoanAccountSectionPanel({
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
-  auditTotalRecords
+  auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords
 }: {
   section: LoanAccountSectionId;
   account: FineractLoanAccountDetail;
@@ -820,6 +825,10 @@ export function LoanAccountSectionPanel({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
 }) {
   switch (section) {
     case 'summary':
@@ -938,6 +947,15 @@ export function LoanAccountSectionPanel({
           permissions={standingInstructions.permissions}
           canCreate={standingInstructions.canCreate}
           createFormDefaults={standingInstructions.createFormDefaults}
+        />
+      ) : null;
+    case 'journalEntries':
+      return canViewJournals ? (
+        <AccountJournalEntriesView
+          entries={journalEntries}
+          loadFailed={journalLoadFailed}
+          totalRecords={journalTotalRecords}
+          productLabel="this loan"
         />
       ) : null;
     default:

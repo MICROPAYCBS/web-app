@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractRolePermissionUsage, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractRolePermissionUsage, FineractSavingsAccountDetail } from '@mifos/api-client';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -57,6 +57,10 @@ export function SavingsAccountDetailView({
   auditEntries = [],
   auditLoadFailed = false,
   auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords,
   transactionActionPermissions = {
     undoTransaction: false,
     undoTransfer: false,
@@ -75,6 +79,10 @@ export function SavingsAccountDetailView({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
   pendingCheckerActions?: ResourcePendingCheckerAction[];
   pendingApprovalWorkflowContext?: ResourcePendingWorkflowContext;
@@ -190,7 +198,10 @@ export function SavingsAccountDetailView({
       }
       sidebar={
         <Suspense fallback={<SavingsAccountSectionNavSkeleton />}>
-          <SavingsAccountDetailSidebar canViewAudits={canViewAudits} />
+          <SavingsAccountDetailSidebar
+            canViewAudits={canViewAudits}
+            canViewJournals={canViewJournals}
+          />
         </Suspense>
       }
     >
@@ -203,6 +214,10 @@ export function SavingsAccountDetailView({
           auditEntries={auditEntries}
           auditLoadFailed={auditLoadFailed}
           auditTotalRecords={auditTotalRecords}
+          canViewJournals={canViewJournals}
+          journalEntries={journalEntries}
+          journalLoadFailed={journalLoadFailed}
+          journalTotalRecords={journalTotalRecords}
           transactionActionPermissions={transactionActionPermissions}
         />
       </Suspense>

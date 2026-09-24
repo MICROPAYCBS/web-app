@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractRolePermissionUsage } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractRolePermissionUsage } from '@mifos/api-client';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense, useMemo } from 'react';
@@ -69,6 +69,10 @@ export function LoanAccountDetailView({
   auditEntries = [],
   auditLoadFailed = false,
   auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords,
   pendingCheckerActions = [],
   pendingApprovalWorkflowContext,
   makerCheckerTaskPermissions = []
@@ -86,6 +90,10 @@ export function LoanAccountDetailView({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
   pendingCheckerActions?: LoanAccountPendingCheckerAction[];
   pendingApprovalWorkflowContext?: LoanPendingApprovalWorkflowContext;
   makerCheckerTaskPermissions?: FineractRolePermissionUsage[];
@@ -106,12 +114,14 @@ export function LoanAccountDetailView({
         reschedules: reschedulesEnabled,
         notes: notesEnabled,
         canCreateInterestPause,
-        canViewAudits
+        canViewAudits,
+        canViewJournals
       }).length > 1,
     [
       account,
       canCreateInterestPause,
       canViewAudits,
+      canViewJournals,
       includeCashier,
       notesEnabled,
       reschedulesEnabled,
@@ -249,6 +259,7 @@ export function LoanAccountDetailView({
                 notes={notesEnabled}
                 canCreateInterestPause={canCreateInterestPause}
                 canViewAudits={canViewAudits}
+                canViewJournals={canViewJournals}
               />
             </Suspense>
           </div>
@@ -268,6 +279,10 @@ export function LoanAccountDetailView({
           auditEntries={auditEntries}
           auditLoadFailed={auditLoadFailed}
           auditTotalRecords={auditTotalRecords}
+          canViewJournals={canViewJournals}
+          journalEntries={journalEntries}
+          journalLoadFailed={journalLoadFailed}
+          journalTotalRecords={journalTotalRecords}
         />
       </Suspense>
     </DetailPage>

@@ -10,12 +10,26 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   journalEntryTransactionPath,
-  savingsJournalTransactionId
+  loanJournalTransactionId,
+  savingsJournalTransactionId,
+  shareJournalTransactionId
 } from './journal-entry-links';
 
 describe('savingsJournalTransactionId', () => {
   it('prefixes savings transaction id for journal lookup', () => {
     assert.equal(savingsJournalTransactionId(42), 'S42');
+  });
+});
+
+describe('loanJournalTransactionId', () => {
+  it('prefixes loan transaction id for journal lookup', () => {
+    assert.equal(loanJournalTransactionId(18), 'L18');
+  });
+});
+
+describe('shareJournalTransactionId', () => {
+  it('prefixes share transaction id for journal lookup', () => {
+    assert.equal(shareJournalTransactionId(7), 'SH7');
   });
 });
 

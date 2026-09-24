@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -28,6 +28,7 @@ import {
 } from '@/components/composites';
 import { SavingsTransactionActionsMenu } from '@/components/clients/savings/actions/savings-transaction-actions-menu';
 import { SavingsAccountAuditView } from '@/components/clients/savings/savings-account-audit-view';
+import { AccountJournalEntriesView } from '@/components/clients/accounts/account-journal-entries-view';
 import { SavingsStatementSection } from '@/components/clients/savings/statement';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
@@ -699,6 +700,10 @@ export function SavingsAccountSectionPanel({
   auditEntries = [],
   auditLoadFailed = false,
   auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords,
   transactionActionPermissions = {
     undoTransaction: false,
     undoTransfer: false,
@@ -714,6 +719,10 @@ export function SavingsAccountSectionPanel({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
 }) {
   switch (section) {
@@ -732,6 +741,15 @@ export function SavingsAccountSectionPanel({
       return <SavingsStatementSection account={account} reportOrgName={reportOrgName} />;
     case 'charges':
       return <SavingsAccountChargesSection account={account} />;
+    case 'journalEntries':
+      return canViewJournals ? (
+        <AccountJournalEntriesView
+          entries={journalEntries}
+          loadFailed={journalLoadFailed}
+          totalRecords={journalTotalRecords}
+          productLabel="this savings account"
+        />
+      ) : null;
     case 'audit':
       return canViewAudits ? (
         <SavingsAccountAuditView

@@ -36,6 +36,7 @@ export const LOAN_ACCOUNT_SECTIONS = [
   { id: 'documents', label: 'Documents' },
   { id: 'notes', label: 'Notes' },
   { id: 'standingInstructions', label: 'Standing instructions' },
+  { id: 'journalEntries', label: 'Journal entries' },
   { id: 'audit', label: 'Audit trail' }
 ] as const;
 

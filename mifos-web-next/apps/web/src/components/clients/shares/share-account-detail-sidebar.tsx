@@ -8,10 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Coins, Receipt, ScrollText, Share2, type LucideIcon } from 'lucide-react';
+import { BookOpen, Coins, Receipt, ScrollText, Share2, type LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { DetailSectionNav } from '@/components/composites';
 import { useDetailSection } from '@/hooks/use-detail-section';
+import { isAccountPermissionedSectionVisible } from '@/lib/fineract/account-detail-section-visibility';
 import {
   SHARE_ACCOUNT_DEFAULT_SECTION,
   SHARE_ACCOUNT_SECTIONS,
@@ -23,24 +24,32 @@ const SECTION_ICONS: Record<ShareAccountSectionId, LucideIcon> = {
   purchases: Coins,
   charges: Receipt,
   dividends: Coins,
+  journalEntries: BookOpen,
   audit: ScrollText
 };
 
-export function ShareAccountDetailSidebar({ canViewAudits }: { canViewAudits: boolean }) {
+export function ShareAccountDetailSidebar({
+  canViewAudits,
+  canViewJournals
+}: {
+  canViewAudits: boolean;
+  canViewJournals: boolean;
+}) {
   const sectionIds = useMemo(() => {
-    const ids = SHARE_ACCOUNT_SECTIONS.map((section) => section.id);
-    return ids.filter((id) => id !== 'audit' || canViewAudits);
-  }, [canViewAudits]);
+    return SHARE_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) =>
+      isAccountPermissionedSectionVisible(id, { canViewAudits, canViewJournals })
+    );
+  }, [canViewAudits, canViewJournals]);
 
   const navItems = useMemo(
     () =>
-      SHARE_ACCOUNT_SECTIONS.filter((section) => section.id !== 'audit' || canViewAudits).map(
-        (section) => ({
-          ...section,
-          icon: SECTION_ICONS[section.id]
-        })
-      ),
-    [canViewAudits]
+      SHARE_ACCOUNT_SECTIONS.filter((section) =>
+        isAccountPermissionedSectionVisible(section.id, { canViewAudits, canViewJournals })
+      ).map((section) => ({
+        ...section,
+        icon: SECTION_ICONS[section.id]
+      })),
+    [canViewAudits, canViewJournals]
   );
 
   const { activeSection, setSection } = useDetailSection(

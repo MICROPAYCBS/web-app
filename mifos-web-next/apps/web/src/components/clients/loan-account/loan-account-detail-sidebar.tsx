@@ -26,6 +26,7 @@ import {
   Users,
   Handshake,
   Wallet,
+  BookOpen,
   type LucideIcon
 } from 'lucide-react';
 import { useMemo } from 'react';
@@ -38,6 +39,7 @@ import {
   loanAccountVisibleSections,
   type LoanAccountSectionId
 } from '@/lib/fineract/loan-account-display';
+import { isAccountPermissionedSectionVisible } from '@/lib/fineract/account-detail-section-visibility';
 
 export const LOAN_ACCOUNT_CASHIER_SECTION_ID = 'cashier';
 
@@ -58,6 +60,7 @@ const SECTION_ICONS: Record<LoanAccountSectionId, LucideIcon> = {
   documents: FileText,
   notes: NotebookPen,
   standingInstructions: Repeat,
+  journalEntries: BookOpen,
   audit: ScrollText
 };
 
@@ -70,6 +73,7 @@ export function loanAccountSectionIds(
     notes?: boolean;
     canCreateInterestPause?: boolean;
     canViewAudits?: boolean;
+    canViewJournals?: boolean;
   }
 ): string[] {
   const ids = loanAccountVisibleSections(account, {
@@ -77,7 +81,12 @@ export function loanAccountSectionIds(
     reschedules: options?.reschedules,
     notes: options?.notes,
     canCreateInterestPause: options?.canCreateInterestPause
-  }).filter((id) => id !== 'audit' || options?.canViewAudits);
+  }).filter((id) =>
+    isAccountPermissionedSectionVisible(id, {
+      canViewAudits: options?.canViewAudits,
+      canViewJournals: options?.canViewJournals
+    })
+  );
   return options?.includeCashier ? [...ids, LOAN_ACCOUNT_CASHIER_SECTION_ID] : ids;
 }
 
@@ -88,7 +97,8 @@ export function LoanAccountDetailSidebar({
   reschedules = false,
   notes = false,
   canCreateInterestPause = false,
-  canViewAudits = false
+  canViewAudits = false,
+  canViewJournals = false
 }: {
   account: FineractLoanAccountDetail;
   includeCashier?: boolean;
@@ -97,6 +107,7 @@ export function LoanAccountDetailSidebar({
   notes?: boolean;
   canCreateInterestPause?: boolean;
   canViewAudits?: boolean;
+  canViewJournals?: boolean;
 }) {
   const sectionIds = useMemo(
     () =>
@@ -106,12 +117,14 @@ export function LoanAccountDetailSidebar({
         reschedules,
         notes,
         canCreateInterestPause,
-        canViewAudits
+        canViewAudits,
+        canViewJournals
       }),
     [
       account,
       canCreateInterestPause,
       canViewAudits,
+      canViewJournals,
       includeCashier,
       notes,
       reschedules,
@@ -121,13 +134,13 @@ export function LoanAccountDetailSidebar({
 
   const navItems = useMemo(() => {
     const items: Array<{ id: string; label: string; icon: LucideIcon }> =
-      LOAN_ACCOUNT_SECTIONS.filter(
-        (section) => sectionIds.includes(section.id) && (section.id !== 'audit' || canViewAudits)
-      ).map((section) => ({
-        id: section.id,
-        label: section.label,
-        icon: SECTION_ICONS[section.id]
-      }));
+      LOAN_ACCOUNT_SECTIONS.filter((section) => sectionIds.includes(section.id)).map(
+        (section) => ({
+          id: section.id,
+          label: section.label,
+          icon: SECTION_ICONS[section.id]
+        })
+      );
     if (includeCashier) {
       items.push({
         id: LOAN_ACCOUNT_CASHIER_SECTION_ID,
@@ -136,7 +149,7 @@ export function LoanAccountDetailSidebar({
       });
     }
     return items;
-  }, [canViewAudits, includeCashier, sectionIds]);
+  }, [includeCashier, sectionIds]);
 
   const { activeSection, setSection } = useDetailSection(
     sectionIds,
@@ -165,6 +178,7 @@ export function useLoanAccountDetailSection(
     notes?: boolean;
     canCreateInterestPause?: boolean;
     canViewAudits?: boolean;
+    canViewJournals?: boolean;
   }
 ) {
   const sectionIds = useMemo(
@@ -175,12 +189,14 @@ export function useLoanAccountDetailSection(
         reschedules: options?.reschedules,
         notes: options?.notes,
         canCreateInterestPause: options?.canCreateInterestPause,
-        canViewAudits: options?.canViewAudits
+        canViewAudits: options?.canViewAudits,
+        canViewJournals: options?.canViewJournals
       }),
     [
       account,
       options?.canCreateInterestPause,
       options?.canViewAudits,
+      options?.canViewJournals,
       options?.includeCashier,
       options?.notes,
       options?.reschedules,

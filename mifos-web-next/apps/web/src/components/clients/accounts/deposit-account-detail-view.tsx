@@ -8,8 +8,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ClientDepositAccountKind, FineractSavingsAccountDetail } from '@mifos/api-client';
-import { ArrowRightLeft, PiggyBank, Receipt, type LucideIcon } from 'lucide-react';
+import type { ClientDepositAccountKind, FineractJournalEntryListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
+import { ArrowRightLeft, BookOpen, PiggyBank, Receipt, type LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import {
   DetailBackLink,
@@ -42,6 +42,7 @@ import {
   type DepositAccountSectionId,
   type TermDepositAccountKind
 } from '@/lib/fineract/deposit-account-display';
+import { isAccountPermissionedSectionVisible } from '@/lib/fineract/account-detail-section-visibility';
 import type { DepositTransactionActionPermissions } from '@/lib/fineract/deposit-transaction-actions';
 import {
   savingsAccountClientBackLabel,
@@ -69,7 +70,8 @@ const LIST_KIND: Record<ClientDepositAccountKind, ClientAccountProductKind> = {
 const SECTION_ICONS: Record<DepositAccountSectionId, LucideIcon> = {
   summary: PiggyBank,
   transactions: ArrowRightLeft,
-  charges: Receipt
+  charges: Receipt,
+  journalEntries: BookOpen
 };
 
 export function DepositAccountDetailView({
@@ -82,7 +84,11 @@ export function DepositAccountDetailView({
   transactionActionPermissions = {
     undoTransaction: false,
     viewJournal: false
-  }
+  },
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -91,19 +97,28 @@ export function DepositAccountDetailView({
   lifecyclePermissions?: DepositAccountActionPermissions;
   reportOrgName?: string;
   transactionActionPermissions?: DepositTransactionActionPermissions;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
 }) {
   const listKind = LIST_KIND[kind];
   const sectionIds = useMemo(
-    () => DEPOSIT_ACCOUNT_SECTIONS.map((section) => section.id),
-    []
+    () =>
+      DEPOSIT_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) =>
+        isAccountPermissionedSectionVisible(id, { canViewJournals })
+      ),
+    [canViewJournals]
   );
   const navItems = useMemo(
     () =>
-      DEPOSIT_ACCOUNT_SECTIONS.map((section) => ({
+      DEPOSIT_ACCOUNT_SECTIONS.filter((section) =>
+        isAccountPermissionedSectionVisible(section.id, { canViewJournals })
+      ).map((section) => ({
         ...section,
         icon: SECTION_ICONS[section.id]
       })),
-    []
+    [canViewJournals]
   );
   const { activeSection, setSection } = useDetailSection(
     sectionIds,
@@ -178,6 +193,10 @@ export function DepositAccountDetailView({
         clientId={clientId}
         reportOrgName={reportOrgName}
         transactionActionPermissions={transactionActionPermissions}
+        canViewJournals={canViewJournals}
+        journalEntries={journalEntries}
+        journalLoadFailed={journalLoadFailed}
+        journalTotalRecords={journalTotalRecords}
       />
     </DetailPage>
   );

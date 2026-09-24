@@ -10,6 +10,7 @@
 
 import type {
   FineractAuditTrailListItem,
+  FineractJournalEntryListItem,
   FineractShareAccountDetail
 } from '@mifos/api-client';
 import {
@@ -23,6 +24,7 @@ import { ScrollText } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { AuditTrailEntryList } from '@/components/audit/audit-trail-entry-list';
+import { AccountJournalEntriesView } from '@/components/clients/accounts/account-journal-entries-view';
 import {
   DetailField,
   DetailFieldGrid,
@@ -369,7 +371,11 @@ export function ShareAccountSectionPanel({
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
-  auditTotalRecords
+  auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords
 }: {
   section: ShareAccountSectionId;
   account: FineractShareAccountDetail;
@@ -377,6 +383,10 @@ export function ShareAccountSectionPanel({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
 }) {
   switch (section) {
     case 'summary':
@@ -387,6 +397,15 @@ export function ShareAccountSectionPanel({
       return <ShareAccountChargesSection account={account} />;
     case 'dividends':
       return <ShareAccountDividendsSection account={account} />;
+    case 'journalEntries':
+      return canViewJournals ? (
+        <AccountJournalEntriesView
+          entries={journalEntries}
+          loadFailed={journalLoadFailed}
+          totalRecords={journalTotalRecords}
+          productLabel="this share account"
+        />
+      ) : null;
     case 'audit':
       return canViewAudits ? (
         <ShareAccountAuditSection

@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractJournalEntryListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -26,6 +26,7 @@ import {
   MoneyValue
 } from '@/components/composites';
 import { DepositTransactionActionsMenu } from '@/components/clients/accounts/actions/deposit-transaction-actions-menu';
+import { AccountJournalEntriesView } from '@/components/clients/accounts/account-journal-entries-view';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
@@ -636,7 +637,11 @@ export function DepositAccountSectionPanel({
   transactionActionPermissions = {
     undoTransaction: false,
     viewJournal: false
-  }
+  },
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords
 }: {
   section: DepositAccountSectionId;
   account: FineractSavingsAccountDetail;
@@ -644,6 +649,10 @@ export function DepositAccountSectionPanel({
   clientId: string;
   reportOrgName: string;
   transactionActionPermissions?: DepositTransactionActionPermissions;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
 }) {
   switch (section) {
     case 'summary':
@@ -660,6 +669,17 @@ export function DepositAccountSectionPanel({
       );
     case 'charges':
       return <DepositAccountChargesSection account={account} />;
+    case 'journalEntries':
+      return canViewJournals ? (
+        <AccountJournalEntriesView
+          entries={journalEntries}
+          loadFailed={journalLoadFailed}
+          totalRecords={journalTotalRecords}
+          productLabel={
+            kind === 'fixedDeposit' ? 'this fixed deposit' : 'this recurring deposit'
+          }
+        />
+      ) : null;
     default: {
       const _exhaustive: never = section;
       return _exhaustive;

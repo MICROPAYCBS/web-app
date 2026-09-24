@@ -162,6 +162,7 @@ describe('loanAccountVisibleSections', () => {
     assert.ok(ids.includes('collateral'));
     assert.ok(ids.includes('guarantors'));
     assert.ok(ids.includes('originators'));
+    assert.ok(ids.includes('journalEntries'));
     assert.equal(ids.includes('notes'), false);
     assert.equal(ids.includes('delinquency'), true);
   });

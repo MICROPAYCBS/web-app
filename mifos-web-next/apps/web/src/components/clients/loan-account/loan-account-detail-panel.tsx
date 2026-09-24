@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem } from '@mifos/api-client';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 import { LoanAccountSectionPanel } from '@/components/clients/loan-account/loan-account-section-panels';
 import {
@@ -33,7 +33,11 @@ export function LoanAccountDetailPanel({
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
-  auditTotalRecords
+  auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
@@ -46,6 +50,10 @@ export function LoanAccountDetailPanel({
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
 }) {
   const includeCashier = Boolean(cashierSnapshot);
   const standingInstructionsEnabled = standingInstructions != null;
@@ -56,7 +64,8 @@ export function LoanAccountDetailPanel({
     reschedules: reschedulesEnabled,
     notes: relatedRecords.notes != null,
     canCreateInterestPause: Boolean(relatedRecords.interestPauses?.canManage),
-    canViewAudits
+    canViewAudits,
+    canViewJournals
   });
 
   if (activeSection === LOAN_ACCOUNT_CASHIER_SECTION_ID && cashierSnapshot) {
@@ -76,6 +85,10 @@ export function LoanAccountDetailPanel({
       auditEntries={auditEntries}
       auditLoadFailed={auditLoadFailed}
       auditTotalRecords={auditTotalRecords}
+      canViewJournals={canViewJournals}
+      journalEntries={journalEntries}
+      journalLoadFailed={journalLoadFailed}
+      journalTotalRecords={journalTotalRecords}
     />
   );
 }

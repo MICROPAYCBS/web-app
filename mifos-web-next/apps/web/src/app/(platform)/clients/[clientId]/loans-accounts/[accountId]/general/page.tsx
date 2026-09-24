@@ -26,6 +26,7 @@ import {
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForLoanAccount } from '@/lib/fineract/audit-trails';
+import { listJournalEntriesForLoanAccount } from '@/lib/fineract/journal-entries';
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
 import { listLoanRescheduleRequests } from '@/lib/fineract/loan-reschedule';
 import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashier';
@@ -99,6 +100,7 @@ export default async function LoanAccountGeneralPage({
   const { clientId, accountId } = await params;
   const session = await getServerSession();
   const canViewAudits = can(session, resolvePermission('system.audit'));
+  const canViewJournals = can(session, resolvePermission('accounting.journal'));
 
   if (CLIENT_ACCOUNT_RESERVED_IDS.has(accountId)) {
     notFound();
@@ -146,6 +148,7 @@ export default async function LoanAccountGeneralPage({
     standingInstructions,
     repaymentPolicy,
     auditResult,
+    journalResult,
     notesResult,
     documentsResult,
     collateralsResult,
@@ -167,6 +170,12 @@ export default async function LoanAccountGeneralPage({
       () => listAuditTrailsForLoanAccount(accountId, { limit: canViewAudits ? 100 : 25 }),
       'Could not load audit trail.'
     ),
+    canViewJournals
+      ? tryFineractLoad(
+          () => listJournalEntriesForLoanAccount(accountId),
+          'Could not load journal entries.'
+        )
+      : Promise.resolve(null),
     canReadNotes
       ? tryFineractLoad(() => getLoanNotes(account.id), 'Could not load notes.')
       : Promise.resolve(null),
@@ -196,6 +205,15 @@ export default async function LoanAccountGeneralPage({
   const auditTotalRecords =
     canViewAudits && auditResult?.ok && auditResult.data
       ? auditResult.data.totalFilteredRecords
+      : undefined;
+
+  const journalEntries =
+    canViewJournals && journalResult?.ok && journalResult.data
+      ? journalResult.data.pageItems
+      : [];
+  const journalTotalRecords =
+    canViewJournals && journalResult?.ok && journalResult.data
+      ? journalResult.data.totalFilteredRecords
       : undefined;
 
   const pendingCheckerActions = await loadLoanAccountPendingCheckerActions(
@@ -296,6 +314,10 @@ export default async function LoanAccountGeneralPage({
       auditEntries={auditEntries}
       auditLoadFailed={canViewAudits && auditResult != null && !auditResult.ok}
       auditTotalRecords={auditTotalRecords}
+      canViewJournals={canViewJournals}
+      journalEntries={journalEntries}
+      journalLoadFailed={canViewJournals && journalResult != null && !journalResult.ok}
+      journalTotalRecords={journalTotalRecords}
       pendingCheckerActions={pendingCheckerActions}
       pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}
       makerCheckerTaskPermissions={workflowRuntime.makerCheckerPermissions}

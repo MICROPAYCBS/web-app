@@ -19,6 +19,7 @@ import {
 } from '@/lib/fineract/client-action-paths';
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForShareAccount } from '@/lib/fineract/audit-trails';
+import { listJournalEntriesForShareAccount } from '@/lib/fineract/journal-entries';
 import { getShareAccount } from '@/lib/fineract/share-accounts';
 import { loadClientAccountBackLabel } from '@/lib/fineract/load-client-account-back-label';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -49,6 +50,7 @@ export default async function ShareAccountGeneralPage({
   const { clientId, accountId } = await params;
   const session = await getServerSession();
   const canViewAudits = can(session, resolvePermission('system.audit'));
+  const canViewJournals = can(session, resolvePermission('accounting.journal'));
 
   if (CLIENT_ACCOUNT_RESERVED_IDS.has(accountId)) {
     notFound();
@@ -89,20 +91,43 @@ export default async function ShareAccountGeneralPage({
     notFound();
   }
 
+  const account = result.data;
   const auditEntries =
     canViewAudits && auditResult?.ok && auditResult.data ? auditResult.data.pageItems : [];
   const auditTotalRecords =
     auditResult?.ok && auditResult.data ? auditResult.data.totalFilteredRecords : undefined;
 
+  const journalResult = canViewJournals
+    ? await tryFineractLoad(
+        () =>
+          listJournalEntriesForShareAccount(
+            (account.purchasedShares ?? []).map((transaction) => transaction.id)
+          ),
+        'Could not load journal entries.'
+      )
+    : null;
+  const journalEntries =
+    canViewJournals && journalResult?.ok && journalResult.data
+      ? journalResult.data.pageItems
+      : [];
+  const journalTotalRecords =
+    canViewJournals && journalResult?.ok && journalResult.data
+      ? journalResult.data.totalFilteredRecords
+      : undefined;
+
   return (
     <ShareAccountDetailView
-      account={result.data}
+      account={account}
       clientId={clientId}
       permissions={shareAccountPermissions(session)}
       canViewAudits={canViewAudits}
       auditEntries={auditEntries}
       auditLoadFailed={canViewAudits && auditResult != null && !auditResult.ok}
       auditTotalRecords={auditTotalRecords}
+      canViewJournals={canViewJournals}
+      journalEntries={journalEntries}
+      journalLoadFailed={canViewJournals && journalResult != null && !journalResult.ok}
+      journalTotalRecords={journalTotalRecords}
     />
   );
 }

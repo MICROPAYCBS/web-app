@@ -38,14 +38,15 @@ export type DepositAccountActionVisibility = {
   modifyApplication: boolean;
 };
 
-export type DepositAccountSectionId = 'summary' | 'transactions' | 'charges';
+export type DepositAccountSectionId = 'summary' | 'transactions' | 'charges' | 'journalEntries';
 
 export const DEPOSIT_ACCOUNT_DEFAULT_SECTION: DepositAccountSectionId = 'summary';
 
 export const DEPOSIT_ACCOUNT_SECTIONS: Array<{ id: DepositAccountSectionId; label: string }> = [
   { id: 'summary', label: 'Summary' },
   { id: 'transactions', label: 'Transactions' },
-  { id: 'charges', label: 'Charges' }
+  { id: 'charges', label: 'Charges' },
+  { id: 'journalEntries', label: 'Journal entries' }
 ];
 
 export function isTermDepositAccountKind(

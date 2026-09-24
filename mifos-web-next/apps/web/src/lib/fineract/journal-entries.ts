@@ -30,10 +30,13 @@ import {
 } from '@mifos/validation';
 import { backfillJournalEntryGlAccountCode } from '@/lib/accounting/journal-entry-display';
 import {
+  ACCOUNT_JOURNAL_ENTRIES_LIMIT,
   buildJournalEntrySearchParams,
   type JournalEntryListQuery
 } from '@/lib/fineract/journal-entry-query';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
+import { shareJournalTransactionId } from '@/lib/accounting/journal-entry-links';
+import { sortByDateThenId } from '@/lib/fineract/transaction-order';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 const JOURNAL_ENTRIES_PATH = '/journalentries';
@@ -221,9 +224,7 @@ export async function listJournalEntryGlAccounts(): Promise<FineractJournalEntry
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-export async function listJournalEntries(query: JournalEntryListQuery): Promise<FineractJournalEntriesPage> {
-  const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>(JOURNAL_ENTRIES_PATH, buildJournalEntrySearchParams(query));
+function normalizeJournalEntriesPage(raw: unknown): FineractJournalEntriesPage {
   if (!raw || typeof raw !== 'object') {
     return { pageItems: [], totalFilteredRecords: 0 };
   }
@@ -239,6 +240,91 @@ export async function listJournalEntries(query: JournalEntryListQuery): Promise<
   };
 }
 
+function accountJournalEntriesQuery(
+  scope: { loanId?: string; savingsId?: string },
+  options?: { limit?: number; offset?: number }
+): JournalEntryListQuery {
+  return {
+    offset: options?.offset ?? 0,
+    limit: options?.limit ?? ACCOUNT_JOURNAL_ENTRIES_LIMIT,
+    orderBy: 'transactionDate',
+    sortOrder: 'DESC',
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE,
+    omitDateRange: true,
+    ...(scope.loanId ? { loanId: scope.loanId } : {}),
+    ...(scope.savingsId ? { savingsId: scope.savingsId } : {})
+  };
+}
+
+export async function listJournalEntries(query: JournalEntryListQuery): Promise<FineractJournalEntriesPage> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(JOURNAL_ENTRIES_PATH, buildJournalEntrySearchParams(query));
+  return normalizeJournalEntriesPage(raw);
+}
+
+/** Journals posted for a loan account (`GET /journalentries?loanId=`). */
+export async function listJournalEntriesForLoanAccount(
+  loanId: string | number,
+  options?: { limit?: number; offset?: number }
+): Promise<FineractJournalEntriesPage> {
+  return listJournalEntries(accountJournalEntriesQuery({ loanId: String(loanId) }, options));
+}
+
+/** Journals posted for a savings, FD, or RD account (`GET /journalentries?savingsId=`). */
+export async function listJournalEntriesForSavingsAccount(
+  savingsId: string | number,
+  options?: { limit?: number; offset?: number }
+): Promise<FineractJournalEntriesPage> {
+  return listJournalEntries(accountJournalEntriesQuery({ savingsId: String(savingsId) }, options));
+}
+
+const SHARE_ACCOUNT_JOURNAL_TRANSACTION_FETCH_LIMIT = 100;
+
+/**
+ * Share journals have no `shareAccountId` search param. Load each purchased-share
+ * transaction (`SH{id}`) and merge the lines.
+ */
+export async function listJournalEntriesForShareAccount(
+  transactionIds: Array<string | number>
+): Promise<FineractJournalEntriesPage> {
+  const uniqueIds = [
+    ...new Set(
+      transactionIds
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    )
+  ].slice(0, SHARE_ACCOUNT_JOURNAL_TRANSACTION_FETCH_LIMIT);
+
+  if (uniqueIds.length === 0) {
+    return { pageItems: [], totalFilteredRecords: 0 };
+  }
+
+  const pages = await Promise.all(
+    uniqueIds.map(async (id) => {
+      try {
+        return await getJournalEntryTransaction(shareJournalTransactionId(id));
+      } catch {
+        return { pageItems: [], totalFilteredRecords: 0 } satisfies FineractJournalEntriesPage;
+      }
+    })
+  );
+
+  const byId = new Map<number, FineractJournalEntryListItem>();
+  for (const page of pages) {
+    for (const entry of page.pageItems) {
+      byId.set(entry.id, entry);
+    }
+  }
+  const pageItems = sortByDateThenId(
+    [...byId.values()],
+    (entry) => entry.transactionDate,
+    (entry) => entry.id,
+    'desc'
+  );
+  return { pageItems, totalFilteredRecords: pageItems.length };
+}
+
 export async function getJournalEntryTransaction(
   transactionId: string
 ): Promise<FineractJournalEntriesPage> {
@@ -250,19 +336,8 @@ export async function getJournalEntryTransaction(
     limit: '200',
     offset: '0'
   });
-  if (!raw || typeof raw !== 'object') {
-    return { pageItems: [], totalFilteredRecords: 0 };
-  }
-  const row = raw as Record<string, unknown>;
-  const pageItems = Array.isArray(row.pageItems)
-    ? row.pageItems
-        .map((item) => normalizeJournalEntryListItem(item))
-        .filter((item): item is FineractJournalEntryListItem => item !== null)
-    : [];
-  return {
-    pageItems,
-    totalFilteredRecords: pageItems.length
-  };
+  const page = normalizeJournalEntriesPage(raw);
+  return { pageItems: page.pageItems, totalFilteredRecords: page.pageItems.length };
 }
 
 export async function createJournalEntry(

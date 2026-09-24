@@ -20,5 +20,6 @@ User-facing label for offices in detail views: **Branch** (route path unchanged 
 - Other pending-task tabs (client approval, loan approval, bulk loan reschedule, etc.) are not yet migrated.
 - Loan reschedule create / list / approve / reject is on the loan account **Reschedules** section (`GET/POST /rescheduleloans`).
 - Variable installment edits (pending loans only) use **Edit installments** (`POST /loans/{id}/schedule` with `calculateLoanSchedule` / `addVariations` / `deleteVariations`).
-- Loan account related-record lists (notes, documents, collateral, guarantors, originators, original schedule, overdue charges, tranches, term variations, delinquency) are sidebar sections on the loan account, not separate App Router pages.
+- Loan account related-record lists (notes, documents, collateral, guarantors, originators, original schedule, overdue charges, tranches, term variations, delinquency, journal entries) are sidebar sections on the loan account, not separate App Router pages.
+- Account **Journal entries** (loans, savings, shares, FD, RD) use `GET /journalentries?loanId=` / `savingsId=` (share accounts merge `SH{transactionId}` lookups). Visible with `READ_JOURNALENTRY`.
 - Loan originators attach at application create (`originators[]` on `POST /loans`) or while the loan is **submitted and pending approval** (`POST /loans/{id}/originators/{originatorId}`); detach is the matching `DELETE`. Modify application does not process originators. The Originators section stays visible after approval (read-only).

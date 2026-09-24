@@ -10,6 +10,7 @@
 
 import type {
   FineractAuditTrailListItem,
+  FineractJournalEntryListItem,
   FineractShareAccountDetail
 } from '@mifos/api-client';
 import { useMemo } from 'react';
@@ -20,24 +21,34 @@ import {
   SHARE_ACCOUNT_SECTIONS,
   type ShareAccountSectionId
 } from '@/lib/fineract/share-account-display';
+import { isAccountPermissionedSectionVisible } from '@/lib/fineract/account-detail-section-visibility';
 
 export function ShareAccountDetailPanel({
   account,
   canViewAudits = false,
   auditEntries = [],
   auditLoadFailed = false,
-  auditTotalRecords
+  auditTotalRecords,
+  canViewJournals = false,
+  journalEntries = [],
+  journalLoadFailed = false,
+  journalTotalRecords
 }: {
   account: FineractShareAccountDetail;
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
   auditTotalRecords?: number;
+  canViewJournals?: boolean;
+  journalEntries?: FineractJournalEntryListItem[];
+  journalLoadFailed?: boolean;
+  journalTotalRecords?: number;
 }) {
   const sectionIds = useMemo(() => {
-    const ids = SHARE_ACCOUNT_SECTIONS.map((section) => section.id);
-    return ids.filter((id) => id !== 'audit' || canViewAudits);
-  }, [canViewAudits]);
+    return SHARE_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) =>
+      isAccountPermissionedSectionVisible(id, { canViewAudits, canViewJournals })
+    );
+  }, [canViewAudits, canViewJournals]);
 
   const { activeSection } = useDetailSection(sectionIds, SHARE_ACCOUNT_DEFAULT_SECTION);
 
@@ -49,6 +60,10 @@ export function ShareAccountDetailPanel({
       auditEntries={auditEntries}
       auditLoadFailed={auditLoadFailed}
       auditTotalRecords={auditTotalRecords}
+      canViewJournals={canViewJournals}
+      journalEntries={journalEntries}
+      journalLoadFailed={journalLoadFailed}
+      journalTotalRecords={journalTotalRecords}
     />
   );
 }
