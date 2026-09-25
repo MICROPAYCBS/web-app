@@ -531,6 +531,7 @@ export function LoanAccountWizard({
             principal={draft.principal}
             originatorOptions={originatorOptions}
             isEdit={isEdit}
+            borrowerClientId={Number(clientId)}
             onChange={(patch) =>
               setDraft((current) => mergeLoanAccountSecurityStep(current, patch))
             }

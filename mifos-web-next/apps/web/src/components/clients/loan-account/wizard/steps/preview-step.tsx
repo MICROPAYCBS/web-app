@@ -434,7 +434,11 @@ export function LoanAccountPreviewStep({
 
                     {GUARANTOR_TYPE_LABELS[item.guarantorTypeId] ?? item.guarantorTypeId}
 
-                    {item.entityId != null ? ` · ID ${item.entityId}` : ''}
+                    {item.entityLabel
+                      ? ` · ${item.entityLabel}`
+                      : item.entityId != null
+                        ? ` · ID ${item.entityId}`
+                        : ''}
 
                     {item.firstname ? ` · ${item.firstname} ${item.lastname ?? ''}` : ''}
 

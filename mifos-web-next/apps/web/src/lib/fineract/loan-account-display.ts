@@ -252,6 +252,29 @@ export function formatLoanChargeStatus(charge: {
   return 'Active';
 }
 
+export function loanAccountTermLabel(account: FineractLoanAccountDetail): string | undefined {
+  const count = account.loanTermFrequency;
+  const frequency = enumOptionLabel(account.loanTermFrequencyType);
+  if (count == null && !frequency) {
+    return undefined;
+  }
+  if (count != null && frequency) {
+    return `${count} ${frequency.toLowerCase()}`;
+  }
+  return frequency ?? String(count);
+}
+
+export function loanAccountInterestRateLabel(account: FineractLoanAccountDetail): string | undefined {
+  if (account.interestRatePerPeriod == null) {
+    return undefined;
+  }
+  const frequency = enumOptionLabel(account.interestRateFrequencyType);
+  if (frequency) {
+    return `${account.interestRatePerPeriod}% per ${frequency.replace(/s$/i, '').toLowerCase()}`;
+  }
+  return `${account.interestRatePerPeriod}%`;
+}
+
 export function loanAccountRepaymentFrequencyLabel(account: FineractLoanAccountDetail): string {
   const every = account.repaymentEvery;
   const frequency = enumOptionLabel(account.repaymentFrequencyType);
@@ -283,8 +306,13 @@ export function loanAccountHasLoanTerms(account: FineractLoanAccountDetail): boo
       account.repaymentEvery != null ||
       account.repaymentFrequencyType ||
       account.interestRatePerPeriod != null ||
+      account.interestRateFrequencyType ||
       account.annualInterestRate != null ||
+      account.loanTermFrequency != null ||
+      account.loanTermFrequencyType ||
       account.interestCalculationPeriodType ||
+      account.expectedFirstRepaymentOnDate ||
+      account.interestChargedFromDate ||
       loanAccountHasGraceComponents(account)
   );
 }

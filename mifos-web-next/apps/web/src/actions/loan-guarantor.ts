@@ -23,6 +23,7 @@ import {
   getLoanGuarantorTemplate,
   updateLoanGuarantor
 } from '@/lib/fineract/loan-guarantors';
+import { searchClientEntities } from '@/lib/fineract/search';
 import { getServerSession } from '@/lib/session/server';
 
 function parseGuarantor(raw: unknown): LoanAccountActionResult | ReturnType<
@@ -56,6 +57,44 @@ async function requireKey(
     return { ok: false, message };
   }
   return null;
+}
+
+export async function searchLoanGuarantorClientsAction(query: string): Promise<
+  | {
+      ok: true;
+      clients: Array<{
+        id: number;
+        displayName: string;
+        accountNo?: string;
+        officeName?: string;
+      }>;
+    }
+  | { ok: false; message: string }
+> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('clients.list'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to search customers.' };
+  }
+
+  try {
+    const hits = await searchClientEntities(query, { limit: 20 });
+    return {
+      ok: true,
+      clients: hits.map((hit) => ({
+        id: hit.id,
+        displayName: hit.displayName,
+        accountNo: hit.accountNo,
+        officeName: hit.officeName
+      }))
+    };
+  } catch (err) {
+    return toFineractActionError(err, 'Could not search customers.');
+  }
 }
 
 export async function loadLoanGuarantorTemplateAction(accountId: number) {

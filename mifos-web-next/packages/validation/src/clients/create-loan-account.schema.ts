@@ -60,7 +60,10 @@ export const loanGuarantorItemSchema = z
 
     firstname: z.string().trim().max(100).optional().or(z.literal('')),
 
-    lastname: z.string().trim().max(100).optional().or(z.literal(''))
+    lastname: z.string().trim().max(100).optional().or(z.literal('')),
+
+    /** Display name of a searched customer. Not sent to the server. */
+    entityLabel: z.string().trim().max(200).optional().or(z.literal(''))
 
   })
 
@@ -104,7 +107,10 @@ export const loanGuarantorItemSchema = z
 
           code: z.ZodIssueCode.custom,
 
-          message: 'Entity ID is required for this guarantor type.',
+          message:
+            value.guarantorTypeId === 1
+              ? 'Search for and select a customer.'
+              : 'Staff ID is required.',
 
           path: ['entityId']
 

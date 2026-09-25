@@ -21,6 +21,7 @@ import { DetailSection, EmptyState } from '@/components/composites';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { CustomerSearchField } from '@/components/clients/loan-account/customer-search-field';
 import { Button } from '@/components/ui/button';
 import { toSelectOptions } from '@/lib/form/select-options';
 import type { LoanAccountStepErrors } from '../validation';
@@ -36,7 +37,7 @@ function emptyCollateralRow(): LoanCollateralItemInput {
 }
 
 function emptyGuarantorRow(): LoanGuarantorItemInput {
-  return { guarantorTypeId: 1, entityId: undefined, firstname: '', lastname: '' };
+  return { guarantorTypeId: 1, entityId: undefined, entityLabel: '', firstname: '', lastname: '' };
 }
 
 function emptyOriginatorRow(): { id: number } {
@@ -50,7 +51,8 @@ export function LoanAccountSecurityStep({
   onChange,
   principal = 0,
   originatorOptions = [],
-  isEdit = false
+  isEdit = false,
+  borrowerClientId
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountSecurityStepInput;
@@ -59,6 +61,7 @@ export function LoanAccountSecurityStep({
   principal?: number;
   originatorOptions?: LoanOriginatorListItem[];
   isEdit?: boolean;
+  borrowerClientId?: number;
 }) {
   const collateralOptions = toSelectOptions(
     template.loanCollateralOptions?.map((option) => ({
@@ -217,7 +220,6 @@ export function LoanAccountSecurityStep({
           <div className="space-y-4">
             {guarantors.map((row, index) => {
               const isExternal = row.guarantorTypeId === 4;
-              const needsEntityId = row.guarantorTypeId === 1 || row.guarantorTypeId === 3;
               return (
                 <div
                   key={`guarantor-${index}`}
@@ -231,6 +233,7 @@ export function LoanAccountSecurityStep({
                       updateGuarantor(index, {
                         guarantorTypeId: value ? Number(value) : 1,
                         entityId: undefined,
+                        entityLabel: '',
                         firstname: '',
                         lastname: ''
                       })
@@ -238,16 +241,32 @@ export function LoanAccountSecurityStep({
                     options={GUARANTOR_TYPE_OPTIONS}
                     error={errors[`guarantors.${index}.guarantorTypeId`]}
                   />
-                  {needsEntityId ? (
+                  {row.guarantorTypeId === 1 ? (
+                    <CustomerSearchField
+                      id={`guarantor-customer-${index}`}
+                      selectedId={row.entityId}
+                      selectedLabel={row.entityLabel}
+                      excludeClientId={borrowerClientId}
+                      error={errors[`guarantors.${index}.entityId`]}
+                      onSelect={(customer) =>
+                        updateGuarantor(index, {
+                          entityId: customer?.id,
+                          entityLabel: customer?.label ?? ''
+                        })
+                      }
+                    />
+                  ) : null}
+                  {row.guarantorTypeId === 3 ? (
                     <NumericField
                       id={`guarantor-entity-${index}`}
-                      label={row.guarantorTypeId === 3 ? 'Staff ID' : 'Customer ID'}
+                      label="Staff ID"
                       required
                       integer
                       value={row.entityId ? String(row.entityId) : ''}
                       onChange={(value) =>
                         updateGuarantor(index, {
-                          entityId: value ? Number(value) : undefined
+                          entityId: value ? Number(value) : undefined,
+                          entityLabel: ''
                         })
                       }
                       error={errors[`guarantors.${index}.entityId`]}

@@ -26,6 +26,7 @@ import { FormSheet } from '@/components/composites/form-sheet';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { CustomerSearchField } from '@/components/clients/loan-account/customer-search-field';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -52,10 +53,6 @@ function isExternalType(typeId: number) {
   return typeId === 4;
 }
 
-function needsEntityId(typeId: number) {
-  return typeId === 1 || typeId === 3;
-}
-
 export function LoanAccountGuarantorSheet({
   clientId,
   accountId,
@@ -76,6 +73,7 @@ export function LoanAccountGuarantorSheet({
   const [types, setTypes] = useState<LoanGuarantorTypeOption[]>(FALLBACK_GUARANTOR_TYPES);
   const [guarantorTypeId, setGuarantorTypeId] = useState('1');
   const [entityId, setEntityId] = useState('');
+  const [entityLabel, setEntityLabel] = useState('');
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +84,10 @@ export function LoanAccountGuarantorSheet({
   function resetFrom(editingRow?: LoanGuarantorRecord | null) {
     setGuarantorTypeId(String(editingRow?.guarantorTypeId ?? 1));
     setEntityId(editingRow?.entityId != null ? String(editingRow.entityId) : '');
+    setEntityLabel(
+      editingRow?.displayName?.trim() ||
+        (editingRow?.entityId != null ? `Customer #${editingRow.entityId}` : '')
+    );
     setFirstname(editingRow?.firstname ?? '');
     setLastname(editingRow?.lastname ?? '');
     setError(null);
@@ -156,14 +158,34 @@ export function LoanAccountGuarantorSheet({
           label="Guarantor type"
           required
           value={guarantorTypeId}
-          onValueChange={(next) => setGuarantorTypeId(next ?? '1')}
+          onValueChange={(next) => {
+            setGuarantorTypeId(next ?? '1');
+            setEntityId('');
+            setEntityLabel('');
+            setFirstname('');
+            setLastname('');
+          }}
           options={toSelectOptions(types)}
           error={fieldErrors.guarantorTypeId}
           disabled={pending || loading}
         />
-        {needsEntityId(typeId) ? (
+        {typeId === 1 ? (
+          <CustomerSearchField
+            id={`${formId}-customer`}
+            selectedId={entityId ? Number(entityId) : undefined}
+            selectedLabel={entityLabel}
+            excludeClientId={Number(clientId)}
+            error={fieldErrors.entityId}
+            disabled={pending || loading}
+            onSelect={(customer) => {
+              setEntityId(customer ? String(customer.id) : '');
+              setEntityLabel(customer?.label ?? '');
+            }}
+          />
+        ) : null}
+        {typeId === 3 ? (
           <NumericField
-            label={typeId === 3 ? 'Staff ID' : 'Customer ID'}
+            label="Staff ID"
             required
             integer
             value={entityId}

@@ -8,7 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel, loanAccountVisibleSections, sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
+import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountInterestRateLabel, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel, loanAccountTermLabel, loanAccountVisibleSections, sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
 import type { FineractLoanAccountDetail, FineractLoanAccountTransaction } from '@/lib/fineract/loan-account-types';
 
 function sampleAccount(summary: FineractLoanAccountDetail['summary']): FineractLoanAccountDetail {
@@ -139,6 +139,21 @@ describe('loanAccountHasGraceComponents', () => {
       }),
       true
     );
+  });
+});
+
+describe('loan account contract labels', () => {
+  it('formats loan term and interest rate from the account', () => {
+    const account = {
+      ...sampleAccount(undefined),
+      loanTermFrequency: 12,
+      loanTermFrequencyType: { id: 2, value: 'Months' },
+      interestRatePerPeriod: 2,
+      interestRateFrequencyType: { id: 2, value: 'Months' }
+    };
+    assert.equal(loanAccountTermLabel(account), '12 months');
+    assert.equal(loanAccountInterestRateLabel(account), '2% per month');
+    assert.equal(loanAccountHasLoanTerms(account), true);
   });
 });
 

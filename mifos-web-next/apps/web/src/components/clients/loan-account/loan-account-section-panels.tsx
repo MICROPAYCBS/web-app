@@ -77,10 +77,12 @@ import {
   loanAccountHasLoanTerms,
   loanAccountHasPayoutConfiguration,
   loanAccountHasSummary,
+  loanAccountInterestRateLabel,
   loanAccountLinkedAccountId,
   loanAccountLinkedAccountLabel,
   loanAccountProductName,
   loanAccountRepaymentFrequencyLabel,
+  loanAccountTermLabel,
   loanAccountShowApprovedAmount,
   loanAccountShowDisbursedAmount,
   loanAccountStandingInstructionAtDisbursementLabel,
@@ -196,6 +198,17 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
   const timeline = account.timeline;
   const matrixRows = buildLoanAccountSummaryMatrix(account);
 
+  const termLabel = loanAccountTermLabel(account);
+  const interestLabel = loanAccountInterestRateLabel(account);
+  const contractKpis = [
+    ...(termLabel
+      ? [{ id: 'term', label: 'Loan term', value: termLabel }]
+      : []),
+    ...(interestLabel
+      ? [{ id: 'interest', label: 'Interest rate', value: interestLabel }]
+      : [])
+  ];
+
   const kpiItems = summary
     ? [
         {
@@ -219,7 +232,8 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
           id: 'overpaid',
           label: 'Overpaid',
           value: <MoneyValue amount={account.totalOverpaid} currencyCode={currency} />
-        }
+        },
+        ...contractKpis
       ]
     : [
         {
@@ -248,7 +262,8 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
                 value: <MoneyValue amount={account.principal} currencyCode={currency} />
               }
             ]
-          : [])
+          : []),
+        ...contractKpis
       ];
 
   const timelineRows = [
@@ -262,11 +277,14 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
       date: timeline?.approvedOnDate,
       by: formatTimelineActorByRole(timeline, 'approved')
     },
+    { label: 'Expected disbursement', date: timeline?.expectedDisbursementDate },
     {
       label: 'Disbursed',
       date: timeline?.actualDisbursementDate,
       by: formatTimelineActorByRole(timeline, 'disbursed')
     },
+    { label: 'Interest charged from', date: account.interestChargedFromDate },
+    { label: 'First repayment', date: account.expectedFirstRepaymentOnDate },
     { label: 'Expected maturity', date: timeline?.expectedMaturityDate },
     {
       label: 'Closed',
@@ -331,6 +349,18 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
                 <MoneyValue amount={account.principal} currencyCode={currency} />
               </DetailField>
             ) : null}
+            {account.fundName ? (
+              <DetailField label="Fund">{account.fundName}</DetailField>
+            ) : null}
+            {account.netDisbursalAmount != null ? (
+              <DetailField label="Net disbursal">
+                <MoneyValue amount={account.netDisbursalAmount} currencyCode={currency} />
+              </DetailField>
+            ) : null}
+            {account.isNPA ? <DetailField label="Non-performing">Yes</DetailField> : null}
+            {account.delinquent?.pastDueDays != null ? (
+              <DetailField label="Days past due">{account.delinquent.pastDueDays}</DetailField>
+            ) : null}
             {account.writeOffReason ? (
               <DetailField label="Write-off reason">{account.writeOffReason}</DetailField>
             ) : null}
@@ -376,6 +406,7 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
                 {enumOptionLabel(account.amortizationType) ?? '—'}
               </DetailField>
             ) : null}
+            {termLabel ? <DetailField label="Loan term">{termLabel}</DetailField> : null}
             {account.numberOfRepayments != null ? (
               <DetailField label="Repayments">{account.numberOfRepayments}</DetailField>
             ) : null}
@@ -389,13 +420,39 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
                 {enumOptionLabel(account.interestType) ?? '—'}
               </DetailField>
             ) : null}
-            {account.interestRatePerPeriod != null ? (
-              <DetailField label="Interest rate per period">
-                {account.interestRatePerPeriod}%
-              </DetailField>
+            {interestLabel ? (
+              <DetailField label="Interest rate">{interestLabel}</DetailField>
             ) : null}
             {account.annualInterestRate != null ? (
               <DetailField label="Annual interest rate">{account.annualInterestRate}%</DetailField>
+            ) : null}
+            {account.isFloatingInterestRate && account.interestRateDifferential != null ? (
+              <DetailField label="Interest rate differential">
+                {account.interestRateDifferential}%
+              </DetailField>
+            ) : null}
+            {account.isInterestRecalculationEnabled ? (
+              <DetailField label="Interest recalculation">Yes</DetailField>
+            ) : null}
+            {account.daysInMonthType ? (
+              <DetailField label="Days in month">
+                {enumOptionLabel(account.daysInMonthType) ?? '—'}
+              </DetailField>
+            ) : null}
+            {account.daysInYearType ? (
+              <DetailField label="Days in year">
+                {enumOptionLabel(account.daysInYearType) ?? '—'}
+              </DetailField>
+            ) : null}
+            {account.inArrearsTolerance != null ? (
+              <DetailField label="Arrears tolerance">
+                <MoneyValue amount={account.inArrearsTolerance} currencyCode={currency} />
+              </DetailField>
+            ) : null}
+            {account.fixedEmiAmount != null ? (
+              <DetailField label="Fixed installment">
+                <MoneyValue amount={account.fixedEmiAmount} currencyCode={currency} />
+              </DetailField>
             ) : null}
             {account.interestCalculationPeriodType ? (
               <DetailField label="Interest calculation period">
