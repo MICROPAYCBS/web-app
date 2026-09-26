@@ -28,10 +28,28 @@ const STEP_FIELDS: Record<string, readonly string[]> = {
     'maxCap',
     'incomeAccountId',
     'taxGroupId',
+    'penalty',
+    'active',
     'useChargeTiers',
-    'chargeTiers'
+    'chargeTiers',
+    'enableFreeWithdrawalCharge',
+    'freeWithdrawalFrequency',
+    'restartCountFrequency',
+    'countFrequencyType',
+    'enablePaymentType',
+    'paymentTypeId'
   ]
 };
+
+export function chargeStepIdForField(field: string): string | undefined {
+  const root = field.split('.')[0] ?? field;
+  for (const [stepId, fields] of Object.entries(STEP_FIELDS)) {
+    if (fields.includes(root)) {
+      return stepId;
+    }
+  }
+  return undefined;
+}
 
 export function validateChargeStep(stepId: string, draft: ChargeWizardDraft): StepErrors {
   if (stepId === 'appliesTo') {
@@ -107,6 +125,12 @@ export function draftToPayload(draft: ChargeWizardDraft): UpsertChargeInput {
     feeFrequency: draft.feeFrequency,
     feeOnMonthDay: draft.feeOnMonthDay,
     addFeeFrequency: draft.addFeeFrequency,
+    enableFreeWithdrawalCharge: draft.enableFreeWithdrawalCharge,
+    freeWithdrawalFrequency: draft.freeWithdrawalFrequency,
+    restartCountFrequency: draft.restartCountFrequency,
+    countFrequencyType: draft.countFrequencyType,
+    enablePaymentType: draft.enablePaymentType,
+    paymentTypeId: draft.paymentTypeId,
     useChargeTiers,
     chargeTiers
   };

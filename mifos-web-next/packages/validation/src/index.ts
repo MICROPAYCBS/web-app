@@ -158,6 +158,7 @@ export {
   savingsAccountAddChargeSchema,
   savingsAccountPayChargeSchema,
   savingsAccountWithholdTaxSchema,
+  savingsAccountPaymentChannelCommandSchema,
   savingsAccountUndoTransactionSchema,
   savingsAccountModifyTransactionSchema,
   undoAccountTransferCommandSchema,
@@ -177,6 +178,7 @@ export {
   type SavingsAccountAddChargeInput,
   type SavingsAccountPayChargeInput,
   type SavingsAccountWithholdTaxInput,
+  type SavingsAccountPaymentChannelCommandInput,
   type SavingsAccountUndoTransactionInput,
   type SavingsAccountModifyTransactionInput,
   type UndoAccountTransferCommandInput
@@ -416,6 +418,16 @@ export {
   type ChargeTierInput
 } from './products/upsert-charge.schema';
 export {
+  CHARGE_MONTH_DAY_ANCHOR_YEAR,
+  chargeMonthDayToDate,
+  dateToChargeMonthDay,
+  daysInChargeMonth,
+  formatChargeMonthDay,
+  isAcceptedChargeMonthDay,
+  parseChargeMonthDay,
+  type ChargeMonthDay
+} from './products/charge-month-day';
+export {
   validateLookupRangeBands,
   collectLookupRangeBandIssues,
   type LookupRangeBand,
@@ -435,6 +447,7 @@ export {
   savingsProductTermsStepSchema,
   savingsProductSettingsStepSchema,
   savingsProductChargesStepSchema,
+  savingsProductPaymentChannelsStepSchema,
   savingsProductAccountingStepSchema,
   savingsProductAccountingCoreStepSchema,
   savingsProductMappingsStepSchema,
@@ -445,6 +458,7 @@ export {
   type SavingsProductTermsInput,
   type SavingsProductSettingsInput,
   type SavingsProductChargesInput,
+  type SavingsProductPaymentChannelsInput,
   type SavingsProductMappingsInput,
   type SavingsProductAccountingInput
 } from './products/savings-product.schema';

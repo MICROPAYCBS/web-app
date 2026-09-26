@@ -16,6 +16,19 @@
     "useChargeTiers": { "required": false },
     "chargeTiers": { "required": false },
     "minCap": { "required": false },
-    "maxCap": { "required": false }
+    "maxCap": { "required": false },
+    "chargeAppliesTo": { "required": false, "notes": "Cannot change. Resend the current value when the body also includes charge time and tiers." },
+    "chargePaymentMode": { "required": false },
+    "feeOnMonthDay": { "required": false },
+    "feeInterval": { "required": false },
+    "feeFrequency": { "required": false },
+    "enableFreeWithdrawalCharge": { "required": false },
+    "freeWithdrawalFrequency": { "required": false },
+    "restartCountFrequency": { "required": false },
+    "countFrequencyType": { "required": false },
+    "enablePaymentType": { "required": false },
+    "paymentTypeId": { "required": false },
+    "incomeAccountId": { "required": false },
+    "taxGroupId": { "required": false, "notes": "Cannot change once a tax group is already set." }
   }
 }

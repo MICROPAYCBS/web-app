@@ -38,6 +38,7 @@ function minimalDraft(
       ...overrides.settings
     },
     charges: { chargeIds: [], chargeAmounts: {}, ...overrides.charges },
+    paymentChannels: { channels: [], ...overrides.paymentChannels },
     accounting: { accountingRule: 1, ...overrides.accounting }
   };
 }
@@ -89,6 +90,73 @@ describe('buildSavingsProductPayload', () => {
     assert.equal(payload.locale, 'en');
     assert.equal(payload.startDate, '01 January 2024');
     assert.equal(payload.closeDate, '31 December 2030');
+  });
+
+  it('sends an empty payment channel catalog', () => {
+    const payload = buildSavingsProductPayload(minimalDraft());
+
+    assert.deepEqual(payload.paymentChannels, []);
+  });
+
+  it('keeps channel fees out of product charges', () => {
+    const payload = buildSavingsProductPayload(
+      minimalDraft({
+        charges: { chargeIds: [3] },
+        paymentChannels: {
+          channels: [
+            {
+              paymentTypeId: 1,
+              isPremium: false,
+              isActive: true,
+              chargeIds: [99],
+              chargeAmounts: { '99': 10 }
+            },
+            {
+              paymentTypeId: 3,
+              isPremium: true,
+              isActive: true,
+              chargeIds: [12],
+              chargeAmounts: { '12': 50 }
+            }
+          ]
+        }
+      })
+    );
+
+    assert.deepEqual(payload.charges, [{ id: 3 }]);
+    assert.deepEqual(payload.paymentChannels, [
+      { paymentTypeId: 1, isPremium: false, isActive: true, charges: [] },
+      { paymentTypeId: 3, isPremium: true, isActive: true, charges: [{ id: 12, amount: 50 }] }
+    ]);
+  });
+
+  it('keeps one row per payment type and one entry per charge', () => {
+    const payload = buildSavingsProductPayload(
+      minimalDraft({
+        paymentChannels: {
+          channels: [
+            {
+              paymentTypeId: 3,
+              isPremium: true,
+              isActive: true,
+              chargeIds: [12, 12],
+              chargeAmounts: { '12': 50 }
+            },
+            {
+              paymentTypeId: 3,
+              isPremium: false,
+              isActive: false,
+              chargeIds: [8],
+              chargeAmounts: {}
+            }
+          ]
+        }
+      })
+    );
+
+    assert.deepEqual(payload.paymentChannels, [
+      { paymentTypeId: 3, isPremium: true, isActive: true, charges: [{ id: 12, amount: 50 }] }
+    ]);
   });
 
   it('omits empty availability dates', () => {

@@ -51,6 +51,14 @@ Reference: `openMF/web-app` → `src/app/products/`
 | `/products/floating-rates/[id]` | GET | ViewFloatingRateComponent | `GET /floatingrates/{id}` | — | — | done |
 | `/products/floating-rates/[id]/edit` | PUT | EditFloatingRateComponent | `PUT /floatingrates/{id}` | `products.floating-rate.update` | — | done |
 
+## Savings product payment channels
+
+Deposit product create and edit include a Channels step. The catalog is stored on `paymentChannels` (`POST`/`PUT /savingsproducts`) and is separate from product `charges`. An empty catalog keeps every payment type available. Premium rows can map fees with an optional amount override; tiered charges do not take an amount. Savings account detail lists the catalog and can subscribe or unsubscribe (`POST /savingsaccounts/{id}/paymentchannels?command=subscribe|unsubscribe`). Deposit and withdrawal payment types come from the transaction template, which the server filters to allowed channels when a catalog is active.
+
+## Charge create and edit
+
+Create and edit use the same field matrix. Applies-to is locked on edit. Tax group is locked once a charge already has one. Overdue instalment forces the penalty on; disbursement and tranche disbursement force it off. Savings monthly fees require a month-day and a repeat interval of 1–12. Caps show only for percent of amount, and for percent of disbursement on create. Charge tiers stay limited to the loan and savings times that allow them. Savings charges can require free-withdrawal counts and a payment type when those options are on.
+
 ## Notes
 
 - Product mix create flow loads per-product options via `GET /loanproducts/{productId}/productmix?template=true`.

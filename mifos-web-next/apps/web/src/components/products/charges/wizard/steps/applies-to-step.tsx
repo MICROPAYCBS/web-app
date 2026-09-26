@@ -54,6 +54,12 @@ function appliesToResetPatch(chargeAppliesTo: number): Partial<ChargeWizardDraft
     feeFrequency: undefined,
     feeOnMonthDay: undefined,
     addFeeFrequency: false,
+    enableFreeWithdrawalCharge: false,
+    freeWithdrawalFrequency: undefined,
+    restartCountFrequency: undefined,
+    countFrequencyType: undefined,
+    enablePaymentType: false,
+    paymentTypeId: undefined,
     useChargeTiers: false,
     chargeTiers: []
   };

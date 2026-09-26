@@ -17,6 +17,18 @@
     "useChargeTiers": { "required": false },
     "chargeTiers": { "required": false },
     "minCap": { "required": false },
-    "maxCap": { "required": false }
+    "maxCap": { "required": false },
+    "chargePaymentMode": { "required": false, "notes": "Required for loan charges only." },
+    "feeOnMonthDay": { "required": false, "notes": "Required for savings annual and monthly fees. Send with monthDayFormat dd MMM and locale en." },
+    "feeInterval": { "required": false, "notes": "Required for savings monthly fees (1–12) and whenever feeFrequency is sent." },
+    "feeFrequency": { "required": false, "notes": "0–3. Do not send whole term (4)." },
+    "enableFreeWithdrawalCharge": { "required": false },
+    "freeWithdrawalFrequency": { "required": false },
+    "restartCountFrequency": { "required": false },
+    "countFrequencyType": { "required": false },
+    "enablePaymentType": { "required": false },
+    "paymentTypeId": { "required": false },
+    "incomeAccountId": { "required": false },
+    "taxGroupId": { "required": false }
   }
 }

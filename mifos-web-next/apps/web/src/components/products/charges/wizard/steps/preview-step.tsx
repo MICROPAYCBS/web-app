@@ -26,11 +26,13 @@ import { Layers } from 'lucide-react';
 import {
   chargePaymentModeOptions,
   chargeTimeTypeOptions,
+  feePeriodOptions,
   filteredChargeCalculationTypeOptions,
   incomeAccountOptions,
   showChargePaymentMode,
   showIncomeAccountField,
   showMinMaxCap,
+  showSavingsChargeExtras,
   showTaxGroupField
 } from '@/lib/fineract/charge-form-logic';
 import {
@@ -93,7 +95,7 @@ export function PreviewStep({
           <DetailField label="Currency">{currencyCode || '—'}</DetailField>
           <DetailField label="Charge time type">
             {optionLabelById(
-              chargeTimeTypeOptions(template, chargeAppliesTo),
+              chargeTimeTypeOptions(template, chargeAppliesTo, draft.chargeTimeType),
               draft.chargeTimeType
             )}
           </DetailField>
@@ -123,7 +125,23 @@ export function PreviewStep({
           ) : null}
           {draft.feeFrequency != null ? (
             <DetailField label="Charge frequency">
-              {optionLabelById(template.feeFrequencyOptions, draft.feeFrequency)}
+              {optionLabelById(feePeriodOptions(template), draft.feeFrequency)}
+            </DetailField>
+          ) : null}
+          {showSavingsChargeExtras(chargeAppliesTo) && draft.enableFreeWithdrawalCharge ? (
+            <>
+              <DetailField label="Free withdrawals">{draft.freeWithdrawalFrequency ?? '—'}</DetailField>
+              <DetailField label="Restart count frequency">
+                {draft.restartCountFrequency ?? '—'}
+              </DetailField>
+              <DetailField label="Count frequency type">
+                {optionLabelById(feePeriodOptions(template), draft.countFrequencyType)}
+              </DetailField>
+            </>
+          ) : null}
+          {showSavingsChargeExtras(chargeAppliesTo) && draft.enablePaymentType ? (
+            <DetailField label="Payment type">
+              {optionLabelById(template.paymentTypeOptions, draft.paymentTypeId)}
             </DetailField>
           ) : null}
         </DetailFieldGrid>
@@ -138,7 +156,8 @@ export function PreviewStep({
             chargeAppliesTo,
             draft.chargeTimeType,
             draft.chargeCalculationType,
-            useChargeTiers
+            useChargeTiers,
+            mode
           ) &&
           draft.minCap != null ? (
             <DetailField label="Minimum cap">
@@ -157,7 +176,8 @@ export function PreviewStep({
             chargeAppliesTo,
             draft.chargeTimeType,
             draft.chargeCalculationType,
-            useChargeTiers
+            useChargeTiers,
+            mode
           ) &&
           draft.maxCap != null ? (
             <DetailField label="Maximum cap">

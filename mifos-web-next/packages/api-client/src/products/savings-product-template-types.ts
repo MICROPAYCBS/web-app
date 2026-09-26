@@ -8,6 +8,7 @@
 
 import type { FineractCurrencyOption, FineractEnumOption } from '../clients/types';
 import type { ProductGlAccountRef } from './loan-product-types';
+import type { SavingsProductPaymentChannel } from './savings-product-types';
 import type { LoanProductAccountingMappingOptions } from './loan-product-template-types';
 
 export interface SavingsProductTemplate {
@@ -57,7 +58,8 @@ export interface SavingsProductTemplate {
   accountingRuleOptions?: FineractEnumOption[];
   accountingMappingOptions?: LoanProductAccountingMappingOptions;
   accountingMappings?: Record<string, ProductGlAccountRef | undefined>;
-  charges?: { id: number; name?: string; penalty?: boolean }[];
+  charges?: { id: number; name?: string; penalty?: boolean; amount?: number; useChargeTiers?: boolean }[];
+  paymentChannels?: SavingsProductPaymentChannel[];
   paymentChannelToFundSourceMappings?: unknown[];
   feeToIncomeAccountMappings?: unknown[];
   penaltyToIncomeAccountMappings?: unknown[];

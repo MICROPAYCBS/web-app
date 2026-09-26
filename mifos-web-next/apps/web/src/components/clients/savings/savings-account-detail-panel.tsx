@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractSavingsAccountDetail, SavingsAccountPaymentChannel } from '@mifos/api-client';
 import { useMemo } from 'react';
 import { SavingsAccountSectionPanel } from '@/components/clients/savings/savings-account-section-panels';
 import { useDetailSection } from '@/hooks/use-detail-section';
@@ -37,7 +37,10 @@ export function SavingsAccountDetailPanel({
     undoTransfer: false,
     modifyTransaction: false,
     viewJournal: false
-  }
+  },
+  paymentChannels = [],
+  paymentChannelsLoadError,
+  canManagePaymentChannels = false
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -51,6 +54,9 @@ export function SavingsAccountDetailPanel({
   journalLoadFailed?: boolean;
   journalTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
+  paymentChannels?: SavingsAccountPaymentChannel[];
+  paymentChannelsLoadError?: string;
+  canManagePaymentChannels?: boolean;
 }) {
   const sectionIds = useMemo(() => {
     return SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) =>
@@ -75,6 +81,9 @@ export function SavingsAccountDetailPanel({
       journalLoadFailed={journalLoadFailed}
       journalTotalRecords={journalTotalRecords}
       transactionActionPermissions={transactionActionPermissions}
+      paymentChannels={paymentChannels}
+      paymentChannelsLoadError={paymentChannelsLoadError}
+      canManagePaymentChannels={canManagePaymentChannels}
     />
   );
 }

@@ -9,6 +9,7 @@
  */
 
 import type { ChargeWizardDraft } from '../types';
+import { MonthDayField } from '@/components/composites/month-day-field';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
@@ -16,8 +17,10 @@ import { TextField } from '@/components/composites/text-field';
 import {
   chargePaymentModeOptions,
   chargeTimeTypeOptions,
+  feePeriodOptions,
   filteredChargeCalculationTypeOptions,
   isChargeTiersAllowed,
+  penaltyLocked,
   showChargePaymentMode
 } from '@/lib/fineract/charge-form-logic';
 import { toSelectOptions } from '@/lib/form/select-options';
@@ -33,7 +36,9 @@ export function TermsStep({
 }) {
   const chargeAppliesTo = draft.chargeAppliesTo;
   const chargeTimeType = draft.chargeTimeType;
-  const timeOptions = toSelectOptions(chargeTimeTypeOptions(template, chargeAppliesTo));
+  const timeOptions = toSelectOptions(
+    chargeTimeTypeOptions(template, chargeAppliesTo, chargeTimeType)
+  );
   const calculationOptions = toSelectOptions(
     filteredChargeCalculationTypeOptions(template, chargeAppliesTo, chargeTimeType)
   );
@@ -76,6 +81,7 @@ export function TermsStep({
           value={chargeTimeType != null ? String(chargeTimeType) : undefined}
           onValueChange={(value) => {
             const nextTimeType = value ? Number(value) : undefined;
+            const lock = penaltyLocked(chargeAppliesTo, nextTimeType);
             const patch: Partial<ChargeWizardDraft> = {
               chargeTimeType: nextTimeType,
               chargeCalculationType: undefined,
@@ -84,6 +90,11 @@ export function TermsStep({
               feeOnMonthDay: undefined,
               addFeeFrequency: false
             };
+            if (lock === 'on') {
+              patch.penalty = true;
+            } else if (lock === 'off') {
+              patch.penalty = false;
+            }
             if (!isChargeTiersAllowed(chargeAppliesTo, nextTimeType)) {
               patch.useChargeTiers = false;
               patch.chargeTiers = [];
@@ -134,7 +145,13 @@ export function TermsStep({
             id="addFeeFrequency"
             label="Add fee frequency"
             checked={draft.addFeeFrequency ?? false}
-            onCheckedChange={(addFeeFrequency) => onChange({ addFeeFrequency })}
+            onCheckedChange={(addFeeFrequency) =>
+              onChange(
+                addFeeFrequency
+                  ? { addFeeFrequency }
+                  : { addFeeFrequency, feeFrequency: undefined, feeInterval: undefined }
+              )
+            }
           />
         ) : null}
         {chargeTimeType === 9 && draft.addFeeFrequency ? (
@@ -147,7 +164,7 @@ export function TermsStep({
               onValueChange={(value) =>
                 onChange({ feeFrequency: value ? Number(value) : undefined })
               }
-              options={toSelectOptions(template.feeFrequencyOptions)}
+              options={toSelectOptions(feePeriodOptions(template))}
               error={errors.feeFrequency}
             />
             <NumericField
@@ -164,15 +181,12 @@ export function TermsStep({
           </>
         ) : null}
         {chargeTimeType === 6 || chargeTimeType === 7 ? (
-          <TextField
+          <MonthDayField
             id="feeOnMonthDay"
             label="Due date"
-            required={chargeTimeType === 6}
-            optional={chargeTimeType === 7}
-            value={draft.feeOnMonthDay ?? ''}
+            required
+            value={draft.feeOnMonthDay}
             onChange={(feeOnMonthDay) => onChange({ feeOnMonthDay })}
-            placeholder="06 Jun"
-            hint="Day and month, e.g. 06 Jun"
             error={errors.feeOnMonthDay}
           />
         ) : null}
@@ -180,7 +194,8 @@ export function TermsStep({
           <NumericField
             id="feeIntervalRepeat"
             label={chargeTimeType === 7 ? 'Repeat every (months)' : 'Repeat every (weeks)'}
-            required
+            required={chargeTimeType === 7}
+            optional={chargeTimeType === 11}
             integer
             value={draft.feeInterval != null ? String(draft.feeInterval) : ''}
             onChange={(value) =>

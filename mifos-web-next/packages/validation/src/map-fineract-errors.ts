@@ -9,6 +9,10 @@
 import type { FineractApiError } from '@mifos/api-client';
 import { getFineractErrorMessage, resolveFineractErrorItemMessage } from '@mifos/i18n';
 import { resolveCreateClientErrorField } from './clients/create-client-error-fields';
+import {
+  normalizeErrorParameterPath,
+  resolveChargeErrorField
+} from './products/charge-error-fields';
 
 export interface FieldError {
   field: string;
@@ -32,11 +36,14 @@ export function mapFineractErrors(body: FineractApiError | null): MappedFineract
       if (!message) {
         continue;
       }
+      const fromParameter = normalizeErrorParameterPath(
+        resolveCreateClientErrorField(err.userMessageGlobalisationCode, err.parameterName)
+      );
       fieldErrors.push({
-        field: resolveCreateClientErrorField(
-          err.userMessageGlobalisationCode,
-          err.parameterName
-        ),
+        field:
+          fromParameter !== '_form'
+            ? fromParameter
+            : (resolveChargeErrorField(err.userMessageGlobalisationCode) ?? '_form'),
         message,
         code: err.userMessageGlobalisationCode
       });

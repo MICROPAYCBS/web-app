@@ -132,6 +132,55 @@ export const savingsProductChargesStepSchema = z.object({
   chargeAmounts: z.record(z.string(), z.coerce.number().positive()).default({})
 });
 
+const savingsProductPaymentChannelRowSchema = z.object({
+  paymentTypeId: z.coerce.number().int().positive('Select a payment type.'),
+  isPremium: z.boolean(),
+  isActive: z.boolean(),
+  chargeIds: z.array(z.coerce.number().int().positive()).default([]),
+  /** Optional amount overrides keyed by charge id string. Omitted for tiered charges. */
+  chargeAmounts: z.record(z.string(), z.coerce.number().positive()).default({})
+});
+
+/**
+ * Product payment-channel catalog. An empty list keeps legacy behaviour:
+ * every payment type is allowed on deposit and withdrawal.
+ */
+export const savingsProductPaymentChannelsStepSchema = z
+  .object({
+    channels: z.array(savingsProductPaymentChannelRowSchema).default([])
+  })
+  .superRefine((data, ctx) => {
+    const seen = new Set<number>();
+    data.channels.forEach((row, index) => {
+      if (seen.has(row.paymentTypeId)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Each payment type can be listed once.',
+          path: ['channels', index, 'paymentTypeId']
+        });
+      }
+      seen.add(row.paymentTypeId);
+      const seenCharges = new Set<number>();
+      row.chargeIds.forEach((chargeId, chargeIndex) => {
+        if (seenCharges.has(chargeId)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Each fee can be mapped once on a channel.',
+            path: ['channels', index, 'chargeIds', chargeIndex]
+          });
+        }
+        seenCharges.add(chargeId);
+      });
+      if (!row.isPremium && row.chargeIds.length > 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Fees can be mapped only on premium channels.',
+          path: ['channels', index, 'chargeIds']
+        });
+      }
+    });
+  });
+
 function refineSavingsAccounting(
   data: {
     accountingRule: number;
@@ -249,6 +298,7 @@ export const upsertSavingsProductSchema = z
     terms: savingsProductTermsStepSchema,
     settings: savingsProductSettingsStepSchema,
     charges: savingsProductChargesStepSchema,
+    paymentChannels: savingsProductPaymentChannelsStepSchema,
     accounting: savingsProductAccountingStepSchema
   })
   .superRefine((data, ctx) => {
@@ -263,6 +313,9 @@ export type SavingsProductCurrencyInput = z.infer<typeof savingsProductCurrencyS
 export type SavingsProductTermsInput = z.infer<typeof savingsProductTermsStepSchema>;
 export type SavingsProductSettingsInput = z.infer<typeof savingsProductSettingsStepSchema>;
 export type SavingsProductChargesInput = z.infer<typeof savingsProductChargesStepSchema>;
+export type SavingsProductPaymentChannelsInput = z.infer<
+  typeof savingsProductPaymentChannelsStepSchema
+>;
 export type SavingsProductMappingsInput = z.infer<typeof savingsProductMappingsStepSchema>;
 export type SavingsProductAccountingInput = z.infer<typeof savingsProductAccountingStepSchema>;
 export type UpsertSavingsProductInput = z.infer<typeof upsertSavingsProductSchema>;

@@ -22,6 +22,7 @@ import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForSavingsAccount } from '@/lib/fineract/audit-trails';
 import { listJournalEntriesForSavingsAccount } from '@/lib/fineract/journal-entries';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
+import { getSavingsAccountPaymentChannels } from '@/lib/fineract/savings-account-commands';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
 import {
   loadResourcePendingCheckerActions,
@@ -80,7 +81,8 @@ export default async function SavingsAccountGeneralPage({
     notFound();
   }
 
-  const [result, auditResult, journalResult, reportOrgName] = await Promise.all([
+  const canManagePaymentChannels = can(session, 'UPDATE_SAVINGSACCOUNT');
+  const [result, auditResult, journalResult, paymentChannelsResult, reportOrgName] = await Promise.all([
     tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
     tryFineractLoad(
       () => listAuditTrailsForSavingsAccount(accountId, { limit: canViewAudits ? 100 : 25 }),
@@ -92,6 +94,10 @@ export default async function SavingsAccountGeneralPage({
           'Could not load journal entries.'
         )
       : Promise.resolve(null),
+    tryFineractLoad(
+      () => getSavingsAccountPaymentChannels(accountId),
+      'Could not load payment channels.'
+    ),
     loadReportOrganisationName()
   ]);
 
@@ -169,6 +175,11 @@ export default async function SavingsAccountGeneralPage({
       pendingCheckerActions={pendingCheckerActions}
       pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}
       makerCheckerTaskPermissions={workflowRuntime.makerCheckerPermissions}
+      paymentChannels={paymentChannelsResult.ok ? paymentChannelsResult.data : []}
+      paymentChannelsLoadError={
+        paymentChannelsResult.ok ? undefined : paymentChannelsResult.message
+      }
+      canManagePaymentChannels={canManagePaymentChannels}
     />
   );
 }

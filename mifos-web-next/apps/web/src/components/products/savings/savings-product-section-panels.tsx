@@ -28,6 +28,7 @@ import {
   productStatusLabel,
   productStatusVariant
 } from '@/lib/fineract/product-status-display';
+import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
 import {
   savingsProductCurrencyCode,
   savingsProductFeeCharges
@@ -171,6 +172,56 @@ function SavingsProductAccountingSection({ product }: { product: SavingsProductD
   );
 }
 
+function SavingsProductPaymentChannelsSection({ product }: { product: SavingsProductDetail }) {
+  const currency = savingsProductCurrencyCode(product);
+  const rows = product.paymentChannels ?? [];
+
+  return (
+    <DetailSection title="Payment channels">
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No catalog. Every payment type can be used for deposits and withdrawals.
+        </p>
+      ) : (
+        <ul className="divide-y divide-border rounded-lg border border-border">
+          {rows.map((row) => {
+            const fees = row.charges
+              .map((charge) => {
+                const name = charge.name ?? `Fee ${charge.id}`;
+                if (charge.useChargeTiers) {
+                  return `${name} (tiered)`;
+                }
+                const amount = formatChargeAmountDisplay(charge, currency);
+                return amount === '—' ? name : `${name} · ${amount}`;
+              })
+              .join(', ');
+
+            return (
+              <li key={row.paymentTypeId} className="space-y-1 px-4 py-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">
+                    {row.paymentTypeName ?? `Payment type ${row.paymentTypeId}`}
+                  </span>
+                  <Badge variant={row.isPremium ? 'default' : 'secondary'}>
+                    {row.isPremium ? 'Premium' : 'Standard'}
+                  </Badge>
+                  <Badge variant="outline">{row.isActive ? 'Active' : 'Inactive'}</Badge>
+                </div>
+                <p className="text-muted-foreground">
+                  {row.isPremium
+                    ? 'Accounts must subscribe before this channel can be used.'
+                    : 'Allowed on every account. No subscription.'}
+                  {row.isPremium && fees ? ` Fees on subscribe: ${fees}.` : ''}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </DetailSection>
+  );
+}
+
 function SavingsProductChannelMappingSection({ product }: { product: SavingsProductDetail }) {
   const rows =
     product.paymentChannelToFundSourceMappings?.map((row) => ({
@@ -250,6 +301,8 @@ export function SavingsProductSectionPanel({
           />
         </DetailSection>
       );
+    case 'paymentChannels':
+      return <SavingsProductPaymentChannelsSection product={product} />;
     case 'accounting':
       return <SavingsProductAccountingSection product={product} />;
     case 'channelMapping':

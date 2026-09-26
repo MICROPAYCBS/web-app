@@ -58,6 +58,7 @@ export type {
 export type {
   FineractSavingsAccountCharge,
   FineractSavingsAccountDetail,
+  SavingsAccountPaymentChannel,
   FineractSavingsAccountSubStatus,
   FineractSavingsAccountSummary,
   FineractSavingsAccountTimeline,
@@ -174,6 +175,8 @@ export type {
 export type {
   SavingsProductDetail,
   SavingsProductListItem,
+  SavingsProductPaymentChannel,
+  SavingsProductPaymentChannelCharge,
   SavingsProductSectionId
 } from './products/savings-product-types';
 

@@ -1,4 +1,4 @@
-import type { FineractCommandProcessingResult } from '@mifos/api-client';
+import type { FineractCommandProcessingResult, SavingsAccountPaymentChannel } from '@mifos/api-client';
 import 'server-only';
 
 /**
@@ -11,6 +11,7 @@ import 'server-only';
 
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { asCurrency } from '@/lib/fineract/product-normalize';
+import { normalizeSavingsAccountPaymentChannels } from '@/lib/fineract/savings-payment-channels';
 import { resolvePaymentTypeId } from '@/lib/fineract/savings-payment-type-options';
 import {
   SAVINGS_ACCOUNT_BLOCK_REASON_CODE_ID,
@@ -356,4 +357,27 @@ export async function getSavingsAccountChargeDetailTemplate(
     chargeTimeType: enumOption(row.chargeTimeType),
     chargeCalculationType: enumOption(row.chargeCalculationType)
   };
+}
+
+export type SavingsAccountPaymentChannelCommand = 'subscribe' | 'unsubscribe';
+
+export async function getSavingsAccountPaymentChannels(
+  accountId: string | number
+): Promise<SavingsAccountPaymentChannel[]> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`${SAVINGS_ACCOUNTS_PATH}/${accountId}/paymentchannels`);
+  return normalizeSavingsAccountPaymentChannels(raw);
+}
+
+export async function executeSavingsAccountPaymentChannelCommand(
+  accountId: string | number,
+  command: SavingsAccountPaymentChannelCommand,
+  paymentTypeId: number
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.post<FineractCommandProcessingResult>(
+    `${SAVINGS_ACCOUNTS_PATH}/${accountId}/paymentchannels`,
+    { paymentTypeId },
+    { command }
+  );
 }

@@ -22,7 +22,7 @@ import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizar
 import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
 import { WizardDraftRestoreBanner } from '@/components/composites/wizard-draft-restore-banner';
 import { WizardLeaveConfirmDialog } from '@/components/composites/wizard-leave-confirm-dialog';
-import { isChargeTiersAllowed, penaltyDisabled } from '@/lib/fineract/charge-form-logic';
+import { isChargeTiersAllowed, penaltyLocked } from '@/lib/fineract/charge-form-logic';
 import { chargeDetailPath, chargeListPath } from '@/lib/fineract/charge-paths';
 import { wizardDraftsEqual, wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { AppliesToStep } from './steps/applies-to-step';
@@ -30,7 +30,12 @@ import { AmountSettingsStep } from './steps/amount-settings-step';
 import { PreviewStep } from './steps/preview-step';
 import { TermsStep } from './steps/terms-step';
 import type { ChargeWizardDraft, ChargeWizardProps, StepErrors } from './types';
-import { draftToPayload, validateChargeDraft, validateChargeStep } from './validation';
+import {
+  chargeStepIdForField,
+  draftToPayload,
+  validateChargeDraft,
+  validateChargeStep
+} from './validation';
 
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'appliesTo', label: 'Applies to' },
@@ -49,6 +54,7 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [apiFieldErrors, setApiFieldErrors] = useState<StepErrors>({});
   const [pending, startTransition] = useTransition();
   const [leaveOpen, setLeaveOpen] = useState(false);
 
@@ -76,11 +82,11 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
   useUnsavedWizardLeave(sessionDirty);
 
   useEffect(() => {
-    if (penaltyDisabled(draft.chargeAppliesTo)) {
-      setDraft((current) => (current.penalty ? { ...current, penalty: false } : current));
-    }
-    if (draft.chargeTimeType === 9) {
-      setDraft((current) => (current.penalty ? { ...current, penalty: true } : current));
+    const lock = penaltyLocked(draft.chargeAppliesTo, draft.chargeTimeType);
+    if (lock === 'on' && draft.penalty !== true) {
+      setDraft((current) => ({ ...current, penalty: true }));
+    } else if (lock === 'off' && draft.penalty) {
+      setDraft((current) => ({ ...current, penalty: false }));
     }
   }, [draft.chargeAppliesTo, draft.chargeTimeType, draft.penalty]);
 
@@ -104,6 +110,7 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
   }, [draft.useChargeTiers, draft.amount]);
 
   const patchDraft = useCallback((patch: Partial<ChargeWizardDraft>) => {
+    setApiFieldErrors({});
     setDraft((current) => {
       const next = { ...current, ...patch };
       // Only allow clearing bands when tiers are being turned off. Accidental
@@ -141,11 +148,17 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
   }, [validationAttemptedStepIds, draft]);
 
   const stepErrors = useMemo((): StepErrors => {
-    if (isPreview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
+    const fromApi: StepErrors = {};
+    for (const [field, message] of Object.entries(apiFieldErrors)) {
+      if (chargeStepIdForField(field) === stepId) {
+        fromApi[field] = message;
+      }
     }
-    return validateChargeStep(stepId, draft);
-  }, [validationAttemptedStepIds, stepId, draft, isPreview]);
+    if (isPreview || !validationAttemptedStepIds.has(stepId)) {
+      return fromApi;
+    }
+    return { ...fromApi, ...validateChargeStep(stepId, draft) };
+  }, [apiFieldErrors, validationAttemptedStepIds, stepId, draft, isPreview]);
 
   const goNext = useCallback(() => {
     const next = WIZARD_STEPS[currentIndex + 1];
@@ -234,6 +247,14 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
           : await updateChargeAction(chargeId ?? '', actionPayload);
 
       if (!result.ok) {
+        const fieldErrors = result.fieldErrors ?? {};
+        setApiFieldErrors(fieldErrors);
+        const firstField = Object.keys(fieldErrors)[0];
+        const errorStep = firstField ? chargeStepIdForField(firstField) : undefined;
+        if (errorStep) {
+          markValidationAttempted(errorStep);
+          setStepId(errorStep);
+        }
         setSubmitError(
           wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
         );

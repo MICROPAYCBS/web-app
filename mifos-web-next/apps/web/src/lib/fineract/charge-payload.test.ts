@@ -87,5 +87,58 @@ describe('buildChargePayload charge tiers', () => {
     assert.equal(payload.useChargeTiers, false);
     assert.equal(payload.amount, '50');
     assert.equal(payload.chargeTiers, undefined);
+    assert.equal(payload.monthDayFormat, undefined);
+    assert.equal(payload.chargePaymentMode, 0);
+    assert.equal(payload.locale, 'en');
+  });
+
+  it('sends month-day, interval, and locale for a savings monthly fee', () => {
+    const payload = buildChargePayload({
+      chargeAppliesTo: 2,
+      name: 'Monthly maintenance',
+      currencyCode: 'USD',
+      chargeTimeType: 7,
+      chargeCalculationType: 1,
+      amount: 5,
+      active: true,
+      penalty: false,
+      feeOnMonthDay: '01 Jan',
+      feeInterval: 1,
+      chargePaymentMode: 0,
+      useChargeTiers: false,
+      chargeTiers: []
+    });
+
+    assert.equal(payload.feeOnMonthDay, '01 Jan');
+    assert.equal(payload.monthDayFormat, 'dd MMM');
+    assert.equal(payload.feeInterval, 1);
+    assert.equal(payload.locale, 'en');
+    assert.equal(payload.chargePaymentMode, undefined);
+  });
+
+  it('omits caps for flat charges and includes free withdrawal with payment type', () => {
+    const payload = buildChargePayload({
+      chargeAppliesTo: 2,
+      name: 'Withdrawal',
+      currencyCode: 'USD',
+      chargeTimeType: 5,
+      chargeCalculationType: 1,
+      amount: 10,
+      active: true,
+      penalty: false,
+      minCap: 1,
+      maxCap: 2,
+      enableFreeWithdrawalCharge: false,
+      enablePaymentType: true,
+      paymentTypeId: 3,
+      useChargeTiers: false,
+      chargeTiers: []
+    });
+
+    assert.equal(payload.minCap, undefined);
+    assert.equal(payload.maxCap, undefined);
+    assert.equal(payload.enableFreeWithdrawalCharge, false);
+    assert.equal(payload.enablePaymentType, true);
+    assert.equal(payload.paymentTypeId, 3);
   });
 });

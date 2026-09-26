@@ -14,6 +14,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { DetailSection } from '@/components/composites';
 import { DateField } from '@/components/composites/date-field';
+import { MonthDayField } from '@/components/composites/month-day-field';
 import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
@@ -324,13 +325,12 @@ export function LoanAccountChargesStep({
                             allowFuture
                           />
                         ) : showFeeOnMonthDay ? (
-                          <DateField
+                          <MonthDayField
                             label={chargeDateLabel(meta)}
-                            value={charge.feeOnMonthDay ?? ''}
+                            value={charge.feeOnMonthDay}
                             onChange={(feeOnMonthDay) =>
                               updateCharge(index, { feeOnMonthDay })
                             }
-                            allowFuture
                           />
                         ) : (
                           formatLoanAccountChargeDate(charge)

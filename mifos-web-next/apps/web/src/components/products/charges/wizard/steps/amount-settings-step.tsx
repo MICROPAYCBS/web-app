@@ -37,14 +37,17 @@ import {
   isFlatChargeCalculation
 } from '@/lib/fineract/charge-display';
 import {
+  feePeriodOptions,
   incomeAccountOptions,
-  penaltyDisabled,
+  penaltyLocked,
   showChargeTiersToggle,
   showIncomeAccountField,
   showMinMaxCap,
+  showSavingsChargeExtras,
   showTaxGroupField
 } from '@/lib/fineract/charge-form-logic';
 import { glAccountLabel } from '@/lib/fineract/product-display';
+import { toSelectOptions } from '@/lib/form/select-options';
 import { useDraftNumericInput } from '@/lib/form/use-draft-numeric-input';
 import type { ChargeStepProps } from '../types';
 import { ChargeTierFormSheet } from './charge-tier-form-sheet';
@@ -69,6 +72,7 @@ export function AmountSettingsStep({
   const chargeCalculationType = draft.chargeCalculationType;
   const useChargeTiers = draft.useChargeTiers === true;
   const taxLocked = mode === 'edit' && Boolean(template.taxGroup?.id);
+  const penaltyLock = penaltyLocked(chargeAppliesTo, chargeTimeType);
   const flatAmount = isFlatChargeCalculation(chargeCalculationType);
   const amountResetKey = `${chargeCalculationType ?? ''}-${flatAmount}`;
   const tiersAllowed = showChargeTiersToggle(chargeAppliesTo, chargeTimeType);
@@ -390,7 +394,8 @@ export function AmountSettingsStep({
             chargeAppliesTo,
             chargeTimeType,
             chargeCalculationType,
-            useChargeTiers
+            useChargeTiers,
+            mode
           )
             ? capFields
             : null}
@@ -402,7 +407,7 @@ export function AmountSettingsStep({
           <SelectField
             id="incomeAccountId"
             label="Income from charge"
-            required
+            optional
             value={draft.incomeAccountId != null ? String(draft.incomeAccountId) : undefined}
             onValueChange={(value) =>
               onChange({ incomeAccountId: value ? Number(value) : undefined })
@@ -436,15 +441,124 @@ export function AmountSettingsStep({
           label="Active"
           checked={draft.active ?? false}
           onCheckedChange={(active) => onChange({ active })}
+          error={errors.active}
         />
         <SwitchField
           id="penalty"
           label="Penalty"
+          description={
+            penaltyLock === 'on'
+              ? 'Overdue instalment charges are always a penalty.'
+              : penaltyLock === 'off' && chargeAppliesTo === 4
+                ? 'Share charges cannot be a penalty.'
+                : penaltyLock === 'off'
+                  ? 'This charge time cannot be a penalty.'
+                  : 'Turn this on to treat the charge as a penalty.'
+          }
           checked={draft.penalty ?? false}
           onCheckedChange={(penalty) => onChange({ penalty })}
-          disabled={penaltyDisabled(chargeAppliesTo) || chargeTimeType === 9}
+          disabled={penaltyLock != null}
+          error={errors.penalty}
         />
       </div>
+
+      {showSavingsChargeExtras(chargeAppliesTo) ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SwitchField
+            id="enableFreeWithdrawalCharge"
+            label="Enable free withdrawal"
+            checked={draft.enableFreeWithdrawalCharge ?? false}
+            onCheckedChange={(enabled) =>
+              onChange(
+                enabled
+                  ? { enableFreeWithdrawalCharge: true }
+                  : {
+                      enableFreeWithdrawalCharge: false,
+                      freeWithdrawalFrequency: undefined,
+                      restartCountFrequency: undefined,
+                      countFrequencyType: undefined
+                    }
+              )
+            }
+            error={errors.enableFreeWithdrawalCharge}
+          />
+          {draft.enableFreeWithdrawalCharge ? (
+            <>
+              <NumericField
+                id="freeWithdrawalFrequency"
+                label="Free withdrawals"
+                required
+                integer
+                value={
+                  draft.freeWithdrawalFrequency != null
+                    ? String(draft.freeWithdrawalFrequency)
+                    : ''
+                }
+                onChange={(value) =>
+                  onChange({
+                    freeWithdrawalFrequency: value === '' ? undefined : Number(value)
+                  })
+                }
+                error={errors.freeWithdrawalFrequency}
+              />
+              <NumericField
+                id="restartCountFrequency"
+                label="Restart count frequency"
+                required
+                integer
+                value={
+                  draft.restartCountFrequency != null ? String(draft.restartCountFrequency) : ''
+                }
+                onChange={(value) =>
+                  onChange({
+                    restartCountFrequency: value === '' ? undefined : Number(value)
+                  })
+                }
+                error={errors.restartCountFrequency}
+              />
+              <SelectField
+                id="countFrequencyType"
+                label="Count frequency type"
+                required
+                value={
+                  draft.countFrequencyType != null ? String(draft.countFrequencyType) : undefined
+                }
+                onValueChange={(value) =>
+                  onChange({ countFrequencyType: value ? Number(value) : undefined })
+                }
+                options={toSelectOptions(feePeriodOptions(template))}
+                error={errors.countFrequencyType}
+              />
+            </>
+          ) : null}
+          <SwitchField
+            id="enablePaymentType"
+            label="Enable payment type"
+            checked={draft.enablePaymentType ?? false}
+            onCheckedChange={(enabled) =>
+              onChange(
+                enabled
+                  ? { enablePaymentType: true }
+                  : { enablePaymentType: false, paymentTypeId: undefined }
+              )
+            }
+            error={errors.enablePaymentType}
+          />
+          {draft.enablePaymentType ? (
+            <SelectField
+              id="paymentTypeId"
+              label="Payment type"
+              required
+              value={draft.paymentTypeId != null ? String(draft.paymentTypeId) : undefined}
+              onValueChange={(value) =>
+                onChange({ paymentTypeId: value ? Number(value) : undefined })
+              }
+              options={toSelectOptions(template.paymentTypeOptions)}
+              error={errors.paymentTypeId}
+            />
+          ) : null}
+        </div>
+      ) : null}
 
       <ChargeTierFormSheet
         open={tierSheet.mode !== 'closed'}

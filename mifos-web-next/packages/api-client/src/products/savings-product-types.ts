@@ -43,15 +43,37 @@ export interface SavingsProductDetail extends SavingsProductListItem {
   accountingRule?: FineractEnumOption;
   accountingMappings?: Record<string, ProductGlAccountRef | undefined>;
   charges?: LoanProductCharge[];
+  /** Empty or omitted means every payment type is allowed (legacy). */
+  paymentChannels?: SavingsProductPaymentChannel[];
   feeToIncomeAccountMappings?: ChargeIncomeAccountMapping[];
   penaltyToIncomeAccountMappings?: ChargeIncomeAccountMapping[];
   paymentChannelToFundSourceMappings?: PaymentChannelFundSourceMapping[];
+}
+
+export interface SavingsProductPaymentChannelCharge {
+  /** Charge definition id (`chargeId` / `charge.id`). Not the catalog link-row id. */
+  id: number;
+  name?: string;
+  /** Amount stored on the channel link, including an optional override. */
+  amount?: number;
+  /** Amount on the charge definition, when the response includes `charge`. */
+  definitionAmount?: number;
+  useChargeTiers?: boolean;
+}
+
+export interface SavingsProductPaymentChannel {
+  paymentTypeId: number;
+  paymentTypeName?: string;
+  isPremium: boolean;
+  isActive: boolean;
+  charges: SavingsProductPaymentChannelCharge[];
 }
 
 export type SavingsProductSectionId =
   | 'general'
   | 'terms'
   | 'fees'
+  | 'paymentChannels'
   | 'accounting'
   | 'channelMapping'
   | 'feeGlMappings'

@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractSavingsAccountDetail, SavingsAccountPaymentChannel } from '@mifos/api-client';
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -29,6 +29,7 @@ import {
 import { SavingsTransactionActionsMenu } from '@/components/clients/savings/actions/savings-transaction-actions-menu';
 import { SavingsAccountAuditView } from '@/components/clients/savings/savings-account-audit-view';
 import { AccountJournalEntriesView } from '@/components/clients/accounts/account-journal-entries-view';
+import { SavingsAccountPaymentChannelsSection } from '@/components/clients/savings/savings-account-payment-channels-section';
 import { SavingsStatementSection } from '@/components/clients/savings/statement';
 import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
@@ -709,7 +710,10 @@ export function SavingsAccountSectionPanel({
     undoTransfer: false,
     modifyTransaction: false,
     viewJournal: false
-  }
+  },
+  paymentChannels = [],
+  paymentChannelsLoadError,
+  canManagePaymentChannels = false
 }: {
   section: SavingsAccountSectionId;
   account: FineractSavingsAccountDetail;
@@ -724,6 +728,9 @@ export function SavingsAccountSectionPanel({
   journalLoadFailed?: boolean;
   journalTotalRecords?: number;
   transactionActionPermissions?: SavingsTransactionActionPermissions;
+  paymentChannels?: SavingsAccountPaymentChannel[];
+  paymentChannelsLoadError?: string;
+  canManagePaymentChannels?: boolean;
 }) {
   switch (section) {
     case 'summary':
@@ -741,6 +748,18 @@ export function SavingsAccountSectionPanel({
       return <SavingsStatementSection account={account} reportOrgName={reportOrgName} />;
     case 'charges':
       return <SavingsAccountChargesSection account={account} />;
+    case 'paymentChannels':
+      return (
+        <SavingsAccountPaymentChannelsSection
+          clientId={clientId}
+          accountId={account.id}
+          currencyCode={savingsAccountCurrencyCode(account)}
+          accountActive={account.status.active === true}
+          canManage={canManagePaymentChannels}
+          channels={paymentChannels}
+          loadError={paymentChannelsLoadError}
+        />
+      );
     case 'journalEntries':
       return canViewJournals ? (
         <AccountJournalEntriesView

@@ -9,6 +9,7 @@
 import type { UpsertSavingsProductInput } from '@mifos/validation';
 import {
   savingsProductChargesStepSchema,
+  savingsProductPaymentChannelsStepSchema,
   savingsProductCurrencyStepSchema,
   savingsProductDetailsStepSchema,
   savingsProductMappingsStepSchema,
@@ -25,6 +26,7 @@ const STEP_SCHEMAS: Record<string, ZodTypeAny> = {
   terms: savingsProductTermsStepSchema,
   settings: savingsProductSettingsStepSchema,
   charges: savingsProductChargesStepSchema,
+  channels: savingsProductPaymentChannelsStepSchema,
   mappings: savingsProductMappingsStepSchema
 };
 
@@ -52,6 +54,7 @@ function stepPayload(stepId: string, draft: UpsertSavingsProductInput): unknown 
   if (stepId === 'terms') return draft.terms;
   if (stepId === 'settings') return draft.settings;
   if (stepId === 'charges') return draft.charges;
+  if (stepId === 'channels') return draft.paymentChannels;
 
   return undefined;
 }

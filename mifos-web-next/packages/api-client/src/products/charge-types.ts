@@ -43,6 +43,12 @@ export interface ChargeDetail extends ChargeListItem {
   taxGroup?: { id?: number; name?: string };
   useChargeTiers?: boolean;
   chargeTiers?: ChargeTier[];
+  enableFreeWithdrawalCharge?: boolean;
+  freeWithdrawalFrequency?: number;
+  restartCountFrequency?: number;
+  countFrequencyType?: FineractEnumOption;
+  enablePaymentType?: boolean;
+  paymentTypeId?: number;
 }
 
 export interface ChargeIncomeAccountOptions {
@@ -71,6 +77,12 @@ export interface ChargeTemplate {
   taxGroup?: { id?: number; name?: string };
   useChargeTiers?: boolean;
   chargeTiers?: ChargeTier[];
+  enableFreeWithdrawalCharge?: boolean;
+  freeWithdrawalFrequency?: number;
+  restartCountFrequency?: number;
+  countFrequencyType?: FineractEnumOption;
+  enablePaymentType?: boolean;
+  paymentTypeId?: number;
   chargeAppliesToOptions?: FineractEnumOption[];
   currencyOptions?: FineractCurrencyOption[];
   loanChargeCalculationTypeOptions?: FineractEnumOption[];
@@ -85,6 +97,10 @@ export interface ChargeTemplate {
   feeFrequencyOptions?: FineractEnumOption[];
   taxGroupOptions?: { id: number; name?: string }[];
   incomeOrLiabilityAccountOptions?: ChargeIncomeAccountOptions;
+  paymentTypeOptions?: FineractEnumOption[];
+  /** From GET /charges/template?chargeAppliesTo=5&chargeTimeType=2 */
+  workingCapitalChargeTimeTypeOptions?: FineractEnumOption[];
+  workingCapitalChargeCalculationTypeOptions?: FineractEnumOption[];
 }
 
 export interface ChargeMutationResponse {

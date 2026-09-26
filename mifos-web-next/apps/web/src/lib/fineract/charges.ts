@@ -20,6 +20,8 @@ import type {
 import type { UpsertChargeInput } from '@mifos/validation';
 import { FineractHttpError } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { feeOnMonthDayFromCharge } from '@/lib/fineract/charge-form-logic';
+import { listOrganizationPaymentTypes } from '@/lib/fineract/payment-types';
 import { buildChargePayload } from '@/lib/fineract/charge-payload';
 import {
   filterCurrencyOptionsBySelected,
@@ -219,7 +221,54 @@ export function normalizeChargeTemplate(raw: unknown): ChargeTemplate {
     chargePaymentModeOptions: asEnumOptions(paymentModeOptions),
     feeFrequencyOptions: asEnumOptions(row.feeFrequencyOptions),
     taxGroupOptions: asTaxGroupOptions(row.taxGroupOptions),
-    incomeOrLiabilityAccountOptions: normalizeGlAccountOptions(row.incomeOrLiabilityAccountOptions)
+    incomeOrLiabilityAccountOptions: normalizeGlAccountOptions(row.incomeOrLiabilityAccountOptions),
+    paymentTypeOptions: asEnumOptions(row.paymentTypeOptions),
+    enableFreeWithdrawalCharge: row.enableFreeWithdrawalCharge === true,
+    freeWithdrawalFrequency: asFiniteNumber(row.freeWithdrawalFrequency),
+    restartCountFrequency: asFiniteNumber(row.restartCountFrequency),
+    countFrequencyType: asEnumOption(row.countFrequencyType) ?? asCountFrequency(row.countFrequencyType),
+    enablePaymentType: row.enablePaymentType === true,
+    paymentTypeId:
+      asFiniteNumber(row.paymentTypeId) ??
+      asEnumOption(row.paymentType)?.id
+  };
+}
+
+function asFiniteNumber(value: unknown): number | undefined {
+  const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function asCountFrequency(value: unknown): ChargeTemplate['countFrequencyType'] {
+  const id = asFiniteNumber(value);
+  if (id == null || id < 0 || id > 3) {
+    return undefined;
+  }
+  return { id };
+}
+
+async function enrichChargeTemplate(template: ChargeTemplate): Promise<ChargeTemplate> {
+  const fineract = await createFineractClient();
+  const [paymentTypes, workingCapitalRaw] = await Promise.all([
+    template.paymentTypeOptions?.length
+      ? Promise.resolve(null)
+      : listOrganizationPaymentTypes().catch(() => []),
+    fineract
+      .get<unknown>('/charges/template', { chargeAppliesTo: '5', chargeTimeType: '2' })
+      .catch(() => null)
+  ]);
+  const workingCapital = workingCapitalRaw ? normalizeChargeTemplate(workingCapitalRaw) : undefined;
+  return {
+    ...template,
+    paymentTypeOptions: template.paymentTypeOptions?.length
+      ? template.paymentTypeOptions
+      : (paymentTypes ?? []).map((item) => ({ id: item.id, name: item.name })),
+    workingCapitalChargeTimeTypeOptions:
+      workingCapital?.loanChargeTimeTypeOptions ??
+      workingCapital?.workingCapitalChargeTimeTypeOptions,
+    workingCapitalChargeCalculationTypeOptions:
+      workingCapital?.loanChargeCalculationTypeOptions ??
+      workingCapital?.workingCapitalChargeCalculationTypeOptions
   };
 }
 
@@ -240,9 +289,10 @@ export async function getChargeFormTemplate(includeCurrencyCode?: string): Promi
     getChargeTemplate(),
     getOrganizationSelectedCurrencies()
   ]);
+  const enriched = await enrichChargeTemplate(template);
 
   return {
-    ...template,
+    ...enriched,
     currencyOptions: filterCurrencyOptionsBySelected(
       template.currencyOptions ?? [],
       selectedCurrencies,
@@ -287,7 +337,7 @@ export async function getChargeForEdit(chargeId: string | number): Promise<Charg
 
   try {
     const raw = await fineract.get<unknown>(`/charges/${chargeId}`, { template: 'true' });
-    return normalizeChargeTemplate(raw);
+    return enrichChargeTemplate(normalizeChargeTemplate(raw));
   } catch (err) {
     if (err instanceof FineractHttpError && err.status === 404) {
       throw err;
@@ -299,13 +349,15 @@ export async function getChargeForEdit(chargeId: string | number): Promise<Charg
     getCharge(chargeId)
   ]);
 
-  return normalizeChargeTemplate({
-    ...template,
-    ...charge,
-    id: charge.id,
-    currencyCode: charge.currency?.code ?? charge.currencyCode,
-    incomeOrLiabilityAccount: charge.incomeOrLiabilityAccount
-  });
+  return enrichChargeTemplate(
+    normalizeChargeTemplate({
+      ...template,
+      ...charge,
+      id: charge.id,
+      currencyCode: charge.currency?.code ?? charge.currencyCode,
+      incomeOrLiabilityAccount: charge.incomeOrLiabilityAccount
+    })
+  );
 }
 
 export async function createChargeRecord(
@@ -330,25 +382,36 @@ export async function deleteChargeRecord(chargeId: string | number): Promise<Fin
 
 export function chargeInputFromTemplate(template: ChargeTemplate): UpsertChargeInput {
   const useChargeTiers = template.useChargeTiers === true;
+  const time = template.chargeTimeType?.id ?? 0;
+  const calculation = template.chargeCalculationType?.id ?? 0;
+  const savings = template.chargeAppliesTo?.id === 2;
+  const monthDay =
+    time === 6 || time === 7 ? feeOnMonthDayFromCharge(template.feeOnMonthDay) : '';
+  const capsStored = !useChargeTiers && calculation === 2;
   return {
     chargeAppliesTo: template.chargeAppliesTo?.id ?? 0,
     name: template.name ?? '',
     currencyCode: template.currencyCode ?? template.currency?.code ?? '',
-    chargeTimeType: template.chargeTimeType?.id ?? 0,
-    chargeCalculationType: template.chargeCalculationType?.id ?? 0,
+    chargeTimeType: time,
+    chargeCalculationType: calculation,
     amount: useChargeTiers ? 0 : (template.amount ?? 0),
     active: template.active ?? false,
     penalty: template.penalty ?? false,
-    chargePaymentMode: template.chargePaymentMode?.id,
+    chargePaymentMode: template.chargeAppliesTo?.id === 1 ? template.chargePaymentMode?.id : undefined,
     incomeAccountId: template.incomeOrLiabilityAccount?.id,
     taxGroupId: template.taxGroup?.id,
-    minCap: useChargeTiers ? undefined : template.minCap,
-    maxCap: useChargeTiers ? undefined : template.maxCap,
+    minCap: capsStored ? template.minCap : undefined,
+    maxCap: capsStored ? template.maxCap : undefined,
     feeInterval: template.feeInterval,
-    feeFrequency: template.feeFrequency?.id,
-    feeOnMonthDay:
-      typeof template.feeOnMonthDay === 'string' ? template.feeOnMonthDay : undefined,
-    addFeeFrequency: Boolean(template.feeInterval && template.feeFrequency),
+    feeFrequency: time === 9 ? template.feeFrequency?.id : undefined,
+    feeOnMonthDay: monthDay || undefined,
+    addFeeFrequency: time === 9 && Boolean(template.feeInterval && template.feeFrequency),
+    enableFreeWithdrawalCharge: savings ? template.enableFreeWithdrawalCharge === true : undefined,
+    freeWithdrawalFrequency: savings ? template.freeWithdrawalFrequency : undefined,
+    restartCountFrequency: savings ? template.restartCountFrequency : undefined,
+    countFrequencyType: savings ? template.countFrequencyType?.id : undefined,
+    enablePaymentType: savings ? template.enablePaymentType === true : undefined,
+    paymentTypeId: savings ? template.paymentTypeId : undefined,
     useChargeTiers,
     chargeTiers: useChargeTiers
       ? (template.chargeTiers ?? []).map((tier) => ({

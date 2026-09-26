@@ -14,6 +14,7 @@ import {
 } from '@/lib/fineract/organization-currencies';
 import { filterTemplateChargeOptionsByCurrency } from '@/lib/fineract/product-charge-options';
 import { productChargeAmountsFromTemplate } from '@/lib/fineract/product-charge-links';
+import { normalizeSavingsProductPaymentChannels } from '@/lib/fineract/savings-payment-channels';
 import { productDraftAccountingRuleId } from '@/lib/fineract/product-display';
 import {
   asAccountingMappings,
@@ -33,6 +34,39 @@ function enumIdFromOptions(options: unknown, fallbackIndex = 0): number | undefi
     return asEnumOption(options[fallbackIndex])?.id;
   }
   return undefined;
+}
+
+function paymentChannelDraftRows(
+  template: SavingsProductTemplate
+): UpsertSavingsProductInput['paymentChannels'] {
+  const channels = normalizeSavingsProductPaymentChannels(template.paymentChannels);
+  return {
+    channels: channels.map((channel) => {
+      const chargeOptions = new Map<number, { id: number; amount?: number; useChargeTiers?: boolean }>();
+      for (const option of template.chargeOptions ?? []) {
+        if (option.id != null && Number.isFinite(option.id)) {
+          chargeOptions.set(option.id, option);
+        }
+      }
+      for (const charge of channel.charges) {
+        const existing = chargeOptions.get(charge.id);
+        chargeOptions.set(charge.id, {
+          id: charge.id,
+          amount: existing?.amount ?? charge.definitionAmount,
+          useChargeTiers: existing?.useChargeTiers === true || charge.useChargeTiers === true
+        });
+      }
+      return {
+        paymentTypeId: channel.paymentTypeId,
+        isPremium: channel.isPremium,
+        isActive: channel.isActive,
+        chargeIds: channel.isPremium ? channel.charges.map((charge) => charge.id) : [],
+        chargeAmounts: channel.isPremium
+          ? productChargeAmountsFromTemplate(channel.charges, [...chargeOptions.values()])
+          : {}
+      };
+    })
+  };
 }
 
 function optionalAccountId(value: unknown): number | undefined {
@@ -118,6 +152,7 @@ export function savingsProductDraftFromTemplate(
       chargeIds: (template.charges ?? []).map((c) => c.id).filter((id) => Number.isFinite(id)),
       chargeAmounts: productChargeAmountsFromTemplate(template.charges, template.chargeOptions)
     },
+    paymentChannels: paymentChannelDraftRows(template),
     accounting: {
       accountingRule: accountingRuleId,
       savingsReferenceAccountId: mappingAccountId(mappings, 'savingsReferenceAccount'),
@@ -200,6 +235,7 @@ export function normalizeSavingsProductTemplate(raw: unknown): SavingsProductTem
     interestCalculationType: asEnumOption(row.interestCalculationType),
     interestCalculationDaysInYearType: asEnumOption(row.interestCalculationDaysInYearType),
     lockinPeriodFrequencyType: asEnumOption(row.lockinPeriodFrequencyType),
-    taxGroup: asEnumOption(row.taxGroup)
+    taxGroup: asEnumOption(row.taxGroup),
+    paymentChannels: normalizeSavingsProductPaymentChannels(row.paymentChannels)
   };
 }

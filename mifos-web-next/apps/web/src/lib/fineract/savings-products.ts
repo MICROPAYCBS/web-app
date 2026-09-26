@@ -17,6 +17,7 @@ import type {
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { normalizeSavingsProductTemplate } from '@/lib/fineract/savings-product-draft';
 import { SAVINGS_PRODUCTS_API_PATH } from '@/lib/fineract/savings-product-paths';
+import { normalizeSavingsProductPaymentChannels } from '@/lib/fineract/savings-payment-channels';
 import { filterProductChargeOptions, type FilteredProductChargeOptions } from '@/lib/fineract/product-charge-options';
 import {
   asAccountingMappings,
@@ -89,6 +90,7 @@ function normalizeDetail(raw: unknown): SavingsProductDetail | null {
     accountingRule: asEnumOption(row.accountingRule),
     accountingMappings: asAccountingMappings(row.accountingMappings),
     charges: asCharges(row.charges),
+    paymentChannels: normalizeSavingsProductPaymentChannels(row.paymentChannels),
     feeToIncomeAccountMappings: asChargeIncomeMappings(row.feeToIncomeAccountMappings),
     penaltyToIncomeAccountMappings: asChargeIncomeMappings(
       row.penaltyToIncomeAccountMappings

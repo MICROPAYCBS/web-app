@@ -22,6 +22,7 @@ export const SAVINGS_ACCOUNT_SECTIONS = [
   { id: 'transactions', label: 'Transactions' },
   { id: 'statement', label: 'Statement' },
   { id: 'charges', label: 'Charges' },
+  { id: 'paymentChannels', label: 'Payment channels' },
   { id: 'journalEntries', label: 'Journal entries' },
   { id: 'audit', label: 'Audit trail' }
 ] as const;

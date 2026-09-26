@@ -10,11 +10,55 @@ import type { UpsertSavingsProductInput } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { buildProductChargesPayload } from '@/lib/fineract/product-charge-links';
 
+/**
+ * Rebuild the catalog from the current draft. One row per payment type.
+ * Charge `id` is the charge definition id. Link-row ids from GET are not sent.
+ */
+function buildPaymentChannelsPayload(
+  channels: UpsertSavingsProductInput['paymentChannels']['channels']
+): Array<{
+  paymentTypeId: number;
+  isPremium: boolean;
+  isActive: boolean;
+  charges: Array<{ id: number; amount?: number }>;
+}> {
+  const seenTypes = new Set<number>();
+  const rows: Array<{
+    paymentTypeId: number;
+    isPremium: boolean;
+    isActive: boolean;
+    charges: Array<{ id: number; amount?: number }>;
+  }> = [];
+
+  for (const row of channels) {
+    if (seenTypes.has(row.paymentTypeId)) {
+      continue;
+    }
+    seenTypes.add(row.paymentTypeId);
+    const seenCharges = new Set<number>();
+    const chargeIds = (row.isPremium ? (row.chargeIds ?? []) : []).filter((id) => {
+      if (seenCharges.has(id)) {
+        return false;
+      }
+      seenCharges.add(id);
+      return true;
+    });
+    rows.push({
+      paymentTypeId: row.paymentTypeId,
+      isPremium: row.isPremium,
+      isActive: row.isActive,
+      charges: buildProductChargesPayload(chargeIds, row.chargeAmounts)
+    });
+  }
+
+  return rows;
+}
+
 /** Build Fineract POST/PUT body from wizard draft. */
 export function buildSavingsProductPayload(
   input: UpsertSavingsProductInput
 ): Record<string, unknown> {
-  const { details, currency, terms, settings, charges, accounting } = input;
+  const { details, currency, terms, settings, charges, paymentChannels, accounting } = input;
   const { enableLockinPeriod: _enableLockinPeriod, ...settingsPayload } = settings;
 
   const payload: Record<string, unknown> = {
@@ -38,6 +82,7 @@ export function buildSavingsProductPayload(
     interestPayableAccountId: accounting.interestPayableAccountId,
     escheatLiabilityId: accounting.escheatLiabilityId,
     charges: buildProductChargesPayload(charges.chargeIds, charges.chargeAmounts),
+    paymentChannels: buildPaymentChannelsPayload(paymentChannels?.channels ?? []),
     dateFormat: FINERACT_DATE_FORMAT,
     locale: FINERACT_LOCALE
   };

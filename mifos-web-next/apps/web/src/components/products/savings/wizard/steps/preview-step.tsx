@@ -54,7 +54,7 @@ export function PreviewStep({
   mode: WizardMode;
   hasUnsavedChanges?: boolean;
 }) {
-  const { details, currency, terms, settings, charges, accounting } = draft;
+  const { details, currency, terms, settings, charges, paymentChannels, accounting } = draft;
   const currencyCode = currency.currencyCode || undefined;
   const accountingOptions = template.accountingMappingOptions ?? {};
   const allGlOptions = [
@@ -63,6 +63,28 @@ export function PreviewStep({
     ...(accountingOptions.expenseAccountOptions ?? []),
     ...(accountingOptions.liabilityAccountOptions ?? [])
   ];
+
+  const channelSummary = (paymentChannels.channels ?? [])
+    .map((row) => {
+      const name = optionLabelById(template.paymentTypeOptions, row.paymentTypeId);
+      const kind = row.isPremium ? 'Premium' : 'Standard';
+      const state = row.isActive ? kind : `${kind}, inactive`;
+      const fees =
+        row.isPremium && (row.chargeIds ?? []).length > 0
+          ? ` (${(row.chargeIds ?? [])
+              .map((id) =>
+                productChargePreviewLabelById(
+                  template.chargeOptions,
+                  id,
+                  row.chargeAmounts,
+                  currency.currencyCode || undefined
+                )
+              )
+              .join(', ')})`
+          : '';
+      return `${name} · ${state}${fees}`;
+    })
+    .join('; ');
 
   const selectedCharges = (charges.chargeIds ?? [])
     .map((id) =>
@@ -146,6 +168,14 @@ export function PreviewStep({
       <DetailSection title="Charges">
         <DetailFieldGrid columns={1}>
           <DetailField label="Selected fees">{selectedCharges || 'None'}</DetailField>
+        </DetailFieldGrid>
+      </DetailSection>
+
+      <DetailSection title="Payment channels">
+        <DetailFieldGrid columns={1}>
+          <DetailField label="Catalog">
+            {channelSummary || 'All payment types (no catalog)'}
+          </DetailField>
         </DetailFieldGrid>
       </DetailSection>
 

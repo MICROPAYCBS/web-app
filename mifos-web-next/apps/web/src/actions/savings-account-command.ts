@@ -24,6 +24,7 @@ import {
   savingsAccountUndoApprovalCommandSchema,
   savingsAccountUnassignStaffSchema,
   savingsAccountWithdrawnByApplicantCommandSchema,
+  savingsAccountPaymentChannelCommandSchema,
   savingsAccountWithholdTaxSchema,
   toFineractActionError,
   actionSuccessFromFineractCommand,
@@ -38,7 +39,9 @@ import {
   deleteSavingsAccount,
   executeSavingsAccountChargeCommand,
   executeSavingsAccountCommand,
+  executeSavingsAccountPaymentChannelCommand,
   executeSavingsAccountTransaction,
+  type SavingsAccountPaymentChannelCommand,
   getSavingsAccountChargeDetailTemplate,
   getSavingsAccountChargeTemplate,
   getSavingsAccountTransactionTemplate,
@@ -1028,5 +1031,44 @@ export async function executeSavingsAccountWithholdTaxAction(
     return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not update withhold tax.');
+  }
+}
+
+export async function executeSavingsAccountPaymentChannelAction(
+  clientId: string,
+  accountId: string,
+  command: SavingsAccountPaymentChannelCommand,
+  raw: unknown
+): Promise<SavingsAccountActionResult> {
+  const denied = await requirePermission(
+    'UPDATE_SAVINGSACCOUNT',
+    command === 'subscribe'
+      ? 'You do not have permission to subscribe this account to a payment channel.'
+      : 'You do not have permission to unsubscribe this account from a payment channel.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = parseOrError(savingsAccountPaymentChannelCommandSchema, raw);
+  if (!parsed.success) {
+    return parsed.result;
+  }
+
+  try {
+    const response = await executeSavingsAccountPaymentChannelCommand(
+      accountId,
+      command,
+      parsed.data.paymentTypeId
+    );
+    revalidateSavingsAccountPaths(clientId, accountId);
+    return actionSuccessFromFineractCommand(response, {});
+  } catch (error) {
+    return toFineractActionError(
+      error,
+      command === 'subscribe'
+        ? 'Could not subscribe to this payment channel.'
+        : 'Could not unsubscribe from this payment channel.'
+    );
   }
 }

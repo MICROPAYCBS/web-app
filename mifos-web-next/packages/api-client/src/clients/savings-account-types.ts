@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { SavingsProductPaymentChannel } from '../products/savings-product-types';
 import type { FineractClientAccountStatus, FineractCurrencyOption } from './accounts-types';
 import type { FineractEnumOption } from './types';
 
@@ -150,4 +151,10 @@ export interface FineractSavingsAccountDetail {
   officeName?: string;
   taxGroup?: { id?: number; name?: string };
   withHoldTax?: boolean;
+}
+
+/** Product catalog row for one savings account, including subscription state. */
+export interface SavingsAccountPaymentChannel extends SavingsProductPaymentChannel {
+  subscribed: boolean;
+  allowedForDeposit: boolean;
 }

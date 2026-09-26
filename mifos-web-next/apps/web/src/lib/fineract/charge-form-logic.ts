@@ -7,7 +7,7 @@
  */
 
 import type { ChargeTemplate, FineractEnumOption } from '@mifos/api-client';
-import { isChargeTiersAllowed } from '@mifos/validation';
+import { formatChargeMonthDay, isChargeTiersAllowed, parseChargeMonthDay } from '@mifos/validation';
 
 export const CHARGE_APPLIES_TO = {
   LOAN: 1,
@@ -33,22 +33,44 @@ export function chargeAppliesToOptionsForWizard(
 
 export function chargeTimeTypeOptions(
   template: ChargeTemplate,
-  chargeAppliesTo?: number
+  chargeAppliesTo?: number,
+  selectedTimeType?: number
 ): FineractEnumOption[] {
   switch (chargeAppliesTo) {
     case CHARGE_APPLIES_TO.LOAN:
       return template.loanChargeTimeTypeOptions ?? [];
     case CHARGE_APPLIES_TO.SAVINGS:
-      return template.savingsChargeTimeTypeOptions ?? [];
+      return (template.savingsChargeTimeTypeOptions ?? []).filter(
+        (option) => option.id !== 4 || option.id === selectedTimeType
+      );
     case CHARGE_APPLIES_TO.CLIENT:
       return template.clientChargeTimeTypeOptions ?? [];
     case CHARGE_APPLIES_TO.SHARES:
       return template.shareChargeTimeTypeOptions ?? [];
-    case CHARGE_APPLIES_TO.WORKING_CAPITAL:
-      return (template.loanChargeTimeTypeOptions ?? []).filter((option) => option.id === 2);
+    case CHARGE_APPLIES_TO.WORKING_CAPITAL: {
+      const source = template.workingCapitalChargeTimeTypeOptions?.length
+        ? template.workingCapitalChargeTimeTypeOptions
+        : (template.loanChargeTimeTypeOptions ?? []);
+      return source.filter((option) => option.id === 2);
+    }
     default:
       return [];
   }
+}
+
+/** Period frequency 0–3. Whole term (4) is on the template list and is rejected by charge validation. */
+const FEE_PERIOD_FALLBACK: FineractEnumOption[] = [
+  { id: 0, name: 'Days' },
+  { id: 1, name: 'Weeks' },
+  { id: 2, name: 'Months' },
+  { id: 3, name: 'Years' }
+];
+
+export function feePeriodOptions(template: ChargeTemplate): FineractEnumOption[] {
+  const filtered = (template.feeFrequencyOptions ?? []).filter(
+    (option) => option.id != null && option.id >= 0 && option.id <= 3
+  );
+  return filtered.length > 0 ? filtered : FEE_PERIOD_FALLBACK;
 }
 
 export function chargeCalculationTypeOptions(
@@ -64,8 +86,12 @@ export function chargeCalculationTypeOptions(
       return template.clientChargeCalculationTypeOptions ?? [];
     case CHARGE_APPLIES_TO.SHARES:
       return template.shareChargeCalculationTypeOptions ?? [];
-    case CHARGE_APPLIES_TO.WORKING_CAPITAL:
-      return (template.loanChargeCalculationTypeOptions ?? []).filter((option) => option.id === 1);
+    case CHARGE_APPLIES_TO.WORKING_CAPITAL: {
+      const source = template.workingCapitalChargeCalculationTypeOptions?.length
+        ? template.workingCapitalChargeCalculationTypeOptions
+        : (template.loanChargeCalculationTypeOptions ?? []);
+      return source.filter((option) => option.id === 1);
+    }
     default:
       return [];
   }
@@ -77,26 +103,30 @@ export function filteredChargeCalculationTypeOptions(
   chargeTimeType?: number
 ): FineractEnumOption[] {
   return chargeCalculationTypeOptions(template, chargeAppliesTo).filter((option) => {
-    if (chargeTimeType === 12 && (option.id === 3 || option.id === 4)) {
+    const id = option.id;
+    if (id == null) {
       return false;
     }
-    if (chargeTimeType !== 12 && option.id === 5) {
-      return false;
+    if (chargeAppliesTo === CHARGE_APPLIES_TO.LOAN) {
+      if (chargeTimeType === 12) {
+        return id === 1 || id === 5;
+      }
+      return id >= 1 && id <= 4;
     }
     if (chargeAppliesTo === CHARGE_APPLIES_TO.SAVINGS) {
-      if (
-        !(
-          chargeTimeType === 5 ||
-          chargeTimeType === 16 ||
-          chargeTimeType === 17
-        ) &&
-        option.id === 2
-      ) {
-        return false;
+      if (id === 1) {
+        return true;
       }
+      return id === 2 && (chargeTimeType === 5 || chargeTimeType === 16);
     }
-    if (chargeAppliesTo === CHARGE_APPLIES_TO.WORKING_CAPITAL) {
-      return option.id === 1;
+    if (chargeAppliesTo === CHARGE_APPLIES_TO.CLIENT || chargeAppliesTo === CHARGE_APPLIES_TO.WORKING_CAPITAL) {
+      return id === 1;
+    }
+    if (chargeAppliesTo === CHARGE_APPLIES_TO.SHARES) {
+      if (chargeTimeType === 13) {
+        return id === 1;
+      }
+      return id === 1 || id === 2;
     }
     return true;
   });
@@ -114,10 +144,11 @@ export function chargePaymentModeOptions(
 }
 
 export function showChargePaymentMode(chargeAppliesTo?: number): boolean {
-  return (
-    chargeAppliesTo === CHARGE_APPLIES_TO.LOAN ||
-    chargeAppliesTo === CHARGE_APPLIES_TO.WORKING_CAPITAL
-  );
+  return chargeAppliesTo === CHARGE_APPLIES_TO.LOAN;
+}
+
+export function showSavingsChargeExtras(chargeAppliesTo?: number): boolean {
+  return chargeAppliesTo === CHARGE_APPLIES_TO.SAVINGS;
 }
 
 export function showIncomeAccountField(chargeAppliesTo?: number): boolean {
@@ -128,31 +159,52 @@ export function showTaxGroupField(chargeAppliesTo?: number): boolean {
   return chargeAppliesTo !== CHARGE_APPLIES_TO.WORKING_CAPITAL;
 }
 
-export function penaltyDisabled(chargeAppliesTo?: number): boolean {
-  return chargeAppliesTo === CHARGE_APPLIES_TO.SHARES;
+/** Overdue instalment is always a penalty. Disbursement, tranche disbursement, and shares cannot be. */
+export function penaltyLocked(
+  chargeAppliesTo?: number,
+  chargeTimeType?: number
+): 'on' | 'off' | null {
+  if (chargeTimeType === 9) {
+    return 'on';
+  }
+  if (
+    chargeTimeType === 1 ||
+    chargeTimeType === 12 ||
+    chargeAppliesTo === CHARGE_APPLIES_TO.SHARES
+  ) {
+    return 'off';
+  }
+  return null;
+}
+
+export function penaltyDisabled(chargeAppliesTo?: number, chargeTimeType?: number): boolean {
+  return penaltyLocked(chargeAppliesTo, chargeTimeType) != null;
 }
 
 export function showMinMaxCap(
   chargeAppliesTo?: number,
   chargeTimeType?: number,
   chargeCalculationType?: number,
-  useChargeTiers?: boolean
+  useChargeTiers?: boolean,
+  mode: 'create' | 'edit' = 'create'
 ): boolean {
   if (useChargeTiers) {
     return false;
   }
+  if (chargeCalculationType === 5) {
+    return mode !== 'edit' && chargeAppliesTo === CHARGE_APPLIES_TO.LOAN && chargeTimeType === 12;
+  }
+  if (chargeCalculationType !== 2) {
+    return false;
+  }
   if (chargeAppliesTo === CHARGE_APPLIES_TO.LOAN) {
-    return [2, 3, 4, 5].includes(chargeCalculationType ?? -1);
+    return true;
   }
   if (chargeAppliesTo === CHARGE_APPLIES_TO.SAVINGS) {
-    return (
-      (chargeTimeType === 16 || chargeTimeType === 5) && chargeCalculationType === 2
-    );
+    return chargeTimeType === 16 || chargeTimeType === 5;
   }
   if (chargeAppliesTo === CHARGE_APPLIES_TO.SHARES) {
-    return (
-      (chargeTimeType === 14 || chargeTimeType === 15) && chargeCalculationType === 2
-    );
+    return chargeTimeType === 14 || chargeTimeType === 15;
   }
   return false;
 }
@@ -171,13 +223,12 @@ export function incomeAccountOptions(template: ChargeTemplate) {
 }
 
 export function feeOnMonthDayFromCharge(value: string | number[] | undefined): string {
-  if (typeof value === 'string') {
-    return value;
-  }
   if (Array.isArray(value) && value.length >= 2) {
-    const [month, day] = value;
-    const date = new Date(2000, month - 1, day);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    return formatChargeMonthDay(Number(value[0]), Number(value[1])) ?? '';
+  }
+  if (typeof value === 'string') {
+    const parsed = parseChargeMonthDay(value);
+    return parsed ? (formatChargeMonthDay(parsed.month, parsed.day) ?? value) : value;
   }
   return '';
 }

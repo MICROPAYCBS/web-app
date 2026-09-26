@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractRolePermissionUsage, FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractAuditTrailListItem, FineractJournalEntryListItem, FineractRolePermissionUsage, FineractSavingsAccountDetail, SavingsAccountPaymentChannel } from '@mifos/api-client';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -69,7 +69,10 @@ export function SavingsAccountDetailView({
   },
   pendingCheckerActions = [],
   pendingApprovalWorkflowContext,
-  makerCheckerTaskPermissions = []
+  makerCheckerTaskPermissions = [],
+  paymentChannels = [],
+  paymentChannelsLoadError,
+  canManagePaymentChannels = false
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -87,6 +90,9 @@ export function SavingsAccountDetailView({
   pendingCheckerActions?: ResourcePendingCheckerAction[];
   pendingApprovalWorkflowContext?: ResourcePendingWorkflowContext;
   makerCheckerTaskPermissions?: FineractRolePermissionUsage[];
+  paymentChannels?: SavingsAccountPaymentChannel[];
+  paymentChannelsLoadError?: string;
+  canManagePaymentChannels?: boolean;
 }) {
   const currency = savingsAccountCurrencyCode(account);
   const blockedMessage = savingsAccountBlockedMessage(account);
@@ -219,6 +225,9 @@ export function SavingsAccountDetailView({
           journalLoadFailed={journalLoadFailed}
           journalTotalRecords={journalTotalRecords}
           transactionActionPermissions={transactionActionPermissions}
+          paymentChannels={paymentChannels}
+          paymentChannelsLoadError={paymentChannelsLoadError}
+          canManagePaymentChannels={canManagePaymentChannels}
         />
       </Suspense>
     </DetailPage>

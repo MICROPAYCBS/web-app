@@ -1,0 +1,10 @@
+{
+  "schemaId": "clients.savings-account.payment-channel",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.SavingsAccountsApiResource"
+  ],
+  "fields": {
+    "paymentTypeId": { "required": true, "type": "id" }
+  },
+  "notes": "GET /savingsaccounts/{id}/paymentchannels returns the product catalog plus subscriptionStatus, allowedForDeposit, and charges. POST ?command=subscribe and ?command=unsubscribe send { paymentTypeId }. Subscribe attaches mapped charges. Unsubscribe inactivates linked charges and keeps paid history."
+}

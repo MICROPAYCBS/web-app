@@ -19,8 +19,8 @@ import { TransactionDateField } from '@/components/composites/transaction-date-f
 import { FormSheet } from '@/components/composites/form-sheet';
 import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
+import { MonthDayField } from '@/components/composites/month-day-field';
 import { SelectField } from '@/components/composites/select-field';
-import { TextField } from '@/components/composites/text-field';
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import {
   chargeCurrencyCodeFromLike,
@@ -244,12 +244,11 @@ export function SavingsAccountAddChargeSheet({
                 />
               ) : null}
               {flags.annualOrMonthly ? (
-                <TextField
+                <MonthDayField
                   id={`${formId}-fee-day`}
-                  label="Fee day"
-                  hint="Use MM-DD format (e.g. 01-15)."
+                  label="Due date"
                   value={feeOnMonthDay}
-                  onChange={setFeeOnMonthDay}
+                  onChange={(value) => setFeeOnMonthDay(value ?? '')}
                   error={fieldErrors.feeOnMonthDay}
                   required
                   disabled={disabled}

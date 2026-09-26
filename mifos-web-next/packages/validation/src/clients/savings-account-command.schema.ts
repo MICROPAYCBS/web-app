@@ -246,6 +246,14 @@ export function validateSavingsAccountCashTransaction(
   };
 }
 
+export const savingsAccountPaymentChannelCommandSchema = z.object({
+  paymentTypeId: z.coerce.number().int().positive('Select a payment channel.')
+});
+
+export type SavingsAccountPaymentChannelCommandInput = z.infer<
+  typeof savingsAccountPaymentChannelCommandSchema
+>;
+
 export type SavingsAccountPostInterestAsOnInput = z.infer<
   typeof savingsAccountPostInterestAsOnSchema
 >;

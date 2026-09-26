@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ArrowRightLeft, BookOpen, FileText, PiggyBank, Receipt, ScrollText, type LucideIcon } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, CreditCard, FileText, PiggyBank, Receipt, ScrollText, type LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { DetailSectionNav } from '@/components/composites';
 import { useDetailSection } from '@/hooks/use-detail-section';
@@ -24,6 +24,7 @@ const SECTION_ICONS: Record<SavingsAccountSectionId, LucideIcon> = {
   transactions: ArrowRightLeft,
   statement: FileText,
   charges: Receipt,
+  paymentChannels: CreditCard,
   journalEntries: BookOpen,
   audit: ScrollText
 };

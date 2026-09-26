@@ -12,7 +12,7 @@ import type { UpsertSavingsProductInput } from '@mifos/validation';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import {
   createSavingsProductAction,
   fetchSavingsProductChargeOptionsAction,
@@ -36,6 +36,8 @@ import {
   savingsProductDraftHasUnsavedChanges,
   sanitizeSavingsProductDraftForSubmit
 } from '@/lib/fineract/product-wizard-draft-compare';
+import { pruneProductChargeAmounts } from '@/lib/fineract/product-charge-links';
+import { pruneProductChargeIds } from '@/lib/fineract/product-charge-options';
 import { isProductShortNameLocked } from '@/lib/fineract/product-short-name';
 import { wizardSubmitRecoveryMessage } from '@/lib/wizard-session-draft';
 import { AccountingStep } from './steps/accounting-step';
@@ -43,14 +45,15 @@ import { ChargesStep } from './steps/charges-step';
 import { CurrencyStep } from './steps/currency-step';
 import { DetailsStep } from './steps/details-step';
 import { MappingsStep } from './steps/mappings-step';
+import { PaymentChannelsStep } from './steps/payment-channels-step';
 import { PreviewStep } from './steps/preview-step';
 import { SettingsStep } from './steps/settings-step';
 import { TermsStep } from './steps/terms-step';
 import type { SavingsProductWizardProps, StepErrors } from './types';
 import { validateSavingsProductStep } from './validation';
 
-const SAVINGS_CHARGE_OPTION_STEPS = ['charges', 'accounting', 'mappings'] as const;
-const SAVINGS_PRODUCT_WIZARD_SESSION_VERSION = 1;
+const SAVINGS_CHARGE_OPTION_STEPS = ['charges', 'channels', 'accounting', 'mappings'] as const;
+const SAVINGS_PRODUCT_WIZARD_SESSION_VERSION = 2;
 
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'details', label: 'Details' },
@@ -58,6 +61,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'terms', label: 'Terms' },
   { id: 'settings', label: 'Settings' },
   { id: 'charges', label: 'Charges' },
+  { id: 'channels', label: 'Channels' },
   { id: 'accounting', label: 'Accounting' },
   { id: 'mappings', label: 'Mappings' },
   { id: 'preview', label: 'Preview' }
@@ -121,6 +125,31 @@ export function SavingsProductWizard({
     isDirty: isSessionDraftDirty
   });
   useUnsavedWizardLeave(hasUnsavedChanges);
+
+  useEffect(() => {
+    if (!Array.isArray(template.chargeOptions)) {
+      return;
+    }
+    setDraft((current) => {
+      let changed = false;
+      const channels = (current.paymentChannels.channels ?? []).map((row) => {
+        const chargeIds = pruneProductChargeIds(row.chargeIds ?? [], template.chargeOptions, []);
+        const chargeAmounts = pruneProductChargeAmounts(chargeIds, row.chargeAmounts);
+        const sameIds = chargeIds.length === (row.chargeIds ?? []).length;
+        const sameAmounts =
+          Object.keys(chargeAmounts).length === Object.keys(row.chargeAmounts ?? {}).length;
+        if (sameIds && sameAmounts) {
+          return row;
+        }
+        changed = true;
+        return { ...row, chargeIds, chargeAmounts };
+      });
+      if (!changed) {
+        return current;
+      }
+      return { ...current, paymentChannels: { channels } };
+    });
+  }, [template.chargeOptions]);
 
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
   const isPreview = stepId === 'preview';
@@ -367,6 +396,20 @@ export function SavingsProductWizard({
             errors={stepErrors}
             onChange={(patch) =>
               setDraft((current) => ({ ...current, charges: { ...current.charges, ...patch } }))
+            }
+          />
+        ) : null}
+
+        {stepId === 'channels' ? (
+          <PaymentChannelsStep
+            template={template}
+            draft={draft}
+            errors={stepErrors}
+            onChange={(patch) =>
+              setDraft((current) => ({
+                ...current,
+                paymentChannels: { ...current.paymentChannels, ...patch }
+              }))
             }
           />
         ) : null}

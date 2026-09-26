@@ -97,6 +97,7 @@ export function SavingsAccountTransactionSheet({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [paymentTypes, setPaymentTypes] = useState<CashierAwarePaymentTypeOption[]>([]);
+  const [paymentTypesLoaded, setPaymentTypesLoaded] = useState(false);
   const [cashierPolicy, setCashierPolicy] = useState<CashierPolicySettings>({
     preventCashierOverdraw: true,
     requireCashierForCashTransactions: true,
@@ -136,6 +137,7 @@ export function SavingsAccountTransactionSheet({
     }
     let cancelled = false;
     setLoading(true);
+    setPaymentTypesLoaded(false);
     setError(null);
     setFieldErrors({});
     setSuccessState(null);
@@ -165,6 +167,7 @@ export function SavingsAccountTransactionSheet({
         return;
       }
       setLoading(false);
+      setPaymentTypesLoaded(true);
       if (!result.ok) {
         setError(result.message);
         setPaymentTypes([]);
@@ -320,11 +323,19 @@ export function SavingsAccountTransactionSheet({
         value={paymentTypeId}
         onValueChange={(value) => setPaymentTypeId(value ?? '')}
         options={paymentTypes.map((row) => ({ value: String(row.id), label: row.name }))}
-        placeholder="Select payment type"
+        placeholder={
+          paymentTypes.length === 0 ? 'No payment types available' : 'Select payment type'
+        }
         error={fieldErrors.paymentTypeId}
         required
-        disabled={disabled}
+        disabled={disabled || paymentTypes.length === 0}
       />
+      {paymentTypesLoaded && !loading && paymentTypes.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No payment types are allowed for this account. Standard channels stay available when the
+          product has no catalog. Premium channels appear here after the account subscribes.
+        </p>
+      ) : null}
       {showEntryModeToggle ? (
         <div className="space-y-2">
           <p className="text-sm font-medium">Entry mode</p>
@@ -486,7 +497,11 @@ export function SavingsAccountTransactionSheet({
                 type="submit"
                 form={formId}
                 disabled={
-                  disabled || pending || blockedByCashierSession || denominationSubmitBlocked
+                  disabled ||
+                  pending ||
+                  blockedByCashierSession ||
+                  denominationSubmitBlocked ||
+                  (paymentTypesLoaded && paymentTypes.length === 0)
                 }
               >
                 {pending ? 'Saving…' : title}
