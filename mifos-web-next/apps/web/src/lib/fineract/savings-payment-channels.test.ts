@@ -131,6 +131,30 @@ describe('normalizeSavingsAccountPaymentChannels', () => {
     assert.equal(channels[1]?.charges[0]?.id, 12);
   });
 
+  it('reads active and string subscription statuses', () => {
+    const channels = normalizeSavingsAccountPaymentChannels([
+      {
+        paymentTypeId: 3,
+        isPremium: true,
+        subscriptionStatus: { code: 'subscriptionStatus.active', value: 'Active' }
+      },
+      {
+        paymentTypeId: 4,
+        isPremium: true,
+        subscriptionStatus: 'SUBSCRIBED'
+      },
+      {
+        paymentTypeId: 5,
+        isPremium: true,
+        subscription: { active: true }
+      }
+    ]);
+
+    assert.equal(channels[0]?.subscribed, true);
+    assert.equal(channels[1]?.subscribed, true);
+    assert.equal(channels[2]?.subscribed, true);
+  });
+
   it('treats an omitted catalog as no channels', () => {
     assert.deepEqual(normalizeSavingsAccountPaymentChannels(undefined), []);
     assert.deepEqual(normalizeSavingsAccountPaymentChannels({}), []);

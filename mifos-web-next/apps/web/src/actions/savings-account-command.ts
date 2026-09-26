@@ -41,6 +41,7 @@ import {
   executeSavingsAccountCommand,
   executeSavingsAccountPaymentChannelCommand,
   executeSavingsAccountTransaction,
+  getSavingsAccountPaymentChannels,
   type SavingsAccountPaymentChannelCommand,
   getSavingsAccountChargeDetailTemplate,
   getSavingsAccountChargeTemplate,
@@ -1062,7 +1063,16 @@ export async function executeSavingsAccountPaymentChannelAction(
       parsed.data.paymentTypeId
     );
     revalidateSavingsAccountPaths(clientId, accountId);
-    return actionSuccessFromFineractCommand(response, {});
+    const success = actionSuccessFromFineractCommand(response, {});
+    if (success.pendingChecker) {
+      return success;
+    }
+    try {
+      const channels = await getSavingsAccountPaymentChannels(accountId);
+      return { ...success, channels };
+    } catch {
+      return success;
+    }
   } catch (error) {
     return toFineractActionError(
       error,

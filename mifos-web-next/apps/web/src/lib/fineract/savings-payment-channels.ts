@@ -141,6 +141,22 @@ export function normalizeSavingsProductPaymentChannels(
   return channels;
 }
 
+function statusTextMeansSubscribed(text: string): boolean {
+  const normalized = text.toLowerCase().replace(/[._-]+/g, ' ').trim();
+  if (
+    !normalized ||
+    normalized.includes('not ') ||
+    normalized.startsWith('not') ||
+    normalized.includes('unsub') ||
+    normalized.includes('inactive') ||
+    normalized === 'false' ||
+    normalized === '0'
+  ) {
+    return false;
+  }
+  return /\b(subscribed|active|true)\b/.test(normalized);
+}
+
 function isSubscribed(value: unknown): boolean {
   if (value === true) {
     return true;
@@ -149,26 +165,27 @@ function isSubscribed(value: unknown): boolean {
     return value === 1;
   }
   if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
-    if (!normalized || normalized.includes('not') || normalized === 'false' || normalized === '0') {
-      return false;
-    }
-    return normalized === 'subscribed' || normalized === 'active' || normalized === 'true';
+    return statusTextMeansSubscribed(value);
   }
   const row = asRecord(value);
   if (!row) {
     return false;
   }
-  if (row.subscribed === true || row.active === true) {
+  if (row.subscribed === true || row.isSubscribed === true || row.active === true) {
     return true;
   }
-  const code = typeof row.code === 'string' ? row.code.toLowerCase() : '';
-  const label = typeof row.value === 'string' ? row.value.toLowerCase() : '';
-  const text = `${code} ${label}`;
-  if (text.includes('not')) {
-    return false;
+  const nested = row.status ?? row.subscriptionStatus ?? row.subscription;
+  if (nested != null && nested !== value) {
+    return isSubscribed(nested);
   }
-  return text.includes('subscribed');
+  const code = typeof row.code === 'string' ? row.code : '';
+  const label = typeof row.value === 'string' ? row.value : '';
+  const name = typeof row.name === 'string' ? row.name : '';
+  if (statusTextMeansSubscribed(`${code} ${label} ${name}`)) {
+    return true;
+  }
+  const id = Number(row.id);
+  return id === 1 && !statusTextMeansSubscribed(`${code} ${label}`) && `${code} ${label}`.trim() === '';
 }
 
 export function normalizeSavingsAccountPaymentChannels(
@@ -184,8 +201,14 @@ export function normalizeSavingsAccountPaymentChannels(
     if (!channel) {
       continue;
     }
+    const subscription = asRecord(row.subscription);
     const subscribed = isSubscribed(
-      row.subscriptionStatus ?? row.subscribed ?? row.isSubscribed
+      row.subscriptionStatus ??
+        row.subscribed ??
+        row.isSubscribed ??
+        subscription?.status ??
+        subscription?.subscriptionStatus ??
+        subscription
     );
     const allowedForDeposit =
       typeof row.allowedForDeposit === 'boolean'

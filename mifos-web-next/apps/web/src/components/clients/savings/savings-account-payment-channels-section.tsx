@@ -11,7 +11,7 @@
 import type { SavingsAccountPaymentChannel } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { executeSavingsAccountPaymentChannelAction } from '@/actions/savings-account-command';
 import { DetailSection } from '@/components/composites';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
 
@@ -32,6 +33,41 @@ type PendingChannelCommand = {
   paymentTypeId: number;
   name: string;
 };
+
+function withChannelCommand(
+  channels: SavingsAccountPaymentChannel[],
+  command: PendingChannelCommand
+): SavingsAccountPaymentChannel[] {
+  const subscribed = command.command === 'subscribe';
+  return channels.map((channel) => {
+    if (channel.paymentTypeId !== command.paymentTypeId) {
+      return channel;
+    }
+    return {
+      ...channel,
+      subscribed,
+      allowedForDeposit: channel.isActive && (!channel.isPremium || subscribed)
+    };
+  });
+}
+
+/** Keep a just-confirmed subscription until the reloaded account reports the same status. */
+function mergeServerChannels(
+  local: SavingsAccountPaymentChannel[],
+  server: SavingsAccountPaymentChannel[]
+): SavingsAccountPaymentChannel[] {
+  return server.map((channel) => {
+    const previous = local.find((item) => item.paymentTypeId === channel.paymentTypeId);
+    if (!previous || previous.subscribed === channel.subscribed) {
+      return channel;
+    }
+    return {
+      ...channel,
+      subscribed: previous.subscribed,
+      allowedForDeposit: previous.allowedForDeposit
+    };
+  });
+}
 
 function channelFees(channel: SavingsAccountPaymentChannel, currencyCode: string): string {
   if (channel.charges.length === 0) {
@@ -67,9 +103,19 @@ export function SavingsAccountPaymentChannelsSection({
   loadError?: string;
 }) {
   const router = useRouter();
+  const [listedChannels, setListedChannels] = useState(channels);
+  const [listedAccountId, setListedAccountId] = useState(accountId);
+  if (listedAccountId !== accountId) {
+    setListedAccountId(accountId);
+    setListedChannels(channels);
+  }
   const [pendingCommand, setPendingCommand] = useState<PendingChannelCommand | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setListedChannels((current) => mergeServerChannels(current, channels));
+  }, [channels]);
 
   function handleConfirm() {
     if (!pendingCommand) {
@@ -88,7 +134,19 @@ export function SavingsAccountPaymentChannelsSection({
         setError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
+      if (!result.pendingChecker) {
+        setListedChannels((current) =>
+          withChannelCommand(result.channels ?? current, command)
+        );
+      }
       setPendingCommand(null);
+      toastCommandOutcome(result, {
+        completed:
+          command.command === 'subscribe'
+            ? 'Subscribed to this channel.'
+            : 'Unsubscribed from this channel.',
+        pending: 'Sent for approval. The subscription stays unchanged until it is approved.'
+      });
       router.refresh();
     });
   }
@@ -129,7 +187,7 @@ export function SavingsAccountPaymentChannelsSection({
             </p>
           ) : null}
           <ul className="divide-y divide-border rounded-lg border border-border">
-            {channels.map((channel) => {
+            {listedChannels.map((channel) => {
               const name = channel.paymentTypeName ?? `Payment type ${channel.paymentTypeId}`;
               const showSubscribe = channel.isPremium && channel.isActive && !channel.subscribed;
               const showUnsubscribe = channel.isPremium && channel.subscribed;
