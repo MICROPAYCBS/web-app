@@ -80,6 +80,8 @@ function SavingsProductGeneralSection({ product }: { product: SavingsProductDeta
           <DetailField label="Currency code">{currency}</DetailField>
         </DetailFieldGrid>
       </DetailSection>
+
+      <SavingsProductPaymentChannelsSection product={product} />
     </>
   );
 }
@@ -211,7 +213,9 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
                   {row.isPremium
                     ? 'Accounts must subscribe before this channel can be used.'
                     : 'Allowed on every account. No subscription.'}
-                  {row.isPremium && fees ? ` Fees on subscribe: ${fees}.` : ''}
+                  {row.isPremium
+                    ? ` Fees on subscribe: ${fees || 'none'}.`
+                    : ''}
                 </p>
               </li>
             );

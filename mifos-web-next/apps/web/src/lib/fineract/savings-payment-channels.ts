@@ -100,6 +100,16 @@ function chargeRows(raw: unknown): SavingsProductPaymentChannelCharge[] {
   return charges;
 }
 
+function asFlag(value: unknown, fallback: boolean): boolean {
+  if (value === true || value === 1 || value === 'true' || value === '1') {
+    return true;
+  }
+  if (value === false || value === 0 || value === 'false' || value === '0') {
+    return false;
+  }
+  return fallback;
+}
+
 function paymentTypeName(row: Record<string, unknown>): string | undefined {
   if (typeof row.paymentTypeName === 'string' && row.paymentTypeName.trim()) {
     return row.paymentTypeName;
@@ -133,9 +143,9 @@ export function normalizeSavingsProductPaymentChannels(
     channels.push({
       paymentTypeId,
       paymentTypeName: paymentTypeName(row),
-      isPremium: row.isPremium === true,
-      isActive: row.isActive !== false,
-      charges: chargeRows(row.charges)
+      isPremium: asFlag(row.isPremium, false),
+      isActive: asFlag(row.isActive, true),
+      charges: chargeRows(row.charges ?? row.channelCharges)
     });
   }
   return channels;

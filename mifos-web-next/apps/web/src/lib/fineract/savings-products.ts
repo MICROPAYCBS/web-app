@@ -107,6 +107,49 @@ export async function listSavingsProducts(): Promise<SavingsProductListItem[]> {
   return normalizeFineractList(data, normalizeListItem);
 }
 
+function optionNames(value: unknown): Map<number, string> {
+  const names = new Map<number, string>();
+  if (!Array.isArray(value)) {
+    return names;
+  }
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    const row = item as Record<string, unknown>;
+    const id = Number(row.id);
+    const name = typeof row.name === 'string' ? row.name.trim() : '';
+    if (Number.isFinite(id) && name) {
+      names.set(id, name);
+    }
+  }
+  return names;
+}
+
+function channelsNeedLabels(
+  channels: SavingsProductDetail['paymentChannels']
+): boolean {
+  return (channels ?? []).some(
+    (channel) =>
+      !channel.paymentTypeName || channel.charges.some((charge) => !charge.name)
+  );
+}
+
+function withChannelLabels(
+  channels: NonNullable<SavingsProductDetail['paymentChannels']>,
+  paymentTypeNames: Map<number, string>,
+  chargeNames: Map<number, string>
+) {
+  return channels.map((channel) => ({
+    ...channel,
+    paymentTypeName: channel.paymentTypeName ?? paymentTypeNames.get(channel.paymentTypeId),
+    charges: channel.charges.map((charge) => ({
+      ...charge,
+      name: charge.name ?? chargeNames.get(charge.id)
+    }))
+  }));
+}
+
 export async function getSavingsProduct(
   productId: string | number
 ): Promise<SavingsProductDetail> {
@@ -116,7 +159,34 @@ export async function getSavingsProduct(
   if (!product) {
     throw new Error('Deposit product not found.');
   }
-  return product;
+
+  const row = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : undefined;
+  const catalogMissing = !row || !Object.prototype.hasOwnProperty.call(row, 'paymentChannels');
+  if (!catalogMissing && !channelsNeedLabels(product.paymentChannels)) {
+    return product;
+  }
+
+  try {
+    const templated = await fineract.get<unknown>(`${SAVINGS_PRODUCTS_API_PATH}/${productId}`, {
+      template: 'true'
+    });
+    const templateRow =
+      templated && typeof templated === 'object'
+        ? (templated as Record<string, unknown>)
+        : undefined;
+    const fromTemplate = normalizeSavingsProductPaymentChannels(templateRow?.paymentChannels);
+    const channels = catalogMissing ? fromTemplate : (product.paymentChannels ?? []);
+    return {
+      ...product,
+      paymentChannels: withChannelLabels(
+        channels,
+        optionNames(templateRow?.paymentTypeOptions),
+        optionNames(templateRow?.chargeOptions)
+      )
+    };
+  } catch {
+    return product;
+  }
 }
 
 export async function getSavingsProductTemplate(

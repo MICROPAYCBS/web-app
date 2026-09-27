@@ -23,6 +23,7 @@ describe('normalizeSavingsProductPaymentChannels', () => {
         isActive: false,
         charges: [{ id: 12, name: 'Channel fee', amount: 50, useChargeTiers: false }]
       },
+      { isPremium: 1, paymentTypeId: 4, isActive: 0, charges: [] },
       { isPremium: true }
     ]);
 
@@ -40,6 +41,13 @@ describe('normalizeSavingsProductPaymentChannels', () => {
         isPremium: true,
         isActive: false,
         charges: [{ id: 12, name: 'Channel fee', amount: 50, useChargeTiers: false }]
+      },
+      {
+        paymentTypeId: 4,
+        paymentTypeName: undefined,
+        isPremium: true,
+        isActive: false,
+        charges: []
       }
     ]);
   });

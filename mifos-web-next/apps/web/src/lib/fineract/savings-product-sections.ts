@@ -24,10 +24,6 @@ export function savingsProductFeeCharges(product: SavingsProductDetail) {
   return (product.charges ?? []).filter((charge) => charge.penalty !== true);
 }
 
-export function savingsProductHasPaymentChannels(product: SavingsProductDetail): boolean {
-  return (product.paymentChannels?.length ?? 0) > 0;
-}
-
 export function savingsProductHasChannelMappings(product: SavingsProductDetail): boolean {
   return (product.paymentChannelToFundSourceMappings?.length ?? 0) > 0;
 }
@@ -49,9 +45,7 @@ export function savingsProductSections(product: SavingsProductDetail): ProductSe
   if (savingsProductFeeCharges(product).length > 0) {
     items.push({ id: 'fees', label: 'Fees' });
   }
-  if (savingsProductHasPaymentChannels(product)) {
-    items.push({ id: 'paymentChannels', label: 'Payment channels' });
-  }
+  items.push({ id: 'paymentChannels', label: 'Payment channels' });
   if (isProductAccountingEnabled(product.accountingRule)) {
     items.push({ id: 'accounting', label: 'Accounting' });
   }
