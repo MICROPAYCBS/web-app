@@ -117,6 +117,10 @@ export const savingsAccountPayChargeSchema = z.object({
   amount: z.coerce.number().min(0).optional()
 });
 
+export const savingsAccountWaiveChargeSchema = z.object({
+  chargeId: z.coerce.number().int().positive()
+});
+
 export const savingsAccountWithholdTaxSchema = z.object({
   withHoldTax: z.boolean()
 });
@@ -262,6 +266,7 @@ export type SavingsAccountAssignStaffInput = z.infer<typeof savingsAccountAssign
 export type SavingsAccountUnassignStaffInput = z.infer<typeof savingsAccountUnassignStaffSchema>;
 export type SavingsAccountAddChargeInput = z.infer<typeof savingsAccountAddChargeSchema>;
 export type SavingsAccountPayChargeInput = z.infer<typeof savingsAccountPayChargeSchema>;
+export type SavingsAccountWaiveChargeInput = z.infer<typeof savingsAccountWaiveChargeSchema>;
 export type SavingsAccountWithholdTaxInput = z.infer<typeof savingsAccountWithholdTaxSchema>;
 export type SavingsAccountUndoTransactionInput = z.infer<typeof savingsAccountUndoTransactionSchema>;
 export type SavingsAccountModifyTransactionInput = z.infer<typeof savingsAccountModifyTransactionSchema>;

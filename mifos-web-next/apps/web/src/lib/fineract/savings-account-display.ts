@@ -9,8 +9,10 @@
 import type {
   FineractSavingsAccountCharge,
   FineractSavingsAccountDetail,
-  FineractSavingsAccountTransaction
+  FineractSavingsAccountTransaction,
+  SavingsAccountPaymentChannel
 } from '@mifos/api-client';
+import { savingsChargeActions } from '@/lib/fineract/channel-charge-timing';
 import { formatTimelineActor } from '@/lib/fineract/account-timeline-display';
 import { clientAccountBackLabel } from '@/lib/fineract/clients-display';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
@@ -274,20 +276,11 @@ export function isSavingsTransactionCredit(transaction: FineractSavingsAccountTr
   return code === 'CREDIT';
 }
 
-export function formatSavingsChargeStatus(charge: FineractSavingsAccountCharge) {
-  if (charge.isWaived) {
-    return 'Waived';
-  }
-  if (charge.isPaid) {
-    return 'Paid';
-  }
-  if (charge.isActive === false) {
-    return 'Inactive';
-  }
-  if ((charge.amountOutstanding ?? 0) > 0) {
-    return 'Outstanding';
-  }
-  return 'Active';
+export function formatSavingsChargeStatus(
+  charge: FineractSavingsAccountCharge,
+  channels: SavingsAccountPaymentChannel[] = []
+) {
+  return savingsChargeActions(charge, channels).label;
 }
 
 const SAVINGS_STATUS = {

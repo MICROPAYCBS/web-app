@@ -10,7 +10,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   normalizeSavingsAccountPaymentChannels,
-  normalizeSavingsProductPaymentChannels
+  normalizeSavingsProductPaymentChannels,
+  preferSavingsProductPaymentChannels
 } from './savings-payment-channels';
 
 describe('normalizeSavingsProductPaymentChannels', () => {
@@ -105,6 +106,24 @@ describe('normalizeSavingsProductPaymentChannels', () => {
         useChargeTiers: false
       }
     ]);
+  });
+
+  it('reads a payment type id sent as a number', () => {
+    const channels = normalizeSavingsProductPaymentChannels([
+      { paymentType: 3, isPremium: true, isActive: true, charges: [] }
+    ]);
+
+    assert.equal(channels[0]?.paymentTypeId, 3);
+    assert.equal(channels[0]?.isPremium, true);
+  });
+
+  it('uses the templated catalog when the plain product list is empty', () => {
+    const templated = normalizeSavingsProductPaymentChannels([
+      { paymentTypeId: 3, paymentTypeName: 'Mobile money', isPremium: true, isActive: true }
+    ]);
+
+    assert.equal(preferSavingsProductPaymentChannels([], templated), templated);
+    assert.equal(preferSavingsProductPaymentChannels(templated, []), templated);
   });
 });
 

@@ -167,6 +167,7 @@ export function SavingsAccountDetailView({
                   reportOrgName={reportOrgName}
                   permissions={permissions}
                   pendingCheckerActions={pendingCheckerActions}
+                  paymentChannels={paymentChannels}
                 />
               </AccountDetailActionsBar>
             }

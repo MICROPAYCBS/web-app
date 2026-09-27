@@ -23,7 +23,7 @@ import { listAuditTrailsForSavingsAccount } from '@/lib/fineract/audit-trails';
 import { listJournalEntriesForSavingsAccount } from '@/lib/fineract/journal-entries';
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccountPaymentChannels } from '@/lib/fineract/savings-account-commands';
-import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
+import { getSavingsAccount, listSavingsAccountCharges } from '@/lib/fineract/savings-accounts';
 import {
   loadResourcePendingCheckerActions,
   resolveResourcePendingWorkflowContext
@@ -82,8 +82,10 @@ export default async function SavingsAccountGeneralPage({
   }
 
   const canManagePaymentChannels = can(session, 'UPDATE_SAVINGSACCOUNT');
-  const [result, auditResult, journalResult, paymentChannelsResult, reportOrgName] = await Promise.all([
+  const [result, chargesResult, auditResult, journalResult, paymentChannelsResult, reportOrgName] =
+    await Promise.all([
     tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
+    tryFineractLoad(() => listSavingsAccountCharges(accountId), 'Could not load account charges.'),
     tryFineractLoad(
       () => listAuditTrailsForSavingsAccount(accountId, { limit: canViewAudits ? 100 : 25 }),
       'Could not load audit trail.'
@@ -128,6 +130,11 @@ export default async function SavingsAccountGeneralPage({
     notFound();
   }
 
+  const account =
+    chargesResult.ok
+      ? { ...result.data, charges: chargesResult.data }
+      : result.data;
+
   const auditEntriesForPending =
     auditResult?.ok && auditResult.data ? auditResult.data.pageItems : [];
   const auditEntries = canViewAudits ? auditEntriesForPending : [];
@@ -145,21 +152,21 @@ export default async function SavingsAccountGeneralPage({
 
   const workflowRuntime = await loadApprovalWorkflowRuntimeContext();
   const pendingCheckerActions = await loadResourcePendingCheckerActions(
-    savingsAccountPendingCheckerScope(result.data.id),
+    savingsAccountPendingCheckerScope(account.id),
     auditEntriesForPending
   );
   const pendingApprovalWorkflowContext = await resolveResourcePendingWorkflowContext(
     pendingCheckerActions,
-    savingsAccountPendingCheckerScope(result.data.id),
+    savingsAccountPendingCheckerScope(account.id),
     {
-      status: result.data.status
+      status: account.status
     },
     workflowRuntime
   );
 
   return (
     <SavingsAccountDetailView
-      account={result.data}
+      account={account}
       clientId={clientId}
       reportOrgName={reportOrgName}
       permissions={savingsAccountPermissions(session)}

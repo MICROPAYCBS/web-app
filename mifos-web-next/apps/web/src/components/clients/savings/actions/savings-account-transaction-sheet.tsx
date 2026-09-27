@@ -8,7 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CurrencyLegalTender } from '@mifos/api-client';
+import type {
+  CurrencyLegalTender,
+  FineractSavingsAccountCharge,
+  SavingsAccountPaymentChannel
+} from '@mifos/api-client';
 import { formatMoney, parseAmount } from '@mifos/domain';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { CheckCircle2 } from 'lucide-react';
@@ -61,6 +65,8 @@ import type {
 } from '@/lib/fineract/cashier-policy-paths';
 import type { CashTransactionEntryMode } from '@mifos/validation';
 import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
+import { withdrawalFeesForPaymentType } from '@/lib/fineract/channel-charge-timing';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { legalTenderListPath } from '@/lib/fineract/legal-tender-paths';
 
 type DepositWithdrawCommand = 'deposit' | 'withdrawal';
@@ -78,6 +84,8 @@ export function SavingsAccountTransactionSheet({
   orgName,
   command,
   currencyCode,
+  charges = [],
+  paymentChannels = [],
   open,
   onOpenChange
 }: {
@@ -88,6 +96,8 @@ export function SavingsAccountTransactionSheet({
   orgName?: string;
   command: DepositWithdrawCommand | null;
   currencyCode: string;
+  charges?: FineractSavingsAccountCharge[];
+  paymentChannels?: SavingsAccountPaymentChannel[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -200,6 +210,13 @@ export function SavingsAccountTransactionSheet({
     () => paymentTypes.find((row) => String(row.id) === paymentTypeId),
     [paymentTypeId, paymentTypes]
   );
+  const selectedPaymentTypeId = Number(paymentTypeId);
+  const withdrawalFees = useMemo(() => {
+    if (command !== 'withdrawal' || paymentTypeId === '' || !Number.isFinite(selectedPaymentTypeId)) {
+      return [];
+    }
+    return withdrawalFeesForPaymentType(charges, paymentChannels, selectedPaymentTypeId);
+  }, [charges, command, paymentChannels, paymentTypeId, selectedPaymentTypeId]);
   const isCashPayment = selectedPaymentType?.isCashPayment === true;
   const captureMode: LegalTenderCaptureMode =
     cashierPolicy.captureLegalTenderForCashTransactions;
@@ -335,6 +352,22 @@ export function SavingsAccountTransactionSheet({
           No payment types are allowed for this account. Standard channels stay available when the
           product has no catalog. Premium channels appear here after the account subscribes.
         </p>
+      ) : null}
+      {command === 'withdrawal' && paymentTypeId ? (
+        <div className="space-y-1 text-sm">
+          <p className="font-medium">Withdrawal fees</p>
+          {withdrawalFees.length === 0 ? (
+            <p className="text-muted-foreground">No withdrawal fee applies for this payment type.</p>
+          ) : (
+            <ul className="space-y-1 text-muted-foreground">
+              {withdrawalFees.map((fee) => (
+                <li key={fee.id}>
+                  {fee.name} · {formatAccountMoney(fee.amount, currencyCode)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       ) : null}
       {showEntryModeToggle ? (
         <div className="space-y-2">

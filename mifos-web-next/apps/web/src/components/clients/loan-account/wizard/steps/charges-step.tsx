@@ -326,7 +326,11 @@ export function LoanAccountChargesStep({
                           />
                         ) : showFeeOnMonthDay ? (
                           <MonthDayField
-                            label={chargeDateLabel(meta)}
+                            variant={
+                              enumOptionLabel(meta?.chargeTimeType) === 'Annual Fee'
+                                ? 'annual'
+                                : 'monthly'
+                            }
                             value={charge.feeOnMonthDay}
                             onChange={(feeOnMonthDay) =>
                               updateCharge(index, { feeOnMonthDay })

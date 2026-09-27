@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { FineractSavingsAccountDetail } from '@mifos/api-client';
+import type { FineractSavingsAccountDetail, SavingsAccountPaymentChannel } from '@mifos/api-client';
 import {
   ArrowDownCircle,
   ArrowDownToLine,
@@ -102,13 +102,15 @@ export function SavingsAccountActions({
   clientId,
   reportOrgName,
   permissions,
-  pendingCheckerActions = []
+  pendingCheckerActions = [],
+  paymentChannels = []
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
   reportOrgName: string;
   permissions: SavingsAccountActionPermissions;
   pendingCheckerActions?: ResourcePendingCheckerAction[];
+  paymentChannels?: SavingsAccountPaymentChannel[];
 }) {
   const visibility = savingsAccountActionVisibility(account);
   const currencyCode = savingsAccountCurrencyCode(account);
@@ -426,6 +428,8 @@ export function SavingsAccountActions({
         orgName={reportOrgName}
         command={transactionCommand}
         currencyCode={currencyCode}
+        charges={account.charges}
+        paymentChannels={paymentChannels}
         open={transactionCommand !== null}
         onOpenChange={(next) => {
           if (!next) {

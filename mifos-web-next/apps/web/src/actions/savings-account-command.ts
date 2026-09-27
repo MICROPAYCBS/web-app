@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { assertCan } from '@mifos/auth';
+import { assertCan, can } from '@mifos/auth';
 import {
   savingsAccountActivateCommandSchema,
   savingsAccountAddChargeSchema,
@@ -18,6 +18,7 @@ import {
   savingsAccountCloseCommandSchema,
   savingsAccountHoldAmountSchema,
   savingsAccountPayChargeSchema,
+  savingsAccountWaiveChargeSchema,
   savingsAccountPostInterestAsOnSchema,
   savingsAccountRejectCommandSchema,
   savingsAccountTransactionCommandSchema,
@@ -155,6 +156,20 @@ async function requirePermission(
     return { ok: false, message: deniedMessage };
   }
   return null;
+}
+
+async function requireAnyPermission(
+  permissions: string[],
+  deniedMessage: string
+): Promise<PermissionDenied | null> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  if (permissions.some((permission) => can(session, permission))) {
+    return null;
+  }
+  return { ok: false, message: deniedMessage };
 }
 
 async function requireAllPermissions(
@@ -954,9 +969,9 @@ export async function executeSavingsAccountPayChargeAction(
   accountId: string,
   raw: unknown
 ): Promise<SavingsAccountActionResult> {
-  const denied = await requirePermission(
-    'APPLYANNUALFEE_SAVINGSACCOUNT',
-    'You do not have permission to apply annual fees.'
+  const denied = await requireAnyPermission(
+    ['PAY_SAVINGSACCOUNTCHARGE', 'APPLYANNUALFEE_SAVINGSACCOUNT'],
+    'You do not have permission to pay this charge.'
   );
   if (denied) {
     return denied;
@@ -982,7 +997,39 @@ export async function executeSavingsAccountPayChargeAction(
     revalidateSavingsAccountPaths(clientId, accountId);
     return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
-    return toFineractActionError(error, 'Could not apply annual fee.');
+    return toFineractActionError(error, 'Could not pay this charge.');
+  }
+}
+
+export async function executeSavingsAccountWaiveChargeAction(
+  clientId: string,
+  accountId: string,
+  raw: unknown
+): Promise<SavingsAccountActionResult> {
+  const denied = await requirePermission(
+    'WAIVE_SAVINGSACCOUNTCHARGE',
+    'You do not have permission to waive this charge.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = parseOrError(savingsAccountWaiveChargeSchema, raw);
+  if (!parsed.success) {
+    return parsed.result;
+  }
+
+  try {
+    const response = await executeSavingsAccountChargeCommand(
+      accountId,
+      parsed.data.chargeId,
+      'waive',
+      buildFineractCommandBody({})
+    );
+    revalidateSavingsAccountPaths(clientId, accountId);
+    return actionSuccessFromFineractCommand(response, {});
+  } catch (error) {
+    return toFineractActionError(error, 'Could not waive this charge.');
   }
 }
 

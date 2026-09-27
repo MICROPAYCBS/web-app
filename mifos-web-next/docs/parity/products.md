@@ -53,7 +53,7 @@ Reference: `openMF/web-app` → `src/app/products/`
 
 ## Savings product payment channels
 
-Deposit product create and edit include a Channels step. The catalog is stored on `paymentChannels` (`POST`/`PUT /savingsproducts`) and is separate from product `charges`. An empty catalog keeps every payment type available. Premium rows can map fees with an optional amount override; tiered charges do not take an amount. Savings account detail lists the catalog and can subscribe or unsubscribe (`POST /savingsaccounts/{id}/paymentchannels?command=subscribe|unsubscribe`). Deposit and withdrawal payment types come from the transaction template, which the server filters to allowed channels when a catalog is active.
+Deposit product create and edit include a Channels step. The catalog is stored on `paymentChannels` (`POST`/`PUT /savingsproducts`) and is separate from product `charges`. An empty catalog keeps every payment type available. Premium rows can map fees with an optional amount override; tiered charges do not take an amount. Savings account detail lists the catalog and can subscribe or unsubscribe (`POST /savingsaccounts/{id}/paymentchannels?command=subscribe|unsubscribe`). Unsubscribe is allowed while a fee is still due. Monthly and annual fees are labeled as charged on their schedule while subscribed. Withdrawal and overdraft fees are labeled as charged only when that channel is used. Deposit and withdrawal payment types come from the transaction template, which the server filters to allowed channels when a catalog is active. A withdrawal shows only the withdrawal fees that apply to the selected payment type.
 
 ## Charge create and edit
 

@@ -28,6 +28,7 @@ import {
   productStatusLabel,
   productStatusVariant
 } from '@/lib/fineract/product-status-display';
+import { channelChargeTimingLabelFor } from '@/lib/fineract/channel-charge-timing';
 import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
 import {
   savingsProductCurrencyCode,
@@ -187,17 +188,6 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border">
           {rows.map((row) => {
-            const fees = row.charges
-              .map((charge) => {
-                const name = charge.name ?? `Fee ${charge.id}`;
-                if (charge.useChargeTiers) {
-                  return `${name} (tiered)`;
-                }
-                const amount = formatChargeAmountDisplay(charge, currency);
-                return amount === '—' ? name : `${name} · ${amount}`;
-              })
-              .join(', ');
-
             return (
               <li key={row.paymentTypeId} className="space-y-1 px-4 py-3 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
@@ -213,10 +203,31 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
                   {row.isPremium
                     ? 'Accounts must subscribe before this channel can be used.'
                     : 'Allowed on every account. No subscription.'}
-                  {row.isPremium
-                    ? ` Fees on subscribe: ${fees || 'none'}.`
-                    : ''}
                 </p>
+                {row.isPremium ? (
+                  row.charges.length === 0 ? (
+                    <p className="text-muted-foreground">Fees on subscribe: none.</p>
+                  ) : (
+                    <ul className="space-y-1 text-muted-foreground">
+                      {row.charges.map((charge) => {
+                        const name = charge.name ?? `Fee ${charge.id}`;
+                        const amountLabel = charge.useChargeTiers
+                          ? `${name} (tiered)`
+                          : (() => {
+                              const amount = formatChargeAmountDisplay(charge, currency);
+                              return amount === '—' ? name : `${name} · ${amount}`;
+                            })();
+                        const timing = channelChargeTimingLabelFor(charge);
+                        return (
+                          <li key={charge.id}>
+                            {amountLabel}
+                            {timing ? ` ${timing}` : ''}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )
+                ) : null}
               </li>
             );
           })}

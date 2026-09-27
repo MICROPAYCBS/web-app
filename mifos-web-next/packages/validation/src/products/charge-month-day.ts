@@ -99,6 +99,78 @@ export function parseChargeMonthDay(value: string | undefined | null): ChargeMon
   return { month, day };
 }
 
+function monthFromApi(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isInteger(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const asNumber = Number(value);
+    if (Number.isInteger(asNumber)) {
+      return asNumber;
+    }
+    return MONTH_INDEX[value.trim().toLowerCase()];
+  }
+  return undefined;
+}
+
+function dayFromApi(value: unknown): number | undefined {
+  const day = typeof value === 'number' ? value : Number(value);
+  return Number.isInteger(day) ? day : undefined;
+}
+
+/**
+ * Turn a charge due date from a read response into `dd MMM`.
+ * Accepts `04 Mar`, `01 January`, `--03-04`, `2024-03-04`, `[month, day]`,
+ * `[year, month, day]`, and `{ monthValue, dayOfMonth }`.
+ */
+export function chargeMonthDayFromApi(value: unknown): string | undefined {
+  if (value == null || value === '') {
+    return undefined;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    const labeled = parseChargeMonthDay(trimmed);
+    if (labeled) {
+      return formatChargeMonthDay(labeled.month, labeled.day);
+    }
+    const isoMonthDay = /^--(\d{1,2})-(\d{1,2})$/.exec(trimmed);
+    if (isoMonthDay) {
+      return formatChargeMonthDay(Number(isoMonthDay[1]), Number(isoMonthDay[2]));
+    }
+    const isoDate = /^\d{4}-(\d{1,2})-(\d{1,2})$/.exec(trimmed);
+    if (isoDate) {
+      return formatChargeMonthDay(Number(isoDate[1]), Number(isoDate[2]));
+    }
+    return undefined;
+  }
+  if (Array.isArray(value)) {
+    const parts = value.map((part) => Number(part));
+    if (parts.length >= 3 && Number.isFinite(parts[0]) && parts[0] > 12) {
+      return formatChargeMonthDay(parts[1], parts[2]);
+    }
+    if (parts.length >= 2) {
+      const monthDay = formatChargeMonthDay(parts[0], parts[1]);
+      if (monthDay) {
+        return monthDay;
+      }
+    }
+    if (parts.length >= 3) {
+      return formatChargeMonthDay(parts[1], parts[2]);
+    }
+    return undefined;
+  }
+  if (typeof value === 'object') {
+    const row = value as Record<string, unknown>;
+    const month = monthFromApi(row.monthValue ?? row.month);
+    const day = dayFromApi(row.dayOfMonth ?? row.day);
+    if (month == null || day == null) {
+      return undefined;
+    }
+    return formatChargeMonthDay(month, day);
+  }
+  return undefined;
+}
+
 export function chargeMonthDayToDate(value: string | undefined): Date | undefined {
   const parsed = parseChargeMonthDay(value);
   if (!parsed) {

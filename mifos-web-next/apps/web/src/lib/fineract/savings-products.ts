@@ -17,7 +17,10 @@ import type {
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { normalizeSavingsProductTemplate } from '@/lib/fineract/savings-product-draft';
 import { SAVINGS_PRODUCTS_API_PATH } from '@/lib/fineract/savings-product-paths';
-import { normalizeSavingsProductPaymentChannels } from '@/lib/fineract/savings-payment-channels';
+import {
+  normalizeSavingsProductPaymentChannels,
+  preferSavingsProductPaymentChannels
+} from '@/lib/fineract/savings-payment-channels';
 import { filterProductChargeOptions, type FilteredProductChargeOptions } from '@/lib/fineract/product-charge-options';
 import {
   asAccountingMappings,
@@ -160,9 +163,8 @@ export async function getSavingsProduct(
     throw new Error('Deposit product not found.');
   }
 
-  const row = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : undefined;
-  const catalogMissing = !row || !Object.prototype.hasOwnProperty.call(row, 'paymentChannels');
-  if (!catalogMissing && !channelsNeedLabels(product.paymentChannels)) {
+  const plainChannels = product.paymentChannels ?? [];
+  if (plainChannels.length > 0 && !channelsNeedLabels(plainChannels)) {
     return product;
   }
 
@@ -175,7 +177,7 @@ export async function getSavingsProduct(
         ? (templated as Record<string, unknown>)
         : undefined;
     const fromTemplate = normalizeSavingsProductPaymentChannels(templateRow?.paymentChannels);
-    const channels = catalogMissing ? fromTemplate : (product.paymentChannels ?? []);
+    const channels = preferSavingsProductPaymentChannels(plainChannels, fromTemplate);
     return {
       ...product,
       paymentChannels: withChannelLabels(

@@ -7,7 +7,7 @@
  */
 
 import type { ChargeTemplate, FineractEnumOption } from '@mifos/api-client';
-import { formatChargeMonthDay, isChargeTiersAllowed, parseChargeMonthDay } from '@mifos/validation';
+import { chargeMonthDayFromApi, isChargeTiersAllowed } from '@mifos/validation';
 
 export const CHARGE_APPLIES_TO = {
   LOAN: 1,
@@ -222,13 +222,6 @@ export function incomeAccountOptions(template: ChargeTemplate) {
   return liability.length > 0 ? income.concat(liability) : income;
 }
 
-export function feeOnMonthDayFromCharge(value: string | number[] | undefined): string {
-  if (Array.isArray(value) && value.length >= 2) {
-    return formatChargeMonthDay(Number(value[0]), Number(value[1])) ?? '';
-  }
-  if (typeof value === 'string') {
-    const parsed = parseChargeMonthDay(value);
-    return parsed ? (formatChargeMonthDay(parsed.month, parsed.day) ?? value) : value;
-  }
-  return '';
+export function feeOnMonthDayFromCharge(value: unknown): string {
+  return chargeMonthDayFromApi(value) ?? '';
 }

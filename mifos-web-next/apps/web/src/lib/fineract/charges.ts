@@ -21,6 +21,7 @@ import type { UpsertChargeInput } from '@mifos/validation';
 import { FineractHttpError } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { feeOnMonthDayFromCharge } from '@/lib/fineract/charge-form-logic';
+import { chargeMonthDayFromApi } from '@mifos/validation';
 import { listOrganizationPaymentTypes } from '@/lib/fineract/payment-types';
 import { buildChargePayload } from '@/lib/fineract/charge-payload';
 import {
@@ -189,10 +190,7 @@ export function normalizeChargeTemplate(raw: unknown): ChargeTemplate {
     currency,
     currencyCode:
       currency?.code ?? (typeof row.currencyCode === 'string' ? row.currencyCode : undefined),
-    feeOnMonthDay:
-      typeof row.feeOnMonthDay === 'string' || Array.isArray(row.feeOnMonthDay)
-        ? (row.feeOnMonthDay as string | number[])
-        : undefined,
+    feeOnMonthDay: chargeMonthDayFromApi(row.feeOnMonthDay),
     chargeAppliesTo: asEnumOption(row.chargeAppliesTo),
     chargeTimeType: asEnumOption(row.chargeTimeType),
     chargeCalculationType: asEnumOption(row.chargeCalculationType),
@@ -315,10 +313,7 @@ export async function getCharge(chargeId: string | number): Promise<ChargeDetail
     maxCap: typeof row.maxCap === 'number' ? row.maxCap : undefined,
     feeInterval: typeof row.feeInterval === 'number' ? row.feeInterval : undefined,
     feeFrequency: asEnumOption(row.feeFrequency),
-    feeOnMonthDay:
-      typeof row.feeOnMonthDay === 'string' || Array.isArray(row.feeOnMonthDay)
-        ? (row.feeOnMonthDay as string | number[])
-        : undefined,
+    feeOnMonthDay: chargeMonthDayFromApi(row.feeOnMonthDay),
     incomeOrLiabilityAccount:
       row.incomeOrLiabilityAccount && typeof row.incomeOrLiabilityAccount === 'object'
         ? (row.incomeOrLiabilityAccount as ChargeDetail['incomeOrLiabilityAccount'])

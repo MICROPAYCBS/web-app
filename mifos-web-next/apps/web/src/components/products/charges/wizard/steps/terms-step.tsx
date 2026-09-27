@@ -183,8 +183,9 @@ export function TermsStep({
         {chargeTimeType === 6 || chargeTimeType === 7 ? (
           <MonthDayField
             id="feeOnMonthDay"
-            label="Due date"
+            variant={chargeTimeType === 7 ? 'monthly' : 'annual'}
             required
+            className={chargeTimeType === 6 ? 'sm:col-span-2' : undefined}
             value={draft.feeOnMonthDay}
             onChange={(feeOnMonthDay) => onChange({ feeOnMonthDay })}
             error={errors.feeOnMonthDay}

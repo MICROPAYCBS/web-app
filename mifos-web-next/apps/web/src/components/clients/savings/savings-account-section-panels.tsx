@@ -29,6 +29,7 @@ import {
 import { SavingsTransactionActionsMenu } from '@/components/clients/savings/actions/savings-transaction-actions-menu';
 import { SavingsAccountAuditView } from '@/components/clients/savings/savings-account-audit-view';
 import { AccountJournalEntriesView } from '@/components/clients/accounts/account-journal-entries-view';
+import { SavingsAccountChargeActions } from '@/components/clients/savings/savings-account-charge-actions';
 import { SavingsAccountPaymentChannelsSection } from '@/components/clients/savings/savings-account-payment-channels-section';
 import { SavingsStatementSection } from '@/components/clients/savings/statement';
 import { DataTable } from '@/components/composites/data-table/data-table';
@@ -616,7 +617,11 @@ function SavingsAccountTransactionsSection({
 
 type ChargeRow = NonNullable<FineractSavingsAccountDetail['charges']>[number];
 
-function buildChargeColumns(account: FineractSavingsAccountDetail): ColumnDef<ChargeRow>[] {
+function buildChargeColumns(
+  account: FineractSavingsAccountDetail,
+  clientId: string,
+  channels: SavingsAccountPaymentChannel[]
+): ColumnDef<ChargeRow>[] {
   const currency = savingsAccountCurrencyCode(account);
 
   return [
@@ -666,15 +671,34 @@ function buildChargeColumns(account: FineractSavingsAccountDetail): ColumnDef<Ch
       id: 'status',
       header: 'Status',
       cell: ({ row }) => (
-        <Badge variant="outline">{formatSavingsChargeStatus(row.original)}</Badge>
+        <div className="flex flex-col items-start gap-2">
+          <Badge variant="outline">{formatSavingsChargeStatus(row.original, channels)}</Badge>
+          <SavingsAccountChargeActions
+            charge={row.original}
+            clientId={clientId}
+            accountId={account.id}
+            channels={channels}
+          />
+        </div>
       )
     }
   ];
 }
 
-function SavingsAccountChargesSection({ account }: { account: FineractSavingsAccountDetail }) {
+function SavingsAccountChargesSection({
+  account,
+  clientId,
+  channels
+}: {
+  account: FineractSavingsAccountDetail;
+  clientId: string;
+  channels: SavingsAccountPaymentChannel[];
+}) {
   const rows = account.charges ?? [];
-  const columns = useMemo(() => buildChargeColumns(account), [account]);
+  const columns = useMemo(
+    () => buildChargeColumns(account, clientId, channels),
+    [account, clientId, channels]
+  );
   const table = useReactTable({
     data: rows,
     columns,
@@ -747,7 +771,13 @@ export function SavingsAccountSectionPanel({
     case 'statement':
       return <SavingsStatementSection account={account} reportOrgName={reportOrgName} />;
     case 'charges':
-      return <SavingsAccountChargesSection account={account} />;
+      return (
+        <SavingsAccountChargesSection
+          account={account}
+          clientId={clientId}
+          channels={paymentChannels}
+        />
+      );
     case 'paymentChannels':
       return (
         <SavingsAccountPaymentChannelsSection

@@ -163,6 +163,9 @@ export function ChargeDetailView({
                 {enumOptionLabel(charge.feeFrequency)}
               </DetailField>
             ) : null}
+            {charge.feeOnMonthDay ? (
+              <DetailField label="Due date">{charge.feeOnMonthDay}</DetailField>
+            ) : null}
             {charge.feeInterval != null ? (
               <DetailField label="Frequency interval">{charge.feeInterval}</DetailField>
             ) : null}

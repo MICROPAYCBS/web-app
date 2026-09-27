@@ -59,6 +59,7 @@ export interface SavingsProductPaymentChannelCharge {
   /** Amount on the charge definition, when the response includes `charge`. */
   definitionAmount?: number;
   useChargeTiers?: boolean;
+  chargeTimeType?: FineractEnumOption;
 }
 
 export interface SavingsProductPaymentChannel {

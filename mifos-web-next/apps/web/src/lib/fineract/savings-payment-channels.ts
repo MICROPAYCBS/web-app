@@ -7,6 +7,7 @@
  */
 
 import type {
+  FineractEnumOption,
   SavingsAccountPaymentChannel,
   SavingsProductPaymentChannel,
   SavingsProductPaymentChannelCharge
@@ -89,15 +90,36 @@ function chargeRows(raw: unknown): SavingsProductPaymentChannelCharge[] {
           ? row.name
           : undefined;
     const definitionAmount = finiteAmount(nested?.amount);
+    const chargeTimeType = chargeTimeOption(
+      nested?.chargeTimeType ?? nested?.chargeTime ?? row.chargeTimeType ?? row.chargeTime
+    );
     charges.push({
       id,
       name,
       amount: finiteAmount(row.amount),
       ...(definitionAmount != null ? { definitionAmount } : {}),
-      useChargeTiers: nested?.useChargeTiers === true || row.useChargeTiers === true
+      useChargeTiers: nested?.useChargeTiers === true || row.useChargeTiers === true,
+      ...(chargeTimeType ? { chargeTimeType } : {})
     });
   }
   return charges;
+}
+
+function chargeTimeOption(value: unknown): FineractEnumOption | undefined {
+  const row = asRecord(value);
+  if (!row) {
+    return undefined;
+  }
+  const id = Number(row.id);
+  if (!Number.isFinite(id)) {
+    return undefined;
+  }
+  return {
+    id,
+    ...(typeof row.code === 'string' ? { code: row.code } : {}),
+    ...(typeof row.value === 'string' ? { value: row.value } : {}),
+    ...(typeof row.name === 'string' ? { name: row.name } : {})
+  };
 }
 
 function asFlag(value: unknown, fallback: boolean): boolean {
@@ -108,6 +130,26 @@ function asFlag(value: unknown, fallback: boolean): boolean {
     return false;
   }
   return fallback;
+}
+
+function paymentTypeIdFromChannel(row: Record<string, unknown>): number | undefined {
+  const direct = positiveId(row.paymentTypeId);
+  if (direct != null) {
+    return direct;
+  }
+  const paymentType = row.paymentType;
+  if (typeof paymentType === 'number' || typeof paymentType === 'string') {
+    return positiveId(paymentType);
+  }
+  return positiveId(asRecord(paymentType)?.id);
+}
+
+/** Prefer a non-empty catalog when one of the two product reads omits it. */
+export function preferSavingsProductPaymentChannels(
+  plain: SavingsProductPaymentChannel[],
+  templated: SavingsProductPaymentChannel[]
+): SavingsProductPaymentChannel[] {
+  return plain.length > 0 ? plain : templated;
 }
 
 function paymentTypeName(row: Record<string, unknown>): string | undefined {
@@ -134,8 +176,7 @@ export function normalizeSavingsProductPaymentChannels(
     if (!row) {
       continue;
     }
-    const paymentType = asRecord(row.paymentType);
-    const paymentTypeId = positiveId(row.paymentTypeId ?? paymentType?.id);
+    const paymentTypeId = paymentTypeIdFromChannel(row);
     if (paymentTypeId == null || seen.has(paymentTypeId)) {
       continue;
     }

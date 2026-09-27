@@ -25,6 +25,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { channelChargeTimingLabelFor } from '@/lib/fineract/channel-charge-timing';
 import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
 
@@ -69,20 +70,16 @@ function mergeServerChannels(
   });
 }
 
-function channelFees(channel: SavingsAccountPaymentChannel, currencyCode: string): string {
-  if (channel.charges.length === 0) {
-    return 'None';
+function channelFeeLabel(
+  charge: SavingsAccountPaymentChannel['charges'][number],
+  currencyCode: string
+): string {
+  const name = charge.name ?? `Fee ${charge.id}`;
+  if (charge.useChargeTiers) {
+    return `${name} · Tiered`;
   }
-  return channel.charges
-    .map((charge) => {
-      const name = charge.name ?? `Fee ${charge.id}`;
-      if (charge.useChargeTiers) {
-        return `${name} · Tiered`;
-      }
-      const amount = formatChargeAmountDisplay(charge, currencyCode);
-      return amount === '—' ? name : `${name} · ${amount}`;
-    })
-    .join(', ');
+  const amount = formatChargeAmountDisplay(charge, currencyCode);
+  return amount === '—' ? name : `${name} · ${amount}`;
 }
 
 export function SavingsAccountPaymentChannelsSection({
@@ -155,14 +152,10 @@ export function SavingsAccountPaymentChannelsSection({
     pendingCommand?.command === 'unsubscribe'
       ? {
           title: `Unsubscribe from ${pendingCommand.name}`,
-          description:
-            'This channel will no longer be available for deposits and withdrawals. Recurring fees linked to the subscription are stopped. Fees already charged stay on the account.',
           submit: 'Unsubscribe'
         }
       : {
           title: `Subscribe to ${pendingCommand?.name ?? 'this channel'}`,
-          description:
-            'Subscribing allows deposits and withdrawals through this channel. Fees mapped to the channel are added to the account.',
           submit: 'Subscribe'
         };
 
@@ -211,8 +204,24 @@ export function SavingsAccountPaymentChannelsSection({
                     </div>
                     <p className="text-muted-foreground">
                       Allowed for deposit: {formatYesNo(channel.allowedForDeposit)}
-                      {channel.isPremium ? ` · Fees: ${channelFees(channel, currencyCode)}` : ''}
                     </p>
+                    {channel.isPremium ? (
+                      channel.charges.length === 0 ? (
+                        <p className="text-muted-foreground">Fees: None</p>
+                      ) : (
+                        <ul className="space-y-1 text-muted-foreground">
+                          {channel.charges.map((charge) => {
+                            const timing = channelChargeTimingLabelFor(charge);
+                            return (
+                              <li key={charge.id}>
+                                {channelFeeLabel(charge, currencyCode)}
+                                {timing ? ` ${timing}` : ''}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )
+                    ) : null}
                   </div>
                   {canManage && (showSubscribe || showUnsubscribe) ? (
                     <Button
@@ -250,7 +259,19 @@ export function SavingsAccountPaymentChannelsSection({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{subscribeCopy.title}</DialogTitle>
-            <DialogDescription>{subscribeCopy.description}</DialogDescription>
+            {pendingCommand?.command === 'unsubscribe' ? (
+              <DialogDescription>
+                Access to this premium channel ends now. Deposits and withdrawals on it stop. Fees
+                already collected stay collected. A monthly or annual fee that is already due stays
+                on the account until it is paid or waived. A fee that has not fallen due yet is
+                dropped.
+              </DialogDescription>
+            ) : (
+              <DialogDescription>
+                Subscribing allows deposits and withdrawals through this channel. Fees mapped to
+                the channel are added to the account.
+              </DialogDescription>
+            )}
           </DialogHeader>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter>

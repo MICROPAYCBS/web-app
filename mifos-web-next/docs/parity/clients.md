@@ -214,7 +214,7 @@ Legacy **Personal Data** tab content is delivered on **General** (`ClientGeneral
 | CL-131 | `/charges/overview`             | Legacy charges overview        | Deferred |
 | CL-132 | `/charges/[chargeId]`           | View charge + transactions     | Deferred |
 | CL-133 | `/charges/[chargeId]/pay`       | Pay charge                     | Deferred |
-| CL-134 | Pay / waive from General teaser | Row actions                    | Deferred |
+| CL-134 | Pay / waive from General teaser | Row actions                    | Done (savings charges; stopped fees stay listed) |
 | CL-135 | Add charge                      | Actions → `actions/Add Charge` | Deferred |
 
 ### Collateral (`CL-043`)

@@ -237,8 +237,8 @@ function normalizeCharge(raw: unknown): FineractSavingsAccountCharge | null {
     id,
     name,
     chargeId: Number.isFinite(Number(row.chargeId)) ? Number(row.chargeId) : undefined,
-    chargeTimeType: normalizeEnumOption(row.chargeTimeType),
-    dueDate: row.dueDate as FineractSavingsAccountCharge['dueDate'],
+    chargeTimeType: normalizeEnumOption(row.chargeTimeType ?? row.chargeTime),
+    dueDate: (row.dueDate ?? row.dueAsOfDate) as FineractSavingsAccountCharge['dueDate'],
     amount: num('amount'),
     amountPaid: num('amountPaid'),
     amountWaived: num('amountWaived'),
@@ -246,7 +246,10 @@ function normalizeCharge(raw: unknown): FineractSavingsAccountCharge | null {
     amountOutstanding: num('amountOutstanding'),
     chargeCalculationType: normalizeEnumOption(row.chargeCalculationType),
     penalty: row.penalty === true,
-    isActive: row.isActive === true,
+    isActive:
+      row.isActive == null
+        ? undefined
+        : row.isActive === true || row.isActive === 1 || row.isActive === 'true',
     isPaid: row.isPaid === true,
     isWaived: row.isWaived === true
   };
@@ -362,6 +365,23 @@ export function normalizeDepositAccountDetail(raw: unknown): FineractSavingsAcco
         : undefined,
     withHoldTax: typeof row.withHoldTax === 'boolean' ? row.withHoldTax : undefined
   };
+}
+
+export async function listSavingsAccountCharges(
+  accountId: string | number
+): Promise<FineractSavingsAccountCharge[]> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`${SAVINGS_ACCOUNTS_PATH}/${accountId}/charges`);
+  const rows = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object' && Array.isArray((raw as { pageItems?: unknown }).pageItems)
+      ? (raw as { pageItems: unknown[] }).pageItems
+      : raw && typeof raw === 'object' && Array.isArray((raw as { content?: unknown }).content)
+        ? (raw as { content: unknown[] }).content
+        : [];
+  return rows
+    .map((item) => normalizeCharge(item))
+    .filter((item): item is FineractSavingsAccountCharge => item !== null);
 }
 
 export async function getSavingsAccount(

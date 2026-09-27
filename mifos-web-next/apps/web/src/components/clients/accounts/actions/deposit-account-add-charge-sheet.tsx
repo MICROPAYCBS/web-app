@@ -254,7 +254,7 @@ export function DepositAccountAddChargeSheet({
               {flags.annualOrMonthly ? (
                 <MonthDayField
                   id={`${formId}-fee-day`}
-                  label="Due date"
+                  variant={flags.isMonthly ? 'monthly' : 'annual'}
                   value={feeOnMonthDay}
                   onChange={(value) => setFeeOnMonthDay(value ?? '')}
                   error={fieldErrors.feeOnMonthDay}
