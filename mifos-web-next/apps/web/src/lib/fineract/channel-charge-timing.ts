@@ -38,6 +38,17 @@ export function chargeTimeId(option?: FineractEnumOption): number | undefined {
   return undefined;
 }
 
+export const CHANNEL_FEE_PAUSED_LABEL =
+  'Paused while this channel cannot be used. An amount already due stays payable.';
+
+/** Shown on the product when the catalog row is turned off for every account. */
+export const PRODUCT_CHANNEL_DISABLED_LINES = [
+  'No account on this product can deposit or withdraw on this channel.',
+  'Existing subscriptions stay in place.',
+  'Monthly and annual fees pause. An amount already due stays payable. Missed cycles are not billed later.',
+  'Turning it back on does not clear a block on an individual account.'
+] as const;
+
 /** When a mapped channel fee is charged. Omitted for times that are not withdrawal, overdraft, monthly, or annual. */
 export function channelChargeTimingLabel(timeId?: number): string | undefined {
   if (timeId === WITHDRAWAL || timeId === OVERDRAFT) {
@@ -157,7 +168,12 @@ export function savingsChargeActions(
 }
 
 export function channelChargeTimingLabelFor(
-  charge: Pick<SavingsProductPaymentChannelCharge, 'chargeTimeType'>
+  charge: Pick<SavingsProductPaymentChannelCharge, 'chargeTimeType'>,
+  options?: { paused?: boolean }
 ): string | undefined {
-  return channelChargeTimingLabel(chargeTimeId(charge.chargeTimeType));
+  const timeId = chargeTimeId(charge.chargeTimeType);
+  if (options?.paused && isScheduledChannelFee(timeId)) {
+    return CHANNEL_FEE_PAUSED_LABEL;
+  }
+  return channelChargeTimingLabel(timeId);
 }

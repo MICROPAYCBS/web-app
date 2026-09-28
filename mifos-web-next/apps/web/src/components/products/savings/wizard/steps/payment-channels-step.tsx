@@ -14,6 +14,7 @@ import { ProductChargeCheckboxList } from '@/components/products/shared/product-
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { PRODUCT_CHANNEL_DISABLED_LINES } from '@/lib/fineract/channel-charge-timing';
 import type { ChargeAmountLike } from '@/lib/fineract/charge-display';
 import { pruneProductChargeAmounts } from '@/lib/fineract/product-charge-links';
 import { fineractOptionLabel } from '@/lib/form/select-options';
@@ -195,9 +196,24 @@ export function PaymentChannelsStep({
                                 update(option.id, { isActive: checked })
                               }
                             />
-                            <Label htmlFor={`${controlId}-active`}>Active</Label>
+                            <Label htmlFor={`${controlId}-active`}>
+                              Enabled for every account
+                            </Label>
                           </div>
                         </div>
+                        {row.isActive ? (
+                          <p className="text-xs text-muted-foreground">
+                            Turn this off to stop deposits and withdrawals on this channel for
+                            every account on this product. The channel stays on this catalog so it
+                            can be turned back on.
+                          </p>
+                        ) : (
+                          <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                            {PRODUCT_CHANNEL_DISABLED_LINES.map((line) => (
+                              <li key={line}>{line}</li>
+                            ))}
+                          </ul>
+                        )}
 
                         {row.isPremium ? (
                           <div className="space-y-2">

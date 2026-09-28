@@ -153,8 +153,16 @@ export interface FineractSavingsAccountDetail {
   withHoldTax?: boolean;
 }
 
-/** Product catalog row for one savings account, including subscription state. */
+/** Product catalog row for one savings account, including subscription and account block. */
 export interface SavingsAccountPaymentChannel extends SavingsProductPaymentChannel {
   subscribed: boolean;
+  /**
+   * True only when the product channel is on, this account is not blocked,
+   * and a premium channel is subscribed. Deposits and withdrawals both use this.
+   */
   allowedForDeposit: boolean;
+  /** This account has an open block on the channel. Independent of `isActive`. */
+  blocked: boolean;
+  /** When the account block started. Absent when `blocked` is false. */
+  blockedOnDate?: string | number[];
 }

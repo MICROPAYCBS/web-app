@@ -10,7 +10,9 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { FineractSavingsAccountCharge, SavingsAccountPaymentChannel } from '@mifos/api-client';
 import {
+  CHANNEL_FEE_PAUSED_LABEL,
   channelChargeTimingLabel,
+  channelChargeTimingLabelFor,
   savingsChargeActions,
   withdrawalFeesForPaymentType
 } from './channel-charge-timing';
@@ -28,6 +30,7 @@ const premiumWithdrawal: SavingsAccountPaymentChannel = {
   isActive: true,
   subscribed: true,
   allowedForDeposit: true,
+  blocked: false,
   charges: [{ id: 12, name: 'Channel withdrawal', chargeTimeType: { id: 5 } }]
 };
 
@@ -126,5 +129,41 @@ describe('channel charge timing', () => {
     assert.equal(stopped.label, 'Stopped');
     assert.equal(stopped.canPay, false);
     assert.equal(stopped.canWaive, false);
+  });
+
+  it('keeps a due monthly fee payable while the channel is blocked or disabled', () => {
+    const blocked: SavingsAccountPaymentChannel = {
+      ...premiumWithdrawal,
+      blocked: true,
+      isActive: false,
+      subscribed: true,
+      allowedForDeposit: false,
+      charges: [{ id: 20, name: 'Monthly', chargeTimeType: { id: 7 } }]
+    };
+    const due = savingsChargeActions(
+      charge({
+        id: 9,
+        name: 'Monthly',
+        chargeId: 20,
+        chargeTimeType: { id: 7 },
+        isActive: true,
+        amountOutstanding: 5
+      }),
+      [blocked]
+    );
+    assert.equal(due.label, 'Outstanding');
+    assert.equal(due.canPay, true);
+    assert.equal(due.canWaive, true);
+    assert.equal(
+      channelChargeTimingLabelFor(blocked.charges[0], { paused: true }),
+      CHANNEL_FEE_PAUSED_LABEL
+    );
+    assert.equal(
+      channelChargeTimingLabelFor(
+        { chargeTimeType: { id: 5 } },
+        { paused: true }
+      ),
+      'Charged only when this channel is used.'
+    );
   });
 });

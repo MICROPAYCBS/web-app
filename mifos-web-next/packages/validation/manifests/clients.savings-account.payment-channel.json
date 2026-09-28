@@ -6,5 +6,5 @@
   "fields": {
     "paymentTypeId": { "required": true, "type": "id" }
   },
-  "notes": "GET /savingsaccounts/{id}/paymentchannels returns the product catalog plus subscriptionStatus, allowedForDeposit, and charges. POST ?command=subscribe and ?command=unsubscribe send { paymentTypeId }. Subscribe attaches mapped charges. Unsubscribe inactivates linked charges and keeps paid history."
+  "notes": "GET /savingsaccounts/{id}/paymentchannels returns every product channel, including isActive false, plus subscriptionStatus, allowedForDeposit, blocked, blockedOnDate, and charges. POST ?command=subscribe|unsubscribe|block|unblock sends { paymentTypeId }. Block does not unsubscribe. Omitting a product channel on PUT soft-disables it; send isActive false to keep the row and turn it off."
 }

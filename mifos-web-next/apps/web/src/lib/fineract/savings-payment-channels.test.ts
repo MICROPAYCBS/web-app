@@ -182,6 +182,37 @@ describe('normalizeSavingsAccountPaymentChannels', () => {
     assert.equal(channels[2]?.subscribed, true);
   });
 
+  it('keeps a disabled product channel and an account block', () => {
+    const channels = normalizeSavingsAccountPaymentChannels([
+      {
+        paymentTypeId: 3,
+        isPremium: true,
+        isActive: false,
+        subscriptionStatus: 'SUBSCRIBED',
+        blocked: true,
+        blockedOnDate: [2026, 8, 20],
+        allowedForDeposit: false,
+        charges: []
+      },
+      {
+        paymentTypeId: 4,
+        isPremium: false,
+        isActive: true,
+        blocked: true,
+        charges: []
+      }
+    ]);
+
+    assert.equal(channels[0]?.isActive, false);
+    assert.equal(channels[0]?.blocked, true);
+    assert.equal(channels[0]?.subscribed, true);
+    assert.deepEqual(channels[0]?.blockedOnDate, [2026, 8, 20]);
+    assert.equal(channels[0]?.allowedForDeposit, false);
+    assert.equal(channels[1]?.blocked, true);
+    assert.equal(channels[1]?.allowedForDeposit, false);
+    assert.equal(channels[1]?.blockedOnDate, undefined);
+  });
+
   it('treats an omitted catalog as no channels', () => {
     assert.deepEqual(normalizeSavingsAccountPaymentChannels(undefined), []);
     assert.deepEqual(normalizeSavingsAccountPaymentChannels({}), []);

@@ -22,6 +22,7 @@ import {
   type SavingsAccountChargeCommand,
   type SavingsAccountExistingTransactionCommand,
   type SavingsAccountLifecycleCommand,
+  type SavingsAccountPaymentChannelCommand,
   type SavingsAccountTransactionCommand
 } from '@/lib/fineract/savings-account-command-meta';
 
@@ -34,6 +35,7 @@ export {
   type SavingsAccountChargeCommand,
   type SavingsAccountExistingTransactionCommand,
   type SavingsAccountLifecycleCommand,
+  type SavingsAccountPaymentChannelCommand,
   type SavingsAccountTransactionCommand
 };
 
@@ -358,8 +360,6 @@ export async function getSavingsAccountChargeDetailTemplate(
     chargeCalculationType: enumOption(row.chargeCalculationType)
   };
 }
-
-export type SavingsAccountPaymentChannelCommand = 'subscribe' | 'unsubscribe';
 
 export async function getSavingsAccountPaymentChannels(
   accountId: string | number

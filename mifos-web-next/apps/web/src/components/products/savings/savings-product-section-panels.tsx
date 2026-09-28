@@ -28,7 +28,10 @@ import {
   productStatusLabel,
   productStatusVariant
 } from '@/lib/fineract/product-status-display';
-import { channelChargeTimingLabelFor } from '@/lib/fineract/channel-charge-timing';
+import {
+  channelChargeTimingLabelFor,
+  PRODUCT_CHANNEL_DISABLED_LINES
+} from '@/lib/fineract/channel-charge-timing';
 import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
 import {
   savingsProductCurrencyCode,
@@ -197,13 +200,23 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
                   <Badge variant={row.isPremium ? 'default' : 'secondary'}>
                     {row.isPremium ? 'Premium' : 'Standard'}
                   </Badge>
-                  <Badge variant="outline">{row.isActive ? 'Active' : 'Inactive'}</Badge>
+                  <Badge variant="outline">
+                    {row.isActive ? 'Enabled' : 'Disabled on this product'}
+                  </Badge>
                 </div>
-                <p className="text-muted-foreground">
-                  {row.isPremium
-                    ? 'Accounts must subscribe before this channel can be used.'
-                    : 'Allowed on every account. No subscription.'}
-                </p>
+                {row.isActive ? (
+                  <p className="text-muted-foreground">
+                    {row.isPremium
+                      ? 'Accounts must subscribe before this channel can be used.'
+                      : 'Allowed on every account. No subscription.'}
+                  </p>
+                ) : (
+                  <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+                    {PRODUCT_CHANNEL_DISABLED_LINES.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                )}
                 {row.isPremium ? (
                   row.charges.length === 0 ? (
                     <p className="text-muted-foreground">Fees on subscribe: none.</p>
@@ -217,7 +230,9 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
                               const amount = formatChargeAmountDisplay(charge, currency);
                               return amount === '—' ? name : `${name} · ${amount}`;
                             })();
-                        const timing = channelChargeTimingLabelFor(charge);
+                        const timing = channelChargeTimingLabelFor(charge, {
+                          paused: !row.isActive
+                        });
                         return (
                           <li key={charge.id}>
                             {amountLabel}

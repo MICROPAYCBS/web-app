@@ -28,9 +28,12 @@ import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { channelChargeTimingLabelFor } from '@/lib/fineract/channel-charge-timing';
 import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
+import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
+import type { SavingsAccountPaymentChannelCommand } from '@/lib/fineract/savings-account-command-meta';
+import { savingsAccountChannelAllowed } from '@/lib/fineract/savings-payment-channels';
 
 type PendingChannelCommand = {
-  command: 'subscribe' | 'unsubscribe';
+  command: SavingsAccountPaymentChannelCommand;
   paymentTypeId: number;
   name: string;
 };
@@ -39,15 +42,29 @@ function withChannelCommand(
   channels: SavingsAccountPaymentChannel[],
   command: PendingChannelCommand
 ): SavingsAccountPaymentChannel[] {
-  const subscribed = command.command === 'subscribe';
   return channels.map((channel) => {
     if (channel.paymentTypeId !== command.paymentTypeId) {
       return channel;
     }
+    const subscribed =
+      command.command === 'subscribe'
+        ? true
+        : command.command === 'unsubscribe'
+          ? false
+          : channel.subscribed;
+    const blocked =
+      command.command === 'block' ? true : command.command === 'unblock' ? false : channel.blocked;
     return {
       ...channel,
       subscribed,
-      allowedForDeposit: channel.isActive && (!channel.isPremium || subscribed)
+      blocked,
+      blockedOnDate: blocked ? channel.blockedOnDate : undefined,
+      allowedForDeposit: savingsAccountChannelAllowed({
+        isActive: channel.isActive,
+        blocked,
+        isPremium: channel.isPremium,
+        subscribed
+      })
     };
   });
 }
@@ -59,15 +76,61 @@ function mergeServerChannels(
 ): SavingsAccountPaymentChannel[] {
   return server.map((channel) => {
     const previous = local.find((item) => item.paymentTypeId === channel.paymentTypeId);
-    if (!previous || previous.subscribed === channel.subscribed) {
+    if (!previous) {
+      return channel;
+    }
+    const subscribed =
+      previous.subscribed === channel.subscribed ? channel.subscribed : previous.subscribed;
+    const blocked = previous.blocked === channel.blocked ? channel.blocked : previous.blocked;
+    if (subscribed === channel.subscribed && blocked === channel.blocked) {
       return channel;
     }
     return {
       ...channel,
-      subscribed: previous.subscribed,
-      allowedForDeposit: previous.allowedForDeposit
+      subscribed,
+      blocked,
+      blockedOnDate: blocked ? (channel.blockedOnDate ?? previous.blockedOnDate) : undefined,
+      allowedForDeposit: savingsAccountChannelAllowed({
+        isActive: channel.isActive,
+        blocked,
+        isPremium: channel.isPremium,
+        subscribed
+      })
     };
   });
+}
+
+function blockedSince(channel: SavingsAccountPaymentChannel): string | undefined {
+  if (!channel.blocked || channel.blockedOnDate == null) {
+    return undefined;
+  }
+  return formatFineractDateArray(channel.blockedOnDate, FINERACT_LOCALE) ?? undefined;
+}
+
+function commandCopy(command: PendingChannelCommand | null): { title: string; submit: string } {
+  switch (command?.command) {
+    case 'unsubscribe':
+      return { title: `Unsubscribe from ${command.name}`, submit: 'Unsubscribe' };
+    case 'block':
+      return { title: `Block ${command.name} on this account`, submit: 'Block' };
+    case 'unblock':
+      return { title: `Unblock ${command.name} on this account`, submit: 'Unblock' };
+    default:
+      return { title: `Subscribe to ${command?.name ?? 'this channel'}`, submit: 'Subscribe' };
+  }
+}
+
+function commandCompleted(command: SavingsAccountPaymentChannelCommand): string {
+  switch (command) {
+    case 'subscribe':
+      return 'Subscribed to this channel.';
+    case 'unsubscribe':
+      return 'Unsubscribed from this channel.';
+    case 'block':
+      return 'Blocked this channel on this account.';
+    case 'unblock':
+      return 'Unblocked this channel on this account.';
+  }
 }
 
 function channelFeeLabel(
@@ -80,6 +143,48 @@ function channelFeeLabel(
   }
   const amount = formatChargeAmountDisplay(charge, currencyCode);
   return amount === '—' ? name : `${name} · ${amount}`;
+}
+
+function ChannelCommandDescription({
+  command
+}: {
+  command?: SavingsAccountPaymentChannelCommand;
+}) {
+  if (command === 'unsubscribe') {
+    return (
+      <DialogDescription>
+        Access to this premium channel ends now. Deposits and withdrawals on it stop. Fees already
+        collected stay collected. A monthly or annual fee that is already due stays on the account
+        until it is paid or waived. A fee that has not fallen due yet is dropped.
+      </DialogDescription>
+    );
+  }
+  if (command === 'block') {
+    return (
+      <DialogDescription>
+        Deposits and withdrawals on this channel stop for this account. Other accounts are
+        unchanged. This account&apos;s other channels are unchanged. A premium subscription stays
+        active. This is not unsubscribe. A monthly or annual fee that is already due stays
+        payable. Fees for the time the channel is blocked are not charged. Billing resumes on the
+        next cycle after unblock.
+      </DialogDescription>
+    );
+  }
+  if (command === 'unblock') {
+    return (
+      <DialogDescription>
+        The account block ends. Use resumes only if the product channel is still active and, for a
+        premium channel, the subscription is still active. Scheduled fees resume on the next cycle
+        on or after today.
+      </DialogDescription>
+    );
+  }
+  return (
+    <DialogDescription>
+      Subscribing allows deposits and withdrawals through this channel. Fees mapped to the channel
+      are added to the account.
+    </DialogDescription>
+  );
 }
 
 export function SavingsAccountPaymentChannelsSection({
@@ -138,26 +243,17 @@ export function SavingsAccountPaymentChannelsSection({
       }
       setPendingCommand(null);
       toastCommandOutcome(result, {
-        completed:
-          command.command === 'subscribe'
-            ? 'Subscribed to this channel.'
-            : 'Unsubscribed from this channel.',
-        pending: 'Sent for approval. The subscription stays unchanged until it is approved.'
+        completed: commandCompleted(command.command),
+        pending:
+          command.command === 'block' || command.command === 'unblock'
+            ? 'Sent for approval. The block stays unchanged until it is approved.'
+            : 'Sent for approval. The subscription stays unchanged until it is approved.'
       });
       router.refresh();
     });
   }
 
-  const subscribeCopy =
-    pendingCommand?.command === 'unsubscribe'
-      ? {
-          title: `Unsubscribe from ${pendingCommand.name}`,
-          submit: 'Unsubscribe'
-        }
-      : {
-          title: `Subscribe to ${pendingCommand?.name ?? 'this channel'}`,
-          submit: 'Subscribe'
-        };
+  const dialogCopy = commandCopy(pendingCommand);
 
   return (
     <DetailSection title="Payment channels">
@@ -171,8 +267,9 @@ export function SavingsAccountPaymentChannelsSection({
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Standard channels are always allowed. Premium channels can be used after this account
-            subscribes.
+            A channel can be used when it is enabled on the product and this account is not
+            blocked. A premium channel also needs an active subscription. A disabled product
+            channel stays listed.
           </p>
           {!accountActive ? (
             <p className="text-sm text-muted-foreground">
@@ -184,6 +281,9 @@ export function SavingsAccountPaymentChannelsSection({
               const name = channel.paymentTypeName ?? `Payment type ${channel.paymentTypeId}`;
               const showSubscribe = channel.isPremium && channel.isActive && !channel.subscribed;
               const showUnsubscribe = channel.isPremium && channel.subscribed;
+              const showBlock = !channel.blocked;
+              const paused = !channel.isActive || channel.blocked;
+              const since = blockedSince(channel);
               return (
                 <li
                   key={channel.paymentTypeId}
@@ -195,15 +295,22 @@ export function SavingsAccountPaymentChannelsSection({
                       <Badge variant={channel.isPremium ? 'default' : 'secondary'}>
                         {channel.isPremium ? 'Premium' : 'Standard'}
                       </Badge>
-                      {!channel.isActive ? <Badge variant="outline">Inactive</Badge> : null}
                       {channel.isPremium ? (
                         <Badge variant={channel.subscribed ? 'default' : 'outline'}>
                           {channel.subscribed ? 'Subscribed' : 'Not subscribed'}
                         </Badge>
                       ) : null}
                     </div>
+                    {!channel.isActive ? (
+                      <p className="font-medium">Disabled on this product.</p>
+                    ) : null}
+                    {channel.blocked ? (
+                      <p className="font-medium">
+                        Blocked on this account{since ? ` since ${since}` : ''}.
+                      </p>
+                    ) : null}
                     <p className="text-muted-foreground">
-                      Allowed for deposit: {formatYesNo(channel.allowedForDeposit)}
+                      Can be used: {formatYesNo(channel.allowedForDeposit)}
                     </p>
                     {channel.isPremium ? (
                       channel.charges.length === 0 ? (
@@ -211,7 +318,7 @@ export function SavingsAccountPaymentChannelsSection({
                       ) : (
                         <ul className="space-y-1 text-muted-foreground">
                           {channel.charges.map((charge) => {
-                            const timing = channelChargeTimingLabelFor(charge);
+                            const timing = channelChargeTimingLabelFor(charge, { paused });
                             return (
                               <li key={charge.id}>
                                 {channelFeeLabel(charge, currencyCode)}
@@ -223,22 +330,41 @@ export function SavingsAccountPaymentChannelsSection({
                       )
                     ) : null}
                   </div>
-                  {canManage && (showSubscribe || showUnsubscribe) ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={showUnsubscribe ? 'outline' : 'default'}
-                      disabled={!accountActive || pending}
-                      onClick={() =>
-                        setPendingCommand({
-                          command: showUnsubscribe ? 'unsubscribe' : 'subscribe',
-                          paymentTypeId: channel.paymentTypeId,
-                          name
-                        })
-                      }
-                    >
-                      {showUnsubscribe ? 'Unsubscribe' : 'Subscribe'}
-                    </Button>
+                  {canManage ? (
+                    <div className="flex flex-wrap gap-2">
+                      {showSubscribe || showUnsubscribe ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={showUnsubscribe ? 'outline' : 'default'}
+                          disabled={!accountActive || pending}
+                          onClick={() =>
+                            setPendingCommand({
+                              command: showUnsubscribe ? 'unsubscribe' : 'subscribe',
+                              paymentTypeId: channel.paymentTypeId,
+                              name
+                            })
+                          }
+                        >
+                          {showUnsubscribe ? 'Unsubscribe' : 'Subscribe'}
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={pending}
+                        onClick={() =>
+                          setPendingCommand({
+                            command: showBlock ? 'block' : 'unblock',
+                            paymentTypeId: channel.paymentTypeId,
+                            name
+                          })
+                        }
+                      >
+                        {showBlock ? 'Block' : 'Unblock'}
+                      </Button>
+                    </div>
                   ) : null}
                 </li>
               );
@@ -258,20 +384,8 @@ export function SavingsAccountPaymentChannelsSection({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{subscribeCopy.title}</DialogTitle>
-            {pendingCommand?.command === 'unsubscribe' ? (
-              <DialogDescription>
-                Access to this premium channel ends now. Deposits and withdrawals on it stop. Fees
-                already collected stay collected. A monthly or annual fee that is already due stays
-                on the account until it is paid or waived. A fee that has not fallen due yet is
-                dropped.
-              </DialogDescription>
-            ) : (
-              <DialogDescription>
-                Subscribing allows deposits and withdrawals through this channel. Fees mapped to
-                the channel are added to the account.
-              </DialogDescription>
-            )}
+            <DialogTitle>{dialogCopy.title}</DialogTitle>
+            <ChannelCommandDescription command={pendingCommand?.command} />
           </DialogHeader>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter>
@@ -292,7 +406,7 @@ export function SavingsAccountPaymentChannelsSection({
               disabled={pending}
               onClick={handleConfirm}
             >
-              {pending ? 'Saving…' : subscribeCopy.submit}
+              {pending ? 'Saving…' : dialogCopy.submit}
             </Button>
           </DialogFooter>
         </DialogContent>

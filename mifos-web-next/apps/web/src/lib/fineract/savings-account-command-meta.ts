@@ -53,3 +53,9 @@ export type SavingsAccountTransactionCommand =
 export type SavingsAccountExistingTransactionCommand = 'undo' | 'modify' | 'releaseAmount';
 
 export type SavingsAccountChargeCommand = 'paycharge' | 'waive';
+
+export type SavingsAccountPaymentChannelCommand =
+  | 'subscribe'
+  | 'unsubscribe'
+  | 'block'
+  | 'unblock';

@@ -1082,6 +1082,32 @@ export async function executeSavingsAccountWithholdTaxAction(
   }
 }
 
+function paymentChannelDeniedMessage(command: SavingsAccountPaymentChannelCommand): string {
+  switch (command) {
+    case 'subscribe':
+      return 'You do not have permission to subscribe this account to a payment channel.';
+    case 'unsubscribe':
+      return 'You do not have permission to unsubscribe this account from a payment channel.';
+    case 'block':
+      return 'You do not have permission to block this payment channel on this account.';
+    case 'unblock':
+      return 'You do not have permission to unblock this payment channel on this account.';
+  }
+}
+
+function paymentChannelFailureMessage(command: SavingsAccountPaymentChannelCommand): string {
+  switch (command) {
+    case 'subscribe':
+      return 'Could not subscribe to this payment channel.';
+    case 'unsubscribe':
+      return 'Could not unsubscribe from this payment channel.';
+    case 'block':
+      return 'Could not block this payment channel on this account.';
+    case 'unblock':
+      return 'Could not unblock this payment channel on this account.';
+  }
+}
+
 export async function executeSavingsAccountPaymentChannelAction(
   clientId: string,
   accountId: string,
@@ -1090,9 +1116,7 @@ export async function executeSavingsAccountPaymentChannelAction(
 ): Promise<SavingsAccountActionResult> {
   const denied = await requirePermission(
     'UPDATE_SAVINGSACCOUNT',
-    command === 'subscribe'
-      ? 'You do not have permission to subscribe this account to a payment channel.'
-      : 'You do not have permission to unsubscribe this account from a payment channel.'
+    paymentChannelDeniedMessage(command)
   );
   if (denied) {
     return denied;
@@ -1121,11 +1145,6 @@ export async function executeSavingsAccountPaymentChannelAction(
       return success;
     }
   } catch (error) {
-    return toFineractActionError(
-      error,
-      command === 'subscribe'
-        ? 'Could not subscribe to this payment channel.'
-        : 'Could not unsubscribe from this payment channel.'
-    );
+    return toFineractActionError(error, paymentChannelFailureMessage(command));
   }
 }

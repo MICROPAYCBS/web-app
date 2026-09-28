@@ -152,6 +152,30 @@ export function preferSavingsProductPaymentChannels(
   return plain.length > 0 ? plain : templated;
 }
 
+function dateField(value: unknown): string | number[] | undefined {
+  if (typeof value === 'string' && value.trim()) {
+    return value;
+  }
+  if (
+    Array.isArray(value) &&
+    value.length >= 3 &&
+    value.every((part) => typeof part === 'number')
+  ) {
+    return value as number[];
+  }
+  return undefined;
+}
+
+/** Deposit and withdrawal are both allowed only when every stop is clear and a premium channel is subscribed. */
+export function savingsAccountChannelAllowed(input: {
+  isActive: boolean;
+  blocked: boolean;
+  isPremium: boolean;
+  subscribed: boolean;
+}): boolean {
+  return input.isActive && !input.blocked && (!input.isPremium || input.subscribed);
+}
+
 function paymentTypeName(row: Record<string, unknown>): string | undefined {
   if (typeof row.paymentTypeName === 'string' && row.paymentTypeName.trim()) {
     return row.paymentTypeName;
@@ -261,14 +285,22 @@ export function normalizeSavingsAccountPaymentChannels(
         subscription?.subscriptionStatus ??
         subscription
     );
+    const blocked = asFlag(row.blocked, false);
     const allowedForDeposit =
       typeof row.allowedForDeposit === 'boolean'
         ? row.allowedForDeposit
-        : channel.isActive && (!channel.isPremium || subscribed);
+        : savingsAccountChannelAllowed({
+            isActive: channel.isActive,
+            blocked,
+            isPremium: channel.isPremium,
+            subscribed
+          });
     channels.push({
       ...channel,
       subscribed,
-      allowedForDeposit
+      allowedForDeposit,
+      blocked,
+      ...(blocked ? { blockedOnDate: dateField(row.blockedOnDate) } : {})
     });
   }
   return channels;

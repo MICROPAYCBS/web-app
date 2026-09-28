@@ -68,7 +68,7 @@ export function PreviewStep({
     .map((row) => {
       const name = optionLabelById(template.paymentTypeOptions, row.paymentTypeId);
       const kind = row.isPremium ? 'Premium' : 'Standard';
-      const state = row.isActive ? kind : `${kind}, inactive`;
+      const state = row.isActive ? kind : `${kind}, disabled for every account`;
       const fees =
         row.isPremium && (row.chargeIds ?? []).length > 0
           ? ` (${(row.chargeIds ?? [])
