@@ -18,6 +18,7 @@ import {
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
 import type { LoanAccountRescheduleContext } from '@/components/clients/loan-account/loan-account-reschedules-section';
 import type { LoanAccountRelatedRecordsContext } from '@/components/clients/loan-account/loan-account-related-context';
+import type { LoanTransactionActionPermissions } from '@/lib/fineract/loan-transaction-actions';
 import type { LoanAccountSectionId } from '@/lib/fineract/loan-account-display';
 import { AccountCashierPanel } from '@/components/accounts/account-cashier-panel';
 import type { AccountCashierSnapshot } from '@/lib/fineract/cashier-display';
@@ -37,7 +38,8 @@ export function LoanAccountDetailPanel({
   canViewJournals = false,
   journalEntries = [],
   journalLoadFailed = false,
-  journalTotalRecords
+  journalTotalRecords,
+  transactionActionPermissions
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
@@ -54,6 +56,7 @@ export function LoanAccountDetailPanel({
   journalEntries?: FineractJournalEntryListItem[];
   journalLoadFailed?: boolean;
   journalTotalRecords?: number;
+  transactionActionPermissions?: LoanTransactionActionPermissions;
 }) {
   const includeCashier = Boolean(cashierSnapshot);
   const standingInstructionsEnabled = standingInstructions != null;
@@ -89,6 +92,7 @@ export function LoanAccountDetailPanel({
       journalEntries={journalEntries}
       journalLoadFailed={journalLoadFailed}
       journalTotalRecords={journalTotalRecords}
+      transactionActionPermissions={transactionActionPermissions}
     />
   );
 }

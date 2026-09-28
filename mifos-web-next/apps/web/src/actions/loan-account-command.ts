@@ -21,6 +21,7 @@ import {
   loanAccountUndoDisbursalCommandSchema,
   loanAccountWithdrawnCommandSchema,
   loanAccountAddChargeSchema,
+  loanAccountUndoTransactionSchema,
   toFineractActionError,
   actionSuccessFromFineractCommand
 } from '@mifos/validation';
@@ -47,7 +48,7 @@ import {
   getLoanAccountApprovalTemplate,
   getLoanAccountTransactionTemplate
 } from '@/lib/fineract/loan-account-commands';
-import { getLoanAccount } from '@/lib/fineract/loan-accounts';
+import { getLoanAccount, undoLoanAccountTransaction } from '@/lib/fineract/loan-accounts';
 import { loadCashierAwarePaymentTypeOptions } from '@/lib/fineract/cashier-cash-transaction-guard';
 import { chargeExpectsDueDate } from '@/lib/fineract/loan-application-charges';
 import { getServerSession } from '@/lib/session/server';
@@ -106,9 +107,18 @@ async function requirePermission(
   return null;
 }
 
-function revalidateLoanAccountPaths(clientId: string, accountId: string) {
+function revalidateLoanAccountPaths(
+  clientId: string,
+  accountId: string,
+  transactionId?: string | number
+) {
   revalidatePath(clientAccountGeneralPath(clientId, 'loan', accountId));
   revalidatePath(`/clients/${clientId}/loans`);
+  if (transactionId != null) {
+    revalidatePath(
+      `/clients/${clientId}/loans-accounts/${accountId}/transactions/${transactionId}`
+    );
+  }
 }
 
 function omitEmptyStrings(fields: Record<string, unknown>) {
@@ -517,5 +527,44 @@ export async function executeLoanAccountAddChargeAction(
     return actionSuccessFromFineractCommand(response, {});
   } catch (error) {
     return toFineractActionError(error, 'Could not add charge.');
+  }
+}
+
+export async function undoLoanTransactionAction(
+  raw: unknown
+): Promise<LoanAccountActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+
+  const parsed = loanAccountUndoTransactionSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, message: 'Invalid transaction undo request.' };
+  }
+
+  const { clientId, accountId, transactionId, transactionDate, writeOff } = parsed.data;
+  const permission = writeOff ? 'UNDOWRITEOFF_LOAN' : 'ADJUST_LOAN';
+
+  try {
+    assertCan(session, permission);
+  } catch {
+    return { ok: false, message: 'You do not have permission to undo this transaction.' };
+  }
+
+  try {
+    const response = await undoLoanAccountTransaction(
+      accountId,
+      transactionId,
+      buildFineractCommandBody({
+        transactionDate,
+        transactionAmount: 0
+      }),
+      writeOff === true
+    );
+    revalidateLoanAccountPaths(clientId, accountId, transactionId);
+    return actionSuccessFromFineractCommand(response, {});
+  } catch (error) {
+    return toFineractActionError(error, 'Could not undo transaction.');
   }
 }

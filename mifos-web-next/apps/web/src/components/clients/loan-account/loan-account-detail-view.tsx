@@ -54,6 +54,7 @@ import type { LoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-
 import type { LoanAccountPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
 import type { LoanPendingApprovalWorkflowContext } from '@/lib/fineract/loan-account-pending-checker';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
+import type { LoanTransactionActionPermissions } from '@/lib/fineract/loan-transaction-actions';
 
 export function LoanAccountDetailView({
   account,
@@ -73,6 +74,7 @@ export function LoanAccountDetailView({
   journalEntries = [],
   journalLoadFailed = false,
   journalTotalRecords,
+  transactionActionPermissions,
   pendingCheckerActions = [],
   pendingApprovalWorkflowContext,
   makerCheckerTaskPermissions = []
@@ -94,6 +96,7 @@ export function LoanAccountDetailView({
   journalEntries?: FineractJournalEntryListItem[];
   journalLoadFailed?: boolean;
   journalTotalRecords?: number;
+  transactionActionPermissions?: LoanTransactionActionPermissions;
   pendingCheckerActions?: LoanAccountPendingCheckerAction[];
   pendingApprovalWorkflowContext?: LoanPendingApprovalWorkflowContext;
   makerCheckerTaskPermissions?: FineractRolePermissionUsage[];
@@ -283,6 +286,7 @@ export function LoanAccountDetailView({
           journalEntries={journalEntries}
           journalLoadFailed={journalLoadFailed}
           journalTotalRecords={journalTotalRecords}
+          transactionActionPermissions={transactionActionPermissions}
         />
       </Suspense>
     </DetailPage>

@@ -32,7 +32,7 @@ const SAVINGS_SORT_COLUMN_TO_FIELD: Record<PortfolioListSortColumn, string> = {
   clientName: 'clientName',
   productName: 'productName',
   status: 'status',
-  officeName: 'clientOfficeName',
+  officeName: 'officeName',
   balance: 'accountBalance'
 };
 

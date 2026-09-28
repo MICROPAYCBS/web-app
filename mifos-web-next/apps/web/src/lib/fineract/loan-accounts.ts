@@ -91,3 +91,28 @@ export async function executeLoanAccountCommand(
   const fineract = await createFineractClient();
   return fineract.post<FineractCommandProcessingResult>(`/loans/${accountId}`, body, { command });
 }
+
+/**
+ * Reverse a posted loan transaction.
+ * Write-off uses the account command; other rows post an adjustment with amount 0.
+ */
+export async function undoLoanAccountTransaction(
+  accountId: string | number,
+  transactionId: string | number,
+  body: Record<string, unknown>,
+  writeOff: boolean
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  if (writeOff) {
+    return fineract.post<FineractCommandProcessingResult>(
+      `/loans/${accountId}/transactions`,
+      body,
+      { command: 'undowriteoff' }
+    );
+  }
+  return fineract.post<FineractCommandProcessingResult>(
+    `/loans/${accountId}/transactions/${transactionId}`,
+    body,
+    { command: 'undo' }
+  );
+}

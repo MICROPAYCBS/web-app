@@ -16,9 +16,11 @@ import {
   getPaginationRowModel,
   useReactTable,
   type ColumnDef,
-  type PaginationState
+  type PaginationState,
+  type VisibilityState
 } from '@tanstack/react-table';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { LoanTransactionActionsMenu } from '@/components/clients/loan-account/actions/loan-transaction-actions-menu';
 import { LoanAccountAuditView } from '@/components/clients/loan-account/loan-account-audit-view';
 import { AccountJournalEntriesView } from '@/components/clients/accounts/account-journal-entries-view';
 import { LoanAccountSchedulePreview } from '@/components/clients/loan-account/loan-account-schedule-preview';
@@ -45,6 +47,7 @@ import {
   MoneyValue
 } from '@/components/composites';
 import { DataTable } from '@/components/composites/data-table/data-table';
+import { DataTableColumnVisibility } from '@/components/composites/data-table/data-table-column-visibility';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -59,6 +62,10 @@ import {
 } from '@/components/ui/table';
 import { enumOptionLabel } from '@/lib/fineract/client-detail-labels';
 import { clientAccountGeneralPath, loanAccountTransactionPath } from '@/lib/fineract/client-account-links';
+import {
+  EMPTY_LOAN_TRANSACTION_ACTION_PERMISSIONS,
+  type LoanTransactionActionPermissions
+} from '@/lib/fineract/loan-transaction-actions';
 import type {
   FineractLoanAccountCharge,
   FineractLoanAccountDetail,
@@ -541,9 +548,15 @@ function filterLoanTransactions(
   });
 }
 
+const DEFAULT_TRANSACTION_COLUMN_VISIBILITY: VisibilityState = {
+  externalId: false,
+  user: false
+};
+
 function buildTransactionColumns(
   account: FineractLoanAccountDetail,
-  clientId: string
+  clientId: string,
+  transactionActionPermissions: LoanTransactionActionPermissions
 ): ColumnDef<TransactionRow>[] {
   const currency = loanAccountCurrencyCode(account);
 
@@ -576,20 +589,20 @@ function buildTransactionColumns(
       )
     },
     {
-      id: 'office',
-      header: 'Office',
-      cell: ({ row }) => (
-        <TransactionCell transaction={row.original}>
-          {row.original.officeName ?? '—'}
-        </TransactionCell>
-      )
-    },
-    {
       id: 'date',
       header: 'Transaction date',
       cell: ({ row }) => (
         <TransactionCell transaction={row.original}>
           {formatLoanAccountDate(loanTransactionDate(row.original))}
+        </TransactionCell>
+      )
+    },
+    {
+      id: 'externalId',
+      header: 'External ID',
+      cell: ({ row }) => (
+        <TransactionCell transaction={row.original}>
+          {row.original.externalId?.trim() || '—'}
         </TransactionCell>
       )
     },
@@ -635,19 +648,48 @@ function buildTransactionColumns(
         ) : (
           <Badge variant="secondary">Posted</Badge>
         )
+    },
+    {
+      id: 'user',
+      header: 'User',
+      cell: ({ row }) => (
+        <TransactionCell transaction={row.original}>
+          {row.original.submittedByUsername?.trim() || '—'}
+        </TransactionCell>
+      )
+    },
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">Actions</span>,
+      enableHiding: false,
+      meta: { sticky: 'right' },
+      cell: ({ row }) => (
+        <LoanTransactionActionsMenu
+          clientId={clientId}
+          accountId={account.id}
+          transaction={row.original}
+          permissions={transactionActionPermissions}
+          showViewTransaction
+        />
+      )
     }
   ];
 }
 
 function LoanAccountTransactionsSection({
   account,
-  clientId
+  clientId,
+  transactionActionPermissions = EMPTY_LOAN_TRANSACTION_ACTION_PERMISSIONS
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
+  transactionActionPermissions?: LoanTransactionActionPermissions;
 }) {
   const [hideReversed, setHideReversed] = useState(false);
   const [hideAccruals, setHideAccruals] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    DEFAULT_TRANSACTION_COLUMN_VISIBILITY
+  );
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 50
@@ -667,13 +709,17 @@ function LoanAccountTransactionsSection({
     setPagination((current) => ({ ...current, pageIndex: 0 }));
   }, [hideAccruals, hideReversed]);
 
-  const columns = useMemo(() => buildTransactionColumns(account, clientId), [account, clientId]);
+  const columns = useMemo(
+    () => buildTransactionColumns(account, clientId, transactionActionPermissions),
+    [account, clientId, transactionActionPermissions]
+  );
 
   const table = useReactTable({
     data: rows,
     columns,
-    state: { pagination },
+    state: { pagination, columnVisibility },
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel()
   });
@@ -681,7 +727,11 @@ function LoanAccountTransactionsSection({
   return (
     <DetailSection title="Transactions">
       {allRows.length ? (
-        <div className="mb-4 flex flex-wrap items-center gap-4">
+        <div className="mb-4 flex flex-wrap items-center justify-end gap-4">
+          <DataTableColumnVisibility
+            table={table}
+            onReset={() => setColumnVisibility(DEFAULT_TRANSACTION_COLUMN_VISIBILITY)}
+          />
           <div className="flex items-center gap-2">
             <Checkbox
               id="loan-hide-reversed"
@@ -869,7 +919,8 @@ export function LoanAccountSectionPanel({
   canViewJournals = false,
   journalEntries = [],
   journalLoadFailed = false,
-  journalTotalRecords
+  journalTotalRecords,
+  transactionActionPermissions = EMPTY_LOAN_TRANSACTION_ACTION_PERMISSIONS
 }: {
   section: LoanAccountSectionId;
   account: FineractLoanAccountDetail;
@@ -886,6 +937,7 @@ export function LoanAccountSectionPanel({
   journalEntries?: FineractJournalEntryListItem[];
   journalLoadFailed?: boolean;
   journalTotalRecords?: number;
+  transactionActionPermissions?: LoanTransactionActionPermissions;
 }) {
   switch (section) {
     case 'summary':
@@ -907,7 +959,13 @@ export function LoanAccountSectionPanel({
         />
       );
     case 'transactions':
-      return <LoanAccountTransactionsSection account={account} clientId={clientId} />;
+      return (
+        <LoanAccountTransactionsSection
+          account={account}
+          clientId={clientId}
+          transactionActionPermissions={transactionActionPermissions}
+        />
+      );
     case 'charges':
       return <LoanAccountChargesSection account={account} />;
     case 'overdueCharges':

@@ -112,3 +112,14 @@ export const loanAccountAddChargeSchema = z.object({
 });
 
 export type LoanAccountAddChargeInput = z.infer<typeof loanAccountAddChargeSchema>;
+
+/** Undo a posted loan row. Write-off uses the account write-off undo; other rows are an adjustment. */
+export const loanAccountUndoTransactionSchema = z.object({
+  clientId: z.string().trim().min(1),
+  accountId: z.string().trim().min(1),
+  transactionId: z.coerce.number().int().positive(),
+  transactionDate: requiredDate,
+  writeOff: z.boolean().optional()
+});
+
+export type LoanAccountUndoTransactionInput = z.infer<typeof loanAccountUndoTransactionSchema>;

@@ -1,0 +1,15 @@
+{
+  "schemaId": "clients.loan-account.transaction.undo",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoanTransactionsApiResource",
+    "org.apache.fineract.portfolio.loanaccount.service.adjustment.LoanAdjustmentServiceImpl"
+  ],
+  "fields": {
+    "transactionDate": { "required": true, "type": "date" },
+    "transactionAmount": { "required": true, "type": "money" },
+    "writeOff": {
+      "required": false,
+      "notes": "When true, POST loans/{id}/transactions?command=undowriteoff. Otherwise POST loans/{id}/transactions/{transactionId}?command=undo (adjust with amount 0)."
+    }
+  }
+}

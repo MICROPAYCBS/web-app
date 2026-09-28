@@ -221,6 +221,7 @@ export {
   loanAccountWriteOffCommandSchema,
   loanAccountTransactionCommandSchema,
   loanAccountAddChargeSchema,
+  loanAccountUndoTransactionSchema,
   type LoanAccountAssignOfficerInput,
   type LoanAccountUnassignOfficerInput,
   type LoanAccountApproveCommandInput,
@@ -232,7 +233,8 @@ export {
   type LoanAccountDisburseToSavingsCommandInput,
   type LoanAccountWriteOffCommandInput,
   type LoanAccountTransactionCommandInput,
-  type LoanAccountAddChargeInput
+  type LoanAccountAddChargeInput,
+  type LoanAccountUndoTransactionInput
 } from './clients/loan-account-command.schema';
 export {
   createLoanRescheduleRequestSchema,

@@ -28,6 +28,7 @@ import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForLoanAccount } from '@/lib/fineract/audit-trails';
 import { listJournalEntriesForLoanAccount } from '@/lib/fineract/journal-entries';
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
+import { loanTransactionActionPermissions } from '@/lib/fineract/loan-transaction-action-permissions';
 import { listLoanRescheduleRequests } from '@/lib/fineract/loan-reschedule';
 import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashier';
 import { loadApprovalWorkflowRuntimeContext } from '@/lib/checker-inbox/approval-workflow-runtime';
@@ -318,6 +319,7 @@ export default async function LoanAccountGeneralPage({
       journalEntries={journalEntries}
       journalLoadFailed={canViewJournals && journalResult != null && !journalResult.ok}
       journalTotalRecords={journalTotalRecords}
+      transactionActionPermissions={loanTransactionActionPermissions(session)}
       pendingCheckerActions={pendingCheckerActions}
       pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}
       makerCheckerTaskPermissions={workflowRuntime.makerCheckerPermissions}

@@ -16,6 +16,7 @@ import { LoanTransactionJournalSection } from '@/components/clients/loan-account
 import {
   LoanTransactionRecordTimestamps
 } from '@/components/clients/loan-account/loan-transaction-record-timestamps';
+import { LoanTransactionActionsMenu } from '@/components/clients/loan-account/actions/loan-transaction-actions-menu';
 import {
   DetailBackLink,
   DetailField,
@@ -33,6 +34,10 @@ import type {
   FineractLoanAccountDetail,
   FineractLoanAccountTransaction
 } from '@/lib/fineract/loan-account-types';
+import {
+  EMPTY_LOAN_TRANSACTION_ACTION_PERMISSIONS,
+  type LoanTransactionActionPermissions
+} from '@/lib/fineract/loan-transaction-actions';
 import {
   formatLoanAccountDate,
   formatLoanTransactionType,
@@ -66,7 +71,8 @@ export function LoanAccountTransactionDetailView({
   journalLoadFailed = false,
   canViewAudits = false,
   auditEntries = [],
-  auditLoadFailed = false
+  auditLoadFailed = false,
+  transactionActionPermissions = EMPTY_LOAN_TRANSACTION_ACTION_PERMISSIONS
 }: {
   account: FineractLoanAccountDetail;
   transaction: FineractLoanAccountTransaction;
@@ -78,6 +84,7 @@ export function LoanAccountTransactionDetailView({
   canViewAudits?: boolean;
   auditEntries?: FineractAuditTrailListItem[];
   auditLoadFailed?: boolean;
+  transactionActionPermissions?: LoanTransactionActionPermissions;
 }) {
   const sectionIds = useMemo(() => {
     const ids: TransactionSectionId[] = [TRANSACTION_SECTION.details];
@@ -146,15 +153,16 @@ export function LoanAccountTransactionDetailView({
             </p>
           }
           actions={
-            canViewJournal && journalTransactionId ? (
-              <button
-                type="button"
-                className="text-sm text-primary underline-offset-4 hover:underline"
-                onClick={() => setSection(TRANSACTION_SECTION.journal)}
-              >
-                View ledger entries
-              </button>
-            ) : undefined
+            <LoanTransactionActionsMenu
+              clientId={clientId}
+              accountId={account.id}
+              transaction={transaction}
+              permissions={{
+                ...transactionActionPermissions,
+                viewJournal: transactionActionPermissions.viewJournal && canViewJournal
+              }}
+              onViewJournal={() => setSection(TRANSACTION_SECTION.journal)}
+            />
           }
         />
       }

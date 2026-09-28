@@ -203,8 +203,7 @@ export function normalizeLoanAccountTransaction(raw: unknown): FineractLoanAccou
     currency: normalizeCurrency(row.currency),
     paymentDetailData:
       row.paymentDetailData as FineractLoanAccountTransaction['paymentDetailData'],
-    submittedByUsername:
-      typeof row.submittedByUsername === 'string' ? row.submittedByUsername : undefined
+    submittedByUsername: readOptionalString(row.submittedByUsername)
   };
 }
 

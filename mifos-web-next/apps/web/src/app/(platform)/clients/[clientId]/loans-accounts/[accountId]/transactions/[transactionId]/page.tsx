@@ -19,6 +19,7 @@ import { loanAccountSectionPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForLoanTransaction } from '@/lib/fineract/audit-trails';
 import { getJournalEntryTransaction } from '@/lib/fineract/journal-entries';
 import { getLoanAccount, getLoanAccountTransaction } from '@/lib/fineract/loan-accounts';
+import { loanTransactionActionPermissions } from '@/lib/fineract/loan-transaction-action-permissions';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
@@ -118,6 +119,7 @@ export default async function LoanAccountTransactionPage({
         canViewAudits={canViewAudits}
         auditEntries={auditEntries}
         auditLoadFailed={auditLoadFailed}
+        transactionActionPermissions={loanTransactionActionPermissions(session)}
       />
     </Suspense>
   );
