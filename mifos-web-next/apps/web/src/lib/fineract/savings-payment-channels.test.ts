@@ -34,6 +34,7 @@ describe('normalizeSavingsProductPaymentChannels', () => {
         paymentTypeName: undefined,
         isPremium: false,
         isActive: true,
+        paymentTypeActive: true,
         charges: []
       },
       {
@@ -41,6 +42,7 @@ describe('normalizeSavingsProductPaymentChannels', () => {
         paymentTypeName: 'Mobile money',
         isPremium: true,
         isActive: false,
+        paymentTypeActive: true,
         charges: [{ id: 12, name: 'Channel fee', amount: 50, useChargeTiers: false }]
       },
       {
@@ -48,6 +50,7 @@ describe('normalizeSavingsProductPaymentChannels', () => {
         paymentTypeName: undefined,
         isPremium: true,
         isActive: false,
+        paymentTypeActive: true,
         charges: []
       }
     ]);
@@ -211,6 +214,25 @@ describe('normalizeSavingsAccountPaymentChannels', () => {
     assert.equal(channels[1]?.blocked, true);
     assert.equal(channels[1]?.allowedForDeposit, false);
     assert.equal(channels[1]?.blockedOnDate, undefined);
+  });
+
+  it('treats an inactive payment type as a system-wide stop', () => {
+    const channels = normalizeSavingsAccountPaymentChannels([
+      {
+        paymentTypeId: 3,
+        paymentType: { id: 3, name: 'Mobile money', isActive: false },
+        isPremium: true,
+        isActive: true,
+        subscriptionStatus: 'SUBSCRIBED',
+        blocked: false,
+        charges: []
+      }
+    ]);
+
+    assert.equal(channels[0]?.paymentTypeActive, false);
+    assert.equal(channels[0]?.isActive, true);
+    assert.equal(channels[0]?.blocked, false);
+    assert.equal(channels[0]?.allowedForDeposit, false);
   });
 
   it('treats an omitted catalog as no channels', () => {

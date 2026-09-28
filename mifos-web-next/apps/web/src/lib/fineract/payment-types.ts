@@ -39,6 +39,10 @@ export function normalizeOrganizationPaymentType(raw: unknown): OrganizationPaym
     codeName: typeof row.codeName === 'string' ? row.codeName : undefined,
     isSystemDefined: row.isSystemDefined === true,
     isCashPayment: row.isCashPayment === true,
+    isActive:
+      row.isActive == null
+        ? true
+        : row.isActive === true || row.isActive === 1 || row.isActive === 'true',
     position:
       typeof row.position === 'number'
         ? row.position
@@ -111,8 +115,10 @@ export async function deleteOrganizationPaymentType(
 /** Lightweight id/name list for accounting journal forms. */
 export async function listPaymentTypes(): Promise<FineractPaymentTypeOption[]> {
   const paymentTypes = await listOrganizationPaymentTypes();
-  return paymentTypes.map((paymentType) => ({
-    id: paymentType.id,
-    name: paymentType.name
-  }));
+  return paymentTypes
+    .filter((paymentType) => paymentType.isActive !== false)
+    .map((paymentType) => ({
+      id: paymentType.id,
+      name: paymentType.name
+    }));
 }

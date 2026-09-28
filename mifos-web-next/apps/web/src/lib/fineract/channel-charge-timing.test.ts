@@ -31,6 +31,7 @@ const premiumWithdrawal: SavingsAccountPaymentChannel = {
   subscribed: true,
   allowedForDeposit: true,
   blocked: false,
+  paymentTypeActive: true,
   charges: [{ id: 12, name: 'Channel withdrawal', chargeTimeType: { id: 5 } }]
 };
 

@@ -166,14 +166,33 @@ function dateField(value: unknown): string | number[] | undefined {
   return undefined;
 }
 
+/** True unless the nested payment type explicitly says it is off. */
+export function paymentTypeIsActive(row: Record<string, unknown>): boolean {
+  const paymentType = asRecord(row.paymentType);
+  if (!paymentType) {
+    return true;
+  }
+  const flag = paymentType.isActive ?? paymentType.active;
+  if (flag == null) {
+    return true;
+  }
+  return asFlag(flag, true);
+}
+
 /** Deposit and withdrawal are both allowed only when every stop is clear and a premium channel is subscribed. */
 export function savingsAccountChannelAllowed(input: {
+  paymentTypeActive: boolean;
   isActive: boolean;
   blocked: boolean;
   isPremium: boolean;
   subscribed: boolean;
 }): boolean {
-  return input.isActive && !input.blocked && (!input.isPremium || input.subscribed);
+  return (
+    input.paymentTypeActive &&
+    input.isActive &&
+    !input.blocked &&
+    (!input.isPremium || input.subscribed)
+  );
 }
 
 function paymentTypeName(row: Record<string, unknown>): string | undefined {
@@ -210,6 +229,7 @@ export function normalizeSavingsProductPaymentChannels(
       paymentTypeName: paymentTypeName(row),
       isPremium: asFlag(row.isPremium, false),
       isActive: asFlag(row.isActive, true),
+      paymentTypeActive: paymentTypeIsActive(row),
       charges: chargeRows(row.charges ?? row.channelCharges)
     });
   }
@@ -290,6 +310,7 @@ export function normalizeSavingsAccountPaymentChannels(
       typeof row.allowedForDeposit === 'boolean'
         ? row.allowedForDeposit
         : savingsAccountChannelAllowed({
+            paymentTypeActive: channel.paymentTypeActive,
             isActive: channel.isActive,
             blocked,
             isPremium: channel.isPremium,

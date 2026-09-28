@@ -6,6 +6,7 @@
   ],
   "fields": {
     "name": { "required": true, "maxLength": 200 },
-    "position": { "required": true, "min": 1 }
+    "position": { "required": true, "min": 1 },
+    "isActive": { "required": false, "type": "boolean", "notes": "Omitted on create leaves the payment type active." }
   }
 }

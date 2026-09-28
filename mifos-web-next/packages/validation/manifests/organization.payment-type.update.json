@@ -5,6 +5,7 @@
     "org.apache.fineract.portfolio.paymenttype.data.PaymentTypeDataValidator"
   ],
   "fields": {
-    "name": { "required": true, "maxLength": 200 }
+    "name": { "required": true, "maxLength": 200 },
+    "isActive": { "required": false, "type": "boolean", "notes": "Omitted on update leaves the current value." }
   }
 }

@@ -66,7 +66,13 @@ export interface SavingsProductPaymentChannel {
   paymentTypeId: number;
   paymentTypeName?: string;
   isPremium: boolean;
+  /** Product channel switch. False disables the channel for every account on the product. */
   isActive: boolean;
+  /**
+   * Payment type switch. False disables the channel for every product and portfolio.
+   * Omitted responses are treated as active.
+   */
+  paymentTypeActive: boolean;
   charges: SavingsProductPaymentChannelCharge[];
 }
 

@@ -12,7 +12,8 @@ const paymentTypeFields = {
   name: z.string().trim().min(1, 'Payment type name is required').max(200),
   description: z.string().trim().optional(),
   isCashPayment: z.boolean().default(false),
-  position: z.coerce.number().int().min(1, 'Position must be at least 1')
+  position: z.coerce.number().int().min(1, 'Position must be at least 1'),
+  isActive: z.boolean().optional()
 };
 
 export const createPaymentTypeSchema = z.object(paymentTypeFields);
@@ -21,12 +22,14 @@ export const updatePaymentTypeSchema = z.object({
   name: paymentTypeFields.name,
   description: paymentTypeFields.description,
   isCashPayment: z.boolean().optional(),
-  position: paymentTypeFields.position.optional()
+  position: paymentTypeFields.position.optional(),
+  isActive: paymentTypeFields.isActive
 });
 
 export const updateSystemPaymentTypeSchema = z.object({
   name: paymentTypeFields.name,
-  description: paymentTypeFields.description
+  description: paymentTypeFields.description,
+  isActive: paymentTypeFields.isActive
 });
 
 export type CreatePaymentTypeInput = z.input<typeof createPaymentTypeSchema>;

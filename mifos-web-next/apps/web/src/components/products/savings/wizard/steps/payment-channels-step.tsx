@@ -45,6 +45,11 @@ export function PaymentChannelsStep({
       .filter((row) => !optionIds.has(row.paymentTypeId))
       .map((row) => ({ id: row.paymentTypeId, name: `Payment type ${row.paymentTypeId}` }))
   ];
+  const inactivePaymentTypeIds = new Set(
+    (template.paymentChannels ?? [])
+      .filter((channel) => channel.paymentTypeActive === false)
+      .map((channel) => channel.paymentTypeId)
+  );
   const feeOptions = chargeOptions(template);
   const currencyCode = draft.currency.currencyCode?.trim().toUpperCase();
   const stepError = Object.values(errors)[0];
@@ -156,6 +161,10 @@ export function PaymentChannelsStep({
             {catalogOptions.map((option) => {
               const row = byTypeId.get(option.id);
               const included = row != null;
+              const paymentTypeOff =
+                inactivePaymentTypeIds.has(option.id) ||
+                (option as { isActive?: boolean; active?: boolean }).isActive === false ||
+                (option as { active?: boolean }).active === false;
               const controlId = `payment-channel-${option.id}`;
               const label = fineractOptionLabel(option);
 
@@ -174,7 +183,12 @@ export function PaymentChannelsStep({
                         checked={included}
                         onCheckedChange={(checked) => toggleIncluded(option.id, checked === true)}
                       />
-                      <span className="min-w-0 flex-1 text-sm leading-snug">{label}</span>
+                      <span className="min-w-0 flex-1 text-sm leading-snug">
+                        {label}
+                        {paymentTypeOff ? (
+                          <span className="mt-1 block font-medium">Disabled system-wide.</span>
+                        ) : null}
+                      </span>
                     </label>
 
                     {row ? (

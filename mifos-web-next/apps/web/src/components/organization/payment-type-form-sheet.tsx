@@ -28,6 +28,7 @@ type PaymentTypeFormState = {
   description: string;
   isCashPayment: boolean;
   position: string;
+  isActive: boolean;
 };
 
 export type PaymentTypeFormInitial = {
@@ -35,6 +36,7 @@ export type PaymentTypeFormInitial = {
   description?: string;
   isCashPayment?: boolean;
   position?: number;
+  isActive?: boolean;
 };
 
 function defaultFormState(): PaymentTypeFormState {
@@ -42,7 +44,8 @@ function defaultFormState(): PaymentTypeFormState {
     name: '',
     description: '',
     isCashPayment: false,
-    position: '1'
+    position: '1',
+    isActive: true
   };
 }
 
@@ -54,7 +57,8 @@ function formStateFromInitial(initial?: PaymentTypeFormInitial): PaymentTypeForm
     name: initial.name ?? '',
     description: initial.description ?? '',
     isCashPayment: initial.isCashPayment ?? false,
-    position: initial.position != null ? String(initial.position) : '1'
+    position: initial.position != null ? String(initial.position) : '1',
+    isActive: initial.isActive !== false
   };
 }
 
@@ -63,7 +67,8 @@ function formStateFromPaymentType(paymentType: OrganizationPaymentType): Payment
     name: paymentType.name,
     description: paymentType.description ?? '',
     isCashPayment: Boolean(paymentType.isCashPayment),
-    position: paymentType.position != null ? String(paymentType.position) : '1'
+    position: paymentType.position != null ? String(paymentType.position) : '1',
+    isActive: paymentType.isActive !== false
   };
 }
 
@@ -120,20 +125,23 @@ export function PaymentTypeFormSheet({
               name: form.name,
               description: form.description.trim() || undefined,
               isCashPayment: form.isCashPayment,
-              position: Number(form.position)
+              position: Number(form.position),
+              isActive: form.isActive
             })
           : await updatePaymentTypeAction(
               paymentType!.id,
               isSystemDefined
                 ? {
                     name: form.name,
-                    description: form.description.trim() || undefined
+                    description: form.description.trim() || undefined,
+                    isActive: form.isActive
                   }
                 : {
                     name: form.name,
                     description: form.description.trim() || undefined,
                     isCashPayment: form.isCashPayment,
-                    position: Number(form.position)
+                    position: Number(form.position),
+                    isActive: form.isActive
                   },
               isSystemDefined
             );
@@ -163,7 +171,7 @@ export function PaymentTypeFormSheet({
         mode === 'create'
           ? 'Define how payments are classified in transactions and collections.'
           : isSystemDefined
-            ? 'System-defined payment types only allow name and description changes.'
+            ? 'System-defined payment types allow name, description, and whether the type is enabled.'
             : 'Update payment type details.'
       }
       formId={formId}
@@ -195,6 +203,23 @@ export function PaymentTypeFormSheet({
             disabled={pending}
           />
         </div>
+        <Field orientation="horizontal" className="items-start gap-3">
+          <Checkbox
+            id={`${formId}-active`}
+            className="mt-0.5"
+            checked={form.isActive}
+            onCheckedChange={(checked) => patchForm({ isActive: checked === true })}
+            disabled={pending}
+          />
+          <FieldContent>
+            <FieldLabel htmlFor={`${formId}-active`}>Enabled</FieldLabel>
+            <p className="text-xs text-muted-foreground">
+              {form.isActive
+                ? 'Turn this off to stop new deposits, withdrawals, repayments, and other transactions that use this payment type. Reversals of an existing transaction stay allowed. Product channel settings and account blocks are left as they are.'
+                : 'This payment type is off for every product. Monthly and annual savings fees pause. An amount already due stays payable. Missed cycles are not billed later. Turning it back on does not clear a product channel setting or an account block.'}
+            </p>
+          </FieldContent>
+        </Field>
         <Field orientation="horizontal" className="items-center gap-3">
           <Checkbox
             id={`${formId}-cash`}

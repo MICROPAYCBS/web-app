@@ -83,7 +83,8 @@ export function PaymentTypesTable({
         row.codeName,
         row.position,
         row.isSystemDefined ? 'system' : 'custom',
-        row.isCashPayment ? 'cash' : 'non-cash'
+        row.isCashPayment ? 'cash' : 'non-cash',
+        row.isActive === false ? 'inactive disabled' : 'active enabled'
       ]
         .filter(Boolean)
         .join(' ')
@@ -118,6 +119,11 @@ export function PaymentTypesTable({
         id: 'isCashPayment',
         header: 'Cash payment',
         cell: ({ row }) => <BooleanIcon value={row.original.isCashPayment} />
+      },
+      {
+        id: 'isActive',
+        header: 'Enabled',
+        cell: ({ row }) => <BooleanIcon value={row.original.isActive !== false} />
       },
       {
         accessorKey: 'position',

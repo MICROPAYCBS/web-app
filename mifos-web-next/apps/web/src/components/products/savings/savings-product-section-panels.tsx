@@ -204,6 +204,9 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
                     {row.isActive ? 'Enabled' : 'Disabled on this product'}
                   </Badge>
                 </div>
+                {!row.paymentTypeActive ? (
+                  <p className="font-medium">Disabled system-wide.</p>
+                ) : null}
                 {row.isActive ? (
                   <p className="text-muted-foreground">
                     {row.isPremium
@@ -231,7 +234,7 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
                               return amount === '—' ? name : `${name} · ${amount}`;
                             })();
                         const timing = channelChargeTimingLabelFor(charge, {
-                          paused: !row.isActive
+                          paused: !row.paymentTypeActive || !row.isActive
                         });
                         return (
                           <li key={charge.id}>

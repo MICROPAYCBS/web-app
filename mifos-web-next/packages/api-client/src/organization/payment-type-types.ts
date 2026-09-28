@@ -14,6 +14,8 @@ export interface OrganizationPaymentType {
   isSystemDefined?: boolean;
   isCashPayment?: boolean;
   position?: number;
+  /** False stops new transactions that name this payment type. Omitted means active. */
+  isActive?: boolean;
 }
 
 export interface OrganizationPaymentTypeMutationResponse {

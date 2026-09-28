@@ -60,6 +60,7 @@ function withChannelCommand(
       blocked,
       blockedOnDate: blocked ? channel.blockedOnDate : undefined,
       allowedForDeposit: savingsAccountChannelAllowed({
+        paymentTypeActive: channel.paymentTypeActive,
         isActive: channel.isActive,
         blocked,
         isPremium: channel.isPremium,
@@ -91,6 +92,7 @@ function mergeServerChannels(
       blocked,
       blockedOnDate: blocked ? (channel.blockedOnDate ?? previous.blockedOnDate) : undefined,
       allowedForDeposit: savingsAccountChannelAllowed({
+        paymentTypeActive: channel.paymentTypeActive,
         isActive: channel.isActive,
         blocked,
         isPremium: channel.isPremium,
@@ -173,9 +175,9 @@ function ChannelCommandDescription({
   if (command === 'unblock') {
     return (
       <DialogDescription>
-        The account block ends. Use resumes only if the product channel is still active and, for a
-        premium channel, the subscription is still active. Scheduled fees resume on the next cycle
-        on or after today.
+        The account block ends. Use resumes only if the payment type is still active, the product
+        channel is still active, and, for a premium channel, the subscription is still active.
+        Scheduled fees resume on the next cycle on or after today.
       </DialogDescription>
     );
   }
@@ -267,9 +269,9 @@ export function SavingsAccountPaymentChannelsSection({
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            A channel can be used when it is enabled on the product and this account is not
-            blocked. A premium channel also needs an active subscription. A disabled product
-            channel stays listed.
+            A channel can be used when the payment type is active, it is enabled on the product,
+            and this account is not blocked. A premium channel also needs an active subscription.
+            A disabled product channel stays listed.
           </p>
           {!accountActive ? (
             <p className="text-sm text-muted-foreground">
@@ -282,7 +284,7 @@ export function SavingsAccountPaymentChannelsSection({
               const showSubscribe = channel.isPremium && channel.isActive && !channel.subscribed;
               const showUnsubscribe = channel.isPremium && channel.subscribed;
               const showBlock = !channel.blocked;
-              const paused = !channel.isActive || channel.blocked;
+              const paused = !channel.paymentTypeActive || !channel.isActive || channel.blocked;
               const since = blockedSince(channel);
               return (
                 <li
@@ -301,6 +303,9 @@ export function SavingsAccountPaymentChannelsSection({
                         </Badge>
                       ) : null}
                     </div>
+                    {!channel.paymentTypeActive ? (
+                      <p className="font-medium">Disabled system-wide.</p>
+                    ) : null}
                     {!channel.isActive ? (
                       <p className="font-medium">Disabled on this product.</p>
                     ) : null}
