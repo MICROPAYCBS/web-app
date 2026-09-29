@@ -38,18 +38,23 @@ import {
   syncRepaymentsFromLoanTerm
 } from '@/lib/fineract/loan-application-rules';
 import { toSelectOptions } from '@/lib/form/select-options';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import type { LoanAccountStepErrors } from '../validation';
 
 function LoanAccountFinancialTermsForm({
   template,
   draft,
   errors,
-  onChange
+  onChange,
+  topupPayoff,
+  topupCashToClient
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountFinancialStepInput;
   errors: LoanAccountStepErrors;
   onChange: (patch: Partial<LoanAccountFinancialStepInput>) => void;
+  topupPayoff?: number | null;
+  topupCashToClient?: number | null;
 }) {
   const currencyCode = template.currency?.code ?? 'USD';
   const overrides = template.allowAttributeOverrides;
@@ -85,7 +90,11 @@ function LoanAccountFinancialTermsForm({
 
   const principalHint = LOAN_ACCOUNT_PRINCIPAL_HINT;
   const repaymentHint = LOAN_ACCOUNT_NUMBER_OF_REPAYMENTS_HINT;
-  const principalRangeDescription = loanApplicationAllowedRangeDescription(principalRange);
+  const payoffFloor =
+    topupPayoff != null ? `At least the payoff of ${formatAccountMoney(topupPayoff, currencyCode)}.` : undefined;
+  const principalRangeDescription = [loanApplicationAllowedRangeDescription(principalRange), payoffFloor]
+    .filter(Boolean)
+    .join(' ');
   const repaymentRangeDescription = loanApplicationAllowedRangeDescription(repaymentRange);
   const productSupportsDownPayment = template.enableDownPayment === true;
 
@@ -109,6 +118,12 @@ function LoanAccountFinancialTermsForm({
           hint={principalHint}
           hintAriaLabel="About principal"
         />
+        {topupCashToClient != null ? (
+          <p className="text-sm text-muted-foreground">
+            Cash to client {formatAccountMoney(topupCashToClient, currencyCode)}. Zero is allowed
+            when the principal equals the payoff and there is no charge due at disbursement.
+          </p>
+        ) : null}
       </DetailSection>
       <DetailSection title="Loan term">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -212,12 +227,16 @@ export function LoanAccountFinancialStep({
   template,
   draft,
   errors,
-  onChange
+  onChange,
+  topupPayoff,
+  topupCashToClient
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountFinancialStepInput;
   errors: LoanAccountStepErrors;
   onChange: (patch: Partial<LoanAccountFinancialStepInput>) => void;
+  topupPayoff?: number | null;
+  topupCashToClient?: number | null;
 }) {
   const showProductDefaults = hasLoanAccountProductTermsInfo(template);
 
@@ -239,6 +258,8 @@ export function LoanAccountFinancialStep({
               draft={draft}
               errors={errors}
               onChange={onChange}
+              topupPayoff={topupPayoff}
+              topupCashToClient={topupCashToClient}
             />
           </TabsContent>
           <TabsContent value="defaults" className="mt-0">
@@ -251,6 +272,8 @@ export function LoanAccountFinancialStep({
           draft={draft}
           errors={errors}
           onChange={onChange}
+          topupPayoff={topupPayoff}
+          topupCashToClient={topupCashToClient}
         />
       )}
     </div>

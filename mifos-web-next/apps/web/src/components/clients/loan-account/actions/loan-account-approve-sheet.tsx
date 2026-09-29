@@ -25,19 +25,24 @@ import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { resolveLoanApprovalDefaultDate } from '@/lib/fineract/business-date-context';
 import { LOAN_APPROVE_COMMAND_TOAST } from '@/lib/fineract/loan-account-command-toasts';
 import { parseFineractDateString, toFineractDate } from '@/lib/fineract/dates';
+import { loanTopupCommandBlocker, topupCashToClient } from '@/lib/fineract/loan-topup';
+import { LoanTopupQuoteBreakdown } from '@/components/clients/loan-account/loan-topup-quote';
+import { useLoanTopupQuote } from '@/components/clients/loan-account/use-loan-topup';
 
 export function LoanAccountApproveSheet({
   clientId,
   accountId,
   currencyCode,
   open,
-  onOpenChange
+  onOpenChange,
+  topup = null
 }: {
   clientId: string;
   accountId: number;
   currencyCode: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  topup?: { closureLoanId: number; disbursementCharges: number } | null;
 }) {
   const formId = useId();
   const router = useRouter();
@@ -51,6 +56,25 @@ export function LoanAccountApproveSheet({
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const topupQuote = useLoanTopupQuote(
+    topup?.closureLoanId,
+    expectedDisbursementDate,
+    open && topup != null
+  );
+  const approvedAmount = Number(approvedLoanAmount);
+  const topupBlocker =
+    topup == null
+      ? null
+      : loanTopupCommandBlocker({
+          context: topupQuote.context,
+          failed: topupQuote.failed,
+          amount: Number.isFinite(approvedAmount) ? approvedAmount : 0,
+          transactionDate: expectedDisbursementDate
+        });
+  const topupCash =
+    topup && topupQuote.context?.payoff && Number.isFinite(approvedAmount)
+      ? topupCashToClient(approvedAmount, topupQuote.context.payoff.amount, topup.disbursementCharges)
+      : null;
 
   useEffect(() => {
     if (!open) {
@@ -92,6 +116,10 @@ export function LoanAccountApproveSheet({
     event.preventDefault();
     setError(null);
     setFieldErrors({});
+    if (topupBlocker) {
+      setError(topupBlocker);
+      return;
+    }
 
     startTransition(async () => {
       const trimmedExpected = expectedDisbursementDate.trim();
@@ -124,7 +152,7 @@ export function LoanAccountApproveSheet({
       description="Set approval date and approved amount."
       formId={formId}
       submitLabel="Approve"
-      submitLoading={pending || loading}
+      submitLoading={pending || loading || (topup != null && topupQuote.loading)}
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-4">
         <TransactionDateField
@@ -161,6 +189,19 @@ export function LoanAccountApproveSheet({
           error={fieldErrors.note}
           multiline
         />
+        {topup ? (
+          topupQuote.loading ? (
+            <p className="text-sm text-muted-foreground">Calculating the payoff…</p>
+          ) : topupQuote.context?.payoff ? (
+            <LoanTopupQuoteBreakdown
+              currencyCode={currencyCode}
+              payoff={topupQuote.context.payoff}
+              cashToClient={topupCash}
+              estimate
+            />
+          ) : null
+        ) : null}
+        {topupBlocker ? <p className="text-sm text-destructive">{topupBlocker}</p> : null}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
       </form>
     </FormSheet>

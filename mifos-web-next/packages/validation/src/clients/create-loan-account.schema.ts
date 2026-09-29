@@ -66,7 +66,11 @@ export const loanAccountCoreStepSchema = z.object({
 
   fundId: optionalId,
 
-  externalId: z.string().trim().max(100).optional().or(z.literal(''))
+  externalId: z.string().trim().max(100).optional().or(z.literal('')),
+
+  isTopup: z.boolean().optional(),
+
+  loanIdToClose: optionalId
 
 });
 
@@ -203,6 +207,24 @@ export const createLoanAccountSchema = loanAccountCoreStepSchema
   .extend({
 
     loanType: z.literal('individual').default('individual')
+
+  })
+
+  .superRefine((data, ctx) => {
+
+    if (data.isTopup === true && data.loanIdToClose == null) {
+
+      ctx.addIssue({
+
+        code: 'custom',
+
+        path: ['loanIdToClose'],
+
+        message: 'Choose an active loan of this client'
+
+      });
+
+    }
 
   });
 

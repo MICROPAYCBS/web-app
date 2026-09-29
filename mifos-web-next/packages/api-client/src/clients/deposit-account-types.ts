@@ -102,6 +102,16 @@ export interface ClientLoanCollateralOption {
 }
 
 /** Charge row from loan application / product template APIs. */
+/** Active loan the client can close with a top-up. `loanBalance` is outstanding, not the payoff. */
+export interface ClientActiveLoanOption {
+  id: number;
+  accountNo?: string;
+  productName?: string;
+  /** Stored outstanding. A zero balance is returned as null and normalized to 0. */
+  loanBalance?: number;
+  currency?: FineractCurrencyOption;
+}
+
 export interface ClientLoanAccountChargeOption {
   id?: number;
   chargeId?: number;
@@ -163,6 +173,7 @@ export interface ClientLoanAccountTemplate {
   disallowExpectedDisbursements?: boolean;
   maxTrancheCount?: number;
   canUseForTopup?: boolean;
+  clientActiveLoanOptions?: ClientActiveLoanOption[];
   canDefineInstallmentAmount?: boolean;
   isInterestRecalculationEnabled?: boolean;
   loanScheduleType?: FineractEnumOption;

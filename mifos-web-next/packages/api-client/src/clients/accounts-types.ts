@@ -64,12 +64,28 @@ export interface FineractClientShareAccount {
   totalPendingForApprovalShares?: number;
 }
 
+/** Loan this customer guarantees. Borrower id is not on the summary. */
+export interface FineractClientGuarantorAccount {
+  id: number;
+  accountNo: string;
+  productName?: string;
+  status: FineractClientAccountStatus;
+  loanType?: FineractEnumOption;
+  inArrears?: boolean;
+  originalLoan?: number;
+  loanBalance?: number;
+  amountPaid?: number;
+  isActive?: boolean;
+  relationship?: string;
+  onHoldAmount?: number;
+}
+
 export interface FineractClientAccounts {
   loanAccounts?: FineractClientLoanAccount[];
   savingsAccounts?: FineractClientSavingsAccount[];
   shareAccounts?: FineractClientShareAccount[];
   workingCapitalLoanAccounts?: FineractClientLoanAccount[];
-  guarantorAccounts?: unknown[];
+  guarantorAccounts?: FineractClientGuarantorAccount[];
 }
 
 export interface FineractDatatableRegistration {

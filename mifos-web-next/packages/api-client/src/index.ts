@@ -47,6 +47,7 @@ export type {
 export type {
   FineractClientAccountStatus,
   FineractClientAccounts,
+  FineractClientGuarantorAccount,
   FineractClientLoanAccount,
   FineractClientSavingsAccount,
   FineractClientShareAccount,
@@ -102,6 +103,7 @@ export type {
   ClientDepositAccountProductOption,
   ClientDepositAccountTemplate,
   ClientLoanAccountProductOption,
+  ClientActiveLoanOption,
   ClientLoanAccountChargeOption,
   ClientLoanCollateralOption,
   ClientLoanAccountTemplate,

@@ -134,10 +134,19 @@ export function buildLoanAccountPayload(
     payload.interestRatePerPeriod = input.interestRatePerPeriod;
   }
 
+  if (input.isTopup === true && input.loanIdToClose != null) {
+    payload.isTopup = true;
+    payload.loanIdToClose = input.loanIdToClose;
+  } else if (options.forUpdate) {
+    payload.isTopup = false;
+  }
+
   if (options.forSchedulePreview) {
     for (const key of SCHEDULE_PREVIEW_OMIT_FIELDS) {
       delete payload[key];
     }
+    delete payload.isTopup;
+    delete payload.loanIdToClose;
   }
 
   return stripEmpty(payload);

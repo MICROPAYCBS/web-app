@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { translateFineractCode } from '@mifos/i18n';
 import type { FieldError } from '../map-fineract-errors';
 
 const LOAN_APPLICATION_FIELD_ALIASES: Record<string, string> = {
@@ -36,7 +37,23 @@ const LOAN_APPLICATION_FIELD_ALIASES: Record<string, string> = {
   interestCalculationPeriodType: 'interestCalculationPeriodType',
   collateral: 'collateral',
   charges: 'charges',
-  disbursementData: 'disbursementData'
+  disbursementData: 'disbursementData',
+  loanIdToClose: 'loanIdToClose',
+  isTopup: 'isTopup'
+};
+
+const LOAN_TOPUP_ERROR_FIELDS: Record<string, string> = {
+  'error.msg.loan.loanIdToClose.no.active.loan.associated.to.client.found': 'loanIdToClose',
+  'error.msg.loan.to.be.closed.has.different.currency': 'loanIdToClose',
+  'error.msg.loan.topup.on.multi.tranche.loan.without.interest.recalculation.not.supported':
+    'loanIdToClose',
+  'error.msg.loan.submitted.date.should.be.after.topup.loan.disbursal.date': 'submittedOnDate',
+  'error.msg.loan.disbursal.date.should.be.after.last.transaction.date.of.loan.to.be.closed':
+    'expectedDisbursementDate',
+  'error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed': 'principal',
+  'error.msg.loan.to.be.closed.with.topup.is.not.active': 'loanIdToClose',
+  'error.msg.loan.applied.or.to.be.disbursed.can.not.co-exist.with.the.loan.already.active.to.this.client':
+    'productId'
 };
 
 const LOAN_APPLICATION_USER_MESSAGES: Record<string, string> = {
@@ -82,6 +99,9 @@ function isRawParameterName(message: string, field: string): boolean {
 }
 
 function loanApplicationFieldMessage(field: string, err: FieldError): string {
+  if (err.code && LOAN_TOPUP_ERROR_FIELDS[err.code]) {
+    return translateFineractCode(err.code);
+  }
   if (err.code && LOAN_APPLICATION_USER_MESSAGES[err.code]) {
     return LOAN_APPLICATION_USER_MESSAGES[err.code];
   }
@@ -102,7 +122,8 @@ export function mapLoanApplicationFineractErrors(
   const mapped: Record<string, string> = {};
 
   for (const err of fieldErrors) {
-    const formField = mapLoanApplicationFineractField(err.field);
+    const formField =
+      (err.code && LOAN_TOPUP_ERROR_FIELDS[err.code]) || mapLoanApplicationFineractField(err.field);
     if (
       options?.schedulePreview &&
       LOAN_APPLICATION_SCHEDULE_PREVIEW_OMIT_FIELDS.has(formField)
@@ -126,6 +147,8 @@ export function mapLoanApplicationFineractField(field: string): string {
 export function loanApplicationStepForField(field: string): string | undefined {
   const core = new Set([
     'productId',
+    'isTopup',
+    'loanIdToClose',
     'loanOfficerId',
     'loanPurposeId',
     'fundId',

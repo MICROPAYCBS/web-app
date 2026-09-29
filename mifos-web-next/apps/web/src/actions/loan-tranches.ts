@@ -18,7 +18,44 @@ import { revalidatePath } from 'next/cache';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import type { LoanAccountActionResult } from '@/lib/fineract/loan-account-action-result';
 import { editLoanDisbursements } from '@/lib/fineract/loan-tranches';
+import { amountCoversPayoff, earliestDisbursementTranche } from '@/lib/fineract/loan-topup';
+import { loadLoanTopupContext } from '@/lib/fineract/loan-topup-load';
+import { createFineractClient } from '@/lib/fineract/create-client';
 import { getServerSession } from '@/lib/session/server';
+
+async function topupTrancheBlocker(
+  accountId: number,
+  tranches: { expectedDisbursementDate: string; principal: number }[]
+): Promise<LoanAccountActionResult | null> {
+  const earliest = earliestDisbursementTranche(tranches);
+  if (!earliest) {
+    return null;
+  }
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`/loans/${accountId}`);
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const row = raw as Record<string, unknown>;
+  const closureLoanId = Number(row.closureLoanId);
+  if (row.isTopup !== true || !Number.isFinite(closureLoanId) || closureLoanId <= 0) {
+    return null;
+  }
+  const context = await loadLoanTopupContext(closureLoanId, earliest.expectedDisbursementDate);
+  if (!context.ok) {
+    return { ok: false, message: context.message };
+  }
+  if (!context.context.active) {
+    return { ok: false, message: 'That loan is no longer active' };
+  }
+  if (
+    context.context.payoff &&
+    !amountCoversPayoff(earliest.principal, context.context.payoff.amount)
+  ) {
+    return { ok: false, message: 'Principal must cover the payoff' };
+  }
+  return null;
+}
 
 export async function editLoanTranchesAction(
   clientId: string,
@@ -48,6 +85,10 @@ export async function editLoanTranchesAction(
   }
 
   try {
+    const topupBlock = await topupTrancheBlocker(accountId, parsed.data.disbursementData);
+    if (topupBlock) {
+      return topupBlock;
+    }
     const response = await editLoanDisbursements(accountId, parsed.data);
     revalidatePath(clientAccountGeneralPath(clientId, 'loan', accountId));
     return actionSuccessFromFineractCommand(response, {});

@@ -220,7 +220,15 @@ export function loanAccountDraftFromEditTemplate(
     originators: [],
     linkAccountId: toNumber(row.linkAccountId),
     createStandingInstructionAtDisbursement:
-      row.createStandingInstructionAtDisbursement === true
+      row.createStandingInstructionAtDisbursement === true,
+    isTopup: row.isTopup === true,
+    loanIdToClose: (() => {
+      if (row.isTopup !== true) {
+        return undefined;
+      }
+      const closureLoanId = toNumber(row.closureLoanId);
+      return closureLoanId != null && closureLoanId > 0 ? closureLoanId : undefined;
+    })()
   };
 }
 

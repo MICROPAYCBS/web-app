@@ -56,6 +56,20 @@ export function loanGuarantorTypeNeedsEntity(typeId: number): boolean {
   );
 }
 
+export function customerGuarantorProfilePath(record: {
+  guarantorTypeId?: number;
+  entityId?: number;
+}): string | undefined {
+  if (
+    record.guarantorTypeId !== GUARANTOR_TYPE_CUSTOMER ||
+    record.entityId == null ||
+    record.entityId <= 0
+  ) {
+    return undefined;
+  }
+  return `/clients/${record.entityId}/general`;
+}
+
 export function loanGuarantorDisplayName(record: {
   guarantorTypeId?: number;
   firstname?: string;

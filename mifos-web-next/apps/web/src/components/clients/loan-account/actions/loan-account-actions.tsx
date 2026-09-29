@@ -69,6 +69,7 @@ import { hasLoanPendingCheckerAction } from '@/lib/fineract/loan-account-pending
 import type { LoanAccountPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
 import { loanInboundPaymentEligibility } from '@/lib/fineract/loan-repayment-ui';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
+import { sumAccountDisbursementCharges } from '@/lib/fineract/loan-topup';
 
 export interface LoanAccountActionPermissions {
   approve: boolean;
@@ -124,6 +125,13 @@ export function LoanAccountActions({
 }) {
   const visibility = loanAccountActionVisibility(account);
   const currencyCode = loanAccountCurrencyCode(account);
+  const topup =
+    account.isTopup === true && account.closureLoanId != null && account.closureLoanId > 0
+      ? {
+          closureLoanId: account.closureLoanId,
+          disbursementCharges: sumAccountDisbursementCharges(account.charges)
+        }
+      : null;
 
   const [lifecycleKind, setLifecycleKind] = useState<LoanAccountLifecycleDialogKind | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -411,6 +419,7 @@ export function LoanAccountActions({
         currencyCode={currencyCode}
         open={approveOpen}
         onOpenChange={setApproveOpen}
+        topup={topup}
       />
       <LoanAccountDisburseSheet
         clientId={clientId}
@@ -418,6 +427,7 @@ export function LoanAccountActions({
         currencyCode={currencyCode}
         command={disburseCommand}
         open={disburseCommand != null}
+        topup={topup}
         onOpenChange={(open) => {
           if (!open) {
             setDisburseCommand(null);

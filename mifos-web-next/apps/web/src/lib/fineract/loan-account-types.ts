@@ -296,6 +296,13 @@ export interface FineractLoanAccountDetail {
   approvedPrincipal?: number;
   principal?: number;
   netDisbursalAmount?: number;
+  isTopup?: boolean;
+  canUseForTopup?: boolean;
+  /** 0 when the loan is not a top-up. Trust `isTopup`. */
+  closureLoanId?: number;
+  closureLoanAccountNo?: string;
+  /** Payoff transferred at disbursement. Null until then. */
+  topupAmount?: number;
   loanTermFrequency?: number;
   loanTermFrequencyType?: FineractEnumOption;
   numberOfRepayments?: number;

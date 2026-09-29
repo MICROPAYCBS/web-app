@@ -46,6 +46,33 @@ function baseInput(overrides: Partial<CreateLoanAccountInput> = {}): CreateLoanA
   };
 }
 
+describe('buildLoanAccountPayload top-up', () => {
+  it('sends the loan to close when the application is a top-up', () => {
+    const payload = buildLoanAccountPayload(
+      baseInput({ isTopup: true, loanIdToClose: 88 }),
+      { clientId: 15 }
+    );
+    assert.equal(payload.isTopup, true);
+    assert.equal(payload.loanIdToClose, 88);
+    assert.equal(payload.locale, 'en');
+  });
+
+  it('omits top-up fields on a normal create', () => {
+    const payload = buildLoanAccountPayload(baseInput(), { clientId: 15 });
+    assert.equal('isTopup' in payload, false);
+    assert.equal('loanIdToClose' in payload, false);
+  });
+
+  it('clears a top-up on update without sending the loan to close', () => {
+    const payload = buildLoanAccountPayload(baseInput({ isTopup: false, loanIdToClose: 88 }), {
+      clientId: 15,
+      forUpdate: true
+    });
+    assert.equal(payload.isTopup, false);
+    assert.equal('loanIdToClose' in payload, false);
+  });
+});
+
 describe('buildLoanAccountPayload enableDownPayment', () => {
   it('includes enableDownPayment when set on the application', () => {
     const payload = buildLoanAccountPayload(baseInput({ enableDownPayment: true }), {

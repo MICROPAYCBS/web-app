@@ -10,6 +10,7 @@ import 'server-only';
 
 import type {
   FineractClientAccounts,
+  FineractClientGuarantorAccount,
   FineractClientLoanAccount,
   FineractClientSavingsAccount,
   FineractClientShareAccount
@@ -42,6 +43,68 @@ export function mergeClientLoanAccounts(accounts: FineractClientAccounts): Finer
     loans.push({ ...account, productType: account.productType ?? 'working-capital' });
   }
   return loans;
+}
+
+export function normalizeGuarantorAccounts(value: unknown): FineractClientGuarantorAccount[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const accounts: FineractClientGuarantorAccount[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    const row = item as Record<string, unknown>;
+    const id = typeof row.id === 'number' ? row.id : Number(row.id);
+    const accountNo = typeof row.accountNo === 'string' ? row.accountNo : '';
+    const status =
+      row.status && typeof row.status === 'object'
+        ? (row.status as FineractClientGuarantorAccount['status'])
+        : {};
+    if (!Number.isFinite(id) || !accountNo) {
+      continue;
+    }
+    const onHold = typeof row.onHoldAmount === 'number' ? row.onHoldAmount : Number(row.onHoldAmount);
+    const balance = typeof row.loanBalance === 'number' ? row.loanBalance : Number(row.loanBalance);
+    accounts.push({
+      id,
+      accountNo,
+      productName: typeof row.productName === 'string' ? row.productName : undefined,
+      status,
+      inArrears: row.inArrears === true,
+      loanBalance: Number.isFinite(balance) ? balance : undefined,
+      isActive: row.isActive === true,
+      relationship: typeof row.relationship === 'string' ? row.relationship : undefined,
+      onHoldAmount: Number.isFinite(onHold) ? onHold : undefined
+    });
+  }
+  return accounts;
+}
+
+/** Borrower client id for each guaranteed loan, so the row can open that loan. */
+export async function loadGuarantorLoanBorrowerIds(
+  loanIds: number[]
+): Promise<Map<number, number>> {
+  const fineract = await createFineractClient();
+  const entries = await Promise.all(
+    loanIds.map(async (loanId) => {
+      try {
+        const raw = await fineract.get<unknown>(`/loans/${loanId}`);
+        if (!raw || typeof raw !== 'object') {
+          return null;
+        }
+        const clientId = (raw as { clientId?: unknown }).clientId;
+        const id = typeof clientId === 'number' ? clientId : Number(clientId);
+        if (!Number.isFinite(id) || id <= 0) {
+          return null;
+        }
+        return [loanId, id] as const;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return new Map(entries.filter((entry): entry is readonly [number, number] => entry != null));
 }
 
 export function filterOpenLoanAccounts(accounts: FineractClientLoanAccount[]): FineractClientLoanAccount[] {

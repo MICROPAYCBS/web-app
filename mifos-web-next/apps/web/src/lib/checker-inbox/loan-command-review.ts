@@ -234,6 +234,8 @@ export function loanAccountDraftFromCommandPayload(
       asBoolean(payload.createStandingInstructionAtDisbursement) ??
       base.createStandingInstructionAtDisbursement,
     enableDownPayment: asBoolean(payload.enableDownPayment),
+    isTopup: asBoolean(payload.isTopup) ?? false,
+    loanIdToClose: asNumber(payload.loanIdToClose),
     charges: mapCharges(payload.charges),
     collateral: mapCollateral(payload.collateral),
     guarantors: [],
@@ -254,6 +256,8 @@ export function loanAccountDraftFromCommandAsJson(
 /** Preferred highlight keys for LOAN checker tasks (create, approve, disburse). */
 export const LOAN_PREFERRED_COMMAND_KEYS = [
   'principal',
+  'isTopup',
+  'loanIdToClose',
   'approvedLoanAmount',
   'transactionAmount',
   'productId',

@@ -150,6 +150,12 @@ export function LoanAccountTimelineStep({
         )}
       </DetailSection>
       <DetailSection title="Application dates">
+        {draft.isTopup ? (
+          <p className="mb-4 text-sm text-muted-foreground">
+            The application date must be after the loan being closed was disbursed. Expected
+            disbursement must be on or after that loan&apos;s last transaction.
+          </p>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <TransactionDateField
             id="loan-submitted-on"

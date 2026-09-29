@@ -52,6 +52,9 @@ import { LoanAccountPreviewStep } from './steps/preview-step';
 import { LoanAccountScheduleStep } from './steps/schedule-step';
 import { LoanAccountSecurityStep } from './steps/security-step';
 import { LoanAccountTimelineStep } from './steps/timeline-step';
+import { LoanTopupFields } from '@/components/clients/loan-account/loan-topup-fields';
+import { useLoanTopup } from '@/components/clients/loan-account/use-loan-topup';
+import { loanTopupErrorsForStep } from '@/lib/fineract/loan-topup';
 import { validateLoanAccountStep, resolveLoanAccountWizardStepErrors } from './validation';
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'core', label: 'Product' },
@@ -65,7 +68,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
 ];
 const SCHEDULE_STEP_INDEX = WIZARD_STEPS.findIndex((step) => step.id === 'schedule');
 const CREATE_LOAN_ACCOUNT_WIZARD_ID = 'create-loan-account';
-const CREATE_LOAN_ACCOUNT_WIZARD_SESSION_VERSION = 2;
+const CREATE_LOAN_ACCOUNT_WIZARD_SESSION_VERSION = 3;
 export type LoanAccountWizardMode = 'create' | 'edit';
 export function LoanAccountWizard({
   mode = 'create',
@@ -92,6 +95,12 @@ export function LoanAccountWizard({
   const [draft, setDraft] = useState<LoanAccountDraft>(
     () => initialDraft ?? emptyLoanAccountDraft(initialTransactionDate)
   );
+  const topup = useLoanTopup({
+    clientId,
+    excludeLoanId: isEdit && loanId ? Number(loanId) : undefined,
+    template,
+    draft
+  });
   const [stepId, setStepId] = useState('core');
   const [validationAttemptedStepIds, setValidationAttemptedStepIds] = useState<Set<string>>(
     () => new Set()
@@ -158,15 +167,21 @@ export function LoanAccountWizard({
       if (id === 'preview' || id === 'schedule' || id === 'charges') {
         return false;
       }
-      return Object.keys(validateLoanAccountStep(id, draft, template)).length > 0;
+      return (
+        Object.keys({
+          ...validateLoanAccountStep(id, draft, template),
+          ...loanTopupErrorsForStep(id, topup.fieldErrors)
+        }).length > 0
+      );
     });
-  }, [validationAttemptedStepIds, draft, template]);
+  }, [validationAttemptedStepIds, draft, template, topup.fieldErrors]);
   const stepErrors = useMemo(() => {
-    return resolveLoanAccountWizardStepErrors(stepId, draft, template, {
+    const resolved = resolveLoanAccountWizardStepErrors(stepId, draft, template, {
       validationAttempted: validationAttemptedStepIds.has(stepId),
       isReviewStep,
       serverFieldErrors
     });
+    return { ...resolved, ...loanTopupErrorsForStep(stepId, topup.fieldErrors) };
   }, [
     validationAttemptedStepIds,
     stepId,
@@ -175,10 +190,11 @@ export function LoanAccountWizard({
     isReviewStep,
     isPreview,
     isSchedule,
-    serverFieldErrors
+    serverFieldErrors,
+    topup.fieldErrors
   ]);
   const applyProductTemplate = useCallback(
-    (productId: number, result: ClientLoanAccountTemplate) => {
+    (productId: number, result: ClientLoanAccountTemplate, preserveTopup = false) => {
       const seededDraft = loanAccountDraftFromTemplate(result, initialTransactionDate);
       setTemplate(result);
       setDraft((current) => ({
@@ -199,13 +215,18 @@ export function LoanAccountWizard({
         enableDownPayment:
           result.enableDownPayment === true
             ? (seededDraft.enableDownPayment ?? true)
+            : undefined,
+        isTopup: result.canUseForTopup === true && preserveTopup ? current.isTopup === true : false,
+        loanIdToClose:
+          result.canUseForTopup === true && preserveTopup && current.isTopup === true
+            ? current.loanIdToClose
             : undefined
       }));
     },
-    [clientId, initialTransactionDate]
+    [initialTransactionDate]
   );
   const loadProductTemplate = useCallback(
-    async (productId: number): Promise<boolean> => {
+    async (productId: number, preserveTopup = true): Promise<boolean> => {
       if (!productId) {
         return false;
       }
@@ -222,7 +243,7 @@ export function LoanAccountWizard({
           setProductTemplateError(interpreted.message);
           return false;
         }
-        applyProductTemplate(productId, interpreted.template);
+        applyProductTemplate(productId, interpreted.template, preserveTopup);
         return true;
       } finally {
         if (requestId === productTemplateRequestRef.current) {
@@ -269,7 +290,10 @@ export function LoanAccountWizard({
       }
       for (let i = currentIndex; i < targetIndex; i++) {
         const stepToValidate = WIZARD_STEPS[i].id;
-        const errors = validateLoanAccountStep(stepToValidate, draft, template);
+        const errors = {
+          ...validateLoanAccountStep(stepToValidate, draft, template),
+          ...loanTopupErrorsForStep(stepToValidate, topup.fieldErrors)
+        };
         if (Object.keys(errors).length > 0) {
           markValidationAttempted(stepToValidate);
           setStepId(stepToValidate);
@@ -278,12 +302,21 @@ export function LoanAccountWizard({
       }
       setStepId(targetStepId);
     },
-    [currentIndex, draft, template, markValidationAttempted]
+    [currentIndex, draft, template, markValidationAttempted, topup.fieldErrors]
   );
   const tryNext = useCallback(async () => {
     markValidationAttempted(stepId);
-    const errors = validateLoanAccountStep(stepId, draft, template);
+    const errors = {
+      ...validateLoanAccountStep(stepId, draft, template),
+      ...loanTopupErrorsForStep(stepId, topup.fieldErrors)
+    };
     if (Object.keys(errors).length > 0) {
+      const firstField = Object.keys(errors)[0];
+      const targetStep = firstField ? loanApplicationStepForField(firstField) : undefined;
+      if (targetStep && targetStep !== stepId) {
+        setStepId(targetStep);
+        markValidationAttempted(targetStep);
+      }
       return;
     }
     if (stepId === 'schedule') {
@@ -320,12 +353,23 @@ export function LoanAccountWizard({
     goNext,
     schedulePreview,
     isEdit,
-    productTemplateError
+    productTemplateError,
+    topup.fieldErrors
   ]);
   const handleSubmit = useCallback(() => {
     markValidationAttempted('preview');
-    const errors = validateLoanAccountStep('preview', draft, template, serverFieldErrors);
+    const errors = {
+      ...validateLoanAccountStep('preview', draft, template, serverFieldErrors),
+      ...loanTopupErrorsForStep('preview', topup.fieldErrors)
+    };
     if (Object.keys(errors).length > 0) {
+      const firstField = Object.keys(errors)[0];
+      const targetStep = firstField ? loanApplicationStepForField(firstField) : undefined;
+      if (targetStep) {
+        setStepId(targetStep);
+        markValidationAttempted(targetStep);
+      }
+      setSubmitError('Please fix the highlighted fields.');
       return;
     }
     if (schedulePreview.loading) {
@@ -398,7 +442,8 @@ export function LoanAccountWizard({
     serverFieldErrors,
     isEdit,
     loanId,
-    sessionDraft
+    sessionDraft,
+    topup.fieldErrors
   ]);
   function handleResumeDraft() {
     const snapshot = sessionDraft.resume();
@@ -469,7 +514,13 @@ export function LoanAccountWizard({
               (isPreview &&
                 (schedulePreview.loading ||
                   !schedulePreview.hasSuccessfulPreview ||
-                  schedulePreview.stale))
+                  schedulePreview.stale)) ||
+              (draft.isTopup === true &&
+                topup.loading &&
+                (stepId === 'core' ||
+                  stepId === 'financial' ||
+                  stepId === 'timeline' ||
+                  stepId === 'preview'))
             }
           />
         }
@@ -497,10 +548,28 @@ export function LoanAccountWizard({
               onChange={(patch) => {
                 setDraft((current) => mergeLoanAccountCoreStep(current, patch));
                 if (patch.productId && patch.productId !== draft.productId) {
-                  void loadProductTemplate(patch.productId);
+                  void loadProductTemplate(patch.productId, false);
                 }
               }}
             />
+            {topup.visible ? (
+              <div className="mt-6">
+                <LoanTopupFields
+                  enabled={draft.isTopup === true}
+                  loanIdToClose={draft.loanIdToClose}
+                  options={topup.options}
+                  optionLabel={topup.optionLabel}
+                  currencyCode={template.currency?.code ?? 'USD'}
+                  errors={stepErrors}
+                  loading={topup.loading}
+                  payoff={topup.context?.payoff}
+                  cashToClient={topup.cashToClient}
+                  omittedInterestBased={topup.omittedInterestBased}
+                  pendingWarning={topup.pendingWarning}
+                  onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+                />
+              </div>
+            ) : null}
           </>
         ) : null}
         {stepId === 'financial' ? (
@@ -508,6 +577,8 @@ export function LoanAccountWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
+            topupPayoff={draft.isTopup ? topup.context?.payoff?.amount : null}
+            topupCashToClient={draft.isTopup ? topup.cashToClient : null}
             onChange={(patch) =>
               setDraft((current) => mergeLoanAccountFinancialStep(current, patch))
             }
@@ -581,6 +652,17 @@ export function LoanAccountWizard({
             template={template}
             draft={draft}
             originatorOptions={originatorOptions}
+            topupQuote={
+              draft.isTopup
+                ? {
+                    loanLabel: topup.selectedLabel,
+                    payoff: topup.context?.payoff,
+                    cashToClient: topup.cashToClient,
+                    pendingWarning: topup.pendingWarning,
+                    omittedInterestBased: topup.omittedInterestBased
+                  }
+                : null
+            }
           />
         ) : null}
       </FormWizard>

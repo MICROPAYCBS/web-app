@@ -34,6 +34,8 @@ import {
 } from '@/lib/fineract/loan-application-charges';
 import { loanApplicationInterestRateFieldLabel } from '@/lib/fineract/loan-application-rules';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
+import { LoanTopupQuoteBreakdown } from '@/components/clients/loan-account/loan-topup-quote';
+import type { LoanTopupPayoff } from '@/lib/fineract/loan-topup';
 
 
 
@@ -90,7 +92,9 @@ export function LoanAccountPreviewStep({
 
   originatorOptions = [],
 
-  mode = 'wizard'
+  mode = 'wizard',
+
+  topupQuote = null
 
 }: {
 
@@ -103,6 +107,14 @@ export function LoanAccountPreviewStep({
   /** `review` uses checker-oriented copy. */
 
   mode?: 'wizard' | 'review';
+
+  topupQuote?: {
+    loanLabel?: string;
+    payoff?: LoanTopupPayoff | null;
+    cashToClient?: number | null;
+    pendingWarning?: string | null;
+    omittedInterestBased?: boolean;
+  } | null;
 
 }) {
 
@@ -134,6 +146,40 @@ export function LoanAccountPreviewStep({
           : 'Review the loan application before submitting.'}
 
       </p>
+
+      {draft.isTopup ? (
+        <DetailSection title="Top-up">
+          <div className="space-y-3">
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground">Loan to close</dt>
+                <dd className="font-medium">
+                  {topupQuote?.loanLabel ??
+                    (draft.loanIdToClose != null ? `Loan ${draft.loanIdToClose}` : '—')}
+                </dd>
+              </div>
+            </dl>
+            {topupQuote?.pendingWarning ? (
+              <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+                {topupQuote.pendingWarning}
+              </p>
+            ) : null}
+            {topupQuote?.payoff ? (
+              <LoanTopupQuoteBreakdown
+                currencyCode={currencyCode}
+                payoff={topupQuote.payoff}
+                cashToClient={topupQuote.cashToClient}
+                estimate
+                omittedInterestBased={topupQuote.omittedInterestBased}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Payoff is recalculated at approval and disbursement.
+              </p>
+            )}
+          </div>
+        </DetailSection>
+      ) : null}
 
       <DetailSection title="Core product & context">
 

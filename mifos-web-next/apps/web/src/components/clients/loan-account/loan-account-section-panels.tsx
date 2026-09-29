@@ -36,6 +36,7 @@ import { LoanAccountCollateralSection } from '@/components/clients/loan-account/
 import { LoanAccountGuarantorsSection } from '@/components/clients/loan-account/loan-account-guarantors-section';
 import { LoanAccountOriginatorsSection } from '@/components/clients/loan-account/loan-account-originators-section';
 import { LoanAccountTranchesSection } from '@/components/clients/loan-account/loan-account-tranches-section';
+import { LoanAccountTopupSummary } from '@/components/clients/loan-account/loan-topup-summary';
 import { LoanAccountTermVariationsSection } from '@/components/clients/loan-account/loan-account-term-variations-section';
 import { LoanAccountDelinquencySection } from '@/components/clients/loan-account/loan-account-delinquency-section';
 import type { LoanAccountRelatedRecordsContext } from '@/components/clients/loan-account/loan-account-related-context';
@@ -303,6 +304,8 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
   return (
     <div className="space-y-6">
       <DetailSummary items={kpiItems} />
+
+      {account.isTopup ? <LoanAccountTopupSummary account={account} /> : null}
 
       {loanAccountHasSummary(account) ? (
         <>

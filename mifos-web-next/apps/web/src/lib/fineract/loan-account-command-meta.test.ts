@@ -24,6 +24,14 @@ describe('loanAccountActionVisibility', () => {
     assert.equal(visibility.attachOriginator, true);
   });
 
+  it('hides undo disbursement on a top-up', () => {
+    const visibility = loanAccountActionVisibility({
+      isTopup: true,
+      status: { value: 'Active', active: true }
+    });
+    assert.equal(visibility.undoDisbursal, false);
+  });
+
   it('hides installment editing after approval', () => {
     const visibility = loanAccountActionVisibility({
       isVariableInstallmentsAllowed: true,

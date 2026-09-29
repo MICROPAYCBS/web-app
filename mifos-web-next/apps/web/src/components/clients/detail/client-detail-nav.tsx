@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   FileText,
   Fingerprint,
+  Handshake,
   MapPin,
   NotebookPen,
   Phone,
@@ -54,6 +55,12 @@ export function clientDetailNavGroups(
       id: 'accounts',
       items: [
         { id: 'loans', label: 'Loans', href: `${base}/loans`, icon: Banknote },
+        {
+          id: 'guarantees',
+          label: 'Guarantees',
+          href: `${base}/guarantees`,
+          icon: Handshake
+        },
         { id: 'savings', label: 'Savings', href: `${base}/savings`, icon: PiggyBank },
         {
           id: 'fixed-deposits',

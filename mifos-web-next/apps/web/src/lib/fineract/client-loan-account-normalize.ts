@@ -25,6 +25,10 @@ import type {
 } from '@mifos/api-client';
 
 import { asLoanProductAttributeOverrides } from '@/lib/fineract/loan-product-attribute-overrides';
+import {
+  loanTemplateAllowsTopup,
+  normalizeClientActiveLoanOptions
+} from '@/lib/fineract/loan-topup';
 
 
 
@@ -602,7 +606,16 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     maxTrancheCount: toNumber(row.maxTrancheCount),
 
-    canUseForTopup: row.canUseForTopup === true ? true : undefined,
+    canUseForTopup: loanTemplateAllowsTopup({
+      id: row.id,
+      canUseForTopup: row.canUseForTopup,
+      isTopup: row.isTopup,
+      product: { canUseForTopup: loanTemplateProductRow(row)?.canUseForTopup }
+    })
+      ? true
+      : undefined,
+
+    clientActiveLoanOptions: normalizeClientActiveLoanOptions(row.clientActiveLoanOptions),
 
     canDefineInstallmentAmount:
       row.canDefineInstallmentAmount === true ? true : undefined,

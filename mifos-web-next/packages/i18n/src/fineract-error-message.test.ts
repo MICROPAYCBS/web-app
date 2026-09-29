@@ -170,6 +170,21 @@ describe('getFineractErrorMessage', () => {
     );
   });
 
+  it('uses the top-up wording instead of the platform default', () => {
+    assert.equal(
+      getFineractErrorMessage({
+        defaultUserMessage: 'The loan amount must be greater than the outstanding of the loan to be closed',
+        errors: [
+          {
+            defaultUserMessage: 'The loan amount must be greater than the outstanding of the loan to be closed',
+            userMessageGlobalisationCode: 'error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed'
+          }
+        ]
+      }),
+      'Principal must cover the payoff'
+    );
+  });
+
   it('uses the first nested error when a single nested error is returned', () => {
     assert.equal(
       getFineractErrorMessage({

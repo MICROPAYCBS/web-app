@@ -11,6 +11,7 @@
 import { formatActionErrorMessage, GUARANTOR_TYPE_EXTERNAL } from '@mifos/validation';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { Plus } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 import {
@@ -33,6 +34,7 @@ import {
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import {
+  customerGuarantorProfilePath,
   loanGuaranteeShortfall,
   loanGuarantorCanRemovePerson,
   loanGuarantorDisplayName,
@@ -119,9 +121,20 @@ export function LoanAccountGuarantorsSection({
                   .filter(Boolean)
                   .join(', ')
               : '';
+          const profileHref = customerGuarantorProfilePath(record);
+          const name = loanGuarantorDisplayName(record);
           return (
             <div className="space-y-1">
-              <p>{loanGuarantorDisplayName(record)}</p>
+              {profileHref ? (
+                <Link
+                  href={profileHref}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  {name}
+                </Link>
+              ) : (
+                <p>{name}</p>
+              )}
               {record.guarantorTypeId === GUARANTOR_TYPE_EXTERNAL && record.nationalIdNumber ? (
                 <p className="text-xs text-muted-foreground">{record.nationalIdNumber}</p>
               ) : null}

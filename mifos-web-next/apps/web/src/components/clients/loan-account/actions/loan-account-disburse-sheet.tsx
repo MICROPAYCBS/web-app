@@ -28,6 +28,9 @@ import {
   LOAN_DISBURSE_TO_SAVINGS_COMMAND_TOAST
 } from '@/lib/fineract/loan-account-command-toasts';
 import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
+import { loanTopupCommandBlocker, topupCashToClient } from '@/lib/fineract/loan-topup';
+import { LoanTopupQuoteBreakdown } from '@/components/clients/loan-account/loan-topup-quote';
+import { useLoanTopupQuote } from '@/components/clients/loan-account/use-loan-topup';
 
 export type LoanAccountDisburseCommand = 'disburse' | 'disbursetosavings';
 
@@ -53,7 +56,8 @@ export function LoanAccountDisburseSheet({
   currencyCode,
   command,
   open,
-  onOpenChange
+  onOpenChange,
+  topup = null
 }: {
   clientId: string;
   accountId: number;
@@ -61,6 +65,7 @@ export function LoanAccountDisburseSheet({
   command: LoanAccountDisburseCommand | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  topup?: { closureLoanId: number; disbursementCharges: number } | null;
 }) {
   const formId = useId();
   const router = useRouter();
@@ -78,6 +83,30 @@ export function LoanAccountDisburseSheet({
 
   const copy = command ? COPY[command] : COPY.disburse;
   const showPaymentType = command === 'disburse';
+  const topupQuote = useLoanTopupQuote(
+    topup?.closureLoanId,
+    actualDisbursementDate,
+    open && topup != null
+  );
+  const disbursementAmount = Number(transactionAmount);
+  const topupBlocker =
+    topup == null
+      ? null
+      : loanTopupCommandBlocker({
+          context: topupQuote.context,
+          failed: topupQuote.failed,
+          amount: Number.isFinite(disbursementAmount) ? disbursementAmount : 0,
+          transactionDate: actualDisbursementDate
+        });
+  const topupCash =
+    topup && topupQuote.context?.payoff && Number.isFinite(disbursementAmount)
+      ? topupCashToClient(
+          disbursementAmount,
+          topupQuote.context.payoff.amount,
+          topup.disbursementCharges
+        )
+      : null;
+  const cashLabel = command === 'disbursetosavings' ? 'Transfer to linked savings' : 'Cash to client';
 
   useEffect(() => {
     if (!open || !command) {
@@ -130,6 +159,10 @@ export function LoanAccountDisburseSheet({
     }
     setError(null);
     setFieldErrors({});
+    if (topupBlocker) {
+      setError(topupBlocker);
+      return;
+    }
 
     startTransition(async () => {
       const activeCommand = command;
@@ -173,7 +206,7 @@ export function LoanAccountDisburseSheet({
       description={copy.description}
       formId={formId}
       submitLabel={copy.submitLabel}
-      submitLoading={pending || loading}
+      submitLoading={pending || loading || (topup != null && topupQuote.loading)}
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-4">
         <TransactionDateField
@@ -216,6 +249,20 @@ export function LoanAccountDisburseSheet({
           error={fieldErrors.note}
           multiline
         />
+        {topup ? (
+          topupQuote.loading ? (
+            <p className="text-sm text-muted-foreground">Calculating the payoff…</p>
+          ) : topupQuote.context?.payoff ? (
+            <LoanTopupQuoteBreakdown
+              currencyCode={currencyCode}
+              payoff={topupQuote.context.payoff}
+              cashToClient={topupCash}
+              cashLabel={cashLabel}
+              appliedAmount={topupQuote.context.payoff.amount}
+            />
+          ) : null
+        ) : null}
+        {topupBlocker ? <p className="text-sm text-destructive">{topupBlocker}</p> : null}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
       </form>
     </FormSheet>

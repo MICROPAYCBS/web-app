@@ -29,6 +29,8 @@
     "guarantors": { "required": false },
     "originators": { "required": false },
     "linkAccountId": { "required": false },
-    "createStandingInstructionAtDisbursement": { "required": false, "default": false }
+    "createStandingInstructionAtDisbursement": { "required": false, "default": false },
+    "isTopup": { "required": false, "default": false },
+    "loanIdToClose": { "required": false }
   }
 }

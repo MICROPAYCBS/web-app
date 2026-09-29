@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { translateFineractCode } from './error-messages';
+import { curatedFineractErrorMessage, translateFineractCode } from './error-messages';
 import { resolveFineractPermissionDeniedMessage } from './fineract-permission-errors';
 
 /** Subset of a Fineract API error payload used for user-facing messages. */
@@ -98,6 +98,10 @@ export function resolveFineractErrorItemMessage(item?: FineractErrorItem | null)
   }
 
   const code = item.userMessageGlobalisationCode;
+  const curated = curatedFineractErrorMessage(code);
+  if (curated) {
+    return curated;
+  }
   const raw = resolveFineractErrorItemRawMessage(item);
   if (code) {
     const translated = translateFineractCode(code);

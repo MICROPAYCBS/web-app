@@ -96,6 +96,7 @@ export function loanAccountActionVisibility(account: {
   loanOfficerName?: string;
   chargedOff?: boolean;
   isVariableInstallmentsAllowed?: boolean;
+  isTopup?: boolean;
   status: { code?: string; value?: string; active?: boolean };
 }): LoanAccountActionVisibility {
   const value = statusValue(account.status);
@@ -116,7 +117,7 @@ export function loanAccountActionVisibility(account: {
     undoApproval: approved,
     disburse: approved,
     disburseToSavings: approved,
-    undoDisbursal: active,
+    undoDisbursal: active && account.isTopup !== true,
     makeRepayment: active || overpaid,
     addCharge: pending || approved || active || overpaid,
     addCollateral: pending,

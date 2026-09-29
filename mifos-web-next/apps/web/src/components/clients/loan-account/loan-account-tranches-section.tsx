@@ -243,6 +243,12 @@ export function LoanAccountTranchesSection({
         ) : undefined
       }
     >
+      {account.isTopup ? (
+        <p className="mb-4 text-sm text-muted-foreground">
+          The earliest tranche must cover the payoff of the loan this top-up closes. Later tranches
+          are not applied to that loan.
+        </p>
+      ) : null}
       {error ? (
         <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}

@@ -212,7 +212,7 @@ function LoanProductSettingsSection({ product, productKind }: SectionProps) {
           <DetailField label="Multi-disburse loan">
             {formatYesNo(product.multiDisburseLoan)}
           </DetailField>
-          <DetailField label="Can use for top-up">
+          <DetailField label="Can be used for top-up">
             {formatYesNo(product.canUseForTopup)}
           </DetailField>
           <DetailField label="Hold guarantee funds">

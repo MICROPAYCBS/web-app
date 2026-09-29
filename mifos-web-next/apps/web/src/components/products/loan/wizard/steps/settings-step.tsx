@@ -452,7 +452,7 @@ export function SettingsStep({
           />
           <SwitchField
             id="settings.canUseForTopup"
-            label="Can use for top-up"
+            label="Can be used for top-up"
             checked={settings.canUseForTopup ?? false}
             onCheckedChange={(canUseForTopup) => onChange({ canUseForTopup })}
             error={errors['settings.canUseForTopup']}

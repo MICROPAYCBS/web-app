@@ -7,6 +7,7 @@
  */
 
 import type {
+  FineractClientGuarantorAccount,
   FineractClientLoanAccount,
   FineractClientSavingsAccount,
   FineractClientShareAccount
@@ -32,6 +33,33 @@ export function toLoanAccountRows(
     extraLabel: account.inArrears ? 'In arrears' : account.productType === 'working-capital' ? 'Working capital' : undefined,
     href: clientAccountGeneralPath(clientId, 'loan', account.id)
   }));
+}
+
+export function toGuarantorAccountRows(
+  accounts: FineractClientGuarantorAccount[],
+  borrowerClientIdByLoanId: ReadonlyMap<number, number>
+): ClientAccountRow[] {
+  return accounts.map((account) => {
+    const borrowerId = borrowerClientIdByLoanId.get(account.id);
+    const details = [
+      account.relationship?.trim(),
+      account.onHoldAmount != null && account.onHoldAmount > 0
+        ? `On hold ${formatAccountMoney(account.onHoldAmount)}`
+        : undefined,
+      account.inArrears ? 'In arrears' : undefined
+    ].filter((part): part is string => Boolean(part));
+    return {
+      id: account.id,
+      accountNo: account.accountNo,
+      productName: account.productName,
+      statusLabel: account.status?.value,
+      statusCode: account.status?.code,
+      balanceLabel: formatAccountMoney(account.loanBalance),
+      extraLabel: details.length > 0 ? details.join(' · ') : undefined,
+      href:
+        borrowerId != null ? clientAccountGeneralPath(borrowerId, 'loan', account.id) : undefined
+    };
+  });
 }
 
 export function toSavingsAccountRows(

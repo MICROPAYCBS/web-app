@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { LoanGuarantorRecord } from '@/lib/fineract/loan-account-types';
 import {
+  customerGuarantorProfilePath,
   loanGuaranteeShortfall,
   loanGuarantorCanRemovePerson,
   loanGuarantorDisplayName,
@@ -29,6 +30,12 @@ function guarantor(overrides: Partial<LoanGuarantorRecord> = {}): LoanGuarantorR
 }
 
 describe('loan guarantor display', () => {
+  it('links a customer guarantor to that customer profile', () => {
+    assert.equal(customerGuarantorProfilePath(guarantor()), '/clients/42/general');
+    assert.equal(customerGuarantorProfilePath(guarantor({ guarantorTypeId: 2 })), undefined);
+    assert.equal(customerGuarantorProfilePath(guarantor({ entityId: undefined })), undefined);
+  });
+
   it('labels a group from the loaded group name', () => {
     assert.equal(
       loanGuarantorDisplayName({ guarantorTypeId: 4, groupName: 'Kisasi traders' }),

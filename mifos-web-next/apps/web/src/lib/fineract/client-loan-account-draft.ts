@@ -101,7 +101,9 @@ export function emptyLoanAccountDraft(defaultTransactionDate?: string): LoanAcco
 
     originators: [],
 
-    createStandingInstructionAtDisbursement: false
+    createStandingInstructionAtDisbursement: false,
+
+    isTopup: false
 
   };
 

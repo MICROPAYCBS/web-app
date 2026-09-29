@@ -10,8 +10,8 @@ import { DetailPage } from '@/components/composites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-/** Nav groups: General · accounts (5) · lists (9) — matches {@link clientDetailNavGroups}. */
-const CLIENT_DETAIL_NAV_GROUP_SIZES = [1, 5, 9] as const;
+/** Nav groups: General · accounts (6) · lists (9) — matches {@link clientDetailNavGroups}. */
+const CLIENT_DETAIL_NAV_GROUP_SIZES = [1, 6, 9] as const;
 
 function ClientDetailNavSkeleton() {
   return (

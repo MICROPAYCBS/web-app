@@ -55,6 +55,13 @@ function minimalDraft(
 }
 
 describe('buildLoanProductPayload', () => {
+  it('sends canUseForTopup on create and update', () => {
+    const enabled = buildLoanProductPayload(minimalDraft({ settings: { canUseForTopup: true } }));
+    const disabled = buildLoanProductPayload(minimalDraft({ settings: { canUseForTopup: false } }));
+    assert.equal(enabled.canUseForTopup, true);
+    assert.equal(disabled.canUseForTopup, false);
+  });
+
   it('includes optional product charge amount overrides', () => {
     const payload = buildLoanProductPayload(
       minimalDraft({

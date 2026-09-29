@@ -506,6 +506,14 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
     approvedPrincipal: toNumber(row.approvedPrincipal),
     principal: toNumber(row.principal),
     netDisbursalAmount: toNumber(row.netDisbursalAmount),
+    isTopup: row.isTopup === true,
+    canUseForTopup: row.canUseForTopup === true,
+    closureLoanId: toNumber(row.closureLoanId),
+    closureLoanAccountNo:
+      typeof row.closureLoanAccountNo === 'string' && row.closureLoanAccountNo.trim()
+        ? row.closureLoanAccountNo
+        : undefined,
+    topupAmount: toNumber(row.topupAmount),
     loanTermFrequency: toNumber(row.loanTermFrequency) ?? toNumber(row.termFrequency),
     loanTermFrequencyType:
       normalizeEnumOption(row.loanTermFrequencyType) ??

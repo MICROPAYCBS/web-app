@@ -238,8 +238,46 @@ const ERROR_MESSAGES: Record<string, string> = {
   'validation.msg.charge.chargeTiers[].amountRangeTo.only.last.tier.may.be.open.ended':
     'Only the last charge tier may be open-ended (leave To blank).',
   'validation.msg.charge.chargeTiers[].amountRangeTo.must.be.greater.than.from':
-    'Each charge tier’s To must be greater than its From.'
+    'Each charge tier’s To must be greater than its From.',
+  'error.msg.loan.loanIdToClose.no.active.loan.associated.to.client.found':
+    'Choose an active loan of this client',
+  'error.msg.loan.to.be.closed.has.different.currency':
+    'The loan to close must use the same currency',
+  'error.msg.loan.topup.on.multi.tranche.loan.without.interest.recalculation.not.supported':
+    'This loan cannot be closed by a top-up',
+  'error.msg.loan.submitted.date.should.be.after.topup.loan.disbursal.date':
+    'Application date must be after that loan was disbursed',
+  'error.msg.loan.disbursal.date.should.be.after.last.transaction.date.of.loan.to.be.closed':
+    "Disbursement must be on or after that loan's last transaction",
+  'error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed':
+    'Principal must cover the payoff',
+  'error.msg.loan.to.be.closed.with.topup.is.not.active': 'That loan is no longer active',
+  'error.msg.loan.undo.disbursal.not.allowed.on.topup.loan':
+    'Disbursement of a top-up cannot be undone',
+  'error.msg.loan.applied.or.to.be.disbursed.can.not.co-exist.with.the.loan.already.active.to.this.client':
+    'This product cannot be applied while that loan is still active'
 };
+
+const LOAN_TOPUP_ERROR_CODES = new Set([
+  'error.msg.loan.loanIdToClose.no.active.loan.associated.to.client.found',
+  'error.msg.loan.to.be.closed.has.different.currency',
+  'error.msg.loan.topup.on.multi.tranche.loan.without.interest.recalculation.not.supported',
+  'error.msg.loan.submitted.date.should.be.after.topup.loan.disbursal.date',
+  'error.msg.loan.disbursal.date.should.be.after.last.transaction.date.of.loan.to.be.closed',
+  'error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed',
+  'error.msg.loan.to.be.closed.with.topup.is.not.active',
+  'error.msg.loan.undo.disbursal.not.allowed.on.topup.loan',
+  'error.msg.loan.applied.or.to.be.disbursed.can.not.co-exist.with.the.loan.already.active.to.this.client'
+]);
+
+/** Prefer these sentences over the platform's default wording. */
+export function curatedFineractErrorMessage(code: string | undefined): string | undefined {
+  if (!code || !LOAN_TOPUP_ERROR_CODES.has(code)) {
+    return undefined;
+  }
+  const translated = translateFineractCode(code);
+  return translated === code ? undefined : translated;
+}
 
 /** Normalize indexed Fineract params: chargeTiers[0].x → chargeTiers[].x */
 function normalizeFineractErrorCode(code: string): string {

@@ -10,7 +10,7 @@
 
 import { Can, type PermissionInput } from '@mifos/auth';
 import type { LucideIcon } from 'lucide-react';
-import { CalendarClock, Landmark, PiggyBank, Plus, Share2 } from 'lucide-react';
+import { CalendarClock, Handshake, Landmark, PiggyBank, Plus, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -28,14 +28,16 @@ export type ClientAccountListKind =
   | 'loan'
   | 'share'
   | 'fixed-deposit'
-  | 'recurring-deposit';
+  | 'recurring-deposit'
+  | 'guarantee';
 
 const ACCOUNT_EMPTY_ICONS: Record<ClientAccountListKind, LucideIcon> = {
   savings: PiggyBank,
   loan: Landmark,
   share: Share2,
   'fixed-deposit': CalendarClock,
-  'recurring-deposit': CalendarClock
+  'recurring-deposit': CalendarClock,
+  guarantee: Handshake
 };
 
 export function ClientAccountsSection({
