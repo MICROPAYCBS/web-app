@@ -14,6 +14,7 @@ import {
   hasLoanAccountProductTermsInfo,
   LoanAccountProductTermsSummary
 } from '@/components/clients/loan-account/loan-account-product-terms-summary';
+import { LoanTopupQuoteBreakdown } from '@/components/clients/loan-account/loan-topup-quote';
 import { DetailSection } from '@/components/composites';
 import { MoneyField } from '@/components/composites/money-field';
 import { NumericField } from '@/components/composites/numeric-field';
@@ -39,6 +40,7 @@ import {
 } from '@/lib/fineract/loan-application-rules';
 import { toSelectOptions } from '@/lib/form/select-options';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
+import type { LoanTopupPayoff } from '@/lib/fineract/loan-topup';
 import type { LoanAccountStepErrors } from '../validation';
 
 function LoanAccountFinancialTermsForm({
@@ -47,14 +49,16 @@ function LoanAccountFinancialTermsForm({
   errors,
   onChange,
   topupPayoff,
-  topupCashToClient
+  topupCashToClient,
+  topupOmittedInterestBased
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountFinancialStepInput;
   errors: LoanAccountStepErrors;
   onChange: (patch: Partial<LoanAccountFinancialStepInput>) => void;
-  topupPayoff?: number | null;
+  topupPayoff?: LoanTopupPayoff | null;
   topupCashToClient?: number | null;
+  topupOmittedInterestBased?: boolean;
 }) {
   const currencyCode = template.currency?.code ?? 'USD';
   const overrides = template.allowAttributeOverrides;
@@ -91,7 +95,9 @@ function LoanAccountFinancialTermsForm({
   const principalHint = LOAN_ACCOUNT_PRINCIPAL_HINT;
   const repaymentHint = LOAN_ACCOUNT_NUMBER_OF_REPAYMENTS_HINT;
   const payoffFloor =
-    topupPayoff != null ? `At least the payoff of ${formatAccountMoney(topupPayoff, currencyCode)}.` : undefined;
+    topupPayoff?.amount != null
+      ? `At least the payoff of ${formatAccountMoney(topupPayoff.amount, currencyCode)}.`
+      : undefined;
   const principalRangeDescription = [loanApplicationAllowedRangeDescription(principalRange), payoffFloor]
     .filter(Boolean)
     .join(' ');
@@ -118,11 +124,14 @@ function LoanAccountFinancialTermsForm({
           hint={principalHint}
           hintAriaLabel="About principal"
         />
-        {topupCashToClient != null ? (
-          <p className="text-sm text-muted-foreground">
-            Cash to client {formatAccountMoney(topupCashToClient, currencyCode)}. Zero is allowed
-            when the principal equals the payoff and there is no charge due at disbursement.
-          </p>
+        {topupPayoff ? (
+          <LoanTopupQuoteBreakdown
+            currencyCode={currencyCode}
+            payoff={topupPayoff}
+            cashToClient={topupCashToClient}
+            estimate
+            omittedInterestBased={topupOmittedInterestBased}
+          />
         ) : null}
       </DetailSection>
       <DetailSection title="Loan term">
@@ -229,14 +238,16 @@ export function LoanAccountFinancialStep({
   errors,
   onChange,
   topupPayoff,
-  topupCashToClient
+  topupCashToClient,
+  topupOmittedInterestBased
 }: {
   template: ClientLoanAccountTemplate;
   draft: LoanAccountFinancialStepInput;
   errors: LoanAccountStepErrors;
   onChange: (patch: Partial<LoanAccountFinancialStepInput>) => void;
-  topupPayoff?: number | null;
+  topupPayoff?: LoanTopupPayoff | null;
   topupCashToClient?: number | null;
+  topupOmittedInterestBased?: boolean;
 }) {
   const showProductDefaults = hasLoanAccountProductTermsInfo(template);
 
@@ -260,6 +271,7 @@ export function LoanAccountFinancialStep({
               onChange={onChange}
               topupPayoff={topupPayoff}
               topupCashToClient={topupCashToClient}
+              topupOmittedInterestBased={topupOmittedInterestBased}
             />
           </TabsContent>
           <TabsContent value="defaults" className="mt-0">
@@ -274,6 +286,7 @@ export function LoanAccountFinancialStep({
           onChange={onChange}
           topupPayoff={topupPayoff}
           topupCashToClient={topupCashToClient}
+          topupOmittedInterestBased={topupOmittedInterestBased}
         />
       )}
     </div>

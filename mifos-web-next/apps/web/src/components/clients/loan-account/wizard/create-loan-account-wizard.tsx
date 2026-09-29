@@ -625,8 +625,9 @@ export function LoanAccountWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            topupPayoff={draft.isTopup ? topup.context?.payoff?.amount : null}
+            topupPayoff={draft.isTopup ? topup.context?.payoff : null}
             topupCashToClient={draft.isTopup ? topup.cashToClient : null}
+            topupOmittedInterestBased={draft.isTopup ? topup.omittedInterestBased : false}
             onChange={(patch) =>
               setDraft((current) => mergeLoanAccountFinancialStep(current, patch))
             }
