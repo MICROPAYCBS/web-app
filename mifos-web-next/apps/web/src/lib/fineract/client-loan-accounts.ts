@@ -12,10 +12,8 @@ import type { ClientLoanAccountTemplate, CreateClientLoanAccountResponse } from 
 import type { CreateLoanAccountInput } from '@mifos/validation';
 import { buildLoanAccountPayload, buildLoanGuarantorPayload } from '@/lib/fineract/client-loan-account-payload';
 import { normalizeLoanScheduleData } from '@/lib/fineract/loan-schedule-normalize';
-import {
-  normalizeClientLoanAccountTemplate,
-  normalizeLoanCollateralTemplate
-} from '@/lib/fineract/client-loan-account-normalize';
+import { listClientPledgeCollaterals } from '@/lib/fineract/client-collaterals';
+import { normalizeClientLoanAccountTemplate } from '@/lib/fineract/client-loan-account-normalize';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 const LOANS_API_PATH = 'loans';
@@ -36,28 +34,8 @@ export async function getClientLoanAccountTemplate(
   }
   const raw = await fineract.get<unknown>(`${LOANS_API_PATH}/template`, params);
   const template = normalizeClientLoanAccountTemplate(raw);
-
-  if (productId != null && String(productId).trim() !== '') {
-    const collateralTemplate = await getLoanCollateralTemplate(productId);
-    return {
-      ...template,
-      loanCollateralOptions: collateralTemplate.loanCollateralOptions
-    };
-  }
-
-  return template;
-}
-
-export async function getLoanCollateralTemplate(
-  productId: string | number
-): Promise<ClientLoanAccountTemplate> {
-  const fineract = await createFineractClient();
-  const raw = await fineract.get<unknown>(`${LOANS_API_PATH}/template`, {
-    fields: 'id,loanCollateralOptions',
-    productId: String(productId),
-    templateType: 'collateral'
-  });
-  return normalizeLoanCollateralTemplate(raw);
+  const loanCollateralOptions = await listClientPledgeCollaterals(clientId).catch(() => []);
+  return { ...template, loanCollateralOptions };
 }
 
 export async function createLoanGuarantorRecord(
@@ -99,18 +77,11 @@ export async function getClientLoanAccountEditContext(
     staffInSelectedOfficeOnly: 'true',
     template: 'true'
   });
-  let template = normalizeClientLoanAccountTemplate(raw);
-  const productId = template.product?.id;
-
-  if (productId != null) {
-    const collateralTemplate = await getLoanCollateralTemplate(productId);
-    template = {
-      ...template,
-      loanCollateralOptions: collateralTemplate.loanCollateralOptions
-    };
-  }
-
-  return { template, raw };
+  const template = normalizeClientLoanAccountTemplate(raw);
+  const clientId = template.clientId;
+  const loanCollateralOptions =
+    clientId != null ? await listClientPledgeCollaterals(clientId).catch(() => []) : [];
+  return { template: { ...template, loanCollateralOptions }, raw };
 }
 
 export async function updateClientLoanAccountRecord(

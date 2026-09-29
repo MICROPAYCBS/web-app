@@ -8,16 +8,18 @@
 
 import 'server-only';
 
-import type { FineractCommandProcessingResult } from '@mifos/api-client';
+import type { ClientLoanCollateralOption, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { LoanCollateralItemInput } from '@mifos/validation';
-import type {
-  LoanCollateralRecord,
-  LoanCollateralTypeOption
-} from '@/lib/fineract/loan-account-types';
+import { listClientPledgeCollaterals } from '@/lib/fineract/client-collaterals';
+import {
+  getClientLoanAccountEditContext,
+  updateClientLoanAccountRecord
+} from '@/lib/fineract/client-loan-accounts';
+import { loanAccountDraftFromEditTemplate } from '@/lib/fineract/client-loan-account-edit-draft';
+import type { LoanCollateralRecord } from '@/lib/fineract/loan-account-types';
 import { createFineractClient } from '@/lib/fineract/create-client';
-import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 
-export type { LoanCollateralRecord, LoanCollateralTypeOption };
+export type { LoanCollateralRecord };
 
 function toNumber(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -53,19 +55,6 @@ function normalizeCollateral(raw: unknown): LoanCollateralRecord | null {
   };
 }
 
-function normalizeTypeOption(raw: unknown): LoanCollateralTypeOption | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-  const row = raw as Record<string, unknown>;
-  const id = Number(row.id);
-  const name = typeof row.name === 'string' ? row.name : undefined;
-  if (!Number.isFinite(id) || !name) {
-    return null;
-  }
-  return { id, name };
-}
-
 export async function getLoanCollaterals(
   accountId: string | number
 ): Promise<LoanCollateralRecord[]> {
@@ -79,32 +68,39 @@ export async function getLoanCollaterals(
     .filter((item): item is LoanCollateralRecord => item != null);
 }
 
-export async function getLoanCollateralTemplate(
-  accountId: string | number
-): Promise<{ allowedCollateralTypes: LoanCollateralTypeOption[] }> {
-  const fineract = await createFineractClient();
-  const data = await fineract.get<unknown>(`/loans/${accountId}/collaterals/template`);
-  if (!data || typeof data !== 'object') {
-    return { allowedCollateralTypes: [] };
-  }
-  const row = data as Record<string, unknown>;
-  const options = Array.isArray(row.allowedCollateralTypes)
-    ? row.allowedCollateralTypes
-        .map((item) => normalizeTypeOption(item))
-        .filter((item): item is LoanCollateralTypeOption => item != null)
-    : [];
-  return { allowedCollateralTypes: options };
+export async function listLoanPledgeOptions(
+  clientId: string | number
+): Promise<ClientLoanCollateralOption[]> {
+  return listClientPledgeCollaterals(clientId);
 }
 
-export async function createLoanCollateral(
+/** Pledge customer collateral onto a pending loan application. */
+export async function pledgeClientCollateralOnLoan(
+  clientId: string | number,
   accountId: string | number,
   input: LoanCollateralItemInput
 ): Promise<FineractCommandProcessingResult> {
-  const fineract = await createFineractClient();
-  return fineract.post<FineractCommandProcessingResult>(`/loans/${accountId}/collaterals`, {
-    collateralTypeId: input.collateralTypeId,
-    value: input.value,
-    description: input.description?.trim() || undefined,
-    locale: FINERACT_LOCALE
+  const { template, raw } = await getClientLoanAccountEditContext(accountId);
+  const draft = loanAccountDraftFromEditTemplate(raw, template);
+  const existing = draft.collateral ?? [];
+  if (existing.some((row) => row.collateralTypeId === input.collateralTypeId)) {
+    throw new Error('This collateral is already pledged on the loan.');
+  }
+  const held = template.loanCollateralOptions?.find(
+    (option) => option.collateralId === input.collateralTypeId
+  );
+  if (held?.quantity != null && input.value > held.quantity) {
+    throw new Error(`Quantity cannot be more than ${held.quantity}.`);
+  }
+  return updateClientLoanAccountRecord(accountId, clientId, {
+    ...draft,
+    collateral: [
+      ...existing,
+      {
+        collateralTypeId: input.collateralTypeId,
+        value: input.value,
+        description: ''
+      }
+    ]
   });
 }

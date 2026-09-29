@@ -103,6 +103,7 @@ export type {
   ClientDepositAccountTemplate,
   ClientLoanAccountProductOption,
   ClientLoanAccountChargeOption,
+  ClientLoanCollateralOption,
   ClientLoanAccountTemplate,
   CreateClientDepositAccountResponse,
   CreateClientLoanAccountResponse

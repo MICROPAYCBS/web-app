@@ -42,7 +42,7 @@ const fineractDate = z.string().trim().min(1);
 
 export const loanCollateralItemSchema = z.object({
 
-  collateralTypeId: z.coerce.number().int().positive('Select collateral.'),
+  collateralTypeId: z.coerce.number().int().positive("Select the customer's collateral."),
 
   value: z.coerce.number().positive('Quantity is required.'),
 

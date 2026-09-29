@@ -74,7 +74,10 @@ export function LoanAccountSecurityStep({
   const collateralOptions = toSelectOptions(
     template.loanCollateralOptions?.map((option) => ({
       id: option.collateralId,
-      name: option.name ?? option.description ?? String(option.collateralId)
+      name:
+        option.quantity != null
+          ? `${option.name ?? option.collateralId} · ${option.quantity} available`
+          : (option.name ?? option.description ?? String(option.collateralId))
     }))
   );
 
@@ -122,7 +125,7 @@ export function LoanAccountSecurityStep({
         {collateral.length === 0 ? (
           <EmptyState
             title="No collateral added"
-            description="Add security items backing this loan when required by the product."
+            description="Pledge collateral already recorded for this customer. Add it on the customer first if it is not listed."
             action={
               collateralOptions.length > 0 ? (
                 <Button
@@ -145,7 +148,7 @@ export function LoanAccountSecurityStep({
                 className="grid gap-4 rounded-lg border border-border p-4 sm:grid-cols-2"
               >
                 <SelectField
-                  label="Collateral type"
+                  label="Customer collateral"
                   required
                   value={row.collateralTypeId > 0 ? String(row.collateralTypeId) : undefined}
                   onValueChange={(value) =>
@@ -159,22 +162,13 @@ export function LoanAccountSecurityStep({
                 />
                 <NumericField
                   id={`collateral-value-${index}`}
-                  label="Quantity"
+                  label="Quantity to pledge"
                   required
                   value={row.value > 0 ? String(row.value) : ''}
                   onChange={(value) =>
                     updateCollateral(index, { value: value ? Number(value) : 0 })
                   }
                   error={errors[`collateral.${index}.value`]}
-                />
-                <TextField
-                  id={`collateral-description-${index}`}
-                  label="Description"
-                  optional
-                  className="sm:col-span-2"
-                  value={row.description ?? ''}
-                  onChange={(description) => updateCollateral(index, { description })}
-                  error={errors[`collateral.${index}.description`]}
                 />
                 <div className="sm:col-span-2">
                   <Button

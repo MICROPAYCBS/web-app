@@ -10,7 +10,7 @@ import 'server-only';
 
 import type { ClientCollateralListItem,
   ClientCollateralTemplate,
-  CollateralProductDetail,
+  ClientLoanCollateralOption,
   CollateralProductOption,
   CreateClientCollateralResponse, FineractCommandProcessingResult } from '@mifos/api-client';
 import type { CreateClientCollateralInput } from '@mifos/validation';
@@ -19,30 +19,11 @@ import {
   listCollateralProducts,
   toCollateralProductOptions
 } from '@/lib/fineract/collateral-products';
+import { clientPledgeOptionsFromResponse } from '@/lib/fineract/client-collateral-display';
 import { FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { createFineractClient } from '@/lib/fineract/create-client';
 
 export { getCollateralProduct };
-
-function asCollateralOptions(value: unknown): CollateralProductOption[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value
-    .map((item) => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-      const row = item as Record<string, unknown>;
-      const id = Number(row.id);
-      const name = typeof row.name === 'string' ? row.name : undefined;
-      if (!Number.isFinite(id) || !name) {
-        return null;
-      }
-      return { id, name };
-    })
-    .filter((item): item is CollateralProductOption => item !== null);
-}
 
 function toNumber(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -115,19 +96,20 @@ export async function listClientCollaterals(
 }
 
 export async function getClientCollateralTemplate(
-  clientId: string | number
+  _clientId: string | number
 ): Promise<ClientCollateralTemplate> {
-  const fineract = await createFineractClient();
-  const raw = await fineract.get<ClientCollateralTemplate & Record<string, unknown>>(
-    `/clients/${clientId}/collaterals/template`
-  );
-
-  let options = asCollateralOptions(raw.collateralOptions);
-  if (options.length === 0) {
-    options = await listCollateralProductOptions();
-  }
-
+  // `/clients/{id}/collaterals/template` lists collateral already held by the customer.
+  // Adding collateral uses the product catalog and sends that product id.
+  const options = await listCollateralProductOptions();
   return { collateralOptions: options };
+}
+
+export async function listClientPledgeCollaterals(
+  clientId: string | number
+): Promise<ClientLoanCollateralOption[]> {
+  const fineract = await createFineractClient();
+  const data = await fineract.get<unknown>(`/clients/${clientId}/collaterals/template`);
+  return clientPledgeOptionsFromResponse(data);
 }
 
 export async function listCollateralProductOptions(): Promise<CollateralProductOption[]> {

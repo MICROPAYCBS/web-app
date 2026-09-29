@@ -18,22 +18,22 @@ import { revalidatePath } from 'next/cache';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import type { LoanAccountActionResult } from '@/lib/fineract/loan-account-action-result';
 import {
-  createLoanCollateral,
-  getLoanCollateralTemplate
+  listLoanPledgeOptions,
+  pledgeClientCollateralOnLoan
 } from '@/lib/fineract/loan-collaterals';
 import { getServerSession } from '@/lib/session/server';
 
-export async function loadLoanCollateralTemplateAction(accountId: number) {
+export async function loadLoanCollateralTemplateAction(clientId: string) {
   const session = await getServerSession();
   if (!session) {
     return { ok: false as const, message: 'You must be signed in.' };
   }
   try {
-    assertCan(session, resolvePermission('loans.collateral'));
-    const template = await getLoanCollateralTemplate(accountId);
-    return { ok: true as const, ...template };
+    assertCan(session, resolvePermission('clients.collateral'));
+    const options = await listLoanPledgeOptions(clientId);
+    return { ok: true as const, options };
   } catch (err) {
-    return toFineractActionError(err, 'Could not load collateral types.');
+    return toFineractActionError(err, 'Could not load this customer’s collateral.');
   }
 }
 
@@ -47,9 +47,9 @@ export async function createLoanCollateralAction(
     return { ok: false, message: 'You must be signed in.' };
   }
   try {
-    assertCan(session, resolvePermission('loans.collateral.create'));
+    assertCan(session, resolvePermission('loans.update'));
   } catch {
-    return { ok: false, message: 'You do not have permission to add collateral.' };
+    return { ok: false, message: 'You do not have permission to update this loan.' };
   }
 
   const parsed = loanCollateralItemSchema.safeParse(raw);
@@ -65,7 +65,7 @@ export async function createLoanCollateralAction(
   }
 
   try {
-    const response = await createLoanCollateral(accountId, parsed.data);
+    const response = await pledgeClientCollateralOnLoan(clientId, accountId, parsed.data);
     revalidatePath(clientAccountGeneralPath(clientId, 'loan', accountId));
     return actionSuccessFromFineractCommand(response, {});
   } catch (err) {

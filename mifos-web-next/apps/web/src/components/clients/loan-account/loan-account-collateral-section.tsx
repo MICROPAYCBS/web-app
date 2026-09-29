@@ -22,17 +22,16 @@ import { DataTable } from '@/components/composites/data-table/data-table';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
-import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
 import { toSelectOptions } from '@/lib/form/select-options';
 import {
   loanAccountCurrencyCode
 } from '@/lib/fineract/loan-account-display';
+import type { ClientLoanCollateralOption } from '@mifos/api-client';
 import type {
   FineractLoanAccountDetail,
   FineractLoanPledgedCollateral,
-  LoanCollateralRecord,
-  LoanCollateralTypeOption
+  LoanCollateralRecord
 } from '@/lib/fineract/loan-account-types';
 import { formatActionErrorMessage } from '@mifos/validation';
 
@@ -51,17 +50,15 @@ export function LoanAccountCollateralSheet({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
-  const [types, setTypes] = useState<LoanCollateralTypeOption[]>([]);
+  const [options, setOptions] = useState<ClientLoanCollateralOption[]>([]);
   const [collateralTypeId, setCollateralTypeId] = useState('');
   const [value, setValue] = useState('');
-  const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function reset() {
     setCollateralTypeId('');
     setValue('');
-    setDescription('');
     setError(null);
     setFieldErrors({});
   }
@@ -73,7 +70,7 @@ export function LoanAccountCollateralSheet({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    void loadLoanCollateralTemplateAction(accountId).then((result) => {
+    void loadLoanCollateralTemplateAction(clientId).then((result) => {
       if (cancelled) {
         return;
       }
@@ -82,12 +79,12 @@ export function LoanAccountCollateralSheet({
         setError(result.message);
         return;
       }
-      setTypes(result.allowedCollateralTypes);
+      setOptions(result.options);
     });
     return () => {
       cancelled = true;
     };
-  }, [accountId, open]);
+  }, [clientId, open]);
 
   function handleOpenChange(next: boolean) {
     if (!next) {
@@ -101,8 +98,7 @@ export function LoanAccountCollateralSheet({
     startTransition(async () => {
       const result = await createLoanCollateralAction(clientId, accountId, {
         collateralTypeId: Number(collateralTypeId),
-        value: Number(value),
-        description
+        value: Number(value)
       });
       if (!result.ok) {
         setError(formatActionErrorMessage(result.message, result.fieldErrors));
@@ -118,8 +114,8 @@ export function LoanAccountCollateralSheet({
     <FormSheet
       open={open}
       onOpenChange={handleOpenChange}
-      title="Add collateral"
-      description="Pledge property against this loan before it is approved."
+      title="Pledge collateral"
+      description="Pledge collateral already recorded for this customer. The quantity cannot exceed what the customer still holds."
       formId={formId}
       submitLabel="Add collateral"
       submitLoading={pending || loading}
@@ -140,27 +136,30 @@ export function LoanAccountCollateralSheet({
           </p>
         ) : null}
         <SelectField
-          label="Collateral type"
+          label="Customer collateral"
           required
           value={collateralTypeId}
           onValueChange={(next) => setCollateralTypeId(next ?? '')}
-          options={toSelectOptions(types)}
+          options={toSelectOptions(
+            options.map((option) => ({
+              id: option.collateralId,
+              name:
+                option.quantity != null
+                  ? `${option.name ?? option.collateralId} · ${option.quantity} available`
+                  : (option.name ?? String(option.collateralId))
+            }))
+          )}
+          placeholder="Select collateral"
+          emptyMessage="This customer has no collateral to pledge."
           error={fieldErrors.collateralTypeId}
           disabled={pending || loading}
         />
         <NumericField
-          label="Value"
+          label="Quantity to pledge"
           required
           value={value}
           onChange={setValue}
           error={fieldErrors.value}
-          disabled={pending || loading}
-        />
-        <TextField
-          label="Description"
-          value={description}
-          onChange={setDescription}
-          error={fieldErrors.description}
           disabled={pending || loading}
         />
       </form>
@@ -282,22 +281,22 @@ export function LoanAccountCollateralSection({
         context.canCreate ? (
           <Button type="button" size="sm" onClick={() => setOpen(true)}>
             <Plus className="mr-2 size-4" />
-            Add collateral
+            Pledge collateral
           </Button>
         ) : undefined
       }
     >
       <DataTable
-        table={table}
+        table={pledgedTable}
         stickyHeader={false}
-        emptyMessage="No collateral on this loan."
-        emptyDescription="Add collateral before the loan is approved."
+        emptyMessage="No customer collateral is pledged on this loan."
+        emptyDescription="Pledge collateral that is already recorded for this customer. You can do this while the loan is waiting for approval."
       />
 
-      {pledged.length > 0 ? (
+      {context.items.length > 0 ? (
         <div className="mt-8 space-y-3">
-          <p className="text-sm font-medium">Pledged customer collateral</p>
-          <DataTable table={pledgedTable} stickyHeader={false} />
+          <p className="text-sm font-medium">Other collateral records</p>
+          <DataTable table={table} stickyHeader={false} />
         </div>
       ) : null}
 

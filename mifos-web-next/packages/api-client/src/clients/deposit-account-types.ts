@@ -90,11 +90,15 @@ export interface ClientLoanAccountPurposeOption {
 }
 
 export interface ClientLoanCollateralOption {
+  /** Client collateral link id. Sent on the loan as `clientCollateralId`. */
   collateralId: number;
   name?: string;
   description?: string;
+  /** Product base price. */
   value?: number;
   pctToBase?: number;
+  /** Quantity still held by the customer. */
+  quantity?: number;
 }
 
 /** Charge row from loan application / product template APIs. */

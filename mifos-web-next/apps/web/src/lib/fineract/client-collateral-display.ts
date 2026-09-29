@@ -6,7 +6,46 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ClientCollateralListItem, CollateralProductDetail } from '@mifos/api-client';
+import type {
+  ClientCollateralListItem,
+  ClientLoanCollateralOption,
+  CollateralProductDetail
+} from '@mifos/api-client';
+
+function toNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+/** Customer collateral that can be pledged on a loan. `collateralId` is the client collateral id. */
+export function clientPledgeOptionsFromResponse(raw: unknown): ClientLoanCollateralOption[] {
+  const rows = Array.isArray(raw) ? raw : [];
+  return rows.flatMap((item) => {
+    if (!item || typeof item !== 'object') {
+      return [];
+    }
+    const row = item as Record<string, unknown>;
+    const collateralId = toNumber(row.collateralId ?? row.id);
+    if (collateralId == null) {
+      return [];
+    }
+    return [
+      {
+        collateralId,
+        name: typeof row.name === 'string' ? row.name : undefined,
+        value: toNumber(row.basePrice ?? row.value),
+        pctToBase: toNumber(row.pctToBase),
+        quantity: toNumber(row.quantity)
+      }
+    ];
+  });
+}
 
 /** Total value = Fineract `total` or basePrice × quantity. */
 export function clientCollateralTotalValue(

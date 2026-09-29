@@ -73,7 +73,7 @@ function loanAccountPermissions(
     undoDisbursal: can(session, LOAN_LIFECYCLE_COMMAND_PERMISSIONS.undodisbursal),
     makeRepayment: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.repayment),
     addCharge: can(session, 'CREATE_LOANCHARGE'),
-    addCollateral: can(session, resolvePermission('loans.collateral.create')),
+    addCollateral: can(session, resolvePermission('loans.update')),
     addGuarantor: can(session, resolvePermission('loans.guarantors.create')),
     attachOriginator: can(session, resolvePermission('loans.originators.attach')),
     foreclosure: can(session, LOAN_TRANSACTION_COMMAND_PERMISSIONS.foreclosure),
