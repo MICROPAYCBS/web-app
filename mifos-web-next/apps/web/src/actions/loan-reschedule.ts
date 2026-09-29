@@ -21,6 +21,7 @@ import { revalidatePath } from 'next/cache';
 import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
 import type { LoanAccountActionResult } from '@/lib/fineract/loan-account-action-result';
+import { loanRescheduleCommandDate } from '@/lib/fineract/loan-reschedule-display';
 import {
   createLoanRescheduleRequest,
   executeLoanRescheduleRequestCommand,
@@ -142,12 +143,33 @@ export async function createLoanRescheduleRequestAction(
   try {
     const {
       loanId,
-      rescheduleFromDate,
+      rescheduleFromDate: rawFromDate,
       rescheduleReasonId,
-      submittedOnDate,
+      submittedOnDate: rawSubmittedOnDate,
       rescheduleReasonComment,
+      adjustedDueDate: rawAdjustedDueDate,
       ...optionalChanges
     } = parsed.data;
+    const rescheduleFromDate = loanRescheduleCommandDate(rawFromDate);
+    const submittedOnDate = loanRescheduleCommandDate(rawSubmittedOnDate);
+    const adjustedDueDate = loanRescheduleCommandDate(rawAdjustedDueDate);
+    const fieldErrors: Record<string, string> = {};
+    if (!rescheduleFromDate) {
+      fieldErrors.rescheduleFromDate = 'Select an unpaid installment.';
+    }
+    if (!submittedOnDate) {
+      fieldErrors.submittedOnDate = 'Enter a valid date.';
+    }
+    if (rawAdjustedDueDate && !adjustedDueDate) {
+      fieldErrors.adjustedDueDate = 'Enter a valid date.';
+    }
+    if (Object.keys(fieldErrors).length > 0) {
+      return {
+        ok: false,
+        message: 'Fix the highlighted fields.',
+        fieldErrors
+      };
+    }
     const response = await createLoanRescheduleRequest(
       buildFineractCommandBody(
         omitEmpty({
@@ -156,6 +178,7 @@ export async function createLoanRescheduleRequestAction(
           rescheduleReasonId,
           submittedOnDate,
           rescheduleReasonComment: rescheduleReasonComment?.trim() || undefined,
+          adjustedDueDate,
           ...optionalChanges
         })
       )

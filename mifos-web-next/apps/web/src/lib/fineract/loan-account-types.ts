@@ -162,20 +162,79 @@ export interface LoanCollateralTypeOption {
   name: string;
 }
 
+export interface LoanGuarantorFundingRecord {
+  id: number;
+  statusId?: number;
+  statusLabel?: string;
+  savingsAccountId?: number;
+  savingsAccountNo?: string;
+  amount?: number;
+  amountReleased?: number;
+  amountRemaining?: number;
+  amountTransferred?: number;
+}
+
 export interface LoanGuarantorRecord {
   id: number;
+  /** False once the guarantor has been removed. The row stays in the list. */
+  active: boolean;
   guarantorTypeId?: number;
   guarantorTypeName?: string;
   entityId?: number;
+  groupName?: string;
+  clientRelationshipTypeId?: number;
+  clientRelationshipTypeName?: string;
   firstname?: string;
   lastname?: string;
   displayName?: string;
-  status?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zip?: string;
+  mobileNumber?: string;
+  housePhoneNumber?: string;
+  comment?: string;
+  dob?: string;
+  officeName?: string;
+  joinedDate?: string;
+  externalId?: string;
+  funding: LoanGuarantorFundingRecord[];
 }
 
 export interface LoanGuarantorTypeOption {
   id: number;
   value: string;
+  code?: string;
+}
+
+export interface LoanGuarantorRelationshipOption {
+  id: number;
+  name: string;
+}
+
+export interface LoanGuarantorSavingsAccountOption {
+  id: number;
+  accountNo?: string;
+  productName?: string;
+  currencyCode?: string;
+}
+
+export interface LoanGuaranteeSettings {
+  holdGuaranteeFunds: boolean;
+  mandatoryGuarantee?: number;
+  minimumGuaranteeFromOwnFunds?: number;
+  minimumGuaranteeFromGuarantor?: number;
+}
+
+export interface ClientObligeeRecord {
+  displayName?: string;
+  accountNumber?: string;
+  loanAmount?: number;
+  guaranteeAmount?: number;
+  amountReleased?: number;
+  amountTransferred?: number;
 }
 
 export interface LoanInterestPauseRecord {

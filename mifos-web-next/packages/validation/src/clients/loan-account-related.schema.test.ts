@@ -43,7 +43,7 @@ describe('loan related-record write schemas', () => {
 
   it('requires first and last name for external guarantors', () => {
     const result = loanGuarantorItemSchema.safeParse({
-      guarantorTypeId: 4,
+      guarantorTypeId: 3,
       firstname: '',
       lastname: ''
     });
@@ -62,6 +62,28 @@ describe('loan related-record write schemas', () => {
     if (!result.success) {
       assert.ok(result.error.issues.some((issue) => issue.path[0] === 'entityId'));
     }
+  });
+
+  it('requires a pledge amount when savings are selected', () => {
+    const result = loanGuarantorItemSchema.safeParse({
+      guarantorTypeId: 1,
+      entityId: 15,
+      savingsId: 88
+    });
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.ok(result.error.issues.some((issue) => issue.path[0] === 'amount'));
+    }
+  });
+
+  it('accepts a customer pledge without a relationship', () => {
+    const result = loanGuarantorItemSchema.safeParse({
+      guarantorTypeId: 1,
+      entityId: 15,
+      savingsId: 88,
+      amount: 5000
+    });
+    assert.equal(result.success, true);
   });
 
   it('accepts an interest pause range', () => {

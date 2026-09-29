@@ -1,0 +1,27 @@
+{
+  "command": "clients.loan-guarantor",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.guarantor.api.GuarantorsApiResource",
+    "org.apache.fineract.portfolio.loanaccount.guarantor.GuarantorConstants",
+    "org.apache.fineract.portfolio.loanaccount.guarantor.service.GuarantorWritePlatformServiceJpaRepositoryImpl"
+  ],
+  "fields": {
+    "guarantorTypeId": { "required": true, "type": "number" },
+    "entityId": { "required": false, "type": "number" },
+    "clientRelationshipTypeId": { "required": false, "type": "number" },
+    "savingsId": { "required": false, "type": "number" },
+    "amount": { "required": false, "type": "number" },
+    "firstname": { "required": false, "maxLength": 50 },
+    "lastname": { "required": false, "maxLength": 50 },
+    "addressLine1": { "required": false, "maxLength": 500 },
+    "addressLine2": { "required": false, "maxLength": 500 },
+    "city": { "required": false, "maxLength": 50 },
+    "state": { "required": false, "maxLength": 50 },
+    "country": { "required": false, "maxLength": 50 },
+    "zip": { "required": false, "maxLength": 20 },
+    "mobileNumber": { "required": false, "maxLength": 20 },
+    "housePhoneNumber": { "required": false, "maxLength": 20 },
+    "comment": { "required": false, "maxLength": 500 },
+    "dob": { "required": false, "type": "date" }
+  }
+}

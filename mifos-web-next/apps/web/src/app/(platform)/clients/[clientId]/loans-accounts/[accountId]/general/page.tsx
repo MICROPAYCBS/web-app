@@ -18,7 +18,8 @@ import { LOAN_OFFICER_CONFIG } from '@/lib/fineract/account-field-officer-config
 import {
   LOAN_DELETE_PERMISSION,
   LOAN_LIFECYCLE_COMMAND_PERMISSIONS,
-  LOAN_TRANSACTION_COMMAND_PERMISSIONS
+  LOAN_TRANSACTION_COMMAND_PERMISSIONS,
+  loanAccountActionVisibility
 } from '@/lib/fineract/loan-account-command-meta';
 import {
   CLIENT_ACCOUNT_RESERVED_IDS,
@@ -45,7 +46,8 @@ import { getServerSession } from '@/lib/session/server';
 import { getLoanNotes } from '@/lib/fineract/loan-notes';
 import { getLoanDocuments } from '@/lib/fineract/loan-documents';
 import { getLoanCollaterals } from '@/lib/fineract/loan-collaterals';
-import { getLoanGuarantors } from '@/lib/fineract/loan-guarantors';
+import { getLoanGuaranteeSettings, getLoanGuarantors } from '@/lib/fineract/loan-guarantors';
+import { loanHasRecoverableGuarantee } from '@/lib/fineract/loan-guarantor-display';
 import { getLoanAccountOriginators } from '@/lib/fineract/loan-account-originators';
 import { getLoanInterestPauses } from '@/lib/fineract/loan-interest-pauses';
 import {
@@ -157,7 +159,8 @@ export default async function LoanAccountGeneralPage({
     originatorsResult,
     delinquencyTagsResult,
     delinquencyActionsResult,
-    interestPausesResult
+    interestPausesResult,
+    guaranteeSettings
   ] = await Promise.all([
     loadAccountCashierForSession(session, {
       accountId: account.id,
@@ -197,6 +200,9 @@ export default async function LoanAccountGeneralPage({
       : Promise.resolve(null),
     showInterestPauses
       ? tryFineractLoad(() => getLoanInterestPauses(account.id), 'Could not load interest pauses.')
+      : Promise.resolve(null),
+    account.loanProductId != null
+      ? getLoanGuaranteeSettings(account.loanProductId).catch(() => null)
       : Promise.resolve(null)
   ]);
 
@@ -247,6 +253,8 @@ export default async function LoanAccountGeneralPage({
     : null;
 
   const statusValue = account.status.value ?? '';
+  const guarantorVisibility = loanAccountActionVisibility(account);
+  const guarantorItems = guarantorsResult?.ok ? guarantorsResult.data : [];
   const canEditTranches =
     account.multiDisburseLoan === true &&
     permissions.modifyApplication &&
@@ -271,10 +279,19 @@ export default async function LoanAccountGeneralPage({
       canCreate: permissions.addCollateral && statusValue === 'Submitted and pending approval'
     },
     guarantors: {
-      items: guarantorsResult?.ok ? guarantorsResult.data : [],
-      canCreate: permissions.addGuarantor,
-      canUpdate: can(session, resolvePermission('loans.guarantors.update')),
-      canDelete: can(session, resolvePermission('loans.guarantors.delete'))
+      items: guarantorItems,
+      canCreate: permissions.addGuarantor && guarantorVisibility.addGuarantor,
+      canUpdate:
+        can(session, resolvePermission('loans.guarantors.update')) &&
+        guarantorVisibility.addGuarantor,
+      canDelete:
+        can(session, resolvePermission('loans.guarantors.delete')) &&
+        guarantorVisibility.addGuarantor,
+      canRecover:
+        can(session, resolvePermission('loans.guarantors.recover')) &&
+        guarantorVisibility.recoverGuarantees &&
+        loanHasRecoverableGuarantee(guarantorItems),
+      guarantee: guaranteeSettings
     },
     originators: {
       items: originatorsResult?.ok ? originatorsResult.data : [],

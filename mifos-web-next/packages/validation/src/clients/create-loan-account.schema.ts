@@ -16,6 +16,8 @@
 
 import { z } from 'zod';
 
+import { loanGuarantorItemSchema } from './loan-guarantor.schema';
+
 
 
 const optionalId = z.coerce
@@ -50,79 +52,7 @@ export const loanCollateralItemSchema = z.object({
 
 
 
-export const loanGuarantorItemSchema = z
-
-  .object({
-
-    guarantorTypeId: z.coerce.number().int().positive('Select guarantor type.'),
-
-    entityId: optionalId,
-
-    firstname: z.string().trim().max(100).optional().or(z.literal('')),
-
-    lastname: z.string().trim().max(100).optional().or(z.literal('')),
-
-    /** Display name of a searched customer. Not sent to the server. */
-    entityLabel: z.string().trim().max(200).optional().or(z.literal(''))
-
-  })
-
-  .superRefine((value, ctx) => {
-
-    if (value.guarantorTypeId === 4) {
-
-      if (!value.firstname?.trim()) {
-
-        ctx.addIssue({
-
-          code: z.ZodIssueCode.custom,
-
-          message: 'First name is required for external guarantors.',
-
-          path: ['firstname']
-
-        });
-
-      }
-
-      if (!value.lastname?.trim()) {
-
-        ctx.addIssue({
-
-          code: z.ZodIssueCode.custom,
-
-          message: 'Last name is required for external guarantors.',
-
-          path: ['lastname']
-
-        });
-
-      }
-
-    } else if (value.guarantorTypeId === 1 || value.guarantorTypeId === 3) {
-
-      if (value.entityId == null) {
-
-        ctx.addIssue({
-
-          code: z.ZodIssueCode.custom,
-
-          message:
-            value.guarantorTypeId === 1
-              ? 'Search for and select a customer.'
-              : 'Staff ID is required.',
-
-          path: ['entityId']
-
-        });
-
-      }
-
-    }
-
-  });
-
-
+export { loanGuarantorItemSchema };
 
 /** Step 1 — Core product & context */
 

@@ -249,6 +249,11 @@
       "DELETE_GUARANTOR"
     ]
   },
+  "loans.guarantors.recover": {
+    "any": [
+      "RECOVERGUARANTEES_LOAN"
+    ]
+  },
   "loans.originators.attach": {
     "any": [
       "ATTACH_LOAN_ORIGINATOR"

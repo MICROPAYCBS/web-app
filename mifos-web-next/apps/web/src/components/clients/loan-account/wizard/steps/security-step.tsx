@@ -27,9 +27,10 @@ import { toSelectOptions } from '@/lib/form/select-options';
 import type { LoanAccountStepErrors } from '../validation';
 
 const GUARANTOR_TYPE_OPTIONS = [
-  { value: '1', label: 'Existing customer', keywords: ['customer', 'client'] },
-  { value: '3', label: 'Staff', keywords: ['staff'] },
-  { value: '4', label: 'External entity', keywords: ['external'] }
+  { value: '1', label: 'CUSTOMER', keywords: ['customer', 'client'] },
+  { value: '2', label: 'STAFF', keywords: ['staff'] },
+  { value: '3', label: 'EXTERNAL', keywords: ['external'] },
+  { value: '4', label: 'GROUP', keywords: ['group'] }
 ];
 
 function emptyCollateralRow(): LoanCollateralItemInput {
@@ -219,7 +220,7 @@ export function LoanAccountSecurityStep({
         ) : (
           <div className="space-y-4">
             {guarantors.map((row, index) => {
-              const isExternal = row.guarantorTypeId === 4;
+              const isExternal = row.guarantorTypeId === 3;
               return (
                 <div
                   key={`guarantor-${index}`}
@@ -256,10 +257,10 @@ export function LoanAccountSecurityStep({
                       }
                     />
                   ) : null}
-                  {row.guarantorTypeId === 3 ? (
+                  {row.guarantorTypeId === 2 || row.guarantorTypeId === 4 ? (
                     <NumericField
                       id={`guarantor-entity-${index}`}
-                      label="Staff ID"
+                      label={row.guarantorTypeId === 4 ? 'Group ID' : 'Staff ID'}
                       required
                       integer
                       value={row.entityId ? String(row.entityId) : ''}

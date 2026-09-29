@@ -11,6 +11,7 @@
 import { assertCan, resolvePermission } from '@mifos/auth';
 import {
   loanGuarantorItemSchema,
+  updateLoanGuarantorSchema,
   toFineractActionError,
   actionSuccessFromFineractCommand
 } from '@mifos/validation';
@@ -20,16 +21,23 @@ import type { LoanAccountActionResult } from '@/lib/fineract/loan-account-action
 import {
   createLoanGuarantor,
   deleteLoanGuarantor,
+  getLoanGuaranteeSettings,
+  getLoanGuarantorSavingsAccounts,
   getLoanGuarantorTemplate,
+  getLoanGuarantors,
+  listGuarantorGroupOptions,
+  recoverLoanGuarantees,
   updateLoanGuarantor
 } from '@/lib/fineract/loan-guarantors';
 import { searchClientEntities } from '@/lib/fineract/search';
+import { listStaff } from '@/lib/fineract/staff';
 import { getServerSession } from '@/lib/session/server';
 
-function parseGuarantor(raw: unknown): LoanAccountActionResult | ReturnType<
-  typeof loanGuarantorItemSchema.parse
-> {
-  const parsed = loanGuarantorItemSchema.safeParse(raw);
+function parseWithSchema<T>(
+  schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: { issues: { path: (string | number)[]; message: string }[] } } },
+  raw: unknown
+): LoanAccountActionResult | T {
+  const parsed = schema.safeParse(raw);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
@@ -44,7 +52,11 @@ function parseGuarantor(raw: unknown): LoanAccountActionResult | ReturnType<
 }
 
 async function requireKey(
-  key: 'loans.guarantors.create' | 'loans.guarantors.update' | 'loans.guarantors.delete',
+  key:
+    | 'loans.guarantors.create'
+    | 'loans.guarantors.update'
+    | 'loans.guarantors.delete'
+    | 'loans.guarantors.recover',
   message: string
 ): Promise<LoanAccountActionResult | null> {
   const session = await getServerSession();
@@ -97,17 +109,60 @@ export async function searchLoanGuarantorClientsAction(query: string): Promise<
   }
 }
 
-export async function loadLoanGuarantorTemplateAction(accountId: number) {
+export async function loadLoanGuarantorTemplateAction(
+  accountId: number,
+  loanProductId?: number
+) {
   const session = await getServerSession();
   if (!session) {
     return { ok: false as const, message: 'You must be signed in.' };
   }
   try {
     assertCan(session, resolvePermission('loans.guarantors'));
-    const template = await getLoanGuarantorTemplate(accountId);
-    return { ok: true as const, ...template };
+    const [template, staffResult, groupResult, guarantee, guarantors] = await Promise.all([
+      getLoanGuarantorTemplate(accountId),
+      listStaff().catch(() => []),
+      listGuarantorGroupOptions().catch(() => []),
+      loanProductId != null
+        ? getLoanGuaranteeSettings(loanProductId).catch(() => ({ holdGuaranteeFunds: false }))
+        : Promise.resolve({ holdGuaranteeFunds: false }),
+      getLoanGuarantors(accountId).catch(() => [])
+    ]);
+    return {
+      ok: true as const,
+      ...template,
+      guarantee,
+      guarantors,
+      staffOptions: staffResult
+        .filter((member) => member.isActive !== false)
+        .map((member) => ({
+          id: member.id,
+          name: [member.firstname, member.lastname].filter(Boolean).join(' ').trim() || `Staff ${member.id}`
+        })),
+      groupOptions: groupResult
+    };
   } catch (err) {
     return toFineractActionError(err, 'Could not load guarantor types.');
+  }
+}
+
+export async function loadLoanGuarantorSavingsAction(
+  accountId: number,
+  clientId: number
+): Promise<
+  | { ok: true; accounts: Awaited<ReturnType<typeof getLoanGuarantorSavingsAccounts>> }
+  | { ok: false; message: string }
+> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('loans.guarantors'));
+    const accounts = await getLoanGuarantorSavingsAccounts(accountId, clientId);
+    return { ok: true, accounts };
+  } catch (err) {
+    return toFineractActionError(err, 'Could not load savings accounts to pledge.');
   }
 }
 
@@ -123,8 +178,8 @@ export async function createLoanGuarantorAction(
   if (denied) {
     return denied;
   }
-  const parsed = parseGuarantor(raw);
-  if ('ok' in parsed) {
+  const parsed = parseWithSchema(loanGuarantorItemSchema, raw);
+  if (typeof parsed === 'object' && parsed && 'ok' in parsed) {
     return parsed;
   }
   try {
@@ -149,8 +204,8 @@ export async function updateLoanGuarantorAction(
   if (denied) {
     return denied;
   }
-  const parsed = parseGuarantor(raw);
-  if ('ok' in parsed) {
+  const parsed = parseWithSchema(updateLoanGuarantorSchema, raw);
+  if (typeof parsed === 'object' && parsed && 'ok' in parsed) {
     return parsed;
   }
   try {
@@ -165,7 +220,8 @@ export async function updateLoanGuarantorAction(
 export async function deleteLoanGuarantorAction(
   clientId: string,
   accountId: number,
-  guarantorId: number
+  guarantorId: number,
+  guarantorFundingId?: number
 ): Promise<LoanAccountActionResult> {
   const denied = await requireKey(
     'loans.guarantors.delete',
@@ -175,10 +231,30 @@ export async function deleteLoanGuarantorAction(
     return denied;
   }
   try {
-    const response = await deleteLoanGuarantor(accountId, guarantorId);
+    const response = await deleteLoanGuarantor(accountId, guarantorId, guarantorFundingId);
     revalidatePath(clientAccountGeneralPath(clientId, 'loan', accountId));
     return actionSuccessFromFineractCommand(response, {});
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
+  }
+}
+
+export async function recoverLoanGuaranteesAction(
+  clientId: string,
+  accountId: number
+): Promise<LoanAccountActionResult> {
+  const denied = await requireKey(
+    'loans.guarantors.recover',
+    'You do not have permission to recover pledged savings.'
+  );
+  if (denied) {
+    return denied;
+  }
+  try {
+    const response = await recoverLoanGuarantees(accountId);
+    revalidatePath(clientAccountGeneralPath(clientId, 'loan', accountId));
+    return actionSuccessFromFineractCommand(response, {});
+  } catch (err) {
+    return toFineractActionError(err, 'Could not recover pledged savings.');
   }
 }

@@ -6,7 +6,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { CreateLoanAccountInput, LoanGuarantorItemInput } from '@mifos/validation';
+import {
+  GUARANTOR_TYPE_EXTERNAL,
+  type CreateLoanAccountInput,
+  type LoanGuarantorItemInput,
+  type UpdateLoanGuarantorInput
+} from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { uniqueLoanAccountCharges } from '@/lib/fineract/loan-application-charges';
 
@@ -141,12 +146,69 @@ export function buildLoanAccountPayload(
 export function buildLoanGuarantorPayload(
   guarantor: LoanGuarantorItemInput
 ): Record<string, unknown> {
-  return stripEmpty({
+  const external = guarantor.guarantorTypeId === GUARANTOR_TYPE_EXTERNAL;
+  const payload: Record<string, unknown> = {
     guarantorTypeId: guarantor.guarantorTypeId,
+    clientRelationshipTypeId: guarantor.clientRelationshipTypeId
+  };
+  if (!external) {
+    payload.entityId = guarantor.entityId;
+  }
+  if (guarantor.savingsId != null) {
+    payload.savingsId = guarantor.savingsId;
+    payload.amount = guarantor.amount;
+    payload.locale = FINERACT_LOCALE;
+  }
+  if (external) {
+    Object.assign(payload, {
+      firstname: guarantor.firstname,
+      lastname: guarantor.lastname,
+      addressLine1: guarantor.addressLine1,
+      addressLine2: guarantor.addressLine2,
+      city: guarantor.city,
+      state: guarantor.state,
+      country: guarantor.country,
+      zip: guarantor.zip,
+      mobileNumber: guarantor.mobileNumber,
+      housePhoneNumber: guarantor.housePhoneNumber,
+      comment: guarantor.comment,
+      dob: guarantor.dob
+    });
+    if (guarantor.dob) {
+      payload.dateFormat = FINERACT_DATE_FORMAT;
+      payload.locale = FINERACT_LOCALE;
+    } else if (
+      guarantor.mobileNumber ||
+      guarantor.housePhoneNumber
+    ) {
+      payload.locale = FINERACT_LOCALE;
+    }
+  }
+  return stripEmpty(payload);
+}
+
+export function buildLoanGuarantorUpdatePayload(
+  guarantor: UpdateLoanGuarantorInput
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    clientRelationshipTypeId: guarantor.clientRelationshipTypeId,
     entityId: guarantor.entityId,
     firstname: guarantor.firstname,
     lastname: guarantor.lastname,
-    locale: FINERACT_LOCALE,
-    dateFormat: FINERACT_DATE_FORMAT
-  });
+    addressLine1: guarantor.addressLine1,
+    addressLine2: guarantor.addressLine2,
+    city: guarantor.city,
+    state: guarantor.state,
+    country: guarantor.country,
+    zip: guarantor.zip,
+    mobileNumber: guarantor.mobileNumber,
+    housePhoneNumber: guarantor.housePhoneNumber,
+    comment: guarantor.comment,
+    dob: guarantor.dob
+  };
+  if (guarantor.dob) {
+    payload.dateFormat = FINERACT_DATE_FORMAT;
+    payload.locale = FINERACT_LOCALE;
+  }
+  return stripEmpty(payload);
 }

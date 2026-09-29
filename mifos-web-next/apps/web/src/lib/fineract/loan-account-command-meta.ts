@@ -75,6 +75,7 @@ export interface LoanAccountActionVisibility {
   assignOfficer: boolean;
   reassignOfficer: boolean;
   modifyApplication: boolean;
+  recoverGuarantees: boolean;
 }
 
 const LOAN_STATUS = {
@@ -119,7 +120,8 @@ export function loanAccountActionVisibility(account: {
     makeRepayment: active || overpaid,
     addCharge: pending || approved || active || overpaid,
     addCollateral: pending,
-    addGuarantor: pending,
+    addGuarantor: pending || approved || active,
+    recoverGuarantees: active,
     attachOriginator: pending,
     foreclosure: active,
     waiveInterest: active,

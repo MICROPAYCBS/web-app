@@ -38,6 +38,13 @@ export type LoanAccountGuarantorsContext = {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canRecover: boolean;
+  guarantee: {
+    holdGuaranteeFunds: boolean;
+    mandatoryGuarantee?: number;
+    minimumGuaranteeFromOwnFunds?: number;
+    minimumGuaranteeFromGuarantor?: number;
+  } | null;
 };
 
 export type LoanAccountOriginatorsContext = {

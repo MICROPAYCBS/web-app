@@ -20,6 +20,7 @@ describe('loanAccountActionVisibility', () => {
     assert.equal(visibility.reschedule, false);
     assert.equal(visibility.addCollateral, true);
     assert.equal(visibility.addGuarantor, true);
+    assert.equal(visibility.recoverGuarantees, false);
     assert.equal(visibility.attachOriginator, true);
   });
 
@@ -30,5 +31,7 @@ describe('loanAccountActionVisibility', () => {
     });
     assert.equal(visibility.editVariableInstallments, false);
     assert.equal(visibility.attachOriginator, false);
+    assert.equal(visibility.addGuarantor, true);
+    assert.equal(visibility.recoverGuarantees, false);
   });
 });

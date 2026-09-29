@@ -30,7 +30,7 @@ import Link from 'next/link';
 import { Fragment, useState } from 'react';
 import { LoanAccountAddChargeSheet } from '@/components/clients/loan-account/actions/loan-account-add-charge-sheet';
 import { LoanAccountCollateralSheet } from '@/components/clients/loan-account/loan-account-collateral-section';
-import { LoanAccountGuarantorSheet } from '@/components/clients/loan-account/loan-account-guarantors-section';
+import { LoanAccountGuarantorSheet } from '@/components/clients/loan-account/loan-account-guarantor-sheet';
 import { LoanAccountOriginatorSheet } from '@/components/clients/loan-account/loan-account-originators-section';
 import { LoanAccountApproveSheet } from '@/components/clients/loan-account/actions/loan-account-approve-sheet';
 import { LoanAccountConfirmDialog } from '@/components/clients/loan-account/actions/loan-account-confirm-dialog';
@@ -452,6 +452,10 @@ export function LoanAccountActions({
       <LoanAccountGuarantorSheet
         clientId={clientId}
         accountId={account.id}
+        loanProductId={account.loanProductId}
+        borrowerClientId={account.clientId}
+        principal={account.principal ?? account.approvedPrincipal ?? account.proposedPrincipal}
+        currencyCode={account.currency.code}
         open={addGuarantorOpen}
         onOpenChange={setAddGuarantorOpen}
       />

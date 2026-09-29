@@ -12,21 +12,15 @@ import { formatActionErrorMessage } from '@mifos/validation';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useId, useMemo, useState, useTransition, useEffect } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import {
-  createLoanGuarantorAction,
   deleteLoanGuarantorAction,
-  loadLoanGuarantorTemplateAction,
-  updateLoanGuarantorAction
+  recoverLoanGuaranteesAction
 } from '@/actions/loan-guarantor';
+import { LoanAccountGuarantorSheet } from '@/components/clients/loan-account/loan-account-guarantor-sheet';
 import type { LoanAccountGuarantorsContext } from '@/components/clients/loan-account/loan-account-related-context';
 import { DetailSection } from '@/components/composites';
 import { DataTable } from '@/components/composites/data-table/data-table';
-import { FormSheet } from '@/components/composites/form-sheet';
-import { NumericField } from '@/components/composites/numeric-field';
-import { SelectField } from '@/components/composites/select-field';
-import { TextField } from '@/components/composites/text-field';
-import { CustomerSearchField } from '@/components/clients/loan-account/customer-search-field';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -36,189 +30,30 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { toSelectOptions } from '@/lib/form/select-options';
-import type {
-  FineractLoanAccountDetail,
-  LoanGuarantorRecord,
-  LoanGuarantorTypeOption
-} from '@/lib/fineract/loan-account-types';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
+import {
+  loanGuaranteeShortfall,
+  loanGuarantorCanRemovePerson,
+  loanGuarantorDisplayName,
+  loanGuarantorFundingCanRemove,
+  loanGuarantorFundingStatusLabel
+} from '@/lib/fineract/loan-guarantor-display';
+import type { FineractLoanAccountDetail, LoanGuarantorRecord } from '@/lib/fineract/loan-account-types';
 
-const FALLBACK_GUARANTOR_TYPES: LoanGuarantorTypeOption[] = [
-  { id: 1, value: 'Existing customer' },
-  { id: 3, value: 'Staff' },
-  { id: 4, value: 'External entity' }
-];
+const DELETE_TOAST = {
+  completed: 'Guarantor removed.',
+  pending: 'Guarantor removal submitted for approval.'
+};
 
-function isExternalType(typeId: number) {
-  return typeId === 4;
-}
+const RECOVER_TOAST = {
+  completed: 'Pledged savings recovered onto the loan.',
+  pending: 'Guarantee recovery submitted for approval.'
+};
 
-export function LoanAccountGuarantorSheet({
-  clientId,
-  accountId,
-  open,
-  onOpenChange,
-  editing
-}: {
-  clientId: string;
-  accountId: number;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  editing?: LoanGuarantorRecord | null;
-}) {
-  const formId = useId();
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [loading, setLoading] = useState(false);
-  const [types, setTypes] = useState<LoanGuarantorTypeOption[]>(FALLBACK_GUARANTOR_TYPES);
-  const [guarantorTypeId, setGuarantorTypeId] = useState('1');
-  const [entityId, setEntityId] = useState('');
-  const [entityLabel, setEntityLabel] = useState('');
-  const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  const typeId = Number(guarantorTypeId) || 1;
-
-  function resetFrom(editingRow?: LoanGuarantorRecord | null) {
-    setGuarantorTypeId(String(editingRow?.guarantorTypeId ?? 1));
-    setEntityId(editingRow?.entityId != null ? String(editingRow.entityId) : '');
-    setEntityLabel(
-      editingRow?.displayName?.trim() ||
-        (editingRow?.entityId != null ? `Customer #${editingRow.entityId}` : '')
-    );
-    setFirstname(editingRow?.firstname ?? '');
-    setLastname(editingRow?.lastname ?? '');
-    setError(null);
-    setFieldErrors({});
-  }
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    resetFrom(editing);
-    let cancelled = false;
-    setLoading(true);
-    void loadLoanGuarantorTemplateAction(accountId).then((result) => {
-      if (cancelled) {
-        return;
-      }
-      setLoading(false);
-      if (result.ok && result.guarantorTypeOptions.length) {
-        setTypes(result.guarantorTypeOptions);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [accountId, editing, open]);
-
-  function handleOpenChange(next: boolean) {
-    onOpenChange(next);
-  }
-
-  function handleSubmit(event?: React.FormEvent) {
-    event?.preventDefault();
-    setError(null);
-    startTransition(async () => {
-      const payload = {
-        guarantorTypeId: typeId,
-        entityId: entityId ? Number(entityId) : undefined,
-        firstname,
-        lastname
-      };
-      const result = editing
-        ? await updateLoanGuarantorAction(clientId, accountId, editing.id, payload)
-        : await createLoanGuarantorAction(clientId, accountId, payload);
-      if (!result.ok) {
-        setError(formatActionErrorMessage(result.message, result.fieldErrors));
-        setFieldErrors(result.fieldErrors ?? {});
-        return;
-      }
-      handleOpenChange(false);
-      router.refresh();
-    });
-  }
-
-  return (
-    <FormSheet
-      open={open}
-      onOpenChange={handleOpenChange}
-      title={editing ? 'Edit guarantor' : 'Add guarantor'}
-      description="Guarantee this loan with an existing customer, staff member, or an external person."
-      formId={formId}
-      submitLabel={editing ? 'Save guarantor' : 'Add guarantor'}
-      submitLoading={pending}
-      submitDisabled={loading}
-    >
-      <form id={formId} className="space-y-4" onSubmit={handleSubmit}>
-        <SelectField
-          label="Guarantor type"
-          required
-          value={guarantorTypeId}
-          onValueChange={(next) => {
-            setGuarantorTypeId(next ?? '1');
-            setEntityId('');
-            setEntityLabel('');
-            setFirstname('');
-            setLastname('');
-          }}
-          options={toSelectOptions(types)}
-          error={fieldErrors.guarantorTypeId}
-          disabled={pending || loading}
-        />
-        {typeId === 1 ? (
-          <CustomerSearchField
-            id={`${formId}-customer`}
-            selectedId={entityId ? Number(entityId) : undefined}
-            selectedLabel={entityLabel}
-            excludeClientId={Number(clientId)}
-            error={fieldErrors.entityId}
-            disabled={pending || loading}
-            onSelect={(customer) => {
-              setEntityId(customer ? String(customer.id) : '');
-              setEntityLabel(customer?.label ?? '');
-            }}
-          />
-        ) : null}
-        {typeId === 3 ? (
-          <NumericField
-            label="Staff ID"
-            required
-            integer
-            value={entityId}
-            onChange={setEntityId}
-            error={fieldErrors.entityId}
-            disabled={pending || loading}
-          />
-        ) : null}
-        {isExternalType(typeId) ? (
-          <>
-            <TextField
-              label="First name"
-              required
-              value={firstname}
-              onChange={setFirstname}
-              error={fieldErrors.firstname}
-              disabled={pending || loading}
-            />
-            <TextField
-              label="Last name"
-              required
-              value={lastname}
-              onChange={setLastname}
-              error={fieldErrors.lastname}
-              disabled={pending || loading}
-            />
-          </>
-        ) : null}
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      </form>
-    </FormSheet>
-  );
-}
+type DeleteTarget =
+  | { kind: 'person'; guarantor: LoanGuarantorRecord }
+  | { kind: 'funding'; guarantor: LoanGuarantorRecord; fundingId: number; label: string };
 
 export function LoanAccountGuarantorsSection({
   account,
@@ -237,8 +72,11 @@ export function LoanAccountGuarantorsSection({
   const [pending, startTransition] = useTransition();
   const [internalOpen, setInternalOpen] = useState(false);
   const [editing, setEditing] = useState<LoanGuarantorRecord | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<LoanGuarantorRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [recoverOpen, setRecoverOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const currencyCode = account.currency.code;
+  const principal = account.principal ?? account.approvedPrincipal ?? account.proposedPrincipal;
   const open = editing != null || (addOpen ?? internalOpen);
   const setOpen = (next: boolean) => {
     if (!next) {
@@ -254,12 +92,39 @@ export function LoanAccountGuarantorsSection({
     setInternalOpen(true);
   };
 
+  const shortfall = loanGuaranteeShortfall({
+    principal,
+    thresholds: context.guarantee,
+    guarantors: context.items,
+    borrowerClientId: account.clientId
+  });
+
   const columns = useMemo<ColumnDef<LoanGuarantorRecord>[]>(
     () => [
       {
         id: 'name',
         header: 'Name',
-        cell: ({ row }) => row.original.displayName || '—'
+        cell: ({ row }) => {
+          const record = row.original;
+          return (
+            <div className="space-y-1">
+              <p>{loanGuarantorDisplayName(record)}</p>
+              {record.officeName ? (
+                <p className="text-xs text-muted-foreground">{record.officeName}</p>
+              ) : null}
+              {record.funding.map((line) => (
+                <p key={line.id} className="text-xs text-muted-foreground">
+                  {loanGuarantorFundingStatusLabel(line.statusId)}
+                  {line.savingsAccountNo ? ` · ${line.savingsAccountNo}` : ''}
+                  {line.amount != null ? ` · ${formatAccountMoney(line.amount, currencyCode)}` : ''}
+                  {line.amountRemaining != null
+                    ? ` · ${formatAccountMoney(line.amountRemaining, currencyCode)} remaining`
+                    : ''}
+                </p>
+              ))}
+            </div>
+          );
+        }
       },
       {
         id: 'type',
@@ -267,43 +132,74 @@ export function LoanAccountGuarantorsSection({
         cell: ({ row }) => row.original.guarantorTypeName ?? '—'
       },
       {
+        id: 'relationship',
+        header: 'Relationship',
+        cell: ({ row }) => row.original.clientRelationshipTypeName ?? '—'
+      },
+      {
         id: 'status',
         header: 'Status',
-        cell: ({ row }) => row.original.status ?? '—'
+        cell: ({ row }) => (row.original.active ? 'Active' : 'Removed')
       },
       {
         id: 'actions',
         header: 'Actions',
-        cell: ({ row }) => (
-          <div className="flex flex-wrap gap-2">
-            {context.canUpdate ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setEditing(row.original);
-                  setInternalOpen(true);
-                }}
-              >
-                Edit
-              </Button>
-            ) : null}
-            {context.canDelete ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setDeleteTarget(row.original)}
-              >
-                Remove
-              </Button>
-            ) : null}
-          </div>
-        )
+        cell: ({ row }) => {
+          const record = row.original;
+          if (!record.active) {
+            return null;
+          }
+          return (
+            <div className="flex flex-wrap gap-2">
+              {context.canUpdate ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditing(record);
+                    setInternalOpen(true);
+                  }}
+                >
+                  Edit
+                </Button>
+              ) : null}
+              {context.canDelete && loanGuarantorCanRemovePerson(record) ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteTarget({ kind: 'person', guarantor: record })}
+                >
+                  Remove
+                </Button>
+              ) : null}
+              {context.canDelete
+                ? record.funding.filter(loanGuarantorFundingCanRemove).map((line) => (
+                    <Button
+                      key={line.id}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setDeleteTarget({
+                          kind: 'funding',
+                          guarantor: record,
+                          fundingId: line.id,
+                          label: line.savingsAccountNo ?? `pledge ${line.id}`
+                        })
+                      }
+                    >
+                      Remove pledge
+                    </Button>
+                  ))
+                : null}
+            </div>
+          );
+        }
       }
     ],
-    [context.canDelete, context.canUpdate]
+    [context.canDelete, context.canUpdate, currencyCode]
   );
 
   const table = useReactTable({
@@ -317,9 +213,15 @@ export function LoanAccountGuarantorsSection({
       return;
     }
     setActionError(null);
+    const target = deleteTarget;
     startTransition(async () => {
-      const result = await deleteLoanGuarantorAction(clientId, account.id, deleteTarget.id);
-      if (!result.ok) {
+      const result = await deleteLoanGuarantorAction(
+        clientId,
+        account.id,
+        target.guarantor.id,
+        target.kind === 'funding' ? target.fundingId : undefined
+      );
+      if (!toastCommandOutcome(result, DELETE_TOAST)) {
         setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
@@ -328,18 +230,46 @@ export function LoanAccountGuarantorsSection({
     });
   }
 
+  function handleRecover() {
+    setActionError(null);
+    startTransition(async () => {
+      const result = await recoverLoanGuaranteesAction(clientId, account.id);
+      if (!toastCommandOutcome(result, RECOVER_TOAST)) {
+        setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
+        return;
+      }
+      setRecoverOpen(false);
+      router.refresh();
+    });
+  }
+
   return (
     <DetailSection
       title="Guarantors"
       actions={
-        context.canCreate ? (
-          <Button type="button" size="sm" onClick={() => setOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            Add guarantor
-          </Button>
-        ) : undefined
+        <div className="flex flex-wrap gap-2">
+          {context.canRecover ? (
+            <Button type="button" size="sm" variant="outline" onClick={() => setRecoverOpen(true)}>
+              Recover guarantees
+            </Button>
+          ) : null}
+          {context.canCreate ? (
+            <Button type="button" size="sm" onClick={() => setOpen(true)}>
+              <Plus className="mr-2 size-4" />
+              Add guarantor
+            </Button>
+          ) : null}
+        </div>
       }
     >
+      {shortfall ? (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Still short of the product guarantee: own funds{' '}
+          {formatAccountMoney(shortfall.ownFundsShort, currencyCode)}, other guarantors{' '}
+          {formatAccountMoney(shortfall.otherShort, currencyCode)}, combined{' '}
+          {formatAccountMoney(shortfall.mandatoryShort, currencyCode)}.
+        </p>
+      ) : null}
       {actionError ? (
         <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {actionError}
@@ -354,6 +284,11 @@ export function LoanAccountGuarantorsSection({
       <LoanAccountGuarantorSheet
         clientId={clientId}
         accountId={account.id}
+        loanProductId={account.loanProductId}
+        borrowerClientId={account.clientId}
+        principal={principal}
+        currencyCode={currencyCode}
+        existingGuarantors={context.items}
         open={open}
         onOpenChange={setOpen}
         editing={editing}
@@ -361,20 +296,40 @@ export function LoanAccountGuarantorsSection({
       <Dialog open={deleteTarget != null} onOpenChange={(openDialog) => !openDialog && setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Remove guarantor</DialogTitle>
-            <DialogDescription>This guarantor will be removed from the loan.</DialogDescription>
+            <DialogTitle>
+              {deleteTarget?.kind === 'funding' ? 'Remove pledge' : 'Remove guarantor'}
+            </DialogTitle>
+            <DialogDescription>
+              {deleteTarget?.kind === 'funding'
+                ? `The savings hold on ${deleteTarget.label} will be released. The guarantor stays on the loan until every pledge is removed.`
+                : 'This guarantor will be marked removed. The row stays on the loan.'}
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={pending}
-              onClick={handleDeleteConfirm}
-            >
+            <Button type="button" variant="destructive" disabled={pending} onClick={handleDeleteConfirm}>
               Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={recoverOpen} onOpenChange={setRecoverOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recover guarantees</DialogTitle>
+            <DialogDescription>
+              Active pledged savings will be transferred onto this loan as a repayment, and those
+              guarantees will be released.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setRecoverOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={pending} onClick={handleRecover}>
+              Recover
             </Button>
           </DialogFooter>
         </DialogContent>

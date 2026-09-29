@@ -74,13 +74,10 @@ function namedOptionLabel(
 
 
 const GUARANTOR_TYPE_LABELS: Record<number, string> = {
-
-  1: 'Existing customer',
-
-  3: 'Staff',
-
-  4: 'External entity'
-
+  1: 'CUSTOMER',
+  2: 'STAFF',
+  3: 'EXTERNAL',
+  4: 'GROUP'
 };
 
 

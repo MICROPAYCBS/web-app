@@ -353,6 +353,14 @@ export {
   type LoanAccountTermsStepInput
 } from './clients/create-loan-account.schema';
 export {
+  updateLoanGuarantorSchema,
+  GUARANTOR_TYPE_CUSTOMER,
+  GUARANTOR_TYPE_STAFF,
+  GUARANTOR_TYPE_EXTERNAL,
+  GUARANTOR_TYPE_GROUP,
+  type UpdateLoanGuarantorInput
+} from './clients/loan-guarantor.schema';
+export {
   computedLoanTermFrequency,
   computedNumberOfRepayments,
   loanApplicationHasScheduleMinimumFields,

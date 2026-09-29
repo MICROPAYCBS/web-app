@@ -8,6 +8,7 @@
 
 import { notFound } from 'next/navigation';
 import { ClientGeneralSections } from '@/components/clients/detail/client-general-sections';
+import { ClientObligeeSection } from '@/components/clients/detail/client-obligee-section';
 import { ClientTransferStatusPanel } from '@/components/clients/detail/client-transfer-status-panel';
 import { LoadErrorAlert } from '@/components/composites/load-error-alert';
 import { buildClientFinancialSummary } from '@/lib/fineract/client-financial-summary';
@@ -16,6 +17,7 @@ import { getClientIncomeSources } from '@/lib/fineract/client-income-source';
 import { getClientAccounts } from '@/lib/fineract/client-accounts';
 import { getClientTransferContext } from '@/lib/fineract/client-transfer';
 import { getClient } from '@/lib/fineract/clients';
+import { getClientObligeeDetails } from '@/lib/fineract/loan-guarantors';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 
 export default async function ClientGeneralPage({
@@ -39,14 +41,16 @@ export default async function ClientGeneralPage({
   }
   const client = clientResult.data;
 
-  const [accountsResult, transferContext, incomeSources, complianceProfile] = await Promise.all([
+  const [accountsResult, transferContext, incomeSources, complianceProfile, obligeeDetails] =
+    await Promise.all([
     tryFineractLoad(
       () => getClientAccounts(clientId),
       'Could not load account summary for this customer.'
     ),
     getClientTransferContext(clientId).catch(() => null),
     getClientIncomeSources(clientId).catch(() => []),
-    getClientComplianceProfile(clientId).catch(() => null)
+    getClientComplianceProfile(clientId).catch(() => null),
+    getClientObligeeDetails(clientId).catch(() => [])
   ]);
 
   const financialSummary = accountsResult.ok
@@ -65,6 +69,7 @@ export default async function ClientGeneralPage({
         incomeSources={incomeSources}
         complianceProfile={complianceProfile}
       />
+      <ClientObligeeSection items={obligeeDetails} />
     </div>
   );
 }
