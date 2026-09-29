@@ -55,6 +55,7 @@ export const loanGuarantorItemSchema = z
     ),
     firstname: optionalText(50),
     lastname: optionalText(50),
+    nationalIdNumber: optionalText(50),
     addressLine1: optionalText(500),
     addressLine2: optionalText(500),
     city: optionalText(50),
@@ -100,6 +101,13 @@ export const loanGuarantorItemSchema = z
           path: ['lastname']
         });
       }
+      if (!value.nationalIdNumber?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'National ID Number is required for external guarantors.',
+          path: ['nationalIdNumber']
+        });
+      }
     }
     const hasSavings = value.savingsId != null;
     const hasAmount = typeof value.amount === 'number' && Number.isFinite(value.amount);
@@ -124,6 +132,7 @@ const updatePersonalFields = {
   entityId: optionalId,
   firstname: optionalText(50),
   lastname: optionalText(50),
+  nationalIdNumber: optionalText(50),
   addressLine1: optionalText(500),
   addressLine2: optionalText(500),
   city: optionalText(50),
@@ -143,6 +152,7 @@ export const updateLoanGuarantorSchema = z
       value.entityId,
       value.firstname,
       value.lastname,
+      value.nationalIdNumber,
       value.addressLine1,
       value.addressLine2,
       value.city,
@@ -156,9 +166,33 @@ export const updateLoanGuarantorSchema = z
     if (!hasChange) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Change the relationship together with a name, address, phone, or comment.',
+        message:
+          'Change the relationship together with a name, national ID, address, phone, or comment.',
         path: ['clientRelationshipTypeId']
       });
+    }
+    if (value.firstname != null || value.lastname != null) {
+      if (!value.firstname?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'First name is required for external guarantors.',
+          path: ['firstname']
+        });
+      }
+      if (!value.lastname?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Last name is required for external guarantors.',
+          path: ['lastname']
+        });
+      }
+      if (!value.nationalIdNumber?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'National ID Number is required for external guarantors.',
+          path: ['nationalIdNumber']
+        });
+      }
     }
   });
 

@@ -163,6 +163,7 @@ export function buildLoanGuarantorPayload(
     Object.assign(payload, {
       firstname: guarantor.firstname,
       lastname: guarantor.lastname,
+      nationalIdNumber: guarantor.nationalIdNumber,
       addressLine1: guarantor.addressLine1,
       addressLine2: guarantor.addressLine2,
       city: guarantor.city,
@@ -195,6 +196,7 @@ export function buildLoanGuarantorUpdatePayload(
     entityId: guarantor.entityId,
     firstname: guarantor.firstname,
     lastname: guarantor.lastname,
+    nationalIdNumber: guarantor.nationalIdNumber,
     addressLine1: guarantor.addressLine1,
     addressLine2: guarantor.addressLine2,
     city: guarantor.city,

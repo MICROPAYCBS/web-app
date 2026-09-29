@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage } from '@mifos/validation';
+import { formatActionErrorMessage, GUARANTOR_TYPE_EXTERNAL } from '@mifos/validation';
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -106,11 +106,36 @@ export function LoanAccountGuarantorsSection({
         header: 'Name',
         cell: ({ row }) => {
           const record = row.original;
+          const externalAddress =
+            record.guarantorTypeId === GUARANTOR_TYPE_EXTERNAL
+              ? [
+                  record.addressLine1,
+                  record.addressLine2,
+                  record.city,
+                  record.state,
+                  record.country,
+                  record.zip
+                ]
+                  .filter(Boolean)
+                  .join(', ')
+              : '';
           return (
             <div className="space-y-1">
               <p>{loanGuarantorDisplayName(record)}</p>
+              {record.guarantorTypeId === GUARANTOR_TYPE_EXTERNAL && record.nationalIdNumber ? (
+                <p className="text-xs text-muted-foreground">{record.nationalIdNumber}</p>
+              ) : null}
+              {externalAddress ? (
+                <p className="text-xs text-muted-foreground">{externalAddress}</p>
+              ) : null}
               {record.officeName ? (
                 <p className="text-xs text-muted-foreground">{record.officeName}</p>
+              ) : null}
+              {record.joinedDate ? (
+                <p className="text-xs text-muted-foreground">Joined {record.joinedDate}</p>
+              ) : null}
+              {record.externalId ? (
+                <p className="text-xs text-muted-foreground">{record.externalId}</p>
               ) : null}
               {record.funding.map((line) => (
                 <p key={line.id} className="text-xs text-muted-foreground">

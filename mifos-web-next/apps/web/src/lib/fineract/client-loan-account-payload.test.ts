@@ -9,7 +9,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { CreateLoanAccountInput } from '@mifos/validation';
-import { buildLoanAccountPayload } from '@/lib/fineract/client-loan-account-payload';
+import {
+  buildLoanAccountPayload,
+  buildLoanGuarantorPayload,
+  buildLoanGuarantorUpdatePayload
+} from '@/lib/fineract/client-loan-account-payload';
 
 function baseInput(overrides: Partial<CreateLoanAccountInput> = {}): CreateLoanAccountInput {
   return {
@@ -86,5 +90,39 @@ describe('buildLoanAccountPayload originators', () => {
       forSchedulePreview: true
     });
     assert.equal('originators' in payload, false);
+  });
+});
+
+describe('buildLoanGuarantorPayload', () => {
+  it('sends a national ID only for an external guarantor', () => {
+    const external = buildLoanGuarantorPayload({
+      guarantorTypeId: 3,
+      firstname: 'Amina',
+      lastname: 'Okello',
+      nationalIdNumber: 'CM1234567890123'
+    });
+    assert.equal(external.nationalIdNumber, 'CM1234567890123');
+    assert.equal('entityId' in external, false);
+
+    const customer = buildLoanGuarantorPayload({
+      guarantorTypeId: 1,
+      entityId: 15,
+      nationalIdNumber: 'CM1234567890123'
+    });
+    assert.equal(customer.entityId, 15);
+    assert.equal('nationalIdNumber' in customer, false);
+  });
+
+  it('sends the stored national ID back on an external update', () => {
+    const payload = buildLoanGuarantorUpdatePayload({
+      firstname: 'Amina',
+      lastname: 'Okello',
+      nationalIdNumber: 'CM1234567890123',
+      clientRelationshipTypeId: 3
+    });
+    assert.equal(payload.nationalIdNumber, 'CM1234567890123');
+    assert.equal(payload.firstname, 'Amina');
+    assert.equal('guarantorTypeId' in payload, false);
+    assert.equal('savingsId' in payload, false);
   });
 });

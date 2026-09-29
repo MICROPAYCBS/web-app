@@ -38,7 +38,14 @@ function emptyCollateralRow(): LoanCollateralItemInput {
 }
 
 function emptyGuarantorRow(): LoanGuarantorItemInput {
-  return { guarantorTypeId: 1, entityId: undefined, entityLabel: '', firstname: '', lastname: '' };
+  return {
+    guarantorTypeId: 1,
+    entityId: undefined,
+    entityLabel: '',
+    firstname: '',
+    lastname: '',
+    nationalIdNumber: ''
+  };
 }
 
 function emptyOriginatorRow(): { id: number } {
@@ -236,7 +243,8 @@ export function LoanAccountSecurityStep({
                         entityId: undefined,
                         entityLabel: '',
                         firstname: '',
-                        lastname: ''
+                        lastname: '',
+                        nationalIdNumber: ''
                       })
                     }
                     options={GUARANTOR_TYPE_OPTIONS}
@@ -290,6 +298,15 @@ export function LoanAccountSecurityStep({
                         value={row.lastname ?? ''}
                         onChange={(lastname) => updateGuarantor(index, { lastname })}
                         error={errors[`guarantors.${index}.lastname`]}
+                      />
+                      <TextField
+                        id={`guarantor-national-id-${index}`}
+                        label="National ID Number"
+                        required
+                        value={row.nationalIdNumber ?? ''}
+                        onChange={(nationalIdNumber) => updateGuarantor(index, { nationalIdNumber })}
+                        error={errors[`guarantors.${index}.nationalIdNumber`]}
+                        maxLength={50}
                       />
                     </>
                   ) : null}

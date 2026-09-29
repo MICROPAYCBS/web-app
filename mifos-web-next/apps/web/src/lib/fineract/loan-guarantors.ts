@@ -136,6 +136,7 @@ function normalizeGuarantor(raw: unknown): LoanGuarantorRecord | null {
     clientRelationshipTypeName: text(relationship?.name),
     firstname,
     lastname,
+    nationalIdNumber: text(row.nationalIdNumber),
     displayName,
     addressLine1: text(row.addressLine1),
     addressLine2: text(row.addressLine2),

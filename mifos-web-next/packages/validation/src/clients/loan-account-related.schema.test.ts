@@ -13,6 +13,7 @@ import {
   loanGuarantorItemSchema,
   loanApplicationOriginatorItemSchema
 } from './create-loan-account.schema';
+import { updateLoanGuarantorSchema } from './loan-guarantor.schema';
 import { clientNoteSchema } from './client-details.schema';
 import {
   loanDelinquencyPauseSchema,
@@ -51,7 +52,38 @@ describe('loan related-record write schemas', () => {
     if (!result.success) {
       assert.ok(result.error.issues.some((issue) => issue.path[0] === 'firstname'));
       assert.ok(result.error.issues.some((issue) => issue.path[0] === 'lastname'));
+      assert.ok(result.error.issues.some((issue) => issue.path[0] === 'nationalIdNumber'));
     }
+  });
+
+  it('accepts an external guarantor with a national ID', () => {
+    const result = loanGuarantorItemSchema.safeParse({
+      guarantorTypeId: 3,
+      firstname: 'Amina',
+      lastname: 'Okello',
+      nationalIdNumber: 'CM1234567890123'
+    });
+    assert.equal(result.success, true);
+  });
+
+  it('requires a national ID when an external guarantor is edited', () => {
+    const missing = updateLoanGuarantorSchema.safeParse({
+      firstname: 'Amina',
+      lastname: 'Okello',
+      nationalIdNumber: ''
+    });
+    assert.equal(missing.success, false);
+    if (!missing.success) {
+      assert.ok(missing.error.issues.some((issue) => issue.path[0] === 'nationalIdNumber'));
+    }
+
+    const saved = updateLoanGuarantorSchema.safeParse({
+      firstname: 'Amina',
+      lastname: 'Okello',
+      nationalIdNumber: 'CM1234567890123',
+      clientRelationshipTypeId: 3
+    });
+    assert.equal(saved.success, true);
   });
 
   it('requires an entity for existing-customer guarantors', () => {

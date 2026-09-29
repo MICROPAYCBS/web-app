@@ -186,6 +186,7 @@ export interface LoanGuarantorRecord {
   clientRelationshipTypeName?: string;
   firstname?: string;
   lastname?: string;
+  nationalIdNumber?: string;
   displayName?: string;
   addressLine1?: string;
   addressLine2?: string;

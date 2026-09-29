@@ -57,6 +57,7 @@ const ACTION_ERROR_FIELD_LABELS: Record<string, string> = {
   email: 'Email',
   username: 'Login name',
   firstname: 'First name',
+  nationalIdNumber: 'National ID Number',
   lastname: 'Last name',
   officeId: 'Branch',
   staffId: 'Staff',

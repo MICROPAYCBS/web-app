@@ -13,6 +13,7 @@ const FIELD_LABELS: Record<string, string> = {
   staffId: 'Relationship officer',
   legalFormId: 'Profile type',
   firstname: 'First name',
+  nationalIdNumber: 'National ID Number',
   middlename: 'Middle name',
   lastname: 'Last name',
   fullname: 'Entity name',

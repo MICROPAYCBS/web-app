@@ -438,6 +438,7 @@ export function LoanAccountPreviewStep({
                         : ''}
 
                     {item.firstname ? ` · ${item.firstname} ${item.lastname ?? ''}` : ''}
+                    {item.nationalIdNumber ? ` · ${item.nationalIdNumber}` : ''}
 
                   </li>
 

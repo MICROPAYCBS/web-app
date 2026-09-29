@@ -102,6 +102,7 @@ export function LoanAccountGuarantorSheet({
   const [amount, setAmount] = useState('');
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
+  const [nationalIdNumber, setNationalIdNumber] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
@@ -129,6 +130,7 @@ export function LoanAccountGuarantorSheet({
     setAmount('');
     setFirstname(row?.firstname ?? '');
     setLastname(row?.lastname ?? '');
+    setNationalIdNumber(row?.nationalIdNumber ?? '');
     setAddressLine1(row?.addressLine1 ?? '');
     setAddressLine2(row?.addressLine2 ?? '');
     setCity(row?.city ?? '');
@@ -268,6 +270,7 @@ export function LoanAccountGuarantorSheet({
             entityId: editingExternal ? undefined : editing.entityId,
             firstname: editingExternal ? firstname : undefined,
             lastname: editingExternal ? lastname : undefined,
+            nationalIdNumber: editingExternal ? nationalIdNumber : undefined,
             addressLine1: editingExternal ? addressLine1 : undefined,
             addressLine2: editingExternal ? addressLine2 : undefined,
             city: editingExternal ? city : undefined,
@@ -287,6 +290,7 @@ export function LoanAccountGuarantorSheet({
             amount: amount || undefined,
             firstname: external ? firstname : undefined,
             lastname: external ? lastname : undefined,
+            nationalIdNumber: external ? nationalIdNumber : undefined,
             addressLine1: external ? addressLine1 : undefined,
             addressLine2: external ? addressLine2 : undefined,
             city: external ? city : undefined,
@@ -413,6 +417,15 @@ export function LoanAccountGuarantorSheet({
                 maxLength={50}
               />
             </div>
+            <TextField
+              label="National ID Number"
+              required
+              value={nationalIdNumber}
+              onChange={setNationalIdNumber}
+              error={fieldErrors.nationalIdNumber}
+              disabled={pending || loading}
+              maxLength={50}
+            />
             <TextField
               label="Address line 1"
               optional

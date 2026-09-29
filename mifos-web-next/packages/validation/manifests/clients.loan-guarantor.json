@@ -13,6 +13,7 @@
     "amount": { "required": false, "type": "number" },
     "firstname": { "required": false, "maxLength": 50 },
     "lastname": { "required": false, "maxLength": 50 },
+    "nationalIdNumber": { "required": false, "maxLength": 50, "requiredWhen": "guarantorTypeId=3" },
     "addressLine1": { "required": false, "maxLength": 500 },
     "addressLine2": { "required": false, "maxLength": 500 },
     "city": { "required": false, "maxLength": 50 },
