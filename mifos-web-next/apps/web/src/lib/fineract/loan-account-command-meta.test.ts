@@ -32,6 +32,24 @@ describe('loanAccountActionVisibility', () => {
     assert.equal(visibility.undoDisbursal, false);
   });
 
+  it('offers top up on an active customer loan', () => {
+    const visibility = loanAccountActionVisibility({
+      clientId: 15,
+      status: { value: 'Active', active: true }
+    });
+    assert.equal(visibility.topup, true);
+  });
+
+  it('hides top up when the loan cannot be closed that way', () => {
+    const visibility = loanAccountActionVisibility({
+      clientId: 15,
+      multiDisburseLoan: true,
+      isInterestRecalculationEnabled: false,
+      status: { value: 'Active', active: true }
+    });
+    assert.equal(visibility.topup, false);
+  });
+
   it('hides installment editing after approval', () => {
     const visibility = loanAccountActionVisibility({
       isVariableInstallmentsAllowed: true,

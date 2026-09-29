@@ -16,6 +16,7 @@ import {
   estimateApplicationDisbursementCharges,
   isTopupUserTransaction,
   lastTopupUserTransactionDate,
+  filterTopupProductOptions,
   loanTemplateAllowsTopup,
   loanTopupSectionVisible,
   normalizeClientActiveLoanOptions,
@@ -34,6 +35,28 @@ describe('loan top-up visibility', () => {
     assert.equal(loanTemplateAllowsTopup({ isTopup: true }), true);
     assert.equal(loanTemplateAllowsTopup({ id: 88, isTopup: true }), false);
     assert.equal(loanTemplateAllowsTopup({ id: 88, canUseForTopup: true, isTopup: false }), true);
+  });
+});
+
+describe('products offered when starting from a loan', () => {
+  const options = [
+    { id: 1, name: 'Top-up UGX' },
+    { id: 2, name: 'Ordinary' },
+    { id: 3, name: 'Top-up USD' },
+    { id: 4, name: 'Unknown flag' }
+  ];
+  const products = [
+    { id: 1, canUseForTopup: true, currencyCode: 'UGX' },
+    { id: 2, canUseForTopup: false, currencyCode: 'UGX' },
+    { id: 3, canUseForTopup: true, currencyCode: 'USD' },
+    { id: 4, currencyCode: 'USD' }
+  ];
+
+  it('keeps top-up products in the loan currency and rows that omit the flag', () => {
+    assert.deepEqual(
+      filterTopupProductOptions(options, products, 'UGX').map((option) => option.id),
+      [1, 4]
+    );
   });
 });
 

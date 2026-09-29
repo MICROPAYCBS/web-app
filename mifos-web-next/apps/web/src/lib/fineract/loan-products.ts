@@ -47,7 +47,8 @@ function normalizeListItem(item: unknown): LoanProductListItem | null {
     closeDate: typeof row.closeDate === 'string' ? row.closeDate : undefined,
     status: typeof row.status === 'string' ? row.status : undefined,
     currencyCode: listItemCurrencyCode(row),
-    accountingRule: asEnumOption(row.accountingRule)
+    accountingRule: asEnumOption(row.accountingRule),
+    canUseForTopup: typeof row.canUseForTopup === 'boolean' ? row.canUseForTopup : undefined
   };
 }
 

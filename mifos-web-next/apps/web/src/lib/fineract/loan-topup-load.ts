@@ -114,6 +114,27 @@ export async function loadLoanTopupContext(
   }
 }
 
+/** Active loan of this customer that a new application may close. */
+export async function loadLoanTopupStart(
+  clientId: string | number,
+  loanId: number
+): Promise<{ currencyCode?: string } | null> {
+  try {
+    const fineract = await createFineractClient();
+    const raw = await fineract.get<unknown>(`/loans/${loanId}`);
+    const account = normalizeLoanAccountDetail(raw);
+    if (!account || account.clientId !== Number(clientId) || !loanIsActiveStatus(account.status)) {
+      return null;
+    }
+    if (account.multiDisburseLoan === true && account.isInterestRecalculationEnabled !== true) {
+      return null;
+    }
+    return { currencyCode: account.currency?.code };
+  } catch {
+    return null;
+  }
+}
+
 export async function listPendingTopupClosures(
   clientId: string | number,
   excludeLoanId?: number

@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { toDecimal } from '@mifos/domain';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 import {
   loanAccountLinkedAccountId,
@@ -42,15 +43,59 @@ export function loanAccountRepaymentTransferCascade(
   };
 }
 
+function positiveAmount(value: number | undefined): number | undefined {
+  const decimal = toDecimal(value);
+  if (!decimal || !decimal.greaterThan(0)) {
+    return undefined;
+  }
+  return decimal.toNumber();
+}
+
+/** Remaining amount on the earliest unpaid installment. */
+export function loanInstallmentAmountDue(account: FineractLoanAccountDetail): number | undefined {
+  for (const period of account.repaymentSchedule?.periods ?? []) {
+    if (period.period == null || period.complete) {
+      continue;
+    }
+    const due = positiveAmount(period.totalOutstandingForPeriod ?? period.totalDueForPeriod);
+    if (due != null) {
+      return due;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Payment default: the overdue total when the loan is in arrears, otherwise the
+ * amount due on the next unpaid installment.
+ */
+export function loanPaymentDefaultAmount(
+  account: FineractLoanAccountDetail,
+  amountDue?: number
+): number | undefined {
+  return (
+    positiveAmount(account.summary?.totalOverdue) ??
+    positiveAmount(amountDue) ??
+    loanInstallmentAmountDue(account)
+  );
+}
+
 export function loanAccountRepaymentTransferDefaults(
   account: FineractLoanAccountDetail,
   availableBalance: number,
   kind: 'repayment' | 'recoverypayment' = 'repayment'
 ): { transferAmount: string; transferDescription: string } {
   const outstanding = account.summary?.totalOutstanding;
-  let amount = outstanding != null && outstanding > 0 ? outstanding : undefined;
-  if (amount != null && availableBalance > 0) {
-    amount = Math.min(amount, availableBalance);
+  let amount =
+    kind === 'repayment'
+      ? loanPaymentDefaultAmount(account)
+      : outstanding != null && outstanding > 0
+        ? outstanding
+        : undefined;
+  const balance = toDecimal(availableBalance);
+  const chosen = toDecimal(amount);
+  if (chosen && balance && balance.greaterThan(0) && chosen.greaterThan(balance)) {
+    amount = balance.toNumber();
   }
   const label =
     kind === 'recoverypayment'

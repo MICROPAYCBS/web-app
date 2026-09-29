@@ -91,7 +91,8 @@ function loanAccountPermissions(
       all: [LOAN_OFFICER_CONFIG.assignPermission, LOAN_OFFICER_CONFIG.removePermission]
     }),
     repayFromSavings: can(session, 'CREATE_ACCOUNTTRANSFER'),
-    modifyApplication: can(session, resolvePermission('loans.update'))
+    modifyApplication: can(session, resolvePermission('loans.update')),
+    create: can(session, resolvePermission('loans.create'))
   };
 }
 

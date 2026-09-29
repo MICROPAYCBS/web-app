@@ -46,6 +46,7 @@ export interface LoanProductListItem {
   status?: string;
   currencyCode?: string;
   accountingRule?: FineractEnumOption;
+  canUseForTopup?: boolean;
 }
 
 export interface LoanProductDetail extends LoanProductListItem {

@@ -32,6 +32,9 @@ import { getClient } from '@/lib/fineract/clients';
 
 import { getClientLoanAccountTemplate } from '@/lib/fineract/client-loan-accounts';
 import { emptyLoanAccountDraft } from '@/lib/fineract/client-loan-account-draft';
+import { listLoanProducts } from '@/lib/fineract/loan-products';
+import { filterTopupProductOptions } from '@/lib/fineract/loan-topup';
+import { loadLoanTopupStart } from '@/lib/fineract/loan-topup-load';
 import { getDefaultTransactionDate } from '@/lib/fineract/business-date';
 import { listLoanOriginators } from '@/lib/fineract/loan-originators';
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
@@ -46,11 +49,15 @@ import { cn } from '@/lib/utils';
 
 export default async function NewLoanAccountPage({
 
-  params
+  params,
+
+  searchParams
 
 }: {
 
   params: Promise<{ clientId: string }>;
+
+  searchParams: Promise<{ closeLoan?: string }>;
 
 }) {
 
@@ -77,6 +84,8 @@ export default async function NewLoanAccountPage({
 
 
   const { clientId } = await params;
+
+  const { closeLoan } = await searchParams;
 
   const client = await getClient(clientId);
 
@@ -139,6 +148,44 @@ export default async function NewLoanAccountPage({
 
   const defaultTransactionDate = await getDefaultTransactionDate().catch(() => undefined);
 
+  const closeLoanId = Number(closeLoan);
+
+  const topupStart =
+
+    Number.isInteger(closeLoanId) && closeLoanId > 0
+
+      ? await loadLoanTopupStart(clientId, closeLoanId)
+
+      : null;
+
+  let applicationTemplate = template;
+
+  let initialDraft = emptyLoanAccountDraft(defaultTransactionDate);
+
+  if (topupStart) {
+
+    const products = await listLoanProducts('loan').catch(() => []);
+
+    applicationTemplate = {
+
+      ...template,
+
+      productOptions: filterTopupProductOptions(
+
+        template.productOptions,
+
+        products,
+
+        topupStart.currencyCode
+
+      )
+
+    };
+
+    initialDraft = { ...initialDraft, isTopup: true, loanIdToClose: closeLoanId };
+
+  }
+
   const originatorsResult = await tryFineractLoad(
     () => listLoanOriginators(),
     'Could not load originators.'
@@ -155,9 +202,9 @@ export default async function NewLoanAccountPage({
 
       clientDisplayName={clientDisplayName}
 
-      initialTemplate={template}
+      initialTemplate={applicationTemplate}
 
-      initialDraft={emptyLoanAccountDraft(defaultTransactionDate)}
+      initialDraft={initialDraft}
 
       originatorOptions={originatorOptions}
 

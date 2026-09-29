@@ -27,6 +27,7 @@ export function LoanTopupFields({
   cashToClient,
   omittedInterestBased,
   pendingWarning,
+  locked,
   onChange
 }: {
   enabled: boolean;
@@ -34,12 +35,13 @@ export function LoanTopupFields({
   options: ClientActiveLoanOption[];
   optionLabel: (option: ClientActiveLoanOption) => string;
   currencyCode: string;
-  errors: { loanIdToClose?: string };
+  errors: { loanIdToClose?: string; productId?: string };
   loading: boolean;
   payoff?: LoanTopupPayoff | null;
   cashToClient?: number | null;
   omittedInterestBased?: boolean;
   pendingWarning?: string | null;
+  locked?: boolean;
   onChange: (patch: { isTopup: boolean; loanIdToClose?: number }) => void;
 }) {
   const selectOptions = options.map((option) => ({
@@ -63,8 +65,13 @@ export function LoanTopupFields({
         <SwitchField
           id="loan-is-topup"
           label="Top up an existing loan"
-          description="When this loan is disbursed, it repays the selected loan and pays the customer what is left."
+          description={
+            locked
+              ? 'This application tops up the selected loan. Disbursement repays that loan and pays the customer what is left.'
+              : 'When this loan is disbursed, it repays the selected loan and pays the customer what is left.'
+          }
           checked={enabled}
+          disabled={locked}
           onCheckedChange={(isTopup) =>
             onChange({
               isTopup,
@@ -87,6 +94,7 @@ export function LoanTopupFields({
               }
               options={selectOptions}
               placeholder="Select an active loan"
+              disabled={locked}
               error={errors.loanIdToClose}
               emptyMessage="This customer has no active loans in this currency."
             />

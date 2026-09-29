@@ -76,6 +76,7 @@ export interface LoanAccountActionVisibility {
   reassignOfficer: boolean;
   modifyApplication: boolean;
   recoverGuarantees: boolean;
+  topup: boolean;
 }
 
 const LOAN_STATUS = {
@@ -97,6 +98,9 @@ export function loanAccountActionVisibility(account: {
   chargedOff?: boolean;
   isVariableInstallmentsAllowed?: boolean;
   isTopup?: boolean;
+  clientId?: number;
+  multiDisburseLoan?: boolean;
+  isInterestRecalculationEnabled?: boolean;
   status: { code?: string; value?: string; active?: boolean };
 }): LoanAccountActionVisibility {
   const value = statusValue(account.status);
@@ -108,6 +112,10 @@ export function loanAccountActionVisibility(account: {
   const closedObligationsMet = value === LOAN_STATUS.closedObligationsMet;
   const hasOfficer = Boolean(account.loanOfficerId || account.loanOfficerName?.trim());
   const canManageOfficer = pending || approved || active;
+  const blockedTopupClose =
+    account.multiDisburseLoan === true && account.isInterestRecalculationEnabled !== true;
+  const canTopup =
+    active && account.clientId != null && account.clientId > 0 && !blockedTopupClose;
 
   return {
     approve: pending,
@@ -135,7 +143,8 @@ export function loanAccountActionVisibility(account: {
     undoWriteOff: closedWrittenOff,
     assignOfficer: canManageOfficer && !hasOfficer,
     reassignOfficer: canManageOfficer && hasOfficer,
-    modifyApplication: pending
+    modifyApplication: pending,
+    topup: canTopup
   };
 }
 

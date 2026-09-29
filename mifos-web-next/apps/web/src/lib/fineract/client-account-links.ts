@@ -80,6 +80,13 @@ export function loanAccountTransactionSectionPath(
   return section === 'details' ? base : `${base}?section=${section}`;
 }
 
+export function loanTopupApplicationPath(
+  clientId: string | number,
+  loanId: string | number
+): string {
+  return `/clients/${clientId}/loans-accounts/create?closeLoan=${loanId}`;
+}
+
 export function clientAccountListPath(
   clientId: string | number,
   kind: ClientAccountProductKind

@@ -72,6 +72,30 @@ export function loanTemplateAllowsTopup(row: {
   return !savedLoan && row.isTopup === true;
 }
 
+/** Keep products that can be used for top-up in the loan's currency. A missing flag stays selectable. */
+export function filterTopupProductOptions<T extends { id: number }>(
+  options: T[] | undefined,
+  products: { id: number; canUseForTopup?: boolean; currencyCode?: string }[],
+  currencyCode?: string
+): T[] {
+  const byId = new Map(products.map((product) => [product.id, product]));
+  const wanted = currencyCode?.trim().toUpperCase();
+  return (options ?? []).filter((option) => {
+    const product = byId.get(option.id);
+    if (!product || product.canUseForTopup == null) {
+      return true;
+    }
+    if (product.canUseForTopup !== true) {
+      return false;
+    }
+    const productCurrency = product.currencyCode?.trim().toUpperCase();
+    if (wanted && productCurrency && productCurrency !== wanted) {
+      return false;
+    }
+    return true;
+  });
+}
+
 export function loanTopupSectionVisible(
   canUseForTopup: boolean | undefined,
   clientId: number | null | undefined

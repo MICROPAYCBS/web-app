@@ -24,6 +24,7 @@ import {
   UserX,
   XCircle,
   Pencil,
+  ArrowUpCircle,
   type LucideIcon
 } from 'lucide-react';
 import Link from 'next/link';
@@ -56,7 +57,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { loanAccountActionVisibility } from '@/lib/fineract/loan-account-command-meta';
 import type { LoanAccountTransactionCommand } from '@/lib/fineract/loan-account-command-meta';
-import { clientAccountEditPath } from '@/lib/fineract/client-account-links';
+import { clientAccountEditPath, loanTopupApplicationPath } from '@/lib/fineract/client-account-links';
 import {
   loanAccountCurrencyCode
 } from '@/lib/fineract/loan-account-display';
@@ -99,6 +100,7 @@ export interface LoanAccountActionPermissions {
   reassignOfficer: boolean;
   repayFromSavings: boolean;
   modifyApplication: boolean;
+  create: boolean;
 }
 
 type MenuItem = {
@@ -181,6 +183,7 @@ export function LoanAccountActions({
     !hasLoanPendingCheckerAction(pendingCheckerActions, 'DISBURSE');
   const showModifyApplication =
     visibility.modifyApplication && permissions.modifyApplication;
+  const showTopup = visibility.topup && permissions.create && account.clientId != null;
   const showEditInstallments =
     visibility.editVariableInstallments && permissions.editVariableInstallments;
 
@@ -322,7 +325,12 @@ export function LoanAccountActions({
   }
 
   const hasPrimary =
-    showApprove || showDisburse || showMakeRepayment || showModifyApplication || showEditInstallments;
+    showApprove ||
+    showDisburse ||
+    showMakeRepayment ||
+    showModifyApplication ||
+    showEditInstallments ||
+    showTopup;
   const hasMenu = menuItems.length > 0;
 
   if (!hasPrimary && !hasMenu) {
@@ -354,6 +362,19 @@ export function LoanAccountActions({
           <Button type="button" onClick={() => openInboundPayment('repayment')}>
             <HandCoins className="mr-1 size-4" aria-hidden />
             Make repayment
+          </Button>
+        ) : null}
+        {showTopup && account.clientId != null ? (
+          <Button
+            type="button"
+            variant="outline"
+            nativeButton={false}
+            render={
+              <Link href={loanTopupApplicationPath(account.clientId, account.id)} />
+            }
+          >
+            <ArrowUpCircle className="mr-1 size-4" aria-hidden />
+            Top up
           </Button>
         ) : null}
         {showModifyApplication ? (

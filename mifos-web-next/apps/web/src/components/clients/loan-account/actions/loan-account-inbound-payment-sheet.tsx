@@ -36,7 +36,8 @@ import {
 } from '@/lib/fineract/loan-account-display';
 import {
   loanAccountLinkedSavingsLabel,
-  loanAccountRepaymentTransferDefaults
+  loanAccountRepaymentTransferDefaults,
+  loanPaymentDefaultAmount
 } from '@/lib/fineract/loan-account-repayment-transfer';
 import type { LoanAccountTransactionCommand } from '@/lib/fineract/loan-account-command-meta';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
@@ -167,15 +168,17 @@ export function LoanAccountInboundPaymentSheet({
         return;
       }
       setPaymentTypes(result.paymentTypeOptions);
-      if (result.amount != null) {
-        setTransactionAmount(String(result.amount));
+      const amount =
+        command === 'repayment' ? loanPaymentDefaultAmount(account, result.amount) : result.amount;
+      if (amount != null) {
+        setTransactionAmount(String(amount));
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [account.id, command, initialTransactionDate, kind, methods, open, paymentMethod]);
+  }, [account, command, initialTransactionDate, kind, methods, open, paymentMethod]);
 
   useEffect(() => {
     if (
