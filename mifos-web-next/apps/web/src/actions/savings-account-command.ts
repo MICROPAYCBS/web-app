@@ -26,6 +26,8 @@ import {
   savingsAccountUnassignStaffSchema,
   savingsAccountWithdrawnByApplicantCommandSchema,
   savingsAccountPaymentChannelCommandSchema,
+  savingsAccountChannelLimitSchema,
+  channelLimitCustomerSaveErrors,
   savingsAccountWithholdTaxSchema,
   toFineractActionError,
   actionSuccessFromFineractCommand,
@@ -34,6 +36,7 @@ import {
 import type { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { buildFineractCommandBody, buildFineractNoteCommandBody } from '@/lib/fineract/client-command-body';
+import type { SavingsAccountChannelLimit } from '@mifos/api-client';
 import type { SavingsAccountActionResult } from '@/lib/fineract/savings-account-action-result';
 import {
   createSavingsAccountCharge,
@@ -42,7 +45,9 @@ import {
   executeSavingsAccountCommand,
   executeSavingsAccountPaymentChannelCommand,
   executeSavingsAccountTransaction,
+  getSavingsAccountChannelLimits,
   getSavingsAccountPaymentChannels,
+  updateSavingsAccountChannelLimit,
   type SavingsAccountPaymentChannelCommand,
   getSavingsAccountChargeDetailTemplate,
   getSavingsAccountChargeTemplate,
@@ -1146,5 +1151,96 @@ export async function executeSavingsAccountPaymentChannelAction(
     }
   } catch (error) {
     return toFineractActionError(error, paymentChannelFailureMessage(command));
+  }
+}
+
+export type SavingsChannelLimitsResult =
+  | { ok: true; limits: SavingsAccountChannelLimit[] }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
+
+export async function loadSavingsAccountChannelLimitsAction(
+  accountId: string,
+  productPaymentChannelId: number,
+  direction?: 'DEBIT' | 'CREDIT'
+): Promise<SavingsChannelLimitsResult> {
+  const denied = await requirePermission(
+    'READCHANNELLIMIT_SAVINGSACCOUNT',
+    'You do not have permission to view channel limits.'
+  );
+  if (denied) {
+    return denied;
+  }
+  try {
+    const limits = await getSavingsAccountChannelLimits(
+      accountId,
+      productPaymentChannelId,
+      direction
+    );
+    return { ok: true, limits };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load channel limits.');
+  }
+}
+
+export async function updateSavingsAccountChannelLimitAction(
+  clientId: string,
+  accountId: string,
+  productPaymentChannelId: number,
+  raw: unknown
+): Promise<SavingsAccountActionResult & { limits?: SavingsAccountChannelLimit[] }> {
+  const denied = await requirePermission(
+    'UPDATECHANNELLIMIT_SAVINGSACCOUNT',
+    'You do not have permission to change channel limits.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = parseOrError(savingsAccountChannelLimitSchema, raw);
+  if (!parsed.success) {
+    return parsed.result;
+  }
+
+  try {
+    const current = await getSavingsAccountChannelLimits(
+      accountId,
+      productPaymentChannelId,
+      parsed.data.direction
+    );
+    const row = current.find((limit) => limit.direction === parsed.data.direction);
+    if (row) {
+      const fieldErrors = channelLimitCustomerSaveErrors({
+        values: parsed.data,
+        ceilings: {
+          maxPerTxn: row.ceilingPerTxn,
+          maxPerDay: row.ceilingPerDay,
+          maxPerMonth: row.ceilingPerMonth,
+          maxCountPerDay: row.ceilingCountPerDay,
+          maxCountPerMonth: row.ceilingCountPerMonth
+        }
+      });
+      if (Object.keys(fieldErrors).length > 0) {
+        return { ok: false, message: 'Fix the highlighted fields.', fieldErrors };
+      }
+    }
+  } catch {
+    // The save is still checked when it is posted.
+  }
+
+  try {
+    const response = await updateSavingsAccountChannelLimit(accountId, parsed.data);
+    revalidateSavingsAccountPaths(clientId, accountId);
+    const success = actionSuccessFromFineractCommand(response, {});
+    if (success.pendingChecker) {
+      return success;
+    }
+    try {
+      const limits = await getSavingsAccountChannelLimits(accountId, productPaymentChannelId);
+      return { ...success, limits };
+    } catch {
+      return success;
+    }
+  } catch (error) {
+    return toFineractActionError(error, 'Could not save channel limits.');
   }
 }

@@ -8,7 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { SavingsProductDetail, SavingsProductSectionId } from '@mifos/api-client';
+import type {
+  SavingsProductDetail,
+  SavingsProductPaymentChannel,
+  SavingsProductSectionId
+} from '@mifos/api-client';
 import {
   DetailField,
   DetailFieldGrid,
@@ -33,6 +37,7 @@ import {
   PRODUCT_CHANNEL_DISABLED_LINES
 } from '@/lib/fineract/channel-charge-timing';
 import { formatChargeAmountDisplay } from '@/lib/fineract/charge-display';
+import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import {
   savingsProductCurrencyCode,
   savingsProductFeeCharges
@@ -178,6 +183,54 @@ function SavingsProductAccountingSection({ product }: { product: SavingsProductD
   );
 }
 
+function ceilingLine(
+  label: string,
+  value: number | null | undefined,
+  currencyCode: string,
+  count = false
+): string | null {
+  if (value == null) {
+    return null;
+  }
+  if (value === 0) {
+    return `${label}: Blocked`;
+  }
+  return `${label}: ${count ? String(value) : formatAccountMoney(value, currencyCode)}`;
+}
+
+function ChannelCeilingSummary({
+  row,
+  currencyCode
+}: {
+  row: SavingsProductPaymentChannel;
+  currencyCode: string;
+}) {
+  const lines = [
+    ceilingLine('Debit per transaction', row.maxDebitPerTxn, currencyCode),
+    ceilingLine('Debit per day', row.maxDebitPerDay, currencyCode),
+    ceilingLine('Debit per month', row.maxDebitPerMonth, currencyCode),
+    ceilingLine('Debit count per day', row.maxDebitCountPerDay, currencyCode, true),
+    ceilingLine('Debit count per month', row.maxDebitCountPerMonth, currencyCode, true),
+    ceilingLine('Credit per transaction', row.maxCreditPerTxn, currencyCode),
+    ceilingLine('Credit per day', row.maxCreditPerDay, currencyCode),
+    ceilingLine('Credit per month', row.maxCreditPerMonth, currencyCode),
+    ceilingLine('Credit count per day', row.maxCreditCountPerDay, currencyCode, true),
+    ceilingLine('Credit count per month', row.maxCreditCountPerMonth, currencyCode, true)
+  ].filter((line): line is string => line != null);
+
+  if (lines.length === 0) {
+    return <p className="text-muted-foreground">No bank ceilings.</p>;
+  }
+
+  return (
+    <ul className="space-y-1 text-muted-foreground">
+      {lines.map((line) => (
+        <li key={line}>{line}</li>
+      ))}
+    </ul>
+  );
+}
+
 function SavingsProductPaymentChannelsSection({ product }: { product: SavingsProductDetail }) {
   const currency = savingsProductCurrencyCode(product);
   const rows = product.paymentChannels ?? [];
@@ -220,6 +273,14 @@ function SavingsProductPaymentChannelsSection({ product }: { product: SavingsPro
                     ))}
                   </ul>
                 )}
+                {row.isAccountTransferChannel ? (
+                  <p className="text-muted-foreground">
+                    {row.isActive
+                      ? 'Account transfers use this channel.'
+                      : 'Marked for account transfers. Only an active channel is used.'}
+                  </p>
+                ) : null}
+                <ChannelCeilingSummary row={row} currencyCode={currency} />
                 {row.isPremium ? (
                   row.charges.length === 0 ? (
                     <p className="text-muted-foreground">Fees on subscribe: none.</p>

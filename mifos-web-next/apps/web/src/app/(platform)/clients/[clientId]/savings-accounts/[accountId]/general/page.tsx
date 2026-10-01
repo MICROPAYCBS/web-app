@@ -82,6 +82,8 @@ export default async function SavingsAccountGeneralPage({
   }
 
   const canManagePaymentChannels = can(session, 'UPDATE_SAVINGSACCOUNT');
+  const canReadChannelLimits = can(session, resolvePermission('savings.channelLimit.read'));
+  const canUpdateChannelLimits = can(session, resolvePermission('savings.channelLimit.update'));
   const [result, chargesResult, auditResult, journalResult, paymentChannelsResult, reportOrgName] =
     await Promise.all([
     tryFineractLoad(() => getSavingsAccount(accountId), 'Could not load savings account.'),
@@ -187,6 +189,8 @@ export default async function SavingsAccountGeneralPage({
         paymentChannelsResult.ok ? undefined : paymentChannelsResult.message
       }
       canManagePaymentChannels={canManagePaymentChannels}
+      canReadChannelLimits={canReadChannelLimits}
+      canUpdateChannelLimits={canUpdateChannelLimits}
     />
   );
 }

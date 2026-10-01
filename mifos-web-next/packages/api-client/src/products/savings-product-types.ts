@@ -62,12 +62,33 @@ export interface SavingsProductPaymentChannelCharge {
   chargeTimeType?: FineractEnumOption;
 }
 
-export interface SavingsProductPaymentChannel {
+/** Bank ceilings on one product payment channel. Null means that dimension has no ceiling. Zero blocks it. */
+export interface SavingsChannelCeilings {
+  maxDebitPerTxn?: number | null;
+  maxDebitPerDay?: number | null;
+  maxDebitPerMonth?: number | null;
+  maxDebitCountPerDay?: number | null;
+  maxDebitCountPerMonth?: number | null;
+  maxCreditPerTxn?: number | null;
+  maxCreditPerDay?: number | null;
+  maxCreditPerMonth?: number | null;
+  maxCreditCountPerDay?: number | null;
+  maxCreditCountPerMonth?: number | null;
+}
+
+export interface SavingsProductPaymentChannel extends SavingsChannelCeilings {
+  /** Catalog row id. Account limits use this as productPaymentChannelId. */
+  id?: number;
   paymentTypeId: number;
   paymentTypeName?: string;
   isPremium: boolean;
   /** Product channel switch. False disables the channel for every account on the product. */
   isActive: boolean;
+  /**
+   * When true on an active channel, account transfers with no payment type use this channel.
+   * At most one active channel on the product may carry this flag.
+   */
+  isAccountTransferChannel?: boolean;
   /**
    * Payment type switch. False disables the channel for every product and portfolio.
    * Omitted responses are treated as active.

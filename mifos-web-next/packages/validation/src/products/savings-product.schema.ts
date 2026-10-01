@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { channelLimitOrderErrors } from './savings-channel-limit-rules';
 import { optionalInMultiplesOf } from './product-currency.schema';
 import {
   productMappingsObjectSchema,
@@ -132,10 +133,33 @@ export const savingsProductChargesStepSchema = z.object({
   chargeAmounts: z.record(z.string(), z.coerce.number().positive()).default({})
 });
 
+const ceilingAmount = z
+  .number()
+  .nonnegative('Enter zero or a greater amount.')
+  .nullable()
+  .optional();
+const ceilingCount = z
+  .number()
+  .int('Enter a whole number.')
+  .nonnegative('Enter zero or a greater amount.')
+  .nullable()
+  .optional();
+
 const savingsProductPaymentChannelRowSchema = z.object({
   paymentTypeId: z.coerce.number().int().positive('Select a payment type.'),
   isPremium: z.boolean(),
   isActive: z.boolean(),
+  isAccountTransferChannel: z.boolean().optional(),
+  maxDebitPerTxn: ceilingAmount,
+  maxDebitPerDay: ceilingAmount,
+  maxDebitPerMonth: ceilingAmount,
+  maxDebitCountPerDay: ceilingCount,
+  maxDebitCountPerMonth: ceilingCount,
+  maxCreditPerTxn: ceilingAmount,
+  maxCreditPerDay: ceilingAmount,
+  maxCreditPerMonth: ceilingAmount,
+  maxCreditCountPerDay: ceilingCount,
+  maxCreditCountPerMonth: ceilingCount,
   chargeIds: z.array(z.coerce.number().int().positive()).default([]),
   /** Optional amount overrides keyed by charge id string. Omitted for tiered charges. */
   chargeAmounts: z.record(z.string(), z.coerce.number().positive()).default({})
@@ -178,7 +202,47 @@ export const savingsProductPaymentChannelsStepSchema = z
           path: ['channels', index, 'chargeIds']
         });
       }
+      const debitErrors = channelLimitOrderErrors({
+        perTxn: row.maxDebitPerTxn,
+        perDay: row.maxDebitPerDay,
+        perMonth: row.maxDebitPerMonth,
+        countPerDay: row.maxDebitCountPerDay,
+        countPerMonth: row.maxDebitCountPerMonth,
+        perTxnField: 'maxDebitPerTxn',
+        perDayField: 'maxDebitPerDay',
+        perMonthField: 'maxDebitPerMonth',
+        countPerDayField: 'maxDebitCountPerDay',
+        countPerMonthField: 'maxDebitCountPerMonth'
+      });
+      const creditErrors = channelLimitOrderErrors({
+        perTxn: row.maxCreditPerTxn,
+        perDay: row.maxCreditPerDay,
+        perMonth: row.maxCreditPerMonth,
+        countPerDay: row.maxCreditCountPerDay,
+        countPerMonth: row.maxCreditCountPerMonth,
+        perTxnField: 'maxCreditPerTxn',
+        perDayField: 'maxCreditPerDay',
+        perMonthField: 'maxCreditPerMonth',
+        countPerDayField: 'maxCreditCountPerDay',
+        countPerMonthField: 'maxCreditCountPerMonth'
+      });
+      for (const [field, message] of Object.entries({ ...debitErrors, ...creditErrors })) {
+        ctx.addIssue({
+          code: 'custom',
+          message,
+          path: ['channels', index, field]
+        });
+      }
     });
+    const activeTransferIndexes = data.channels.flatMap((row, index) =>
+      row.isActive && row.isAccountTransferChannel === true ? [index] : []
+    );
+    if (activeTransferIndexes.length > 1) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Only one active channel can be the account-transfer channel.'
+      });
+    }
   });
 
 function refineSavingsAccounting(

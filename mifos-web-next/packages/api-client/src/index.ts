@@ -59,7 +59,9 @@ export type {
 export type {
   FineractSavingsAccountCharge,
   FineractSavingsAccountDetail,
+  SavingsAccountChannelLimit,
   SavingsAccountPaymentChannel,
+  SavingsChannelLimitDirection,
   FineractSavingsAccountSubStatus,
   FineractSavingsAccountSummary,
   FineractSavingsAccountTimeline,
@@ -176,6 +178,7 @@ export type {
 } from './products/loan-product-template-types';
 
 export type {
+  SavingsChannelCeilings,
   SavingsProductDetail,
   SavingsProductListItem,
   SavingsProductPaymentChannel,

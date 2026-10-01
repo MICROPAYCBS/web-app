@@ -21,7 +21,7 @@
     "paymentChannels": {
       "required": false,
       "type": "array",
-      "notes": "Catalog rows { paymentTypeId, isPremium, isActive, charges: [{ id, amount? }] }. Empty array keeps legacy behaviour (all payment types). Do not put channel fees in product charges."
+      "notes": "Catalog rows { paymentTypeId, isPremium, isActive, isAccountTransferChannel, ceiling amounts and counts, charges: [{ id, amount? }] }. Null ceiling means unlimited. Zero blocks that dimension. At most one active row may set isAccountTransferChannel. Empty array keeps legacy behaviour (all payment types). Do not put channel fees in product charges."
     }
   }
 }

@@ -153,6 +153,49 @@ export interface FineractSavingsAccountDetail {
   withHoldTax?: boolean;
 }
 
+export type SavingsChannelLimitDirection = 'DEBIT' | 'CREDIT';
+
+/**
+ * Customer limit for one direction of one product channel.
+ * `id` is null until the account has a customer row. Ceilings still come from the product.
+ */
+export interface SavingsAccountChannelLimit {
+  id: number | null;
+  savingsAccountId?: number;
+  productPaymentChannelId: number;
+  paymentTypeId: number;
+  direction: SavingsChannelLimitDirection;
+  ceilingPerTxn: number | null;
+  ceilingPerDay: number | null;
+  ceilingPerMonth: number | null;
+  ceilingCountPerDay: number | null;
+  ceilingCountPerMonth: number | null;
+  maxPerTxn: number | null;
+  maxPerDay: number | null;
+  maxPerMonth: number | null;
+  maxCountPerDay: number | null;
+  maxCountPerMonth: number | null;
+  pendingMaxPerTxn: number | null;
+  pendingMaxPerDay: number | null;
+  pendingMaxPerMonth: number | null;
+  pendingMaxCountPerDay: number | null;
+  pendingMaxCountPerMonth: number | null;
+  pendingEffectiveOn: string | null;
+  effectivePerTxn: number | null;
+  effectivePerDay: number | null;
+  effectivePerMonth: number | null;
+  effectiveCountPerDay: number | null;
+  effectiveCountPerMonth: number | null;
+  usedToday: number | null;
+  countToday: number | null;
+  usedThisMonth: number | null;
+  countThisMonth: number | null;
+  remainingToday: number | null;
+  remainingThisMonth: number | null;
+  remainingCountToday: number | null;
+  remainingCountThisMonth: number | null;
+}
+
 /** Product catalog row for one savings account, including subscription and account block. */
 export interface SavingsAccountPaymentChannel extends SavingsProductPaymentChannel {
   subscribed: boolean;

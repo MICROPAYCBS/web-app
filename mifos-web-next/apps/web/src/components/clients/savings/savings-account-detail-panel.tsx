@@ -40,7 +40,9 @@ export function SavingsAccountDetailPanel({
   },
   paymentChannels = [],
   paymentChannelsLoadError,
-  canManagePaymentChannels = false
+  canManagePaymentChannels = false,
+  canReadChannelLimits = false,
+  canUpdateChannelLimits = false
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -57,6 +59,8 @@ export function SavingsAccountDetailPanel({
   paymentChannels?: SavingsAccountPaymentChannel[];
   paymentChannelsLoadError?: string;
   canManagePaymentChannels?: boolean;
+  canReadChannelLimits?: boolean;
+  canUpdateChannelLimits?: boolean;
 }) {
   const sectionIds = useMemo(() => {
     return SAVINGS_ACCOUNT_SECTIONS.map((section) => section.id).filter((id) =>
@@ -84,6 +88,8 @@ export function SavingsAccountDetailPanel({
       paymentChannels={paymentChannels}
       paymentChannelsLoadError={paymentChannelsLoadError}
       canManagePaymentChannels={canManagePaymentChannels}
+      canReadChannelLimits={canReadChannelLimits}
+      canUpdateChannelLimits={canUpdateChannelLimits}
     />
   );
 }

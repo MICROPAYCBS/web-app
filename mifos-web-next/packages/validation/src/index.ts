@@ -160,6 +160,7 @@ export {
   savingsAccountWaiveChargeSchema,
   savingsAccountWithholdTaxSchema,
   savingsAccountPaymentChannelCommandSchema,
+  savingsAccountChannelLimitSchema,
   savingsAccountUndoTransactionSchema,
   savingsAccountModifyTransactionSchema,
   undoAccountTransferCommandSchema,
@@ -181,6 +182,7 @@ export {
   type SavingsAccountWaiveChargeInput,
   type SavingsAccountWithholdTaxInput,
   type SavingsAccountPaymentChannelCommandInput,
+  type SavingsAccountChannelLimitInput,
   type SavingsAccountUndoTransactionInput,
   type SavingsAccountModifyTransactionInput,
   type UndoAccountTransferCommandInput
@@ -475,6 +477,17 @@ export {
   type SavingsProductMappingsInput,
   type SavingsProductAccountingInput
 } from './products/savings-product.schema';
+export {
+  channelLimitCeilingErrors,
+  channelLimitCustomerSaveErrors,
+  channelLimitEffectiveOrderErrors,
+  channelLimitOrderErrors,
+  effectiveChannelLimit,
+  SAVINGS_CHANNEL_CEILING_FIELDS,
+  SAVINGS_CHANNEL_CUSTOMER_LIMIT_FIELDS,
+  type SavingsChannelCeilingField,
+  type SavingsChannelCustomerLimitField
+} from './products/savings-channel-limit-rules';
 export {
   upsertShareProductSchema,
   shareProductDetailsStepSchema,

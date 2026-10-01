@@ -9,9 +9,23 @@
 import type {
   FineractEnumOption,
   SavingsAccountPaymentChannel,
+  SavingsChannelCeilings,
   SavingsProductPaymentChannel,
   SavingsProductPaymentChannelCharge
 } from '@mifos/api-client';
+
+const CEILING_FIELDS = [
+  'maxDebitPerTxn',
+  'maxDebitPerDay',
+  'maxDebitPerMonth',
+  'maxDebitCountPerDay',
+  'maxDebitCountPerMonth',
+  'maxCreditPerTxn',
+  'maxCreditPerDay',
+  'maxCreditPerMonth',
+  'maxCreditCountPerDay',
+  'maxCreditCountPerMonth'
+] as const satisfies readonly (keyof SavingsChannelCeilings)[];
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -42,6 +56,30 @@ function channelList(raw: unknown): unknown[] {
     }
   }
   return [];
+}
+
+/** Present null stays null (no ceiling). Zero stays zero (blocked). A missing key is omitted. */
+function ceilingValue(row: Record<string, unknown>, key: string): number | null | undefined {
+  if (!Object.prototype.hasOwnProperty.call(row, key)) {
+    return undefined;
+  }
+  const value = row[key];
+  if (value == null || value === '') {
+    return null;
+  }
+  const amount = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(amount) ? amount : null;
+}
+
+function ceilingFields(row: Record<string, unknown>): SavingsChannelCeilings {
+  const ceilings: SavingsChannelCeilings = {};
+  for (const key of CEILING_FIELDS) {
+    const value = ceilingValue(row, key);
+    if (value !== undefined) {
+      ceilings[key] = value;
+    }
+  }
+  return ceilings;
 }
 
 function finiteAmount(value: unknown): number | undefined {
@@ -224,11 +262,17 @@ export function normalizeSavingsProductPaymentChannels(
       continue;
     }
     seen.add(paymentTypeId);
+    const id = positiveId(row.id);
     channels.push({
+      ...(id != null ? { id } : {}),
       paymentTypeId,
       paymentTypeName: paymentTypeName(row),
       isPremium: asFlag(row.isPremium, false),
       isActive: asFlag(row.isActive, true),
+      ...(Object.prototype.hasOwnProperty.call(row, 'isAccountTransferChannel')
+        ? { isAccountTransferChannel: asFlag(row.isAccountTransferChannel, false) }
+        : {}),
+      ...ceilingFields(row),
       paymentTypeActive: paymentTypeIsActive(row),
       charges: chargeRows(row.charges ?? row.channelCharges)
     });
@@ -296,6 +340,9 @@ export function normalizeSavingsAccountPaymentChannels(
     if (!channel) {
       continue;
     }
+    const catalogId = positiveId(row.productPaymentChannelId);
+    const channelFields = { ...channel };
+    delete channelFields.id;
     const subscription = asRecord(row.subscription);
     const subscribed = isSubscribed(
       row.subscriptionStatus ??
@@ -317,7 +364,8 @@ export function normalizeSavingsAccountPaymentChannels(
             subscribed
           });
     channels.push({
-      ...channel,
+      ...channelFields,
+      ...(catalogId != null ? { id: catalogId } : {}),
       subscribed,
       allowedForDeposit,
       blocked,
@@ -325,4 +373,24 @@ export function normalizeSavingsAccountPaymentChannels(
     });
   }
   return channels;
+}
+
+/** `id` on the account list is the subscription. Fill the catalog id from the product when it is missing. */
+export function withProductPaymentChannelIds(
+  channels: SavingsAccountPaymentChannel[],
+  productChannels: SavingsProductPaymentChannel[]
+): SavingsAccountPaymentChannel[] {
+  const catalogIds = new Map<number, number>();
+  for (const productChannel of productChannels) {
+    if (productChannel.id != null && productChannel.id > 0) {
+      catalogIds.set(productChannel.paymentTypeId, productChannel.id);
+    }
+  }
+  return channels.map((channel) => {
+    if (channel.id != null) {
+      return channel;
+    }
+    const id = catalogIds.get(channel.paymentTypeId);
+    return id != null ? { ...channel, id } : channel;
+  });
 }

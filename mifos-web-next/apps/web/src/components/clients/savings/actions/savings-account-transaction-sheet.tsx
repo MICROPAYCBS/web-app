@@ -66,6 +66,7 @@ import type {
 import type { CashTransactionEntryMode } from '@mifos/validation';
 import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
 import { withdrawalFeesForPaymentType } from '@/lib/fineract/channel-charge-timing';
+import { SavingsChannelLimitNotice } from '@/components/clients/savings/savings-channel-limit-notice';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { legalTenderListPath } from '@/lib/fineract/legal-tender-paths';
 
@@ -352,6 +353,17 @@ export function SavingsAccountTransactionSheet({
           No payment types are allowed for this account. Standard channels stay available when the
           product has no catalog. Premium channels appear here after the account subscribes.
         </p>
+      ) : null}
+      {command && paymentTypeId ? (
+        <SavingsChannelLimitNotice
+          accountId={accountId}
+          paymentChannels={paymentChannels}
+          paymentTypeId={selectedPaymentTypeId}
+          direction={command === 'deposit' ? 'CREDIT' : 'DEBIT'}
+          transactionDate={transactionDate}
+          businessDate={initialTransactionDate}
+          currencyCode={currencyCode}
+        />
       ) : null}
       {command === 'withdrawal' && paymentTypeId ? (
         <div className="space-y-1 text-sm">

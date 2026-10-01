@@ -6,7 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { LoanScheduleData } from '@mifos/api-client';
+import type { LoanScheduleData, LoanSchedulePeriod } from '@mifos/api-client';
+import { toDecimal } from '@mifos/domain';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 
 export function scheduleCurrencyCode(schedule: LoanScheduleData): string {
@@ -44,4 +45,37 @@ export function formatScheduleMoney(
   currencyCode: string
 ): string {
   return formatAccountMoney(amount, currencyCode);
+}
+
+/** True when any period includes accrued interest, including a present zero. */
+export function loanScheduleHasAccruedInterest(
+  periods: readonly Pick<LoanSchedulePeriod, 'totalAccruedInterest'>[]
+): boolean {
+  return periods.some((period) => period.totalAccruedInterest != null);
+}
+
+/** Sum of accrued interest on periods that include the field. */
+export function loanScheduleTotalAccruedInterest(
+  periods: readonly Pick<LoanSchedulePeriod, 'totalAccruedInterest'>[]
+): number | undefined {
+  if (!loanScheduleHasAccruedInterest(periods)) {
+    return undefined;
+  }
+
+  let total = toDecimal(0);
+  if (!total) {
+    return undefined;
+  }
+
+  for (const period of periods) {
+    if (period.totalAccruedInterest == null) {
+      continue;
+    }
+    const amount = toDecimal(period.totalAccruedInterest);
+    if (amount) {
+      total = total.plus(amount);
+    }
+  }
+
+  return total.toNumber();
 }

@@ -737,7 +737,9 @@ export function SavingsAccountSectionPanel({
   },
   paymentChannels = [],
   paymentChannelsLoadError,
-  canManagePaymentChannels = false
+  canManagePaymentChannels = false,
+  canReadChannelLimits = false,
+  canUpdateChannelLimits = false
 }: {
   section: SavingsAccountSectionId;
   account: FineractSavingsAccountDetail;
@@ -755,6 +757,8 @@ export function SavingsAccountSectionPanel({
   paymentChannels?: SavingsAccountPaymentChannel[];
   paymentChannelsLoadError?: string;
   canManagePaymentChannels?: boolean;
+  canReadChannelLimits?: boolean;
+  canUpdateChannelLimits?: boolean;
 }) {
   switch (section) {
     case 'summary':
@@ -786,6 +790,8 @@ export function SavingsAccountSectionPanel({
           currencyCode={savingsAccountCurrencyCode(account)}
           accountActive={account.status.active === true}
           canManage={canManagePaymentChannels}
+          canReadLimits={canReadChannelLimits}
+          canUpdateLimits={canUpdateChannelLimits}
           channels={paymentChannels}
           loadError={paymentChannelsLoadError}
         />

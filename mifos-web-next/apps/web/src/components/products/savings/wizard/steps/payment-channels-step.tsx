@@ -9,6 +9,7 @@
  */
 
 import type { SavingsProductPaymentChannelsInput } from '@mifos/validation';
+import { ChannelCeilingFields } from '@/components/products/savings/wizard/steps/channel-ceiling-fields';
 import { DetailSection } from '@/components/composites';
 import { ProductChargeCheckboxList } from '@/components/products/shared/product-charge-checkbox-list';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -95,7 +96,24 @@ export function PaymentChannelsStep({
     }
     write([
       ...channels,
-      { paymentTypeId, isPremium: false, isActive: true, chargeIds: [], chargeAmounts: {} }
+      {
+        paymentTypeId,
+        isPremium: false,
+        isActive: true,
+        isAccountTransferChannel: false,
+        maxDebitPerTxn: null,
+        maxDebitPerDay: null,
+        maxDebitPerMonth: null,
+        maxDebitCountPerDay: null,
+        maxDebitCountPerMonth: null,
+        maxCreditPerTxn: null,
+        maxCreditPerDay: null,
+        maxCreditPerMonth: null,
+        maxCreditCountPerDay: null,
+        maxCreditCountPerMonth: null,
+        chargeIds: [],
+        chargeAmounts: {}
+      }
     ]);
   }
 
@@ -160,6 +178,7 @@ export function PaymentChannelsStep({
           <ul className="space-y-2">
             {catalogOptions.map((option) => {
               const row = byTypeId.get(option.id);
+              const channelIndex = channels.findIndex((item) => item.paymentTypeId === option.id);
               const included = row != null;
               const paymentTypeOff =
                 inactivePaymentTypeIds.has(option.id) ||
@@ -259,6 +278,15 @@ export function PaymentChannelsStep({
                             channel fee.
                           </p>
                         )}
+                        <ChannelCeilingFields
+                          row={row}
+                          currencyCode={currencyCode}
+                          idPrefix={controlId}
+                          fieldError={(field) =>
+                            errors[`channels.channels.${channelIndex}.${field}`]
+                          }
+                          onChange={(patch) => update(option.id, patch)}
+                        />
                       </div>
                     ) : null}
                   </div>
@@ -266,7 +294,12 @@ export function PaymentChannelsStep({
               );
             })}
           </ul>
-          {stepError ? <p className="mt-3 text-sm text-destructive">{stepError}</p> : null}
+          {errors.channels ? (
+            <p className="mt-3 text-sm text-destructive">{errors.channels}</p>
+          ) : null}
+          {stepError && stepError !== errors.channels ? (
+            <p className="mt-3 text-sm text-destructive">{stepError}</p>
+          ) : null}
         </DetailSection>
       )}
     </div>

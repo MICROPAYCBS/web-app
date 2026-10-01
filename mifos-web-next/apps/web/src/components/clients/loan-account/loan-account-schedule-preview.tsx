@@ -17,6 +17,8 @@ import {
 } from '@/components/clients/loan-account/schedule';
 import {
   installmentAmount,
+  loanScheduleHasAccruedInterest,
+  loanScheduleTotalAccruedInterest,
   scheduleCurrencyCode,
   scheduleHighlights
 } from '@/components/clients/loan-account/schedule/loan-schedule-format';
@@ -84,6 +86,10 @@ function ScheduleSummary({
   const periods = schedule.periods ?? [];
   const overdueInstallmentCount = loanScheduleOverdueInstallmentCount(periods, referenceDate);
   const totalOverdue = loanScheduleTotalOverdueAmount(periods, referenceDate);
+  const showAccruedInterest = layout === 'page' && loanScheduleHasAccruedInterest(periods);
+  const totalAccruedInterest = showAccruedInterest
+    ? loanScheduleTotalAccruedInterest(periods)
+    : undefined;
   const gridClass =
     layout === 'page'
       ? 'grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4'
@@ -107,6 +113,13 @@ function ScheduleSummary({
           amount={schedule.totalInterestCharged}
           currencyCode={currencyCode}
         />
+        {showAccruedInterest ? (
+          <SummaryCard
+            label="Accrued interest"
+            amount={totalAccruedInterest}
+            currencyCode={currencyCode}
+          />
+        ) : null}
         <SummaryCard
           label="Total fees"
           amount={schedule.totalFeeChargesCharged}
@@ -216,6 +229,7 @@ function ScheduleTable({
   const currencyCode = scheduleCurrencyCode(schedule);
   const periods = schedule.periods ?? [];
   const showExtendedColumns = layout === 'page';
+  const showAccruedInterest = showExtendedColumns && loanScheduleHasAccruedInterest(periods);
   const hasOverduePeriods = loanScheduleHasOverduePeriods(periods, referenceDate);
 
   return (
@@ -235,6 +249,9 @@ function ScheduleTable({
               {showExtendedColumns ? <TableHead className="text-right">Days</TableHead> : null}
               <TableHead className="text-right">Principal</TableHead>
               <TableHead className="text-right">Interest</TableHead>
+              {showAccruedInterest ? (
+                <TableHead className="text-right whitespace-nowrap">Accrued interest</TableHead>
+              ) : null}
               <TableHead className="text-right">Fees</TableHead>
               <TableHead className="text-right">Installment</TableHead>
               <TableHead className="text-right">Balance</TableHead>
@@ -320,6 +337,15 @@ function ScheduleTable({
                       <MoneyValue amount={row.interestDue} currencyCode={currencyCode} />
                     )}
                   </TableCell>
+                  {showAccruedInterest ? (
+                    <TableCell className="text-right">
+                      {isDisbursement ? (
+                        '—'
+                      ) : (
+                        <MoneyValue amount={row.totalAccruedInterest} currencyCode={currencyCode} />
+                      )}
+                    </TableCell>
+                  ) : null}
                   <TableCell
                     className={cn('text-right', loanScheduleOverdueAmountClassName(overdue.fees))}
                   >

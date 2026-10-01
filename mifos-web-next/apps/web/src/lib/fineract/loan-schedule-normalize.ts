@@ -66,6 +66,7 @@ export function normalizeLoanScheduleData(raw: unknown): LoanScheduleData | null
             principalDisbursed: toNumber(period.principalDisbursed),
             principalDue: toNumber(period.principalDue),
             interestDue: toNumber(period.interestDue),
+            totalAccruedInterest: toNumber(period.totalAccruedInterest),
             feeChargesDue: toNumber(period.feeChargesDue),
             penaltyChargesDue: toNumber(period.penaltyChargesDue),
             principalOutstanding: toNumber(period.principalOutstanding),

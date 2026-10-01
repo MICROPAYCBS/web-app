@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { UpsertSavingsProductInput } from '@mifos/validation';
+import { SAVINGS_CHANNEL_CEILING_FIELDS, type UpsertSavingsProductInput } from '@mifos/validation';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 import { buildProductChargesPayload } from '@/lib/fineract/product-charge-links';
 
@@ -16,19 +16,9 @@ import { buildProductChargesPayload } from '@/lib/fineract/product-charge-links'
  */
 function buildPaymentChannelsPayload(
   channels: UpsertSavingsProductInput['paymentChannels']['channels']
-): Array<{
-  paymentTypeId: number;
-  isPremium: boolean;
-  isActive: boolean;
-  charges: Array<{ id: number; amount?: number }>;
-}> {
+): Array<Record<string, unknown>> {
   const seenTypes = new Set<number>();
-  const rows: Array<{
-    paymentTypeId: number;
-    isPremium: boolean;
-    isActive: boolean;
-    charges: Array<{ id: number; amount?: number }>;
-  }> = [];
+  const rows: Array<Record<string, unknown>> = [];
 
   for (const row of channels) {
     if (seenTypes.has(row.paymentTypeId)) {
@@ -43,10 +33,17 @@ function buildPaymentChannelsPayload(
       seenCharges.add(id);
       return true;
     });
+    const ceilings: Record<string, number | null> = {};
+    for (const key of SAVINGS_CHANNEL_CEILING_FIELDS) {
+      const value = row[key];
+      ceilings[key] = value == null ? null : value;
+    }
     rows.push({
       paymentTypeId: row.paymentTypeId,
       isPremium: row.isPremium,
       isActive: row.isActive,
+      isAccountTransferChannel: row.isAccountTransferChannel === true,
+      ...ceilings,
       charges: buildProductChargesPayload(chargeIds, row.chargeAmounts)
     });
   }

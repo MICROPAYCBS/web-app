@@ -284,6 +284,43 @@ function normalizeFineractErrorCode(code: string): string {
   return code.replace(/\[\d+\]/g, '[]');
 }
 
+const CHANNEL_LIMIT_CODE_MARKERS = [
+  'savingsproduct.paymentchannels',
+  'savingsaccount.channellimit',
+  'savingsaccount.transaction'
+];
+
+/** Longer suffixes first so daily count is not read as the daily amount. */
+const CHANNEL_LIMIT_SUFFIX_MESSAGES: [string, string][] = [
+  ['multiple.account.transfer.channels', 'Only one active channel can be the account-transfer channel.'],
+  ['not.zero.or.greater', 'Enter zero or a greater amount.'],
+  ['must.not.exceed.daily', 'Per transaction cannot be above the daily amount.'],
+  ['must.not.exceed.monthly', 'This value cannot be above the monthly limit.'],
+  ['exceeds.ceiling', 'This value is above the bank ceiling.'],
+  ['not.in.product.channel.catalog', 'This payment type is not on this product.'],
+  ['not.mapped.to.client', 'This account is not mapped to your customer.'],
+  ['exceeds.per.transaction', 'This amount is above the per-transaction cap.'],
+  ['exceeds.daily.count', 'The day’s count is already full.'],
+  ['exceeds.monthly.count', 'The month’s count is already full.'],
+  ['exceeds.daily', 'This amount is above the remaining daily amount.'],
+  ['exceeds.monthly', 'This amount is above the remaining monthly amount.'],
+  ['parameter.mandatory', 'Select a payment channel.'],
+  ['invalid', 'Choose debit or credit.']
+];
+
+function channelLimitMessage(code: string): string | undefined {
+  const normalized = code.toLowerCase();
+  if (!CHANNEL_LIMIT_CODE_MARKERS.some((marker) => normalized.includes(marker))) {
+    return undefined;
+  }
+  for (const [suffix, message] of CHANNEL_LIMIT_SUFFIX_MESSAGES) {
+    if (normalized.endsWith(suffix)) {
+      return message;
+    }
+  }
+  return undefined;
+}
+
 export function translateFineractCode(code: string, fallback?: string): string {
   if (ERROR_MESSAGES[code]) {
     return ERROR_MESSAGES[code];
@@ -292,5 +329,5 @@ export function translateFineractCode(code: string, fallback?: string): string {
   if (normalized !== code && ERROR_MESSAGES[normalized]) {
     return ERROR_MESSAGES[normalized];
   }
-  return fallback ?? code;
+  return channelLimitMessage(normalized) ?? fallback ?? code;
 }

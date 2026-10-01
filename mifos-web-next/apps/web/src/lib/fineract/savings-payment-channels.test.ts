@@ -11,7 +11,8 @@ import { describe, it } from 'node:test';
 import {
   normalizeSavingsAccountPaymentChannels,
   normalizeSavingsProductPaymentChannels,
-  preferSavingsProductPaymentChannels
+  preferSavingsProductPaymentChannels,
+  withProductPaymentChannelIds
 } from './savings-payment-channels';
 
 describe('normalizeSavingsProductPaymentChannels', () => {
@@ -238,5 +239,55 @@ describe('normalizeSavingsAccountPaymentChannels', () => {
   it('treats an omitted catalog as no channels', () => {
     assert.deepEqual(normalizeSavingsAccountPaymentChannels(undefined), []);
     assert.deepEqual(normalizeSavingsAccountPaymentChannels({}), []);
+  });
+
+  it('uses the product channel id and ignores the subscription id', () => {
+    const channels = normalizeSavingsAccountPaymentChannels([
+      {
+        id: 99,
+        productPaymentChannelId: 7,
+        paymentTypeId: 3,
+        isPremium: false,
+        isActive: true,
+        isAccountTransferChannel: true,
+        maxDebitPerTxn: 0,
+        maxDebitPerDay: null,
+        maxCreditPerTxn: 1000,
+        charges: []
+      }
+    ]);
+
+    assert.equal(channels[0]?.id, 7);
+    assert.equal(channels[0]?.isAccountTransferChannel, true);
+    assert.equal(channels[0]?.maxDebitPerTxn, 0);
+    assert.equal(channels[0]?.maxDebitPerDay, null);
+    assert.equal(channels[0]?.maxCreditPerTxn, 1000);
+    assert.equal(channels[0]?.maxCreditPerDay, undefined);
+  });
+
+  it('does not treat a subscription id as the catalog id', () => {
+    const channels = normalizeSavingsAccountPaymentChannels([
+      {
+        id: 99,
+        paymentTypeId: 3,
+        isPremium: false,
+        isActive: false,
+        charges: []
+      }
+    ]);
+
+    assert.equal(channels[0]?.id, undefined);
+    assert.equal(
+      withProductPaymentChannelIds(channels, [
+        {
+          id: 7,
+          paymentTypeId: 3,
+          isPremium: false,
+          isActive: false,
+          charges: []
+        }
+      ])[0]?.id,
+      7
+    );
   });
 });

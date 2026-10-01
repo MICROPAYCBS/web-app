@@ -31,6 +31,7 @@ import { formatYesNo } from '@/lib/fineract/client-detail-labels';
 import { FINERACT_LOCALE, formatFineractDateArray } from '@/lib/fineract/dates';
 import type { SavingsAccountPaymentChannelCommand } from '@/lib/fineract/savings-account-command-meta';
 import { savingsAccountChannelAllowed } from '@/lib/fineract/savings-payment-channels';
+import { SavingsAccountChannelLimitsSheet } from '@/components/clients/savings/savings-account-channel-limits-sheet';
 
 type PendingChannelCommand = {
   command: SavingsAccountPaymentChannelCommand;
@@ -195,6 +196,8 @@ export function SavingsAccountPaymentChannelsSection({
   currencyCode,
   accountActive,
   canManage,
+  canReadLimits = false,
+  canUpdateLimits = false,
   channels,
   loadError
 }: {
@@ -203,6 +206,8 @@ export function SavingsAccountPaymentChannelsSection({
   currencyCode: string;
   accountActive: boolean;
   canManage: boolean;
+  canReadLimits?: boolean;
+  canUpdateLimits?: boolean;
   channels: SavingsAccountPaymentChannel[];
   loadError?: string;
 }) {
@@ -214,6 +219,7 @@ export function SavingsAccountPaymentChannelsSection({
     setListedChannels(channels);
   }
   const [pendingCommand, setPendingCommand] = useState<PendingChannelCommand | null>(null);
+  const [limitsChannelId, setLimitsChannelId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -335,8 +341,20 @@ export function SavingsAccountPaymentChannelsSection({
                       )
                     ) : null}
                   </div>
-                  {canManage ? (
+                  {canManage || canReadLimits ? (
                     <div className="flex flex-wrap gap-2">
+                      {canReadLimits ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setLimitsChannelId(channel.paymentTypeId)}
+                        >
+                          Limits
+                        </Button>
+                      ) : null}
+                      {canManage ? (
+                        <>
                       {showSubscribe || showUnsubscribe ? (
                         <Button
                           type="button"
@@ -369,6 +387,8 @@ export function SavingsAccountPaymentChannelsSection({
                       >
                         {showBlock ? 'Block' : 'Unblock'}
                       </Button>
+                        </>
+                      ) : null}
                     </div>
                   ) : null}
                 </li>
@@ -416,6 +436,27 @@ export function SavingsAccountPaymentChannelsSection({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {canReadLimits ? (
+        <SavingsAccountChannelLimitsSheet
+          clientId={clientId}
+          accountId={accountId}
+          productPaymentChannelId={
+            listedChannels.find((channel) => channel.paymentTypeId === limitsChannelId)?.id
+          }
+          channelName={
+            listedChannels.find((channel) => channel.paymentTypeId === limitsChannelId)
+              ?.paymentTypeName ?? 'this channel'
+          }
+          currencyCode={currencyCode}
+          canUpdate={canUpdateLimits}
+          open={limitsChannelId != null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setLimitsChannelId(null);
+            }
+          }}
+        />
+      ) : null}
     </DetailSection>
   );
 }

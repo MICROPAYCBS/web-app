@@ -182,7 +182,39 @@ function RowCell({
   );
 }
 
+function scheduleColumnWidths(showAccruedInterest: boolean) {
+  if (showAccruedInterest) {
+    return {
+      period: '5%',
+      date: '12%',
+      days: '5%',
+      principal: '10%',
+      interest: '10%',
+      accrued: '12%',
+      fees: '9%',
+      installment: '10%',
+      balance: '11%',
+      note: '16%'
+    };
+  }
+
+  return {
+    period: '6%',
+    date: '14%',
+    days: '6%',
+    principal: '11%',
+    interest: '11%',
+    accrued: '0%',
+    fees: '11%',
+    installment: '11%',
+    balance: '12%',
+    note: '18%'
+  };
+}
+
 export function LoanRepaymentScheduleDocument({ data }: { data: LoanRepaymentScheduleDocumentData }) {
+  const columns = scheduleColumnWidths(data.showAccruedInterest);
+
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
@@ -246,6 +278,12 @@ export function LoanRepaymentScheduleDocument({ data }: { data: LoanRepaymentSch
             <Text style={styles.summaryLabel}>Total interest</Text>
             <Text style={styles.summaryValue}>{data.totalInterestLabel}</Text>
           </View>
+          {data.showAccruedInterest ? (
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Accrued interest</Text>
+              <Text style={styles.summaryValue}>{data.totalAccruedInterestLabel}</Text>
+            </View>
+          ) : null}
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Total fees</Text>
             <Text style={styles.summaryValue}>{data.totalFeesLabel}</Text>
@@ -266,30 +304,36 @@ export function LoanRepaymentScheduleDocument({ data }: { data: LoanRepaymentSch
 
         <View>
           <View style={styles.tableHeader}>
-            <HeaderCell width="6%" label="#" />
-            <HeaderCell width="14%" label="Due date" />
-            <HeaderCell width="6%" label="Days" />
-            <HeaderCell width="11%" label="Principal" align="right" />
-            <HeaderCell width="11%" label="Interest" align="right" />
-            <HeaderCell width="11%" label="Fees" align="right" />
-            <HeaderCell width="11%" label="Installment" align="right" />
-            <HeaderCell width="12%" label="Balance" align="right" />
-            <HeaderCell width="18%" label="Note" />
+            <HeaderCell width={columns.period} label="#" />
+            <HeaderCell width={columns.date} label="Due date" />
+            <HeaderCell width={columns.days} label="Days" />
+            <HeaderCell width={columns.principal} label="Principal" align="right" />
+            <HeaderCell width={columns.interest} label="Interest" align="right" />
+            {data.showAccruedInterest ? (
+              <HeaderCell width={columns.accrued} label="Accrued interest" align="right" />
+            ) : null}
+            <HeaderCell width={columns.fees} label="Fees" align="right" />
+            <HeaderCell width={columns.installment} label="Installment" align="right" />
+            <HeaderCell width={columns.balance} label="Balance" align="right" />
+            <HeaderCell width={columns.note} label="Note" />
           </View>
           {data.rows.map((row) => (
             <View
               key={row.key}
               style={[styles.tableRow, row.note === 'Disbursement' ? styles.tableRowMuted : {}]}
             >
-              <RowCell width="6%" value={row.period} />
-              <RowCell width="14%" value={row.dueDate} />
-              <RowCell width="6%" value={row.daysInPeriod} />
-              <RowCell width="11%" value={row.principalDue} align="right" />
-              <RowCell width="11%" value={row.interestDue} align="right" />
-              <RowCell width="11%" value={row.feesDue} align="right" />
-              <RowCell width="11%" value={row.installment} align="right" bold />
-              <RowCell width="12%" value={row.balance} align="right" />
-              <RowCell width="18%" value={row.note ?? ''} />
+              <RowCell width={columns.period} value={row.period} />
+              <RowCell width={columns.date} value={row.dueDate} />
+              <RowCell width={columns.days} value={row.daysInPeriod} />
+              <RowCell width={columns.principal} value={row.principalDue} align="right" />
+              <RowCell width={columns.interest} value={row.interestDue} align="right" />
+              {data.showAccruedInterest ? (
+                <RowCell width={columns.accrued} value={row.accruedInterest ?? '—'} align="right" />
+              ) : null}
+              <RowCell width={columns.fees} value={row.feesDue} align="right" />
+              <RowCell width={columns.installment} value={row.installment} align="right" bold />
+              <RowCell width={columns.balance} value={row.balance} align="right" />
+              <RowCell width={columns.note} value={row.note ?? ''} />
             </View>
           ))}
         </View>

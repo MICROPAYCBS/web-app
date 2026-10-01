@@ -1,0 +1,17 @@
+{
+  "schemaId": "clients.savings-account.channel-limit",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.SavingsAccountsApiResource"
+  ],
+  "fields": {
+    "paymentTypeId": { "required": true, "type": "id" },
+    "direction": { "required": true, "notes": "DEBIT or CREDIT" },
+    "maxPerTxn": { "required": false, "min": 0, "notes": "Null clears the customer cap. Zero blocks." },
+    "maxPerDay": { "required": false, "min": 0 },
+    "maxPerMonth": { "required": false, "min": 0 },
+    "maxCountPerDay": { "required": false, "min": 0 },
+    "maxCountPerMonth": { "required": false, "min": 0 },
+    "locale": { "required": true }
+  },
+  "notes": "POST /savingsaccounts/{id}/paymentchannels?command=updateLimit. Send every limit field. Null clears that customer cap. GET /savingsaccounts/{id}/paymentchannels/{productPaymentChannelId}/limits is the read. productPaymentChannelId is paymentChannels[].id, not paymentTypeId."
+}

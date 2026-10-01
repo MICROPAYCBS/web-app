@@ -72,7 +72,9 @@ export function SavingsAccountDetailView({
   makerCheckerTaskPermissions = [],
   paymentChannels = [],
   paymentChannelsLoadError,
-  canManagePaymentChannels = false
+  canManagePaymentChannels = false,
+  canReadChannelLimits = false,
+  canUpdateChannelLimits = false
 }: {
   account: FineractSavingsAccountDetail;
   clientId: string;
@@ -93,6 +95,8 @@ export function SavingsAccountDetailView({
   paymentChannels?: SavingsAccountPaymentChannel[];
   paymentChannelsLoadError?: string;
   canManagePaymentChannels?: boolean;
+  canReadChannelLimits?: boolean;
+  canUpdateChannelLimits?: boolean;
 }) {
   const currency = savingsAccountCurrencyCode(account);
   const blockedMessage = savingsAccountBlockedMessage(account);
@@ -229,6 +233,8 @@ export function SavingsAccountDetailView({
           paymentChannels={paymentChannels}
           paymentChannelsLoadError={paymentChannelsLoadError}
           canManagePaymentChannels={canManagePaymentChannels}
+          canReadChannelLimits={canReadChannelLimits}
+          canUpdateChannelLimits={canUpdateChannelLimits}
         />
       </Suspense>
     </DetailPage>

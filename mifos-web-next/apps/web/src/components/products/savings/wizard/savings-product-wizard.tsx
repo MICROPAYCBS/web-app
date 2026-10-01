@@ -53,7 +53,7 @@ import type { SavingsProductWizardProps, StepErrors } from './types';
 import { validateSavingsProductStep } from './validation';
 
 const SAVINGS_CHARGE_OPTION_STEPS = ['charges', 'channels', 'accounting', 'mappings'] as const;
-const SAVINGS_PRODUCT_WIZARD_SESSION_VERSION = 2;
+const SAVINGS_PRODUCT_WIZARD_SESSION_VERSION = 3;
 
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'details', label: 'Details' },

@@ -15,6 +15,8 @@ import { DEFAULT_REPORT_ORG_NAME } from '@/lib/fineract/report-branding';
 import {
   formatScheduleMoney,
   installmentAmount,
+  loanScheduleHasAccruedInterest,
+  loanScheduleTotalAccruedInterest,
   scheduleCurrencyCode,
   scheduleHighlights
 } from '@/components/clients/loan-account/schedule/loan-schedule-format';
@@ -26,6 +28,7 @@ export type LoanRepaymentScheduleRow = {
   daysInPeriod: string;
   principalDue: string;
   interestDue: string;
+  accruedInterest?: string;
   feesDue: string;
   installment: string;
   balance: string;
@@ -45,6 +48,8 @@ export type LoanRepaymentScheduleDocumentData = {
   principalDisbursedLabel: string;
   principalExpectedLabel: string;
   totalInterestLabel: string;
+  showAccruedInterest: boolean;
+  totalAccruedInterestLabel?: string;
   totalFeesLabel: string;
   totalRepaymentLabel: string;
   loanTermLabel: string;
@@ -72,7 +77,8 @@ function periodNote(period: NonNullable<LoanScheduleData['periods']>[number]): s
 
 function buildScheduleRows(
   schedule: LoanScheduleData,
-  currencyCode: string
+  currencyCode: string,
+  showAccruedInterest: boolean
 ): LoanRepaymentScheduleRow[] {
   return (schedule.periods ?? []).map((row, index) => {
     const isDisbursement = row.period === 0;
@@ -84,6 +90,11 @@ function buildScheduleRows(
       daysInPeriod: row.daysInPeriod != null ? String(row.daysInPeriod) : '—',
       principalDue: isDisbursement ? '—' : formatScheduleMoney(row.principalDue, currencyCode),
       interestDue: isDisbursement ? '—' : formatScheduleMoney(row.interestDue, currencyCode),
+      accruedInterest: showAccruedInterest
+        ? isDisbursement
+          ? '—'
+          : formatScheduleMoney(row.totalAccruedInterest, currencyCode)
+        : undefined,
       feesDue: formatScheduleMoney(row.feeChargesDue, currencyCode),
       installment: isDisbursement
         ? formatScheduleMoney(row.principalDisbursed, currencyCode)
@@ -103,6 +114,8 @@ export function buildLoanRepaymentScheduleDocumentData(input: {
   const { account, schedule, orgName, generatedOn = new Date() } = input;
   const currencyCode = scheduleCurrencyCode(schedule);
   const highlights = scheduleHighlights(schedule);
+  const periods = schedule.periods ?? [];
+  const showAccruedInterest = loanScheduleHasAccruedInterest(periods);
 
   return {
     orgName: resolveLoanScheduleOrgName(orgName),
@@ -117,6 +130,10 @@ export function buildLoanRepaymentScheduleDocumentData(input: {
     principalDisbursedLabel: formatScheduleMoney(schedule.totalPrincipalDisbursed, currencyCode),
     principalExpectedLabel: formatScheduleMoney(schedule.totalPrincipalExpected, currencyCode),
     totalInterestLabel: formatScheduleMoney(schedule.totalInterestCharged, currencyCode),
+    showAccruedInterest,
+    totalAccruedInterestLabel: showAccruedInterest
+      ? formatScheduleMoney(loanScheduleTotalAccruedInterest(periods), currencyCode)
+      : undefined,
     totalFeesLabel: formatScheduleMoney(schedule.totalFeeChargesCharged, currencyCode),
     totalRepaymentLabel: formatScheduleMoney(schedule.totalRepaymentExpected, currencyCode),
     loanTermLabel:
@@ -126,7 +143,7 @@ export function buildLoanRepaymentScheduleDocumentData(input: {
     firstRepaymentLabel: highlights.firstRepaymentDate ?? '—',
     lastRepaymentLabel: highlights.lastRepaymentDate ?? '—',
     averageInstallmentLabel: formatScheduleMoney(highlights.averageInstallment, currencyCode),
-    rows: buildScheduleRows(schedule, currencyCode)
+    rows: buildScheduleRows(schedule, currencyCode, showAccruedInterest)
   };
 }
 

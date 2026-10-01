@@ -320,4 +320,19 @@ describe('translateFineractCode', () => {
   it('maps a missing user session to operator copy', () => {
     assert.equal(translateFineractCode('error.msg.usersession.not.found'), 'Session no longer active.');
   });
+
+  it('maps savings channel limit codes', () => {
+    assert.equal(
+      translateFineractCode(
+        'validation.msg.savingsaccount.transaction.amount.exceeds.daily.count'
+      ),
+      'The day’s count is already full.'
+    );
+    assert.equal(
+      translateFineractCode(
+        'validation.msg.savingsaccount.channellimit.maxPerTxn.exceeds.ceiling'
+      ),
+      'This value is above the bank ceiling.'
+    );
+  });
 });

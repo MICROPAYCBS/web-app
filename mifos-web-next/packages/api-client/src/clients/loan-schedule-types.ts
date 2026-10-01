@@ -16,6 +16,8 @@ export interface LoanSchedulePeriod {
   principalDisbursed?: number;
   principalDue?: number;
   interestDue?: number;
+  /** Interest already recognized on this installment, when the server sends it. */
+  totalAccruedInterest?: number;
   feeChargesDue?: number;
   penaltyChargesDue?: number;
   principalOutstanding?: number;

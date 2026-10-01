@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { channelLimitOrderErrors } from '../products/savings-channel-limit-rules';
 import {
   hasPositiveLegalTenderQuantity,
   type LegalTenderMasterRow
@@ -254,9 +255,52 @@ export const savingsAccountPaymentChannelCommandSchema = z.object({
   paymentTypeId: z.coerce.number().int().positive('Select a payment channel.')
 });
 
+const customerLimitAmount = z
+  .number()
+  .nonnegative('Enter zero or a greater amount.')
+  .nullable();
+const customerLimitCount = z
+  .number()
+  .int('Enter a whole number.')
+  .nonnegative('Enter zero or a greater amount.')
+  .nullable();
+
+export const savingsAccountChannelLimitSchema = z
+  .object({
+    paymentTypeId: z.coerce.number().int().positive('Select a payment channel.'),
+    direction: z.enum(['DEBIT', 'CREDIT'], {
+      errorMap: () => ({ message: 'Choose debit or credit.' })
+    }),
+    maxPerTxn: customerLimitAmount,
+    maxPerDay: customerLimitAmount,
+    maxPerMonth: customerLimitAmount,
+    maxCountPerDay: customerLimitCount,
+    maxCountPerMonth: customerLimitCount,
+    locale: z.string().min(1)
+  })
+  .superRefine((data, ctx) => {
+    const errors = channelLimitOrderErrors({
+      perTxn: data.maxPerTxn,
+      perDay: data.maxPerDay,
+      perMonth: data.maxPerMonth,
+      countPerDay: data.maxCountPerDay,
+      countPerMonth: data.maxCountPerMonth,
+      perTxnField: 'maxPerTxn',
+      perDayField: 'maxPerDay',
+      perMonthField: 'maxPerMonth',
+      countPerDayField: 'maxCountPerDay',
+      countPerMonthField: 'maxCountPerMonth'
+    });
+    for (const [field, message] of Object.entries(errors)) {
+      ctx.addIssue({ code: 'custom', message, path: [field] });
+    }
+  });
+
 export type SavingsAccountPaymentChannelCommandInput = z.infer<
   typeof savingsAccountPaymentChannelCommandSchema
 >;
+
+export type SavingsAccountChannelLimitInput = z.infer<typeof savingsAccountChannelLimitSchema>;
 
 export type SavingsAccountPostInterestAsOnInput = z.infer<
   typeof savingsAccountPostInterestAsOnSchema

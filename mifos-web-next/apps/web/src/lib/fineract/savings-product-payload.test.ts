@@ -11,6 +11,20 @@ import { describe, it } from 'node:test';
 import type { UpsertSavingsProductInput } from '@mifos/validation';
 import { buildSavingsProductPayload } from './savings-product-payload';
 
+const UNLIMITED_CEILINGS = {
+  isAccountTransferChannel: false,
+  maxDebitPerTxn: null,
+  maxDebitPerDay: null,
+  maxDebitPerMonth: null,
+  maxDebitCountPerDay: null,
+  maxDebitCountPerMonth: null,
+  maxCreditPerTxn: null,
+  maxCreditPerDay: null,
+  maxCreditPerMonth: null,
+  maxCreditCountPerDay: null,
+  maxCreditCountPerMonth: null
+};
+
 function minimalDraft(
   overrides: Partial<UpsertSavingsProductInput> = {}
 ): UpsertSavingsProductInput {
@@ -125,8 +139,14 @@ describe('buildSavingsProductPayload', () => {
 
     assert.deepEqual(payload.charges, [{ id: 3 }]);
     assert.deepEqual(payload.paymentChannels, [
-      { paymentTypeId: 1, isPremium: false, isActive: true, charges: [] },
-      { paymentTypeId: 3, isPremium: true, isActive: true, charges: [{ id: 12, amount: 50 }] }
+      { paymentTypeId: 1, isPremium: false, isActive: true, ...UNLIMITED_CEILINGS, charges: [] },
+      {
+        paymentTypeId: 3,
+        isPremium: true,
+        isActive: true,
+        ...UNLIMITED_CEILINGS,
+        charges: [{ id: 12, amount: 50 }]
+      }
     ]);
   });
 
@@ -155,8 +175,43 @@ describe('buildSavingsProductPayload', () => {
     );
 
     assert.deepEqual(payload.paymentChannels, [
-      { paymentTypeId: 3, isPremium: true, isActive: true, charges: [{ id: 12, amount: 50 }] }
+      {
+        paymentTypeId: 3,
+        isPremium: true,
+        isActive: true,
+        ...UNLIMITED_CEILINGS,
+        charges: [{ id: 12, amount: 50 }]
+      }
     ]);
+  });
+
+  it('sends ceilings and the transfer flag, and stores a blank ceiling as unlimited', () => {
+    const payload = buildSavingsProductPayload(
+      minimalDraft({
+        paymentChannels: {
+          channels: [
+            {
+              paymentTypeId: 2,
+              isPremium: false,
+              isActive: true,
+              isAccountTransferChannel: true,
+              maxDebitPerTxn: 0,
+              maxDebitPerDay: 1000,
+              maxDebitPerMonth: null,
+              chargeIds: [],
+              chargeAmounts: {}
+            }
+          ]
+        }
+      })
+    );
+
+    const [channel] = payload.paymentChannels as Array<Record<string, unknown>>;
+    assert.equal(channel?.isAccountTransferChannel, true);
+    assert.equal(channel?.maxDebitPerTxn, 0);
+    assert.equal(channel?.maxDebitPerDay, 1000);
+    assert.equal(channel?.maxDebitPerMonth, null);
+    assert.equal(channel?.maxCreditPerTxn, null);
   });
 
   it('omits empty availability dates', () => {

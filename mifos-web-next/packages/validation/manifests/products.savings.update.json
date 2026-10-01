@@ -21,7 +21,7 @@
     "paymentChannels": {
       "required": false,
       "type": "array",
-      "notes": "Replaces the product catalog. Empty array restores legacy behaviour (all payment types)."
+      "notes": "Replaces the product catalog, including ceilings and isAccountTransferChannel. A null ceiling is unlimited. Empty array restores legacy behaviour (all payment types)."
     }
   }
 }

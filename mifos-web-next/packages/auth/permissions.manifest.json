@@ -320,6 +320,16 @@
       "READ_SAVINGSACCOUNT"
     ]
   },
+  "savings.channelLimit.read": {
+    "any": [
+      "READCHANNELLIMIT_SAVINGSACCOUNT"
+    ]
+  },
+  "savings.channelLimit.update": {
+    "any": [
+      "UPDATECHANNELLIMIT_SAVINGSACCOUNT"
+    ]
+  },
   "savings.importTransactions": {
     "any": [
       "DEPOSIT_SAVINGSACCOUNT",

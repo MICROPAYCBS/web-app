@@ -60,6 +60,17 @@ function paymentChannelDraftRows(
         paymentTypeId: channel.paymentTypeId,
         isPremium: channel.isPremium,
         isActive: channel.isActive,
+        isAccountTransferChannel: channel.isAccountTransferChannel === true,
+        maxDebitPerTxn: channel.maxDebitPerTxn ?? null,
+        maxDebitPerDay: channel.maxDebitPerDay ?? null,
+        maxDebitPerMonth: channel.maxDebitPerMonth ?? null,
+        maxDebitCountPerDay: channel.maxDebitCountPerDay ?? null,
+        maxDebitCountPerMonth: channel.maxDebitCountPerMonth ?? null,
+        maxCreditPerTxn: channel.maxCreditPerTxn ?? null,
+        maxCreditPerDay: channel.maxCreditPerDay ?? null,
+        maxCreditPerMonth: channel.maxCreditPerMonth ?? null,
+        maxCreditCountPerDay: channel.maxCreditCountPerDay ?? null,
+        maxCreditCountPerMonth: channel.maxCreditCountPerMonth ?? null,
         chargeIds: channel.isPremium ? channel.charges.map((charge) => charge.id) : [],
         chargeAmounts: channel.isPremium
           ? productChargeAmountsFromTemplate(channel.charges, [...chargeOptions.values()])

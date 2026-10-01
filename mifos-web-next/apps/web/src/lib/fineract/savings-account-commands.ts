@@ -1,4 +1,8 @@
-import type { FineractCommandProcessingResult, SavingsAccountPaymentChannel } from '@mifos/api-client';
+import type {
+  FineractCommandProcessingResult,
+  SavingsAccountChannelLimit,
+  SavingsAccountPaymentChannel
+} from '@mifos/api-client';
 import 'server-only';
 
 /**
@@ -11,7 +15,13 @@ import 'server-only';
 
 import { createFineractClient } from '@/lib/fineract/create-client';
 import { asCurrency } from '@/lib/fineract/product-normalize';
-import { normalizeSavingsAccountPaymentChannels } from '@/lib/fineract/savings-payment-channels';
+import { normalizeSavingsAccountChannelLimits } from '@/lib/fineract/savings-channel-limits';
+import {
+  normalizeSavingsAccountPaymentChannels,
+  withProductPaymentChannelIds
+} from '@/lib/fineract/savings-payment-channels';
+import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
+import { getSavingsProduct } from '@/lib/fineract/savings-products';
 import { resolvePaymentTypeId } from '@/lib/fineract/savings-payment-type-options';
 import {
   SAVINGS_ACCOUNT_BLOCK_REASON_CODE_ID,
@@ -361,12 +371,59 @@ export async function getSavingsAccountChargeDetailTemplate(
   };
 }
 
+export async function getSavingsAccountChannelLimits(
+  accountId: string | number,
+  productPaymentChannelId: number,
+  direction?: 'DEBIT' | 'CREDIT'
+): Promise<SavingsAccountChannelLimit[]> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(
+    `${SAVINGS_ACCOUNTS_PATH}/${accountId}/paymentchannels/${productPaymentChannelId}/limits`,
+    direction ? { direction } : undefined
+  );
+  return normalizeSavingsAccountChannelLimits(raw);
+}
+
+export async function updateSavingsAccountChannelLimit(
+  accountId: string | number,
+  body: {
+    paymentTypeId: number;
+    direction: 'DEBIT' | 'CREDIT';
+    maxPerTxn: number | null;
+    maxPerDay: number | null;
+    maxPerMonth: number | null;
+    maxCountPerDay: number | null;
+    maxCountPerMonth: number | null;
+    locale: string;
+  }
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.post<FineractCommandProcessingResult>(
+    `${SAVINGS_ACCOUNTS_PATH}/${accountId}/paymentchannels`,
+    body,
+    { command: 'updateLimit' }
+  );
+}
+
 export async function getSavingsAccountPaymentChannels(
   accountId: string | number
 ): Promise<SavingsAccountPaymentChannel[]> {
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(`${SAVINGS_ACCOUNTS_PATH}/${accountId}/paymentchannels`);
-  return normalizeSavingsAccountPaymentChannels(raw);
+  const channels = normalizeSavingsAccountPaymentChannels(raw);
+  if (channels.length === 0 || channels.every((channel) => channel.id != null)) {
+    return channels;
+  }
+  try {
+    const account = await getSavingsAccount(accountId);
+    if (account?.savingsProductId == null) {
+      return channels;
+    }
+    const product = await getSavingsProduct(account.savingsProductId);
+    return withProductPaymentChannelIds(channels, product.paymentChannels ?? []);
+  } catch {
+    return channels;
+  }
 }
 
 export async function executeSavingsAccountPaymentChannelCommand(
