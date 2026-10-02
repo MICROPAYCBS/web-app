@@ -154,6 +154,11 @@
       "UPDATE_LOAN"
     ]
   },
+  "loans.accrue": {
+    "any": [
+      "ACCRUE_LOAN"
+    ]
+  },
   "loans.reschedule": {
     "any": [
       "READ_RESCHEDULELOAN"

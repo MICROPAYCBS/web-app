@@ -113,6 +113,13 @@ export const loanAccountAddChargeSchema = z.object({
 
 export type LoanAccountAddChargeInput = z.infer<typeof loanAccountAddChargeSchema>;
 
+/** Accrue one loan through the business date, or through an earlier till date. */
+export const loanAccountAccrueCommandSchema = z.object({
+  tillDate: optionalDate
+});
+
+export type LoanAccountAccrueCommandInput = z.infer<typeof loanAccountAccrueCommandSchema>;
+
 /** Undo a posted loan row. Write-off uses the account write-off undo; other rows are an adjustment. */
 export const loanAccountUndoTransactionSchema = z.object({
   clientId: z.string().trim().min(1),

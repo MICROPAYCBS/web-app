@@ -1,0 +1,12 @@
+{
+  "command": "clients.loan-account.accrue",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource",
+    "org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformServiceJpaRepositoryImpl"
+  ],
+  "fields": {
+    "tillDate": { "required": false, "type": "date" },
+    "dateFormat": { "required": false, "type": "string" },
+    "locale": { "required": false, "type": "string" }
+  }
+}

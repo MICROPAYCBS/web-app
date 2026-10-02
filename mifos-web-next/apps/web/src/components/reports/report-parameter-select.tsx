@@ -25,7 +25,8 @@ export function ReportParameterSelect({
   parentValue,
   disabled = false,
   error,
-  placeholder = 'Select an option'
+  placeholder = 'Select an option',
+  onDisplayLabel
 }: {
   id?: string;
   label: string;
@@ -38,6 +39,8 @@ export function ReportParameterSelect({
   disabled?: boolean;
   error?: string;
   placeholder?: string;
+  /** Selected option name, once options have loaded. */
+  onDisplayLabel?: (label: string | undefined) => void;
 }) {
   const [options, setOptions] = useState<FineractReportRunParameterOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,6 +93,17 @@ export function ReportParameterSelect({
       })),
     [options, selectAll]
   );
+
+  useEffect(() => {
+    if (!onDisplayLabel) {
+      return;
+    }
+    if (!value) {
+      onDisplayLabel(undefined);
+      return;
+    }
+    onDisplayLabel(selectOptions.find((option) => option.value === value)?.label);
+  }, [onDisplayLabel, selectOptions, value]);
 
   const resolvedPlaceholder = parentBlocked
     ? 'Select parent parameter first'

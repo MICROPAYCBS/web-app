@@ -28,7 +28,13 @@ import {
 import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForLoanAccount } from '@/lib/fineract/audit-trails';
 import { listJournalEntriesForLoanAccount } from '@/lib/fineract/journal-entries';
+import {
+  loanAccountAccrueEligibility,
+  type LoanAccountAccrueEligibility
+} from '@/lib/fineract/loan-account-accrue';
+import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
+import { getLoanProductAccountingRule } from '@/lib/fineract/loan-products';
 import { loanTransactionActionPermissions } from '@/lib/fineract/loan-transaction-action-permissions';
 import { listLoanRescheduleRequests } from '@/lib/fineract/loan-reschedule';
 import { loadAccountCashierForSession } from '@/lib/fineract/load-account-cashier';
@@ -58,6 +64,32 @@ import {
   loanAccountHasTermVariations,
   loanAccountIsActive
 } from '@/lib/fineract/loan-account-display';
+
+const HIDDEN_LOAN_ACCRUE: LoanAccountAccrueEligibility = { show: false, omitTillDate: false };
+
+async function loanAccountAccrueMode(
+  session: Awaited<ReturnType<typeof getServerSession>>,
+  account: FineractLoanAccountDetail,
+  canAccrue: boolean
+): Promise<LoanAccountAccrueEligibility> {
+  if (
+    !canAccrue ||
+    !can(session, resolvePermission('products.loan')) ||
+    account.loanProductId == null
+  ) {
+    return HIDDEN_LOAN_ACCRUE;
+  }
+
+  const ruleResult = await tryFineractLoad(
+    () => getLoanProductAccountingRule(account.loanProductId as number),
+    'Could not load loan product.'
+  );
+  if (!ruleResult.ok || !ruleResult.data) {
+    return HIDDEN_LOAN_ACCRUE;
+  }
+
+  return loanAccountAccrueEligibility(account, ruleResult.data);
+}
 
 function loanAccountPermissions(
   session: Awaited<ReturnType<typeof getServerSession>>
@@ -92,7 +124,8 @@ function loanAccountPermissions(
     }),
     repayFromSavings: can(session, 'CREATE_ACCOUNTTRANSFER'),
     modifyApplication: can(session, resolvePermission('loans.update')),
-    create: can(session, resolvePermission('loans.create'))
+    create: can(session, resolvePermission('loans.create')),
+    accrue: can(session, resolvePermission('loans.accrue'))
   };
 }
 
@@ -237,6 +270,7 @@ export default async function LoanAccountGeneralPage({
   );
 
   const permissions = loanAccountPermissions(session);
+  const accrue = await loanAccountAccrueMode(session, account, permissions.accrue);
   const canReadReschedules = can(session, resolvePermission('loans.reschedule'));
   const rescheduleResult = canReadReschedules
     ? await tryFineractLoad(
@@ -341,6 +375,7 @@ export default async function LoanAccountGeneralPage({
       pendingCheckerActions={pendingCheckerActions}
       pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}
       makerCheckerTaskPermissions={workflowRuntime.makerCheckerPermissions}
+      accrue={accrue}
     />
   );
 }

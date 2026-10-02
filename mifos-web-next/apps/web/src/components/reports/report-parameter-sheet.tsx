@@ -35,7 +35,7 @@ export function ReportParameterSheet({
   reportName: string;
   parameters: FineractReportRunParameter[];
   pending?: boolean;
-  onSubmit: (values: Record<string, string>) => void;
+  onSubmit: (values: Record<string, string>, displayValues?: Record<string, string>) => void;
 }) {
   const formId = useId();
 
@@ -59,8 +59,8 @@ export function ReportParameterSheet({
             formId={formId}
             parameters={parameters}
             disabled={pending}
-            onSubmit={(values) => {
-              onSubmit(values);
+            onSubmit={(values, displayValues) => {
+              onSubmit(values, displayValues);
               onOpenChange(false);
             }}
           />

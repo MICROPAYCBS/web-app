@@ -37,6 +37,29 @@ describe('resolveFineractErrorItemMessage', () => {
     );
   });
 
+  it('keeps a specific loan accrual message and translates the code when none is sent', () => {
+    assert.equal(
+      resolveFineractErrorItemMessage({
+        defaultUserMessage: 'Loan is not active',
+        userMessageGlobalisationCode: 'error.msg.loan.accrual.not.active'
+      }),
+      'Loan is not active'
+    );
+    assert.equal(
+      resolveFineractErrorItemMessage({
+        userMessageGlobalisationCode: 'error.msg.loan.accrual.not.active'
+      }),
+      'This loan is not active.'
+    );
+    assert.equal(
+      resolveFineractErrorItemMessage({
+        defaultUserMessage: 'Validation errors exist.',
+        userMessageGlobalisationCode: 'validation.msg.loan.tillDate.is.greater.than.date'
+      }),
+      'Accrue through a date on or before the business date.'
+    );
+  });
+
   it('falls back to developerMessage', () => {
     assert.equal(
       resolveFineractErrorItemMessage({

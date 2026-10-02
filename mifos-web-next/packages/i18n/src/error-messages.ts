@@ -255,7 +255,18 @@ const ERROR_MESSAGES: Record<string, string> = {
   'error.msg.loan.undo.disbursal.not.allowed.on.topup.loan':
     'Disbursement of a top-up cannot be undone',
   'error.msg.loan.applied.or.to.be.disbursed.can.not.co-exist.with.the.loan.already.active.to.this.client':
-    'This product cannot be applied while that loan is still active'
+    'This product cannot be applied while that loan is still active',
+  'error.msg.loan.accrual.accounting.rule.not.periodic':
+    'This loan product does not use periodic accrual.',
+  'error.msg.loan.accrual.not.active': 'This loan is not active.',
+  'error.msg.loan.accrual.npa': 'This loan is non-performing.',
+  'error.msg.loan.accrual.charged.off': 'This loan is charged off.',
+  'error.msg.loan.accrual.contract.terminated': 'This loan is contract-terminated.',
+  'error.msg.loan.accrual.progressive.compounding.unsupported':
+    'Accrual is not available when this progressive loan posts compounding as transactions.',
+  'validation.msg.loan.tillDate.is.greater.than.date':
+    'Accrue through a date on or before the business date.',
+  'validation.msg.loan.accrual.execution.failed': 'Accrual could not be completed.'
 };
 
 const LOAN_TOPUP_ERROR_CODES = new Set([

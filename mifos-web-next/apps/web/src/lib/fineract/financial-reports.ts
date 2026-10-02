@@ -10,7 +10,7 @@
  * First-class financial statement reports (Fineract `report_name` is the stable contract).
  * Dedicated nav routes resolve by these exact names — never by tenant-specific report ids.
  *
- * Special treatment for these reports (layout, exports, etc.) will build on this registry.
+ * Statement preview, print, PDF, and CSV for these reports build on this registry.
  */
 export const FINANCIAL_REPORT_SLUGS = [
   'balance-sheet',

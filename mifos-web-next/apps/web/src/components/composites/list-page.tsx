@@ -22,7 +22,8 @@ export function ListPage({
   actions,
   toolbar,
   children,
-  className
+  className,
+  headerClassName
 }: {
   title: ReactNode;
   description?: string;
@@ -37,10 +38,12 @@ export function ListPage({
   toolbar?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Extra classes on the title region (for example `print:hidden`). */
+  headerClassName?: string;
 }) {
   return (
     <div className={cn(platformPageShell, className)}>
-      <PageHeader>
+      <PageHeader className={headerClassName}>
         <div className={pageHeaderContentSpacing}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">

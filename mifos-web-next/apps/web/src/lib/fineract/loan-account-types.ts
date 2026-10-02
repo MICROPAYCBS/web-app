@@ -46,6 +46,10 @@ export interface FineractLoanAccountSummary {
   totalOutstanding?: number;
   totalOverdue?: number;
   overdueSinceDate?: number[] | string;
+  /** Unpaid interest on installments already due. Present when the schedule was loaded. */
+  totalUnpaidPayableDueInterest?: number;
+  /** Accrued interest on the current period that is not yet due. Present when the schedule was loaded. */
+  totalUnpaidPayableNotDueInterest?: number;
 }
 
 export interface FineractLoanAccountTimeline {
@@ -317,6 +321,11 @@ export interface FineractLoanAccountDetail {
   interestRateDifferential?: number;
   isFloatingInterestRate?: boolean;
   isInterestRecalculationEnabled?: boolean;
+  loanScheduleType?: FineractEnumOption;
+  subStatus?: FineractEnumOption;
+  interestRecalculationData?: {
+    isCompoundingToBePostedAsTransaction?: boolean;
+  };
   daysInMonthType?: FineractEnumOption;
   daysInYearType?: FineractEnumOption;
   inArrearsTolerance?: number;

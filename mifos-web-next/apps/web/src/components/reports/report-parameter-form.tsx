@@ -59,7 +59,7 @@ export function ReportParameterForm({
   formId: string;
   parameters: FineractReportRunParameter[];
   disabled?: boolean;
-  onSubmit: (values: Record<string, string>) => void;
+  onSubmit: (values: Record<string, string>, displayValues?: Record<string, string>) => void;
 }) {
   const [values, setValues] = useState<Record<string, string | boolean>>(() => {
     const initial: Record<string, string | boolean> = {};
@@ -74,6 +74,7 @@ export function ReportParameterForm({
     return initial;
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [displayLabels, setDisplayLabels] = useState<Record<string, string>>({});
 
   const variableByParameterName = useMemo(
     () =>
@@ -127,7 +128,7 @@ export function ReportParameterForm({
       return;
     }
 
-    onSubmit(formatReportRunParameterValues(parameters, formatted));
+    onSubmit(formatReportRunParameterValues(parameters, formatted), displayLabels);
   }
 
   if (!parameters.length) {
@@ -137,7 +138,7 @@ export function ReportParameterForm({
         className="space-y-4"
         onSubmit={(event) => {
           event.preventDefault();
-          onSubmit({});
+          onSubmit({}, {});
         }}
       >
         <p className="text-sm text-muted-foreground">This report has no parameters.</p>
@@ -173,6 +174,21 @@ export function ReportParameterForm({
                 disabled={disabled}
                 error={fieldErrors[fieldName]}
                 placeholder={`Select ${label}`}
+                onDisplayLabel={(label) => {
+                  setDisplayLabels((current) => {
+                    const next = label ?? '';
+                    if ((current[fieldName] ?? '') === next) {
+                      return current;
+                    }
+                    const updated = { ...current };
+                    if (!next) {
+                      delete updated[fieldName];
+                    } else {
+                      updated[fieldName] = next;
+                    }
+                    return updated;
+                  });
+                }}
               />
             ) : isDate ? (
               <DateField

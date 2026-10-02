@@ -70,11 +70,15 @@
 @media print {
   body.loan-schedule-print [data-slot='sidebar'],
   body.loan-schedule-print [data-slot='sidebar-wrapper'] > [data-slot='sidebar'],
-  body.loan-schedule-print [data-slot='sidebar-inset'] > header {
+  body.loan-schedule-print [data-slot='sidebar-inset'] > header,
+  body.financial-statement-print [data-slot='sidebar'],
+  body.financial-statement-print [data-slot='sidebar-wrapper'] > [data-slot='sidebar'],
+  body.financial-statement-print [data-slot='sidebar-inset'] > header {
     display: none !important;
   }
 
-  body.loan-schedule-print [data-slot='sidebar-inset'] {
+  body.loan-schedule-print [data-slot='sidebar-inset'],
+  body.financial-statement-print [data-slot='sidebar-inset'] {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -82,12 +86,24 @@
     padding: 0 !important;
   }
 
-  body.loan-schedule-print {
+  body.loan-schedule-print,
+  body.financial-statement-print {
     background: white !important;
     color: black !important;
   }
 
   body.loan-schedule-print [data-loan-schedule-printable] {
+    break-inside: avoid;
+  }
+
+  body.financial-statement-print .financial-statement-page,
+  body.financial-statement-print .financial-statement-page .overflow-y-auto {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  body.financial-statement-print [data-financial-statement-printable] tr {
     break-inside: avoid;
   }
 }

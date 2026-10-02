@@ -13,6 +13,7 @@ import {
   getFinancialReportBySlug,
   isFinancialReportSlug
 } from '@/lib/fineract/financial-reports';
+import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisation-name';
 import { findRunnableReportByName } from '@/lib/fineract/reports';
 import { getServerSession } from '@/lib/session/server';
 
@@ -43,6 +44,7 @@ export default async function FinancialReportRunPage({
 
   const canEdit =
     can(session, resolvePermission('system.reports')) && can(session, 'UPDATE_REPORT');
+  const organisationName = await loadReportOrganisationName();
 
   return (
     <ReportRunPageContent
@@ -50,6 +52,8 @@ export default async function FinancialReportRunPage({
       canEdit={canEdit}
       backHref="/reports"
       backLabel="Back to all reports"
+      statementSlug={definition.slug}
+      organisationName={organisationName}
     />
   );
 }

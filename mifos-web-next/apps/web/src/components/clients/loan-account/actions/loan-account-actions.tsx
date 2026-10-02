@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, useState } from 'react';
+import { LoanAccountAccrueSheet } from '@/components/clients/loan-account/actions/loan-account-accrue-sheet';
 import { LoanAccountAddChargeSheet } from '@/components/clients/loan-account/actions/loan-account-add-charge-sheet';
 import { LoanAccountCollateralSheet } from '@/components/clients/loan-account/loan-account-collateral-section';
 import { LoanAccountGuarantorSheet } from '@/components/clients/loan-account/loan-account-guarantor-sheet';
@@ -55,6 +56,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import type { LoanAccountAccrueEligibility } from '@/lib/fineract/loan-account-accrue';
 import { loanAccountActionVisibility } from '@/lib/fineract/loan-account-command-meta';
 import type { LoanAccountTransactionCommand } from '@/lib/fineract/loan-account-command-meta';
 import { clientAccountEditPath, loanTopupApplicationPath } from '@/lib/fineract/client-account-links';
@@ -101,6 +103,7 @@ export interface LoanAccountActionPermissions {
   repayFromSavings: boolean;
   modifyApplication: boolean;
   create: boolean;
+  accrue: boolean;
 }
 
 type MenuItem = {
@@ -117,13 +120,15 @@ export function LoanAccountActions({
   clientId,
   permissions,
   repaymentPolicy,
-  pendingCheckerActions = []
+  pendingCheckerActions = [],
+  accrue = { show: false, omitTillDate: false }
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
   permissions: LoanAccountActionPermissions;
   repaymentPolicy: LoanRepaymentPolicySettings;
   pendingCheckerActions?: LoanAccountPendingCheckerAction[];
+  accrue?: LoanAccountAccrueEligibility;
 }) {
   const visibility = loanAccountActionVisibility(account);
   const currencyCode = loanAccountCurrencyCode(account);
@@ -151,6 +156,7 @@ export function LoanAccountActions({
   const [inboundPaymentKind, setInboundPaymentKind] = useState<LoanInboundPaymentKind | null>(null);
   const [inboundInitialMethod, setInboundInitialMethod] =
     useState<LoanInboundPaymentMethod>('savings');
+  const [accrueOpen, setAccrueOpen] = useState(false);
 
   function openInboundPayment(kind: LoanInboundPaymentKind, method: LoanInboundPaymentMethod = 'savings') {
     setInboundInitialMethod(method);
@@ -186,6 +192,7 @@ export function LoanAccountActions({
   const showTopup = visibility.topup && permissions.create && account.clientId != null;
   const showEditInstallments =
     visibility.editVariableInstallments && permissions.editVariableInstallments;
+  const showAccrue = permissions.accrue && accrue.show;
 
   const menuItems: MenuItem[] = [];
 
@@ -330,7 +337,8 @@ export function LoanAccountActions({
     showMakeRepayment ||
     showModifyApplication ||
     showEditInstallments ||
-    showTopup;
+    showTopup ||
+    showAccrue;
   const hasMenu = menuItems.length > 0;
 
   if (!hasPrimary && !hasMenu) {
@@ -362,6 +370,12 @@ export function LoanAccountActions({
           <Button type="button" onClick={() => openInboundPayment('repayment')}>
             <HandCoins className="mr-1 size-4" aria-hidden />
             Make repayment
+          </Button>
+        ) : null}
+        {showAccrue ? (
+          <Button type="button" variant="outline" onClick={() => setAccrueOpen(true)}>
+            <CalendarClock className="mr-1 size-4" aria-hidden />
+            Accrue
           </Button>
         ) : null}
         {showTopup && account.clientId != null ? (
@@ -466,6 +480,13 @@ export function LoanAccountActions({
             setTransactionCommand(null);
           }
         }}
+      />
+      <LoanAccountAccrueSheet
+        clientId={clientId}
+        accountId={account.id}
+        open={accrueOpen}
+        omitTillDate={accrue.omitTillDate}
+        onOpenChange={setAccrueOpen}
       />
       <LoanAccountAddChargeSheet
         clientId={clientId}

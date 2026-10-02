@@ -142,7 +142,24 @@ function normalizeSummary(raw: unknown): FineractLoanAccountSummary | undefined 
     totalWrittenOff: pick('totalWrittenOff'),
     totalOutstanding: pick('totalOutstanding'),
     totalOverdue: pick('totalOverdue'),
-    overdueSinceDate: normalizeDateField(row.overdueSinceDate)
+    overdueSinceDate: normalizeDateField(row.overdueSinceDate),
+    totalUnpaidPayableDueInterest: pick('totalUnpaidPayableDueInterest'),
+    totalUnpaidPayableNotDueInterest: pick('totalUnpaidPayableNotDueInterest')
+  };
+}
+
+function normalizeInterestRecalculationData(
+  raw: unknown
+): FineractLoanAccountDetail['interestRecalculationData'] {
+  if (!raw || typeof raw !== 'object') {
+    return undefined;
+  }
+  const row = raw as Record<string, unknown>;
+  if (typeof row.isCompoundingToBePostedAsTransaction !== 'boolean') {
+    return undefined;
+  }
+  return {
+    isCompoundingToBePostedAsTransaction: row.isCompoundingToBePostedAsTransaction
   };
 }
 
@@ -530,6 +547,9 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
     interestRateDifferential: toNumber(row.interestRateDifferential),
     isFloatingInterestRate: row.isFloatingInterestRate === true,
     isInterestRecalculationEnabled: row.isInterestRecalculationEnabled === true,
+    loanScheduleType: normalizeEnumOption(row.loanScheduleType),
+    subStatus: normalizeEnumOption(row.subStatus),
+    interestRecalculationData: normalizeInterestRecalculationData(row.interestRecalculationData),
     daysInMonthType: normalizeEnumOption(row.daysInMonthType),
     daysInYearType: normalizeEnumOption(row.daysInYearType),
     inArrearsTolerance: toNumber(row.inArrearsTolerance),

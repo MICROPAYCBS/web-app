@@ -156,6 +156,16 @@ export async function getLoanAccountTransactionTemplate(
   return normalizeTransactionTemplate(raw);
 }
 
+export async function executeLoanAccountAccrueCommand(
+  accountId: string | number,
+  body: Record<string, unknown>
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.post<FineractCommandProcessingResult>(`/loans/${accountId}`, body, {
+    command: 'accrue'
+  });
+}
+
 export async function executeLoanAccountLifecycleCommand(
   accountId: string | number,
   command: LoanAccountLifecycleCommand,

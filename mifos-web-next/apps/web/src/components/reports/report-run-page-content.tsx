@@ -20,9 +20,12 @@ import { toast } from 'sonner';
 import { fetchReportParameterMetadataAction, runReportAction } from '@/actions/report-run';
 import { DetailBackLink } from '@/components/composites';
 import { ListPage } from '@/components/composites/list-page';
+import { FinancialStatementPreview } from '@/components/reports/financial-statement-preview';
 import { ReportParameterSheet } from '@/components/reports/report-parameter-sheet';
 import { ReportResultTable } from '@/components/reports/report-result-table';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { buildFinancialStatement } from '@/lib/fineract/financial-statement';
+import type { FinancialReportSlug } from '@/lib/fineract/financial-reports';
 import {
   isTabularReportType,
   mergeReportRunParameters
@@ -34,19 +37,26 @@ export function ReportRunPageContent({
   report,
   canEdit = false,
   backHref = '/reports',
-  backLabel = 'Back to reports'
+  backLabel = 'Back to reports',
+  statementSlug,
+  organisationName
 }: {
   report: FineractReportDetail;
   canEdit?: boolean;
   /** Override catalog back link (e.g. financial-report entry points). */
   backHref?: string;
   backLabel?: string;
+  /** When set, a successful run renders a statement preview instead of the generic grid. */
+  statementSlug?: FinancialReportSlug;
+  organisationName?: string;
 }) {
   const [parameters, setParameters] = useState<FineractReportRunParameter[]>(() =>
     mergeReportRunParameters([], report)
   );
   const [metadataLoading, setMetadataLoading] = useState(true);
   const [result, setResult] = useState<FineractReportRunResult | null>(null);
+  const [runValues, setRunValues] = useState<Record<string, string>>({});
+  const [runDisplayValues, setRunDisplayValues] = useState<Record<string, string>>({});
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -88,7 +98,23 @@ export function ReportRunPageContent({
       : 'No parameters';
   }, [metadataLoading, parameters.length]);
 
-  function handleRun(values: Record<string, string>) {
+  const statementResult = useMemo(() => {
+    if (!statementSlug || !result) {
+      return null;
+    }
+    return buildFinancialStatement({
+      slug: statementSlug,
+      result,
+      organisationName,
+      parameters,
+      values: runValues,
+      displayValues: runDisplayValues
+    });
+  }, [statementSlug, result, organisationName, parameters, runValues, runDisplayValues]);
+
+  const showStatement = statementResult?.ok === true;
+
+  function handleRun(values: Record<string, string>, displayValues?: Record<string, string>) {
     startTransition(async () => {
       const runResult = await runReportAction({
         reportName: report.reportName,
@@ -98,6 +124,8 @@ export function ReportRunPageContent({
         toastFineractError(runResult.message);
         return;
       }
+      setRunValues(values);
+      setRunDisplayValues(displayValues ?? {});
       setResult(runResult.data);
       toast.success('Report completed.');
     });
@@ -105,6 +133,8 @@ export function ReportRunPageContent({
 
   return (
     <ListPage
+      className={showStatement ? 'financial-statement-page' : undefined}
+      headerClassName={showStatement ? 'print:hidden' : undefined}
       backLink={<DetailBackLink href={backHref} label={backLabel} />}
       title={report.reportName}
       meta={`${report.reportType}${report.reportSubType ? ` · ${report.reportSubType}` : ''}`}
@@ -145,19 +175,21 @@ export function ReportRunPageContent({
       }
     >
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">{parameterCountLabel}</p>
+        <p className={cn('text-sm text-muted-foreground', showStatement && 'print:hidden')}>
+          {parameterCountLabel}
+        </p>
 
         {!tabular ? (
           <div className="rounded-lg border border-border bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
             {report.reportType} reports are not supported in the browser yet. Table and SMS reports
             can be run here; chart and PDF report types will follow in a later update.
           </div>
+        ) : pending ? (
+          <ReportResultTable result={result} reportName={report.reportName} loading />
+        ) : statementResult?.ok ? (
+          <FinancialStatementPreview statement={statementResult.statement} />
         ) : (
-          <ReportResultTable
-            result={result}
-            reportName={report.reportName}
-            loading={pending}
-          />
+          <ReportResultTable result={result} reportName={report.reportName} />
         )}
       </div>
 

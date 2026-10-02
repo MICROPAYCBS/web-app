@@ -323,6 +323,27 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
           {matrixRows.length ? (
             <DetailSection title="Loan summary">
               <LoanAccountSummaryMatrix account={account} rows={matrixRows} />
+              {summary?.totalUnpaidPayableDueInterest != null ||
+              summary?.totalUnpaidPayableNotDueInterest != null ? (
+                <DetailFieldGrid className="mt-4">
+                  {summary?.totalUnpaidPayableDueInterest != null ? (
+                    <DetailField label="Unpaid interest due">
+                      <MoneyValue
+                        amount={summary.totalUnpaidPayableDueInterest}
+                        currencyCode={currency}
+                      />
+                    </DetailField>
+                  ) : null}
+                  {summary?.totalUnpaidPayableNotDueInterest != null ? (
+                    <DetailField label="Interest accrued, not yet due">
+                      <MoneyValue
+                        amount={summary.totalUnpaidPayableNotDueInterest}
+                        currencyCode={currency}
+                      />
+                    </DetailField>
+                  ) : null}
+                </DetailFieldGrid>
+              ) : null}
             </DetailSection>
           ) : null}
         </>

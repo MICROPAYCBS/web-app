@@ -9,6 +9,7 @@ import 'server-only';
  */
 
 import type {
+  FineractEnumOption,
   LoanProductDetail,
   LoanProductKind,
   LoanProductListItem,
@@ -159,6 +160,18 @@ export async function listLoanProducts(kind: LoanProductKind): Promise<LoanProdu
   const fineract = await createFineractClient();
   const data = await fineract.get<unknown>(loanProductApiPath(kind));
   return normalizeFineractList(data, normalizeListItem);
+}
+
+/** Accounting rule on a loan product. The loan payload does not include it. */
+export async function getLoanProductAccountingRule(
+  productId: string | number
+): Promise<FineractEnumOption | null> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`/loanproducts/${productId}`);
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  return asEnumOption((raw as Record<string, unknown>).accountingRule) ?? null;
 }
 
 export async function getLoanProduct(

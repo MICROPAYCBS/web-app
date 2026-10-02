@@ -54,6 +54,7 @@ import type { LoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-
 import type { LoanAccountPendingCheckerAction } from '@/lib/fineract/loan-account-pending-checker-display';
 import type { LoanPendingApprovalWorkflowContext } from '@/lib/fineract/loan-account-pending-checker';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
+import type { LoanAccountAccrueEligibility } from '@/lib/fineract/loan-account-accrue';
 import type { LoanTransactionActionPermissions } from '@/lib/fineract/loan-transaction-actions';
 
 export function LoanAccountDetailView({
@@ -77,7 +78,8 @@ export function LoanAccountDetailView({
   transactionActionPermissions,
   pendingCheckerActions = [],
   pendingApprovalWorkflowContext,
-  makerCheckerTaskPermissions = []
+  makerCheckerTaskPermissions = [],
+  accrue = { show: false, omitTillDate: false }
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
@@ -100,6 +102,7 @@ export function LoanAccountDetailView({
   pendingCheckerActions?: LoanAccountPendingCheckerAction[];
   pendingApprovalWorkflowContext?: LoanPendingApprovalWorkflowContext;
   makerCheckerTaskPermissions?: FineractRolePermissionUsage[];
+  accrue?: LoanAccountAccrueEligibility;
 }) {
   const currency = loanAccountCurrencyCode(account);
   const summary = account.summary;
@@ -202,6 +205,7 @@ export function LoanAccountDetailView({
                   permissions={permissions}
                   repaymentPolicy={repaymentPolicy}
                   pendingCheckerActions={pendingCheckerActions}
+                  accrue={accrue}
                 />
               </AccountDetailActionsBar>
             }
