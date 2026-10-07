@@ -294,6 +294,11 @@
       "UPDATE_LOANPRODUCT"
     ]
   },
+  "products.loan.delete": {
+    "any": [
+      "DELETE_LOANPRODUCT"
+    ]
+  },
   "products.savings": {
     "any": [
       "READ_SAVINGSPRODUCT"
@@ -307,6 +312,11 @@
   "products.savings.update": {
     "any": [
       "UPDATE_SAVINGSPRODUCT"
+    ]
+  },
+  "products.savings.delete": {
+    "any": [
+      "DELETE_SAVINGSPRODUCT"
     ]
   },
   "organization": {
@@ -1004,6 +1014,11 @@
   "products.share.update": {
     "any": [
       "UPDATE_SHAREPRODUCT"
+    ]
+  },
+  "products.share.delete": {
+    "any": [
+      "DELETE_SHAREPRODUCT"
     ]
   },
   "products.charges": {

@@ -23,6 +23,7 @@ import {
 } from '@/lib/fineract/share-product-paths';
 import {
   createShareProductRecord,
+  deleteShareProductRecord,
   getShareProduct,
   getShareProductChargeOptions,
   updateShareProductRecord
@@ -136,5 +137,27 @@ export async function updateShareProductAction(
     return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, 'Could not update share product.');
+  }
+}
+
+export async function deleteShareProductAction(
+  productId: string
+): Promise<ShareProductActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('products.share.delete'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to delete share products.' };
+  }
+
+  try {
+    const response = await deleteShareProductRecord(productId);
+    revalidatePath(SHARE_PRODUCTS_LIST_PATH);
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
+  } catch (err) {
+    return toFineractActionError(err, 'Could not delete share product.');
   }
 }

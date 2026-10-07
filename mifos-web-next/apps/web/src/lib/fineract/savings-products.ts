@@ -11,6 +11,7 @@ import 'server-only';
 import type {
   SavingsProductDetail,
   SavingsProductListItem,
+  FineractCommandProcessingResult,
   SavingsProductMutationResponse,
   SavingsProductTemplate
 } from '@mifos/api-client';
@@ -240,5 +241,14 @@ export async function updateSavingsProductRecord(
   return fineract.put<SavingsProductMutationResponse>(
     `${SAVINGS_PRODUCTS_API_PATH}/${productId}`,
     payload
+  );
+}
+
+export async function deleteSavingsProductRecord(
+  productId: string | number
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.delete<FineractCommandProcessingResult>(
+    `${SAVINGS_PRODUCTS_API_PATH}/${productId}`
   );
 }

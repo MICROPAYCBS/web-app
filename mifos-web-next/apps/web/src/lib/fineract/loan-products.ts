@@ -13,6 +13,7 @@ import type {
   LoanProductDetail,
   LoanProductKind,
   LoanProductListItem,
+  FineractCommandProcessingResult,
   LoanProductMutationResponse,
   LoanProductTemplate
 } from '@mifos/api-client';
@@ -241,5 +242,15 @@ export async function updateLoanProductRecord(
   return fineract.put<LoanProductMutationResponse>(
     `${loanProductApiPath(kind)}/${productId}`,
     payload
+  );
+}
+
+export async function deleteLoanProductRecord(
+  productId: string | number,
+  kind: LoanProductKind
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.delete<FineractCommandProcessingResult>(
+    `${loanProductApiPath(kind)}/${productId}`
   );
 }

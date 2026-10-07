@@ -20,10 +20,15 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import Link from 'next/link';
+import { deleteShareProductAction } from '@/actions/share-product';
 import { DetailBackLink, DetailHeader, DetailPage, DetailSectionNav } from '@/components/composites';
+import { ProductDeleteButton } from '@/components/products/product-delete-button';
 import { ShareProductSectionPanel } from '@/components/products/share/share-product-section-panels';
 import { buttonVariants } from '@/components/ui/button';
-import { shareProductEditPath } from '@/lib/fineract/share-product-paths';
+import {
+  SHARE_PRODUCTS_LIST_PATH,
+  shareProductEditPath
+} from '@/lib/fineract/share-product-paths';
 import {
   SHARE_PRODUCT_DEFAULT_SECTION,
   shareProductSectionIds,
@@ -64,15 +69,25 @@ export function ShareProductDetailView({
           }
           title={product.name ?? `Share product #${product.id}`}
           actions={
-            <Can permission="UPDATE_SHAREPRODUCT">
-              <Link
-                href={shareProductEditPath(product.id)}
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-              >
-                <Pencil className="mr-1 size-4" />
-                Edit
-              </Link>
-            </Can>
+            <div className="flex flex-wrap gap-2">
+              <Can permission="UPDATE_SHAREPRODUCT">
+                <Link
+                  href={shareProductEditPath(product.id)}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                >
+                  <Pencil className="mr-1 size-4" />
+                  Edit
+                </Link>
+              </Can>
+              <Can permission="DELETE_SHAREPRODUCT">
+                <ProductDeleteButton
+                  productName={product.name}
+                  productKindLabel="share product"
+                  listHref={SHARE_PRODUCTS_LIST_PATH}
+                  onDelete={() => deleteShareProductAction(String(product.id))}
+                />
+              </Can>
+            </div>
           }
         />
       }

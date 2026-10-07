@@ -11,6 +11,7 @@ import 'server-only';
 import type {
   ShareProductDetail,
   ShareProductListItem,
+  FineractCommandProcessingResult,
   ShareProductMutationResponse,
   ShareProductTemplate
 } from '@mifos/api-client';
@@ -217,5 +218,14 @@ export async function updateShareProductRecord(
   return fineract.put<ShareProductMutationResponse>(
     `${SHARE_PRODUCTS_API_PATH}/${productId}`,
     payload
+  );
+}
+
+export async function deleteShareProductRecord(
+  productId: string | number
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.delete<FineractCommandProcessingResult>(
+    `${SHARE_PRODUCTS_API_PATH}/${productId}`
   );
 }

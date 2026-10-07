@@ -22,9 +22,14 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import Link from 'next/link';
+import { deleteSavingsProductAction } from '@/actions/savings-product';
 import { DetailBackLink, DetailHeader, DetailPage, DetailSectionNav } from '@/components/composites';
+import { ProductDeleteButton } from '@/components/products/product-delete-button';
 import { buttonVariants } from '@/components/ui/button';
-import { savingsProductEditPath } from '@/lib/fineract/savings-product-paths';
+import {
+  SAVINGS_PRODUCTS_LIST_PATH,
+  savingsProductEditPath
+} from '@/lib/fineract/savings-product-paths';
 import { cn } from '@/lib/utils';
 import { SavingsProductSectionPanel } from '@/components/products/savings/savings-product-section-panels';
 import { useDetailSection } from '@/hooks/use-detail-section';
@@ -69,15 +74,25 @@ export function SavingsProductDetailView({
           }
           title={product.name ?? `Deposit product #${product.id}`}
           actions={
-            <Can permission="UPDATE_SAVINGSPRODUCT">
-              <Link
-                href={savingsProductEditPath(product.id)}
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-              >
-                <Pencil className="mr-1 size-4" />
-                Edit
-              </Link>
-            </Can>
+            <div className="flex flex-wrap gap-2">
+              <Can permission="UPDATE_SAVINGSPRODUCT">
+                <Link
+                  href={savingsProductEditPath(product.id)}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                >
+                  <Pencil className="mr-1 size-4" />
+                  Edit
+                </Link>
+              </Can>
+              <Can permission="DELETE_SAVINGSPRODUCT">
+                <ProductDeleteButton
+                  productName={product.name}
+                  productKindLabel="deposit product"
+                  listHref={SAVINGS_PRODUCTS_LIST_PATH}
+                  onDelete={() => deleteSavingsProductAction(String(product.id))}
+                />
+              </Can>
+            </div>
           }
         />
       }

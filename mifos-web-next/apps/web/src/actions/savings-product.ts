@@ -23,6 +23,7 @@ import {
 } from '@/lib/fineract/savings-product-paths';
 import {
   createSavingsProductRecord,
+  deleteSavingsProductRecord,
   getSavingsProduct,
   getSavingsProductChargeOptions,
   updateSavingsProductRecord
@@ -136,5 +137,27 @@ export async function updateSavingsProductAction(
     return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, 'Could not update deposit product.');
+  }
+}
+
+export async function deleteSavingsProductAction(
+  productId: string
+): Promise<SavingsProductActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('products.savings.delete'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to delete deposit products.' };
+  }
+
+  try {
+    const response = await deleteSavingsProductRecord(productId);
+    revalidatePath(SAVINGS_PRODUCTS_LIST_PATH);
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
+  } catch (err) {
+    return toFineractActionError(err, 'Could not delete deposit product.');
   }
 }

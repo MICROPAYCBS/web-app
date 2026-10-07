@@ -20,6 +20,7 @@ import { buildLoanProductPayload } from '@/lib/fineract/loan-product-payload';
 import type { LoanProductActionResult } from '@/lib/fineract/loan-product-action-result';
 import {
   createLoanProductRecord,
+  deleteLoanProductRecord,
   getLoanProduct,
   getLoanProductChargeOptions,
   updateLoanProductRecord
@@ -137,5 +138,28 @@ export async function updateLoanProductAction(
     return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, 'Could not update loan product.');
+  }
+}
+
+export async function deleteLoanProductAction(
+  productId: string,
+  kind: LoanProductKind
+): Promise<LoanProductActionResult> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission('products.loan.delete'));
+  } catch {
+    return { ok: false, message: 'You do not have permission to delete loan products.' };
+  }
+
+  try {
+    const response = await deleteLoanProductRecord(productId, kind);
+    revalidatePath(loanProductListPath(kind));
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
+  } catch (err) {
+    return toFineractActionError(err, 'Could not delete loan product.');
   }
 }

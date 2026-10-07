@@ -23,8 +23,10 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import Link from 'next/link';
+import { deleteLoanProductAction } from '@/actions/loan-product';
 import { DetailBackLink, DetailHeader, DetailPage, DetailSectionNav } from '@/components/composites';
 import { LoanProductSectionPanel } from '@/components/products/loan/loan-product-section-panels';
+import { ProductDeleteButton } from '@/components/products/product-delete-button';
 import { buttonVariants } from '@/components/ui/button';
 import { useDetailSection } from '@/hooks/use-detail-section';
 import {
@@ -80,15 +82,29 @@ export function LoanProductDetailView({
           }
           title={product.name ?? `Loan product #${product.id}`}
           actions={
-            <Can permission="UPDATE_LOANPRODUCT">
-              <Link
-                href={loanProductEditPath(product.id, productKind)}
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-              >
-                <Pencil className="mr-1 size-4" />
-                Edit
-              </Link>
-            </Can>
+            <div className="flex flex-wrap gap-2">
+              <Can permission="UPDATE_LOANPRODUCT">
+                <Link
+                  href={loanProductEditPath(product.id, productKind)}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                >
+                  <Pencil className="mr-1 size-4" />
+                  Edit
+                </Link>
+              </Can>
+              <Can permission="DELETE_LOANPRODUCT">
+                <ProductDeleteButton
+                  productName={product.name}
+                  productKindLabel={
+                    productKind === 'working-capital'
+                      ? 'working capital loan product'
+                      : 'loan product'
+                  }
+                  listHref={loanProductListPath(productKind)}
+                  onDelete={() => deleteLoanProductAction(String(product.id), productKind)}
+                />
+              </Can>
+            </div>
           }
         />
       }
