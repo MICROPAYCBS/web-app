@@ -44,11 +44,34 @@ export type SavingsAccountLifecycleCommand =
   | 'assignSavingsOfficer'
   | 'unassignSavingsOfficer';
 
-export type SavingsAccountTransactionCommand =
+export type SavingsAccountMoneyCommand =
   | 'deposit'
   | 'withdrawal'
+  | 'glToSavings'
+  | 'savingsToGl';
+
+export type SavingsAccountTransactionCommand =
+  | SavingsAccountMoneyCommand
   | 'postInterestAsOn'
   | 'holdAmount';
+
+/** Payment types come from the deposit or withdrawal template. The GL commands reuse those. */
+export function savingsMoneyCommandPaymentTemplate(
+  command: SavingsAccountMoneyCommand
+): 'deposit' | 'withdrawal' {
+  return command === 'withdrawal' || command === 'savingsToGl' ? 'withdrawal' : 'deposit';
+}
+
+export function savingsMoneyCommandIsGl(command: SavingsAccountMoneyCommand): boolean {
+  return command === 'glToSavings' || command === 'savingsToGl';
+}
+
+/** GL to Savings is a credit, like a deposit. Savings to GL is a debit, like a withdrawal. */
+export function savingsMoneyCommandLimitDirection(
+  command: SavingsAccountMoneyCommand
+): 'CREDIT' | 'DEBIT' {
+  return command === 'deposit' || command === 'glToSavings' ? 'CREDIT' : 'DEBIT';
+}
 
 export type SavingsAccountExistingTransactionCommand = 'undo' | 'modify' | 'releaseAmount';
 

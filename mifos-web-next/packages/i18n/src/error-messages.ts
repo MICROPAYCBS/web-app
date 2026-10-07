@@ -256,6 +256,12 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Disbursement of a top-up cannot be undone',
   'error.msg.loan.applied.or.to.be.disbursed.can.not.co-exist.with.the.loan.already.active.to.this.client':
     'This product cannot be applied while that loan is still active',
+  'error.msg.savingsaccount.transaction.accounting.not.enabled':
+    'This savings product does not use cash or accrual accounting.',
+  'error.msg.glaccount.id.invalid': 'Select a GL account.',
+  'error.msg.glJournalEntry.invalid.account.disabled': 'That GL account is disabled.',
+  'error.msg.glJournalEntry.invalid.account.manual.adjustments.not.permitted':
+    'That GL account does not allow manual entries.',
   'error.msg.loan.accrual.accounting.rule.not.periodic':
     'This loan product does not use periodic accrual.',
   'error.msg.loan.accrual.not.active': 'This loan is not active.',

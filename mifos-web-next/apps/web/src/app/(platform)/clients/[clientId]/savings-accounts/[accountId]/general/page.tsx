@@ -24,6 +24,11 @@ import { listJournalEntriesForSavingsAccount } from '@/lib/fineract/journal-entr
 import { savingsTransactionActionPermissions } from '@/lib/fineract/savings-transaction-action-permissions';
 import { getSavingsAccountPaymentChannels } from '@/lib/fineract/savings-account-commands';
 import { getSavingsAccount, listSavingsAccountCharges } from '@/lib/fineract/savings-accounts';
+import { getSavingsProductAccountingRule } from '@/lib/fineract/savings-products';
+import {
+  savingsAccountingRuleAllowsGlTransactions,
+  savingsAccountStatusIsActive
+} from '@/lib/fineract/savings-gl-transaction';
 import {
   loadResourcePendingCheckerActions,
   resolveResourcePendingWorkflowContext
@@ -34,7 +39,33 @@ import { loadReportOrganisationName } from '@/lib/fineract/load-report-organisat
 import { tryFineractLoad } from '@/lib/fineract/safe-load';
 import { getServerSession } from '@/lib/session/server';
 
-function savingsAccountPermissions(session: Awaited<ReturnType<typeof getServerSession>>): SavingsAccountActionPermissions {
+async function savingsGlTransactionsAllowed(
+  account: { status?: { id?: number }; savingsProductId?: number },
+  session: Awaited<ReturnType<typeof getServerSession>>
+): Promise<boolean> {
+  const canPost =
+    can(session, 'GLTOSAVINGS_SAVINGSACCOUNT') || can(session, 'SAVINGSTOGL_SAVINGSACCOUNT');
+  if (
+    !canPost ||
+    !can(session, resolvePermission('products.savings')) ||
+    !can(session, resolvePermission('accounting.coa')) ||
+    !savingsAccountStatusIsActive(account.status) ||
+    account.savingsProductId == null
+  ) {
+    return false;
+  }
+
+  const product = await tryFineractLoad(
+    () => getSavingsProductAccountingRule(account.savingsProductId as number),
+    'Could not load deposit product.'
+  );
+  return product.ok && savingsAccountingRuleAllowsGlTransactions(product.data);
+}
+
+function savingsAccountPermissions(
+  session: Awaited<ReturnType<typeof getServerSession>>,
+  glTransactionsAllowed: boolean
+): SavingsAccountActionPermissions {
   return {
     approve: can(session, 'APPROVE_SAVINGSACCOUNT'),
     activate: can(session, 'ACTIVATE_SAVINGSACCOUNT'),
@@ -43,6 +74,8 @@ function savingsAccountPermissions(session: Awaited<ReturnType<typeof getServerS
     undoApproval: can(session, 'APPROVALUNDO_SAVINGSACCOUNT'),
     deposit: can(session, 'DEPOSIT_SAVINGSACCOUNT'),
     withdraw: can(session, 'WITHDRAWAL_SAVINGSACCOUNT'),
+    glToSavings: glTransactionsAllowed && can(session, 'GLTOSAVINGS_SAVINGSACCOUNT'),
+    savingsToGl: glTransactionsAllowed && can(session, 'SAVINGSTOGL_SAVINGSACCOUNT'),
     close: can(session, 'CLOSE_SAVINGSACCOUNT'),
     block: can(session, 'BLOCK_SAVINGSACCOUNT'),
     unblock: can(session, 'UNBLOCK_SAVINGSACCOUNT'),
@@ -136,6 +169,7 @@ export default async function SavingsAccountGeneralPage({
     chargesResult.ok
       ? { ...result.data, charges: chargesResult.data }
       : result.data;
+  const glTransactionsAllowed = await savingsGlTransactionsAllowed(account, session);
 
   const auditEntriesForPending =
     auditResult?.ok && auditResult.data ? auditResult.data.pageItems : [];
@@ -171,7 +205,7 @@ export default async function SavingsAccountGeneralPage({
       account={account}
       clientId={clientId}
       reportOrgName={reportOrgName}
-      permissions={savingsAccountPermissions(session)}
+      permissions={savingsAccountPermissions(session, glTransactionsAllowed)}
       canViewAudits={canViewAudits}
       auditEntries={auditEntries}
       auditLoadFailed={canViewAudits && auditResult != null && !auditResult.ok}

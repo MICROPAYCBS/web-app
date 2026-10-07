@@ -75,10 +75,17 @@ export const savingsAccountBlockCommandSchema = z.object({
   reasonForBlock: z.string().trim().min(1, 'Reason is required.')
 });
 
+const optionalGlAccountId = z.coerce
+  .number()
+  .int()
+  .positive('Select a GL account.')
+  .optional();
+
 export const savingsAccountTransactionCommandSchema = z.object({
   transactionDate: requiredDate,
   transactionAmount: z.coerce.number().positive('Amount must be greater than zero.'),
   paymentTypeId: z.coerce.number().int().positive('Select a payment type.'),
+  glAccountId: optionalGlAccountId,
   entryMode: z.enum(['amount', 'denominations']).optional(),
   legalTenderLines: z.array(legalTenderLineInputSchema).optional(),
   ...optionalPaymentFields,
@@ -140,6 +147,7 @@ export const savingsAccountModifyTransactionSchema = z.object({
   transactionDate: requiredDate,
   transactionAmount: z.coerce.number().positive('Amount must be greater than zero.'),
   paymentTypeId: z.coerce.number().int().positive('Select a payment type.'),
+  glAccountId: optionalGlAccountId,
   ...optionalPaymentFields,
   note: optionalNote
 });

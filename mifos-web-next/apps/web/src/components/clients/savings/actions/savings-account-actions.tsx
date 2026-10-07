@@ -74,6 +74,8 @@ export interface SavingsAccountActionPermissions {
   undoApproval: boolean;
   deposit: boolean;
   withdraw: boolean;
+  glToSavings: boolean;
+  savingsToGl: boolean;
   close: boolean;
   block: boolean;
   unblock: boolean;
@@ -95,7 +97,7 @@ export interface SavingsAccountActionPermissions {
   deleteAccount: boolean;
 }
 
-type DepositWithdrawCommand = 'deposit' | 'withdrawal';
+type DepositWithdrawCommand = 'deposit' | 'withdrawal' | 'glToSavings' | 'savingsToGl';
 
 export function SavingsAccountActions({
   account,
@@ -140,6 +142,8 @@ export function SavingsAccountActions({
     !hasPendingCheckerAction(pendingCheckerActions, 'ACTIVATE');
   const showDeposit = visibility.deposit && permissions.deposit;
   const showWithdraw = visibility.withdraw && permissions.withdraw;
+  const showGlToSavings = permissions.glToSavings;
+  const showSavingsToGl = permissions.savingsToGl;
 
   type MenuItem = {
     id: string;
@@ -322,7 +326,8 @@ export function SavingsAccountActions({
     });
   }
 
-  const hasPrimary = showApprove || showActivate || showDeposit || showWithdraw;
+  const hasPrimary =
+    showApprove || showActivate || showDeposit || showWithdraw || showGlToSavings || showSavingsToGl;
   const hasMenu = menuItems.length > 0;
 
   if (!hasPrimary && !hasMenu) {
@@ -354,6 +359,18 @@ export function SavingsAccountActions({
           <Button type="button" size="sm" variant="outline" onClick={() => setTransactionCommand('withdrawal')}>
             <ArrowUpCircle className="mr-1 size-4" />
             Withdraw
+          </Button>
+        ) : null}
+        {showGlToSavings ? (
+          <Button type="button" size="sm" variant="outline" onClick={() => setTransactionCommand('glToSavings')}>
+            <ArrowDownToLine className="mr-1 size-4" />
+            GL to Savings
+          </Button>
+        ) : null}
+        {showSavingsToGl ? (
+          <Button type="button" size="sm" variant="outline" onClick={() => setTransactionCommand('savingsToGl')}>
+            <ArrowUpFromLine className="mr-1 size-4" />
+            Savings to GL
           </Button>
         ) : null}
         {hasMenu ? (

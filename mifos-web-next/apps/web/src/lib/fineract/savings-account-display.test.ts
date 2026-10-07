@@ -92,6 +92,84 @@ describe('formatSavingsTransactionType', () => {
     );
   });
 
+  it('labels GL movements before the deposit and withdrawal flags', () => {
+    assert.equal(
+      formatSavingsTransactionType(
+        transaction({
+          transactionType: {
+            id: 22,
+            deposit: true,
+            glToSavings: true,
+            value: 'GL to Savings'
+          }
+        })
+      ),
+      'GL to Savings'
+    );
+    assert.equal(
+      formatSavingsTransactionType(
+        transaction({
+          transactionType: { id: 22, deposit: true, value: 'Deposit' }
+        })
+      ),
+      'GL to Savings'
+    );
+    assert.equal(
+      formatSavingsTransactionType(
+        transaction({
+          transactionType: {
+            id: 23,
+            withdrawal: true,
+            savingsToGl: true,
+            value: 'Savings to GL'
+          }
+        })
+      ),
+      'Savings to GL'
+    );
+    assert.equal(
+      formatSavingsTransactionType(
+        transaction({
+          transactionType: { id: 23, withdrawal: true, value: 'Withdrawal' }
+        })
+      ),
+      'Savings to GL'
+    );
+  });
+
+  it('keeps GL movements in the deposit and withdrawal totals', () => {
+    const totals = sumSavingsCashMovementTotals([
+      transaction({
+        id: 1,
+        amount: 150,
+        transactionType: { id: 22, deposit: true, glToSavings: true, value: 'GL to Savings' }
+      }),
+      transaction({
+        id: 2,
+        amount: 40,
+        transactionType: { id: 23, withdrawal: true, savingsToGl: true, value: 'Savings to GL' }
+      })
+    ]);
+    assert.equal(totals.totalDeposits, 150);
+    assert.equal(totals.totalWithdrawals, 40);
+    assert.equal(
+      isSavingsTransactionDebit(
+        transaction({
+          transactionType: { id: 22, deposit: true, debit: true, glToSavings: true }
+        })
+      ),
+      false
+    );
+    assert.equal(
+      isSavingsTransactionDebit(
+        transaction({
+          transactionType: { id: 23, withdrawal: true, savingsToGl: true }
+        })
+      ),
+      true
+    );
+  });
+
   it('keeps cash deposits and withdrawals unchanged', () => {
     assert.equal(
       formatSavingsTransactionType(transaction({ transactionType: { deposit: true, value: 'Deposit' } })),

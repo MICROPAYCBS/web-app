@@ -345,6 +345,16 @@
       "UPDATECHANNELLIMIT_SAVINGSACCOUNT"
     ]
   },
+  "savings.glToSavings": {
+    "any": [
+      "GLTOSAVINGS_SAVINGSACCOUNT"
+    ]
+  },
+  "savings.savingsToGl": {
+    "any": [
+      "SAVINGSTOGL_SAVINGSACCOUNT"
+    ]
+  },
   "savings.importTransactions": {
     "any": [
       "DEPOSIT_SAVINGSACCOUNT",

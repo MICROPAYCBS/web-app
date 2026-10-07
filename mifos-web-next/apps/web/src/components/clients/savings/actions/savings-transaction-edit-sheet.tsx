@@ -26,6 +26,10 @@ import {
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  isSavingsGlToSavingsTransaction,
+  isSavingsToGlTransaction
+} from '@/lib/fineract/savings-account-display';
 
 export function SavingsTransactionEditSheet({
   clientId,
@@ -51,16 +55,25 @@ export function SavingsTransactionEditSheet({
   const [transactionDate, setTransactionDate] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentTypeId, setPaymentTypeId] = useState('');
+  const [glAccounts, setGlAccounts] = useState<{ id: number; glCode: string; name: string }[]>([]);
+  const [glAccountId, setGlAccountId] = useState('');
   const [note, setNote] = useState('');
   const [paymentDetails, setPaymentDetails] = useState(emptyPaymentDetailFields);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const isDeposit = transaction.transactionType?.deposit === true;
+  const glToSavings = isSavingsGlToSavingsTransaction(transaction);
+  const savingsToGl = isSavingsToGlTransaction(transaction);
+  const isGlTransaction = glToSavings || savingsToGl;
+  const isDeposit = !isGlTransaction && transaction.transactionType?.deposit === true;
   const title = 'Edit transaction';
-  const description = isDeposit
-    ? 'Update this deposit on the savings account.'
-    : 'Update this withdrawal from the savings account.';
+  const description = glToSavings
+    ? 'Update this GL to Savings posting. The selected account is debited and the savings balance increases.'
+    : savingsToGl
+      ? 'Update this Savings to GL posting. The selected account is credited and the savings balance decreases.'
+      : isDeposit
+        ? 'Update this deposit on the savings account.'
+        : 'Update this withdrawal from the savings account.';
 
   useEffect(() => {
     if (!open) {
@@ -71,8 +84,13 @@ export function SavingsTransactionEditSheet({
     setError(null);
     setFieldErrors({});
     setActiveTab('basic');
-    void loadSavingsTransactionEditSheetDataAction(String(accountId), transaction.id).then(
-      (result) => {
+    setGlAccounts([]);
+    setGlAccountId('');
+    void loadSavingsTransactionEditSheetDataAction(
+      String(accountId),
+      transaction.id,
+      isGlTransaction
+    ).then((result) => {
         if (cancelled) {
           return;
         }
@@ -83,6 +101,8 @@ export function SavingsTransactionEditSheet({
           return;
         }
         setPaymentTypes(result.paymentTypeOptions);
+        setGlAccounts(result.glAccounts);
+        setGlAccountId('');
         setTransactionDate(result.transactionDate);
         setAmount(result.transactionAmount);
         setPaymentTypeId(result.paymentTypeId);
@@ -99,7 +119,7 @@ export function SavingsTransactionEditSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, accountId, transaction.id]);
+  }, [open, accountId, transaction.id, isGlTransaction]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -119,7 +139,8 @@ export function SavingsTransactionEditSheet({
         checkNumber: paymentDetails.checkNumber.trim() || undefined,
         routingCode: paymentDetails.routingCode.trim() || undefined,
         receiptNumber: paymentDetails.receiptNumber.trim() || undefined,
-        bankNumber: paymentDetails.bankNumber.trim() || undefined
+        bankNumber: paymentDetails.bankNumber.trim() || undefined,
+        ...(isGlTransaction && glAccountId ? { glAccountId } : {})
       });
 
       if (!result.ok) {
@@ -167,6 +188,23 @@ export function SavingsTransactionEditSheet({
         required
         disabled={disabled}
       />
+      {isGlTransaction ? (
+        <SelectField
+          id={`${formId}-gl-account`}
+          label="GL account"
+          value={glAccountId}
+          onValueChange={(value) => setGlAccountId(value ?? '')}
+          options={glAccounts.map((account) => ({
+            value: String(account.id),
+            label: `${account.glCode} — ${account.name}`
+          }))}
+          placeholder="Keep the stored account"
+          error={fieldErrors.glAccountId}
+          optional
+          disabled={disabled || glAccounts.length === 0}
+          hint="Leave this empty to keep the account already stored. Choose an account to replace it."
+        />
+      ) : null}
       <TextField
         id={`${formId}-note`}
         label="Note"

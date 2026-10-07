@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { assertCan } from '@mifos/auth';
+import { assertCan, can } from '@mifos/auth';
 import {
   savingsAccountModifyTransactionSchema,
   savingsAccountUndoTransactionSchema,
@@ -18,6 +18,7 @@ import {
 } from '@mifos/validation';
 import { revalidatePath } from 'next/cache';
 import { undoAccountTransfer } from '@/lib/fineract/account-transfers';
+import { listManualEntryDetailGlAccounts } from '@/lib/fineract/gl-accounts';
 import { buildFineractCommandBody } from '@/lib/fineract/client-command-body';
 import {
   executeSavingsAccountExistingTransaction,
@@ -115,7 +116,8 @@ function omitEmptyStrings(fields: Record<string, unknown>) {
 
 export async function loadSavingsTransactionEditSheetDataAction(
   accountId: string,
-  transactionId: number
+  transactionId: number,
+  includeGlAccounts = false
 ): Promise<
   | {
       ok: true;
@@ -131,6 +133,7 @@ export async function loadSavingsTransactionEditSheetDataAction(
         receiptNumber: string;
         bankNumber: string;
       };
+      glAccounts: { id: number; glCode: string; name: string }[];
     }
   | { ok: false; message: string }
 > {
@@ -160,6 +163,10 @@ export async function loadSavingsTransactionEditSheetDataAction(
       fineractApiDateToFormString([new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()]) ??
       '';
     const payment = template.paymentDetailData;
+    const glAccounts =
+      includeGlAccounts && can(session, 'READ_GLACCOUNT')
+        ? await listManualEntryDetailGlAccounts()
+        : [];
     return {
       ok: true,
       paymentTypeOptions,
@@ -174,7 +181,8 @@ export async function loadSavingsTransactionEditSheetDataAction(
         routingCode: payment?.routingCode ?? '',
         receiptNumber: payment?.receiptNumber ?? '',
         bankNumber: payment?.bankNumber ?? ''
-      }
+      },
+      glAccounts
     };
   } catch (error) {
     return toFineractActionError(error, 'Could not load transaction for editing.');
@@ -221,7 +229,8 @@ export async function modifySavingsTransactionAction(
           checkNumber: fields.checkNumber,
           routingCode: fields.routingCode,
           receiptNumber: fields.receiptNumber,
-          bankNumber: fields.bankNumber
+          bankNumber: fields.bankNumber,
+          ...(fields.glAccountId != null ? { glAccountId: fields.glAccountId } : {})
         })
       )
     );

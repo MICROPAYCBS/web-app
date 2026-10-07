@@ -8,6 +8,7 @@
     "transactionDate": { "required": true, "type": "date" },
     "transactionAmount": { "required": true, "type": "money" },
     "paymentTypeId": { "required": true, "type": "id" },
+    "glAccountId": { "required": false, "type": "id" },
     "accountNumber": { "required": false, "type": "string" },
     "checkNumber": { "required": false, "type": "string" },
     "routingCode": { "required": false, "type": "string" },

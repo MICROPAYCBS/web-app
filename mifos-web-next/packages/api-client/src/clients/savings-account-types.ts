@@ -63,6 +63,8 @@ export interface FineractSavingsAccountTransaction {
   transactionType?: FineractEnumOption & {
     deposit?: boolean;
     withdrawal?: boolean;
+    glToSavings?: boolean;
+    savingsToGl?: boolean;
     debit?: boolean;
     credit?: boolean;
     interestPosting?: boolean;

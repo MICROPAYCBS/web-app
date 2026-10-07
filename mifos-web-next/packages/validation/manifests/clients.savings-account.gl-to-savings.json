@@ -1,0 +1,20 @@
+{
+  "schemaId": "clients.savings-account.gl-to-savings",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.savings.api.SavingsAccountTransactionsApiResource",
+    "org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDataValidator"
+  ],
+  "fields": {
+    "transactionDate": { "required": true, "type": "date" },
+    "transactionAmount": { "required": true, "type": "money" },
+    "paymentTypeId": { "required": true, "type": "id" },
+    "glAccountId": { "required": true, "type": "id" },
+    "accountNumber": { "required": false, "type": "string" },
+    "checkNumber": { "required": false, "type": "string" },
+    "routingCode": { "required": false, "type": "string" },
+    "receiptNumber": { "required": false, "type": "string" },
+    "bankNumber": { "required": false, "type": "string" },
+    "note": { "required": false, "type": "string" }
+  },
+  "notes": "POST /savingsaccounts/{id}/transactions?command=glToSavings. Body is the deposit body plus glAccountId. The supplied detail GL account is debited. Savings Control stays the product mapping."
+}

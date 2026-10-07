@@ -69,8 +69,41 @@ import { withdrawalFeesForPaymentType } from '@/lib/fineract/channel-charge-timi
 import { SavingsChannelLimitNotice } from '@/components/clients/savings/savings-channel-limit-notice';
 import { formatAccountMoney } from '@/lib/fineract/format-account-money';
 import { legalTenderListPath } from '@/lib/fineract/legal-tender-paths';
+import {
+  savingsMoneyCommandIsGl,
+  savingsMoneyCommandLimitDirection,
+  type SavingsAccountMoneyCommand
+} from '@/lib/fineract/savings-account-command-meta';
 
-type DepositWithdrawCommand = 'deposit' | 'withdrawal';
+type DepositWithdrawCommand = SavingsAccountMoneyCommand;
+
+function savingsMoneyCommandCopy(command: SavingsAccountMoneyCommand): {
+  title: string;
+  description: string;
+} {
+  switch (command) {
+    case 'deposit':
+      return {
+        title: 'Deposit',
+        description: 'Post a deposit to this savings account.'
+      };
+    case 'withdrawal':
+      return {
+        title: 'Withdraw',
+        description: 'Withdraw funds from this savings account.'
+      };
+    case 'glToSavings':
+      return {
+        title: 'GL to Savings',
+        description: 'The selected account is debited and the savings balance increases.'
+      };
+    case 'savingsToGl':
+      return {
+        title: 'Savings to GL',
+        description: 'The selected account is credited and the savings balance decreases.'
+      };
+  }
+}
 
 type TransactionSuccessState = {
   receipt: SavingsReceiptData;
@@ -136,11 +169,14 @@ export function SavingsAccountTransactionSheet({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [successState, setSuccessState] = useState<TransactionSuccessState | null>(null);
 
-  const isDeposit = command === 'deposit';
-  const title = isDeposit ? 'Deposit' : 'Withdraw';
-  const description = isDeposit
-    ? 'Post a deposit to this savings account.'
-    : 'Withdraw funds from this savings account.';
+  const [glAccounts, setGlAccounts] = useState<{ id: number; glCode: string; name: string }[]>([]);
+  const [glAccountId, setGlAccountId] = useState('');
+
+  const copy = command ? savingsMoneyCommandCopy(command) : null;
+  const title = copy?.title ?? 'Transaction';
+  const description = copy?.description ?? '';
+  const isGlCommand = command != null && savingsMoneyCommandIsGl(command);
+  const showsWithdrawalFees = command === 'withdrawal' || command === 'savingsToGl';
 
   useEffect(() => {
     if (!open || !command) {
@@ -162,6 +198,8 @@ export function SavingsAccountTransactionSheet({
     setQuantities({});
     setLegalTenders([]);
     setDecimalPlaces(2);
+    setGlAccounts([]);
+    setGlAccountId('');
     setCashierPolicy({
       preventCashierOverdraw: true,
       requireCashierForCashTransactions: true,
@@ -190,6 +228,7 @@ export function SavingsAccountTransactionSheet({
       setCashierSessionLink(result.cashierSessionLink);
       setLegalTenders(result.legalTenders);
       setDecimalPlaces(result.decimalPlaces);
+      setGlAccounts(result.glAccounts);
       setQuantities(emptyLegalTenderQuantities(result.legalTenders));
       const defaultEntryMode: CashTransactionEntryMode =
         result.cashierPolicy.captureLegalTenderForCashTransactions === 'REQUIRED'
@@ -213,11 +252,11 @@ export function SavingsAccountTransactionSheet({
   );
   const selectedPaymentTypeId = Number(paymentTypeId);
   const withdrawalFees = useMemo(() => {
-    if (command !== 'withdrawal' || paymentTypeId === '' || !Number.isFinite(selectedPaymentTypeId)) {
+    if (!showsWithdrawalFees || paymentTypeId === '' || !Number.isFinite(selectedPaymentTypeId)) {
       return [];
     }
     return withdrawalFeesForPaymentType(charges, paymentChannels, selectedPaymentTypeId);
-  }, [charges, command, paymentChannels, paymentTypeId, selectedPaymentTypeId]);
+  }, [charges, paymentChannels, paymentTypeId, selectedPaymentTypeId, showsWithdrawalFees]);
   const isCashPayment = selectedPaymentType?.isCashPayment === true;
   const captureMode: LegalTenderCaptureMode =
     cashierPolicy.captureLegalTenderForCashTransactions;
@@ -283,7 +322,8 @@ export function SavingsAccountTransactionSheet({
           checkNumber: paymentDetails.checkNumber.trim() || undefined,
           routingCode: paymentDetails.routingCode.trim() || undefined,
           receiptNumber: paymentDetails.receiptNumber.trim() || undefined,
-          bankNumber: paymentDetails.bankNumber.trim() || undefined
+          bankNumber: paymentDetails.bankNumber.trim() || undefined,
+          ...(isGlCommand ? { glAccountId } : {})
         }
       );
 
@@ -306,7 +346,7 @@ export function SavingsAccountTransactionSheet({
           transactionId: result.resourceId,
           transactionDate,
           transactionAmount: amount,
-          transactionTypeLabel: isDeposit ? 'Deposit' : 'Withdrawal',
+          transactionTypeLabel: title,
           paymentTypeName,
           note: note.trim() || undefined,
           paymentDetails,
@@ -359,13 +399,29 @@ export function SavingsAccountTransactionSheet({
           accountId={accountId}
           paymentChannels={paymentChannels}
           paymentTypeId={selectedPaymentTypeId}
-          direction={command === 'deposit' ? 'CREDIT' : 'DEBIT'}
+          direction={savingsMoneyCommandLimitDirection(command)}
           transactionDate={transactionDate}
           businessDate={initialTransactionDate}
           currencyCode={currencyCode}
         />
       ) : null}
-      {command === 'withdrawal' && paymentTypeId ? (
+      {isGlCommand ? (
+        <SelectField
+          id={`${formId}-gl-account`}
+          label="GL account"
+          value={glAccountId}
+          onValueChange={(value) => setGlAccountId(value ?? '')}
+          options={glAccounts.map((account) => ({
+            value: String(account.id),
+            label: `${account.glCode} — ${account.name}`
+          }))}
+          placeholder={glAccounts.length === 0 ? 'No GL accounts available' : 'Select GL account'}
+          error={fieldErrors.glAccountId}
+          required
+          disabled={disabled || glAccounts.length === 0}
+        />
+      ) : null}
+      {showsWithdrawalFees && paymentTypeId ? (
         <div className="space-y-1 text-sm">
           <p className="font-medium">Withdrawal fees</p>
           {withdrawalFees.length === 0 ? (
@@ -416,7 +472,7 @@ export function SavingsAccountTransactionSheet({
               >
                 Organization → Legal tenders
               </Link>{' '}
-              before posting cash {isDeposit ? 'deposits' : 'withdrawals'} by denomination.
+              before posting cash {command === 'deposit' || command === 'glToSavings' ? 'deposits' : 'withdrawals'} by denomination.
             </>
           }
         />

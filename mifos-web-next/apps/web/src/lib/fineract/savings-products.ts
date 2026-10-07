@@ -154,6 +154,18 @@ function withChannelLabels(
   }));
 }
 
+/** Accounting rule only. The savings account payload does not include it. */
+export async function getSavingsProductAccountingRule(
+  productId: string | number
+): Promise<ReturnType<typeof asEnumOption>> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(`${SAVINGS_PRODUCTS_API_PATH}/${productId}`);
+  if (!raw || typeof raw !== 'object') {
+    return undefined;
+  }
+  return asEnumOption((raw as Record<string, unknown>).accountingRule);
+}
+
 export async function getSavingsProduct(
   productId: string | number
 ): Promise<SavingsProductDetail> {

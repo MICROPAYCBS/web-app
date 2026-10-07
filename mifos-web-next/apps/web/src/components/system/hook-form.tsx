@@ -33,6 +33,9 @@ function isHookTemplateName(value: string): value is FineractHookTemplateName {
   return value === 'Web' || value === 'SMS Bridge';
 }
 
+const PAYLOAD_URL_PLACEHOLDER = 'https://example.com/hooks/';
+const PAYLOAD_URL_GUIDANCE = 'End the address with a slash (/), for example https://example.com/hooks/.';
+
 export function HookForm({
   mode,
   hookId,
@@ -201,14 +204,19 @@ export function HookForm({
             disabled={pending}
             error={fieldErrors.contentType}
           />
-          <TextField
-            label="Payload URL"
-            required
-            value={form.payloadUrl}
-            onChange={(value) => patchForm({ name: 'Web', payloadUrl: value })}
-            disabled={pending}
-            error={fieldErrors.payloadUrl}
-          />
+          <div className="space-y-1">
+            <TextField
+              label="Payload URL"
+              required
+              value={form.payloadUrl}
+              onChange={(value) => patchForm({ name: 'Web', payloadUrl: value })}
+              disabled={pending}
+              error={fieldErrors.payloadUrl}
+              placeholder={PAYLOAD_URL_PLACEHOLDER}
+              hint={PAYLOAD_URL_GUIDANCE}
+            />
+            <p className="text-sm text-muted-foreground">{PAYLOAD_URL_GUIDANCE}</p>
+          </div>
         </div>
       ) : (
         <>
@@ -221,14 +229,19 @@ export function HookForm({
               disabled={pending}
               error={fieldErrors.phoneNumber}
             />
-            <TextField
-              label="Payload URL"
-              required
-              value={form.payloadUrl}
-              onChange={(value) => patchForm({ name: 'SMS Bridge', payloadUrl: value })}
-              disabled={pending}
-              error={fieldErrors.payloadUrl}
-            />
+            <div className="space-y-1">
+              <TextField
+                label="Payload URL"
+                required
+                value={form.payloadUrl}
+                onChange={(value) => patchForm({ name: 'SMS Bridge', payloadUrl: value })}
+                disabled={pending}
+                error={fieldErrors.payloadUrl}
+                placeholder={PAYLOAD_URL_PLACEHOLDER}
+                hint={PAYLOAD_URL_GUIDANCE}
+              />
+              <p className="text-sm text-muted-foreground">{PAYLOAD_URL_GUIDANCE}</p>
+            </div>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <TextField

@@ -1,7 +1,8 @@
 {
   "command": "system.hooks.update",
   "fineractSources": [
-    "org.apache.fineract.infrastructure.hooks.api.HookApiResource"
+    "org.apache.fineract.infrastructure.hooks.api.HookApiResource",
+    "org.apache.fineract.infrastructure.hooks.processor.ProcessorHelper"
   ],
   "fields": {
     "name": { "required": true },

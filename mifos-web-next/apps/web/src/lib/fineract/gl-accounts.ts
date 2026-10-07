@@ -182,6 +182,26 @@ export async function getGlAccountFormTemplate(): Promise<FineractGlAccountFormT
   return normalizeGlAccountFormTemplate(raw);
 }
 
+/** Detail accounts that allow manual entries. Used by GL to Savings and Savings to GL. */
+export async function listManualEntryDetailGlAccounts(): Promise<
+  Pick<FineractGlAccountListItem, 'id' | 'glCode' | 'name'>[]
+> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(GL_ACCOUNTS_PATH, {
+    manualEntriesAllowed: 'true',
+    usage: '1',
+    disabled: 'false'
+  });
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw
+    .map((item) => normalizeGlAccountListItem(item))
+    .filter((item): item is FineractGlAccountListItem => item !== null)
+    .map((item) => ({ id: item.id, glCode: item.glCode, name: item.name }))
+    .sort((left, right) => left.glCode.localeCompare(right.glCode) || left.name.localeCompare(right.name));
+}
+
 export async function listGlAccounts(): Promise<FineractGlAccountListItem[]> {
   const fineract = await createFineractClient();
   const raw = await fineract.get<unknown>(GL_ACCOUNTS_PATH);

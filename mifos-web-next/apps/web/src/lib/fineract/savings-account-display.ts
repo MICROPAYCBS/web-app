@@ -105,7 +105,63 @@ export function isSavingsAccountTransfer(
   return Boolean(transaction.transfer);
 }
 
+function savingsTransactionTypeCode(transaction: FineractSavingsAccountTransaction): string {
+  return transaction.transactionType?.code?.toLowerCase() ?? '';
+}
+
+/** Type 22. Checked before deposit, because the server also sets `deposit` on these rows. */
+export function isSavingsGlToSavingsTransaction(
+  transaction: FineractSavingsAccountTransaction
+): boolean {
+  const type = transaction.transactionType;
+  if (!type) {
+    return false;
+  }
+  if (type.glToSavings === true || type.id === 22) {
+    return true;
+  }
+  return savingsTransactionTypeCode(transaction).endsWith('.gltosavings');
+}
+
+/** Type 23. Checked before withdrawal, because the server also sets `withdrawal` on these rows. */
+export function isSavingsToGlTransaction(transaction: FineractSavingsAccountTransaction): boolean {
+  const type = transaction.transactionType;
+  if (!type) {
+    return false;
+  }
+  if (type.savingsToGl === true || type.id === 23) {
+    return true;
+  }
+  return savingsTransactionTypeCode(transaction).endsWith('.savingstogl');
+}
+
+function savingsGlTransactionLabel(
+  value: string | undefined,
+  fallback: string,
+  forbidden: string
+): string {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.toLowerCase() === forbidden) {
+    return fallback;
+  }
+  return trimmed;
+}
+
 export function formatSavingsTransactionType(transaction: FineractSavingsAccountTransaction) {
+  if (isSavingsGlToSavingsTransaction(transaction)) {
+    return savingsGlTransactionLabel(
+      transaction.transactionType?.value,
+      'GL to Savings',
+      'deposit'
+    );
+  }
+  if (isSavingsToGlTransaction(transaction)) {
+    return savingsGlTransactionLabel(
+      transaction.transactionType?.value,
+      'Savings to GL',
+      'withdrawal'
+    );
+  }
   if (isSavingsAccountTransfer(transaction)) {
     return isSavingsTransactionDebit(transaction) ? 'Outward Transfer' : 'Inward Transfer';
   }
@@ -130,6 +186,12 @@ export function sortSavingsAccountTransactions(
 export function isSavingsTransactionDebit(transaction: FineractSavingsAccountTransaction) {
   const type = transaction.transactionType;
   if (type) {
+    if (isSavingsToGlTransaction(transaction)) {
+      return true;
+    }
+    if (isSavingsGlToSavingsTransaction(transaction)) {
+      return false;
+    }
     if (type.debit === true) {
       return true;
     }
@@ -160,18 +222,26 @@ export function isSavingsTransactionDebit(transaction: FineractSavingsAccountTra
   return entryCode === 'DEBIT';
 }
 
-/** Cash deposit — excludes account transfers (share purchase, loan repayment, etc.). */
+/** Cash deposit — excludes account transfers. GL to Savings stays in the deposit total. */
 export function isPureSavingsDeposit(transaction: FineractSavingsAccountTransaction): boolean {
-  return (
-    !isSavingsAccountTransfer(transaction) && transaction.transactionType?.deposit === true
-  );
+  if (isSavingsAccountTransfer(transaction) || isSavingsToGlTransaction(transaction)) {
+    return false;
+  }
+  if (isSavingsGlToSavingsTransaction(transaction)) {
+    return true;
+  }
+  return transaction.transactionType?.deposit === true;
 }
 
-/** Cash withdrawal — excludes account transfers. */
+/** Cash withdrawal — excludes account transfers. Savings to GL stays in the withdrawal total. */
 export function isPureSavingsWithdrawal(transaction: FineractSavingsAccountTransaction): boolean {
-  return (
-    !isSavingsAccountTransfer(transaction) && transaction.transactionType?.withdrawal === true
-  );
+  if (isSavingsAccountTransfer(transaction) || isSavingsGlToSavingsTransaction(transaction)) {
+    return false;
+  }
+  if (isSavingsToGlTransaction(transaction)) {
+    return true;
+  }
+  return transaction.transactionType?.withdrawal === true;
 }
 
 export type SavingsCashMovementTotals = {

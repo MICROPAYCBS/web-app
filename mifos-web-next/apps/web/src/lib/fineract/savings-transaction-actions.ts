@@ -7,7 +7,11 @@
  */
 
 import type { FineractSavingsAccountTransaction } from '@mifos/api-client';
-import { isSavingsTransactionAccrual } from '@/lib/fineract/savings-account-display';
+import {
+  isSavingsGlToSavingsTransaction,
+  isSavingsToGlTransaction,
+  isSavingsTransactionAccrual
+} from '@/lib/fineract/savings-account-display';
 
 export interface SavingsTransactionActionPermissions {
   undoTransaction: boolean;
@@ -51,7 +55,12 @@ export function savingsTransactionOffersEdit(
   ) {
     return false;
   }
-  return type.deposit === true || type.withdrawal === true;
+  return (
+    type.deposit === true ||
+    type.withdrawal === true ||
+    isSavingsGlToSavingsTransaction(transaction) ||
+    isSavingsToGlTransaction(transaction)
+  );
 }
 
 /** Printable receipt for manual deposits and withdrawals (not transfers). */
@@ -65,5 +74,10 @@ export function savingsTransactionOffersReceipt(
   if (!type) {
     return false;
   }
-  return type.deposit === true || type.withdrawal === true;
+  return (
+    type.deposit === true ||
+    type.withdrawal === true ||
+    isSavingsGlToSavingsTransaction(transaction) ||
+    isSavingsToGlTransaction(transaction)
+  );
 }

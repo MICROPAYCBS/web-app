@@ -56,11 +56,16 @@ import {
   SAVINGS_ACCOUNT_HOLD_REASON_CODE_NAME,
   type SavingsAccountBlockReasonKind,
   updateSavingsAccountWithholdTax,
-  type SavingsAccountLifecycleCommand,
-  type SavingsAccountTransactionCommand
+  type SavingsAccountLifecycleCommand
 } from '@/lib/fineract/savings-account-commands';
 import { getClientWithTemplate } from '@/lib/fineract/client-action-data';
+import { listManualEntryDetailGlAccounts } from '@/lib/fineract/gl-accounts';
 import { getSavingsAccount } from '@/lib/fineract/savings-accounts';
+import {
+  savingsMoneyCommandIsGl,
+  savingsMoneyCommandPaymentTemplate,
+  type SavingsAccountMoneyCommand
+} from '@/lib/fineract/savings-account-command-meta';
 import { savingsAccountAnnualFeeCharge } from '@/lib/fineract/savings-account-display';
 import { listCodeValuesByName } from '@/lib/fineract/system-codes';
 import type { CashierAwarePaymentTypeOption } from '@/lib/fineract/cash-payment-type';
@@ -96,9 +101,11 @@ const LIFECYCLE_PERMISSIONS: Record<SavingsAccountLifecycleCommand, string> = {
   unassignSavingsOfficer: 'REMOVESAVINGSOFFICER_SAVINGSACCOUNT'
 };
 
-const DEPOSIT_WITHDRAW_COMMANDS = {
+const SAVINGS_MONEY_COMMANDS = {
   deposit: 'DEPOSIT_SAVINGSACCOUNT',
-  withdrawal: 'WITHDRAWAL_SAVINGSACCOUNT'
+  withdrawal: 'WITHDRAWAL_SAVINGSACCOUNT',
+  glToSavings: 'GLTOSAVINGS_SAVINGSACCOUNT',
+  savingsToGl: 'SAVINGSTOGL_SAVINGSACCOUNT'
 } as const;
 
 const EXTENDED_TRANSACTION_PERMISSIONS = {
@@ -243,7 +250,7 @@ async function rejectCashTransactionWithoutActiveCashier(
 
 export async function loadSavingsAccountTransactionSheetDataAction(
   accountId: string,
-  command: 'deposit' | 'withdrawal',
+  command: SavingsAccountMoneyCommand,
   currencyCode: string
 ): Promise<
   | {
@@ -258,10 +265,11 @@ export async function loadSavingsAccountTransactionSheetDataAction(
       } | null;
       legalTenders: Awaited<ReturnType<typeof listActiveCurrencyLegalTenders>>;
       decimalPlaces: number;
+      glAccounts: { id: number; glCode: string; name: string }[];
     }
   | { ok: false; message: string }
 > {
-  const permission = DEPOSIT_WITHDRAW_COMMANDS[command];
+  const permission = SAVINGS_MONEY_COMMANDS[command];
   const denied = await requirePermission(
     permission,
     'You do not have permission to perform this transaction.'
@@ -269,14 +277,24 @@ export async function loadSavingsAccountTransactionSheetDataAction(
   if (denied) {
     return { ok: false, message: denied.message };
   }
+  if (savingsMoneyCommandIsGl(command)) {
+    const glDenied = await requirePermission(
+      'READ_GLACCOUNT',
+      'You do not have permission to choose a GL account.'
+    );
+    if (glDenied) {
+      return glDenied;
+    }
+  }
 
   try {
     const session = await getServerSession();
     const trimmedCurrency = currencyCode.trim();
-    const [template, cashierPolicy, decimalPlaces] = await Promise.all([
-      getSavingsAccountTransactionTemplate(accountId, command),
+    const [template, cashierPolicy, decimalPlaces, glAccounts] = await Promise.all([
+      getSavingsAccountTransactionTemplate(accountId, savingsMoneyCommandPaymentTemplate(command)),
       getCashierPolicySettings(),
-      resolveCurrencyDecimalPlaces(trimmedCurrency)
+      resolveCurrencyDecimalPlaces(trimmedCurrency),
+      savingsMoneyCommandIsGl(command) ? listManualEntryDetailGlAccounts() : Promise.resolve([])
     ]);
     const paymentTypeOptions = await loadCashierAwarePaymentTypeOptions(
       template.paymentTypeOptions ?? []
@@ -326,7 +344,8 @@ export async function loadSavingsAccountTransactionSheetDataAction(
       activeCashierSession,
       cashierSessionLink,
       legalTenders,
-      decimalPlaces
+      decimalPlaces,
+      glAccounts
     };
   } catch (error) {
     return toFineractActionError(error, 'Could not load transaction template.');
@@ -547,10 +566,10 @@ export async function executeSavingsAccountLifecycleCommandAction(
 export async function executeSavingsAccountTransactionCommandAction(
   clientId: string,
   accountId: string,
-  command: 'deposit' | 'withdrawal',
+  command: SavingsAccountMoneyCommand,
   raw: unknown
 ): Promise<SavingsAccountActionResult> {
-  const permission = DEPOSIT_WITHDRAW_COMMANDS[command];
+  const permission = SAVINGS_MONEY_COMMANDS[command];
   const denied = await requirePermission(
     permission,
     'You do not have permission to perform this transaction.'
@@ -562,6 +581,14 @@ export async function executeSavingsAccountTransactionCommandAction(
   const parsed = parseOrError(savingsAccountTransactionCommandSchema, raw);
   if (!parsed.success) {
     return parsed.result;
+  }
+
+  if (savingsMoneyCommandIsGl(command) && parsed.data.glAccountId == null) {
+    return {
+      ok: false,
+      message: 'Fix the highlighted fields.',
+      fieldErrors: { glAccountId: 'Select a GL account.' }
+    };
   }
 
   const cashierDenied = await rejectCashTransactionWithoutActiveCashier(parsed.data.paymentTypeId);
@@ -577,7 +604,7 @@ export async function executeSavingsAccountTransactionCommandAction(
     const accountCurrencyCode = account.currency?.code?.trim() ?? '';
 
     const [template, cashierPolicy] = await Promise.all([
-      getSavingsAccountTransactionTemplate(accountId, command),
+      getSavingsAccountTransactionTemplate(accountId, savingsMoneyCommandPaymentTemplate(command)),
       getCashierPolicySettings()
     ]);
     const paymentTypeOptions = await loadCashierAwarePaymentTypeOptions(
@@ -628,6 +655,7 @@ export async function executeSavingsAccountTransactionCommandAction(
           receiptNumber: validated.data.receiptNumber,
           bankNumber: validated.data.bankNumber,
           note: validated.data.note,
+          ...(validated.data.glAccountId != null ? { glAccountId: validated.data.glAccountId } : {}),
           ...(validated.data.legalTenderLines?.length
             ? { legalTenderLines: validated.data.legalTenderLines }
             : {})

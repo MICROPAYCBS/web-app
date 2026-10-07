@@ -13,10 +13,31 @@ export const hookEventSchema = z.object({
   actionName: z.string().trim().min(1, 'Action is required.')
 });
 
+/** Retrofit treats the payload URL as a base URL and throws unless it ends with `/`. */
+const payloadUrlSchema = z.string().trim().superRefine((value, ctx) => {
+  if (!value) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Payload URL is required.' });
+    return;
+  }
+  if (!/^https?:\/\//i.test(value)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Enter a full address starting with http:// or https://.'
+    });
+    return;
+  }
+  if (!value.endsWith('/')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'End the payload URL with a slash (/).'
+    });
+  }
+});
+
 const hookFormBaseSchema = z.object({
   displayName: z.string().trim().min(1, 'Display name is required.'),
   isActive: z.boolean(),
-  payloadUrl: z.string().trim().min(1, 'Payload URL is required.'),
+  payloadUrl: payloadUrlSchema,
   events: z.array(hookEventSchema).min(1, 'Add at least one event.')
 });
 
