@@ -24,6 +24,7 @@ import {
 import { buildDepositProductPayload } from '@/lib/fineract/deposit-product-payload';
 import {
   createDepositProductRecord,
+  deleteDepositProductRecord,
   getDepositProduct,
   getDepositProductChargeOptions,
   updateDepositProductRecord
@@ -163,5 +164,29 @@ export async function updateDepositProductAction(
     return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
   } catch (err) {
     return toFineractActionError(err, `Could not update ${config.label.toLowerCase()}.`);
+  }
+}
+
+export async function deleteDepositProductAction(
+  kind: DepositProductKind,
+  productId: string
+): Promise<DepositProductActionResult> {
+  const config = depositProductConfig(kind);
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, resolvePermission(config.permissionDeleteKey));
+  } catch {
+    return { ok: false, message: `You do not have permission to delete ${config.labelPlural.toLowerCase()}.` };
+  }
+
+  try {
+    const response = await deleteDepositProductRecord(kind, productId);
+    revalidatePath(config.listPath);
+    return actionSuccessFromFineractCommand(response, { resourceId: Number(productId) });
+  } catch (err) {
+    return toFineractActionError(err, `Could not delete ${config.label.toLowerCase()}.`);
   }
 }

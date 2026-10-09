@@ -15,6 +15,7 @@ export interface DepositProductKindConfig {
   permissionKey: string;
   permissionCreateKey: string;
   permissionUpdateKey: string;
+  permissionDeleteKey: 'products.fixedDeposit.delete' | 'products.recurringDeposit.delete';
   label: string;
   labelPlural: string;
   createButtonLabel: string;
@@ -31,6 +32,7 @@ export const RECURRING_DEPOSIT_CONFIG: DepositProductKindConfig = {
   permissionKey: 'products.recurringDeposit',
   permissionCreateKey: 'products.recurringDeposit.create',
   permissionUpdateKey: 'products.recurringDeposit.update',
+  permissionDeleteKey: 'products.recurringDeposit.delete',
   label: 'Recurring deposit product',
   labelPlural: 'Recurring deposit products',
   createButtonLabel: 'Create recurring deposit product',
@@ -48,6 +50,7 @@ export const FIXED_DEPOSIT_CONFIG: DepositProductKindConfig = {
   permissionKey: 'products.fixedDeposit',
   permissionCreateKey: 'products.fixedDeposit.create',
   permissionUpdateKey: 'products.fixedDeposit.update',
+  permissionDeleteKey: 'products.fixedDeposit.delete',
   label: 'Fixed deposit product',
   labelPlural: 'Fixed deposit products',
   createButtonLabel: 'Create fixed deposit product',

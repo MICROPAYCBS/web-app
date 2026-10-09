@@ -54,7 +54,9 @@ import {
   productStatusVariant
 } from '@/lib/fineract/product-status-display';
 import { useDetailSection } from '@/hooks/use-detail-section';
+import { deleteDepositProductAction } from '@/actions/deposit-product';
 import { DepositProductInterestCharts } from '@/components/products/deposit/deposit-product-interest-charts';
+import { ProductDeleteButton } from '@/components/products/product-delete-button';
 import { ProductChargesTable } from '@/components/products/shared/product-charges-table';
 import { ProductMappingTable } from '@/components/products/shared/product-mapping-table';
 import { cn } from '@/lib/utils';
@@ -80,6 +82,8 @@ export function DepositProductDetailView({
   const config = depositProductConfig(kind);
   const updatePermission =
     kind === 'recurring' ? 'UPDATE_RECURRINGDEPOSITPRODUCT' : 'UPDATE_FIXEDDEPOSITPRODUCT';
+  const deletePermission =
+    kind === 'recurring' ? 'DELETE_RECURRINGDEPOSITPRODUCT' : 'DELETE_FIXEDDEPOSITPRODUCT';
   const sectionIds = depositProductSectionIds(product);
   const navItems = depositProductSections(product).map((section) => ({
     ...section,
@@ -103,15 +107,25 @@ export function DepositProductDetailView({
           }
           title={product.name ?? `${config.label} #${product.id}`}
           actions={
-            <Can permission={updatePermission}>
-              <Link
-                href={depositProductEditPath(kind, product.id)}
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-              >
-                <Pencil className="mr-1 size-4" />
-                Edit
-              </Link>
-            </Can>
+            <div className="flex flex-wrap gap-2">
+              <Can permission={updatePermission}>
+                <Link
+                  href={depositProductEditPath(kind, product.id)}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                >
+                  <Pencil className="mr-1 size-4" />
+                  Edit
+                </Link>
+              </Can>
+              <Can permission={deletePermission}>
+                <ProductDeleteButton
+                  productName={product.name}
+                  productKindLabel={config.label.toLowerCase()}
+                  listHref={config.listPath}
+                  onDelete={() => deleteDepositProductAction(kind, String(product.id))}
+                />
+              </Can>
+            </div>
           }
         />
       }

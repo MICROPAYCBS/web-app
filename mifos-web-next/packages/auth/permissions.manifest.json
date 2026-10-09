@@ -1169,6 +1169,11 @@
       "UPDATE_RECURRINGDEPOSITPRODUCT"
     ]
   },
+  "products.recurringDeposit.delete": {
+    "any": [
+      "DELETE_RECURRINGDEPOSITPRODUCT"
+    ]
+  },
   "products.fixedDeposit": {
     "any": [
       "READ_FIXEDDEPOSITPRODUCT"
@@ -1182,6 +1187,11 @@
   "products.fixedDeposit.update": {
     "any": [
       "UPDATE_FIXEDDEPOSITPRODUCT"
+    ]
+  },
+  "products.fixedDeposit.delete": {
+    "any": [
+      "DELETE_FIXEDDEPOSITPRODUCT"
     ]
   },
   "products.floatingRates": {

@@ -13,7 +13,8 @@ import type {
   DepositProductKind,
   DepositProductListItem,
   DepositProductMutationResponse,
-  DepositProductTemplate
+  DepositProductTemplate,
+  FineractCommandProcessingResult
 } from '@mifos/api-client';
 import { FineractHttpError } from '@mifos/api-client';
 import { depositProductConfig } from '@/lib/fineract/deposit-product-config';
@@ -274,4 +275,13 @@ export async function updateDepositProductRecord(
   const fineract = await createFineractClient();
   const apiPath = depositProductConfig(kind).apiPath;
   return fineract.put<DepositProductMutationResponse>(`${apiPath}/${productId}`, payload);
+}
+
+export async function deleteDepositProductRecord(
+  kind: DepositProductKind,
+  productId: string | number
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  const apiPath = depositProductConfig(kind).apiPath;
+  return fineract.delete<FineractCommandProcessingResult>(`${apiPath}/${productId}`);
 }
