@@ -10,10 +10,11 @@
 
 import type { FineractAccountNumberPreferenceTemplate } from '@mifos/api-client';
 import {
-  ACCOUNT_NUMBER_FORMAT_MAX_LENGTH,
   accountTypeUsesClientTypeLabel,
   accountTypeUsesProductShortName,
   defaultPatternForAccountType,
+  FORMAT_SEGMENT_MAX_WIDTH,
+  maxPatternWidthForAccountType,
   patternIncludesOfficeCode,
   patternIncludesProductCode,
   patternToSegments,
@@ -30,7 +31,10 @@ import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
 import { Button } from '@/components/ui/button';
-import { accountNumberPreferenceLabel } from '@/lib/fineract/account-number-preference-display';
+import {
+  accountNumberPreferenceLabel,
+  checkDigitAlgorithmLabel
+} from '@/lib/fineract/account-number-preference-display';
 
 export type AccountNumberFormatOfficeOption = {
   id: number;
@@ -95,7 +99,7 @@ export function AccountNumberFormatStructuredFields({
     () =>
       (template.checkDigitAlgorithmOptions ?? []).map((option) => ({
         value: String(option.id),
-        label: accountNumberPreferenceLabel(option)
+        label: checkDigitAlgorithmLabel(option)
       })),
     [template.checkDigitAlgorithmOptions]
   );
@@ -206,8 +210,8 @@ export function AccountNumberFormatStructuredFields({
         <div>
           <h3 className="text-sm font-medium">Structured format</h3>
           <p className="text-xs text-muted-foreground">
-            Build a pattern from segments. Total width must be {ACCOUNT_NUMBER_FORMAT_MAX_LENGTH}{' '}
-            characters or less.
+            Build a pattern from segments. Total width must be{' '}
+            {maxPatternWidthForAccountType(accountTypeId)} characters or less.
           </p>
         </div>
         <Button
@@ -247,7 +251,10 @@ export function AccountNumberFormatStructuredFields({
                 value={String(segment.width)}
                 onChange={(value) =>
                   handleSegmentChange(index, {
-                    width: Math.max(1, Number.parseInt(value || '1', 10) || 1)
+                    width: Math.min(
+                      FORMAT_SEGMENT_MAX_WIDTH,
+                      Math.max(1, Number.parseInt(value || '1', 10) || 1)
+                    )
                   })
                 }
                 disabled={disabled}
@@ -276,6 +283,20 @@ export function AccountNumberFormatStructuredFields({
           <Plus className="mr-2 size-4" />
           Add segment
         </Button>
+        <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+          <li>
+            A code longer than its width is cut. SV01 in {'{productCode:2}'} prints as SV.
+          </li>
+          <li>
+            Codes that print the same share one counter. SV01 and SV02 under a width of 2 are the
+            same product code, so they count together.
+          </li>
+          <li>
+            A sequence of width n holds 10<sup>n</sup> − 1 accounts. {'{sequence:3}'} stops at 999.
+            The next account is rejected. It does not start again at 001.
+          </li>
+          <li>Short text is padded with 0. S in a width of 2 prints as S0.</li>
+        </ul>
       </div>
 
       <TextField

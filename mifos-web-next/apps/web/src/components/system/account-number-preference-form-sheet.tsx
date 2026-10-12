@@ -39,6 +39,8 @@ import {
   listPrefixTypeOptions
 } from '@/lib/fineract/account-number-preference-display';
 
+const PREFIX_TEXT_TYPE_ID = 401;
+
 export function AccountNumberPreferenceFormSheet({
   mode,
   open,
@@ -189,14 +191,20 @@ export function AccountNumberPreferenceFormSheet({
     }
 
     setSubmitError(null);
-    const prefixType = prefixTypeId ? Number(prefixTypeId) : undefined;
+    const prefixType = prefixTypeId ? Number(prefixTypeId) : null;
     const structuredPayload = buildStructuredPayload();
+    const prefixCharacterValue =
+      showLegacyFields && prefixType === PREFIX_TEXT_TYPE_ID
+        ? prefixCharacter.trim() || null
+        : showLegacyFields
+          ? null
+          : undefined;
 
     if (mode === 'create') {
       const parsed = validateCreateAccountNumberPreference({
         accountType: Number(accountTypeId),
         prefixType: showLegacyFields ? prefixType : undefined,
-        prefixCharacter: showLegacyFields && prefixCharacter.trim() ? prefixCharacter.trim() : null,
+        prefixCharacter: prefixCharacterValue,
         ...structuredPayload
       });
       if (!parsed.success) {
@@ -238,8 +246,9 @@ export function AccountNumberPreferenceFormSheet({
     }
 
     const parsed = validateUpdateAccountNumberPreference({
+      accountType: preference.accountType.id,
       prefixType: showLegacyFields ? prefixType : undefined,
-      prefixCharacter: showLegacyFields && prefixCharacter.trim() ? prefixCharacter.trim() : null,
+      prefixCharacter: prefixCharacterValue,
       ...structuredPayload
     });
     if (!parsed.success) {
@@ -337,15 +346,17 @@ export function AccountNumberPreferenceFormSheet({
                   : 'Select an account type first.'
               }
             />
-            <TextField
-              label="Prefix character"
-              optional
-              value={prefixCharacter}
-              onChange={setPrefixCharacter}
-              disabled={pending}
-              error={fieldErrors.prefixCharacter}
-              placeholder="Single character override"
-            />
+            {Number(prefixTypeId) === PREFIX_TEXT_TYPE_ID ? (
+              <TextField
+                label="Prefix character"
+                required
+                maxLength={10}
+                value={prefixCharacter}
+                onChange={setPrefixCharacter}
+                disabled={pending}
+                error={fieldErrors.prefixCharacter}
+              />
+            ) : null}
           </>
         ) : null}
 

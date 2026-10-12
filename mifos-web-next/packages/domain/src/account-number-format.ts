@@ -8,6 +8,25 @@
 
 export const ACCOUNT_NUMBER_FORMAT_MAX_LENGTH = 34;
 
+/** Loan and savings numbers can gain a trailing `1` on a group account. */
+export const ACCOUNT_NUMBER_FORMAT_LOAN_SAVINGS_MAX_LENGTH = 33;
+
+export const FORMAT_SEGMENT_MIN_WIDTH = 1;
+export const FORMAT_SEGMENT_MAX_WIDTH = 99;
+
+export const KNOWN_FORMAT_SEGMENT_TOKENS = [
+  'officeCode',
+  'regionCode',
+  'branchType',
+  'productCode',
+  'clientTypeCode',
+  'entityTypeCode',
+  'sequence',
+  'checkDigit'
+] as const;
+
+const KNOWN_FORMAT_SEGMENT_TOKEN_SET = new Set<string>(KNOWN_FORMAT_SEGMENT_TOKENS);
+
 export const FORMAT_SEGMENT_PATTERN = /^(\{\w+:\d+\})+$/;
 
 export interface FormatSegmentRow {
@@ -121,6 +140,113 @@ export function segmentTokenOptionsForAccountType(
         return true;
     }
   });
+}
+
+export function maxPatternWidthForAccountType(accountTypeId: number | undefined): number {
+  if (accountTypeId === 2 || accountTypeId === 3) {
+    return ACCOUNT_NUMBER_FORMAT_LOAN_SAVINGS_MAX_LENGTH;
+  }
+  return ACCOUNT_NUMBER_FORMAT_MAX_LENGTH;
+}
+
+export interface AccountNumberPatternRuleIssue {
+  path: 'formatPattern' | 'sequenceScope';
+  message: string;
+}
+
+/**
+ * Extra pattern rules after a `{token:width}` shape check.
+ * Missing pattern, bad shape, and a missing sequence stay in the schema.
+ */
+export function accountNumberPatternRuleIssues(input: {
+  pattern: string;
+  accountTypeId?: number;
+  sequenceScope?: number;
+}): AccountNumberPatternRuleIssue[] {
+  const issues: AccountNumberPatternRuleIssue[] = [];
+  const segments = patternToSegments(input.pattern);
+
+  const unknownToken = segments.find((segment) => !KNOWN_FORMAT_SEGMENT_TOKEN_SET.has(segment.token));
+  if (unknownToken) {
+    issues.push({
+      path: 'formatPattern',
+      message: `Unknown segment ${unknownToken.token}.`
+    });
+  }
+
+  if (
+    segments.some(
+      (segment) =>
+        segment.width < FORMAT_SEGMENT_MIN_WIDTH || segment.width > FORMAT_SEGMENT_MAX_WIDTH
+    )
+  ) {
+    issues.push({
+      path: 'formatPattern',
+      message: 'Each segment width must be from 1 to 99.'
+    });
+  }
+
+  if (input.accountTypeId != null && Number.isFinite(input.accountTypeId)) {
+    const disallowed = segments.find(
+      (segment) =>
+        KNOWN_FORMAT_SEGMENT_TOKEN_SET.has(segment.token) &&
+        !segmentTokenOptionsForAccountType(input.accountTypeId, [segment.token]).includes(
+          segment.token
+        )
+    );
+    if (disallowed) {
+      issues.push({
+        path: 'formatPattern',
+        message: `${disallowed.token} is not used for this account type.`
+      });
+    }
+  }
+
+  const checkDigitCount = segments.filter((segment) => segment.token === 'checkDigit').length;
+  const lastToken = segments[segments.length - 1]?.token;
+  if (checkDigitCount > 1 || (checkDigitCount === 1 && lastToken !== 'checkDigit')) {
+    issues.push({
+      path: 'formatPattern',
+      message: 'Use at most one check digit, and put it last.'
+    });
+  }
+
+  const maxWidth = maxPatternWidthForAccountType(input.accountTypeId);
+  if (patternTotalWidth(input.pattern) > maxWidth) {
+    issues.push({
+      path: 'formatPattern',
+      message: `Total segment width must be ${maxWidth} characters or less.`
+    });
+  }
+
+  if (
+    input.sequenceScope != null &&
+    input.accountTypeId != null &&
+    !sequenceScopeAllowedForAccountType(input.accountTypeId, input.sequenceScope)
+  ) {
+    issues.push({
+      path: 'sequenceScope',
+      message: 'This sequence scope is not available for the account type.'
+    });
+  }
+
+  if (input.sequenceScope === 2 || input.sequenceScope === 3) {
+    if (!patternIncludesOfficeCode(input.pattern)) {
+      issues.push({
+        path: 'formatPattern',
+        message: 'This sequence scope must include an office code.'
+      });
+    }
+  }
+
+  if (input.sequenceScope === 3 && !patternIncludesProductCode(input.pattern)) {
+    issues.push({
+      path: 'formatPattern',
+      message: 'A per office and product sequence must include a product code.'
+    });
+  }
+
+  return issues;
 }
 
 export function sequenceScopeAllowedForAccountType(

@@ -23,6 +23,16 @@ export function accountNumberPreferenceLabel(
   return option.value || String(option.id);
 }
 
+/** Algorithm 2 is a digit sum, not Luhn. */
+export function checkDigitAlgorithmLabel(
+  option: FineractAccountNumberPreferenceOption | undefined | null
+): string {
+  if (option?.id === 2) {
+    return 'Mod 10 (digit sum)';
+  }
+  return accountNumberPreferenceLabel(option);
+}
+
 export function accountNumberFormatModeLabel(preference: {
   structuredEnabled?: boolean | null;
 }): string {

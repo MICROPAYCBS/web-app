@@ -38,7 +38,8 @@ import {
 import {
   accountNumberFormatModeLabel,
   accountNumberFormatPatternSummary,
-  accountNumberPreferenceLabel
+  accountNumberPreferenceLabel,
+  checkDigitAlgorithmLabel
 } from '@/lib/fineract/account-number-preference-display';
 
 export function AccountNumberPreferenceDetailView({
@@ -135,7 +136,7 @@ export function AccountNumberPreferenceDetailView({
                   {accountNumberPreferenceLabel(preference.sequenceScope)}
                 </DetailField>
                 <DetailField label="Check digit">
-                  {accountNumberPreferenceLabel(preference.checkDigitAlgorithm)}
+                  {checkDigitAlgorithmLabel(preference.checkDigitAlgorithm)}
                 </DetailField>
               </>
             ) : (

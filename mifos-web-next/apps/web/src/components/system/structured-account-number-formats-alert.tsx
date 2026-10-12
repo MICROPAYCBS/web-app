@@ -59,7 +59,8 @@ export function StructuredAccountNumberFormatsAlert({
       <p className="font-medium">Structured account number formats are disabled</p>
       <p className="mt-1 text-sm text-muted-foreground">
         Enable structured formats to configure multi-segment patterns with branch codes, product
-        codes, and check digits. Legacy prefix preferences continue to work until you turn this on.
+        codes, and check digits. Turning this on does not change existing preferences. Each account
+        type stays on the old prefix number until Structured format is turned on for that preference.
       </p>
       {canUpdateConfiguration ? (
         <div className="mt-3 flex items-center gap-3">

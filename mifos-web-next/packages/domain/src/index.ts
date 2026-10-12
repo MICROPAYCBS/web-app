@@ -30,13 +30,19 @@ export {
   reportReadPermissionCode
 } from './report-permissions';
 export {
+  ACCOUNT_NUMBER_FORMAT_LOAN_SAVINGS_MAX_LENGTH,
   ACCOUNT_NUMBER_FORMAT_MAX_LENGTH,
+  accountNumberPatternRuleIssues,
   accountTypeUsesClientTypeLabel,
   accountTypeUsesProductShortName,
   buildAccountNumberFormatPreviewSearchParams,
   countSequenceSegments,
   defaultPatternForAccountType,
+  FORMAT_SEGMENT_MAX_WIDTH,
+  FORMAT_SEGMENT_MIN_WIDTH,
   FORMAT_SEGMENT_PATTERN,
+  KNOWN_FORMAT_SEGMENT_TOKENS,
+  maxPatternWidthForAccountType,
   patternIncludesOfficeCode,
   patternIncludesProductCode,
   patternIncludesSequence,
@@ -46,6 +52,7 @@ export {
   sequenceScopeAllowedForAccountType,
   segmentsToPattern,
   type AccountNumberFormatPreviewQuery,
+  type AccountNumberPatternRuleIssue,
   type FormatSegmentRow
 } from './account-number-format';
 export {

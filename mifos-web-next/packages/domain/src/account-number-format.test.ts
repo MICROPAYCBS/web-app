@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  accountNumberPatternRuleIssues,
   buildAccountNumberFormatPreviewSearchParams,
   defaultPatternForAccountType,
   patternToSegments,
@@ -85,5 +86,68 @@ describe('account-number-format', () => {
   it('restricts office+product sequence scope to product account types', () => {
     assert.equal(sequenceScopeAllowedForAccountType(1, 3), false);
     assert.equal(sequenceScopeAllowedForAccountType(3, 3), true);
+  });
+
+  it('rejects tokens, widths, check digits, and scope codes the server rejects', () => {
+    const messages = (issues: { message: string }[]) => issues.map((issue) => issue.message);
+
+    assert.ok(
+      messages(
+        accountNumberPatternRuleIssues({
+          pattern: '{productCode:2}{sequence:4}',
+          accountTypeId: 1,
+          sequenceScope: 2
+        })
+      ).some((message) => message.includes('productCode'))
+    );
+
+    assert.ok(
+      messages(
+        accountNumberPatternRuleIssues({
+          pattern: '{officeCode:3}{sequence:4}{checkDigit:1}{productCode:2}',
+          accountTypeId: 2,
+          sequenceScope: 3
+        })
+      ).some((message) => message.includes('check digit'))
+    );
+
+    assert.ok(
+      messages(
+        accountNumberPatternRuleIssues({
+          pattern: '{officeCode:3}{productCode:2}{sequence:30}',
+          accountTypeId: 2,
+          sequenceScope: 3
+        })
+      ).some((message) => message.includes('33'))
+    );
+
+    assert.ok(
+      messages(
+        accountNumberPatternRuleIssues({
+          pattern: '{productCode:2}{sequence:4}',
+          accountTypeId: 3,
+          sequenceScope: 2
+        })
+      ).some((message) => message.includes('office code'))
+    );
+
+    assert.ok(
+      messages(
+        accountNumberPatternRuleIssues({
+          pattern: '{officeCode:3}{sequence:4}',
+          accountTypeId: 6,
+          sequenceScope: 3
+        })
+      ).some((message) => message.includes('product code'))
+    );
+
+    assert.equal(
+      accountNumberPatternRuleIssues({
+        pattern: '{officeCode:3}{clientTypeCode:1}{sequence:8}{checkDigit:1}',
+        accountTypeId: 1,
+        sequenceScope: 2
+      }).length,
+      0
+    );
   });
 });

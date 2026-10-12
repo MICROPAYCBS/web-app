@@ -7,16 +7,23 @@
  */
 
 import {
-  ACCOUNT_NUMBER_FORMAT_MAX_LENGTH,
+  accountNumberPatternRuleIssues,
   countSequenceSegments,
-  FORMAT_SEGMENT_PATTERN,
-  patternTotalWidth
+  FORMAT_SEGMENT_PATTERN
 } from '@mifos/domain';
 import { z } from 'zod';
+
+const PREFIX_TEXT_TYPE_ID = 401;
 
 const optionalPrefixTypeSchema = z.preprocess(
   (value) => (value === 0 || value === '' || value == null ? undefined : value),
   z.number().int().positive().optional()
+);
+
+/** Update can clear a stored prefix. `0` and `''` mean no prefix; omitted stays omitted. */
+const nullablePrefixTypeSchema = z.preprocess(
+  (value) => (value === 0 || value === '' ? null : value),
+  z.number().int().positive().nullable().optional()
 );
 
 const optionalEnumIdSchema = z.preprocess(
@@ -32,14 +39,28 @@ const structuredFieldsSchema = {
   prefixCharacter: z
     .string()
     .trim()
-    .max(1)
+    .max(10, 'Prefix text can be at most 10 characters.')
     .optional()
     .nullable()
     .transform((value) => (value === '' ? null : value))
 };
 
+function refinePrefixCharacter(
+  data: { prefixType?: number | null; prefixCharacter?: string | null },
+  ctx: z.RefinementCtx
+) {
+  if (data.prefixType === PREFIX_TEXT_TYPE_ID && !data.prefixCharacter?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['prefixCharacter'],
+      message: 'Enter the prefix text.'
+    });
+  }
+}
+
 function refineStructuredFields(
   data: {
+    accountType?: number;
     structuredEnabled?: boolean;
     formatPattern?: string;
     sequenceScope?: number;
@@ -77,13 +98,18 @@ function refineStructuredFields(
     });
   }
 
-  const totalWidth = patternTotalWidth(pattern);
-  if (totalWidth > ACCOUNT_NUMBER_FORMAT_MAX_LENGTH) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['formatPattern'],
-      message: `Total segment width must be ${ACCOUNT_NUMBER_FORMAT_MAX_LENGTH} characters or less.`
-    });
+  if (FORMAT_SEGMENT_PATTERN.test(pattern)) {
+    for (const issue of accountNumberPatternRuleIssues({
+      pattern,
+      accountTypeId: data.accountType,
+      sequenceScope: data.sequenceScope
+    })) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [issue.path],
+        message: issue.message
+      });
+    }
   }
 
   if (data.sequenceScope == null || data.sequenceScope < 1 || data.sequenceScope > 3) {
@@ -109,13 +135,17 @@ export const createAccountNumberPreferenceSchema = z
     prefixType: optionalPrefixTypeSchema,
     ...structuredFieldsSchema
   })
+  .superRefine(refinePrefixCharacter)
   .superRefine(refineStructuredFields);
 
 export const updateAccountNumberPreferenceSchema = z
   .object({
-    prefixType: optionalPrefixTypeSchema,
+    prefixType: nullablePrefixTypeSchema,
+    /** Used to check pattern rules. Not sent on update. */
+    accountType: z.number().int().positive().optional(),
     ...structuredFieldsSchema
   })
+  .superRefine(refinePrefixCharacter)
   .superRefine(refineStructuredFields);
 
 export const accountNumberFormatPreviewQuerySchema = z.object({
@@ -148,7 +178,7 @@ function appendStructuredPayload(
   payload: Record<string, unknown>,
   input: CreateAccountNumberPreferenceInput | UpdateAccountNumberPreferenceInput
 ) {
-  if (input.prefixCharacter != null) {
+  if (input.prefixCharacter !== undefined) {
     payload.prefixCharacter = input.prefixCharacter;
   }
   if (input.formatPattern?.trim()) {
@@ -178,7 +208,7 @@ export function buildCreateAccountNumberPreferencePayload(input: CreateAccountNu
 
 export function buildUpdateAccountNumberPreferencePayload(input: UpdateAccountNumberPreferenceInput) {
   const payload: Record<string, unknown> = {};
-  if (input.prefixType != null) {
+  if (input.prefixType !== undefined) {
     payload.prefixType = input.prefixType;
   }
   appendStructuredPayload(payload, input);
