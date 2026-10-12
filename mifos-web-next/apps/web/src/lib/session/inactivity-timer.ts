@@ -54,11 +54,13 @@ export function createInactivityTimerController(
   const scheduleTimers = () => {
     clearTimers();
 
-    const warnDelay = Math.max(0, options.timeoutMs - options.warningMs);
-    warningTimer = setTimeout(() => {
-      warningVisible = true;
-      options.onWarning();
-    }, warnDelay);
+    if (options.warningMs > 0) {
+      const warnDelay = Math.max(0, options.timeoutMs - options.warningMs);
+      warningTimer = setTimeout(() => {
+        warningVisible = true;
+        options.onWarning();
+      }, warnDelay);
+    }
 
     logoutTimer = setTimeout(() => {
       options.onTimeout();

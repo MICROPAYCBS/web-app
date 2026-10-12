@@ -34,12 +34,12 @@ function glOptions(accounts: LoanProductGlAccountOption[] | undefined) {
   }));
 }
 
-const LOAN_ACCOUNT_FIELDS: LoanAccountField[] = [
+export const LOAN_ACCOUNT_FIELDS: LoanAccountField[] = [
   {
     key: 'fundSourceAccountId',
-    label: 'Fund source',
+    label: 'Fund source (asset or liability GL)',
     group: 'Assets',
-    optionKey: 'assetAccountOptions'
+    optionKey: 'fundSourceAccountOptions'
   },
   {
     key: 'loanPortfolioAccountId',

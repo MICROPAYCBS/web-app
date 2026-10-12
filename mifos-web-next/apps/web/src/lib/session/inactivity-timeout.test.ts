@@ -63,6 +63,17 @@ describe('inactivity timeout config', () => {
     );
     assert.equal(config.enabled, false);
   });
+
+  it('treats an idle warning of 0 as no warning and does not substitute 60 seconds', () => {
+    const config = getInactivityTimeoutConfig(
+      { NEXT_PUBLIC_SESSION_IDLE_WARNING_SECONDS: '60' },
+      { sessionIdleTimeoutMinutes: 20, sessionIdleWarningSeconds: 0 }
+    );
+    assert.equal(config.enabled, true);
+    assert.equal(config.timeoutMs, 20 * 60 * 1000);
+    assert.equal(config.warningSeconds, 0);
+    assert.equal(config.warningMs, 0);
+  });
 });
 
 describe('inactivity timer controller', () => {
@@ -135,6 +146,21 @@ describe('inactivity timer controller', () => {
 
     mock.timers.tick(2000);
     assert.deepEqual(events, ['warning', 'reset', 'warning', 'timeout']);
+    controller.dispose();
+  });
+
+  it('logs out without a warning when the warning interval is 0', () => {
+    const events: string[] = [];
+    const controller = createInactivityTimerController({
+      timeoutMs: 5000,
+      warningMs: 0,
+      onWarning: () => events.push('warning'),
+      onTimeout: () => events.push('timeout')
+    });
+
+    controller.start();
+    mock.timers.tick(5000);
+    assert.deepEqual(events, ['timeout']);
     controller.dispose();
   });
 });

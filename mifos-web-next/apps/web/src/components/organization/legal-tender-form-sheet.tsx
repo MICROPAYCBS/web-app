@@ -12,13 +12,13 @@ import type { CurrencyLegalTender } from '@mifos/api-client';
 import { formatActionErrorMessage } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useId, useState, useTransition } from 'react';
-import { toast } from 'sonner';
 import { createLegalTenderAction, updateLegalTenderAction } from '@/actions/legal-tender';
 import { FormErrorAlert } from '@/components/composites/form-error-alert';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { NumericField } from '@/components/composites/numeric-field';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -111,7 +111,10 @@ export function LegalTenderFormSheet({
         return;
       }
 
-      toast.success(mode === 'create' ? 'Legal tender created.' : 'Legal tender updated.');
+      toastCommandOutcome(result, {
+        completed: mode === 'create' ? 'Legal tender created.' : 'Legal tender updated.',
+        pending: 'Legal tender change sent for approval.'
+      });
       handleOpenChange(false);
       router.refresh();
     });

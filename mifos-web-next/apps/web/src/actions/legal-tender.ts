@@ -28,7 +28,7 @@ import {
 import { getServerSession } from '@/lib/session/server';
 
 export type LegalTenderActionResult =
-  | { ok: true; legalTenderId?: number }
+  | { ok: true; legalTenderId?: number; pendingChecker?: boolean; commandId?: number }
   | { ok: false; message: string; fieldErrors?: Record<string, string> };
 
 function zodFieldErrors(error: { flatten: () => { fieldErrors: Record<string, string[]> } }) {
@@ -72,8 +72,14 @@ export async function createLegalTenderAction(
 
   try {
     const response = await createCurrencyLegalTender(currencyCode, parsed.data);
-    revalidateLegalTenderViews(currencyCode, response.resourceId);
-    return actionSuccessFromFineractCommand(response, { legalTenderId: response.resourceId });
+    const result = actionSuccessFromFineractCommand(response, {
+      legalTenderId: response.resourceId
+    });
+    revalidateLegalTenderViews(
+      currencyCode,
+      result.pendingChecker ? undefined : response.resourceId
+    );
+    return result;
   } catch (error) {
     return toFineractActionError(error, 'Failed to create legal tender.');
   }

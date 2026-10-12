@@ -16,19 +16,24 @@ import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
 import { LOAN_PRODUCT_NOMINAL_INTEREST_RATE_HINT } from '@/lib/fineract/loan-product-field-hints';
 import { toSelectOptions } from '@/lib/form/select-options';
-import type { LoanProductStepProps } from '../types';
+import type { LoanProductStepProps, WizardMode } from '../types';
 
 export function TermsStep({
   template,
   draft,
   errors,
+  mode,
   onChange
 }: LoanProductStepProps & {
+  mode: WizardMode;
   onChange: (patch: Partial<LoanProductTermsInput>) => void;
 }) {
   const terms = draft.terms;
   const currencyCode = draft.currency.currencyCode || undefined;
   const floating = terms.isLinkedToFloatingInterestRates ?? false;
+  /** Shown again when the interest recalculation panel exists. */
+  const showFloatingInterestRates = false;
+  const floatingLocked = mode === 'edit' && floating && !showFloatingInterestRates;
 
   return (
     <div className="space-y-6">
@@ -37,6 +42,34 @@ export function TermsStep({
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {floatingLocked ? (
+          <div className="space-y-1 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm sm:col-span-2">
+            <p className="font-medium text-foreground">Linked to floating interest rates</p>
+            <p className="text-muted-foreground">
+              Floating rate:{' '}
+              {template.floatingRateOptions?.find((option) => option.id === terms.floatingRatesId)
+                ?.name ?? '—'}
+            </p>
+            <p className="text-muted-foreground">
+              Interest rate differential (%): {terms.interestRateDifferential ?? '—'}
+            </p>
+            <p className="text-muted-foreground">
+              Min differential rate: {terms.minDifferentialLendingRate ?? '—'}
+            </p>
+            <p className="text-muted-foreground">
+              Default differential lending rate: {terms.defaultDifferentialLendingRate ?? '—'}
+            </p>
+            <p className="text-muted-foreground">
+              Max differential rate: {terms.maxDifferentialLendingRate ?? '—'}
+            </p>
+            <p className="text-muted-foreground">
+              Allow floating interest rate calculation:{' '}
+              {terms.isFloatingInterestRateCalculationAllowed ? 'Yes' : 'No'}
+            </p>
+          </div>
+        ) : null}
+
+        {showFloatingInterestRates ? (
         <SwitchField
           id="terms.isLinkedToFloatingInterestRates"
           label="Link to floating interest rates"
@@ -55,6 +88,7 @@ export function TermsStep({
             onChange({
               isLinkedToFloatingInterestRates: false,
               floatingRatesId: undefined,
+              interestRateDifferential: undefined,
               defaultDifferentialLendingRate: undefined,
               minDifferentialLendingRate: undefined,
               maxDifferentialLendingRate: undefined,
@@ -63,8 +97,9 @@ export function TermsStep({
           }}
           error={errors['terms.isLinkedToFloatingInterestRates']}
         />
+        ) : null}
 
-        {floating ? (
+        {showFloatingInterestRates && floating ? (
           <>
             <SelectField
               id="terms.floatingRatesId"
@@ -76,6 +111,21 @@ export function TermsStep({
               }
               options={toSelectOptions(template.floatingRateOptions)}
               error={errors['terms.floatingRatesId']}
+            />
+            <NumericField
+              id="terms.interestRateDifferential"
+              label="Interest rate differential (%)"
+              required
+              hint="Added to the floating rate for every loan of this product."
+              value={
+                terms.interestRateDifferential != null ? String(terms.interestRateDifferential) : ''
+              }
+              onChange={(value) =>
+                onChange({
+                  interestRateDifferential: value === '' ? undefined : Number(value)
+                })
+              }
+              error={errors['terms.interestRateDifferential']}
             />
             <NumericField
               id="terms.defaultDifferentialLendingRate"
@@ -96,7 +146,7 @@ export function TermsStep({
             <NumericField
               id="terms.minDifferentialLendingRate"
               label="Min differential rate"
-              optional
+              required
               value={
                 terms.minDifferentialLendingRate != null
                   ? String(terms.minDifferentialLendingRate)
@@ -112,7 +162,7 @@ export function TermsStep({
             <NumericField
               id="terms.maxDifferentialLendingRate"
               label="Max differential rate"
-              optional
+              required
               value={
                 terms.maxDifferentialLendingRate != null
                   ? String(terms.maxDifferentialLendingRate)
@@ -135,7 +185,7 @@ export function TermsStep({
               error={errors['terms.isFloatingInterestRateCalculationAllowed']}
             />
           </>
-        ) : (
+        ) : floatingLocked ? null : (
           <div className="sm:col-span-2">
             <DetailSection title="Nominal interest rate">
               <div className="grid gap-4 sm:grid-cols-2">

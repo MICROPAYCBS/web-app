@@ -22,6 +22,8 @@ export interface LoanProductGlAccountOption extends ProductGlAccountRef {
 
 export interface LoanProductAccountingMappingOptions {
   assetAccountOptions?: LoanProductGlAccountOption[];
+  /** Assets plus liabilities. Fund source and payment-channel fund source only. */
+  fundSourceAccountOptions?: LoanProductGlAccountOption[];
   incomeAccountOptions?: LoanProductGlAccountOption[];
   expenseAccountOptions?: LoanProductGlAccountOption[];
   liabilityAccountOptions?: LoanProductGlAccountOption[];
@@ -59,6 +61,12 @@ export interface LoanProductTemplate {
   interestRateFrequencyType?: FineractEnumOption;
   interestRateFrequencyTypeOptions?: FineractEnumOption[];
   isLinkedToFloatingInterestRates?: boolean;
+  floatingRateId?: number;
+  interestRateDifferential?: number;
+  minDifferentialLendingRate?: number;
+  defaultDifferentialLendingRate?: number;
+  maxDifferentialLendingRate?: number;
+  isFloatingInterestRateCalculationAllowed?: boolean;
   floatingRateOptions?: FineractEnumOption[];
   amortizationType?: FineractEnumOption;
   amortizationTypeOptions?: FineractEnumOption[];
@@ -96,6 +104,14 @@ export interface LoanProductTemplate {
   enableDownPayment?: boolean;
   disbursedAmountPercentageForDownPayment?: number;
   enableAutoRepaymentForDownPayment?: boolean;
+  maxTrancheCount?: number;
+  minimumGap?: number;
+  maximumGap?: number;
+  productGuaranteeData?: {
+    mandatoryGuarantee?: number;
+    minimumGuaranteeFromOwnFunds?: number;
+    minimumGuaranteeFromGuarantor?: number;
+  };
   [key: string]: unknown;
 }
 

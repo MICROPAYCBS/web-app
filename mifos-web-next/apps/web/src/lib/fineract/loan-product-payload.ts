@@ -115,8 +115,11 @@ export function buildLoanProductPayload(input: UpsertLoanProductInput): Record<s
   // Wizard-only toggle; Fineract create/update does not accept this parameter.
   delete payload.useDueForRepaymentsConfigurations;
   delete payload.allowAttributeConfiguration;
-  // Older Fineract versions reject this parameter entirely (even when false).
-  delete payload.allowAccrualPostingInArrears;
+  if (payload.isInterestRecalculationEnabled === true) {
+    delete payload.isInterestRecalculationEnabled;
+  } else {
+    payload.isInterestRecalculationEnabled = false;
+  }
 
   if (terms.isLinkedToFloatingInterestRates) {
     delete payload.minInterestRatePerPeriod;

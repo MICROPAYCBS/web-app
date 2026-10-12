@@ -27,6 +27,7 @@ import { DataTable } from '@/components/composites/data-table/data-table';
 import { DataTablePagination } from '@/components/composites/data-table/data-table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { toastCommandOutcome } from '@/lib/command-outcome-toast';
 import {
   Dialog,
   DialogContent,
@@ -148,6 +149,10 @@ export function LegalTendersTable({
         setActionError(formatActionErrorMessage(result.message, result.fieldErrors));
         return;
       }
+      toastCommandOutcome(result, {
+        completed: 'Legal tender deleted.',
+        pending: 'Legal tender change sent for approval.'
+      });
       setDeleteTarget(null);
       router.refresh();
     });

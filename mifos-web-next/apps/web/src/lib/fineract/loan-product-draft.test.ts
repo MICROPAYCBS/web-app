@@ -11,6 +11,7 @@ import { describe, it } from 'node:test';
 import type { LoanProductTemplate } from '@mifos/api-client';
 import type { UpsertLoanProductInput } from '@mifos/validation';
 import { loanProductDraftFromTemplate } from './loan-product-draft';
+import { buildLoanProductPayload } from './loan-product-payload';
 import {
   loanProductDraftHasUnsavedChanges,
   sanitizeLoanProductDraftForSubmit
@@ -56,6 +57,93 @@ describe('loanProductDraftFromTemplate down payment', () => {
     );
 
     assert.equal(draft.settings.disbursedAmountPercentageForDownPayment, 33.333333);
+  });
+
+  it('leaves overdue days for NPA unset when the template omits it', () => {
+    const draft = loanProductDraftFromTemplate(minimalTemplate(), 'loan');
+    assert.equal(draft.settings.overdueDaysForNPA, undefined);
+  });
+
+  it('maps saved tranche, gap, guarantee, and floating values', () => {
+    const draft = loanProductDraftFromTemplate(
+      minimalTemplate({
+        multiDisburseLoan: true,
+        maxTrancheCount: 3,
+        allowVariableInstallments: true,
+        minimumGap: 7,
+        maximumGap: 30,
+        holdGuaranteeFunds: true,
+        productGuaranteeData: {
+          mandatoryGuarantee: 20,
+          minimumGuaranteeFromOwnFunds: 10,
+          minimumGuaranteeFromGuarantor: 5
+        },
+        isLinkedToFloatingInterestRates: true,
+        floatingRateId: 9,
+        interestRateDifferential: 1.5,
+        minDifferentialLendingRate: 1,
+        defaultDifferentialLendingRate: 2,
+        maxDifferentialLendingRate: 4,
+        isFloatingInterestRateCalculationAllowed: true,
+        isInterestRecalculationEnabled: true
+      }),
+      'loan'
+    );
+
+    assert.equal(draft.settings.maxTrancheCount, 3);
+    assert.equal(draft.settings.minimumGap, 7);
+    assert.equal(draft.settings.maximumGap, 30);
+    assert.equal(draft.settings.mandatoryGuarantee, 20);
+    assert.equal(draft.settings.minimumGuaranteeFromOwnFunds, 10);
+    assert.equal(draft.settings.minimumGuaranteeFromGuarantor, 5);
+    assert.equal(draft.terms.floatingRatesId, 9);
+    assert.equal(draft.terms.interestRateDifferential, 1.5);
+    assert.equal(draft.terms.minDifferentialLendingRate, 1);
+    assert.equal(draft.terms.defaultDifferentialLendingRate, 2);
+    assert.equal(draft.terms.maxDifferentialLendingRate, 4);
+    assert.equal(draft.terms.isFloatingInterestRateCalculationAllowed, true);
+
+    const edited = structuredClone(draft);
+    edited.details.description = 'Updated description';
+    const payload = buildLoanProductPayload(edited);
+    assert.equal(payload.description, 'Updated description');
+    assert.equal(payload.maxTrancheCount, 3);
+    assert.equal(payload.minimumGap, 7);
+    assert.equal(payload.maximumGap, 30);
+    assert.equal(payload.mandatoryGuarantee, 20);
+    assert.equal(payload.minimumGuaranteeFromOwnFunds, 10);
+    assert.equal(payload.minimumGuaranteeFromGuarantor, 5);
+    assert.equal(payload.floatingRatesId, 9);
+    assert.equal(payload.interestRateDifferential, 1.5);
+    assert.equal(payload.minDifferentialLendingRate, 1);
+    assert.equal(payload.defaultDifferentialLendingRate, 2);
+    assert.equal(payload.maxDifferentialLendingRate, 4);
+    assert.equal(payload.isFloatingInterestRateCalculationAllowed, true);
+    assert.equal('isInterestRecalculationEnabled' in payload, false);
+  });
+
+  it('maps saved schedule type codes onto option-list ids', () => {
+    const options = [
+      { id: 1, code: 'CUMULATIVE', value: 'Cumulative' },
+      { id: 2, code: 'PROGRESSIVE', value: 'Progressive' }
+    ];
+    const cumulative = loanProductDraftFromTemplate(
+      minimalTemplate({
+        loanScheduleType: { id: 0, code: 'CUMULATIVE', value: 'Cumulative' },
+        loanScheduleTypeOptions: options
+      }),
+      'loan'
+    );
+    const progressive = loanProductDraftFromTemplate(
+      minimalTemplate({
+        loanScheduleType: { id: 1, code: 'PROGRESSIVE', value: 'Progressive' },
+        loanScheduleTypeOptions: options
+      }),
+      'loan'
+    );
+
+    assert.equal(cumulative.settings.loanScheduleType, 1);
+    assert.equal(progressive.settings.loanScheduleType, 2);
   });
 });
 

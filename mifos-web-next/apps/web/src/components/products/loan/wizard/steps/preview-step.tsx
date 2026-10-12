@@ -24,6 +24,18 @@ import { loanProductAttributeOverrideFields } from '@/lib/fineract/loan-product-
 import { fineractOptionLabel } from '@/lib/form/select-options';
 import type { LoanProductKind } from '@mifos/api-client';
 import type { LoanProductStepProps, WizardMode } from '../types';
+import { LOAN_ACCOUNT_FIELDS } from './accounting-step';
+
+function numericAccountId(value: unknown): number | undefined {
+  return typeof value === 'number' ? value : undefined;
+}
+
+function liveLabel(label: string, mode: WizardMode, live: boolean): string {
+  if (mode !== 'edit' || !live) {
+    return label;
+  }
+  return `${label} (Changes existing loans)`;
+}
 
 function optionLabelById(
   options: { id: number; name?: string; value?: string }[] | undefined,
@@ -134,6 +146,9 @@ export function PreviewStep({
           <DetailField label="Currency code">{currency.currencyCode || '—'}</DetailField>
           <DetailField label="Decimal places">{currency.digitsAfterDecimal ?? '—'}</DetailField>
           <DetailField label="In multiples of">{currency.inMultiplesOf ?? '—'}</DetailField>
+          <DetailField label="Installment amount in multiples of">
+            {currency.installmentAmountInMultiplesOf ?? '—'}
+          </DetailField>
         </DetailFieldGrid>
       </DetailSection>
 
@@ -166,13 +181,135 @@ export function PreviewStep({
               ) ?? '—'}
             </DetailField>
           ) : null}
-          <DetailField label="Multi-disburse">{formatYesNo(settings.multiDisburseLoan)}</DetailField>
-          <DetailField label="Hold guarantee funds">
+          <DetailField label={liveLabel('Multi-disburse', mode, true)}>
+            {formatYesNo(settings.multiDisburseLoan)}
+          </DetailField>
+          {settings.multiDisburseLoan ? (
+            <DetailField label={liveLabel('Maximum tranche count', mode, true)}>
+              {settings.maxTrancheCount ?? '—'}
+            </DetailField>
+          ) : null}
+          <DetailField label={liveLabel('Hold guarantee funds', mode, true)}>
             {formatYesNo(settings.holdGuaranteeFunds)}
           </DetailField>
+          {settings.holdGuaranteeFunds ? (
+            <>
+              <DetailField label={liveLabel('Mandatory guarantee (%)', mode, true)}>
+                {settings.mandatoryGuarantee ?? '—'}
+              </DetailField>
+              <DetailField label={liveLabel('Minimum guarantee from own funds (%)', mode, true)}>
+                {settings.minimumGuaranteeFromOwnFunds ?? '—'}
+              </DetailField>
+              <DetailField label={liveLabel('Minimum guarantee from guarantor (%)', mode, true)}>
+                {settings.minimumGuaranteeFromGuarantor ?? '—'}
+              </DetailField>
+            </>
+          ) : null}
           <DetailField label="Down payment">{formatYesNo(settings.enableDownPayment)}</DetailField>
+          {settings.enableDownPayment ? (
+            <>
+              <DetailField label="Down payment percentage">
+                {settings.disbursedAmountPercentageForDownPayment ?? '—'}
+              </DetailField>
+              <DetailField label="Auto repayment for down payment">
+                {formatYesNo(settings.enableAutoRepaymentForDownPayment)}
+              </DetailField>
+            </>
+          ) : null}
           <DetailField label="Variable installments">
             {formatYesNo(settings.allowVariableInstallments)}
+          </DetailField>
+          {settings.allowVariableInstallments ? (
+            <>
+              <DetailField label="Minimum gap">{settings.minimumGap ?? '—'}</DetailField>
+              <DetailField label="Maximum gap">{settings.maximumGap ?? '—'}</DetailField>
+            </>
+          ) : null}
+          {settings.canUseForTopup ? (
+            <DetailField label="Can be used for top-up">{formatYesNo(true)}</DetailField>
+          ) : null}
+          <DetailField label={liveLabel('Disallow expected disbursements', mode, true)}>
+            {formatYesNo(settings.disallowExpectedDisbursements)}
+          </DetailField>
+          <DetailField
+            label={liveLabel('Allow approved or disbursed amounts over applied', mode, true)}
+          >
+            {formatYesNo(settings.allowApprovedDisbursedAmountsOverApplied)}
+          </DetailField>
+          {settings.allowApprovedDisbursedAmountsOverApplied ? (
+            <>
+              <DetailField label={liveLabel('Over-applied calculation type', mode, true)}>
+                {settings.overAppliedCalculationType ?? '—'}
+              </DetailField>
+              <DetailField label={liveLabel('Over-applied number', mode, true)}>
+                {settings.overAppliedNumber ?? '—'}
+              </DetailField>
+            </>
+          ) : null}
+          <DetailField label={liveLabel('Sync expected with disbursement date', mode, true)}>
+            {formatYesNo(settings.syncExpectedWithDisbursementDate)}
+          </DetailField>
+        </DetailFieldGrid>
+      </DetailSection>
+
+      <DetailSection title="Interest calendar">
+        <DetailFieldGrid>
+          <DetailField label="Interest calculation period">
+            {enumOptionLabel(
+              template.interestCalculationPeriodTypeOptions?.find(
+                (option) => option.id === settings.interestCalculationPeriodType
+              )
+            ) ?? '—'}
+          </DetailField>
+          <DetailField label="Partial-period interest">
+            {formatYesNo(settings.allowPartialPeriodInterestCalculation)}
+          </DetailField>
+          <DetailField label="Days in year">
+            {enumOptionLabel(
+              template.daysInYearTypeOptions?.find((option) => option.id === settings.daysInYearType)
+            ) ?? '—'}
+          </DetailField>
+          <DetailField label="Days in month">
+            {enumOptionLabel(
+              template.daysInMonthTypeOptions?.find((option) => option.id === settings.daysInMonthType)
+            ) ?? '—'}
+          </DetailField>
+          <DetailField label="Repayment start date type">
+            {enumOptionLabel(
+              template.repaymentStartDateTypeOptions?.find(
+                (option) => option.id === terms.repaymentStartDateType
+              )
+            ) ?? '—'}
+          </DetailField>
+        </DetailFieldGrid>
+      </DetailSection>
+
+      <DetailSection title="Grace and arrears">
+        <DetailFieldGrid>
+          <DetailField label="Grace on principal">{settings.graceOnPrincipalPayment ?? '—'}</DetailField>
+          <DetailField label="Grace on interest payment">
+            {settings.graceOnInterestPayment ?? '—'}
+          </DetailField>
+          <DetailField label="Grace on interest charged">
+            {settings.graceOnInterestCharged ?? '—'}
+          </DetailField>
+          <DetailField label="Arrears tolerance">{settings.inArrearsTolerance ?? '—'}</DetailField>
+          <DetailField label="Grace on arrears ageing">
+            {settings.graceOnArrearsAgeing ?? '—'}
+          </DetailField>
+          <DetailField label={liveLabel('Overdue days for NPA', mode, true)}>
+            {settings.overdueDaysForNPA ?? '—'}
+          </DetailField>
+          <DetailField
+            label={liveLabel('Account moves out of NPA only on arrears completion', mode, true)}
+          >
+            {formatYesNo(settings.accountMovesOutOfNPAOnlyOnArrearsCompletion)}
+          </DetailField>
+          <DetailField label="Installment-level delinquency">
+            {formatYesNo(settings.enableInstallmentLevelDelinquency)}
+          </DetailField>
+          <DetailField label={liveLabel('Delinquency bucket', mode, true)}>
+            {optionLabelById(template.delinquencyBucketOptions, settings.delinquencyBucketId)}
           </DetailField>
         </DetailFieldGrid>
       </DetailSection>
@@ -208,9 +345,23 @@ export function PreviewStep({
               : '—'}
           </DetailField>
           {terms.isLinkedToFloatingInterestRates ? (
-            <DetailField label="Floating rate">
-              {optionLabelById(template.floatingRateOptions, terms.floatingRatesId)}
-            </DetailField>
+            <>
+              <DetailField label="Floating rate">
+                {optionLabelById(template.floatingRateOptions, terms.floatingRatesId)}
+              </DetailField>
+              <DetailField label="Interest rate differential (%)">
+                {terms.interestRateDifferential ?? '—'}
+              </DetailField>
+              <DetailField label="Min differential rate">
+                {terms.minDifferentialLendingRate ?? '—'}
+              </DetailField>
+              <DetailField label="Default differential lending rate">
+                {terms.defaultDifferentialLendingRate ?? '—'}
+              </DetailField>
+              <DetailField label="Max differential rate">
+                {terms.maxDifferentialLendingRate ?? '—'}
+              </DetailField>
+            </>
           ) : (
             <>
               <DetailField label="Minimum interest rate">
@@ -248,24 +399,21 @@ export function PreviewStep({
 
       <DetailSection title="Accounting">
         <DetailFieldGrid>
-          <DetailField label="Accounting rule">
+          <DetailField label={liveLabel('Accounting rule', mode, true)}>
             {accountingRuleLabel(
               template.accountingRuleOptions?.find((o) => o.id === accounting.accountingRule)
             )}
           </DetailField>
-          {accounting.accountingRule !== 1 ? (
-            <>
-              <DetailField label="Fund source">
-                {glLabelFromOptions(allGlOptions, accounting.fundSourceAccountId)}
-              </DetailField>
-              <DetailField label="Loan portfolio">
-                {glLabelFromOptions(allGlOptions, accounting.loanPortfolioAccountId)}
-              </DetailField>
-              <DetailField label="Income from interest">
-                {glLabelFromOptions(allGlOptions, accounting.interestOnLoanAccountId)}
-              </DetailField>
-            </>
-          ) : null}
+          {accounting.accountingRule !== 1
+            ? LOAN_ACCOUNT_FIELDS.map((field) => (
+                <DetailField key={field.key} label={field.label}>
+                  {glLabelFromOptions(
+                    accountingOptions[field.optionKey],
+                    numericAccountId(accounting[field.key])
+                  )}
+                </DetailField>
+              ))
+            : null}
         </DetailFieldGrid>
       </DetailSection>
 

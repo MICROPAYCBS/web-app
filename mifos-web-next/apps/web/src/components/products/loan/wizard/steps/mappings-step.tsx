@@ -64,7 +64,7 @@ export function MappingsStep({
   const rule = accounting.accountingRule ?? 1;
   const accountingEnabled = rule !== 1;
   const mappingOptions = template.accountingMappingOptions ?? {};
-  const assetOptions = glOptions(mappingOptions.assetAccountOptions);
+  const fundSourceOptions = glOptions(mappingOptions.fundSourceAccountOptions);
   const incomeOptions = glOptions(mappingOptions.incomeAccountOptions);
   const selectedChargeIds = draft.charges.chargeIds ?? [];
   const currencyCode = draft.currency.currencyCode?.trim().toUpperCase();
@@ -103,12 +103,12 @@ export function MappingsStep({
 
       <MappingSection<PaymentChannelMapping>
         title="Payment channels"
-        description="Map each payment channel to a fund source account (asset GL only)."
+        description="Map each payment channel to a fund source account (asset or liability GL)."
         rows={accounting.paymentChannelToFundSourceMappings ?? []}
         leftLabel="Payment channel"
         rightLabel="Fund source account"
         leftOptions={toSelectOptions(template.paymentTypeOptions)}
-        rightOptions={assetOptions}
+        rightOptions={fundSourceOptions}
         onChange={(paymentChannelToFundSourceMappings) =>
           onChange({ paymentChannelToFundSourceMappings })
         }

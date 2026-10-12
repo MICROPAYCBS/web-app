@@ -31,7 +31,8 @@ const baseSettings = {
   transactionProcessingStrategyCode: 'mifos-standard-strategy',
   daysInYearType: 1,
   daysInMonthType: 1,
-  loanScheduleType: 1
+  loanScheduleType: 1,
+  overdueDaysForNPA: 90
 };
 
 describe('loanProductTermsStepSchema', () => {
@@ -71,6 +72,44 @@ describe('loanProductTermsStepSchema', () => {
     });
     assert.equal(parsed.success, false);
   });
+
+  it('requires an interest rate differential when floating rates are linked', () => {
+    const parsed = loanProductTermsStepSchema.safeParse({
+      isLinkedToFloatingInterestRates: true,
+      principal: 1000,
+      numberOfRepayments: 12,
+      repaymentEvery: 1,
+      repaymentFrequencyType: 2,
+      floatingRatesId: 4,
+      minDifferentialLendingRate: 1,
+      defaultDifferentialLendingRate: 2,
+      maxDifferentialLendingRate: 4,
+      isFloatingInterestRateCalculationAllowed: true
+    });
+    assert.equal(parsed.success, false);
+    if (!parsed.success) {
+      assert.ok(
+        parsed.error.issues.some((issue) => issue.path.join('.') === 'interestRateDifferential')
+      );
+    }
+  });
+
+  it('accepts a complete floating-rate draft', () => {
+    const parsed = loanProductTermsStepSchema.safeParse({
+      isLinkedToFloatingInterestRates: true,
+      principal: 1000,
+      numberOfRepayments: 12,
+      repaymentEvery: 1,
+      repaymentFrequencyType: 2,
+      floatingRatesId: 4,
+      interestRateDifferential: 2,
+      minDifferentialLendingRate: 1,
+      defaultDifferentialLendingRate: 2,
+      maxDifferentialLendingRate: 4,
+      isFloatingInterestRateCalculationAllowed: true
+    });
+    assert.equal(parsed.success, true);
+  });
 });
 
 describe('loanProductSettingsStepSchema', () => {
@@ -107,6 +146,37 @@ describe('loanProductSettingsStepSchema', () => {
       disbursedAmountPercentageForDownPayment: 25
     });
     assert.equal(parsed.success, true);
+  });
+
+  it('requires overdue days for NPA and rejects 0', () => {
+    const { overdueDaysForNPA: _kept, ...withoutNpa } = baseSettings;
+    const missing = loanProductSettingsStepSchema.safeParse(withoutNpa);
+    const zero = loanProductSettingsStepSchema.safeParse({
+      ...baseSettings,
+      overdueDaysForNPA: 0
+    });
+    const blank = loanProductSettingsStepSchema.safeParse({
+      ...baseSettings,
+      overdueDaysForNPA: undefined
+    });
+    const accepted = loanProductSettingsStepSchema.safeParse({
+      ...baseSettings,
+      overdueDaysForNPA: 90
+    });
+
+    assert.equal(missing.success, false);
+    assert.equal(zero.success, false);
+    assert.equal(blank.success, false);
+    assert.equal(accepted.success, true);
+    for (const parsed of [missing, zero, blank]) {
+      if (!parsed.success) {
+        assert.match(
+          parsed.error.issues.find((issue) => issue.path.join('.') === 'overdueDaysForNPA')
+            ?.message ?? '',
+          /non-performing/
+        );
+      }
+    }
   });
 });
 

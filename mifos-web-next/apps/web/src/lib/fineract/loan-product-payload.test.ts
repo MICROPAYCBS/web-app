@@ -46,7 +46,6 @@ function minimalDraft(
       daysInMonthType: 1,
       loanScheduleType: 1,
       useDueForRepaymentsConfigurations: false,
-      allowAccrualPostingInArrears: false,
       ...overrides.settings
     },
     charges: { chargeIds: [], chargeAmounts: {}, ...overrides.charges },
@@ -76,7 +75,6 @@ describe('buildLoanProductPayload', () => {
     const payload = buildLoanProductPayload(minimalDraft());
 
     assert.equal('useDueForRepaymentsConfigurations' in payload, false);
-    assert.equal('allowAccrualPostingInArrears' in payload, false);
     assert.equal('allowAttributeConfiguration' in payload, false);
   });
 
@@ -180,5 +178,15 @@ describe('buildLoanProductPayload', () => {
 
     assert.equal(payload.disbursedAmountPercentageForDownPayment, 25);
     assert.equal(payload.enableAutoRepaymentForDownPayment, true);
+  });
+
+  it('sends interest recalculation as false unless the product already has it on', () => {
+    const created = buildLoanProductPayload(minimalDraft());
+    assert.equal(created.isInterestRecalculationEnabled, false);
+
+    const existing = buildLoanProductPayload(
+      minimalDraft({ settings: { isInterestRecalculationEnabled: true } })
+    );
+    assert.equal('isInterestRecalculationEnabled' in existing, false);
   });
 });

@@ -19,7 +19,7 @@ import {
   LOAN_PRODUCT_LOAN_SCHEDULE_TYPE_HINT,
   LOAN_PRODUCT_SCHEDULE_PROCESSING_TYPE_HINT
 } from '@/lib/fineract/loan-product-field-hints';
-import type { LoanProductStepProps } from '../types';
+import type { LoanProductStepProps, WizardMode } from '../types';
 import { LoanProductAttributeOverridesFields } from '../loan-product-attribute-overrides-fields';
 
 function strategyOptions(template: LoanProductStepProps['template']) {
@@ -34,9 +34,11 @@ export function SettingsStep({
   template,
   draft,
   errors,
+  mode,
   onChange
 }: LoanProductStepProps & {
   productKind: LoanProductKind;
+  mode: WizardMode;
   onChange: (patch: Partial<LoanProductSettingsInput>) => void;
 }) {
   const settings = draft.settings;
@@ -221,8 +223,9 @@ export function SettingsStep({
           <NumericField
             id="settings.overdueDaysForNPA"
             label="Overdue days for NPA"
-            optional
+            required
             integer
+            hint="Days overdue before the nightly job marks the loan non-performing (NPA). Use your provisioning policy, for example 90."
             value={settings.overdueDaysForNPA != null ? String(settings.overdueDaysForNPA) : ''}
             onChange={(value) =>
               onChange({ overdueDaysForNPA: value === '' ? undefined : Number(value) })
@@ -282,7 +285,7 @@ export function SettingsStep({
               <NumericField
                 id="settings.maxTrancheCount"
                 label="Maximum tranche count"
-                optional
+                required
                 integer
                 value={settings.maxTrancheCount != null ? String(settings.maxTrancheCount) : ''}
                 onChange={(value) =>
@@ -314,7 +317,7 @@ export function SettingsStep({
               <NumericField
                 id="settings.mandatoryGuarantee"
                 label="Mandatory guarantee (%)"
-                optional
+                required
                 value={
                   settings.mandatoryGuarantee != null ? String(settings.mandatoryGuarantee) : ''
                 }
@@ -410,7 +413,7 @@ export function SettingsStep({
               <NumericField
                 id="settings.minimumGap"
                 label="Minimum gap (days)"
-                optional
+                required
                 integer
                 value={settings.minimumGap != null ? String(settings.minimumGap) : ''}
                 onChange={(value) =>
@@ -421,7 +424,7 @@ export function SettingsStep({
               <NumericField
                 id="settings.maximumGap"
                 label="Maximum gap (days)"
-                optional
+                required
                 integer
                 value={settings.maximumGap != null ? String(settings.maximumGap) : ''}
                 onChange={(value) =>
@@ -457,14 +460,22 @@ export function SettingsStep({
             onCheckedChange={(canUseForTopup) => onChange({ canUseForTopup })}
             error={errors['settings.canUseForTopup']}
           />
-          <SwitchField
-            id="settings.isInterestRecalculationEnabled"
-            label="Interest recalculation enabled"
-            checked={settings.isInterestRecalculationEnabled ?? false}
-            onCheckedChange={(isInterestRecalculationEnabled) =>
-              onChange({ isInterestRecalculationEnabled })
+          {mode === 'edit' && settings.isInterestRecalculationEnabled ? (
+            <p className="text-sm text-muted-foreground sm:col-span-2">
+              Interest recalculation is set through the API for this product.
+            </p>
+          ) : null}
+          <SelectField
+            id="settings.delinquencyBucketId"
+            label="Delinquency bucket"
+            required={settings.enableInstallmentLevelDelinquency === true}
+            optional={settings.enableInstallmentLevelDelinquency !== true}
+            value={settings.delinquencyBucketId ? String(settings.delinquencyBucketId) : undefined}
+            onValueChange={(value) =>
+              onChange({ delinquencyBucketId: value ? Number(value) : undefined })
             }
-            error={errors['settings.isInterestRecalculationEnabled']}
+            options={toSelectOptions(template.delinquencyBucketOptions)}
+            error={errors['settings.delinquencyBucketId']}
           />
           <SwitchField
             id="settings.enableInstallmentLevelDelinquency"
@@ -474,30 +485,6 @@ export function SettingsStep({
               onChange({ enableInstallmentLevelDelinquency })
             }
             error={errors['settings.enableInstallmentLevelDelinquency']}
-          />
-          {settings.enableInstallmentLevelDelinquency ? (
-            <SelectField
-              id="settings.delinquencyBucketId"
-              label="Delinquency bucket"
-              optional
-              value={
-                settings.delinquencyBucketId ? String(settings.delinquencyBucketId) : undefined
-              }
-              onValueChange={(value) =>
-                onChange({ delinquencyBucketId: value ? Number(value) : undefined })
-              }
-              options={toSelectOptions(template.delinquencyBucketOptions)}
-              error={errors['settings.delinquencyBucketId']}
-            />
-          ) : null}
-          <SwitchField
-            id="settings.allowAccrualPostingInArrears"
-            label="Allow accrual posting in arrears"
-            checked={settings.allowAccrualPostingInArrears ?? false}
-            onCheckedChange={(allowAccrualPostingInArrears) =>
-              onChange({ allowAccrualPostingInArrears })
-            }
-            error={errors['settings.allowAccrualPostingInArrears']}
           />
           <SwitchField
             id="settings.syncExpectedWithDisbursementDate"

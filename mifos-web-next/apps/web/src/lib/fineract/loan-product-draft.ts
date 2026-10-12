@@ -124,7 +124,15 @@ export function loanProductDraftFromTemplate(
         enumId(template.interestRateFrequencyType) ??
         enumIdFromOptions(template.interestRateFrequencyTypeOptions) ??
         2,
-      isFloatingInterestRateCalculationAllowed: false,
+      floatingRatesId: optionalNumber(template.floatingRateId),
+      interestRateDifferential: optionalNumber(template.interestRateDifferential),
+      minDifferentialLendingRate: optionalNumber(template.minDifferentialLendingRate),
+      defaultDifferentialLendingRate: optionalNumber(template.defaultDifferentialLendingRate),
+      maxDifferentialLendingRate: optionalNumber(template.maxDifferentialLendingRate),
+      isFloatingInterestRateCalculationAllowed:
+        typeof template.isFloatingInterestRateCalculationAllowed === 'boolean'
+          ? template.isFloatingInterestRateCalculationAllowed
+          : undefined,
       repaymentStartDateType:
         resolveEnumOptionId(
           template.repaymentStartDateType,
@@ -161,7 +169,7 @@ export function loanProductDraftFromTemplate(
         1,
       canDefineInstallmentAmount: Boolean(template.canDefineInstallmentAmount),
       graceOnArrearsAgeing: Number(template.graceOnArrearsAgeing ?? 0),
-      overdueDaysForNPA: Number(template.overdueDaysForNPA ?? 0),
+      overdueDaysForNPA: optionalNumber(template.overdueDaysForNPA),
       accountMovesOutOfNPAOnlyOnArrearsCompletion: Boolean(
         template.accountMovesOutOfNPAOnlyOnArrearsCompletion
       ),
@@ -173,7 +181,17 @@ export function loanProductDraftFromTemplate(
       canUseForTopup: Boolean(template.canUseForTopup),
       isInterestRecalculationEnabled: Boolean(template.isInterestRecalculationEnabled),
       holdGuaranteeFunds: Boolean(template.holdGuaranteeFunds),
+      mandatoryGuarantee: optionalNumber(template.productGuaranteeData?.mandatoryGuarantee),
+      minimumGuaranteeFromOwnFunds: optionalNumber(
+        template.productGuaranteeData?.minimumGuaranteeFromOwnFunds
+      ),
+      minimumGuaranteeFromGuarantor: optionalNumber(
+        template.productGuaranteeData?.minimumGuaranteeFromGuarantor
+      ),
       multiDisburseLoan: Boolean(template.multiDisburseLoan),
+      maxTrancheCount: optionalNumber(template.maxTrancheCount),
+      minimumGap: optionalNumber(template.minimumGap),
+      maximumGap: optionalNumber(template.maximumGap),
       allowFullTermForTranche: Boolean(template.allowFullTermForTranche),
       enableDownPayment: Boolean(template.enableDownPayment),
       disbursedAmountPercentageForDownPayment: optionalNumber(
@@ -193,7 +211,6 @@ export function loanProductDraftFromTemplate(
         template.loanScheduleProcessingType,
         template.loanScheduleProcessingTypeOptions
       ),
-      allowAccrualPostingInArrears: Boolean(template.allowAccrualPostingInArrears),
       syncExpectedWithDisbursementDate: Boolean(template.syncExpectedWithDisbursementDate),
       allowApprovedDisbursedAmountsOverApplied: Boolean(
         template.allowApprovedDisbursedAmountsOverApplied
@@ -286,7 +303,8 @@ export async function enrichLoanProductTemplate(
     currencyOptions,
     accountingMappingOptions: {
       ...template.accountingMappingOptions,
-      assetAccountOptions: asset.concat(liability)
+      assetAccountOptions: asset,
+      fundSourceAccountOptions: asset.concat(liability)
     }
   });
 }

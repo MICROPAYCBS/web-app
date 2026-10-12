@@ -215,6 +215,30 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Submitted date cannot be before the product start date.',
   'validation.msg.recurringdepositaccount.summital.cannot.be.after.savings.product.close.date':
     'Submitted date cannot be after the product expiry date.',
+  'validation.msg.savingsaccount.submittal.cannot.be.a.future.date':
+    'Submitted date cannot be in the future.',
+  'validation.msg.savingsaccount.submittal.cannot.be.before.savings.product.start.date':
+    'Submitted date cannot be before the product start date.',
+  'validation.msg.savingsaccount.submittal.cannot.be.after.savings.product.close.date':
+    'Submitted date cannot be after the product expiry date.',
+  'validation.msg.savingsaccount.submittal.cannot.be.before.client.activation.date':
+    'Submitted date cannot be before the customer was activated.',
+  'validation.msg.fixeddepositaccount.submittal.cannot.be.a.future.date':
+    'Submitted date cannot be in the future.',
+  'validation.msg.fixeddepositaccount.submittal.cannot.be.before.savings.product.start.date':
+    'Submitted date cannot be before the product start date.',
+  'validation.msg.fixeddepositaccount.submittal.cannot.be.after.savings.product.close.date':
+    'Submitted date cannot be after the product expiry date.',
+  'validation.msg.fixeddepositaccount.submittal.cannot.be.before.client.activation.date':
+    'Submitted date cannot be before the customer was activated.',
+  'validation.msg.recurringdepositaccount.submittal.cannot.be.a.future.date':
+    'Submitted date cannot be in the future.',
+  'validation.msg.recurringdepositaccount.submittal.cannot.be.before.savings.product.start.date':
+    'Submitted date cannot be before the product start date.',
+  'validation.msg.recurringdepositaccount.submittal.cannot.be.after.savings.product.close.date':
+    'Submitted date cannot be after the product expiry date.',
+  'validation.msg.recurringdepositaccount.submittal.cannot.be.before.client.activation.date':
+    'Submitted date cannot be before the customer was activated.',
 
   // Charge lookup tiers (useChargeTiers)
   'validation.msg.charge.chargeTiers.required.when.useChargeTiers':

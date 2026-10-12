@@ -347,6 +347,7 @@ export function LoanProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
+            mode={mode}
             onChange={(patch) =>
               setDraft((current) => ({ ...current, settings: { ...current.settings, ...patch } }))
             }
@@ -358,6 +359,7 @@ export function LoanProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
+            mode={mode}
             onChange={(patch) =>
               setDraft((current) => ({ ...current, terms: { ...current.terms, ...patch } }))
             }

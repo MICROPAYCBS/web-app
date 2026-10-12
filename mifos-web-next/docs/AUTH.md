@@ -99,7 +99,7 @@ While the warning is visible, further pointer or keyboard activity does **not** 
 | Source | Default | Purpose |
 |--------|---------|---------|
 | Login payload `sessionIdleTimeoutMinutes` | `15` | Minutes until idle sign-out; `0` disables |
-| Login payload `sessionIdleWarningSeconds` | `60` | Warning period before sign-out |
+| Login payload `sessionIdleWarningSeconds` | `60` | Seconds of warning before sign-out; `0` means no warning dialog |
 | `NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES` | same as above | Fallback when login payload omits idle policy (older servers, demo session) |
 | `NEXT_PUBLIC_SESSION_IDLE_WARNING_SECONDS` | same as above | Fallback when login payload omits idle policy |
 

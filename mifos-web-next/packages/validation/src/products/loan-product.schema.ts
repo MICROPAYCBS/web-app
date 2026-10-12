@@ -220,6 +220,9 @@ export const loanProductTermsStepSchema = z
     refineFixedInterestRates(data, ctx);
   });
 
+const OVERDUE_DAYS_FOR_NPA_MESSAGE =
+  '0 marks every overdue loan as non-performing at once.';
+
 export const loanProductSettingsStepSchema = z
   .object({
     amortizationType: z.coerce.number().int().min(0).max(1),
@@ -237,7 +240,10 @@ export const loanProductSettingsStepSchema = z
     daysInYearCustomStrategy: z.coerce.number().int().optional(),
     canDefineInstallmentAmount: z.boolean().optional(),
     graceOnArrearsAgeing: z.coerce.number().int().min(0).optional(),
-    overdueDaysForNPA: z.coerce.number().int().min(0).optional(),
+    overdueDaysForNPA: z.preprocess(
+      (value) => (value === '' || value === null ? undefined : value),
+      z.coerce.number().int().min(1, OVERDUE_DAYS_FOR_NPA_MESSAGE).optional()
+    ),
     accountMovesOutOfNPAOnlyOnArrearsCompletion: z.boolean().optional(),
     principalThresholdForLastInstallment: z.coerce
       .number()
@@ -267,7 +273,6 @@ export const loanProductSettingsStepSchema = z
     overDueDaysForRepaymentEvent: z.coerce.number().int().min(0).optional(),
     loanScheduleType: fineractLoanScheduleOptionIdSchema,
     loanScheduleProcessingType: fineractLoanScheduleProcessingOptionIdSchema.optional(),
-    allowAccrualPostingInArrears: z.boolean().optional(),
     syncExpectedWithDisbursementDate: z.boolean().optional(),
     allowApprovedDisbursedAmountsOverApplied: z.boolean().optional(),
     overAppliedCalculationType: z.enum(['percentage', 'flat']).optional(),
@@ -292,6 +297,14 @@ export const loanProductSettingsStepSchema = z
       .optional()
   })
   .superRefine((data, ctx) => {
+    if (data.overdueDaysForNPA == null) {
+      ctx.addIssue({
+        code: 'custom',
+        message: OVERDUE_DAYS_FOR_NPA_MESSAGE,
+        path: ['overdueDaysForNPA']
+      });
+    }
+
     if (data.allowVariableInstallments) {
       if (data.minimumGap == null) {
         ctx.addIssue({

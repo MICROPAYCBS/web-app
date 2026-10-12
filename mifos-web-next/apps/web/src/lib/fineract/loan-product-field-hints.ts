@@ -11,7 +11,7 @@
  */
 
 export const LOAN_PRODUCT_CURRENCY_IN_MULTIPLES_OF_HINT =
-  'Loan amounts (such as principal and disbursement) are rounded to the nearest multiple of this value. For example, 100 rounds to 100, 200, 300, and so on. Use 0 for no rounding.';
+  'Loan amounts (such as principal and disbursement) are rounded to the nearest multiple of this value. For example, 100 rounds to 100, 200, 300, and so on. Leave blank for no rounding.';
 
 export const LOAN_PRODUCT_INSTALLMENT_IN_MULTIPLES_OF_HINT =
   'Each repayment installment is rounded to the nearest multiple of this value after the schedule is calculated. For example, 50 rounds installments to 50, 100, 150, and so on. Use 0 or leave blank for no rounding.';
