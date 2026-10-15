@@ -224,6 +224,7 @@ export {
   loanAccountTransactionCommandSchema,
   loanAccountAddChargeSchema,
   loanAccountAccrueCommandSchema,
+  loanAccountMarkAsNpaCommandSchema,
   loanAccountUndoTransactionSchema,
   type LoanAccountAssignOfficerInput,
   type LoanAccountUnassignOfficerInput,
@@ -238,6 +239,7 @@ export {
   type LoanAccountTransactionCommandInput,
   type LoanAccountAddChargeInput,
   type LoanAccountAccrueCommandInput,
+  type LoanAccountMarkAsNpaCommandInput,
   type LoanAccountUndoTransactionInput
 } from './clients/loan-account-command.schema';
 export {

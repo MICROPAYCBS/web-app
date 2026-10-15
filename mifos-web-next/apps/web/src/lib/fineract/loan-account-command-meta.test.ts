@@ -50,6 +50,30 @@ describe('loanAccountActionVisibility', () => {
     assert.equal(visibility.topup, false);
   });
 
+  it('offers mark as NPA on an active loan that is not deliberately classified', () => {
+    const overdueJob = loanAccountActionVisibility({
+      deliberateNpa: false,
+      status: { id: 300, value: 'Active', active: true }
+    });
+    assert.equal(overdueJob.markAsNpa, true);
+    assert.equal(overdueJob.undoMarkAsNpa, false);
+
+    const deliberate = loanAccountActionVisibility({
+      deliberateNpa: true,
+      status: { id: 300, value: 'Active', active: true }
+    });
+    assert.equal(deliberate.markAsNpa, false);
+    assert.equal(deliberate.undoMarkAsNpa, true);
+  });
+
+  it('hides NPA actions when the loan is not active', () => {
+    const visibility = loanAccountActionVisibility({
+      status: { id: 200, value: 'Approved' }
+    });
+    assert.equal(visibility.markAsNpa, false);
+    assert.equal(visibility.undoMarkAsNpa, false);
+  });
+
   it('hides installment editing after approval', () => {
     const visibility = loanAccountActionVisibility({
       isVariableInstallmentsAllowed: true,

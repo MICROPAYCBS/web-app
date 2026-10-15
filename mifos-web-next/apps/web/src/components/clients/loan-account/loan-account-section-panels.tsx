@@ -389,6 +389,17 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
               </DetailField>
             ) : null}
             {account.isNPA ? <DetailField label="Non-performing">Yes</DetailField> : null}
+            {account.deliberateNpa && account.npaReason ? (
+              <DetailField label="Reason">{account.npaReason}</DetailField>
+            ) : null}
+            {account.deliberateNpa && account.npaReasonNote ? (
+              <DetailField label="Note">{account.npaReasonNote}</DetailField>
+            ) : null}
+            {account.deliberateNpa && account.deliberateNpaOnDate ? (
+              <DetailField label="Classified on">
+                {formatLoanAccountDate(account.deliberateNpaOnDate)}
+              </DetailField>
+            ) : null}
             {account.delinquent?.pastDueDays != null ? (
               <DetailField label="Days past due">{account.delinquent.pastDueDays}</DetailField>
             ) : null}

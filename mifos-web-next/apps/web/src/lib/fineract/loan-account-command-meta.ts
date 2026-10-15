@@ -77,7 +77,11 @@ export interface LoanAccountActionVisibility {
   modifyApplication: boolean;
   recoverGuarantees: boolean;
   topup: boolean;
+  markAsNpa: boolean;
+  undoMarkAsNpa: boolean;
 }
+
+const ACTIVE_LOAN_STATUS_ID = 300;
 
 const LOAN_STATUS = {
   pending: 'Submitted and pending approval',
@@ -101,7 +105,8 @@ export function loanAccountActionVisibility(account: {
   clientId?: number;
   multiDisburseLoan?: boolean;
   isInterestRecalculationEnabled?: boolean;
-  status: { code?: string; value?: string; active?: boolean };
+  deliberateNpa?: boolean;
+  status: { id?: number; code?: string; value?: string; active?: boolean };
 }): LoanAccountActionVisibility {
   const value = statusValue(account.status);
   const pending = value === LOAN_STATUS.pending;
@@ -116,6 +121,7 @@ export function loanAccountActionVisibility(account: {
     account.multiDisburseLoan === true && account.isInterestRecalculationEnabled !== true;
   const canTopup =
     active && account.clientId != null && account.clientId > 0 && !blockedTopupClose;
+  const activeById = account.status.id === ACTIVE_LOAN_STATUS_ID;
 
   return {
     approve: pending,
@@ -144,7 +150,9 @@ export function loanAccountActionVisibility(account: {
     assignOfficer: canManageOfficer && !hasOfficer,
     reassignOfficer: canManageOfficer && hasOfficer,
     modifyApplication: pending,
-    topup: canTopup
+    topup: canTopup,
+    markAsNpa: activeById && account.deliberateNpa !== true,
+    undoMarkAsNpa: activeById && account.deliberateNpa === true
   };
 }
 

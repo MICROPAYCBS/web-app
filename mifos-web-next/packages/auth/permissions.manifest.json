@@ -159,6 +159,16 @@
       "ACCRUE_LOAN"
     ]
   },
+  "loans.markAsNpa": {
+    "any": [
+      "MARKASNPA_LOAN"
+    ]
+  },
+  "loans.undoMarkAsNpa": {
+    "any": [
+      "UNDOMARKASNPA_LOAN"
+    ]
+  },
   "loans.reschedule": {
     "any": [
       "READ_RESCHEDULELOAN"

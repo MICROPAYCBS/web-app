@@ -8,11 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import {
-  formatActionErrorMessage,
-  validateCreateRole,
-  validateUpdateRole
-} from '@mifos/validation';
+import { validateCreateRole, validateUpdateRole } from '@mifos/validation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, useTransition } from 'react';
 import { toastCommandOutcome } from '@/lib/command-outcome-toast';
@@ -25,11 +21,40 @@ export type RoleFormInitial = {
   description: string;
 };
 
+const ROLE_FIELD_KEYS = new Set(['name', 'description']);
+
 function formStateFromInitial(initial?: RoleFormInitial) {
   return {
     name: initial?.name ?? '',
     description: initial?.description ?? ''
   };
+}
+
+/** Footer copy for failures that are not already shown on Role name or Description. */
+function roleFormFooterError(
+  message: string,
+  fieldErrors?: Record<string, string>
+): string | null {
+  const unmapped: string[] = [];
+  let shownOnField = false;
+  for (const [field, text] of Object.entries(fieldErrors ?? {})) {
+    if (!text) {
+      continue;
+    }
+    if (ROLE_FIELD_KEYS.has(field)) {
+      shownOnField = true;
+      continue;
+    }
+    unmapped.push(text);
+  }
+  if (unmapped.length > 0) {
+    return unmapped.join('\n');
+  }
+  if (shownOnField) {
+    return null;
+  }
+  const trimmed = message.trim();
+  return trimmed ? message : null;
 }
 
 export function RoleFormSheet({
@@ -100,10 +125,10 @@ export function RoleFormSheet({
       startTransition(async () => {
         const result = await createRoleAction(parsed.data);
         if (!result.ok) {
-          setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
           if (result.fieldErrors) {
             setFieldErrors(result.fieldErrors);
           }
+          setSubmitError(roleFormFooterError(result.message, result.fieldErrors));
           return;
         }
 
@@ -145,10 +170,10 @@ export function RoleFormSheet({
     startTransition(async () => {
       const result = await updateRoleAction(roleId, parsed.data);
       if (!result.ok) {
-        setSubmitError(formatActionErrorMessage(result.message, result.fieldErrors));
         if (result.fieldErrors) {
           setFieldErrors(result.fieldErrors);
         }
+        setSubmitError(roleFormFooterError(result.message, result.fieldErrors));
         return;
       }
 
@@ -229,7 +254,9 @@ export function RoleFormSheet({
           error={fieldErrors.description}
           autoComplete="off"
         />
-        {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
+        {submitError ? (
+          <p className="text-sm whitespace-pre-line text-destructive">{submitError}</p>
+        ) : null}
       </form>
     </FormSheet>
   );

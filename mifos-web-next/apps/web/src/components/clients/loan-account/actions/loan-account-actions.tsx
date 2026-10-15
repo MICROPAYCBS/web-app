@@ -17,6 +17,7 @@ import {
   HandCoins,
   HeartCrack,
   MoreHorizontal,
+  ShieldAlert,
   PiggyBank,
   PlusCircle,
   Trash2,
@@ -30,6 +31,8 @@ import {
 import Link from 'next/link';
 import { Fragment, useState } from 'react';
 import { LoanAccountAccrueSheet } from '@/components/clients/loan-account/actions/loan-account-accrue-sheet';
+import { LoanAccountMarkNpaSheet } from '@/components/clients/loan-account/actions/loan-account-mark-npa-sheet';
+import { LoanAccountUndoNpaDialog } from '@/components/clients/loan-account/actions/loan-account-undo-npa-dialog';
 import { LoanAccountAddChargeSheet } from '@/components/clients/loan-account/actions/loan-account-add-charge-sheet';
 import { LoanAccountCollateralSheet } from '@/components/clients/loan-account/loan-account-collateral-section';
 import { LoanAccountGuarantorSheet } from '@/components/clients/loan-account/loan-account-guarantor-sheet';
@@ -104,6 +107,8 @@ export interface LoanAccountActionPermissions {
   modifyApplication: boolean;
   create: boolean;
   accrue: boolean;
+  markAsNpa: boolean;
+  undoMarkAsNpa: boolean;
 }
 
 type MenuItem = {
@@ -157,6 +162,8 @@ export function LoanAccountActions({
   const [inboundInitialMethod, setInboundInitialMethod] =
     useState<LoanInboundPaymentMethod>('savings');
   const [accrueOpen, setAccrueOpen] = useState(false);
+  const [markNpaOpen, setMarkNpaOpen] = useState(false);
+  const [undoNpaOpen, setUndoNpaOpen] = useState(false);
 
   function openInboundPayment(kind: LoanInboundPaymentKind, method: LoanInboundPaymentMethod = 'savings') {
     setInboundInitialMethod(method);
@@ -295,6 +302,22 @@ export function LoanAccountActions({
       icon: HeartCrack,
       onSelect: () => setTransactionCommand('writeoff'),
       destructive: true
+    });
+  }
+  if (visibility.markAsNpa && permissions.markAsNpa) {
+    menuItems.push({
+      id: 'mark-as-npa',
+      label: 'Mark as NPA',
+      icon: ShieldAlert,
+      onSelect: () => setMarkNpaOpen(true)
+    });
+  }
+  if (visibility.undoMarkAsNpa && permissions.undoMarkAsNpa) {
+    menuItems.push({
+      id: 'undo-mark-as-npa',
+      label: 'Undo mark as NPA',
+      icon: Undo2,
+      onSelect: () => setUndoNpaOpen(true)
     });
   }
   if (visibility.close && permissions.close) {
@@ -552,6 +575,19 @@ export function LoanAccountActions({
             : repaymentEligibility.canTransfer
         }
         initialMethod={inboundInitialMethod}
+      />
+      <LoanAccountMarkNpaSheet
+        clientId={clientId}
+        accountId={account.id}
+        alreadyNonPerforming={account.isNPA === true}
+        open={markNpaOpen}
+        onOpenChange={setMarkNpaOpen}
+      />
+      <LoanAccountUndoNpaDialog
+        clientId={clientId}
+        accountId={account.id}
+        open={undoNpaOpen}
+        onOpenChange={setUndoNpaOpen}
       />
     </>
   );

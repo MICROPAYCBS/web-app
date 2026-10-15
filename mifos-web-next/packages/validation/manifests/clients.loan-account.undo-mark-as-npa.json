@@ -1,0 +1,7 @@
+{
+  "command": "clients.loan-account.undo-mark-as-npa",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource"
+  ],
+  "fields": {}
+}

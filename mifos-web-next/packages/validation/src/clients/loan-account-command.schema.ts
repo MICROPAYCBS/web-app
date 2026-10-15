@@ -120,6 +120,33 @@ export const loanAccountAccrueCommandSchema = z.object({
 
 export type LoanAccountAccrueCommandInput = z.infer<typeof loanAccountAccrueCommandSchema>;
 
+/** Deliberate NPA classification. The server records the business date. */
+const npaReasonIdSchema = z.preprocess(
+  (value) => {
+    if (value == null || value === '') {
+      return undefined;
+    }
+    const id = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(id) ? id : value;
+  },
+  z
+    .number({ required_error: 'Select a reason.', invalid_type_error: 'Select a reason.' })
+    .int('Select a reason.')
+    .positive('Select a reason.')
+);
+
+export const loanAccountMarkAsNpaCommandSchema = z.object({
+  npaReasonId: npaReasonIdSchema,
+  note: z
+    .string()
+    .trim()
+    .max(500, 'Note must be 500 characters or fewer.')
+    .optional()
+    .transform((value) => (value ? value : undefined))
+});
+
+export type LoanAccountMarkAsNpaCommandInput = z.infer<typeof loanAccountMarkAsNpaCommandSchema>;
+
 /** Undo a posted loan row. Write-off uses the account write-off undo; other rows are an adjustment. */
 export const loanAccountUndoTransactionSchema = z.object({
   clientId: z.string().trim().min(1),

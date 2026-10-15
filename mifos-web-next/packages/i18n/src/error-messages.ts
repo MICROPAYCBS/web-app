@@ -302,7 +302,16 @@ const ERROR_MESSAGES: Record<string, string> = {
   'validation.msg.loanproduct.loanScheduleProcessingType.supported.only.for.progressive.loan.schedule.type':
     'Advanced payment allocation uses a progressive schedule.',
   'validation.msg.loanproduct.loanScheduleProcessingType.supported.only.for.progressive.loan.schedule.handling':
-    'Vertical schedule processing requires the Advanced payment allocation repayment strategy.'
+    'Vertical schedule processing requires the Advanced payment allocation repayment strategy.',
+  'validation.msg.loan.npa.npaReasonId.cannot.be.blank': 'Select a reason.',
+  'validation.msg.loan.npa.npaReasonId.not.greater.than.zero': 'Select a reason.',
+  'validation.msg.loan.npa.note.exceeds.max.length': 'Note must be 500 characters or fewer.',
+  'error.msg.loan.is.not.active': 'This loan is not active.',
+  'error.msg.loan.npa.already.deliberate': 'This loan already has a deliberate classification.',
+  'error.msg.loan.npa.not.deliberate': 'This loan does not have a deliberate classification.',
+  'error.msg.loan.npa.reason.inactive': 'The selected reason is inactive. Choose another reason.',
+  'error.msg.codevalue.codename.id.combination.invalid':
+    'The selected value is not valid for this list.'
 };
 
 const LOAN_TOPUP_ERROR_CODES = new Set([

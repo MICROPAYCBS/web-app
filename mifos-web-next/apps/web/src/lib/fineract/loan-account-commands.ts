@@ -16,6 +16,11 @@ import type {
   LoanAccountLifecycleCommand,
   LoanAccountTransactionCommand
 } from '@/lib/fineract/loan-account-command-meta';
+import {
+  activeLoanNpaReasons,
+  LOAN_NPA_REASON_CODE_NAME,
+  type LoanNpaReasonOption
+} from '@/lib/fineract/loan-npa';
 
 export interface LoanAccountPaymentTypeOption {
   id: number;
@@ -259,6 +264,23 @@ export async function getLoanAccountChargeTemplate(
     }
   }
   return { chargeOptions };
+}
+
+export async function listLoanNpaReasons(): Promise<LoanNpaReasonOption[]> {
+  const fineract = await createFineractClient();
+  const raw = await fineract.get<unknown>(
+    `/codes/name/${encodeURIComponent(LOAN_NPA_REASON_CODE_NAME)}/codevalues`
+  );
+  return activeLoanNpaReasons(raw);
+}
+
+export async function executeLoanAccountNpaCommand(
+  accountId: string | number,
+  command: 'markAsNpa' | 'undoMarkAsNpa',
+  body: Record<string, unknown>
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.post<FineractCommandProcessingResult>(`/loans/${accountId}`, body, { command });
 }
 
 export async function createLoanAccountCharge(

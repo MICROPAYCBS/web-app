@@ -27,6 +27,7 @@ import type {
   FineractLoanTermVariation
 } from '@/lib/fineract/loan-account-types';
 import { sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
+import { loanNpaReasonName, loanNpaReasonNote } from '@/lib/fineract/loan-npa';
 import { normalizeLoanScheduleData } from '@/lib/fineract/loan-schedule-normalize';
 
 function toNumber(value: unknown): number | undefined {
@@ -91,6 +92,11 @@ function normalizeCurrency(raw: unknown): FineractCurrencyOption | undefined {
     name: typeof row.name === 'string' ? row.name : code,
     decimalPlaces: typeof row.decimalPlaces === 'number' ? row.decimalPlaces : undefined
   };
+}
+
+function positiveId(raw: unknown): number | undefined {
+  const id = Number(raw);
+  return Number.isFinite(id) && id > 0 ? id : undefined;
 }
 
 function normalizeDateField(raw: unknown): number[] | string | undefined {
@@ -556,6 +562,11 @@ export function normalizeLoanAccountDetail(raw: unknown): FineractLoanAccountDet
     fixedEmiAmount: toNumber(row.fixedEmiAmount),
     fundName: typeof row.fundName === 'string' ? row.fundName : undefined,
     isNPA: row.isNPA === true,
+    deliberateNpa: row.deliberateNpa === true,
+    npaReason: loanNpaReasonName(row.npaReason),
+    npaReasonId: positiveId(row.npaReasonId),
+    npaReasonNote: loanNpaReasonNote(row.npaReasonNote),
+    deliberateNpaOnDate: normalizeDateField(row.deliberateNpaOnDate),
     expectedFirstRepaymentOnDate: normalizeDateField(row.expectedFirstRepaymentOnDate),
     interestChargedFromDate: normalizeDateField(row.interestChargedFromDate),
     graceOnPrincipalPayment: toNumber(row.graceOnPrincipalPayment),

@@ -1,0 +1,10 @@
+{
+  "command": "clients.loan-account.mark-as-npa",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.loanaccount.api.LoansApiResource"
+  ],
+  "fields": {
+    "npaReasonId": { "required": true, "type": "number" },
+    "note": { "required": false, "type": "string", "maxLength": 500 }
+  }
+}

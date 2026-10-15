@@ -125,7 +125,9 @@ function loanAccountPermissions(
     repayFromSavings: can(session, 'CREATE_ACCOUNTTRANSFER'),
     modifyApplication: can(session, resolvePermission('loans.update')),
     create: can(session, resolvePermission('loans.create')),
-    accrue: can(session, resolvePermission('loans.accrue'))
+    accrue: can(session, resolvePermission('loans.accrue')),
+    markAsNpa: can(session, resolvePermission('loans.markAsNpa')),
+    undoMarkAsNpa: can(session, resolvePermission('loans.undoMarkAsNpa'))
   };
 }
 

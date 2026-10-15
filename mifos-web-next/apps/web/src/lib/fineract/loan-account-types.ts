@@ -332,6 +332,13 @@ export interface FineractLoanAccountDetail {
   fixedEmiAmount?: number;
   fundName?: string;
   isNPA?: boolean;
+  /** A user classified this loan, as opposed to the overdue job alone. */
+  deliberateNpa?: boolean;
+  /** Name of the selected NPA reason. Absent when the classification is not deliberate. */
+  npaReason?: string;
+  npaReasonId?: number;
+  npaReasonNote?: string;
+  deliberateNpaOnDate?: number[] | string;
   expectedFirstRepaymentOnDate?: number[] | string;
   interestChargedFromDate?: number[] | string;
   graceOnPrincipalPayment?: number;
