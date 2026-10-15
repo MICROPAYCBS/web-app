@@ -28,6 +28,10 @@ import {
   submitClientFromCreateAction
 } from '@/actions/clients';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { LookupLoadError } from '@/components/composites/lookup-load-error';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
 import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
@@ -78,6 +82,7 @@ import {
 } from './datatable-payloads';
 import {
   createClientIssueStepId,
+  locateCreateClientField,
   parseCreateClientPayload,
   parseSaveDraftClientPayload
 } from './build-create-client-raw';
@@ -234,6 +239,8 @@ export function CreateClientWizard({
     () => buildSteps(template, legalFormId, includeKycStep),
     [template, legalFormId, includeKycStep]
   );
+  const clientStepIds = useMemo(() => steps.map((step) => step.id), [steps]);
+  const serverErrors = useWizardServerErrors(locateCreateClientField, clientStepIds);
   const resolvedStepId = steps.some((s) => s.id === stepId) ? stepId : 'biodata';
   const currentIndex = steps.findIndex((s) => s.id === resolvedStepId);
 
@@ -269,20 +276,33 @@ export function CreateClientWizard({
 
   const invalidStepIdsForRail = useMemo(() => {
     const stepIdSet = new Set(steps.map((s) => s.id));
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (!stepIdSet.has(id) || id === 'preview') {
         return false;
       }
       return Object.keys(validateStep(id, draft, template, validationContext)).length > 0;
     });
-  }, [validationAttemptedStepIds, steps, draft, template, validationContext]);
+    const apiInvalid = serverErrors.placed.stepIds.filter((id) => stepIdSet.has(id) && id !== 'preview');
+    return [...new Set([...clientInvalid, ...apiInvalid])];
+  }, [validationAttemptedStepIds, steps, draft, template, validationContext, serverErrors.placed.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
-    if (resolvedStepId === 'preview' || !validationAttemptedStepIds.has(resolvedStepId)) {
+    if (resolvedStepId === 'preview') {
       return {};
     }
-    return validateStep(resolvedStepId, draft, template, validationContext);
-  }, [validationAttemptedStepIds, resolvedStepId, draft, template, validationContext]);
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[resolvedStepId] ?? {},
+      validateStep(resolvedStepId, draft, template, validationContext),
+      validationAttemptedStepIds.has(resolvedStepId)
+    );
+  }, [
+    serverErrors.placed.byStep,
+    validationAttemptedStepIds,
+    resolvedStepId,
+    draft,
+    template,
+    validationContext
+  ]);
 
   const goNext = useCallback(() => {
     const next = steps[currentIndex + 1];
@@ -354,6 +374,7 @@ export function CreateClientWizard({
   );
 
   function patchGeneral(patch: Partial<import('./types').ClientGeneralFormState>) {
+    serverErrors.clearChanged(Object.keys(patch));
     setDraft((d) => {
       const nextGeneral = { ...d.general, ...patch };
       let nextDatatables = d.datatables;
@@ -484,6 +505,7 @@ export function CreateClientWizard({
 
   function handleSaveDraft() {
     setSubmitError(null);
+    serverErrors.reset();
     setLastFailedAction('save');
     const invalidStep = findFirstInvalidSaveProgressStep(draft, template, validationContext);
     if (invalidStep) {
@@ -508,11 +530,11 @@ export function CreateClientWizard({
           })
         ) {
           setLastFailedAction('save');
-          setSubmitError(
-            wizardSubmitRecoveryMessage(
-              formatActionErrorMessage(result.message, result.fieldErrors)
-            )
-          );
+          const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+          if (failure.firstStepId && steps.some((step) => step.id === failure.firstStepId)) {
+            setStepId(failure.firstStepId);
+          }
+          setSubmitError(failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null);
           return;
         }
 
@@ -539,6 +561,7 @@ export function CreateClientWizard({
 
   function handleSubmit() {
     setSubmitError(null);
+    serverErrors.reset();
     setLastFailedAction('submit');
     const invalidStep = findFirstInvalidCreateClientStep(
       steps,
@@ -565,11 +588,11 @@ export function CreateClientWizard({
         const result = await submitClientFromCreateAction(payload);
         if (!result.ok) {
           setLastFailedAction('submit');
-          setSubmitError(
-            wizardSubmitRecoveryMessage(
-              formatActionErrorMessage(result.message, result.fieldErrors)
-            )
-          );
+          const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+          if (failure.firstStepId && steps.some((step) => step.id === failure.firstStepId)) {
+            setStepId(failure.firstStepId);
+          }
+          setSubmitError(failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null);
           if (result.clientId != null) {
             await persistStagedKyc(String(result.clientId));
             toast.error(result.message);
@@ -658,6 +681,7 @@ export function CreateClientWizard({
     if (!snapshot) {
       return;
     }
+    serverErrors.reset();
     setDraft({
       ...snapshot.draft,
       kycPhoto: undefined,
@@ -763,8 +787,14 @@ export function CreateClientWizard({
           errors={stepErrors}
           canCreateImage={canCreateImage}
           canCreateDocument={canCreateDocument}
-          onPhotoChange={(kycPhoto) => setDraft((d) => ({ ...d, kycPhoto }))}
-          onSignatureChange={(kycSignature) => setDraft((d) => ({ ...d, kycSignature }))}
+          onPhotoChange={(kycPhoto) => {
+            serverErrors.clearChanged(['kycPhoto']);
+            setDraft((d) => ({ ...d, kycPhoto }));
+          }}
+          onSignatureChange={(kycSignature) => {
+            serverErrors.clearChanged(['kycSignature']);
+            setDraft((d) => ({ ...d, kycSignature }));
+          }}
         />
       ) : null}
 
@@ -778,7 +808,10 @@ export function CreateClientWizard({
           errors={stepErrors}
           contactTypeOptions={contactTypeOptions}
           onDraftChange={patchGeneral}
-          onContactsChange={(contacts) => setDraft((d) => ({ ...d, contacts }))}
+          onContactsChange={(contacts) => {
+            serverErrors.clearChanged(['contacts']);
+            setDraft((d) => ({ ...d, contacts }));
+          }}
         />
         </>
       ) : null}
@@ -793,9 +826,10 @@ export function CreateClientWizard({
           identityTypeOptions={identifierIdentityTypeOptions}
           draft={draft}
           errors={stepErrors}
-          onIdentifiersChange={(clientIdentifiers) =>
-            setDraft((d) => ({ ...d, clientIdentifiers }))
-          }
+          onIdentifiersChange={(clientIdentifiers) => {
+            serverErrors.clearChanged(['clientIdentifiers']);
+            setDraft((d) => ({ ...d, clientIdentifiers }));
+          }}
         />
         </>
       ) : null}
@@ -810,7 +844,10 @@ export function CreateClientWizard({
           fieldConfig={addressFieldConfig}
           draft={draft}
           errors={stepErrors}
-          onAddressesChange={(addresses) => setDraft((d) => ({ ...d, addresses }))}
+          onAddressesChange={(addresses) => {
+            serverErrors.clearChanged(['addresses', 'address']);
+            setDraft((d) => ({ ...d, addresses }));
+          }}
         />
         </>
       ) : null}
@@ -829,7 +866,10 @@ export function CreateClientWizard({
           template={template}
           draft={draft}
           errors={stepErrors}
-          onFamilyChange={(familyMembers) => setDraft((d) => ({ ...d, familyMembers }))}
+          onFamilyChange={(familyMembers) => {
+            serverErrors.clearChanged(['familyMembers']);
+            setDraft((d) => ({ ...d, familyMembers }));
+          }}
         />
       ) : null}
 
@@ -841,7 +881,11 @@ export function CreateClientWizard({
           <IncomeSourceStep
           incomeSourceOptions={incomeSourceOptions}
           draft={draft}
-          onIncomeSourcesChange={(incomeSources) => setDraft((d) => ({ ...d, incomeSources }))}
+          errors={stepErrors}
+          onIncomeSourcesChange={(incomeSources) => {
+            serverErrors.clearChanged(['incomeSources']);
+            setDraft((d) => ({ ...d, incomeSources }));
+          }}
         />
         </>
       ) : null}
@@ -850,9 +894,18 @@ export function CreateClientWizard({
         <ComplianceProfileStep
           draft={draft}
           errors={stepErrors}
-          onComplianceChange={(complianceProfile) =>
-            setDraft((d) => ({ ...d, complianceProfile }))
-          }
+          onComplianceChange={(complianceProfile) => {
+            serverErrors.clearChanged([
+              'complianceProfile',
+              'pepPosition',
+              'otherBankAccounts',
+              'fatcaRegistrationNo',
+              'hasOtherBankAccounts',
+              'isPep',
+              'fatcaRegistered'
+            ]);
+            setDraft((d) => ({ ...d, complianceProfile }));
+          }}
         />
       ) : null}
 

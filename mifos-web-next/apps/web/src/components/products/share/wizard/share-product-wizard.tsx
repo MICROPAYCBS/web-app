@@ -9,7 +9,6 @@
  */
 
 import type { UpsertShareProductInput } from '@mifos/validation';
-import { formatActionErrorMessage } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
@@ -21,6 +20,10 @@ import {
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { LookupLoadError } from '@/components/composites/lookup-load-error';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
@@ -47,7 +50,7 @@ import { PreviewStep } from './steps/preview-step';
 import { SettingsStep } from './steps/settings-step';
 import { TermsStep } from './steps/terms-step';
 import type { ShareProductWizardProps, StepErrors } from './types';
-import { validateShareProductStep } from './validation';
+import { locateShareProductField, validateShareProductStep } from './validation';
 
 const SHARE_CHARGE_OPTION_STEPS = ['charges', 'accounting'] as const;
 const SHARE_PRODUCT_WIZARD_SESSION_VERSION = 1;
@@ -62,6 +65,8 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'accounting', label: 'Accounting' },
   { id: 'preview', label: 'Preview' }
 ];
+
+const SHARE_STEP_IDS = WIZARD_STEPS.map((step) => step.id);
 
 export function ShareProductWizard({
   mode,
@@ -78,6 +83,7 @@ export function ShareProductWizard({
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const serverErrors = useWizardServerErrors(locateShareProductField, SHARE_STEP_IDS);
   const [pending, startTransition] = useTransition();
   const [leaveOpen, setLeaveOpen] = useState(false);
 
@@ -137,20 +143,22 @@ export function ShareProductWizard({
   }, []);
 
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'preview') {
         return false;
       }
       return Object.keys(validateShareProductStep(id, draft)).length > 0;
     });
-  }, [validationAttemptedStepIds, draft]);
+    return [...new Set([...clientInvalid, ...serverErrors.placed.stepIds])];
+  }, [validationAttemptedStepIds, draft, serverErrors.placed.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
-    if (isPreview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
-    }
-    return validateShareProductStep(stepId, draft);
-  }, [validationAttemptedStepIds, stepId, draft, isPreview]);
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[stepId] ?? {},
+      validateShareProductStep(stepId, draft),
+      !isPreview && validationAttemptedStepIds.has(stepId)
+    );
+  }, [serverErrors.placed.byStep, validationAttemptedStepIds, stepId, draft, isPreview]);
 
   const goNext = useCallback(() => {
     const next = WIZARD_STEPS[currentIndex + 1];
@@ -221,6 +229,7 @@ export function ShareProductWizard({
     }
 
     setSubmitError(null);
+    serverErrors.reset();
     const payload = sanitizeShareProductDraftForSubmit(draft, lockedShortName);
 
     startTransition(async () => {
@@ -230,9 +239,11 @@ export function ShareProductWizard({
           : await updateShareProductAction(productId ?? '', payload);
 
       if (!result.ok) {
-        setSubmitError(
-          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
-        );
+        const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+        if (failure.firstStepId) {
+          setStepId(failure.firstStepId);
+        }
+        setSubmitError(failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null);
         return;
       }
 
@@ -248,6 +259,7 @@ export function ShareProductWizard({
     if (!snapshot) {
       return;
     }
+    serverErrors.reset();
     setDraft(snapshot.draft);
     setStepId(snapshot.stepId);
   }
@@ -258,6 +270,17 @@ export function ShareProductWizard({
       return;
     }
     router.push(SHARE_PRODUCTS_LIST_PATH);
+  }
+
+  function patchDraft<K extends keyof UpsertShareProductInput>(
+    section: K,
+    patch: Partial<UpsertShareProductInput[K]>
+  ) {
+    serverErrors.clearChanged(Object.keys(patch));
+    setDraft((current) => ({
+      ...current,
+      [section]: { ...current[section], ...patch }
+    }));
   }
 
   const title = mode === 'create' ? 'Create share product' : 'Edit share product';
@@ -321,9 +344,7 @@ export function ShareProductWizard({
             draft={draft}
             errors={stepErrors}
             lockedShortName={lockedShortName}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, details: { ...current.details, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('details', patch)}
           />
         ) : null}
 
@@ -332,9 +353,7 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, currency: { ...current.currency, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('currency', patch)}
           />
         ) : null}
 
@@ -343,9 +362,7 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, terms: { ...current.terms, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('terms', patch)}
           />
         ) : null}
 
@@ -354,9 +371,7 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, settings: { ...current.settings, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('settings', patch)}
           />
         ) : null}
 
@@ -365,12 +380,7 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({
-                ...current,
-                marketPrice: { ...current.marketPrice, ...patch }
-              }))
-            }
+            onChange={(patch) => patchDraft('marketPrice', patch)}
           />
         ) : null}
 
@@ -379,9 +389,7 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, charges: { ...current.charges, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('charges', patch)}
           />
         ) : null}
 
@@ -390,12 +398,7 @@ export function ShareProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({
-                ...current,
-                accounting: { ...current.accounting, ...patch }
-              }))
-            }
+            onChange={(patch) => patchDraft('accounting', patch)}
           />
         ) : null}
 

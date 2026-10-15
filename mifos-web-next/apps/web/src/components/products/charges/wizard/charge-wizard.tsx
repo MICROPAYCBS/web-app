@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage, upsertChargeSchema } from '@mifos/validation';
+import { upsertChargeSchema } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
@@ -17,6 +17,11 @@ import { createChargeAction, updateChargeAction } from '@/actions/charge';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  placeWizardFieldErrors,
+  wizardServerFailureBanner
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
 import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
@@ -31,8 +36,8 @@ import { PreviewStep } from './steps/preview-step';
 import { TermsStep } from './steps/terms-step';
 import type { ChargeWizardDraft, ChargeWizardProps, StepErrors } from './types';
 import {
-  chargeStepIdForField,
   draftToPayload,
+  locateChargeField,
   validateChargeDraft,
   validateChargeStep
 } from './validation';
@@ -43,6 +48,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'amount', label: 'Amount & settings' },
   { id: 'preview', label: 'Review' }
 ];
+const CHARGE_STEP_IDS = WIZARD_STEPS.map((step) => step.id);
 const CHARGE_WIZARD_SESSION_VERSION = 1;
 
 export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeWizardProps) {
@@ -138,27 +144,28 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
     });
   }, []);
 
+  const placedApiErrors = useMemo(
+    () => placeWizardFieldErrors(apiFieldErrors, locateChargeField, CHARGE_STEP_IDS),
+    [apiFieldErrors]
+  );
+
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'preview') {
         return false;
       }
       return Object.keys(validateChargeStep(id, draft)).length > 0;
     });
-  }, [validationAttemptedStepIds, draft]);
+    return [...new Set([...clientInvalid, ...placedApiErrors.stepIds])];
+  }, [validationAttemptedStepIds, draft, placedApiErrors.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
-    const fromApi: StepErrors = {};
-    for (const [field, message] of Object.entries(apiFieldErrors)) {
-      if (chargeStepIdForField(field) === stepId) {
-        fromApi[field] = message;
-      }
-    }
-    if (isPreview || !validationAttemptedStepIds.has(stepId)) {
-      return fromApi;
-    }
-    return { ...fromApi, ...validateChargeStep(stepId, draft) };
-  }, [apiFieldErrors, validationAttemptedStepIds, stepId, draft, isPreview]);
+    return mergeWizardStepErrors(
+      placedApiErrors.byStep[stepId] ?? {},
+      validateChargeStep(stepId, draft),
+      !isPreview && validationAttemptedStepIds.has(stepId)
+    );
+  }, [placedApiErrors.byStep, validationAttemptedStepIds, stepId, draft, isPreview]);
 
   const goNext = useCallback(() => {
     const next = WIZARD_STEPS[currentIndex + 1];
@@ -249,15 +256,14 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
       if (!result.ok) {
         const fieldErrors = result.fieldErrors ?? {};
         setApiFieldErrors(fieldErrors);
-        const firstField = Object.keys(fieldErrors)[0];
-        const errorStep = firstField ? chargeStepIdForField(firstField) : undefined;
+        const placed = placeWizardFieldErrors(fieldErrors, locateChargeField, CHARGE_STEP_IDS);
+        const errorStep = placed.stepIds[0];
         if (errorStep) {
           markValidationAttempted(errorStep);
           setStepId(errorStep);
         }
-        setSubmitError(
-          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
-        );
+        const banner = wizardServerFailureBanner(result.message, fieldErrors, placed);
+        setSubmitError(banner ? wizardSubmitRecoveryMessage(banner) : null);
         return;
       }
       sessionDraft.clear();

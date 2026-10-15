@@ -17,6 +17,10 @@ import { createUserAction, fetchStaffByOfficeAction, updateUserAction } from '@/
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
 import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
@@ -30,7 +34,13 @@ import { AccessStep } from './steps/access-step';
 import { PasswordStep } from './steps/password-step';
 import { ReviewStep } from './steps/review-step';
 import type { UserWizardDraft, UserWizardProps, StepErrors } from './types';
-import { draftToCreatePayload, draftToUpdatePayload, validateUserDraft, validateUserStep } from './validation';
+import {
+  draftToCreatePayload,
+  draftToUpdatePayload,
+  locateUserField,
+  validateUserDraft,
+  validateUserStep
+} from './validation';
 
 const CREATE_WIZARD_STEPS: FormWizardStep[] = [
   { id: 'account', label: 'Account' },
@@ -44,6 +54,8 @@ const EDIT_WIZARD_STEPS: FormWizardStep[] = [
   { id: 'access', label: 'Access' },
   { id: 'review', label: 'Review' }
 ];
+const CREATE_STEP_IDS = CREATE_WIZARD_STEPS.map((step) => step.id);
+const EDIT_STEP_IDS = EDIT_WIZARD_STEPS.map((step) => step.id);
 const USER_WIZARD_SESSION_VERSION = 1;
 
 export function UserWizard({
@@ -66,6 +78,10 @@ export function UserWizard({
   const [staffLoadError, setStaffLoadError] = useState<string | null>(null);
   const [staffRetryToken, setStaffRetryToken] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const serverErrors = useWizardServerErrors(
+    locateUserField,
+    mode === 'create' ? CREATE_STEP_IDS : EDIT_STEP_IDS
+  );
   const [pending, startTransition] = useTransition();
   const [leaveOpen, setLeaveOpen] = useState(false);
 
@@ -155,20 +171,30 @@ export function UserWizard({
   }, []);
 
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'review') {
         return false;
       }
       return Object.keys(validateUserStep(id, mode, draft, emailOptions)).length > 0;
     });
-  }, [validationAttemptedStepIds, mode, draft, emailOptions]);
+    return [...new Set([...clientInvalid, ...serverErrors.placed.stepIds])];
+  }, [validationAttemptedStepIds, mode, draft, emailOptions, serverErrors.placed.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
-    if (isReview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
-    }
-    return validateUserStep(stepId, mode, draft, emailOptions);
-  }, [validationAttemptedStepIds, stepId, mode, draft, isReview, emailOptions]);
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[stepId] ?? {},
+      validateUserStep(stepId, mode, draft, emailOptions),
+      !isReview && validationAttemptedStepIds.has(stepId)
+    );
+  }, [
+    serverErrors.placed.byStep,
+    validationAttemptedStepIds,
+    stepId,
+    mode,
+    draft,
+    isReview,
+    emailOptions
+  ]);
 
   const goNext = useCallback(() => {
     const next = wizardSteps[currentIndex + 1];
@@ -249,6 +275,7 @@ export function UserWizard({
       return;
     }
 
+    serverErrors.reset();
     startTransition(async () => {
       const result =
         mode === 'create'
@@ -256,9 +283,11 @@ export function UserWizard({
           : await updateUserAction(userId!, draftToUpdatePayload(draft));
 
       if (!result.ok) {
-        setSubmitError(
-          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
-        );
+        const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+        if (failure.firstStepId) {
+          setStepId(failure.firstStepId);
+        }
+        setSubmitError(failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null);
         return;
       }
       sessionDraft.clear();
@@ -301,6 +330,11 @@ export function UserWizard({
       return;
     }
     router.push(cancelHref);
+  }
+
+  function patchUser(patch: Partial<UserWizardDraft>) {
+    serverErrors.clearChanged(Object.keys(patch));
+    setDraft((current) => ({ ...current, ...patch }));
   }
 
   const stepProps = { mode, template, draft, errors: stepErrors, smtpConfigured };
@@ -346,7 +380,7 @@ export function UserWizard({
         }
       >
         {stepId === 'account' ? (
-          <AccountStep {...stepProps} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
+          <AccountStep {...stepProps} onChange={(patch) => patchUser(patch)} />
         ) : null}
 
         {stepId === 'access' ? (
@@ -356,12 +390,12 @@ export function UserWizard({
             staffLoading={staffLoading}
             staffLoadError={staffLoadError}
             onRetryStaff={() => setStaffRetryToken((current) => current + 1)}
-            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+            onChange={(patch) => patchUser(patch)}
           />
         ) : null}
 
         {stepId === 'password' && mode === 'create' ? (
-          <PasswordStep {...stepProps} onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
+          <PasswordStep {...stepProps} onChange={(patch) => patchUser(patch)} />
         ) : null}
 
         {stepId === 'review' ? (

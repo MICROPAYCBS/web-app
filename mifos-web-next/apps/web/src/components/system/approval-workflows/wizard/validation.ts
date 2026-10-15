@@ -92,6 +92,22 @@ function validateTransitionsStep(draft: UpsertWorkflowDefinitionInput): StepErro
   return errors;
 }
 
+const WORKFLOW_STEP_FIELDS: Record<string, readonly string[]> = {
+  basics: ['taskPermissionCode', 'name', 'description', 'active'],
+  stages: ['stages'],
+  transitions: ['transitions']
+};
+
+export function locateWorkflowField(field: string): { stepId: string; formKey: string } | undefined {
+  const root = field.split('.')[0] ?? field;
+  for (const [stepId, fields] of Object.entries(WORKFLOW_STEP_FIELDS)) {
+    if (fields.includes(root)) {
+      return { stepId, formKey: field.replace(/\[(\d+)\]/g, '.$1') };
+    }
+  }
+  return undefined;
+}
+
 export function validateWorkflowWizardStep(
   stepId: string,
   draft: UpsertWorkflowDefinitionInput

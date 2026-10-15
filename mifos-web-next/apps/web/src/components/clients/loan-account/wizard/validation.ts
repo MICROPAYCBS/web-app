@@ -16,6 +16,7 @@ import {
   loanAccountSecurityStepSchema,
   loanAccountTimelineStepSchema,
   loanApplicationStepForField,
+  mapLoanApplicationFineractField,
   validateLoanApplicationProductRangeRules,
   validateLoanApplicationChargeAmountRules,
   validateLoanApplicationProductRules
@@ -219,6 +220,19 @@ export function validateLoanAccountStep(
   return extraErrors;
 }
 
+export function locateLoanAccountField(
+  field: string
+): { stepId: string; formKey: string } | undefined {
+  const formKey = mapLoanApplicationFineractField(field).replace(/\[(\d+)\]/g, '.$1');
+  const stepId =
+    loanApplicationStepForField(formKey) ??
+    loanApplicationStepForField(formKey.split('.')[0] ?? formKey);
+  if (!stepId) {
+    return undefined;
+  }
+  return { stepId, formKey };
+}
+
 export function resolveLoanAccountWizardStepErrors(
   stepId: string,
   draft: LoanAccountDraft,
@@ -240,26 +254,21 @@ export function resolveLoanAccountWizardStepErrors(
       : {};
   const liveChargeErrors = stepId === 'charges' ? chargeAmountErrors(draft, template) : {};
 
-  const base = options.validationAttempted
-    ? mergeErrors(
-        validateLoanAccountStep(stepId, draft, template, options.serverFieldErrors),
-        liveRangeErrors,
-        liveChargeErrors
-      )
-    : mergeErrors(liveRangeErrors, liveChargeErrors);
+  const serverForStep = Object.fromEntries(
+    Object.entries(options.serverFieldErrors).filter(
+      ([field]) => loanApplicationStepForField(field) === stepId
+    )
+  );
 
-  if (!options.validationAttempted && Object.keys(options.serverFieldErrors).length > 0) {
+  if (options.validationAttempted) {
     return mergeErrors(
-      base,
-      Object.fromEntries(
-        Object.entries(options.serverFieldErrors).filter(
-          ([field]) => loanApplicationStepForField(field) === stepId
-        )
-      )
+      validateLoanAccountStep(stepId, draft, template, serverForStep),
+      liveRangeErrors,
+      liveChargeErrors
     );
   }
 
-  return base;
+  return mergeErrors(liveRangeErrors, liveChargeErrors, serverForStep);
 }
 
 export function mergeLoanAccountServerFieldErrors(

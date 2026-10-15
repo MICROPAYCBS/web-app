@@ -106,6 +106,22 @@ function validatePasswordStep(
   return errors;
 }
 
+const USER_STEP_FIELDS: Record<string, readonly string[]> = {
+  account: ['username', 'firstname', 'lastname', 'email'],
+  access: ['officeId', 'staffId', 'roles'],
+  password: ['password', 'repeatPassword', 'sendPasswordToEmail']
+};
+
+export function locateUserField(field: string): { stepId: string; formKey: string } | undefined {
+  const root = field.split('.')[0] ?? field;
+  for (const [stepId, fields] of Object.entries(USER_STEP_FIELDS)) {
+    if (fields.includes(root)) {
+      return { stepId, formKey: field };
+    }
+  }
+  return undefined;
+}
+
 export function validateUserStep(
   stepId: string,
   mode: UserWizardMode,

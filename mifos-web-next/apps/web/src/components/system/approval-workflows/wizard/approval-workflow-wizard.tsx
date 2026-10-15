@@ -8,13 +8,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { createApprovalWorkflowAction, updateApprovalWorkflowAction } from '@/actions/approval-workflows';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
@@ -37,6 +40,7 @@ import { StagesStep } from './steps/stages-step';
 import { TransitionsStep } from './steps/transitions-step';
 import type { ApprovalWorkflowWizardProps, StepErrors } from './types';
 import {
+  locateWorkflowField,
   stepForField,
   validateWorkflowWizardDraft,
   validateWorkflowWizardStep
@@ -48,6 +52,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'transitions', label: 'Transitions' },
   { id: 'review', label: 'Review' }
 ];
+const WORKFLOW_STEP_IDS = WIZARD_STEPS.map((step) => step.id);
 const APPROVAL_WORKFLOW_WIZARD_SESSION_VERSION = 1;
 
 export function ApprovalWorkflowWizard({
@@ -83,6 +88,7 @@ export function ApprovalWorkflowWizard({
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const serverErrors = useWizardServerErrors(locateWorkflowField, WORKFLOW_STEP_IDS);
   const [pending, startTransition] = useTransition();
   const [leaveOpen, setLeaveOpen] = useState(false);
 
@@ -119,20 +125,22 @@ export function ApprovalWorkflowWizard({
   }, []);
 
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'review') {
         return false;
       }
       return Object.keys(validateWorkflowWizardStep(id, draft)).length > 0;
     });
-  }, [validationAttemptedStepIds, draft]);
+    return [...new Set([...clientInvalid, ...serverErrors.placed.stepIds])];
+  }, [validationAttemptedStepIds, draft, serverErrors.placed.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
-    if (isReview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
-    }
-    return validateWorkflowWizardStep(stepId, draft);
-  }, [validationAttemptedStepIds, stepId, draft, isReview]);
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[stepId] ?? {},
+      validateWorkflowWizardStep(stepId, draft),
+      !isReview && validationAttemptedStepIds.has(stepId)
+    );
+  }, [serverErrors.placed.byStep, validationAttemptedStepIds, stepId, draft, isReview]);
 
   const goNext = useCallback(() => {
     const next = WIZARD_STEPS[currentIndex + 1];
@@ -213,21 +221,20 @@ export function ApprovalWorkflowWizard({
           : await createApprovalWorkflowAction(draft);
 
       if (!result.ok) {
-        const baseMessage = formatActionErrorMessage(result.message, result.fieldErrors);
-        setSubmitError(
-          wizardSubmitRecoveryMessage(
-            isWorkflowInProgressUpdateError(baseMessage)
-              ? `${baseMessage}\n\n${WORKFLOW_IN_PROGRESS_UPDATE_HINT}`
-              : baseMessage
-          )
-        );
-        if (result.fieldErrors) {
-          const firstField = Object.keys(result.fieldErrors)[0];
-          if (firstField) {
-            setStepId(stepForField(firstField));
-          }
+        const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+        if (failure.firstStepId) {
+          setStepId(failure.firstStepId);
         }
-        toast.error(result.message);
+        const inProgress =
+          isWorkflowInProgressUpdateError(result.message) ||
+          (failure.banner != null && isWorkflowInProgressUpdateError(failure.banner));
+        const withHint = inProgress
+          ? `${failure.banner ? `${failure.banner}\n\n` : ''}${WORKFLOW_IN_PROGRESS_UPDATE_HINT}`
+          : failure.banner;
+        setSubmitError(withHint ? wizardSubmitRecoveryMessage(withHint) : null);
+        if (withHint) {
+          toast.error(withHint);
+        }
         return;
       }
 
@@ -252,7 +259,10 @@ export function ApprovalWorkflowWizard({
     disabled: pending,
     definitionId,
     existingDefinitions,
-    onChange: (patch: Partial<typeof draft>) => setDraft((current) => ({ ...current, ...patch }))
+    onChange: (patch: Partial<typeof draft>) => {
+      serverErrors.clearChanged(Object.keys(patch));
+      setDraft((current) => ({ ...current, ...patch }));
+    }
   };
 
   function handleResumeDraft() {

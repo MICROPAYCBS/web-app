@@ -79,6 +79,7 @@ export function AccessStep({
                   : 'Select staff (optional)'
           }
           emptyMessage={staffLoading ? 'Loading staff…' : 'No staff found for this branch.'}
+          error={errors.staffId}
         />
         <RoleCheckboxGroup
           roles={template.availableRoles}

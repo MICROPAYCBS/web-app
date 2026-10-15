@@ -66,6 +66,30 @@ export function validateMessageStep(draft: SmsCampaignWizardDraft): StepErrors {
   return errors;
 }
 
+const CAMPAIGN_FIELDS = [
+  'campaignName',
+  'triggerType',
+  'runReportId',
+  'recurrenceStartDate',
+  'frequency',
+  'interval',
+  'repeatsOnDay',
+  'businessRule',
+  'providerId',
+  'isNotification'
+] as const;
+
+export function locateSmsCampaignField(field: string): { stepId: string; formKey: string } | undefined {
+  const root = field.split('.')[0] ?? field;
+  if (root === 'message') {
+    return { stepId: 'message', formKey: field };
+  }
+  if ((CAMPAIGN_FIELDS as readonly string[]).includes(root)) {
+    return { stepId: 'campaign', formKey: field };
+  }
+  return undefined;
+}
+
 export function validateWizardStep(stepId: string, draft: SmsCampaignWizardDraft): StepErrors {
   switch (stepId) {
     case 'campaign':

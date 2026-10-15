@@ -220,3 +220,68 @@ export function createClientIssueStepId(path: (string | number)[]): string {
   }
   return 'general';
 }
+
+const CLIENT_API_FIELD_STEPS: Record<string, readonly string[]> = {
+  biodata: [
+    'legalFormId',
+    'externalId',
+    'firstname',
+    'middlename',
+    'lastname',
+    'fullname',
+    'genderId',
+    'titleId',
+    'nationalityCountryId',
+    'maritalStatusId',
+    'dateOfBirth',
+    'constitutionId',
+    'incorpNumber',
+    'incorpValidityTillDate',
+    'remarks',
+    'clientNonPersonDetails'
+  ],
+  contact: [
+    'mobileNo',
+    'alternativeMobileNo',
+    'emailAddress',
+    'alternativeEmailAddress',
+    'contacts'
+  ],
+  'customer-profiling': [
+    'clientTypeId',
+    'subIndustryId',
+    'customerClassId',
+    'taxIdentificationNumber',
+    'customerRiskProfileId'
+  ],
+  general: ['officeId', 'staffId', 'submittedOnDate', 'savingsProductId', 'isStaff', 'accountNo'],
+  address: ['address', 'addresses'],
+  compliance: [
+    'complianceProfile',
+    'hasOtherBankAccounts',
+    'otherBankAccounts',
+    'pepPosition',
+    'isPep',
+    'fatcaRegistrationNo',
+    'fatcaRegistered'
+  ],
+  'income-sources': ['incomeSources'],
+  identifiers: ['clientIdentifiers'],
+  family: ['familyMembers'],
+  'kyc-capture': ['kycPhoto', 'kycSignature']
+};
+
+export function locateCreateClientField(field: string): { stepId: string; formKey: string } | undefined {
+  const normalized = field.replace(/\[(\d+)\]/g, '.$1');
+  const root = normalized.split('.')[0] ?? normalized;
+  if (root === 'complianceProfile') {
+    const rest = normalized.slice('complianceProfile.'.length);
+    return { stepId: 'compliance', formKey: rest || '_form' };
+  }
+  for (const [stepId, fields] of Object.entries(CLIENT_API_FIELD_STEPS)) {
+    if (fields.includes(root)) {
+      return { stepId, formKey: normalized };
+    }
+  }
+  return undefined;
+}

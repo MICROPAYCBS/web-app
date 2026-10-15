@@ -8,7 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage } from '@mifos/validation';
 import { format } from 'date-fns';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
@@ -17,6 +16,10 @@ import { toastCommandOutcome, toastFineractError } from '@/lib/command-outcome-t
 import { buildSmsCampaignParamValue, createSmsCampaignAction } from '@/actions/sms-campaign';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
 import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
@@ -34,13 +37,14 @@ import { CampaignStep } from './steps/campaign-step';
 import { MessageStep } from './steps/message-step';
 import { PreviewStep } from './steps/preview-step';
 import { createEmptySmsCampaignDraft, type SmsCampaignWizardProps } from './types';
-import { validateWizardStep } from './validation';
+import { locateSmsCampaignField, validateWizardStep } from './validation';
 
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'campaign', label: 'Campaign' },
   { id: 'message', label: 'Message' },
   { id: 'preview', label: 'Preview' }
 ];
+const SMS_STEP_IDS = WIZARD_STEPS.map((step) => step.id);
 const SMS_CAMPAIGN_WIZARD_SESSION_VERSION = 1;
 
 function formatRecurrenceStartDate(value: string): string {
@@ -63,6 +67,7 @@ export function SmsCampaignWizard({ template }: SmsCampaignWizardProps) {
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const serverErrors = useWizardServerErrors(locateSmsCampaignField, SMS_STEP_IDS);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -91,8 +96,9 @@ export function SmsCampaignWizard({ template }: SmsCampaignWizardProps) {
   const lookupBlocked = stepId === 'campaign' && Boolean(lookupError);
 
   const updateDraft = useCallback((patch: Partial<typeof draft>) => {
+    serverErrors.clearChanged(Object.keys(patch));
     setDraft((current) => ({ ...current, ...patch }));
-  }, []);
+  }, [serverErrors]);
 
   const markValidationAttempted = useCallback((id: string) => {
     setValidationAttemptedStepIds((prev) => {
@@ -106,20 +112,22 @@ export function SmsCampaignWizard({ template }: SmsCampaignWizardProps) {
   }, []);
 
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'preview') {
         return false;
       }
       return Object.keys(validateWizardStep(id, draft)).length > 0;
     });
-  }, [validationAttemptedStepIds, draft]);
+    return [...new Set([...clientInvalid, ...serverErrors.placed.stepIds])];
+  }, [validationAttemptedStepIds, draft, serverErrors.placed.stepIds]);
 
   const stepErrors = useMemo(() => {
-    if (isPreview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
-    }
-    return validateWizardStep(stepId, draft);
-  }, [validationAttemptedStepIds, stepId, draft, isPreview]);
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[stepId] ?? {},
+      validateWizardStep(stepId, draft),
+      !isPreview && validationAttemptedStepIds.has(stepId)
+    );
+  }, [serverErrors.placed.byStep, validationAttemptedStepIds, stepId, draft, isPreview]);
 
   const goNext = useCallback(() => {
     const next = WIZARD_STEPS[currentIndex + 1];
@@ -186,11 +194,15 @@ export function SmsCampaignWizard({ template }: SmsCampaignWizardProps) {
       });
 
       if (!result.ok) {
-        const message = wizardSubmitRecoveryMessage(
-          formatActionErrorMessage(result.message, result.fieldErrors)
-        );
+        const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+        if (failure.firstStepId) {
+          setStepId(failure.firstStepId);
+        }
+        const message = failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null;
         setSubmitError(message);
-        toastFineractError(message);
+        if (message) {
+          toastFineractError(message);
+        }
         return;
       }
       sessionDraft.clear();

@@ -8,6 +8,7 @@
 
 import type { UpsertDepositProductInput } from '@mifos/validation';
 import {
+  depositProductAccountingCoreStepSchema,
   depositProductChargesStepSchema,
   depositProductCurrencyStepSchema,
   depositProductDetailsStepSchema,
@@ -17,6 +18,11 @@ import {
   validateDepositProductAccounting
 } from '@mifos/validation';
 import type { ZodTypeAny } from 'zod';
+import {
+  locateWizardField,
+  wizardErrorSection,
+  type WizardFieldPlacement
+} from '@/components/composites/wizard-api-errors';
 import type { StepErrors } from './types';
 
 const STEP_SCHEMAS: Record<string, ZodTypeAny> = {
@@ -96,4 +102,24 @@ export function validateDepositProductStep(
   }
 
   return flattenZodErrors(stepId, result.error.issues);
+}
+
+const DEPOSIT_MAPPING_FIELDS = [
+  'paymentChannelToFundSourceMappings',
+  'feeToIncomeAccountMappings',
+  'penaltyToIncomeAccountMappings'
+] as const;
+
+const DEPOSIT_ERROR_SECTIONS = [
+  wizardErrorSection('details', 'details', depositProductDetailsStepSchema),
+  wizardErrorSection('currency', 'currency', depositProductCurrencyStepSchema),
+  wizardErrorSection('terms', 'terms', depositProductTermsStepSchema),
+  wizardErrorSection('settings', 'settings', depositProductSettingsStepSchema),
+  wizardErrorSection('interestRateChart', 'interestRateChart', depositProductInterestRateChartStepSchema),
+  wizardErrorSection('charges', 'charges', depositProductChargesStepSchema, ['charges']),
+  wizardErrorSection('accounting', 'accounting', depositProductAccountingCoreStepSchema, DEPOSIT_MAPPING_FIELDS)
+];
+
+export function locateDepositProductField(parameterName: string): WizardFieldPlacement | undefined {
+  return locateWizardField(DEPOSIT_ERROR_SECTIONS, parameterName);
 }

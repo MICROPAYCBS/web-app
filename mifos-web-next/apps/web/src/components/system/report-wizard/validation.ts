@@ -170,8 +170,32 @@ export function stepForField(fieldKey: string, showQueryStep: boolean): string {
   if (fieldKey === 'reportSql') {
     return showQueryStep ? 'query' : 'details';
   }
+  if (fieldKey === 'description') {
+    return 'details';
+  }
   if (fieldKey.startsWith('reportParameters')) {
     return 'parameters';
   }
   return 'review';
+}
+
+export function locateReportField(
+  field: string,
+  coreReport: boolean
+): { stepId: string; formKey: string } | undefined {
+  const root = field.split('.')[0] ?? field;
+  if (coreReport) {
+    if (root === 'reportSql') {
+      return { stepId: 'query', formKey: field };
+    }
+    if (['useReport', 'description', 'reportName', 'reportType', 'reportCategory'].includes(root)) {
+      return { stepId: 'settings', formKey: field };
+    }
+    return undefined;
+  }
+  const stepId = stepForField(field, true);
+  if (stepId === 'review') {
+    return undefined;
+  }
+  return { stepId, formKey: field };
 }

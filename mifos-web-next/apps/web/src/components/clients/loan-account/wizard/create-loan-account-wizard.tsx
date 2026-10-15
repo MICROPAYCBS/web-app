@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 import type { ClientLoanAccountTemplate, LoanOriginatorListItem } from '@mifos/api-client';
-import { formatActionErrorMessage, loanApplicationStepForField } from '@mifos/validation';
+import { loanApplicationStepForField } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
@@ -22,6 +22,11 @@ import { PlatformRouteLayout } from '@/components/platform/platform-route-layout
 import { useInitialTransactionDate } from '@/components/platform/business-date-provider';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  omitWizardFieldErrors,
+  placeWizardFieldErrors,
+  wizardServerFailureBanner
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { LookupLoadError } from '@/components/composites/lookup-load-error';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
@@ -55,7 +60,11 @@ import { LoanAccountTimelineStep } from './steps/timeline-step';
 import { LoanTopupFields } from '@/components/clients/loan-account/loan-topup-fields';
 import { useLoanTopup } from '@/components/clients/loan-account/use-loan-topup';
 import { loanTopupErrorsForStep } from '@/lib/fineract/loan-topup';
-import { validateLoanAccountStep, resolveLoanAccountWizardStepErrors } from './validation';
+import {
+  locateLoanAccountField,
+  resolveLoanAccountWizardStepErrors,
+  validateLoanAccountStep
+} from './validation';
 const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'core', label: 'Product' },
   { id: 'financial', label: 'Terms' },
@@ -66,6 +75,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'payout', label: 'Payout' },
   { id: 'preview', label: 'Preview' }
 ];
+const LOAN_ACCOUNT_STEP_IDS = WIZARD_STEPS.map((step) => step.id);
 const SCHEDULE_STEP_INDEX = WIZARD_STEPS.findIndex((step) => step.id === 'schedule');
 const CREATE_LOAN_ACCOUNT_WIZARD_ID = 'create-loan-account';
 const CREATE_LOAN_ACCOUNT_WIZARD_SESSION_VERSION = 3;
@@ -118,6 +128,13 @@ export function LoanAccountWizard({
   const [topupProductError, setTopupProductError] = useState<string | null>(null);
   const productTemplateRequestRef = useRef(0);
   const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string>>({});
+  const placedServerErrors = useMemo(
+    () => placeWizardFieldErrors(serverFieldErrors, locateLoanAccountField, LOAN_ACCOUNT_STEP_IDS),
+    [serverFieldErrors]
+  );
+  const clearServerFields = useCallback((keys: string[]) => {
+    setServerFieldErrors((current) => omitWizardFieldErrors(current, keys));
+  }, []);
   const [scheduleStepError, setScheduleStepError] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const currentIndex = WIZARD_STEPS.findIndex((step) => step.id === stepId);
@@ -175,7 +192,7 @@ export function LoanAccountWizard({
     });
   }, []);
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'preview' || id === 'schedule' || id === 'charges') {
         return false;
       }
@@ -186,7 +203,8 @@ export function LoanAccountWizard({
         }).length > 0
       );
     });
-  }, [validationAttemptedStepIds, draft, template, topup.fieldErrors]);
+    return [...new Set([...clientInvalid, ...placedServerErrors.stepIds])];
+  }, [validationAttemptedStepIds, draft, template, topup.fieldErrors, placedServerErrors.stepIds]);
   const stepErrors = useMemo(() => {
     const resolved = resolveLoanAccountWizardStepErrors(stepId, draft, template, {
       validationAttempted: validationAttemptedStepIds.has(stepId),
@@ -440,21 +458,22 @@ export function LoanAccountWizard({
           ? 'Loan application update sent for approval.'
           : 'Loan application sent for approval.'
       })) {
-        setSubmitError(
-          wizardSubmitRecoveryMessage(
-            formatActionErrorMessage(result.message, result.fieldErrors)
-          )
+        const placed = placeWizardFieldErrors(
+          result.fieldErrors,
+          locateLoanAccountField,
+          LOAN_ACCOUNT_STEP_IDS
         );
-        if (result.fieldErrors) {
-          setServerFieldErrors(result.fieldErrors);
-          const firstField = Object.keys(result.fieldErrors)[0];
-          const targetStep = firstField
-            ? loanApplicationStepForField(firstField)
-            : undefined;
-          if (targetStep) {
-            setStepId(targetStep);
-            markValidationAttempted(targetStep);
-          }
+        const mapped: Record<string, string> = {};
+        for (const bucket of Object.values(placed.byStep)) {
+          Object.assign(mapped, bucket);
+        }
+        setServerFieldErrors(mapped);
+        const banner = wizardServerFailureBanner(result.message, result.fieldErrors, placed);
+        setSubmitError(banner ? wizardSubmitRecoveryMessage(banner) : null);
+        const targetStep = placed.stepIds[0];
+        if (targetStep) {
+          setStepId(targetStep);
+          markValidationAttempted(targetStep);
         }
         return;
       }
@@ -498,6 +517,7 @@ export function LoanAccountWizard({
       return;
     }
     setDraft(snapshot.draft);
+    setServerFieldErrors({});
     setStepId(snapshot.stepId);
   }
 
@@ -593,6 +613,7 @@ export function LoanAccountWizard({
               productLocked={isEdit}
               productTemplateLoading={productTemplateLoading}
               onChange={(patch) => {
+                clearServerFields(Object.keys(patch));
                 setDraft((current) => mergeLoanAccountCoreStep(current, patch));
                 if (patch.productId && patch.productId !== draft.productId) {
                   void loadProductTemplate(patch.productId, lockTopupLoan);
@@ -614,7 +635,10 @@ export function LoanAccountWizard({
                   cashToClient={topup.cashToClient}
                   omittedInterestBased={topup.omittedInterestBased}
                   pendingWarning={topup.pendingWarning}
-                  onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+                  onChange={(patch) => {
+                    clearServerFields(Object.keys(patch));
+                    setDraft((current) => ({ ...current, ...patch }));
+                  }}
                 />
               </div>
             ) : null}
@@ -628,9 +652,10 @@ export function LoanAccountWizard({
             topupPayoff={draft.isTopup ? topup.context?.payoff : null}
             topupCashToClient={draft.isTopup ? topup.cashToClient : null}
             topupOmittedInterestBased={draft.isTopup ? topup.omittedInterestBased : false}
-            onChange={(patch) =>
-              setDraft((current) => mergeLoanAccountFinancialStep(current, patch))
-            }
+            onChange={(patch) => {
+              clearServerFields(Object.keys(patch));
+              setDraft((current) => mergeLoanAccountFinancialStep(current, patch));
+            }}
           />
         ) : null}
         {stepId === 'timeline' ? (
@@ -638,9 +663,10 @@ export function LoanAccountWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => mergeLoanAccountTimelineStep(current, patch))
-            }
+            onChange={(patch) => {
+              clearServerFields(Object.keys(patch));
+              setDraft((current) => mergeLoanAccountTimelineStep(current, patch));
+            }}
           />
         ) : null}
         {stepId === 'security' ? (
@@ -652,9 +678,10 @@ export function LoanAccountWizard({
             originatorOptions={originatorOptions}
             isEdit={isEdit}
             borrowerClientId={Number(clientId)}
-            onChange={(patch) =>
-              setDraft((current) => mergeLoanAccountSecurityStep(current, patch))
-            }
+            onChange={(patch) => {
+              clearServerFields(Object.keys(patch));
+              setDraft((current) => mergeLoanAccountSecurityStep(current, patch));
+            }}
           />
         ) : null}
         {stepId === 'payout' ? (
@@ -663,14 +690,8 @@ export function LoanAccountWizard({
             draft={draft}
             errors={stepErrors}
             onChange={(patch) => {
+              clearServerFields(Object.keys(patch));
               setDraft((current) => mergeLoanAccountPayoutStep(current, patch));
-              setServerFieldErrors((current) => {
-                const next = { ...current };
-                for (const key of Object.keys(patch)) {
-                  delete next[key];
-                }
-                return next;
-              });
             }}
           />
         ) : null}
@@ -679,9 +700,10 @@ export function LoanAccountWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => mergeLoanAccountChargesStep(current, patch))
-            }
+            onChange={(patch) => {
+              clearServerFields(Object.keys(patch));
+              setDraft((current) => mergeLoanAccountChargesStep(current, patch));
+            }}
           />
         ) : null}
         {stepId === 'schedule' ? (

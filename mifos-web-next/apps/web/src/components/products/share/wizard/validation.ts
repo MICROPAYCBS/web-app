@@ -17,6 +17,11 @@ import {
   shareProductTermsStepSchema
 } from '@mifos/validation';
 import type { ZodTypeAny } from 'zod';
+import {
+  locateWizardField,
+  wizardErrorSection,
+  type WizardFieldPlacement
+} from '@/components/composites/wizard-api-errors';
 import type { StepErrors } from './types';
 
 const STEP_SCHEMAS: Record<string, ZodTypeAny> = {
@@ -72,4 +77,18 @@ export function validateShareProductStep(
   }
 
   return flattenZodErrors(stepId, result.error.issues);
+}
+
+const SHARE_ERROR_SECTIONS = [
+  wizardErrorSection('details', 'details', shareProductDetailsStepSchema),
+  wizardErrorSection('currency', 'currency', shareProductCurrencyStepSchema),
+  wizardErrorSection('terms', 'terms', shareProductTermsStepSchema),
+  wizardErrorSection('settings', 'settings', shareProductSettingsStepSchema),
+  wizardErrorSection('marketPrice', 'marketPrice', shareProductMarketPriceStepSchema),
+  wizardErrorSection('charges', 'charges', shareProductChargesStepSchema, ['charges']),
+  wizardErrorSection('accounting', 'accounting', shareProductAccountingStepSchema)
+];
+
+export function locateShareProductField(parameterName: string): WizardFieldPlacement | undefined {
+  return locateWizardField(SHARE_ERROR_SECTIONS, parameterName);
 }

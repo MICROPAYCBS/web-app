@@ -34,10 +34,12 @@ function incomeSourceTypeLabel(
 export function IncomeSourceStep({
   incomeSourceOptions,
   draft,
+  errors = {},
   onIncomeSourcesChange
 }: {
   incomeSourceOptions: FineractIncomeSourceOptions | undefined;
   draft: CreateClientDraft;
+  errors?: Record<string, string>;
   onIncomeSourcesChange: (sources: IncomeSourceInput[]) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -64,6 +66,9 @@ export function IncomeSourceStep({
       <p className="text-sm text-muted-foreground">
         Add income sources for this customer (optional). You can skip this step.
       </p>
+      {errors.incomeSources ? (
+        <p className="text-sm text-destructive">{errors.incomeSources}</p>
+      ) : null}
 
       <Button type="button" variant="outline" size="sm" onClick={openAdd}>
         <Plus className="mr-2 size-4" />

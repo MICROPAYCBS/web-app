@@ -8,6 +8,7 @@
 
 import type { UpsertSavingsProductInput } from '@mifos/validation';
 import {
+  savingsProductAccountingCoreStepSchema,
   savingsProductChargesStepSchema,
   savingsProductPaymentChannelsStepSchema,
   savingsProductCurrencyStepSchema,
@@ -18,6 +19,11 @@ import {
   validateSavingsProductAccounting
 } from '@mifos/validation';
 import type { ZodTypeAny } from 'zod';
+import {
+  locateWizardField,
+  wizardErrorSection,
+  type WizardFieldPlacement
+} from '@/components/composites/wizard-api-errors';
 import type { StepErrors } from './types';
 
 const STEP_SCHEMAS: Record<string, ZodTypeAny> = {
@@ -105,4 +111,27 @@ export function validateSavingsProductStep(
   }
 
   return flattenZodErrors(stepId, result.error.issues);
+}
+
+const SAVINGS_ERROR_SECTIONS = [
+  wizardErrorSection('details', 'details', savingsProductDetailsStepSchema),
+  wizardErrorSection('currency', 'currency', savingsProductCurrencyStepSchema),
+  wizardErrorSection('terms', 'terms', savingsProductTermsStepSchema),
+  wizardErrorSection('settings', 'settings', savingsProductSettingsStepSchema),
+  wizardErrorSection('charges', 'charges', savingsProductChargesStepSchema, ['charges']),
+  wizardErrorSection('accounting', 'accounting', savingsProductAccountingCoreStepSchema),
+  wizardErrorSection('mappings', 'accounting', savingsProductMappingsStepSchema)
+];
+
+export function locateSavingsProductField(parameterName: string): WizardFieldPlacement | undefined {
+  const normalized = parameterName.replace(/\[(\d+)\]/g, '.$1');
+  const root = normalized.split('.')[0]?.replace(/\[\d+\]$/, '') ?? normalized;
+  if (root === 'paymentChannels' || root === 'channels') {
+    const rest = normalized.replace(/^(paymentChannels|channels)\.?/, '');
+    return {
+      stepId: 'channels',
+      formKey: rest ? `channels.channels.${rest}` : 'channels.channels'
+    };
+  }
+  return locateWizardField(SAVINGS_ERROR_SECTIONS, parameterName);
 }

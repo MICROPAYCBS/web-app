@@ -8,7 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage } from '@mifos/validation';
 import type { UpsertReportFormInput } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
@@ -18,6 +17,10 @@ import { createReportAction, updateReportAction } from '@/actions/reports';
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
 import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
@@ -38,6 +41,7 @@ import type { ReportWizardDraft, ReportWizardProps, StepErrors } from './types';
 import {
   draftToPayload,
   reportDraftHasUnsavedChanges,
+  locateReportField,
   stepForField,
   validateCoreReportDraft,
   validateReportDraft,
@@ -91,6 +95,12 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
     }
     return buildCustomWizardSteps(customShowQueryStep);
   }, [coreReport, coreShowQueryStep, customShowQueryStep]);
+  const reportStepIds = useMemo(() => wizardSteps.map((step) => step.id), [wizardSteps]);
+  const locateReport = useCallback(
+    (field: string) => locateReportField(field, coreReport),
+    [coreReport]
+  );
+  const serverErrors = useWizardServerErrors(locateReport, reportStepIds);
 
   const currentIndex = wizardSteps.findIndex((step) => step.id === stepId);
   const isReview = stepId === 'review';
@@ -154,20 +164,28 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
   );
 
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'review') {
         return false;
       }
       return Object.keys(validateCurrentStep(id)).length > 0;
     });
-  }, [validationAttemptedStepIds, validateCurrentStep]);
+    return [...new Set([...clientInvalid, ...serverErrors.placed.stepIds])];
+  }, [validationAttemptedStepIds, validateCurrentStep, serverErrors.placed.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
-    if (isReview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
-    }
-    return validateCurrentStep(stepId);
-  }, [validationAttemptedStepIds, stepId, validateCurrentStep, isReview]);
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[stepId] ?? {},
+      validateCurrentStep(stepId),
+      !isReview && validationAttemptedStepIds.has(stepId)
+    );
+  }, [
+    serverErrors.placed.byStep,
+    validationAttemptedStepIds,
+    stepId,
+    validateCurrentStep,
+    isReview
+  ]);
 
   const goNext = useCallback(() => {
     const next = wizardSteps[currentIndex + 1];
@@ -223,6 +241,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
   );
 
   function patchForm(patch: Partial<UpsertReportFormInput>) {
+    serverErrors.clearChanged(Object.keys(patch));
     setDraft((current) => ({
       ...current,
       form: { ...current.form, ...patch }
@@ -244,6 +263,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
   }
 
   function setParameters(parameters: ReportParameterRow[]) {
+    serverErrors.clearChanged(['reportParameters']);
     setDraft((current) => ({ ...current, parameters }));
   }
 
@@ -266,6 +286,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
     }
 
     const payload = draftToPayload(draft);
+    serverErrors.reset();
 
     startTransition(async () => {
       const result =
@@ -274,10 +295,14 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
           : await updateReportAction(reportId as number, payload);
 
       if (!result.ok) {
-        setSubmitError(
-          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
-        );
-        toastFineractError(result.message);
+        const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+        if (failure.firstStepId) {
+          setStepId(failure.firstStepId);
+        }
+        setSubmitError(failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null);
+        if (failure.banner) {
+          toastFineractError(failure.banner);
+        }
         return;
       }
       sessionDraft.clear();

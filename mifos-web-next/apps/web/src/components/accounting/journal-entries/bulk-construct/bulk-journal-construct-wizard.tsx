@@ -8,13 +8,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { formatActionErrorMessage } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState, useTransition } from 'react';
 import { createBulkJournalEntriesAction } from '@/actions/journal-entries';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
 import { useWizardSessionDraft } from '@/components/composites/use-wizard-session-draft';
@@ -31,6 +34,7 @@ import { BulkConstructTemplateStep } from './steps/template-step';
 import { BulkConstructVariationsStep } from './steps/variations-step';
 import type { BulkConstructWizardProps } from './types';
 import {
+  locateBulkConstructField,
   stepForBulkConstructField,
   validateBulkConstructDraft,
   validateBulkConstructStep
@@ -41,6 +45,7 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'variations', label: 'Variations' },
   { id: 'review', label: 'Review & post' }
 ];
+const BULK_STEP_IDS = WIZARD_STEPS.map((step) => step.id);
 
 const JOURNAL_ENTRIES_LIST_PATH = '/accounting/journal-entries';
 const BULK_JOURNAL_WIZARD_SESSION_VERSION = 1;
@@ -56,6 +61,7 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const serverErrors = useWizardServerErrors(locateBulkConstructField, BULK_STEP_IDS);
   const [postResults, setPostResults] = useState<
     | Array<
         | { rowIndex: number; ok: true; transactionId?: string; pending?: boolean }
@@ -88,21 +94,23 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
   useUnsavedWizardLeave(sessionDirty);
 
   const stepErrors = useMemo(() => {
-    if (!validationAttemptedStepIds.has(stepId)) {
-      return {};
-    }
-    return validateBulkConstructStep(
-      stepId,
-      form,
-      props.validationContext,
-      props.accountingRules,
-      props.currencies
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[stepId] ?? {},
+      validateBulkConstructStep(
+        stepId,
+        form,
+        props.validationContext,
+        props.accountingRules,
+        props.currencies
+      ),
+      validationAttemptedStepIds.has(stepId)
     );
   }, [
     form,
     props.accountingRules,
     props.currencies,
     props.validationContext,
+    serverErrors.placed.byStep,
     stepId,
     validationAttemptedStepIds
   ]);
@@ -124,12 +132,16 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
         invalid.add(step.id);
       }
     }
+    for (const id of serverErrors.placed.stepIds) {
+      invalid.add(id);
+    }
     return [...invalid];
   }, [
     form,
     props.accountingRules,
     props.currencies,
     props.validationContext,
+    serverErrors.placed.stepIds,
     validationAttemptedStepIds
   ]);
 
@@ -145,10 +157,12 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
   }, []);
 
   function patchForm(patch: Partial<typeof form>) {
+    serverErrors.clearChanged(Object.keys(patch));
     setForm((current) => ({ ...current, ...patch }));
   }
 
   function patchTemplate(patch: Partial<typeof form.template>) {
+    serverErrors.clearChanged(Object.keys(patch));
     setForm((current) => {
       const nextTemplate = { ...current.template, ...patch };
       const variationModeChanged =
@@ -168,6 +182,7 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
   }
 
   function patchRows(rows: typeof form.rows) {
+    serverErrors.clearChanged(['rows']);
     setForm((current) => ({ ...current, rows }));
   }
 
@@ -233,10 +248,15 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
     startTransition(async () => {
       const result = await createBulkJournalEntriesAction(formRef.current);
       if (!result.ok) {
-        setSubmitError(
-          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
-        );
-        toastFineractError(result.message);
+        const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+        if (failure.firstStepId) {
+          setStepId(failure.firstStepId);
+        }
+        const message = failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null;
+        setSubmitError(message);
+        if (message) {
+          toastFineractError(message);
+        }
         return;
       }
 

@@ -9,7 +9,6 @@
  */
 
 import type { UpsertDepositProductInput } from '@mifos/validation';
-import { formatActionErrorMessage } from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
@@ -21,6 +20,10 @@ import {
 import { PlatformRouteLayout } from '@/components/platform/platform-route-layout';
 import { FineractErrorAlert } from '@/components/composites/fineract-error-alert';
 import { FormWizard, type FormWizardStep } from '@/components/composites/form-wizard';
+import {
+  mergeWizardStepErrors,
+  useWizardServerErrors
+} from '@/components/composites/wizard-api-errors';
 import { FormWizardFooter } from '@/components/composites/form-wizard-footer';
 import { LookupLoadError } from '@/components/composites/lookup-load-error';
 import { useUnsavedWizardLeave } from '@/components/composites/use-unsaved-wizard-leave';
@@ -44,7 +47,7 @@ import { PreviewStep } from './steps/preview-step';
 import { SettingsStep } from './steps/settings-step';
 import { TermsStep } from './steps/terms-step';
 import type { DepositProductWizardProps, StepErrors } from './types';
-import { validateDepositProductStep } from './validation';
+import { locateDepositProductField, validateDepositProductStep } from './validation';
 
 const DEPOSIT_CHARGE_OPTION_STEPS = ['charges', 'accounting'] as const;
 const DEPOSIT_PRODUCT_WIZARD_SESSION_VERSION = 1;
@@ -59,6 +62,8 @@ const WIZARD_STEPS: FormWizardStep[] = [
   { id: 'accounting', label: 'Accounting' },
   { id: 'preview', label: 'Preview' }
 ];
+
+const DEPOSIT_STEP_IDS = WIZARD_STEPS.map((step) => step.id);
 
 export function DepositProductWizard({
   kind,
@@ -77,6 +82,7 @@ export function DepositProductWizard({
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const serverErrors = useWizardServerErrors(locateDepositProductField, DEPOSIT_STEP_IDS);
   const [pending, startTransition] = useTransition();
   const [leaveOpen, setLeaveOpen] = useState(false);
 
@@ -137,20 +143,22 @@ export function DepositProductWizard({
   }, []);
 
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'preview') {
         return false;
       }
       return Object.keys(validateDepositProductStep(id, draft)).length > 0;
     });
-  }, [validationAttemptedStepIds, draft]);
+    return [...new Set([...clientInvalid, ...serverErrors.placed.stepIds])];
+  }, [validationAttemptedStepIds, draft, serverErrors.placed.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
-    if (isPreview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
-    }
-    return validateDepositProductStep(stepId, draft);
-  }, [validationAttemptedStepIds, stepId, draft, isPreview]);
+    return mergeWizardStepErrors(
+      serverErrors.placed.byStep[stepId] ?? {},
+      validateDepositProductStep(stepId, draft),
+      !isPreview && validationAttemptedStepIds.has(stepId)
+    );
+  }, [serverErrors.placed.byStep, validationAttemptedStepIds, stepId, draft, isPreview]);
 
   const goNext = useCallback(() => {
     const next = WIZARD_STEPS[currentIndex + 1];
@@ -221,6 +229,7 @@ export function DepositProductWizard({
     }
 
     setSubmitError(null);
+    serverErrors.reset();
     const payload = sanitizeDepositProductDraftForSubmit(draft, lockedShortName);
 
     startTransition(async () => {
@@ -230,9 +239,11 @@ export function DepositProductWizard({
           : await updateDepositProductAction(kind, productId ?? '', payload);
 
       if (!result.ok) {
-        setSubmitError(
-          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
-        );
+        const failure = serverErrors.acceptFailure(result.message, result.fieldErrors);
+        if (failure.firstStepId) {
+          setStepId(failure.firstStepId);
+        }
+        setSubmitError(failure.banner ? wizardSubmitRecoveryMessage(failure.banner) : null);
         return;
       }
 
@@ -248,6 +259,7 @@ export function DepositProductWizard({
     if (!snapshot) {
       return;
     }
+    serverErrors.reset();
     setDraft(snapshot.draft);
     setStepId(snapshot.stepId);
   }
@@ -258,6 +270,20 @@ export function DepositProductWizard({
       return;
     }
     router.push(config.listPath);
+  }
+
+  function patchDraft<K extends keyof UpsertDepositProductInput>(
+    section: K,
+    patch: Partial<UpsertDepositProductInput[K]>
+  ) {
+    serverErrors.clearChanged(Object.keys(patch as object));
+    setDraft((current) => ({
+      ...current,
+      [section]: {
+        ...(current[section] as Record<string, unknown>),
+        ...(patch as Record<string, unknown>)
+      } as UpsertDepositProductInput[K]
+    }));
   }
 
   const title = mode === 'create' ? config.createPageTitle : config.editPageTitle;
@@ -320,69 +346,49 @@ export function DepositProductWizard({
         {stepId === 'details' ? (
           <DetailsStep
             {...stepProps}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, details: { ...current.details, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('details', patch)}
           />
         ) : null}
 
         {stepId === 'currency' ? (
           <CurrencyStep
             {...stepProps}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, currency: { ...current.currency, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('currency', patch)}
           />
         ) : null}
 
         {stepId === 'terms' ? (
           <TermsStep
             {...stepProps}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, terms: { ...current.terms, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('terms', patch)}
           />
         ) : null}
 
         {stepId === 'settings' ? (
           <SettingsStep
             {...stepProps}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, settings: { ...current.settings, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('settings', patch)}
           />
         ) : null}
 
         {stepId === 'interestRateChart' ? (
           <InterestRateChartStep
             {...stepProps}
-            onChange={(patch) =>
-              setDraft((current) => ({
-                ...current,
-                interestRateChart: { ...current.interestRateChart, ...patch }
-              }))
-            }
+            onChange={(patch) => patchDraft('interestRateChart', patch)}
           />
         ) : null}
 
         {stepId === 'charges' ? (
           <ChargesStep
             {...stepProps}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, charges: { ...current.charges, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('charges', patch)}
           />
         ) : null}
 
         {stepId === 'accounting' ? (
           <AccountingStep
             {...stepProps}
-            onChange={(patch) =>
-              setDraft((current) => ({
-                ...current,
-                accounting: { ...current.accounting, ...patch }
-              }))
-            }
+            onChange={(patch) => patchDraft('accounting', patch)}
           />
         ) : null}
 

@@ -41,6 +41,14 @@ const STEP_FIELDS: Record<string, readonly string[]> = {
   ]
 };
 
+export function locateChargeField(field: string): { stepId: string; formKey: string } | undefined {
+  const stepId = chargeStepIdForField(field);
+  if (!stepId) {
+    return undefined;
+  }
+  return { stepId, formKey: field };
+}
+
 export function chargeStepIdForField(field: string): string | undefined {
   const root = field.split('.')[0] ?? field;
   for (const [stepId, fields] of Object.entries(STEP_FIELDS)) {

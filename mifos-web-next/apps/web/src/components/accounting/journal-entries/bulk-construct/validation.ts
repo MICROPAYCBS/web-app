@@ -117,6 +117,15 @@ export function validateBulkConstructDraft(
   return errors;
 }
 
+export function locateBulkConstructField(field: string): { stepId: string; formKey: string } | undefined {
+  const normalized = field.replace(/\[(\d+)\]/g, '.$1');
+  const stepId = stepForBulkConstructField(normalized);
+  if (stepId === 'review') {
+    return undefined;
+  }
+  return { stepId, formKey: normalized };
+}
+
 export function stepForBulkConstructField(fieldKey: string): 'template' | 'variations' | 'review' {
   if (fieldKey.startsWith('template.') || TEMPLATE_ROOT_KEYS.has(fieldKey.split('.').pop() ?? '')) {
     return 'template';
