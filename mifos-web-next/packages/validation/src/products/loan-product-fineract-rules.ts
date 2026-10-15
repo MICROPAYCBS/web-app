@@ -32,6 +32,59 @@ export const FINERACT_REPAYMENT_START_DATE_TYPE_VALUES = [1, 2] as const;
 export const FINERACT_LOAN_SCHEDULE_OPTION_ID_MIN = 1;
 export const FINERACT_LOAN_SCHEDULE_OPTION_ID_MAX = 2;
 
+/** Fineract {@code AdvancedPaymentScheduleTransactionProcessor} code. */
+export const ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE = 'advanced-payment-allocation-strategy';
+
+/** {@code LoanScheduleType} option ids: ordinal + 1. */
+export const LOAN_SCHEDULE_TYPE_CUMULATIVE_ID = 1;
+export const LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID = 2;
+
+/** {@code LoanScheduleProcessingType} option ids: ordinal + 1. */
+export const LOAN_SCHEDULE_PROCESSING_HORIZONTAL_ID = 1;
+export const LOAN_SCHEDULE_PROCESSING_VERTICAL_ID = 2;
+
+export const PROGRESSIVE_SCHEDULE_REQUIRES_ADVANCED_STRATEGY_MESSAGE =
+  'Progressive schedule requires the Advanced payment allocation repayment strategy.';
+
+export const ADVANCED_STRATEGY_REQUIRES_PROGRESSIVE_SCHEDULE_MESSAGE =
+  'Advanced payment allocation uses a progressive schedule.';
+
+export const VERTICAL_PROCESSING_REQUIRES_ADVANCED_STRATEGY_MESSAGE =
+  'Vertical schedule processing requires the Advanced payment allocation repayment strategy.';
+
+export function isAdvancedPaymentAllocationStrategy(code: string | null | undefined): boolean {
+  return code === ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE;
+}
+
+/**
+ * Values to write when the repayment strategy and schedule pair disagree.
+ * Returns null when the current values are already allowed.
+ */
+export function loanScheduleFieldsForStrategy(input: {
+  transactionProcessingStrategyCode?: string | null;
+  loanScheduleType?: number | null;
+  loanScheduleProcessingType?: number | null;
+}): { loanScheduleType?: number; loanScheduleProcessingType?: number } | null {
+  const advanced = isAdvancedPaymentAllocationStrategy(input.transactionProcessingStrategyCode);
+  const loanScheduleType = advanced
+    ? LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID
+    : LOAN_SCHEDULE_TYPE_CUMULATIVE_ID;
+  const processingIsIllegal =
+    !advanced && input.loanScheduleProcessingType === LOAN_SCHEDULE_PROCESSING_VERTICAL_ID;
+  const loanScheduleProcessingType = processingIsIllegal
+    ? LOAN_SCHEDULE_PROCESSING_HORIZONTAL_ID
+    : undefined;
+
+  const patch: { loanScheduleType?: number; loanScheduleProcessingType?: number } = {};
+  if (input.loanScheduleType !== loanScheduleType) {
+    patch.loanScheduleType = loanScheduleType;
+  }
+  if (loanScheduleProcessingType != null) {
+    patch.loanScheduleProcessingType = loanScheduleProcessingType;
+  }
+  return Object.keys(patch).length > 0 ? patch : null;
+}
+
 function isOneOf<T extends number>(values: readonly T[], value: number): value is T {
   return (values as readonly number[]).includes(value);
 }

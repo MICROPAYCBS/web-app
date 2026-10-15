@@ -296,7 +296,13 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Accrual is not available when this progressive loan posts compounding as transactions.',
   'validation.msg.loan.tillDate.is.greater.than.date':
     'Accrue through a date on or before the business date.',
-  'validation.msg.loan.accrual.execution.failed': 'Accrual could not be completed.'
+  'validation.msg.loan.accrual.execution.failed': 'Accrual could not be completed.',
+  'validation.msg.loanproduct.loanScheduleType.supported.only.with.advanced.payment.allocation.strategy':
+    'Progressive schedule requires the Advanced payment allocation repayment strategy.',
+  'validation.msg.loanproduct.loanScheduleProcessingType.supported.only.for.progressive.loan.schedule.type':
+    'Advanced payment allocation uses a progressive schedule.',
+  'validation.msg.loanproduct.loanScheduleProcessingType.supported.only.for.progressive.loan.schedule.handling':
+    'Vertical schedule processing requires the Advanced payment allocation repayment strategy.'
 };
 
 const LOAN_TOPUP_ERROR_CODES = new Set([

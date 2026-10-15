@@ -8,6 +8,7 @@
 
 import { z } from 'zod';
 import {
+  ADVANCED_STRATEGY_REQUIRES_PROGRESSIVE_SCHEDULE_MESSAGE,
   fineractDaysInMonthTypeSchema,
   fineractDaysInYearTypeSchema,
   fineractInterestRateFrequencyTypeSchema,
@@ -15,7 +16,12 @@ import {
   fineractLoanScheduleProcessingOptionIdSchema,
   fineractRepaymentFrequencyTypeSchema,
   fineractRepaymentStartDateTypeSchema,
-  refineMinMaxNumberRange
+  isAdvancedPaymentAllocationStrategy,
+  LOAN_SCHEDULE_PROCESSING_VERTICAL_ID,
+  LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID,
+  PROGRESSIVE_SCHEDULE_REQUIRES_ADVANCED_STRATEGY_MESSAGE,
+  refineMinMaxNumberRange,
+  VERTICAL_PROCESSING_REQUIRES_ADVANCED_STRATEGY_MESSAGE
 } from './loan-product-fineract-rules';
 import { optionalInMultiplesOf } from './product-currency.schema';
 import {
@@ -395,6 +401,32 @@ export const loanProductSettingsStepSchema = z
           path: ['overAppliedNumber']
         });
       }
+    }
+
+    const advancedStrategy = isAdvancedPaymentAllocationStrategy(data.transactionProcessingStrategyCode);
+    if (advancedStrategy && data.loanScheduleType !== LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID) {
+      ctx.addIssue({
+        code: 'custom',
+        message: ADVANCED_STRATEGY_REQUIRES_PROGRESSIVE_SCHEDULE_MESSAGE,
+        path: ['loanScheduleType']
+      });
+    } else if (!advancedStrategy && data.loanScheduleType === LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID) {
+      ctx.addIssue({
+        code: 'custom',
+        message: PROGRESSIVE_SCHEDULE_REQUIRES_ADVANCED_STRATEGY_MESSAGE,
+        path: ['loanScheduleType']
+      });
+    }
+
+    if (
+      !advancedStrategy &&
+      data.loanScheduleProcessingType === LOAN_SCHEDULE_PROCESSING_VERTICAL_ID
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: VERTICAL_PROCESSING_REQUIRES_ADVANCED_STRATEGY_MESSAGE,
+        path: ['loanScheduleProcessingType']
+      });
     }
   });
 

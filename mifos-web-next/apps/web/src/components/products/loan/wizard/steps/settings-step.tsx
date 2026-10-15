@@ -8,8 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { LoanProductKind } from '@mifos/api-client';
-import type { LoanProductSettingsInput } from '@mifos/validation';
+import type { FineractEnumOption, LoanProductKind } from '@mifos/api-client';
+import {
+  ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE,
+  LOAN_SCHEDULE_PROCESSING_HORIZONTAL_ID,
+  LOAN_SCHEDULE_PROCESSING_VERTICAL_ID,
+  LOAN_SCHEDULE_TYPE_CUMULATIVE_ID,
+  LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID,
+  loanScheduleFieldsForStrategy,
+  type LoanProductSettingsInput
+} from '@mifos/validation';
+import { useEffect } from 'react';
 import { DetailSection } from '@/components/composites';
 import { SelectField } from '@/components/composites/select-field';
 import { SwitchField } from '@/components/composites/switch-field';
@@ -21,6 +30,12 @@ import {
 } from '@/lib/fineract/loan-product-field-hints';
 import type { LoanProductStepProps, WizardMode } from '../types';
 import { LoanProductAttributeOverridesFields } from '../loan-product-attribute-overrides-fields';
+
+function optionsMatchingIds(options: FineractEnumOption[] | undefined, ids: number[]) {
+  const allowed = new Set(ids);
+  const filtered = (options ?? []).filter((option) => allowed.has(option.id));
+  return filtered.length > 0 ? filtered : (options ?? []);
+}
 
 function strategyOptions(template: LoanProductStepProps['template']) {
   return (template.transactionProcessingStrategyOptions ?? []).map((option) => ({
@@ -42,6 +57,24 @@ export function SettingsStep({
   onChange: (patch: Partial<LoanProductSettingsInput>) => void;
 }) {
   const settings = draft.settings;
+  const advancedStrategy =
+    settings.transactionProcessingStrategyCode === ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE;
+
+  useEffect(() => {
+    const patch = loanScheduleFieldsForStrategy({
+      transactionProcessingStrategyCode: settings.transactionProcessingStrategyCode,
+      loanScheduleType: settings.loanScheduleType,
+      loanScheduleProcessingType: settings.loanScheduleProcessingType
+    });
+    if (patch) {
+      onChange(patch);
+    }
+  }, [
+    onChange,
+    settings.loanScheduleProcessingType,
+    settings.loanScheduleType,
+    settings.transactionProcessingStrategyCode
+  ]);
 
   return (
     <div className="space-y-6">
@@ -109,9 +142,17 @@ export function SettingsStep({
             label="Repayment strategy"
             required
             value={settings.transactionProcessingStrategyCode || undefined}
-            onValueChange={(value) =>
-              onChange({ transactionProcessingStrategyCode: value ?? '' })
-            }
+            onValueChange={(value) => {
+              const transactionProcessingStrategyCode = value ?? '';
+              onChange({
+                transactionProcessingStrategyCode,
+                ...loanScheduleFieldsForStrategy({
+                  transactionProcessingStrategyCode,
+                  loanScheduleType: settings.loanScheduleType,
+                  loanScheduleProcessingType: settings.loanScheduleProcessingType
+                })
+              });
+            }}
             options={strategyOptions(template)}
             error={errors['settings.transactionProcessingStrategyCode']}
           />
@@ -125,7 +166,14 @@ export function SettingsStep({
             onValueChange={(value) =>
               onChange({ loanScheduleType: value ? Number(value) : undefined })
             }
-            options={toSelectOptions(template.loanScheduleTypeOptions)}
+            options={toSelectOptions(
+              optionsMatchingIds(
+                template.loanScheduleTypeOptions,
+                advancedStrategy
+                  ? [LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID]
+                  : [LOAN_SCHEDULE_TYPE_CUMULATIVE_ID]
+              )
+            )}
             error={errors['settings.loanScheduleType']}
           />
           {template.loanScheduleProcessingTypeOptions?.length ? (
@@ -143,7 +191,14 @@ export function SettingsStep({
               onValueChange={(value) =>
                 onChange({ loanScheduleProcessingType: value ? Number(value) : undefined })
               }
-              options={toSelectOptions(template.loanScheduleProcessingTypeOptions)}
+              options={toSelectOptions(
+                optionsMatchingIds(
+                  template.loanScheduleProcessingTypeOptions,
+                  advancedStrategy
+                    ? [LOAN_SCHEDULE_PROCESSING_HORIZONTAL_ID, LOAN_SCHEDULE_PROCESSING_VERTICAL_ID]
+                    : [LOAN_SCHEDULE_PROCESSING_HORIZONTAL_ID]
+                )
+              )}
               error={errors['settings.loanScheduleProcessingType']}
             />
           ) : null}

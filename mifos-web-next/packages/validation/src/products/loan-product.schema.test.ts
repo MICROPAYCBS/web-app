@@ -9,6 +9,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE,
+  loanScheduleFieldsForStrategy
+} from './loan-product-fineract-rules';
+import {
+  omitLoanProductFieldErrors,
+  placeLoanProductFieldErrors
+} from './loan-product-field-errors';
+import {
   loanProductSettingsStepSchema,
   loanProductTermsStepSchema,
   upsertLoanProductSchema
@@ -168,6 +176,7 @@ describe('loanProductSettingsStepSchema', () => {
     assert.equal(zero.success, false);
     assert.equal(blank.success, false);
     assert.equal(accepted.success, true);
+
     for (const parsed of [missing, zero, blank]) {
       if (!parsed.success) {
         assert.match(
@@ -177,6 +186,80 @@ describe('loanProductSettingsStepSchema', () => {
         );
       }
     }
+  });
+
+  it('rejects a progressive schedule unless the strategy is advanced payment allocation', () => {
+      const rejected = loanProductSettingsStepSchema.safeParse({
+        ...baseSettings,
+        loanScheduleType: 2
+      });
+      const accepted = loanProductSettingsStepSchema.safeParse({
+        ...baseSettings,
+        transactionProcessingStrategyCode: ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE,
+        loanScheduleType: 2,
+        loanScheduleProcessingType: 2
+      });
+      const cumulativeWithAdvanced = loanProductSettingsStepSchema.safeParse({
+        ...baseSettings,
+        transactionProcessingStrategyCode: ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE,
+        loanScheduleType: 1
+      });
+      const verticalWithoutAdvanced = loanProductSettingsStepSchema.safeParse({
+        ...baseSettings,
+        loanScheduleProcessingType: 2
+      });
+
+      assert.equal(rejected.success, false);
+      assert.equal(accepted.success, true);
+      assert.equal(cumulativeWithAdvanced.success, false);
+      assert.equal(verticalWithoutAdvanced.success, false);
+      if (!rejected.success) {
+        assert.match(
+          rejected.error.issues.find((issue) => issue.path.join('.') === 'loanScheduleType')?.message ??
+            '',
+          /Advanced payment allocation/
+        );
+      }
+    });
+
+    it('aligns schedule fields with the selected repayment strategy', () => {
+      assert.deepEqual(
+        loanScheduleFieldsForStrategy({
+          transactionProcessingStrategyCode: 'mifos-standard-strategy',
+          loanScheduleType: 2,
+          loanScheduleProcessingType: 2
+        }),
+        { loanScheduleType: 1, loanScheduleProcessingType: 1 }
+      );
+      assert.equal(
+        loanScheduleFieldsForStrategy({
+          transactionProcessingStrategyCode: ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE,
+          loanScheduleType: 2,
+          loanScheduleProcessingType: 2
+        }),
+        null
+      );
+    });
+
+  it('places loan schedule errors on the settings step and drops them when that field changes', () => {
+    const placed = placeLoanProductFieldErrors({
+      loanScheduleType: 'Progressive schedule requires the Advanced payment allocation repayment strategy.',
+      dateFormat: 'Unsupported format.'
+    });
+    assert.deepEqual(placed.stepIds, ['settings']);
+    assert.equal(
+      placed.steps.settings?.['settings.loanScheduleType'],
+      'Progressive schedule requires the Advanced payment allocation repayment strategy.'
+    );
+    assert.equal(placed.unmapped.dateFormat, 'Unsupported format.');
+
+    const cleared = omitLoanProductFieldErrors(
+      { loanScheduleType: 'Progressive schedule requires the Advanced payment allocation repayment strategy.', principal: 'Too high.' },
+      ['loanScheduleType']
+    );
+    assert.deepEqual(cleared, { principal: 'Too high.' });
+    const terms = placeLoanProductFieldErrors(cleared);
+    assert.deepEqual(terms.stepIds, ['terms']);
   });
 });
 

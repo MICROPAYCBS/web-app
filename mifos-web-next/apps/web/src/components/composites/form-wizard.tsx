@@ -40,6 +40,32 @@ export interface FormWizardProps {
 }
 
 
+function WizardStepLabel({
+  label,
+  isInvalid,
+  isActive
+}: {
+  label: string;
+  isInvalid: boolean;
+  isActive: boolean;
+}) {
+  return (
+    <span className="flex min-w-0 flex-col">
+      <span className="truncate">{label}</span>
+      {isInvalid ? (
+        <span
+          className={cn(
+            'truncate text-xs font-normal',
+            isActive ? 'text-primary-foreground/80' : 'text-destructive'
+          )}
+        >
+          Needs attention
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 function WizardStepIndicator({
   index,
   isActive,
@@ -126,7 +152,7 @@ export function FormWizard({
                       className={cn(stepClassName, 'text-left')}
                       onClick={() => onStepClick?.(step.id)}
                       aria-current={isActive ? 'step' : undefined}
-                      title={isInvalid ? 'Complete required fields on this step' : undefined}
+                      title={isInvalid ? 'Needs attention' : undefined}
                     >
                       <WizardStepIndicator
                         index={index}
@@ -134,12 +160,7 @@ export function FormWizard({
                         isPast={isPast}
                         isInvalid={isInvalid}
                       />
-                      <span className="flex min-w-0 flex-col truncate">
-                        <span className="truncate">{step.label}</span>
-                        {isInvalid ? (
-                          <span className="sr-only">Has required fields to fix</span>
-                        ) : null}
-                      </span>
+                      <WizardStepLabel label={step.label} isInvalid={isInvalid} isActive={isActive} />
                     </button>
                   ) : (
                     <span
@@ -152,10 +173,7 @@ export function FormWizard({
                         isPast={isPast}
                         isInvalid={isInvalid}
                       />
-                      <span className="min-w-0 truncate">{step.label}</span>
-                      {isInvalid ? (
-                        <span className="sr-only">Has required fields to fix</span>
-                      ) : null}
+                      <WizardStepLabel label={step.label} isInvalid={isInvalid} isActive={isActive} />
                     </span>
                   )}
                 </li>

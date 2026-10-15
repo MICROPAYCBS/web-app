@@ -38,11 +38,15 @@ export function docsScreenshotPath(relativeUnderImg: string, fromDir = process.c
  * `relativeUnderImg` is relative to `public/img`, e.g.
  * `administrators/organization/offices-list.png`.
  */
-export async function captureDocsScreenshot(page: Page, relativeUnderImg: string) {
+export async function captureDocsScreenshot(
+  page: Page,
+  relativeUnderImg: string,
+  viewportHeight: number = VIEWPORT.height
+) {
   const filePath = docsScreenshotPath(relativeUnderImg);
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
-  await page.setViewportSize(VIEWPORT);
+  await page.setViewportSize({ width: VIEWPORT.width, height: viewportHeight });
 
   // Prefer light mode so handbook shots match authoring guide.
   await page.evaluate(() => {

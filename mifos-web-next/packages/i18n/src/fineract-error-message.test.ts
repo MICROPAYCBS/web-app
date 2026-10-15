@@ -344,6 +344,15 @@ describe('translateFineractCode', () => {
     assert.equal(translateFineractCode('error.msg.usersession.not.found'), 'Session no longer active.');
   });
 
+  it('maps a progressive loan schedule to the repayment strategy it requires', () => {
+    assert.equal(
+      translateFineractCode(
+        'validation.msg.loanproduct.loanScheduleType.supported.only.with.advanced.payment.allocation.strategy'
+      ),
+      'Progressive schedule requires the Advanced payment allocation repayment strategy.'
+    );
+  });
+
   it('maps savings channel limit codes', () => {
     assert.equal(
       translateFineractCode(

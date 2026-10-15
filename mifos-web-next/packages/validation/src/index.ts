@@ -554,6 +554,23 @@ export {
   type LoanProductAccountingInput
 } from './products/loan-product.schema';
 export {
+  ADVANCED_PAYMENT_ALLOCATION_STRATEGY_CODE,
+  ADVANCED_STRATEGY_REQUIRES_PROGRESSIVE_SCHEDULE_MESSAGE,
+  LOAN_SCHEDULE_PROCESSING_HORIZONTAL_ID,
+  LOAN_SCHEDULE_PROCESSING_VERTICAL_ID,
+  LOAN_SCHEDULE_TYPE_CUMULATIVE_ID,
+  LOAN_SCHEDULE_TYPE_PROGRESSIVE_ID,
+  PROGRESSIVE_SCHEDULE_REQUIRES_ADVANCED_STRATEGY_MESSAGE,
+  VERTICAL_PROCESSING_REQUIRES_ADVANCED_STRATEGY_MESSAGE,
+  isAdvancedPaymentAllocationStrategy,
+  loanScheduleFieldsForStrategy
+} from './products/loan-product-fineract-rules';
+export {
+  omitLoanProductFieldErrors,
+  placeLoanProductFieldErrors,
+  type PlacedLoanProductFieldErrors
+} from './products/loan-product-field-errors';
+export {
   formatActionErrorMessage,
   toFineractActionError,
   type FineractActionError

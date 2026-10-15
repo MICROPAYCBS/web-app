@@ -20,7 +20,7 @@ export const LOAN_PRODUCT_NOMINAL_INTEREST_RATE_HINT =
   'Set the minimum, default, and maximum nominal interest rate per period. The default is applied to new loans; min and max constrain what staff can enter on individual accounts.';
 
 export const LOAN_PRODUCT_LOAN_SCHEDULE_TYPE_HINT =
-  'How repayments are calculated for loans on this product. Cumulative uses the standard schedule engine. Progressive is required for advanced repayment strategies, down payments, and credit allocation features.';
+  'How repayments are calculated for loans on this product. Cumulative is used with standard repayment strategies. Progressive is available only with Advanced payment allocation, and that strategy uses Progressive.';
 
 export const LOAN_PRODUCT_SCHEDULE_PROCESSING_TYPE_HINT =
-  'How incoming payments are applied to the schedule when using the advanced payment allocation strategy. Horizontal applies allocation rules across installment components in the usual order. Vertical uses column-wise processing and is only available with that strategy.';
+  'How incoming payments are applied to the schedule. Horizontal applies allocation rules across installment components in the usual order. Vertical uses column-wise processing and is available only with Advanced payment allocation.';

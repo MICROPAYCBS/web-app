@@ -9,7 +9,11 @@
  */
 
 import type { UpsertLoanProductInput } from '@mifos/validation';
-import { formatActionErrorMessage } from '@mifos/validation';
+import {
+  formatActionErrorMessage,
+  omitLoanProductFieldErrors,
+  placeLoanProductFieldErrors
+} from '@mifos/validation';
 import { useSession } from '@mifos/auth';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState, useTransition } from 'react';
@@ -81,6 +85,7 @@ export function LoanProductWizard({
     () => new Set()
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [apiFieldErrors, setApiFieldErrors] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
   const [leaveOpen, setLeaveOpen] = useState(false);
 
@@ -141,21 +146,28 @@ export function LoanProductWizard({
     });
   }, []);
 
+  const placedApiErrors = useMemo(
+    () => placeLoanProductFieldErrors(apiFieldErrors),
+    [apiFieldErrors]
+  );
+
   const invalidStepIdsForRail = useMemo(() => {
-    return [...validationAttemptedStepIds].filter((id) => {
+    const clientInvalid = [...validationAttemptedStepIds].filter((id) => {
       if (id === 'preview') {
         return false;
       }
       return Object.keys(validateLoanProductStep(id, draft)).length > 0;
     });
-  }, [validationAttemptedStepIds, draft]);
+    return [...new Set([...clientInvalid, ...placedApiErrors.stepIds])];
+  }, [validationAttemptedStepIds, draft, placedApiErrors.stepIds]);
 
   const stepErrors = useMemo((): StepErrors => {
+    const fromApi = placedApiErrors.steps[stepId] ?? {};
     if (isPreview || !validationAttemptedStepIds.has(stepId)) {
-      return {};
+      return fromApi;
     }
-    return validateLoanProductStep(stepId, draft);
-  }, [validationAttemptedStepIds, stepId, draft, isPreview]);
+    return { ...fromApi, ...validateLoanProductStep(stepId, draft) };
+  }, [placedApiErrors.steps, validationAttemptedStepIds, stepId, draft, isPreview]);
 
   const goNext = useCallback(() => {
     const next = WIZARD_STEPS[currentIndex + 1];
@@ -226,6 +238,7 @@ export function LoanProductWizard({
     }
 
     setSubmitError(null);
+    setApiFieldErrors({});
     const payload = sanitizeLoanProductDraftForSubmit(draft, lockedShortName);
 
     startTransition(async () => {
@@ -235,9 +248,21 @@ export function LoanProductWizard({
           : await updateLoanProductAction(productId ?? '', productKind, payload);
 
       if (!result.ok) {
-        setSubmitError(
-          wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message, result.fieldErrors))
-        );
+        const fieldErrors = result.fieldErrors ?? {};
+        setApiFieldErrors(fieldErrors);
+        const placed = placeLoanProductFieldErrors(fieldErrors);
+        const firstStep = placed.stepIds[0];
+        if (firstStep) {
+          setStepId(firstStep);
+        }
+        const unmappedMessages = Object.values(placed.unmapped);
+        if (unmappedMessages.length > 0) {
+          setSubmitError(wizardSubmitRecoveryMessage(unmappedMessages.join('\n')));
+        } else if (Object.keys(fieldErrors).length === 0) {
+          setSubmitError(wizardSubmitRecoveryMessage(formatActionErrorMessage(result.message)));
+        } else {
+          setSubmitError(null);
+        }
         return;
       }
 
@@ -253,6 +278,7 @@ export function LoanProductWizard({
     if (!snapshot) {
       return;
     }
+    setApiFieldErrors({});
     setDraft(snapshot.draft);
     setStepId(snapshot.stepId);
   }
@@ -263,6 +289,17 @@ export function LoanProductWizard({
       return;
     }
     router.push(cancelHref);
+  }
+
+  function patchDraft<K extends keyof UpsertLoanProductInput>(
+    section: K,
+    patch: Partial<UpsertLoanProductInput[K]>
+  ) {
+    setApiFieldErrors((current) => omitLoanProductFieldErrors(current, Object.keys(patch)));
+    setDraft((current) => ({
+      ...current,
+      [section]: { ...current[section], ...patch }
+    }));
   }
 
   const title = mode === 'create' ? 'Create loan product' : 'Edit loan product';
@@ -324,9 +361,7 @@ export function LoanProductWizard({
             draft={draft}
             errors={stepErrors}
             lockedShortName={lockedShortName}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, details: { ...current.details, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('details', patch)}
           />
         ) : null}
 
@@ -335,9 +370,7 @@ export function LoanProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, currency: { ...current.currency, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('currency', patch)}
           />
         ) : null}
 
@@ -348,9 +381,7 @@ export function LoanProductWizard({
             draft={draft}
             errors={stepErrors}
             mode={mode}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, settings: { ...current.settings, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('settings', patch)}
           />
         ) : null}
 
@@ -360,9 +391,7 @@ export function LoanProductWizard({
             draft={draft}
             errors={stepErrors}
             mode={mode}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, terms: { ...current.terms, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('terms', patch)}
           />
         ) : null}
 
@@ -371,9 +400,7 @@ export function LoanProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({ ...current, charges: { ...current.charges, ...patch } }))
-            }
+            onChange={(patch) => patchDraft('charges', patch)}
           />
         ) : null}
 
@@ -382,12 +409,7 @@ export function LoanProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({
-                ...current,
-                accounting: { ...current.accounting, ...patch }
-              }))
-            }
+            onChange={(patch) => patchDraft('accounting', patch)}
           />
         ) : null}
 
@@ -396,12 +418,7 @@ export function LoanProductWizard({
             template={template}
             draft={draft}
             errors={stepErrors}
-            onChange={(patch) =>
-              setDraft((current) => ({
-                ...current,
-                accounting: { ...current.accounting, ...patch }
-              }))
-            }
+            onChange={(patch) => patchDraft('accounting', patch)}
           />
         ) : null}
 
