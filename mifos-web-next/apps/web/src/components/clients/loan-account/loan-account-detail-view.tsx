@@ -46,6 +46,7 @@ import {
   loanAccountProductName,
   loanAccountStatusVariant
 } from '@/lib/fineract/loan-account-display';
+import { loanAccountDueBalance } from '@/lib/fineract/loan-account-repayment-transfer';
 import { loanAccountSectionIds } from '@/components/clients/loan-account/loan-account-detail-sidebar';
 import type { LoanAccountStandingInstructionContext } from '@/components/clients/loan-account/loan-account-standing-instruction-context';
 import type { LoanAccountRescheduleContext } from '@/components/clients/loan-account/loan-account-reschedules-section';
@@ -106,6 +107,7 @@ export function LoanAccountDetailView({
 }) {
   const currency = loanAccountCurrencyCode(account);
   const summary = account.summary;
+  const dueBalance = loanAccountDueBalance(account);
   const delinquencyMessage = loanAccountDelinquencyBanner(account);
   const includeCashier = Boolean(cashierSnapshot);
   const standingInstructionsEnabled = standingInstructions != null;
@@ -219,16 +221,31 @@ export function LoanAccountDetailView({
                   name={account.loanOfficerName}
                 />
                 {loanAccountHasSummary(account) ? (
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                      Current balance
-                    </span>
-                    <MoneyValue
-                      amount={summary?.totalOutstanding}
-                      currencyCode={currency}
-                      emphasize
-                      className="text-base"
-                    />
+                  <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Current balance
+                      </span>
+                      <MoneyValue
+                        amount={summary?.totalOutstanding}
+                        currencyCode={currency}
+                        emphasize
+                        className="text-base"
+                      />
+                    </div>
+                    {dueBalance ? (
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                          {dueBalance.label}
+                        </span>
+                        <MoneyValue
+                          amount={dueBalance.amount}
+                          currencyCode={currency}
+                          emphasize
+                          className="text-base"
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 ) : account.proposedPrincipal != null ? (
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -242,12 +259,6 @@ export function LoanAccountDetailView({
                       className="text-base"
                     />
                   </div>
-                ) : null}
-                {summary?.totalOverdue != null && summary.totalOverdue > 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    Arrears{' '}
-                    <MoneyValue amount={summary.totalOverdue} currencyCode={currency} />
-                  </p>
                 ) : null}
               </div>
             }

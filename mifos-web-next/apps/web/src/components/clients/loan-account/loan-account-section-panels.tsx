@@ -100,6 +100,7 @@ import {
   type LoanAccountSectionId
 } from '@/lib/fineract/loan-account-display';
 import { formatTimelineActorByRole } from '@/lib/fineract/account-timeline-display';
+import { loanAccountDueBalance } from '@/lib/fineract/loan-account-repayment-transfer';
 import { cn } from '@/lib/utils';
 
 function LoanAccountSummaryMatrix({
@@ -217,6 +218,7 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
       : [])
   ];
 
+  const dueBalance = loanAccountDueBalance(account);
   const kpiItems = summary
     ? [
         {
@@ -226,11 +228,17 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
             <MoneyValue amount={summary.totalOutstanding} currencyCode={currency} emphasize />
           )
         },
-        {
-          id: 'arrears',
-          label: 'Arrears',
-          value: <MoneyValue amount={summary.totalOverdue} currencyCode={currency} />
-        },
+        ...(dueBalance
+          ? [
+              {
+                id: 'due',
+                label: dueBalance.label,
+                value: (
+                  <MoneyValue amount={dueBalance.amount} currencyCode={currency} emphasize />
+                )
+              }
+            ]
+          : []),
         {
           id: 'repaid',
           label: 'Total repaid',

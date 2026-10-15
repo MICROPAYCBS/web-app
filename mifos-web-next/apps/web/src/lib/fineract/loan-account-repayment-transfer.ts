@@ -65,6 +65,34 @@ export function loanInstallmentAmountDue(account: FineractLoanAccountDetail): nu
   return undefined;
 }
 
+export interface LoanAccountDueBalance {
+  /** Overdue when installments are past due; otherwise the next unpaid installment. */
+  label: 'Overdue' | 'Due';
+  amount: number;
+}
+
+/**
+ * Summary figure beside the current balance. Overdue wins when the loan is in
+ * arrears. Otherwise this is the amount still due on the next unpaid installment,
+ * or zero when nothing is payable.
+ */
+export function loanAccountDueBalance(
+  account: FineractLoanAccountDetail
+): LoanAccountDueBalance | null {
+  if (!account.summary) {
+    return null;
+  }
+  const overdue = positiveAmount(account.summary.totalOverdue);
+  if (overdue != null) {
+    return { label: 'Overdue', amount: overdue };
+  }
+  const due = loanInstallmentAmountDue(account);
+  if (due != null) {
+    return { label: 'Due', amount: due };
+  }
+  return { label: 'Overdue', amount: 0 };
+}
+
 /**
  * Payment default: the overdue total when the loan is in arrears, otherwise the
  * amount due on the next unpaid installment.

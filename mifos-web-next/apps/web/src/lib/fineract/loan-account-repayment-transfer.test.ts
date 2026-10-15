@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
 import {
+  loanAccountDueBalance,
   loanAccountRepaymentTransferDefaults,
   loanPaymentDefaultAmount
 } from '@/lib/fineract/loan-account-repayment-transfer';
@@ -33,6 +34,29 @@ function account(
     ...overrides
   } as FineractLoanAccountDetail;
 }
+
+describe('loanAccountDueBalance', () => {
+  it('uses the overdue balance when the loan is in arrears', () => {
+    const due = loanAccountDueBalance(
+      account({ summary: { totalOutstanding: 10000, totalOverdue: 4200 } })
+    );
+    assert.deepEqual(due, { label: 'Overdue', amount: 4200 });
+  });
+
+  it('uses the next unpaid installment when nothing is overdue', () => {
+    assert.deepEqual(loanAccountDueBalance(account()), { label: 'Due', amount: 2500 });
+  });
+
+  it('shows a zero overdue balance when nothing is payable', () => {
+    const due = loanAccountDueBalance(
+      account({
+        summary: { totalOutstanding: 0, totalOverdue: 0 },
+        repaymentSchedule: { periods: [{ period: 1, complete: true, totalOutstandingForPeriod: 0 }] }
+      })
+    );
+    assert.deepEqual(due, { label: 'Overdue', amount: 0 });
+  });
+});
 
 describe('loan payment default amount', () => {
   it('uses the overdue total when the loan is in arrears', () => {
