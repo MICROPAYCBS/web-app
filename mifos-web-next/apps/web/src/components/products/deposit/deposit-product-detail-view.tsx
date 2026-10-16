@@ -48,6 +48,7 @@ import {
   depositProductSections
 } from '@/lib/fineract/deposit-product-sections';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
+import { ProductAccountingRuleGuidance } from '@/components/products/shared/product-accounting-rule-guidance';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
 import {
   productStatusLabel,
@@ -229,6 +230,12 @@ export function DepositProductDetailView({
           <DetailField label="Accounting rule">
             {accountingRuleLabel(product.accountingRule)}
           </DetailField>
+          <div className="mt-3">
+            <ProductAccountingRuleGuidance
+              product={config.isRecurring ? 'recurring' : 'fixed'}
+              ruleId={product.accountingRule?.id}
+            />
+          </div>
         </DetailSection>
       ) : null}
 

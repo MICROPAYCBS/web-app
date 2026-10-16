@@ -20,6 +20,7 @@ import {
   productChargeLabelById,
   productChargePreviewLabelById
 } from '@/lib/fineract/charge-display';
+import { ProductAccountingRuleGuidance } from '@/components/products/shared/product-accounting-rule-guidance';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
 import type { SavingsProductStepProps, WizardMode } from '../types';
 
@@ -198,6 +199,9 @@ export function PreviewStep({
             </>
           ) : null}
         </DetailFieldGrid>
+        <div className="mt-3">
+          <ProductAccountingRuleGuidance product="savings" ruleId={accounting.accountingRule} />
+        </div>
       </DetailSection>
 
       {accounting.accountingRule !== 1 ? (

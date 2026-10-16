@@ -13,6 +13,7 @@ import type { LoanProductGlAccountOption } from '@mifos/api-client';
 import { useMemo } from 'react';
 import { DetailSection } from '@/components/composites';
 import { ProductAccountingAccountFieldGroups } from '@/components/products/shared/product-accounting-account-field-groups';
+import { ProductAccountingRuleGuidance } from '@/components/products/shared/product-accounting-rule-guidance';
 import { ProductAccountingRuleField } from '@/components/products/shared/product-accounting-rule-field';
 import { glAccountLabel, resolveSelectableAccountingRuleId } from '@/lib/fineract/product-display';
 import type { ProductAccountingAccountField } from '@/lib/fineract/product-accounting-groups';
@@ -211,6 +212,9 @@ export function AccountingStep({
           onChange={setRule}
           error={errors['accounting.accountingRule']}
         />
+        <div className="mt-3">
+          <ProductAccountingRuleGuidance product="savings" ruleId={rule} />
+        </div>
       </DetailSection>
 
       {accountingEnabled ? (

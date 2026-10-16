@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { ProductChargesTable } from '@/components/products/shared/product-charges-table';
 import { ProductMappingTable } from '@/components/products/shared/product-mapping-table';
 import { enumOptionLabel, formatYesNo } from '@/lib/fineract/client-detail-labels';
+import { ProductAccountingRuleGuidance } from '@/components/products/shared/product-accounting-rule-guidance';
 import {
   accountingRuleLabel,
   glAccountLabel
@@ -166,6 +167,9 @@ function SavingsProductAccountingSection({ product }: { product: SavingsProductD
         <DetailFieldGrid>
           <DetailField label="Type">{accountingRuleLabel(product.accountingRule)}</DetailField>
         </DetailFieldGrid>
+        <div className="mt-3">
+          <ProductAccountingRuleGuidance product="savings" ruleId={product.accountingRule?.id} />
+        </div>
       </DetailSection>
 
       {[...groups.entries()].map(([group, fields]) => (

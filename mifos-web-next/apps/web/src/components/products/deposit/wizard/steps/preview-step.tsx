@@ -16,6 +16,7 @@ import {
 } from '@/components/composites';
 import { formatYesNo } from '@/lib/fineract/client-detail-labels';
 import { fineractOptionLabel } from '@/lib/form/select-options';
+import { ProductAccountingRuleGuidance } from '@/components/products/shared/product-accounting-rule-guidance';
 import { accountingRuleLabel, glAccountLabel } from '@/lib/fineract/product-display';
 import { productChargePreviewLabelById } from '@/lib/fineract/charge-display';
 import type { DepositProductStepProps, WizardMode } from '../types';
@@ -202,6 +203,12 @@ export function PreviewStep({
             </>
           ) : null}
         </DetailFieldGrid>
+        <div className="mt-3">
+          <ProductAccountingRuleGuidance
+            product={config.isRecurring ? 'recurring' : 'fixed'}
+            ruleId={accounting.accountingRule}
+          />
+        </div>
       </DetailSection>
     </div>
   );

@@ -20,6 +20,7 @@ import {
   formatProductChargeOptionLabel,
   type ChargeAmountLike
 } from '@/lib/fineract/charge-display';
+import { ProductAccountingRuleGuidance } from '@/components/products/shared/product-accounting-rule-guidance';
 import { ProductAccountingRuleField } from '@/components/products/shared/product-accounting-rule-field';
 import {
   glAccountLabel,
@@ -125,6 +126,7 @@ function allGlOptions(
 }
 
 export function AccountingStep({
+  config,
   template,
   draft,
   errors,
@@ -211,6 +213,12 @@ export function AccountingStep({
           onChange={setRule}
           error={errors['accounting.accountingRule']}
         />
+        <div className="mt-3">
+          <ProductAccountingRuleGuidance
+            product={config.isRecurring ? 'recurring' : 'fixed'}
+            ruleId={rule}
+          />
+        </div>
       </DetailSection>
 
       {accountingEnabled ? (
