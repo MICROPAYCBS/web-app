@@ -156,6 +156,29 @@ describe('loanProductSettingsStepSchema', () => {
     assert.equal(parsed.success, true);
   });
 
+  it('ignores a stored tranche count of 0 when multi-disburse is off', () => {
+    const parsed = loanProductSettingsStepSchema.safeParse({
+      ...baseSettings,
+      multiDisburseLoan: false,
+      maxTrancheCount: 0
+    });
+    assert.equal(parsed.success, true);
+  });
+
+  it('requires a tranche count of at least 1 when multi-disburse is on', () => {
+    const parsed = loanProductSettingsStepSchema.safeParse({
+      ...baseSettings,
+      multiDisburseLoan: true,
+      maxTrancheCount: 0
+    });
+    assert.equal(parsed.success, false);
+    if (!parsed.success) {
+      assert.ok(
+        parsed.error.issues.some((issue) => issue.path.join('.') === 'maxTrancheCount')
+      );
+    }
+  });
+
   it('requires overdue days for NPA and rejects 0', () => {
     const { overdueDaysForNPA: _kept, ...withoutNpa } = baseSettings;
     const missing = loanProductSettingsStepSchema.safeParse(withoutNpa);

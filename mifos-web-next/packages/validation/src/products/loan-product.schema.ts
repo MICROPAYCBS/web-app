@@ -267,7 +267,7 @@ export const loanProductSettingsStepSchema = z
     minimumGuaranteeFromOwnFunds: z.coerce.number().min(0).optional(),
     minimumGuaranteeFromGuarantor: z.coerce.number().min(0).optional(),
     multiDisburseLoan: z.boolean().optional(),
-    maxTrancheCount: z.coerce.number().int().min(1).optional(),
+    maxTrancheCount: z.coerce.number().int().min(0).optional(),
     allowFullTermForTranche: z.boolean().optional(),
     enableDownPayment: z.boolean().optional(),
     disbursedAmountPercentageForDownPayment: z.coerce.number().min(0).max(100).optional(),
@@ -334,7 +334,7 @@ export const loanProductSettingsStepSchema = z
       }
     }
 
-    if (data.multiDisburseLoan && data.maxTrancheCount == null) {
+    if (data.multiDisburseLoan && (data.maxTrancheCount == null || data.maxTrancheCount < 1)) {
       ctx.addIssue({
         code: 'custom',
         message: 'Maximum tranche count is required when multiple disbursements are enabled.',
