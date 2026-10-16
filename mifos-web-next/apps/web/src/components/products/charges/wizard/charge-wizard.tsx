@@ -308,6 +308,7 @@ export function ChargeWizard({ mode, template, initialDraft, chargeId }: ChargeW
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        fieldErrors={stepErrors}
         banner={
           <>
             {sessionDraft.pendingSnapshot ? (

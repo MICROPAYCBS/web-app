@@ -291,6 +291,7 @@ export function ApprovalWorkflowWizard({
         description={wizardDescription}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        fieldErrors={stepErrors}
         banner={
           <>
             {sessionDraft.pendingSnapshot ? (

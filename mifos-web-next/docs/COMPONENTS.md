@@ -257,6 +257,7 @@ Use `FormWizard` + `FormWizardFooter` for 8+ fields or multi-step create/edit (A
 | Concern | Rule |
 |---------|------|
 | **Lookups** | `SelectField` may take `loading`, `loadError`, and `onRetry`. A failed option load is **not** “this field is required”. Gate **Next** until retry succeeds. |
+| **Field errors** | Pass the current step’s `fieldErrors` into `FormWizard`. The shell lists each failing field above the step and scrolls to the first one. The rail still only says **Needs attention**. |
 | **Submit failure** | Keep the in-memory draft. Show a retryable error. If the browser is offline, say the answers are still here. |
 | **Session resume** | Long FormWizard screens persist JSON to `sessionStorage` via `useWizardSessionDraft` (ADR-015). Show **Resume** / **Discard**; do not auto-apply. Strip KYC blobs and passwords. Clear on successful submit. Create uses entity key `new`; edit keys by resource id so two records do not share a draft. |
 | **Leave** | Dirty Cancel confirms. `beforeunload` warns on refresh/tab close. Cancel does **not** clear the session snapshot. |

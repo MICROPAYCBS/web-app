@@ -358,6 +358,7 @@ export function ReportWizard({ mode, reportId, template, report, initialDraft }:
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        fieldErrors={stepErrors}
         banner={
           <>
             {sessionDraft.pendingSnapshot ? (

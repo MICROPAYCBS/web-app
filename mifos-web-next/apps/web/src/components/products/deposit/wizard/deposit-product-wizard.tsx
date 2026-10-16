@@ -303,6 +303,7 @@ export function DepositProductWizard({
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        fieldErrors={stepErrors}
         banner={
           <>
             {sessionDraft.pendingSnapshot ? (

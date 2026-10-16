@@ -348,6 +348,7 @@ export function UserWizard({
         description={description}
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        fieldErrors={stepErrors}
         banner={
           <>
             {sessionDraft.pendingSnapshot ? (

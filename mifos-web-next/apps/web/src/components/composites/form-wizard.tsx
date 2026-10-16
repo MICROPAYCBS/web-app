@@ -10,6 +10,7 @@
 
 import type { ReactNode } from 'react';
 import { PageHeader } from '@/components/composites/page-header';
+import { WizardFieldErrorSummary } from '@/components/composites/wizard-field-error-summary';
 import { platformInset, platformPageShell, platformSidebarRowLayout } from '@/lib/platform-layout';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +35,8 @@ export interface FormWizardProps {
   onStepClick?: (stepId: string) => void;
   /** Step IDs that failed validation and still need attention */
   invalidStepIds?: readonly string[];
+  /** Field errors for the current step. Listed above the step so the failing control is named. */
+  fieldErrors?: Record<string, string | undefined>;
   /** When true, omit the outer page header (parent supplies title/tabs). */
   embedded?: boolean;
   className?: string;
@@ -114,6 +117,7 @@ export function FormWizard({
   footer,
   onStepClick,
   invalidStepIds,
+  fieldErrors,
   embedded = false,
   className
 }: FormWizardProps) {
@@ -185,6 +189,7 @@ export function FormWizard({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className={cn('min-h-0 flex-1 overflow-y-auto', platformInset)}>
             {banner ? <div className="mb-4 space-y-3">{banner}</div> : null}
+            {fieldErrors ? <WizardFieldErrorSummary errors={fieldErrors} /> : null}
             {children}
           </div>
           {footer}

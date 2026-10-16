@@ -247,6 +247,7 @@ export function SmsCampaignWizard({ template }: SmsCampaignWizardProps) {
         }
       }}
       invalidStepIds={invalidStepIdsForRail}
+      fieldErrors={stepErrors}
       banner={
         <>
           {sessionDraft.pendingSnapshot ? (

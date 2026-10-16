@@ -258,6 +258,33 @@ describe('loanProductSettingsStepSchema', () => {
       ['loanScheduleType']
     );
     assert.deepEqual(cleared, { principal: 'Too high.' });
+
+    const fromServer = placeLoanProductFieldErrors({
+      'settings.overdueDaysForNPA': '0 marks every overdue loan as non-performing at once.',
+      'settings.allowAttributeOverrides.amortizationType': 'Cannot override amortization.',
+      dateFormat: 'Unsupported format.'
+    });
+    assert.deepEqual(fromServer.stepIds, ['settings']);
+    assert.equal(
+      fromServer.steps.settings?.['settings.overdueDaysForNPA'],
+      '0 marks every overdue loan as non-performing at once.'
+    );
+    assert.equal(
+      fromServer.steps.settings?.['settings.allowAttributeOverrides.amortizationType'],
+      'Cannot override amortization.'
+    );
+    assert.equal(fromServer.unmapped.dateFormat, 'Unsupported format.');
+
+    const clearedPrefixed = omitLoanProductFieldErrors(
+      {
+        'settings.overdueDaysForNPA': '0 marks every overdue loan as non-performing at once.',
+        'settings.daysInYearType': 'Select a valid days-in-year type.'
+      },
+      ['overdueDaysForNPA']
+    );
+    assert.deepEqual(clearedPrefixed, {
+      'settings.daysInYearType': 'Select a valid days-in-year type.'
+    });
     const terms = placeLoanProductFieldErrors(cleared);
     assert.deepEqual(terms.stepIds, ['terms']);
   });

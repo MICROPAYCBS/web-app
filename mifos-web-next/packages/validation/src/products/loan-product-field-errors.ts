@@ -163,10 +163,42 @@ export type PlacedLoanProductFieldErrors = {
 };
 
 function formKeyFor(sectionMatch: LoanProductErrorSection, field: string): string {
-  if (field === 'charges') {
+  if (field === 'charges' || field.startsWith('charges.')) {
     return 'charges.chargeIds';
   }
+  if (field === sectionMatch.prefix || field.startsWith(`${sectionMatch.prefix}.`)) {
+    return field;
+  }
   return `${sectionMatch.prefix}.${field}`;
+}
+
+/**
+ * Accept bare parameter names (`overdueDaysForNPA`) and wizard paths
+ * (`settings.overdueDaysForNPA`) from server validation.
+ */
+function locateLoanProductField(
+  field: string
+): { section: LoanProductErrorSection; path: string } | undefined {
+  const parts = field.split('.').filter(Boolean);
+  const root = parts[0];
+  if (!root) {
+    return undefined;
+  }
+  const direct = SECTIONS.find((item) => item.fields.has(root));
+  if (direct) {
+    return { section: direct, path: field };
+  }
+  const nestedName = parts[1];
+  if (!nestedName) {
+    return undefined;
+  }
+  const nested = SECTIONS.find(
+    (item) => item.prefix === root && item.fields.has(nestedName)
+  );
+  if (!nested) {
+    return undefined;
+  }
+  return { section: nested, path: parts.slice(1).join('.') };
 }
 
 /** Map API parameter names onto loan-product wizard steps and form keys. */
@@ -180,14 +212,13 @@ export function placeLoanProductFieldErrors(
     if (!message) {
       continue;
     }
-    const root = field.split('.')[0] ?? field;
-    const match = SECTIONS.find((item) => item.fields.has(root));
-    if (!match) {
+    const located = locateLoanProductField(field);
+    if (!located) {
       unmapped[field] = message;
       continue;
     }
-    const bucket = (steps[match.stepId] ??= {});
-    const formKey = formKeyFor(match, field);
+    const bucket = (steps[located.section.stepId] ??= {});
+    const formKey = formKeyFor(located.section, located.path);
     if (!bucket[formKey]) {
       bucket[formKey] = message;
     }
@@ -219,8 +250,10 @@ export function omitLoanProductFieldErrors(
   }
   const next: Record<string, string> = {};
   for (const [field, message] of Object.entries(fieldErrors)) {
-    const root = field.split('.')[0] ?? field;
-    if (changed.has(root) || changed.has(field)) {
+    const parts = field.split('.').filter(Boolean);
+    const matchesChange =
+      changed.has(field) || parts.some((part) => changed.has(part));
+    if (matchesChange) {
       continue;
     }
     next[field] = message;

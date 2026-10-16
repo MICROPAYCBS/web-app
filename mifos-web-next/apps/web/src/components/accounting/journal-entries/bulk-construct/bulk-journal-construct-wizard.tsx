@@ -330,6 +330,7 @@ export function BulkJournalConstructWizard(props: BulkConstructWizardProps) {
       description="Build multiple similar journal entries from one posting template, then post them together."
       onStepClick={goToStep}
       invalidStepIds={invalidStepIdsForRail}
+      fieldErrors={stepErrors}
       banner={
         <>
           {sessionDraft.pendingSnapshot ? (

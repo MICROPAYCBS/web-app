@@ -546,6 +546,7 @@ export function LoanAccountWizard({
         }
         onStepClick={goToStep}
         invalidStepIds={invalidStepIdsForRail}
+        fieldErrors={stepErrors}
         banner={
           <>
             {!isEdit && sessionDraft.pendingSnapshot ? (

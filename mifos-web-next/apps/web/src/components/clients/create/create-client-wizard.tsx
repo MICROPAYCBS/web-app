@@ -731,6 +731,7 @@ export function CreateClientWizard({
       description="Complete each step to register a new customer."
       onStepClick={goToStep}
       invalidStepIds={invalidStepIdsForRail}
+      fieldErrors={stepErrors}
       banner={
         <>
           {sessionDraft.pendingSnapshot ? (
