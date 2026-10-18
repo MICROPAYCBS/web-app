@@ -221,6 +221,12 @@ function LoanProductSettingsSection({ product, productKind }: SectionProps) {
           <DetailField label="Grace on principal">{product.graceOnPrincipalPayment ?? '—'}</DetailField>
           <DetailField label="Grace on interest">{product.graceOnInterestPayment ?? '—'}</DetailField>
           <DetailField label="Arrears tolerance">{product.inArrearsTolerance ?? '—'}</DetailField>
+          <DetailField label="Overdue days for NPA">
+            {product.overdueDaysForNPA ?? '—'}
+          </DetailField>
+          <DetailField label="Account moves out of NPA only on arrears completion">
+            {formatYesNo(product.accountMovesOutOfNPAOnlyOnArrearsCompletion)}
+          </DetailField>
         </DetailFieldGrid>
       </DetailSection>
 

@@ -518,3 +518,21 @@ export function loanAccountDelinquencyBanner(
   }
   return parts.length ? parts.join(' · ') : null;
 }
+
+/** Arrears banner, with non-performing called out on the same banner when the loan is NPA. */
+export function loanAccountStatusBanner(
+  account: FineractLoanAccountDetail,
+  options?: { periodicAccrual?: boolean }
+): { title: string; detail: string | null; accrualNote: string | null } | null {
+  const arrearsDetail = loanAccountDelinquencyBanner(account);
+  const nonPerforming = account.isNPA === true;
+  if (!arrearsDetail && !nonPerforming) {
+    return null;
+  }
+  const title = [nonPerforming ? 'Non-performing' : null, arrearsDetail ? 'Loan in arrears' : null]
+    .filter(Boolean)
+    .join(' · ');
+  const accrualNote =
+    nonPerforming && options?.periodicAccrual === true ? 'Accrual is paused' : null;
+  return { title, detail: arrearsDetail, accrualNote };
+}

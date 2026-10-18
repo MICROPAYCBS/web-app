@@ -41,7 +41,7 @@ import { LOAN_OFFICER_CONFIG } from '@/lib/fineract/account-field-officer-config
 import {
   loanAccountClientBackLabel,
   loanAccountCurrencyCode,
-  loanAccountDelinquencyBanner,
+  loanAccountStatusBanner,
   loanAccountHasSummary,
   loanAccountProductName,
   loanAccountStatusVariant
@@ -80,7 +80,8 @@ export function LoanAccountDetailView({
   pendingCheckerActions = [],
   pendingApprovalWorkflowContext,
   makerCheckerTaskPermissions = [],
-  accrue = { show: false, omitTillDate: false }
+  accrue = { show: false, omitTillDate: false },
+  periodicAccrual = false
 }: {
   account: FineractLoanAccountDetail;
   clientId: string;
@@ -104,11 +105,13 @@ export function LoanAccountDetailView({
   pendingApprovalWorkflowContext?: LoanPendingApprovalWorkflowContext;
   makerCheckerTaskPermissions?: FineractRolePermissionUsage[];
   accrue?: LoanAccountAccrueEligibility;
+  /** Product uses periodic accrual, so a non-performing loan is skipped by accrual. */
+  periodicAccrual?: boolean;
 }) {
   const currency = loanAccountCurrencyCode(account);
   const summary = account.summary;
   const dueBalance = loanAccountDueBalance(account);
-  const delinquencyMessage = loanAccountDelinquencyBanner(account);
+  const statusBanner = loanAccountStatusBanner(account, { periodicAccrual });
   const includeCashier = Boolean(cashierSnapshot);
   const standingInstructionsEnabled = standingInstructions != null;
   const reschedulesEnabled = reschedules != null;
@@ -150,15 +153,20 @@ export function LoanAccountDetailView({
             loanStatus={account.status}
           />
 
-          {delinquencyMessage ? (
+          {statusBanner ? (
             <div
               className="flex items-start gap-3 rounded-md border border-border bg-muted/50 px-4 py-3"
               role="status"
             >
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
               <div className="space-y-1 text-sm">
-                <p className="font-medium">Loan in arrears</p>
-                <p className="text-muted-foreground">{delinquencyMessage}</p>
+                <p className="font-medium">{statusBanner.title}</p>
+                {statusBanner.detail ? (
+                  <p className="text-muted-foreground">{statusBanner.detail}</p>
+                ) : null}
+                {statusBanner.accrualNote ? (
+                  <p className="text-muted-foreground">{statusBanner.accrualNote}</p>
+                ) : null}
               </div>
             </div>
           ) : null}

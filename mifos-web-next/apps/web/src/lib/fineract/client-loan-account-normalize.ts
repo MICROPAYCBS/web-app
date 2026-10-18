@@ -625,7 +625,11 @@ export function normalizeClientLoanAccountTemplate(raw: unknown): ClientLoanAcco
 
     loanScheduleType: asEnumOption(row.loanScheduleType),
 
-    enableDownPayment: row.enableDownPayment === true ? true : undefined,
+    enableDownPayment:
+      row.enableDownPayment === true ||
+      loanTemplateProductRow(row)?.enableDownPayment === true
+        ? true
+        : undefined,
 
     product:
 

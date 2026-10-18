@@ -47,8 +47,8 @@ test.describe('Approval workflows', () => {
     expect(secondResult.resourceId).toBeTruthy();
 
     await page.goto(APPROVAL_WORKFLOWS_PATH);
-    await expect(page.getByRole('link', { name: firstPayload.name })).toBeVisible();
-    await expect(page.getByRole('link', { name: secondPayload.name })).toBeVisible();
+    await expect(page.getByRole('link', { name: firstPayload.name, exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: secondPayload.name, exact: true })).toBeVisible();
     await expect(page.getByText('CREATE_LOAN').first()).toBeVisible();
 
     await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${firstResult.resourceId}`);
@@ -73,6 +73,9 @@ test.describe('Approval workflows', () => {
     await expect(page.getByText('BRANCH_MANAGER', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('REGIONAL_MANAGER', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('CREDIT_COMMITTEE', { exact: true }).first()).toBeVisible();
+
+    // Leave CREATE_LOAN without an active workflow so the following serial tests can activate their own.
+    await fineract.deactivateWorkflowDefinition(secondResult.resourceId as number);
   });
 
   test('rejects activating a second active workflow for the same task', async () => {
@@ -124,11 +127,14 @@ test.describe('Approval workflows', () => {
     await page.goto(`${APPROVAL_WORKFLOWS_PATH}/create`);
     await waitForPageReady(page);
     await expect(page.getByRole('heading', { name: 'Create approval workflow' })).toBeVisible();
-    await expect(page.getByText('CREATE_LOAN').first()).toBeVisible();
-    await expect(page.getByText('Stages', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /^2 Stages$/ })).toBeVisible();
+    // The task picker is a closed select on the wizard's first step; open it to confirm CREATE_LOAN is offered.
+    await page.getByRole('button', { name: 'Task' }).click();
+    await expect(page.getByRole('option', { name: /CREATE_LOAN/ }).first()).toBeVisible();
+    await page.keyboard.press('Escape');
 
     await page.goto(APPROVAL_WORKFLOWS_PATH);
-    await expect(page.getByRole('link', { name: payload.name })).toBeVisible();
+    await expect(page.getByRole('link', { name: payload.name, exact: true })).toBeVisible();
     await page.goto(`${APPROVAL_WORKFLOWS_PATH}/${created.resourceId}`);
     await expect(page.getByText('Draft', { exact: true })).toBeVisible();
   });

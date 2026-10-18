@@ -8,7 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountInterestRateLabel, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel, loanAccountTermLabel, loanAccountVisibleSections, sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
+import { buildLoanAccountSummaryMatrix, loanAccountHasGraceComponents, loanAccountHasLoanTerms, loanAccountHasPayoutConfiguration, loanAccountInterestRateLabel, loanAccountLinkedAccountLabel, loanAccountStandingInstructionAtDisbursementLabel, loanAccountStatusBanner, loanAccountTermLabel, loanAccountVisibleSections, sortLoanAccountTransactions } from '@/lib/fineract/loan-account-display';
 import type { FineractLoanAccountDetail, FineractLoanAccountTransaction } from '@/lib/fineract/loan-account-types';
 
 function sampleAccount(summary: FineractLoanAccountDetail['summary']): FineractLoanAccountDetail {
@@ -167,6 +167,58 @@ describe('loanAccountHasLoanTerms', () => {
       }),
       true
     );
+  });
+});
+
+describe('loanAccountStatusBanner', () => {
+  it('keeps the arrears banner when the loan is past due and not non-performing', () => {
+    const banner = loanAccountStatusBanner({
+      ...sampleAccount(undefined),
+      delinquent: { pastDueDays: 12 }
+    });
+    assert.equal(banner?.title, 'Loan in arrears');
+    assert.equal(banner?.detail, '12 past due days');
+    assert.equal(banner?.accrualNote, null);
+  });
+
+  it('shows non-performing on the same banner when the loan is NPA', () => {
+    const banner = loanAccountStatusBanner({
+      ...sampleAccount(undefined),
+      isNPA: true,
+      delinquencyRange: { classification: 'Bucket 2' },
+      delinquent: { pastDueDays: 40 }
+    });
+    assert.equal(banner?.title, 'Non-performing · Loan in arrears');
+    assert.equal(banner?.detail, 'Delinquency classification: Bucket 2 · 40 past due days');
+    assert.equal(banner?.accrualNote, null);
+  });
+
+  it('says accrual is paused on a periodic accrual loan that is non-performing', () => {
+    const banner = loanAccountStatusBanner(
+      {
+        ...sampleAccount(undefined),
+        isNPA: true,
+        delinquent: { pastDueDays: 40 }
+      },
+      { periodicAccrual: true }
+    );
+    assert.equal(banner?.title, 'Non-performing · Loan in arrears');
+    assert.equal(banner?.detail, '40 past due days');
+    assert.equal(banner?.accrualNote, 'Accrual is paused');
+  });
+
+  it('shows the banner for a non-performing loan that is not past due', () => {
+    const banner = loanAccountStatusBanner({
+      ...sampleAccount(undefined),
+      isNPA: true
+    });
+    assert.equal(banner?.title, 'Non-performing');
+    assert.equal(banner?.detail, null);
+    assert.equal(banner?.accrualNote, null);
+  });
+
+  it('hides the banner when the loan is current', () => {
+    assert.equal(loanAccountStatusBanner(sampleAccount(undefined)), null);
   });
 });
 

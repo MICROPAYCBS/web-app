@@ -6,29 +6,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { expect, test } from '@playwright/test';
-import { captureDocsScreenshot } from '../helpers/docs-screenshots';
-import { waitForPageReady } from '../helpers/interactions';
-
-const FIXED_DEPOSIT_PRODUCTS_PATH = '/products/fixed-deposit-products';
+import { test } from '@playwright/test';
+import { captureDepositProductWizard } from '../helpers/deposit-product-docs';
 
 test.describe('Docs screenshots — fixed deposit products', () => {
-  test('captures fixed deposit products list and create wizard', async ({ page }) => {
-    await page.goto(FIXED_DEPOSIT_PRODUCTS_PATH);
-    await waitForPageReady(page);
-
-    await expect(page.getByRole('heading', { name: 'Fixed deposit products' })).toBeVisible();
-    const createLink = page.getByRole('link', { name: 'Create fixed deposit product' });
-    await expect(createLink).toBeVisible();
-
-    await captureDocsScreenshot(page, 'administrators/products/fixed-deposit-products-list.png');
-
-    await createLink.click();
-    await waitForPageReady(page);
-    await expect(page.getByRole('heading', { name: 'Create fixed deposit product' })).toBeVisible({
-      timeout: 30_000
+  test('captures the create wizard and layout-changing branches', async ({ page }) => {
+    test.setTimeout(300_000);
+    await captureDepositProductWizard(page, {
+      path: '/products/fixed-deposit-products',
+      listHeading: 'Fixed deposit products',
+      createLinkName: 'Create fixed deposit product',
+      createHeading: 'Create fixed deposit product',
+      name: 'Term deposit',
+      shortName: 'TERM',
+      description: 'Lump-sum deposit held for a fixed term.',
+      filePrefix: 'fixed-deposit-products',
+      captureSharedBranches: true
     });
-
-    await captureDocsScreenshot(page, 'administrators/products/fixed-deposit-products-create.png');
   });
 });

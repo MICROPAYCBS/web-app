@@ -93,6 +93,8 @@ export interface LoanProductDetail extends LoanProductListItem {
   graceOnPrincipalPayment?: number;
   graceOnInterestPayment?: number;
   inArrearsTolerance?: number;
+  overdueDaysForNPA?: number;
+  accountMovesOutOfNPAOnlyOnArrearsCompletion?: boolean;
   allowAttributeOverrides?: LoanProductAttributeOverrides;
   accountingRule?: FineractEnumOption;
   enableAccrualActivityPosting?: boolean;

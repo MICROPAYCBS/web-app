@@ -6,29 +6,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { expect, test } from '@playwright/test';
-import { captureDocsScreenshot } from '../helpers/docs-screenshots';
-import { waitForPageReady } from '../helpers/interactions';
-
-const RECURRING_DEPOSIT_PRODUCTS_PATH = '/products/recurring-deposit-products';
+import { test } from '@playwright/test';
+import { captureDepositProductWizard } from '../helpers/deposit-product-docs';
 
 test.describe('Docs screenshots — recurring deposit products', () => {
-  test('captures recurring deposit products list and create wizard', async ({ page }) => {
-    await page.goto(RECURRING_DEPOSIT_PRODUCTS_PATH);
-    await waitForPageReady(page);
-
-    await expect(page.getByRole('heading', { name: 'Recurring deposit products' })).toBeVisible();
-    const createLink = page.getByRole('link', { name: 'Create recurring deposit product' });
-    await expect(createLink).toBeVisible();
-
-    await captureDocsScreenshot(page, 'administrators/products/recurring-deposit-products-list.png');
-
-    await page.goto(`${RECURRING_DEPOSIT_PRODUCTS_PATH}/create`);
-    await waitForPageReady(page);
-    await expect(
-      page.getByRole('heading', { name: 'Create recurring deposit product' })
-    ).toBeVisible({ timeout: 30_000 });
-
-    await captureDocsScreenshot(page, 'administrators/products/recurring-deposit-products-create.png');
+  test('captures the create wizard', async ({ page }) => {
+    test.setTimeout(300_000);
+    await captureDepositProductWizard(page, {
+      path: '/products/recurring-deposit-products',
+      listHeading: 'Recurring deposit products',
+      createLinkName: 'Create recurring deposit product',
+      createHeading: 'Create recurring deposit product',
+      name: 'Monthly saver',
+      shortName: 'SAVE',
+      description: 'Regular installments held for a fixed term.',
+      filePrefix: 'recurring-deposit-products',
+      captureSharedBranches: false
+    });
   });
 });

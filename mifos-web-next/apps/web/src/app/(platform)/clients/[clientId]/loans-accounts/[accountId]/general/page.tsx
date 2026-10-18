@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import type { FineractEnumOption } from '@mifos/api-client';
 import { can, resolvePermission } from '@mifos/auth';
 import { notFound } from 'next/navigation';
 import { LoanAccountDetailView } from '@/components/clients/loan-account/loan-account-detail-view';
@@ -29,6 +30,7 @@ import { clientAccountListPath } from '@/lib/fineract/client-account-links';
 import { listAuditTrailsForLoanAccount } from '@/lib/fineract/audit-trails';
 import { listJournalEntriesForLoanAccount } from '@/lib/fineract/journal-entries';
 import {
+  isPeriodicAccrualAccounting,
   loanAccountAccrueEligibility,
   type LoanAccountAccrueEligibility
 } from '@/lib/fineract/loan-account-accrue';
@@ -67,17 +69,12 @@ import {
 
 const HIDDEN_LOAN_ACCRUE: LoanAccountAccrueEligibility = { show: false, omitTillDate: false };
 
-async function loanAccountAccrueMode(
+async function loadLoanProductAccountingRule(
   session: Awaited<ReturnType<typeof getServerSession>>,
-  account: FineractLoanAccountDetail,
-  canAccrue: boolean
-): Promise<LoanAccountAccrueEligibility> {
-  if (
-    !canAccrue ||
-    !can(session, resolvePermission('products.loan')) ||
-    account.loanProductId == null
-  ) {
-    return HIDDEN_LOAN_ACCRUE;
+  account: FineractLoanAccountDetail
+): Promise<FineractEnumOption | null> {
+  if (!can(session, resolvePermission('products.loan')) || account.loanProductId == null) {
+    return null;
   }
 
   const ruleResult = await tryFineractLoad(
@@ -85,10 +82,20 @@ async function loanAccountAccrueMode(
     'Could not load loan product.'
   );
   if (!ruleResult.ok || !ruleResult.data) {
+    return null;
+  }
+  return ruleResult.data;
+}
+
+function loanAccountAccrueMode(
+  account: FineractLoanAccountDetail,
+  canAccrue: boolean,
+  accountingRule: FineractEnumOption | null
+): LoanAccountAccrueEligibility {
+  if (!canAccrue || !accountingRule) {
     return HIDDEN_LOAN_ACCRUE;
   }
-
-  return loanAccountAccrueEligibility(account, ruleResult.data);
+  return loanAccountAccrueEligibility(account, accountingRule);
 }
 
 function loanAccountPermissions(
@@ -272,7 +279,12 @@ export default async function LoanAccountGeneralPage({
   );
 
   const permissions = loanAccountPermissions(session);
-  const accrue = await loanAccountAccrueMode(session, account, permissions.accrue);
+  const accountingRule =
+    account.isNPA === true || permissions.accrue
+      ? await loadLoanProductAccountingRule(session, account)
+      : null;
+  const accrue = loanAccountAccrueMode(account, permissions.accrue, accountingRule);
+  const periodicAccrual = isPeriodicAccrualAccounting(accountingRule);
   const canReadReschedules = can(session, resolvePermission('loans.reschedule'));
   const rescheduleResult = canReadReschedules
     ? await tryFineractLoad(
@@ -378,6 +390,7 @@ export default async function LoanAccountGeneralPage({
       pendingApprovalWorkflowContext={pendingApprovalWorkflowContext}
       makerCheckerTaskPermissions={workflowRuntime.makerCheckerPermissions}
       accrue={accrue}
+      periodicAccrual={periodicAccrual}
     />
   );
 }

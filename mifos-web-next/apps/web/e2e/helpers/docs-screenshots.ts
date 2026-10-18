@@ -8,7 +8,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 const VIEWPORT = { width: 1280, height: 800 } as const;
 
@@ -33,6 +33,27 @@ export function docsScreenshotPath(relativeUnderImg: string, fromDir = process.c
   return path.join(resolveDocsPublicImgRoot(fromDir), ...normalized.split('/'));
 }
 
+async function prepareDocsCapture(page: Page, viewportHeight: number = VIEWPORT.height) {
+  await page.setViewportSize({ width: VIEWPORT.width, height: viewportHeight });
+
+  // Prefer light mode so handbook shots match authoring guide.
+  await page.evaluate(() => {
+    document.documentElement.classList.remove('dark');
+    document.documentElement.style.colorScheme = 'light';
+    for (const portal of document.querySelectorAll('nextjs-portal')) {
+      if (portal instanceof HTMLElement) {
+        portal.style.display = 'none';
+      }
+    }
+  });
+}
+
+function ensureScreenshotDir(relativeUnderImg: string) {
+  const filePath = docsScreenshotPath(relativeUnderImg);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  return filePath;
+}
+
 /**
  * Capture a viewport screenshot for the handbook (light mode, ~1280px wide).
  * `relativeUnderImg` is relative to `public/img`, e.g.
@@ -43,16 +64,8 @@ export async function captureDocsScreenshot(
   relativeUnderImg: string,
   viewportHeight: number = VIEWPORT.height
 ) {
-  const filePath = docsScreenshotPath(relativeUnderImg);
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-
-  await page.setViewportSize({ width: VIEWPORT.width, height: viewportHeight });
-
-  // Prefer light mode so handbook shots match authoring guide.
-  await page.evaluate(() => {
-    document.documentElement.classList.remove('dark');
-    document.documentElement.style.colorScheme = 'light';
-  });
+  const filePath = ensureScreenshotDir(relativeUnderImg);
+  await prepareDocsCapture(page, viewportHeight);
 
   await page.screenshot({
     path: filePath,
@@ -60,5 +73,28 @@ export async function captureDocsScreenshot(
     animations: 'disabled'
   });
 
+  return filePath;
+}
+
+/**
+ * Capture one section (a card or step) even when it is taller than the viewport.
+ * Grows the viewport so the element is not clipped by the wizard scroll pane.
+ */
+export async function captureDocsElement(
+  page: Page,
+  locator: Locator,
+  relativeUnderImg: string
+) {
+  const filePath = ensureScreenshotDir(relativeUnderImg);
+  await prepareDocsCapture(page);
+  await locator.scrollIntoViewIfNeeded();
+
+  const box = await locator.boundingBox();
+  if (box && box.y + box.height > VIEWPORT.height) {
+    await prepareDocsCapture(page, Math.ceil(box.y + box.height + 24));
+    await locator.scrollIntoViewIfNeeded();
+  }
+
+  await locator.screenshot({ path: filePath, animations: 'disabled' });
   return filePath;
 }

@@ -120,7 +120,8 @@ describe('normalizeLoanAccountChargeOptions', () => {
         maxNumberOfRepayments: 36,
         minInterestRatePerPeriod: 2,
         maxInterestRatePerPeriod: 5,
-        transactionProcessingStrategyName: 'Creocore Unique'
+        transactionProcessingStrategyName: 'Creocore Unique',
+        enableDownPayment: true
       }
     });
 
@@ -132,5 +133,6 @@ describe('normalizeLoanAccountChargeOptions', () => {
     expect(template.maxInterestRatePerPeriod).toBe(5);
     expect(template.transactionProcessingStrategyCode).toBe('creocore-standard');
     expect(template.transactionProcessingStrategyName).toBe('Creocore Unique');
+    expect(template.enableDownPayment).toBe(true);
   });
 });

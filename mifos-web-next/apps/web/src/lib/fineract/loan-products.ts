@@ -139,6 +139,12 @@ function normalizeDetail(raw: unknown): LoanProductDetail | null {
       typeof row.graceOnInterestPayment === 'number' ? row.graceOnInterestPayment : undefined,
     inArrearsTolerance:
       typeof row.inArrearsTolerance === 'number' ? row.inArrearsTolerance : undefined,
+    overdueDaysForNPA:
+      typeof row.overdueDaysForNPA === 'number' ? row.overdueDaysForNPA : undefined,
+    accountMovesOutOfNPAOnlyOnArrearsCompletion:
+      typeof row.accountMovesOutOfNPAOnlyOnArrearsCompletion === 'boolean'
+        ? row.accountMovesOutOfNPAOnlyOnArrearsCompletion
+        : undefined,
     allowAttributeOverrides: asLoanProductAttributeOverrides(row.allowAttributeOverrides),
     accountingRule: asEnumOption(row.accountingRule),
     enableAccrualActivityPosting:
