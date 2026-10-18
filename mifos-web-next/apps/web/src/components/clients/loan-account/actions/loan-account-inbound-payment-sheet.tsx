@@ -13,7 +13,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from 'react';
 import {
   createLoanRepaymentTransferAction,
-  loadLoanAccountRepaymentTransferSheetAction
+  loadLoanAccountRepaymentTransferSheetAction,
+  loadLoanRepaymentSavingsOptionsAction
 } from '@/actions/account-transfer';
 import {
   executeLoanAccountTransactionCommandAction,
@@ -37,7 +38,9 @@ import {
 import {
   loanAccountLinkedSavingsLabel,
   loanAccountRepaymentTransferDefaults,
-  loanPaymentDefaultAmount
+  loanPaymentDefaultAmount,
+  loanRepaymentOverpaymentError,
+  loanRepaymentSavingsUnavailableMessage
 } from '@/lib/fineract/loan-account-repayment-transfer';
 import type { LoanAccountTransactionCommand } from '@/lib/fineract/loan-account-command-meta';
 import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-types';
@@ -103,9 +106,7 @@ export function LoanAccountInboundPaymentSheet({
     [allowDirectLoanRepayments, canDirect, canTransfer]
   );
   const showMethodTabs = methods.includes('direct') && methods.includes('savings');
-  const savingsOnlyRequired =
-    methods.length === 0 ||
-    (!allowDirectLoanRepayments && linkedSavingsAccountId == null);
+  const savingsOnlyRequired = methods.length === 0;
 
   const [paymentMethod, setPaymentMethod] = useState<LoanInboundPaymentMethod>('savings');
   const [pending, startTransition] = useTransition();
@@ -123,6 +124,9 @@ export function LoanAccountInboundPaymentSheet({
   const [transferDescription, setTransferDescription] = useState('');
   const [availableBalance, setAvailableBalance] = useState(0);
   const [toOfficeId, setToOfficeId] = useState('');
+  const [savingsOptions, setSavingsOptions] = useState<{ id: number; label: string }[]>([]);
+  const [savingsOptionsLoaded, setSavingsOptionsLoaded] = useState(false);
+  const [selectedSavingsAccountId, setSelectedSavingsAccountId] = useState('');
 
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -142,7 +146,42 @@ export function LoanAccountInboundPaymentSheet({
     setPaymentMethod(resolvedInitial);
     setError(null);
     setFieldErrors({});
-  }, [defaultMethod, initialMethod, kind, methods, open]);
+    setSavingsOptions([]);
+    setSavingsOptionsLoaded(linkedSavingsAccountId != null);
+    setSelectedSavingsAccountId('');
+  }, [defaultMethod, initialMethod, kind, linkedSavingsAccountId, methods, open]);
+
+  const sourceSavingsAccountId =
+    linkedSavingsAccountId ??
+    (selectedSavingsAccountId ? Number(selectedSavingsAccountId) : undefined);
+
+  useEffect(() => {
+    if (!open || !kind || linkedSavingsAccountId != null || !methods.includes('savings')) {
+      return;
+    }
+
+    let cancelled = false;
+    setSavingsOptionsLoaded(false);
+    void loadLoanRepaymentSavingsOptionsAction(clientId, currencyCode).then((result) => {
+      if (cancelled) {
+        return;
+      }
+      setSavingsOptionsLoaded(true);
+      if (!result.ok) {
+        setError(result.message);
+        setSavingsOptions([]);
+        return;
+      }
+      setSavingsOptions(result.accounts);
+      if (result.accounts.length === 1) {
+        setSelectedSavingsAccountId(String(result.accounts[0].id));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId, currencyCode, kind, linkedSavingsAccountId, methods, open]);
 
   useEffect(() => {
     if (!open || !kind || paymentMethod !== 'direct' || !methods.includes('direct') || !command) {
@@ -168,8 +207,16 @@ export function LoanAccountInboundPaymentSheet({
         return;
       }
       setPaymentTypes(result.paymentTypeOptions);
-      const amount =
+      let amount =
         command === 'repayment' ? loanPaymentDefaultAmount(account, result.amount) : result.amount;
+      if (
+        command === 'repayment' &&
+        loanRepaymentOverpaymentError(amount, account.summary?.totalOutstanding)
+      ) {
+        const outstandingBalance = account.summary?.totalOutstanding;
+        amount =
+          outstandingBalance != null && outstandingBalance > 0 ? outstandingBalance : undefined;
+      }
       if (amount != null) {
         setTransactionAmount(String(amount));
       }
@@ -186,7 +233,7 @@ export function LoanAccountInboundPaymentSheet({
       !kind ||
       paymentMethod !== 'savings' ||
       !methods.includes('savings') ||
-      linkedSavingsAccountId == null
+      sourceSavingsAccountId == null
     ) {
       return;
     }
@@ -200,7 +247,7 @@ export function LoanAccountInboundPaymentSheet({
     void loadLoanAccountRepaymentTransferSheetAction(
       clientId,
       account.id,
-      linkedSavingsAccountId
+      sourceSavingsAccountId
     ).then((result) => {
       if (cancelled) {
         return;
@@ -232,10 +279,10 @@ export function LoanAccountInboundPaymentSheet({
     clientId,
     initialTransactionDate,
     kind,
-    linkedSavingsAccountId,
     methods,
     open,
-    paymentMethod
+    paymentMethod,
+    sourceSavingsAccountId
   ]);
 
   if (!kind) {
@@ -244,6 +291,10 @@ export function LoanAccountInboundPaymentSheet({
 
   const copy = COPY[kind];
   const outstanding = account.summary?.totalOutstanding;
+  const selectedSavingsLabel = savingsOptions.find(
+    (option) => option.id === sourceSavingsAccountId
+  )?.label;
+  const sourceSavingsLabel = linkedSavingsLabel ?? selectedSavingsLabel ?? null;
   const activeMethod = methods.includes(paymentMethod)
     ? paymentMethod
     : (defaultMethod ?? methods[0] ?? 'savings');
@@ -251,7 +302,17 @@ export function LoanAccountInboundPaymentSheet({
     activeMethod === 'direct' ? copy.directSubmitLabel : copy.savingsSubmitLabel;
   const submitDisabled =
     savingsOnlyRequired ||
-    (activeMethod === 'savings' && linkedSavingsAccountId == null && !methods.includes('direct'));
+    (activeMethod === 'savings' && sourceSavingsAccountId == null);
+  const savingsBalanceHint =
+    availableBalance > 0
+      ? `Up to ${formatLoanAccountMoney(account, availableBalance)} available in savings.`
+      : undefined;
+  const savingsAmountHint =
+    kind === 'repayment' && outstanding != null
+      ? savingsBalanceHint
+        ? `${savingsBalanceHint} Outstanding balance is ${formatLoanAccountMoney(account, outstanding)}.`
+        : `Outstanding balance is ${formatLoanAccountMoney(account, outstanding)}.`
+      : savingsBalanceHint;
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -260,6 +321,20 @@ export function LoanAccountInboundPaymentSheet({
     }
     setError(null);
     setFieldErrors({});
+
+    if (kind === 'repayment') {
+      const overpayment = loanRepaymentOverpaymentError(
+        activeMethod === 'direct' ? transactionAmount : transferAmount,
+        outstanding
+      );
+      if (overpayment) {
+        setError(overpayment);
+        setFieldErrors({
+          [activeMethod === 'direct' ? 'transactionAmount' : 'transferAmount']: overpayment
+        });
+        return;
+      }
+    }
 
     if (activeMethod === 'direct') {
       if (!command) {
@@ -290,8 +365,9 @@ export function LoanAccountInboundPaymentSheet({
       return;
     }
 
-    if (linkedSavingsAccountId == null) {
-      setError(SAVINGS_ONLY_REPAYMENT_MESSAGE);
+    if (sourceSavingsAccountId == null) {
+      setError('Choose a savings account.');
+      setFieldErrors({ fromSavingsAccountId: 'Choose a savings account.' });
       return;
     }
 
@@ -299,7 +375,7 @@ export function LoanAccountInboundPaymentSheet({
       const result = await createLoanRepaymentTransferAction(
         clientId,
         account.id,
-        linkedSavingsAccountId,
+        sourceSavingsAccountId,
         {
           toOfficeId,
           toClientId: clientId,
@@ -352,6 +428,11 @@ export function LoanAccountInboundPaymentSheet({
         error={fieldErrors.transactionAmount}
         required
         disabled={pending || loading}
+        hint={
+          kind === 'repayment' && outstanding != null
+            ? `Outstanding balance is ${formatLoanAccountMoney(account, outstanding)}.`
+            : undefined
+        }
       />
       <SelectField
         id={`${formId}-payment-type`}
@@ -384,7 +465,7 @@ export function LoanAccountInboundPaymentSheet({
       <dl className="grid gap-3 rounded-lg border border-border bg-muted/20 px-3 py-3 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-muted-foreground">From savings</dt>
-          <dd className="font-medium">{linkedSavingsLabel ?? `#${linkedSavingsAccountId}`}</dd>
+          <dd className="font-medium">{sourceSavingsLabel ?? '—'}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Available balance</dt>
@@ -421,11 +502,7 @@ export function LoanAccountInboundPaymentSheet({
         error={fieldErrors.transferAmount}
         required
         disabled={pending || loading}
-        hint={
-          availableBalance > 0
-            ? `Up to ${formatLoanAccountMoney(account, availableBalance)} available in savings.`
-            : undefined
-        }
+        hint={savingsAmountHint}
       />
       <TextField
         id={`${formId}-description`}
@@ -439,13 +516,38 @@ export function LoanAccountInboundPaymentSheet({
     </div>
   );
 
+  const savingsAccountPicker =
+    linkedSavingsAccountId == null && savingsOptions.length > 1 ? (
+      <SelectField
+        id={`${formId}-savings-account`}
+        label="Savings account"
+        value={selectedSavingsAccountId}
+        onValueChange={(value) => setSelectedSavingsAccountId(value ?? '')}
+        options={savingsOptions.map((option) => ({
+          value: String(option.id),
+          label: option.label
+        }))}
+        placeholder="Select a savings account"
+        error={fieldErrors.fromSavingsAccountId}
+        required
+        disabled={pending || loading}
+      />
+    ) : null;
+
   const savingsPanel =
-    linkedSavingsAccountId == null ? (
+    linkedSavingsAccountId != null ? (
+      savingsForm
+    ) : !savingsOptionsLoaded ? (
+      <p className="text-sm text-muted-foreground">Loading savings accounts…</p>
+    ) : savingsOptions.length === 0 ? (
       <p className="rounded-md border border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
-        {SAVINGS_ONLY_REPAYMENT_MESSAGE}
+        {loanRepaymentSavingsUnavailableMessage(currencyCode)}
       </p>
     ) : (
-      savingsForm
+      <div className="space-y-4">
+        {savingsAccountPicker}
+        {sourceSavingsAccountId != null ? savingsForm : null}
+      </div>
     );
 
   const paymentBody = savingsOnlyRequired ? (

@@ -215,6 +215,15 @@ function LoanAccountSummarySection({ account }: { account: FineractLoanAccountDe
       : []),
     ...(interestLabel
       ? [{ id: 'interest', label: 'Interest rate', value: interestLabel }]
+      : []),
+    ...(account.transactionProcessingStrategyName
+      ? [
+          {
+            id: 'strategy',
+            label: 'Repayment strategy',
+            value: account.transactionProcessingStrategyName
+          }
+        ]
       : [])
   ];
 

@@ -66,6 +66,9 @@ function LoanProductGeneralSection({ product, productKind }: SectionProps) {
             </Badge>
           </DetailField>
           <DetailField label="Fund">{product.fundName ?? '—'}</DetailField>
+          <DetailField label="Repayment strategy">
+            {product.transactionProcessingStrategyName ?? '—'}
+          </DetailField>
           <DetailField label="External ID">{product.externalId ?? '—'}</DetailField>
           <DetailField label="Start date">
             <DateValue value={product.startDate} />

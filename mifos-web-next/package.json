@@ -4,7 +4,7 @@
   "private": true,
   "description": "Next.js Fineract web client — greenfield replacement for Mifos X Web App",
   "license": "MPL-2.0",
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "pnpm --filter web dev",
     "dev:webpack": "pnpm --filter web dev:webpack",
@@ -16,7 +16,7 @@
     "check:lint": "pnpm run lint",
     "check:ci": "pnpm run typecheck && pnpm run build",
     "check:pre-commit": "node scripts/pre-commit-check.mjs",
-    "clean": "pnpm --filter web clean",
+    "clean": "pnpm --filter web run clean",
     "format": "prettier --write .",
     "prepare": "node scripts/ensure-git-hooks.mjs",
     "routes:parity": "pnpm exec tsx tooling/routes-inventory/generate-parity.ts",
@@ -24,13 +24,7 @@
   },
   "engines": {
     "node": ">=20",
-    "pnpm": ">=9"
-  },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.17",
-      "@types/react-dom": "19.2.3"
-    }
+    "pnpm": ">=11"
   },
   "devDependencies": {
     "prettier": "^3.8.3",

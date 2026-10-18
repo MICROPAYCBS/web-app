@@ -24,7 +24,8 @@ import { useInitialTransactionDate } from '@/components/platform/business-date-p
 import {
   loanAccountCanRepayFromSavings,
   loanAccountLinkedSavingsLabel,
-  loanAccountRepaymentTransferDefaults
+  loanAccountRepaymentTransferDefaults,
+  loanRepaymentOverpaymentError
 } from '@/lib/fineract/loan-account-repayment-transfer';
 import {
   loanAccountCurrencyCode,
@@ -117,6 +118,16 @@ export function LoanAccountRepaymentTransferSheet({
     setError(null);
     setFieldErrors({});
 
+    const overpayment = loanRepaymentOverpaymentError(
+      transferAmount,
+      account.summary?.totalOutstanding
+    );
+    if (overpayment) {
+      setError(overpayment);
+      setFieldErrors({ transferAmount: overpayment });
+      return;
+    }
+
     startTransition(async () => {
       const result = await createLoanRepaymentTransferAction(
         clientId,
@@ -201,9 +212,13 @@ export function LoanAccountRepaymentTransferSheet({
           error={fieldErrors.transferAmount}
           required
           hint={
-            availableBalance > 0
-              ? `Up to ${formatLoanAccountMoney(account, availableBalance)} available in savings.`
-              : undefined
+            outstanding != null
+              ? availableBalance > 0
+                ? `Up to ${formatLoanAccountMoney(account, availableBalance)} available in savings. Outstanding balance is ${formatLoanAccountMoney(account, outstanding)}.`
+                : `Outstanding balance is ${formatLoanAccountMoney(account, outstanding)}.`
+              : availableBalance > 0
+                ? `Up to ${formatLoanAccountMoney(account, availableBalance)} available in savings.`
+                : undefined
           }
         />
         <TextField

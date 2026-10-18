@@ -48,6 +48,7 @@ import {
   type LoanAccountLifecycleDialogKind
 } from '@/components/clients/loan-account/actions/loan-account-lifecycle-dialog';
 import { LoanAccountInboundPaymentSheet } from '@/components/clients/loan-account/actions/loan-account-inbound-payment-sheet';
+import { LoanAccountPrepaySheet } from '@/components/clients/loan-account/actions/loan-account-prepay-sheet';
 import { LoanAccountRescheduleSheet } from '@/components/clients/loan-account/actions/loan-account-reschedule-sheet';
 import { LoanAccountVariableInstallmentsSheet } from '@/components/clients/loan-account/actions/loan-account-variable-installments-sheet';
 import { LoanAccountTransactionSheet } from '@/components/clients/loan-account/actions/loan-account-transaction-sheet';
@@ -164,6 +165,7 @@ export function LoanAccountActions({
   const [accrueOpen, setAccrueOpen] = useState(false);
   const [markNpaOpen, setMarkNpaOpen] = useState(false);
   const [undoNpaOpen, setUndoNpaOpen] = useState(false);
+  const [prepayOpen, setPrepayOpen] = useState(false);
 
   function openInboundPayment(kind: LoanInboundPaymentKind, method: LoanInboundPaymentMethod = 'savings') {
     setInboundInitialMethod(method);
@@ -186,6 +188,7 @@ export function LoanAccountActions({
   });
 
   const showMakeRepayment = repaymentEligibility.show;
+  const showPrepay = visibility.makeRepayment && permissions.makeRepayment;
   const showRecoveryPayment = recoveryEligibility.show;
 
   const showApprove =
@@ -277,6 +280,14 @@ export function LoanAccountActions({
       label: 'Attach originator',
       icon: PlusCircle,
       onSelect: () => setAttachOriginatorOpen(true)
+    });
+  }
+  if (showPrepay) {
+    menuItems.push({
+      id: 'prepay',
+      label: 'Prepay quote',
+      icon: HandCoins,
+      onSelect: () => setPrepayOpen(true)
     });
   }
   if (visibility.waiveInterest && permissions.waiveInterest) {
@@ -575,6 +586,15 @@ export function LoanAccountActions({
             : repaymentEligibility.canTransfer
         }
         initialMethod={inboundInitialMethod}
+      />
+      <LoanAccountPrepaySheet
+        clientId={clientId}
+        accountId={account.id}
+        currencyCode={currencyCode}
+        outstanding={account.summary?.totalOutstanding}
+        canPost={repaymentPolicy.allowDirectLoanRepayments}
+        open={prepayOpen}
+        onOpenChange={setPrepayOpen}
       />
       <LoanAccountMarkNpaSheet
         clientId={clientId}

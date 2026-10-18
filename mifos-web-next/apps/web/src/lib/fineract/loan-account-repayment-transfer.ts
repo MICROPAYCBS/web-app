@@ -108,6 +108,82 @@ export function loanPaymentDefaultAmount(
   );
 }
 
+export const LOAN_REPAYMENT_EXCEEDS_OUTSTANDING_MESSAGE =
+  'Amount cannot exceed the outstanding balance.';
+
+export const LOAN_REPAYMENT_OUTSTANDING_UNAVAILABLE_MESSAGE =
+  'Outstanding balance is not available for this loan.';
+
+/** Written-off recovery is not limited by the outstanding balance, which is already zero. */
+const WRITTEN_OFF_LOAN_STATUS = 'loanStatusType.closed.written.off';
+
+const ACTIVE_SAVINGS_STATUS = 'savingsAccountStatusType.active';
+
+export interface LoanRepaymentSavingsCandidate {
+  id: number;
+  accountNo?: string;
+  productName?: string;
+  statusCode?: string;
+  currencyCode?: string;
+  depositType?: string;
+}
+
+export function loanRepaymentSavingsSourceLabel(account: LoanRepaymentSavingsCandidate): string {
+  const parts = [account.productName?.trim(), account.accountNo?.trim()].filter(
+    (part): part is string => Boolean(part)
+  );
+  return parts.length ? parts.join(' · ') : `Savings account #${account.id}`;
+}
+
+/** Active savings accounts in the loan currency. Fixed and recurring deposits are excluded. */
+export function loanRepaymentSavingsSources(
+  accounts: readonly LoanRepaymentSavingsCandidate[],
+  currencyCode: string
+): LoanRepaymentSavingsCandidate[] {
+  const currency = currencyCode.trim().toUpperCase();
+  return accounts.filter((account) => {
+    if (!(account.id > 0) || account.statusCode !== ACTIVE_SAVINGS_STATUS) {
+      return false;
+    }
+    if ((account.currencyCode ?? '').trim().toUpperCase() !== currency) {
+      return false;
+    }
+    const depositType = account.depositType?.trim();
+    return depositType !== 'Fixed Deposit' && depositType !== 'Recurring Deposit';
+  });
+}
+
+export function loanRepaymentSavingsUnavailableMessage(currencyCode: string): string {
+  return `This customer has no active ${currencyCode} savings account.`;
+}
+
+export function loanRepaymentRejectsOverpayment(statusCode: string | undefined): boolean {
+  return statusCode !== WRITTEN_OFF_LOAN_STATUS;
+}
+
+/**
+ * Repayments may pay the outstanding balance in full. Anything above it becomes
+ * an overpayment, which this product does not accept. An empty amount is left
+ * for the form schema.
+ */
+export function loanRepaymentOverpaymentError(
+  amount: string | number | null | undefined,
+  outstanding: number | null | undefined
+): string | null {
+  const payment = toDecimal(typeof amount === 'string' ? amount.trim() : amount);
+  if (!payment || !payment.greaterThan(0)) {
+    return null;
+  }
+  const owed = toDecimal(outstanding);
+  if (!owed) {
+    return LOAN_REPAYMENT_OUTSTANDING_UNAVAILABLE_MESSAGE;
+  }
+  if (payment.greaterThan(owed)) {
+    return LOAN_REPAYMENT_EXCEEDS_OUTSTANDING_MESSAGE;
+  }
+  return null;
+}
+
 export function loanAccountRepaymentTransferDefaults(
   account: FineractLoanAccountDetail,
   availableBalance: number,
@@ -121,9 +197,16 @@ export function loanAccountRepaymentTransferDefaults(
         ? outstanding
         : undefined;
   const balance = toDecimal(availableBalance);
-  const chosen = toDecimal(amount);
+  let chosen = toDecimal(amount);
   if (chosen && balance && balance.greaterThan(0) && chosen.greaterThan(balance)) {
     amount = balance.toNumber();
+    chosen = toDecimal(amount);
+  }
+  if (kind === 'repayment') {
+    const owed = toDecimal(outstanding);
+    if (chosen && owed && chosen.greaterThan(owed)) {
+      amount = owed.toNumber();
+    }
   }
   const label =
     kind === 'recoverypayment'

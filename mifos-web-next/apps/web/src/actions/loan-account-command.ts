@@ -46,7 +46,8 @@ import {
   executeLoanAccountLifecycleCommand,
   executeLoanAccountTransactionCommand,
   getLoanAccountApprovalTemplate,
-  getLoanAccountTransactionTemplate
+  getLoanAccountTransactionTemplate,
+  getLoanPrepayTemplate
 } from '@/lib/fineract/loan-account-commands';
 import { getLoanAccount, undoLoanAccountTransaction } from '@/lib/fineract/loan-accounts';
 import { loadCashierAwarePaymentTypeOptions } from '@/lib/fineract/cashier-cash-transaction-guard';
@@ -56,6 +57,7 @@ import {
   isDirectLoanInboundPaymentCommand
 } from '@/lib/fineract/loan-repayment-policy-paths';
 import { getLoanRepaymentPolicySettings } from '@/lib/fineract/loan-repayment-policy';
+import { loanRepaymentOverpaymentError } from '@/lib/fineract/loan-account-repayment-transfer';
 
 const DIRECT_LOAN_REPAYMENT_DENIED_MESSAGE = translateFineractCode(
   'error.msg.direct.loan.repayment.not.allowed'
@@ -206,6 +208,44 @@ export async function loadLoanAccountDisburseSheetDataAction(
     };
   } catch (error) {
     return toFineractActionError(error, 'Could not load disbursement details.');
+  }
+}
+
+export async function loadLoanPrepayQuoteAction(
+  accountId: string,
+  transactionDate: string
+): Promise<
+  | {
+      ok: true;
+      amount?: number;
+      periodicAccrualPayoff: Awaited<
+        ReturnType<typeof getLoanPrepayTemplate>
+      >['periodicAccrualPayoff'];
+      paymentTypeOptions: Awaited<ReturnType<typeof loadCashierAwarePaymentTypeOptions>>;
+    }
+  | Extract<LoanAccountActionResult, { ok: false }>
+> {
+  const denied = await requirePermission(
+    'READ_LOAN',
+    'You do not have permission to view this loan.'
+  );
+  if (denied) {
+    return denied;
+  }
+
+  try {
+    const template = await getLoanPrepayTemplate(accountId, transactionDate);
+    const paymentTypeOptions = await loadCashierAwarePaymentTypeOptions(
+      template.paymentTypeOptions ?? []
+    );
+    return {
+      ok: true,
+      amount: template.amount,
+      periodicAccrualPayoff: template.periodicAccrualPayoff,
+      paymentTypeOptions
+    };
+  } catch (error) {
+    return toFineractActionError(error, 'Could not load the prepay quote.');
   }
 }
 
@@ -414,6 +454,30 @@ export async function executeLoanAccountTransactionCommandAction(
   }
 
   const body = { ...(parsed.data as Record<string, unknown>) };
+
+  if (command === 'repayment') {
+    try {
+      const loanAccount = await getLoanAccount(accountId);
+      if (!loanAccount) {
+        return { ok: false, message: 'Could not load this loan account.' };
+      }
+      const overpayment = loanRepaymentOverpaymentError(
+        typeof body.transactionAmount === 'number' || typeof body.transactionAmount === 'string'
+          ? body.transactionAmount
+          : undefined,
+        loanAccount.summary?.totalOutstanding
+      );
+      if (overpayment) {
+        return {
+          ok: false,
+          message: overpayment,
+          fieldErrors: { transactionAmount: overpayment }
+        };
+      }
+    } catch (error) {
+      return toFineractActionError(error, 'Could not load this loan account.');
+    }
+  }
 
   try {
     const response = await executeLoanAccountTransactionCommand(

@@ -30,10 +30,17 @@ import {
   type AccountTransferTemplateQuery
 } from '@/lib/fineract/account-transfers';
 import { clientAccountGeneralPath } from '@/lib/fineract/client-account-links';
+import { getClientAccounts } from '@/lib/fineract/client-accounts';
 import { getLoanAccount } from '@/lib/fineract/loan-accounts';
+import { loanAccountCurrencyCode } from '@/lib/fineract/loan-account-display';
 import {
   loanAccountRepaymentTransferCascade,
-  loanAccountRepaymentTransferGeneralPath
+  loanAccountRepaymentTransferGeneralPath,
+  loanRepaymentOverpaymentError,
+  loanRepaymentRejectsOverpayment,
+  loanRepaymentSavingsSourceLabel,
+  loanRepaymentSavingsSources,
+  type LoanRepaymentSavingsCandidate
 } from '@/lib/fineract/loan-account-repayment-transfer';
 import { LOAN_PORTFOLIO_ACCOUNT_TYPE } from '@/lib/fineract/portfolio-account-types';
 import { resolveClientOfficeId } from '@/lib/fineract/resolve-client-office-id';
@@ -160,6 +167,56 @@ export async function loadSavingsAccountTransferSheetAction(
   }
 }
 
+function repaymentSavingsCandidate(
+  account: {
+    id: number;
+    accountNo?: string;
+    productName?: string;
+    status?: { code?: string };
+    currency?: { code?: string };
+    depositType?: { value?: string };
+  }
+): LoanRepaymentSavingsCandidate {
+  return {
+    id: account.id,
+    accountNo: account.accountNo,
+    productName: account.productName,
+    statusCode: account.status?.code,
+    currencyCode: account.currency?.code,
+    depositType: account.depositType?.value
+  };
+}
+
+export async function loadLoanRepaymentSavingsOptionsAction(
+  clientId: string,
+  currencyCode: string
+): Promise<
+  | { ok: true; accounts: { id: number; label: string }[] }
+  | Extract<AccountTransferActionResult, { ok: false }>
+> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, 'CREATE_ACCOUNTTRANSFER');
+    const accounts = await getClientAccounts(clientId);
+    const sources = loanRepaymentSavingsSources(
+      (accounts.savingsAccounts ?? []).map(repaymentSavingsCandidate),
+      currencyCode
+    );
+    return {
+      ok: true,
+      accounts: sources.map((account) => ({
+        id: account.id,
+        label: loanRepaymentSavingsSourceLabel(account)
+      }))
+    };
+  } catch (err) {
+    return toFineractActionError(err, 'Could not load savings accounts.');
+  }
+}
+
 export async function loadLoanAccountRepaymentTransferSheetAction(
   clientId: string,
   loanAccountId: string | number,
@@ -233,12 +290,42 @@ export async function createLoanRepaymentTransferAction(
       return { ok: false, message: 'Could not load this loan account.' };
     }
 
+    if (loanRepaymentRejectsOverpayment(loanAccount.status.code)) {
+      const overpayment = loanRepaymentOverpaymentError(
+        input.transferAmount,
+        loanAccount.summary?.totalOutstanding
+      );
+      if (overpayment) {
+        return {
+          ok: false,
+          message: overpayment,
+          fieldErrors: { transferAmount: overpayment }
+        };
+      }
+    }
+
     const linkedSavingsId = loanAccount.linkedAccount?.id ?? loanAccount.linkAccountId;
-    if (linkedSavingsId == null || linkedSavingsId !== savingsId) {
+    if (linkedSavingsId != null && linkedSavingsId !== savingsId) {
       return {
         ok: false,
         message: 'Repayment transfers must use the loan’s linked savings account.'
       };
+    }
+    if (linkedSavingsId == null) {
+      const accounts = await getClientAccounts(clientId);
+      const allowed = loanRepaymentSavingsSources(
+        (accounts.savingsAccounts ?? []).map(repaymentSavingsCandidate),
+        loanAccountCurrencyCode(loanAccount)
+      );
+      if (!allowed.some((account) => account.id === savingsId)) {
+        return {
+          ok: false,
+          message: 'Choose an active savings account in the same currency as this loan.',
+          fieldErrors: {
+            fromSavingsAccountId: 'Choose an active savings account in the same currency as this loan.'
+          }
+        };
+      }
     }
 
     const client = await getClient(clientId);

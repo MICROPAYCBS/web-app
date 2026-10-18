@@ -13,6 +13,7 @@
     "test": "node --import tsx --test src/fineract-error-message.test.ts src/fineract-permission-errors.test.ts"
   },
   "devDependencies": {
+    "@types/node": "^20",
     "tsx": "^4.22.4",
     "typescript": "^5.8.3"
   }

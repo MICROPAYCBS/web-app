@@ -12,7 +12,12 @@ import type { FineractLoanAccountDetail } from '@/lib/fineract/loan-account-type
 import {
   loanAccountDueBalance,
   loanAccountRepaymentTransferDefaults,
-  loanPaymentDefaultAmount
+  loanPaymentDefaultAmount,
+  loanRepaymentOverpaymentError,
+  loanRepaymentRejectsOverpayment,
+  loanRepaymentSavingsSources,
+  LOAN_REPAYMENT_EXCEEDS_OUTSTANDING_MESSAGE,
+  LOAN_REPAYMENT_OUTSTANDING_UNAVAILABLE_MESSAGE
 } from '@/lib/fineract/loan-account-repayment-transfer';
 
 function account(
@@ -76,5 +81,82 @@ describe('loan payment default amount', () => {
     const loan = account({ summary: { totalOutstanding: 10000, totalOverdue: 4200 } });
     const defaults = loanAccountRepaymentTransferDefaults(loan, 1000);
     assert.equal(defaults.transferAmount, '1000');
+  });
+
+  it('caps a savings repayment at the outstanding balance', () => {
+    const loan = account({ summary: { totalOutstanding: 800, totalOverdue: 4200 } });
+    const defaults = loanAccountRepaymentTransferDefaults(loan, 5000);
+    assert.equal(defaults.transferAmount, '800');
+  });
+});
+
+describe('loan repayment overpayment', () => {
+  it('allows an amount equal to the outstanding balance', () => {
+    assert.equal(loanRepaymentOverpaymentError(10000, 10000), null);
+    assert.equal(loanRepaymentOverpaymentError('0.30', 0.3), null);
+  });
+
+  it('rejects an amount above the outstanding balance', () => {
+    assert.equal(
+      loanRepaymentOverpaymentError('10000.01', 10000),
+      LOAN_REPAYMENT_EXCEEDS_OUTSTANDING_MESSAGE
+    );
+    assert.equal(loanRepaymentOverpaymentError(1, 0), LOAN_REPAYMENT_EXCEEDS_OUTSTANDING_MESSAGE);
+  });
+
+  it('rejects a payment when the outstanding balance is missing', () => {
+    assert.equal(
+      loanRepaymentOverpaymentError(1, undefined),
+      LOAN_REPAYMENT_OUTSTANDING_UNAVAILABLE_MESSAGE
+    );
+  });
+
+  it('leaves an empty amount for the form', () => {
+    assert.equal(loanRepaymentOverpaymentError('', 10000), null);
+    assert.equal(loanRepaymentOverpaymentError('  ', 10000), null);
+  });
+
+  it('keeps active savings accounts in the loan currency', () => {
+    const sources = loanRepaymentSavingsSources(
+      [
+        {
+          id: 1,
+          accountNo: 'SA1',
+          productName: 'Wallet',
+          statusCode: 'savingsAccountStatusType.active',
+          currencyCode: 'UGX'
+        },
+        {
+          id: 2,
+          accountNo: 'SA2',
+          statusCode: 'savingsAccountStatusType.active',
+          currencyCode: 'USD'
+        },
+        {
+          id: 3,
+          accountNo: 'SA3',
+          statusCode: 'savingsAccountStatusType.approved',
+          currencyCode: 'ugx'
+        },
+        {
+          id: 4,
+          accountNo: 'FD1',
+          statusCode: 'savingsAccountStatusType.active',
+          currencyCode: 'UGX',
+          depositType: 'Fixed Deposit'
+        }
+      ],
+      'UGX'
+    );
+    assert.deepEqual(
+      sources.map((account) => account.id),
+      [1]
+    );
+  });
+
+  it('does not apply the outstanding cap to a written-off loan', () => {
+    assert.equal(loanRepaymentRejectsOverpayment('loanStatusType.active'), true);
+    assert.equal(loanRepaymentRejectsOverpayment('loanStatusType.closed.written.off'), false);
+    assert.equal(loanRepaymentRejectsOverpayment(undefined), true);
   });
 });

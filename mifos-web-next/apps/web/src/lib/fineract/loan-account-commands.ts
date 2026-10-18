@@ -9,7 +9,16 @@ import 'server-only';
  */
 
 import type { FineractCommandProcessingResult } from '@mifos/api-client';
-import { fineractApiDateToFormString, formatFineractDateValue } from '@/lib/fineract/dates';
+import {
+  FINERACT_DATE_FORMAT,
+  FINERACT_LOCALE,
+  fineractApiDateToFormString,
+  formatFineractDateValue
+} from '@/lib/fineract/dates';
+import {
+  normalizePeriodicAccrualPayoff,
+  type PeriodicAccrualPayoff
+} from '@/lib/fineract/periodic-accrual-payoff';
 import { createFineractClient } from '@/lib/fineract/create-client';
 import type { LoanAccountChargeTemplateOption } from '@/lib/fineract/loan-account-types';
 import type {
@@ -145,6 +154,41 @@ export async function getLoanAccountApprovalTemplate(
     submittedOnDate: fineractApiDateToFormString(
       (row.submittedOnDate ?? timelineSubmitted) as number[] | string | undefined
     )
+  };
+}
+
+export interface LoanPrepayTemplate {
+  amount?: number;
+  date?: string;
+  paymentTypeOptions?: LoanAccountPaymentTypeOption[];
+  periodicAccrualPayoff: PeriodicAccrualPayoff | null;
+}
+
+/** Prepay quote. Omits `fields` so `periodicAccrualPayoff` is not dropped. */
+export async function getLoanPrepayTemplate(
+  accountId: string | number,
+  transactionDate?: string
+): Promise<LoanPrepayTemplate> {
+  const fineract = await createFineractClient();
+  const params: Record<string, string> = {
+    command: 'prepayLoan',
+    dateFormat: FINERACT_DATE_FORMAT,
+    locale: FINERACT_LOCALE
+  };
+  const quotedDate = transactionDate?.trim();
+  if (quotedDate) {
+    params.transactionDate = quotedDate;
+  }
+  const raw = await fineract.get<unknown>(`/loans/${accountId}/transactions/template`, params);
+  if (!raw || typeof raw !== 'object') {
+    return { periodicAccrualPayoff: null };
+  }
+  const row = raw as Record<string, unknown>;
+  return {
+    amount: toNumber(row.amount),
+    date: formatFineractDateValue(row.date),
+    paymentTypeOptions: normalizePaymentTypeOptions(row.paymentTypeOptions),
+    periodicAccrualPayoff: normalizePeriodicAccrualPayoff(row.periodicAccrualPayoff)
   };
 }
 

@@ -45,6 +45,7 @@ Pin in `reference/` (not committed):
 
 ```bash
 pnpm run dev
+pnpm run clean    # delete apps/web/.next — stop the dev server first
 pnpm run build
 pnpm run lint
 pnpm run typecheck
