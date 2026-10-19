@@ -11,6 +11,7 @@ import { describe, it } from 'node:test';
 import {
   CLIENT_IDENTIFIER_DOCUMENT_KEY_MAX_LENGTH,
   clampDocumentKeyInput,
+  clientIdentifierSchema,
   documentKeyMaxLengthForIdentityRule,
   maxLengthFromValidationRegex
 } from './client-identifier.schema';
@@ -64,5 +65,56 @@ describe('clampDocumentKeyInput', () => {
   it('truncates to max length', () => {
     assert.equal(clampDocumentKeyInput('CM1299929292EXTRA', 16), 'CM1299929292EXTR');
     assert.equal(clampDocumentKeyInput('short', 16), 'short');
+  });
+});
+
+describe('clientIdentifierSchema issuance and expiry dates', () => {
+  const base = {
+    documentTypeId: 1,
+    status: 'Active' as const,
+    documentKey: 'CM12345678'
+  };
+
+  it('accepts omitted dates', () => {
+    const result = clientIdentifierSchema.safeParse(base);
+    assert.equal(result.success, true);
+    if (result.success) {
+      assert.equal(result.data.issuanceDate, undefined);
+      assert.equal(result.data.expiryDate, undefined);
+    }
+  });
+
+  it('accepts empty dates as unset', () => {
+    const result = clientIdentifierSchema.safeParse({
+      ...base,
+      issuanceDate: '',
+      expiryDate: ''
+    });
+    assert.equal(result.success, true);
+    if (result.success) {
+      assert.equal(result.data.issuanceDate, undefined);
+      assert.equal(result.data.expiryDate, undefined);
+    }
+  });
+
+  it('accepts both dates when expiry is on or after issuance', () => {
+    const result = clientIdentifierSchema.safeParse({
+      ...base,
+      issuanceDate: '2024-01-01',
+      expiryDate: '2034-01-01'
+    });
+    assert.equal(result.success, true);
+  });
+
+  it('rejects expiry before issuance', () => {
+    const result = clientIdentifierSchema.safeParse({
+      ...base,
+      issuanceDate: '2034-01-01',
+      expiryDate: '2024-01-01'
+    });
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.equal(result.error.issues[0]?.path[0], 'expiryDate');
+    }
   });
 });

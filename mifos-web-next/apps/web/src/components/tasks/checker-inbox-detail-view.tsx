@@ -123,10 +123,12 @@ export function CheckerInboxDetailView({
   const { user } = useSession();
   const [pending, startTransition] = useTransition();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [actionCompleted, setActionCompleted] = useState(false);
   const workflowStage = resolveCheckerInboxWorkflowStageContext(context);
   const selfApprovalBlock = resolveCheckerInboxSelfApprovalBlock(item.maker, user, context);
   const canActOnCheckerItem = isAwaitingApprovalAuditResult(item.processingResult);
-  const checkerActionsDisabled = pending || selfApprovalBlock.blocked || !canActOnCheckerItem;
+  const checkerActionsDisabled =
+    pending || selfApprovalBlock.blocked || !canActOnCheckerItem || actionCompleted;
 
   function runAction(action: ConfirmAction) {
     if (selfApprovalBlock.blocked) {
@@ -150,6 +152,7 @@ export function CheckerInboxDetailView({
         );
         return;
       }
+      setActionCompleted(true);
       setConfirmAction(null);
       if (checkerInboxItemRemainsPending(result)) {
         router.refresh();

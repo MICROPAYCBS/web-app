@@ -1,0 +1,13 @@
+---
+description: This tree is a standalone Next.js Fineract UI. Ignore parent Angular AGENTS.md.
+alwaysApply: true
+---
+
+# Standalone Next.js workspace
+
+This folder is the product. It is **not** the openMF Angular web-app.
+
+- Follow `AGENTS.md` in this folder only.
+- Ignore parent `web-app/AGENTS.md`, `skills/SKILL.md`, Jira `WEB-*`, Angular Material, lodash/moment, ngx-translate, and `proxy.conf.js`.
+- Angular is a frozen inventory (`docs/parity/FROZEN.md`). New screens are Fineract-first.
+- Prefer opening `mifos-web-next.code-workspace` so parent Angular rules never load.

@@ -17,8 +17,39 @@ import type {
 } from '@mifos/api-client';
 import type { ClientIdentifierInput } from '@mifos/validation';
 import { FineractHttpError } from '@mifos/api-client';
+import { toFineractClientIdentifierBody } from '@/lib/fineract/client-identifier-payload';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { fineractApiDateToIso } from '@/lib/fineract/dates';
 import { buildFineractRequestInit, fineractUrl } from '@/lib/fineract/fineract-fetch';
+
+function normalizeClientIdentifier(raw: FineractClientIdentifier): FineractClientIdentifier {
+  return {
+    ...raw,
+    issuanceDate: fineractApiDateToIso(raw.issuanceDate) ?? undefined,
+    expiryDate: fineractApiDateToIso(raw.expiryDate) ?? undefined
+  };
+}
+
+function normalizeEntityDocument(raw: FineractEntityDocument): FineractEntityDocument {
+  return {
+    ...raw,
+    issuanceDate: fineractApiDateToIso(raw.issuanceDate) ?? undefined,
+    expiryDate: fineractApiDateToIso(raw.expiryDate) ?? undefined
+  };
+}
+
+function appendOptionalDocumentDates(
+  formData: FormData,
+  issuanceDate?: string,
+  expiryDate?: string
+) {
+  if (issuanceDate) {
+    formData.append('issuanceDate', issuanceDate);
+  }
+  if (expiryDate) {
+    formData.append('expiryDate', expiryDate);
+  }
+}
 
 function normalizeIdentityTypeOption(raw: unknown): ClientIdentifierIdentityTypeOption | null {
   if (!raw || typeof raw !== 'object') {
@@ -83,11 +114,11 @@ export async function getClientIdentifiers(
           `/client_identifiers/${identifier.id}/documents`
         );
         return {
-          ...identifier,
-          documents: Array.isArray(documents) ? documents : []
+          ...normalizeClientIdentifier(identifier),
+          documents: Array.isArray(documents) ? documents.map(normalizeEntityDocument) : []
         };
       } catch {
-        return { ...identifier, documents: [] };
+        return { ...normalizeClientIdentifier(identifier), documents: [] };
       }
     })
   );
@@ -106,7 +137,22 @@ export async function createClientIdentifier(
   input: ClientIdentifierInput
 ): Promise<{ resourceId: number }> {
   const fineract = await createFineractClient();
-  return fineract.post<{ resourceId: number }>(`/clients/${clientId}/identifiers`, input);
+  return fineract.post<{ resourceId: number }>(
+    `/clients/${clientId}/identifiers`,
+    toFineractClientIdentifierBody(input, 'create')
+  );
+}
+
+export async function updateClientIdentifier(
+  clientId: string | number,
+  identifierId: number,
+  input: ClientIdentifierInput
+): Promise<FineractCommandProcessingResult> {
+  const fineract = await createFineractClient();
+  return fineract.put<FineractCommandProcessingResult>(
+    `/clients/${clientId}/identifiers/${identifierId}`,
+    toFineractClientIdentifierBody(input, 'update')
+  );
 }
 
 export async function deleteClientIdentifier(
@@ -120,12 +166,14 @@ export async function deleteClientIdentifier(
 export async function uploadClientIdentifierDocument(
   identifierId: number,
   file: File,
-  name: string
+  name: string,
+  dates?: { issuanceDate?: string; expiryDate?: string }
 ): Promise<{ resourceId: number }> {
   const { urlBase, init } = await buildFineractRequestInit({ method: 'POST' });
   const formData = new FormData();
   formData.append('name', name);
   formData.append('file', file);
+  appendOptionalDocumentDates(formData, dates?.issuanceDate, dates?.expiryDate);
 
   const headers = new Headers(init.headers);
   const res = await fetch(fineractUrl(urlBase, `/client_identifiers/${identifierId}/documents`), {

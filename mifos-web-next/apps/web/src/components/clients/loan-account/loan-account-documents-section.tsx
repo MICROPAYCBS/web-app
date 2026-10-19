@@ -59,6 +59,12 @@ export function LoanAccountDocumentsSection({
       if (input.description?.trim()) {
         formData.append('description', input.description.trim());
       }
+      if (input.issuanceDate) {
+        formData.append('issuanceDate', input.issuanceDate);
+      }
+      if (input.expiryDate) {
+        formData.append('expiryDate', input.expiryDate);
+      }
 
       const res = await fetch(`/api/loans/${accountId}/documents`, {
         method: 'POST',

@@ -333,6 +333,10 @@ export interface FineractEntityDocument {
   description?: string;
   parentEntityType?: string;
   parentEntityId?: number;
+  /** Normalized calendar day (`yyyy-MM-dd`) from GET DocumentData. */
+  issuanceDate?: string;
+  /** Normalized calendar day (`yyyy-MM-dd`) from GET DocumentData. */
+  expiryDate?: string;
 }
 
 export interface FineractClientIdentifier {
@@ -342,6 +346,10 @@ export interface FineractClientIdentifier {
   documentKey: string;
   description?: string;
   status: string;
+  /** Normalized calendar day (`yyyy-MM-dd`). */
+  issuanceDate?: string;
+  /** Normalized calendar day (`yyyy-MM-dd`). */
+  expiryDate?: string;
   documents?: FineractEntityDocument[];
 }
 

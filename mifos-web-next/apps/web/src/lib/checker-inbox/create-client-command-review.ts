@@ -20,6 +20,7 @@ import type {
   DatatableFormValues,
   MultiRowDatatableDraft
 } from '@/components/clients/create/types';
+import { fineractApiDateToIso } from '@/lib/fineract/dates';
 
 export function isCreateClientCheckerCommand(
   actionName?: string | null,
@@ -64,6 +65,10 @@ function asBoolean(value: unknown): boolean | undefined {
     return value;
   }
   return undefined;
+}
+
+function asIsoDate(value: unknown): string | undefined {
+  return fineractApiDateToIso(value);
 }
 
 function asArray(value: unknown): unknown[] {
@@ -189,7 +194,9 @@ function mapIdentifier(raw: unknown): ClientIdentifierInput | null {
     documentTypeId,
     documentKey,
     description: asString(row.description),
-    status
+    status,
+    issuanceDate: asIsoDate(row.issuanceDate),
+    expiryDate: asIsoDate(row.expiryDate)
   };
 }
 

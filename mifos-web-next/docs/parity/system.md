@@ -1,5 +1,7 @@
 # System — parity (mifos-web-next)
 
+> **Frozen 2026-10-19.** Angular is not a living spec. Keep vs drop: [FROZEN.md](FROZEN.md).
+
 Reference for greenfield **System** admin routes vs legacy Angular (`src/app/system/`).
 
 **Purpose:** Track all 16 sidebar items under the System nav group. Use checklist IDs (`SYS-###`) for issues and PRs.
@@ -36,7 +38,7 @@ Reference for greenfield **System** admin routes vs legacy Angular (`src/app/sys
 | SYS-030 | `/system/entity-to-entity-mapping`   | Entity mapping        | **Done**    | Filter, create, list                     |
 | SYS-040 | `/system/external-services`          | External services     | **Done**    | Hub + S3/SMTP/SMS/notification           |
 | SYS-050 | `/system/data-tables`                | Data tables           | **Done**    | List, create, view, edit columns, delete |
-| SYS-060 | `/system/hooks`                      | Hooks                 | **Done**    | Full CRUD + events                       |
+| SYS-060 | `/system/hooks`                      | Hooks                 | **Done**    | Full CRUD + events; payload URL does not require a trailing `/` |
 | SYS-070 | `/system/roles-and-permissions`      | Roles                 | **Done**    | CRUD + permission assignment             |
 | SYS-080 | `/system/configure-mc-tasks`         | Maker checker         | **Done**    | Permission toggles                       |
 | SYS-090 | `/system/surveys`                    | Surveys               | **Done**    | List, create, view, edit, activate       |

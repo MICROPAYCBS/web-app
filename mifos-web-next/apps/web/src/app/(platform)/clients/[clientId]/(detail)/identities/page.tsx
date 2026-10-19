@@ -23,6 +23,7 @@ export default async function ClientIdentitiesPage({
   const { clientId } = await params;
   const session = await getServerSession();
   const canCreate = can(session, 'CREATE_CLIENTIDENTIFIER');
+  const canUpdate = can(session, 'UPDATE_CLIENTIDENTIFIER');
   const canDelete = can(session, 'DELETE_CLIENTIDENTIFIER');
 
   const [identifiers, template] = await Promise.all([
@@ -39,6 +40,7 @@ export default async function ClientIdentitiesPage({
       documentTypes={template.allowedDocumentTypes ?? []}
       identityTypeOptions={template.identityTypeOptions ?? []}
       canCreate={canCreate}
+      canUpdate={canUpdate}
       canDelete={canDelete}
     />
   );

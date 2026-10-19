@@ -18,10 +18,13 @@ export type BusinessDateContextValue = {
   displayLabel?: string;
   /** True when {@link date} is set and differs from the local calendar day. */
   isNotToday?: boolean;
+  /** Global configuration `disallow-backdated-transactions`. */
+  disallowBackdatedTransactions?: boolean;
 };
 
 export const EMPTY_BUSINESS_DATE_CONTEXT: BusinessDateContextValue = {
-  enabled: false
+  enabled: false,
+  disallowBackdatedTransactions: false
 };
 
 /** True when a configured business date is not the local calendar day. */

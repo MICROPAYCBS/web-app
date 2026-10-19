@@ -96,6 +96,8 @@ export interface ClientLoanCollateralOption {
   description?: string;
   /** Product base price. */
   value?: number;
+  /** Unit price from loan collateral GET (FINERACT-2737). */
+  unitPrice?: number;
   pctToBase?: number;
   /** Quantity still held by the customer. */
   quantity?: number;

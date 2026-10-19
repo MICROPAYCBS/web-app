@@ -31,6 +31,12 @@ function documentTypeLabel(
 
 function identifierInputSummary(identifier: ClientIdentifierInput): string {
   const parts = [identifier.documentKey, identifier.description].filter(Boolean);
+  if (identifier.issuanceDate) {
+    parts.push(`Issued on ${identifier.issuanceDate}`);
+  }
+  if (identifier.expiryDate) {
+    parts.push(`Expires on ${identifier.expiryDate}`);
+  }
   return parts.join(' · ') || 'Identification document';
 }
 

@@ -17,7 +17,7 @@ import {
   hasConfiguredBusinessDate,
   isTransactionDateBackdated
 } from '@/lib/fineract/business-date-context';
-import { fineractDateToDate } from '@/lib/fineract/date-input';
+import { fineractDateToDate, todayStart } from '@/lib/fineract/date-input';
 
 export type TransactionDateFieldProps = Omit<DateFieldProps, 'onChange'> & {
   onChange: (value: string) => void;
@@ -31,6 +31,16 @@ function earlierDate(a: Date | undefined, b: Date | undefined): Date | undefined
     return a;
   }
   return a.getTime() <= b.getTime() ? a : b;
+}
+
+function laterDate(a: Date | undefined, b: Date | undefined): Date | undefined {
+  if (!a) {
+    return b;
+  }
+  if (!b) {
+    return a;
+  }
+  return a.getTime() >= b.getTime() ? a : b;
 }
 
 /**
@@ -58,6 +68,7 @@ export function TransactionDateField({
   const businessDate = useBusinessDate();
   const hasBusinessDate = hasConfiguredBusinessDate(businessDate);
   const isNotToday = businessDate.isNotToday === true;
+  const disallowBackdated = businessDate.disallowBackdatedTransactions === true;
 
   const businessMax = useMemo(
     () => fineractDateToDate(businessDate.date, dateFormat),
@@ -69,6 +80,13 @@ export function TransactionDateField({
     [businessMax, hasBusinessDate, toDate]
   );
 
+  const effectiveFromDate = useMemo(() => {
+    if (!disallowBackdated) {
+      return fromDate;
+    }
+    return laterDate(fromDate, businessMax ?? todayStart());
+  }, [businessMax, disallowBackdated, fromDate]);
+
   const isBackdated = useMemo(
     () => isTransactionDateBackdated(value, businessDate.date, dateFormat),
     [value, businessDate.date, dateFormat]
@@ -78,6 +96,9 @@ export function TransactionDateField({
     if (hint) {
       return hint;
     }
+    if (disallowBackdated) {
+      return 'Backdated posting is turned off.';
+    }
     if (!hasBusinessDate) {
       return undefined;
     }
@@ -86,7 +107,7 @@ export function TransactionDateField({
       parts.push(businessDateBackdatedEntryHint());
     }
     return parts.join(' ');
-  }, [hasBusinessDate, hint, isBackdated, isNotToday]);
+  }, [disallowBackdated, hasBusinessDate, hint, isBackdated, isNotToday]);
 
   return (
     <DateField
@@ -100,7 +121,7 @@ export function TransactionDateField({
       disabled={disabled}
       className={className}
       dateFormat={dateFormat}
-      fromDate={fromDate}
+      fromDate={effectiveFromDate}
       toDate={effectiveToDate}
       hint={resolvedHint}
       hintAriaLabel={hintAriaLabel}

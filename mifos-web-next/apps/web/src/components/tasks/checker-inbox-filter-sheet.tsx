@@ -64,6 +64,15 @@ export function CheckerInboxFilterSheet({
       disabled={disabled}
     >
       <ListFilterSection title="Task details">
+        <TextField
+          id="checker-filter-submitted-by"
+          label="Submitted by"
+          optional
+          value={draft.username ?? ''}
+          onChange={(value) => patch({ username: value || undefined })}
+          disabled={disabled}
+          hint="Prefix match on the submitter login name"
+        />
         <SelectField
           id="checker-filter-user"
           label="User"

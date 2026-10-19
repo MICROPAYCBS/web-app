@@ -1,5 +1,7 @@
 # Accounting — parity (mifos-web-next)
 
+> **Frozen 2026-10-19.** Angular is not a living spec. Keep vs drop: [FROZEN.md](FROZEN.md).
+
 Reference for greenfield **Accounting** routes vs legacy Angular (`src/app/accounting/`).
 
 **Purpose:** Track sidebar items under the Accounting nav group. Use checklist IDs (`ACCT-###`) for issues and PRs.

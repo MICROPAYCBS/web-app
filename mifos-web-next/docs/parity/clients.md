@@ -1,5 +1,7 @@
 # Clients — parity (mifos-web-next)
 
+> **Frozen 2026-10-19.** Angular is not a living spec. Keep vs drop: [FROZEN.md](FROZEN.md).
+
 Reference for greenfield client flows vs legacy Angular (`src/app/clients/`).
 
 **Purpose:** Exhaustive inventory of what exists in legacy, what is built in `mifos-web-next`, and what remains. Use checklist IDs (`CL-###`) for issues and PRs. **No commitment to build order** beyond suggested waves at the end.
@@ -129,7 +131,7 @@ Account No, Loan Product, Product Type, Original Loan (shows last active date), 
 
 #### Savings table columns (open)
 
-Account No, Savings Product, Last Active, Balance, Actions (deposit, withdrawal, approve, undo, activate).
+Account No, Savings Product, Last Active, Balance, Actions (deposit, withdrawal, approve, undo, activate). Undo transfer on a transaction row requires `UNDO_ACCOUNTTRANSFER` (not `ADJUST_ACCOUNTTRANSFER`). Deposit/withdrawal posting dates clamp when `disallow-backdated-transactions` is enabled.
 
 #### Savings table columns (closed)
 
@@ -191,6 +193,7 @@ Legacy **Personal Data** tab content is delivered on **General** (`ClientGeneral
 | CL-100 | List identifiers           | `READ_CLIENTIDENTIFIER`          | Done   |
 | CL-101 | Add / edit / delete        | template + documents             | Done   |
 | CL-102 | Identifier document upload | `upload-document-dialog` pattern | Done   |
+| CL-103 | Issued on / Expires on     | `issuanceDate` / `expiryDate` (FINERACT-2759) | Done   |
 
 ### Documents (`CL-035`)
 
@@ -198,6 +201,7 @@ Legacy **Personal Data** tab content is delivered on **General** (`ClientGeneral
 | ------ | -------------------------- | --------------- | ------ |
 | CL-110 | List documents             | `READ_DOCUMENT` | Done   |
 | CL-111 | Upload / download / delete | —               | Done   |
+| CL-112 | Issued on / Expires on     | multipart `issuanceDate` / `expiryDate` | Done   |
 
 ### Notes (`CL-036`)
 

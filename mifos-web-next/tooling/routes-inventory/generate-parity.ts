@@ -1,6 +1,6 @@
 /**
- * Writes docs/parity/generated.json from @mifos/routes.
- * Run: pnpm run routes:parity
+ * Writes docs/parity/generated.json from @mifos/routes (this app’s registry).
+ * Not an Angular comparison. Run: pnpm run routes:parity
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';

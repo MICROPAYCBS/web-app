@@ -25,9 +25,11 @@ If you see **“Mifos® X WebApp”** with **Username / Password** fields and UR
 
 | Your repo layout | Vercel **Root Directory** | Build runs |
 |------------------|---------------------------|------------|
-| `web-app` repo with `mifos-web-next/` folder (this repo) | **`mifos-web-next`** | `pnpm run build` at monorepo root |
-| Standalone clone of only `mifos-web-next` | **`.`** (leave empty) | same |
+| `web-app` repo with `mifos-web-next/` folder (until extract) | **`mifos-web-next`** | `pnpm run build` at monorepo root |
+| **Extracted** private repo (this tree as git root) | **`.`** (leave empty) | same |
 | Only if the above fails | `apps/web` | `pnpm run build` in `apps/web` (install still runs from monorepo root via `vercel.json`) |
+
+After [`EXTRACTION.md`](../EXTRACTION.md), retarget the Vercel git remote and drop the `mifos-web-next` root-directory prefix.
 
 Do **not** use `mifos-web-next/apps/web` when the project is the full `web-app` repository — Vercel often cannot see workspace `build` scripts there. Use **`mifos-web-next`** instead.
 

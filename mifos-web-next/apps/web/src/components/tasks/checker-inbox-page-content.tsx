@@ -177,6 +177,27 @@ export function CheckerInboxPageContent({
     [pathname, router, searchParams]
   );
 
+  function applyFilters(next: CheckerInboxClientFilters) {
+    setFilters(next);
+    const params = new URLSearchParams(searchParams.toString());
+    if (next.username?.trim()) {
+      params.set('username', next.username.trim());
+    } else {
+      params.delete('username');
+    }
+    const query = params.toString();
+    const href = query
+      ? `${pathname || CHECKER_INBOX_LIST_PATH}?${query}`
+      : pathname || CHECKER_INBOX_LIST_PATH;
+    startTransition(() => {
+      router.replace(href, { scroll: false });
+    });
+  }
+
+  function clearFilters() {
+    applyFilters({});
+  }
+
   function runBulkAction(action: ConfirmAction) {
     if (hasSelfBlockedSelection || isMySubmissionsTab) {
       return;
@@ -284,8 +305,8 @@ export function CheckerInboxPageContent({
         onOpenChange={setFilterOpen}
         options={filterOptions}
         filters={filters}
-        onApply={setFilters}
-        onClear={() => setFilters({})}
+        onApply={applyFilters}
+        onClear={clearFilters}
         disabled={pending}
       />
 

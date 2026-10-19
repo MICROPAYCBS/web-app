@@ -158,6 +158,8 @@ export interface LoanCollateralRecord {
   typeName?: string;
   description?: string;
   value?: number;
+  unitPrice?: number;
+  pctToBase?: number;
   currencyCode?: string;
 }
 

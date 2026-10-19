@@ -79,4 +79,20 @@ describe('resolveFineractPermissionDeniedMessage', () => {
       formatMissingPermissionMessage('READ_CURRENCY')
     );
   });
+
+  it('uses a friendly message for undo transfer', () => {
+    assert.equal(
+      formatMissingPermissionMessage('UNDO_ACCOUNTTRANSFER'),
+      'You cannot undo this transfer.'
+    );
+    assert.equal(
+      resolveFineractPermissionDeniedMessage(
+        { defaultUserMessage: 'User has no authority to: UNDO_ACCOUNTTRANSFER' },
+        403,
+        '/accounttransfers/1',
+        'You do not have permission to perform this action.'
+      ),
+      'You cannot undo this transfer.'
+    );
+  });
 });

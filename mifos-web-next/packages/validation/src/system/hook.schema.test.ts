@@ -27,15 +27,12 @@ describe('validateUpsertHookForm payload URL', () => {
     assert.equal(result.success, true);
   });
 
-  it('rejects an address that does not end with a slash', () => {
+  it('accepts an address that does not end with a slash', () => {
     const result = validateUpsertHookForm({
       ...webHook,
       payloadUrl: 'https://example.com/hooks'
     });
-    assert.equal(result.success, false);
-    if (!result.success) {
-      assert.equal(result.error.issues[0]?.message, 'End the payload URL with a slash (/).');
-    }
+    assert.equal(result.success, true);
   });
 
   it('rejects an address without http or https', () => {

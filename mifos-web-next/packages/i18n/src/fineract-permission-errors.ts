@@ -124,8 +124,15 @@ export function inferReadPermissionFromApiPath(path: string | undefined): string
   return API_READ_PERMISSION_BY_RESOURCE[normalized] ?? null;
 }
 
+const FRIENDLY_PERMISSION_MESSAGES: Record<string, string> = {
+  UNDO_ACCOUNTTRANSFER: 'You cannot undo this transfer.'
+};
+
 export function formatMissingPermissionMessage(permissionCode: string): string {
-  return `You do not have permission to perform this action. Required permission: ${permissionCode}.`;
+  return (
+    FRIENDLY_PERMISSION_MESSAGES[permissionCode] ??
+    `You do not have permission to perform this action. Required permission: ${permissionCode}.`
+  );
 }
 
 export function isGenericPermissionMessage(message: string): boolean {

@@ -2,6 +2,8 @@
   "command": "clients.identifier.create",
   "fineractSources": [
     "org.apache.fineract.portfolio.client.api.ClientIdentifiersApiResource",
+    "org.apache.fineract.portfolio.client.command.ClientIdentifierCommand",
+    "org.apache.fineract.portfolio.client.data.ClientIdentifierRequest",
     "org.apache.fineract.portfolio.client.domain.ClientIdentifier",
     "org.apache.fineract.portfolio.client.api.IdentityTypeApiResource",
     "org.apache.fineract.portfolio.client.data.IdentityTypeData"
@@ -10,6 +12,10 @@
     "documentTypeId": { "required": true },
     "documentKey": { "required": true, "maxLength": 100 },
     "status": { "required": true, "values": ["Active", "Inactive"] },
-    "description": { "required": false }
+    "description": { "required": false },
+    "issuanceDate": { "required": false, "format": "yyyy-MM-dd" },
+    "expiryDate": { "required": false, "format": "yyyy-MM-dd" },
+    "dateFormat": { "requiredWhen": "issuanceDate or expiryDate" },
+    "locale": { "requiredWhen": "issuanceDate or expiryDate" }
   }
 }

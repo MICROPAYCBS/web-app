@@ -11,6 +11,7 @@ import { describe, it } from 'node:test';
 import {
   coerceFineractDateTime,
   fineractApiDateToFormString,
+  fineractApiDateToIso,
   formatFineractDateTimeArray,
   formatFineractDateValue,
   fromFineractDateArray,
@@ -62,5 +63,14 @@ describe('fineract date serialization', () => {
     assert.equal(parsed?.getDate(), 22);
     assert.equal(parsed?.getHours(), 12);
     assert.equal(parsed?.getMinutes(), 46);
+  });
+
+  it('normalizes API dates to yyyy-MM-dd', () => {
+    assert.equal(fineractApiDateToIso('2024-01-01'), '2024-01-01');
+    assert.equal(fineractApiDateToIso('2024-01-01T15:30:00'), '2024-01-01');
+    assert.equal(fineractApiDateToIso([2024, 1, 1]), '2024-01-01');
+    assert.equal(fineractApiDateToIso([2024, 1, 1, 15, 30, 0]), '2024-01-01');
+    assert.equal(fineractApiDateToIso('01 January 2024'), '2024-01-01');
+    assert.equal(fineractApiDateToIso(''), undefined);
   });
 });

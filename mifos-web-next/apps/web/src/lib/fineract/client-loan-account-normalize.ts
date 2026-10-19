@@ -186,6 +186,8 @@ function asLoanCollateralOptions(
 
         value: toNumber(row.value ?? row.basePrice),
 
+        unitPrice: toNumber(row.unitPrice),
+
         pctToBase: toNumber(row.pctToBase)
 
       };

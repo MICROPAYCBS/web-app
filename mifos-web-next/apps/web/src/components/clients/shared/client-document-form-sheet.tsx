@@ -8,8 +8,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { ClientDocumentMetadataInput } from '@mifos/validation';
+import { clientDocumentMetadataSchema, type ClientDocumentMetadataInput } from '@mifos/validation';
 import { useId, useState } from 'react';
+import { IssuanceExpiryDateFields } from '@/components/clients/shared/issuance-expiry-date-fields';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { TextField } from '@/components/composites/text-field';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,7 @@ import {
 import type { FormSubmitResult } from '@/lib/form/submit-result';
 
 function defaultForm(): ClientDocumentMetadataInput {
-  return { name: '', description: '' };
+  return { name: '', description: '', issuanceDate: undefined, expiryDate: undefined };
 }
 
 export function ClientDocumentFormSheet({
@@ -59,8 +60,10 @@ export function ClientDocumentFormSheet({
     if (isSubmitting) {
       return;
     }
-    if (!form.name.trim()) {
-      setError('Name is required.');
+    const parsed = clientDocumentMetadataSchema.safeParse(form);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      setError(first?.message ?? 'Please fix the highlighted fields.');
       return;
     }
     if (!file) {
@@ -74,7 +77,7 @@ export function ClientDocumentFormSheet({
     setError(null);
     setIsSubmitting(true);
     try {
-      const result = await onSave(form, file);
+      const result = await onSave(parsed.data, file);
       if (result.ok) {
         handleOpenChange(false);
         return;
@@ -138,6 +141,16 @@ export function ClientDocumentFormSheet({
           label="Description"
           value={form.description ?? ''}
           onChange={(value) => setForm((current) => ({ ...current, description: value }))}
+        />
+        <IssuanceExpiryDateFields
+          formId={formId}
+          issuanceDate={form.issuanceDate}
+          expiryDate={form.expiryDate}
+          onIssuanceChange={(value) =>
+            setForm((current) => ({ ...current, issuanceDate: value }))
+          }
+          onExpiryChange={(value) => setForm((current) => ({ ...current, expiryDate: value }))}
+          disabled={isSubmitting || submitLoading}
         />
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
       </form>

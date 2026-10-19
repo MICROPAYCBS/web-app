@@ -187,6 +187,8 @@ export function PreviewStep({
               return (
                 <li key={i}>
                   {typeName}: {identifier.documentKey}
+                  {identifier.issuanceDate ? ` · Issued on ${identifier.issuanceDate}` : ''}
+                  {identifier.expiryDate ? ` · Expires on ${identifier.expiryDate}` : ''}
                 </li>
               );
             })}

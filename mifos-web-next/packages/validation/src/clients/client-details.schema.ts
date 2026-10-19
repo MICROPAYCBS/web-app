@@ -7,16 +7,24 @@
  */
 
 import { z } from 'zod';
+import {
+  optionalIsoDateSchema,
+  refineIssuanceAndExpiryDates
+} from './client-identifier.schema';
 
 export {
   clientIdentifierSchema,
   type ClientIdentifierInput
 } from './client-identifier.schema';
 
-export const clientDocumentMetadataSchema = z.object({
-  name: z.string().trim().min(1).max(250),
-  description: z.string().trim().max(500).optional()
-});
+export const clientDocumentMetadataSchema = z
+  .object({
+    name: z.string().trim().min(1).max(250),
+    description: z.string().trim().max(500).optional(),
+    issuanceDate: optionalIsoDateSchema,
+    expiryDate: optionalIsoDateSchema
+  })
+  .superRefine(refineIssuanceAndExpiryDates);
 
 export const clientNoteSchema = z.object({
   note: z.string().trim().min(1).max(65535)

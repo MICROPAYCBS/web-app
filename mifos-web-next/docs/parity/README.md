@@ -1,6 +1,8 @@
-# Feature parity tracking
+# Route and screen inventory (frozen)
 
-Track implementation status against [openMF/web-app](https://github.com/openMF/web-app).
+**Frozen 2026-10-19.** Aligned to openMF/web-app as of that date. **No further Angular-driven work.**
+
+The product bar is Micropay Fineract staff operations (see [PROJECT.md](../PROJECT.md) and [ARCHITECTURE.md](../ARCHITECTURE.md)). Leftover Angular screens are closed in **[FROZEN.md](FROZEN.md)** (keep = backlog, drop = not a goal).
 
 ## Generated matrix
 
@@ -8,23 +10,24 @@ Track implementation status against [openMF/web-app](https://github.com/openMF/w
 pnpm run routes:parity
 ```
 
-Produces **[generated.json](generated.json)** from `@mifos/routes` (`APP_ROUTES.parity`).
+Writes **[generated.json](generated.json)** from `@mifos/routes` (`APP_ROUTES`). That dump is this app’s route registry, not an Angular comparison. New routes need `fineractApi` (and a Zod `schemaId` on writes). `webAppRef` on old entries is optional history.
 
-## Domains
+## Domain notes (archaeology)
 
-| Domain                 | Status      | Parity doc               |
-| ---------------------- | ----------- | ------------------------ |
-| Platform (auth, shell) | In progress | —                        |
-| Clients                | In progress | [clients.md](clients.md) |
-| System (admin)         | In progress | [system.md](system.md)   |
-| Loans                  | Not started | —                        |
-| Accounting             | In progress | [accounting.md](accounting.md) |
-| Organization           | In progress | [organization.md](organization.md) |
+| Domain | Notes |
+|--------|--------|
+| Clients | [clients.md](clients.md) |
+| Groups | [groups.md](groups.md) |
+| Centers | [centers.md](centers.md) |
+| Tasks | [tasks.md](tasks.md) |
+| Products | [products.md](products.md) |
+| System | [system.md](system.md) |
+| Accounting | [accounting.md](accounting.md) |
+| Organization | [organization.md](organization.md) |
+| Financial reports | [financial-reports.md](financial-reports.md) |
 
-## Manual notes
-
-Use domain markdown files for narrative notes. **Route list** lives in `packages/routes/src/app-routes.ts` only.
+Do not grow these files for new Angular gaps. Update operator docs in the sibling `documentation` repo and Fineract manifests when the write contract changes.
 
 ## Template
 
-[\_template.md](_template.md) for free-form domain notes (not duplicate route tables).
+[\_template.md](_template.md) is unused for new Angular tables. Prefer ADRs and operator docs.

@@ -3,18 +3,18 @@
 
 ## Governance
 
-Private, solo-maintained — see [PROJECT.md](PROJECT.md) and [ADR-004](adr/004-private-solo-maintained.md). Functional parity with web-app is a **personal delivery goal**, not a community commitment.
+Private, solo-maintained — see [PROJECT.md](PROJECT.md) and [ADR-004](adr/004-private-solo-maintained.md). openMF/web-app is a **frozen inventory**, not a product bar.
 
 ## Goals
 
-1. Full functional parity with [openMF/web-app](https://github.com/openMF/web-app).
+1. Cover **Micropay Fineract** staff operations (portfolio, products, accounting, organization, system).
 2. Superior UI/UX via shadcn/ui and composite components.
-3. **Fineract-first validation** — rules proven against Apache Fineract source, not only the legacy Angular app.
+3. **Fineract-first validation** — rules proven against Fineract Java sources and Zod manifests.
 4. **Preset-driven LAF** — change look-and-feel by swapping `@mifos/themes` presets.
 
 ## Stack
 
-- **Next.js 16.2.6** — App Router, Turbopack, `experimental.strictRouteTypes`
+- **Next.js 16.4.2** — App Router, Turbopack, `experimental.strictRouteTypes`
 - **React 19** — via Next.js App Router
 - **shadcn/ui** — Tailwind v4, CSS variables, `new-york` / `base-nova` style
 - **TanStack Query** — client mutations and cache
@@ -52,9 +52,9 @@ See [BFF.md](BFF.md). The browser never calls Fineract directly.
 | `(auth)` | `/login`, `/callback` | Authentication |
 | `(platform)` | `/`, `/clients`, … | Authenticated shell |
 
-Use normal paths (no hash routing).
+Use normal paths (no hash routing). New `APP_ROUTES` entries cite `fineractApi` (and a Zod `schemaId` on writes). `webAppRef` on existing entries is optional history.
 
-Request guards run in `apps/web/src/proxy.ts` (Next.js 16; replaces deprecated `middleware.ts`). Deep links from the legacy app (`/#/…`) require a one-time redirect layer if needed during coexistence.
+Request guards run in `apps/web/src/proxy.ts` (Next.js 16; replaces deprecated `middleware.ts`).
 
 ## Theming
 
@@ -62,12 +62,9 @@ Request guards run in `apps/web/src/proxy.ts` (Next.js 16; replaces deprecated `
 - `data-preset` on `<html>` — `heritage` (default), `neutral`, `micropay`
 - Presets live in `packages/themes/presets/*.css`; the choice persists in `localStorage` (`color-preset`)
 
-## Delivery waves
+## Backlog
 
-1. Platform — auth, shell, search, settings
-2. Clients → groups/centers → savings → loans → products → org/system → accounting/reports
-
-Track progress in `docs/parity/`.
+Leftover Angular screens are closed in [`docs/parity/FROZEN.md`](parity/FROZEN.md) (**keep** = Micropay backlog, **drop** = not a goal). Operator how-tos live in the sibling `documentation` repo.
 
 ## References
 

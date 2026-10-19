@@ -1,5 +1,7 @@
 # Parity: Tasks
 
+> **Frozen 2026-10-19.** Angular is not a living spec. Keep vs drop: [FROZEN.md](FROZEN.md).
+
 Reference: `openMF/web-app` → `src/app/tasks/`
 
 User-facing label for offices in detail views: **Branch** (route path unchanged for legacy parity).
@@ -14,13 +16,14 @@ User-facing label for offices in detail views: **Branch** (route path unchanged 
 ### Notes
 
 - `/checker-inbox-and-tasks` redirects to the checker inbox list.
-- List supports quick filter by user (client-side) and advanced search (date range, action, entity, resource ID).
+- List supports **Submitted by** (`username` prefix match on `GET /makercheckers`), plus client-side filters for user, action, entity, resource ID, and date range (`made_on_date` or `made_on_date_utc`).
+- Duplicate approve/reject of a pending command returns 403; the UI shows the server message and does not retry. Actions disable after a successful submit.
 - Bulk and single approve, reject, and delete with confirmation dialogs.
 - Detail view shows command JSON fields and uses `GET /audits/{id}` (legacy parity).
 - Other pending-task tabs (client approval, loan approval, bulk loan reschedule, etc.) are not yet migrated.
 - Loan reschedule create / list / approve / reject is on the loan account **Reschedules** section (`GET/POST /rescheduleloans`).
 - Variable installment edits (pending loans only) use **Edit installments** (`POST /loans/{id}/schedule` with `calculateLoanSchedule` / `addVariations` / `deleteVariations`).
-- Loan account related-record lists (notes, documents, collateral, guarantors, originators, original schedule, overdue charges, tranches, term variations, delinquency, journal entries) are sidebar sections on the loan account, not separate App Router pages.
+- Loan account related-record lists (notes, documents, collateral, guarantors, originators, original schedule, overdue charges, tranches, term variations, delinquency, journal entries) are sidebar sections on the loan account, not separate App Router pages. Loan documents accept optional Issued on / Expires on. Collateral rows show `unitPrice` in the account currency when the API sends it.
 - Account **Journal entries** (loans, savings, shares, FD, RD) use `GET /journalentries?loanId=` / `savingsId=` (share accounts merge `SH{transactionId}` lookups). Visible with `READ_JOURNALENTRY`.
 - Loan originators attach at application create (`originators[]` on `POST /loans`) or while the loan is **submitted and pending approval** (`POST /loans/{id}/originators/{originatorId}`); detach is the matching `DELETE`. Modify application does not process originators. The Originators section stays visible after approval (read-only).
 - Deliberate NPA is on the loan **Actions** menu. **Mark as NPA** (`POST /loans/{id}?command=markAsNpa`, `MARKASNPA_LOAN`) is shown on an active loan (`status.id` 300) that is not already deliberately classified, including when the overdue job has already set `isNPA`. Reasons load from code `LoanNPAReasons`. **Undo mark as NPA** (`command=undoMarkAsNpa`, `UNDOMARKASNPA_LOAN`) clears that classification. After an applied undo, the screen reloads `isNPA` from the loan. A maker-checker response with `commandId` and no `loanId` stays pending and does not change the Non-performing indicator.

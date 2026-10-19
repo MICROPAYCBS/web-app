@@ -255,9 +255,9 @@ export async function undoAccountTransferAction(
   }
 
   try {
-    assertCan(session, 'ADJUST_ACCOUNTTRANSFER');
+    assertCan(session, 'UNDO_ACCOUNTTRANSFER');
   } catch {
-    return { ok: false, message: 'You do not have permission to undo this transfer.' };
+    return { ok: false, message: 'You cannot undo this transfer.' };
   }
 
   const { clientId, accountId, transferId } = parsed.data;

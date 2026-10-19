@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/composites';
 import { DateField } from '@/components/composites/date-field';
 import { SelectField } from '@/components/composites/select-field';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { fineractDateToDate, isAfterToday } from '@/lib/fineract/date-input';
 import {
   formatTaxDate,
   taxComponentName,
@@ -28,6 +29,11 @@ import { cn } from '@/lib/utils';
 
 function emptyMember(): TaxGroupMemberInput {
   return { taxComponentId: 0, startDate: '', isNew: true };
+}
+
+function isStartDateStillPending(startDate: string | undefined): boolean {
+  const parsed = fineractDateToDate(startDate);
+  return parsed != null && isAfterToday(parsed);
 }
 
 export function TaxGroupMembersEditor({
@@ -92,6 +98,12 @@ export function TaxGroupMembersEditor({
     onChange(next);
     setDialogOpen(false);
   }
+
+  const startDateLocked =
+    mode === 'edit' &&
+    !draft.isNew &&
+    Boolean(draft.startDate) &&
+    !isStartDateStillPending(draft.startDate);
 
   const addButton = (
     <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={openCreate}>
@@ -202,16 +214,14 @@ export function TaxGroupMembersEditor({
             placeholder="Select component"
             disabled={disabled || (!draft.isNew && mode === 'edit')}
           />
-          {!draft.endDate || draft.isNew || mode === 'create' ? (
-            <DateField
-              label="Start date"
-              required
-              value={draft.startDate}
-              onChange={(value) => setDraft((current) => ({ ...current, startDate: value }))}
-              allowFuture
-              disabled={disabled}
-            />
-          ) : null}
+          <DateField
+            label="Start date"
+            required={!startDateLocked}
+            value={draft.startDate}
+            onChange={(value) => setDraft((current) => ({ ...current, startDate: value }))}
+            allowFuture
+            disabled={disabled || startDateLocked}
+          />
           {mode === 'edit' && !draft.isNew ? (
             <DateField
               label="End date"

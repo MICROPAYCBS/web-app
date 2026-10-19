@@ -10,6 +10,7 @@ import type { FineractClientIdentifier, FineractEntityDocument } from '@mifos/ap
 import { FileText } from 'lucide-react';
 import { DocumentAttachmentActions } from '@/components/clients/shared/document-attachment-actions';
 import { Badge } from '@/components/ui/badge';
+import { formatFineractDateValue, todayIsoDate } from '@/lib/fineract/dates';
 import { cn } from '@/lib/utils';
 
 export function identifierStatusLabel(status: string): string {
@@ -21,18 +22,48 @@ export function formatIdentifierSummary(identifier: FineractClientIdentifier): s
   return parts.join(' · ') || identifier.documentType.name;
 }
 
+function formatIdentifierDateLine(identifier: FineractClientIdentifier): string | null {
+  const issued = identifier.issuanceDate
+    ? formatFineractDateValue(identifier.issuanceDate)
+    : undefined;
+  const expires = identifier.expiryDate
+    ? formatFineractDateValue(identifier.expiryDate)
+    : undefined;
+  if (!issued && !expires) {
+    return null;
+  }
+  const parts: string[] = [];
+  if (issued) {
+    parts.push(`Issued on ${issued}`);
+  }
+  if (expires) {
+    parts.push(`Expires on ${expires}`);
+  }
+  return parts.join(' · ');
+}
+
+export function isIdentifierExpired(identifier: FineractClientIdentifier): boolean {
+  return Boolean(identifier.expiryDate && identifier.expiryDate < todayIsoDate());
+}
+
 export function ClientIdentifierListItem({
   identifier,
+  canUpdate,
   canDelete,
+  onEdit,
   onDelete,
   className
 }: {
   identifier: FineractClientIdentifier;
+  canUpdate?: boolean;
   canDelete: boolean;
+  onEdit?: () => void;
   onDelete: () => void;
   className?: string;
 }) {
   const active = identifierStatusLabel(identifier.status) === 'Active';
+  const dateLine = formatIdentifierDateLine(identifier);
+  const expired = isIdentifierExpired(identifier);
 
   return (
     <div className={cn('space-y-3 bg-card px-4 py-3', className)}>
@@ -43,18 +74,35 @@ export function ClientIdentifierListItem({
             <Badge variant={active ? 'default' : 'secondary'}>
               {identifierStatusLabel(identifier.status)}
             </Badge>
+            {expired ? (
+              <span className="text-xs text-muted-foreground">Expired</span>
+            ) : null}
           </div>
           <p className="text-sm text-muted-foreground">{formatIdentifierSummary(identifier)}</p>
+          {dateLine ? (
+            <p className="text-sm text-muted-foreground">{dateLine}</p>
+          ) : null}
         </div>
-        {canDelete ? (
-          <button
-            type="button"
-            className="shrink-0 text-sm font-medium text-destructive hover:underline"
-            onClick={onDelete}
-          >
-            Delete
-          </button>
-        ) : null}
+        <div className="flex shrink-0 gap-3">
+          {canUpdate && onEdit ? (
+            <button
+              type="button"
+              className="text-sm font-medium text-primary hover:underline"
+              onClick={onEdit}
+            >
+              Edit
+            </button>
+          ) : null}
+          {canDelete ? (
+            <button
+              type="button"
+              className="text-sm font-medium text-destructive hover:underline"
+              onClick={onDelete}
+            >
+              Delete
+            </button>
+          ) : null}
+        </div>
       </div>
       <IdentifierDocumentList identifierId={identifier.id} documents={identifier.documents ?? []} />
     </div>

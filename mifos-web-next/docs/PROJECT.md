@@ -12,11 +12,11 @@ Solo-maintained. All product, technical, and release decisions are made by the m
 
 | Artifact | Role |
 |----------|------|
-| [openMF/web-app](https://github.com/openMF/web-app) | **Read-only reference** for routes, screens, and behavior — not a fork target |
-| [Apache Fineract](https://fineract.apache.org/) | Backend API and **validation source of truth** |
-| This repository | Independent codebase; may stay private indefinitely |
+| Micropay Fineract | **Backend and validation source of truth** for every new screen |
+| [openMF/web-app](https://github.com/openMF/web-app) | **Frozen inventory** (2026-10-19) — archaeology in [`docs/parity/`](parity/), not a living spec |
+| This repository | Independent Next.js staff UI; may stay private indefinitely |
 
-There is no plan to merge this work into the community web-app or to coordinate releases with openMF at this time.
+There is no plan to merge this work into the community web-app or to coordinate releases with openMF. Do not copy Angular forms or Material patterns when Fineract or Micropay UX already diverges.
 
 ## What this means in practice
 
@@ -33,6 +33,6 @@ There is no plan to merge this work into the community web-app or to coordinate 
 
 Operator and administrator handbooks are maintained in the sibling **Micropay CBS Docs** repo (`documentation` next to `web-app` / `fineract` — Fumadocs + MDX). Do not grow new how-tos under [`docs/user-guide/`](user-guide/README.md); that folder is a retired seed pointer only.
 
-ADRs, parity matrices, BFF, RBAC, and architecture notes in this `docs/` tree remain **developer-facing**.
+ADRs, BFF, RBAC, and architecture notes in this `docs/` tree remain **developer-facing**. [`docs/parity/`](parity/) is a frozen Angular archaeology folder, not a delivery tracker.
 
 When a UI change alters flows, labels, navigation, or screenshots, open a linked PR in the documentation repo (see that repo’s README → Docs sync).

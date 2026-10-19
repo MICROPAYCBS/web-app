@@ -11,6 +11,8 @@ import { format, isValid, parse } from 'date-fns';
 export const FINERACT_DATE_FORMAT = 'dd MMMM yyyy';
 export const FINERACT_DATETIME_FORMAT = 'dd MMMM yyyy HH:mm:ss';
 export const FINERACT_LOCALE = 'en';
+/** Calendar-day wire format used by identifier/document schemas and multipart document dates. */
+export const ISO_CALENDAR_DATE_FORMAT = 'yyyy-MM-dd';
 
 /** Fineract API datetime shapes (arrays, ISO strings, epoch millis). */
 export type FineractDateTimeValue = string | number[] | number;
@@ -99,6 +101,46 @@ export function coerceFineractDateTime(value: unknown): FineractDateTimeValue | 
 /** Format a Date for Fineract command bodies (e.g. `01 March 2026`). */
 export function toFineractDate(date: Date = new Date()): string {
   return format(toLocalCalendarDate(date), FINERACT_DATE_FORMAT);
+}
+
+function calendarIsoFromDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Local calendar day as `yyyy-MM-dd`. */
+export function todayIsoDate(referenceDate: Date = new Date()): string {
+  return calendarIsoFromDate(toLocalCalendarDate(referenceDate));
+}
+
+/**
+ * Fineract Jackson LocalDate / datetime → `yyyy-MM-dd`.
+ * Accepts ISO strings, `dd MMMM yyyy`, `[y, m, d]`, and datetime arrays.
+ */
+export function fineractApiDateToIso(value: unknown): string | undefined {
+  const coerced = coerceFineractDateTime(value);
+  if (coerced == null) {
+    return undefined;
+  }
+  if (typeof coerced === 'number') {
+    const date = new Date(coerced);
+    if (Number.isNaN(date.getTime())) {
+      return undefined;
+    }
+    return calendarIsoFromDate(toLocalCalendarDate(date));
+  }
+  if (typeof coerced === 'string') {
+    const trimmed = coerced.trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+      return trimmed.slice(0, 10);
+    }
+    const parsed = parseFineractDateTimeString(trimmed) ?? parseFineractDateString(trimmed);
+    return parsed ? calendarIsoFromDate(parsed) : undefined;
+  }
+  const fromArray = fromFineractDateArray(coerced);
+  return fromArray ? calendarIsoFromDate(fromArray) : undefined;
 }
 
 /** Map API date payloads (array, string, epoch millis, Java date object) to a display string. */

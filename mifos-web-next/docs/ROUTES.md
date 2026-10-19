@@ -8,7 +8,7 @@ All app routes are defined once in **`packages/routes/src/app-routes.ts`** (`APP
 |-----|-----------|
 | **Type-safe navigation** | `routePath('clients')` + `<AppLink route="clients" />` |
 | **RBAC & nav** | `@mifos/auth` imports `buildNavManifest()`, etc. from `@mifos/routes/server` |
-| **Parity tracking** | `parity` on each route + `docs/parity/generated.json` |
+| **Route dump** | `parity` on each route + `docs/parity/generated.json` (this app’s registry, not Angular) |
 
 Next.js also generates **`AppRoutes`** from the filesystem (`experimental.strictRouteTypes`). Keep **both** in sync when adding a page.
 
@@ -29,7 +29,6 @@ clientsCreate: {
   requiresAuth: true,
   parity: {
     status: 'todo',
-    webAppRef: 'clients/create-client',
     fineractApi: 'POST /clients',
     schemaId: 'clients.create'
   }
@@ -53,7 +52,7 @@ redirect(routePath('login'));
 pnpm run routes:parity
 ```
 
-Writes `docs/parity/generated.json` with status counts and per-route metadata.
+Writes `docs/parity/generated.json` with status counts and per-route metadata. New routes need `fineractApi` (and `schemaId` on writes). Do not add `webAppRef`. Angular inventory is frozen — [parity/FROZEN.md](parity/FROZEN.md).
 
 ## API routes
 

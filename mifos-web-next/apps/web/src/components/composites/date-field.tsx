@@ -52,6 +52,8 @@ export interface DateFieldProps {
   contextHelpSectionId?: string;
   /** Visually hide the label (kept for screen readers). */
   hideLabel?: boolean;
+  /** Show a Clear control when a date is selected (optional fields). */
+  clearable?: boolean;
 }
 
 function addYears(date: Date, years: number): Date {
@@ -105,7 +107,8 @@ export function DateField({
   hint,
   hintAriaLabel,
   contextHelpSectionId,
-  hideLabel = false
+  hideLabel = false,
+  clearable = false
 }: DateFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = useMemo(() => fineractDateToDate(value, dateFormat), [value, dateFormat]);
@@ -184,6 +187,16 @@ export function DateField({
             />
           </PopoverContent>
         </Popover>
+        {clearable && selected ? (
+          <button
+            type="button"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            disabled={disabled}
+            onClick={() => onChange(undefined)}
+          >
+            Clear
+          </button>
+        ) : null}
         <FieldError>{error}</FieldError>
       </FieldContent>
     </Field>

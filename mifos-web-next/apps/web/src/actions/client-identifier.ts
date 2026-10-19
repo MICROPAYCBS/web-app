@@ -20,7 +20,8 @@ import { revalidatePath } from 'next/cache';
 import {
   createClientIdentifier,
   deleteClientIdentifier,
-  getClientIdentifierTemplate
+  getClientIdentifierTemplate,
+  updateClientIdentifier
 } from '@/lib/fineract/client-identifiers';
 import { getServerSession } from '@/lib/session/server';
 
@@ -37,6 +38,19 @@ async function requireCreatePermission(): Promise<ClientIdentifierActionResult |
     assertCan(session, 'CREATE_CLIENTIDENTIFIER');
   } catch {
     return { ok: false, message: 'You do not have permission to add identifiers.' };
+  }
+  return null;
+}
+
+async function requireUpdatePermission(): Promise<ClientIdentifierActionResult | null> {
+  const session = await getServerSession();
+  if (!session) {
+    return { ok: false, message: 'You must be signed in.' };
+  }
+  try {
+    assertCan(session, 'UPDATE_CLIENTIDENTIFIER');
+  } catch {
+    return { ok: false, message: 'You do not have permission to edit identifiers.' };
   }
   return null;
 }
@@ -106,6 +120,30 @@ export async function createClientIdentifierAction(
     const result = await createClientIdentifier(clientId, parsed);
     revalidatePath(`/clients/${clientId}/identities`);
     return actionSuccessFromFineractCommand(result, { resourceId: result.resourceId });
+  } catch (err) {
+    return toFineractActionError(err, 'Request failed.');
+  }
+}
+
+export async function updateClientIdentifierAction(
+  clientId: string,
+  identifierId: number,
+  raw: unknown
+): Promise<ClientIdentifierActionResult> {
+  const denied = await requireUpdatePermission();
+  if (denied) {
+    return denied;
+  }
+
+  const parsed = await parseIdentifier(clientId, raw);
+  if ('ok' in parsed) {
+    return parsed;
+  }
+
+  try {
+    const result = await updateClientIdentifier(clientId, identifierId, parsed);
+    revalidatePath(`/clients/${clientId}/identities`);
+    return actionSuccessFromFineractCommand(result, { resourceId: identifierId });
   } catch (err) {
     return toFineractActionError(err, 'Request failed.');
   }

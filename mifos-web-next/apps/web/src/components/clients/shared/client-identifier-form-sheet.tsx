@@ -16,7 +16,8 @@ import {
   type ClientIdentifierIdentityTypeOption,
   type ClientIdentifierInput
 } from '@mifos/validation';
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { IssuanceExpiryDateFields } from '@/components/clients/shared/issuance-expiry-date-fields';
 import { FormSheet } from '@/components/composites/form-sheet';
 import { SelectField } from '@/components/composites/select-field';
 import { TextField } from '@/components/composites/text-field';
@@ -40,7 +41,9 @@ function defaultForm(identifier?: ClientIdentifierInput): ClientIdentifierInput 
     documentTypeId: identifier?.documentTypeId ?? 0,
     status: identifier?.status ?? 'Active',
     documentKey: identifier?.documentKey ?? '',
-    description: identifier?.description ?? ''
+    description: identifier?.description ?? '',
+    issuanceDate: identifier?.issuanceDate,
+    expiryDate: identifier?.expiryDate
   };
 }
 
@@ -72,6 +75,19 @@ export function ClientIdentifierFormSheet({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setForm(defaultForm(identifier));
+    setFile(null);
+    setFileName('');
+    setError(null);
+    setFieldErrors({});
+    // Reset once when the sheet opens; `identifier` is snapshotted from that render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- open-only reset
+  }, [open]);
 
   const validationContext = useMemo(
     () => ({ identityTypeOptions }),
@@ -166,7 +182,7 @@ export function ClientIdentifierFormSheet({
       description="Record an official ID type, key, and optional supporting document."
       formId={formId}
       onSubmit={handleSubmit}
-      submitLabel="Add identifier"
+      submitLabel={identifier ? 'Save identifier' : 'Add identifier'}
       submitLoading={isSubmitting || submitLoading}
       className="data-[side=right]:sm:max-w-md"
     >
@@ -232,6 +248,17 @@ export function ClientIdentifierFormSheet({
           label="Description"
           value={form.description ?? ''}
           onChange={(value) => setForm((current) => ({ ...current, description: value }))}
+        />
+        <IssuanceExpiryDateFields
+          formId={formId}
+          issuanceDate={form.issuanceDate}
+          expiryDate={form.expiryDate}
+          onIssuanceChange={(value) =>
+            setForm((current) => ({ ...current, issuanceDate: value }))
+          }
+          onExpiryChange={(value) => setForm((current) => ({ ...current, expiryDate: value }))}
+          fieldErrors={fieldErrors}
+          disabled={isSubmitting || submitLoading}
         />
         <div className="space-y-2">
           <Label htmlFor={`${formId}-file`}>Supporting document (optional)</Label>

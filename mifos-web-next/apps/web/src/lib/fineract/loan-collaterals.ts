@@ -48,9 +48,11 @@ function normalizeCollateral(raw: unknown): LoanCollateralRecord | null {
       : undefined;
   return {
     id,
-    typeName: typeof type?.name === 'string' ? type.name : undefined,
+    typeName: typeof type?.name === 'string' ? type.name : typeof row.name === 'string' ? row.name : undefined,
     description: typeof row.description === 'string' ? row.description : undefined,
-    value: toNumber(row.value),
+    value: toNumber(row.value ?? row.basePrice),
+    unitPrice: toNumber(row.unitPrice),
+    pctToBase: toNumber(row.pctToBase),
     currencyCode: typeof currency?.code === 'string' ? currency.code : undefined
   };
 }

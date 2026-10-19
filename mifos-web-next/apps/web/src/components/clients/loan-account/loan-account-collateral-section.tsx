@@ -204,6 +204,22 @@ export function LoanAccountCollateralSection({
         cell: ({ row }) => row.original.description?.trim() || '—'
       },
       {
+        id: 'unitPrice',
+        header: () => <span className="block w-full text-right">Unit price</span>,
+        cell: ({ row }) => (
+          <span className="block w-full text-right tabular-nums">
+            {row.original.unitPrice != null ? (
+              <MoneyValue
+                amount={row.original.unitPrice}
+                currencyCode={row.original.currencyCode ?? currency}
+              />
+            ) : (
+              '—'
+            )}
+          </span>
+        )
+      },
+      {
         id: 'value',
         header: () => <span className="block w-full text-right">Value</span>,
         cell: ({ row }) => (

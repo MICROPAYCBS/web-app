@@ -32,6 +32,8 @@ export async function POST(
     const file = formData.get('file');
     const name = formData.get('name');
     const description = formData.get('description');
+    const issuanceDate = formData.get('issuanceDate');
+    const expiryDate = formData.get('expiryDate');
 
     if (!(file instanceof File)) {
       return NextResponse.json({ message: 'File is required' }, { status: 400 });
@@ -47,7 +49,11 @@ export async function POST(
       clientId,
       file,
       name.trim(),
-      typeof description === 'string' ? description : undefined
+      typeof description === 'string' ? description : undefined,
+      {
+        issuanceDate: typeof issuanceDate === 'string' ? issuanceDate : undefined,
+        expiryDate: typeof expiryDate === 'string' ? expiryDate : undefined
+      }
     );
     return jsonOk(result);
   } catch (err) {

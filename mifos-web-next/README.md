@@ -4,9 +4,11 @@ Instructions for AI agents working in this repository.
 
 ## Project context
 
-**Private, solo-maintained** Fineract UI. Not a community contribution to [openMF/web-app](https://github.com/openMF/web-app). See [docs/PROJECT.md](docs/PROJECT.md).
+**Private, solo-maintained** Micropay Fineract staff UI. Not a community contribution to openMF/web-app. Angular is a frozen inventory — see [docs/PROJECT.md](docs/PROJECT.md) and [docs/parity/FROZEN.md](docs/parity/FROZEN.md).
 
-**Next.js 16.2.6**, App Router only, **shadcn/ui** with **preset-based** theming (`@mifos/themes`).
+Open **this folder** as the Cursor workspace. Ignore any parent `web-app/AGENTS.md`.
+
+**Next.js 16.4.2**, App Router only, **shadcn/ui** with **preset-based** theming (`@mifos/themes`).
 
 ## Monorepo
 
@@ -30,16 +32,17 @@ Instructions for AI agents working in this repository.
 5. Use **decimal.js** (via `@mifos/domain`) for money — never JavaScript `number` for amounts.
 6. **Simple forms (1–7 fields)** use `FormSheet` (shadcn Sheet) with Cancel/Submit in the footer — see `docs/COMPONENTS.md` and ADR-006.
 7. **RBAC:** register permissions in `@mifos/auth`; use `<Can>` + `assertCan()` — see `docs/RBAC.md`.
-8. Update **parity matrix** (`docs/parity/`) when shipping a route.
+8. Add new pages to `packages/routes/src/app-routes.ts` with `fineractApi` (and `schemaId` on writes). Do not add `webAppRef` on new routes.
 9. **Never call Fineract from the browser** — use `createFineractClient()` / `/api/*` BFF only (`docs/BFF.md`).
-10. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules) unless the maintainer explicitly asks.
+10. Do **not** apply openMF community PR conventions (Jira `WEB-*`, Slack approval, squash rules). Do not copy Angular forms when Fineract or Micropay UX already diverges.
+11. User-facing UI changes need a docs PR in the sibling `documentation` repo. Do not update `docs/parity/` unless amending the frozen keep/drop list.
 
 ## Reference repos
 
-Pin in `reference/` (not committed):
+Pin in `reference/` (not committed). **Optional.** New screens do not require reading Angular.
 
-- `reference/web-app` — behavior and routes (reference only)
-- `reference/fineract` — validation source of truth
+- `reference/fineract` — validation source of truth (prefer the sibling Micropay Fineract repo)
+- `reference/web-app` — frozen Angular archive clone; not required reading
 
 ## Commands
 
@@ -50,6 +53,19 @@ pnpm run build
 pnpm run lint
 pnpm run typecheck
 ```
+
+## Fineract backend (1.16 + all Micropay modifications)
+
+The UI talks to the Micropay distribution, not upstream-only Fineract. In the sibling Fineract repo (`../fineract` or `reference/fineract`), use the Quick Start command from that repo’s `README.md`:
+
+```bash
+# start backend — Apache Fineract 1.16 plus every Micropay modification
+# (custom/micropay/** modules, replacements, and moved endpoints).
+# Do not use :fineract-provider:devRun / :fineract-provider:bootRun for this.
+./gradlew :custom:micropay:app:boot:devRun
+```
+
+API base: `https://localhost:8443/fineract-provider`. Wait for `APACHE FINERACT IS READY` before signing in.
 
 ## UI
 
@@ -65,7 +81,7 @@ Prefer composites in `@mifos/ui` for patterns used across domains.
 ## Deploy on Vercel
 
 1. Import the repo at [vercel.com/new](https://vercel.com/new).
-2. **Root Directory:** `mifos-web-next/apps/web`
+2. **Root Directory:** `mifos-web-next` while nested in `web-app`; `.` (repo root) after this tree is extracted — see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 3. Add environment variables from `apps/web/.env.vercel.example`.
 
 Full guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).

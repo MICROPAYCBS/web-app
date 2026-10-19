@@ -40,6 +40,7 @@ export function clientPledgeOptionsFromResponse(raw: unknown): ClientLoanCollate
         collateralId,
         name: typeof row.name === 'string' ? row.name : undefined,
         value: toNumber(row.basePrice ?? row.value),
+        unitPrice: toNumber(row.unitPrice),
         pctToBase: toNumber(row.pctToBase),
         quantity: toNumber(row.quantity)
       }

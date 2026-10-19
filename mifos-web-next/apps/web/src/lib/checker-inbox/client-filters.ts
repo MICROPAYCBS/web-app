@@ -16,6 +16,8 @@ import {
 
 export type CheckerInboxClientFilters = {
   maker?: string;
+  /** Server-side prefix match on GET /makercheckers?username= */
+  username?: string;
   actionName?: string;
   entityName?: string;
   processingResult?: string;

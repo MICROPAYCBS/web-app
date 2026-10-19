@@ -15,11 +15,13 @@ Maintain **`APP_ROUTES`** in `@mifos/routes` as the canonical registry. Each ent
 - `@mifos/auth` derives nav and route permission manifests from `@mifos/routes/server`.
 - Client code imports only `@mifos/routes` (paths/registry); server code uses `@mifos/routes/server`.
 - `AppLink` / `routePath()` provide stable ids for navigation in app code.
-- `pnpm run routes:parity` exports `docs/parity/generated.json`.
+- `pnpm run routes:parity` exports `docs/parity/generated.json` from this registry (not an Angular comparison).
 - Next.js `strictRouteTypes` remains enabled for filesystem-generated `AppRoutes`.
+- `webAppRef` is optional history on existing entries. New routes cite `fineractApi` (and `schemaId` on writes).
 
 ## Consequences
 
 - New pages require an `APP_ROUTES` entry and a filesystem route.
 - Permission keys in routes must exist in `permissions.manifest.json`.
 - Do not hand-edit `NAV_MANIFEST` / `ROUTE_MANIFEST` arrays in auth (they are derived).
+- Do not require `webAppRef` on new routes.

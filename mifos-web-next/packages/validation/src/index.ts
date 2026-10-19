@@ -113,6 +113,8 @@ export {
   documentKeyMaxLengthForIdentityRule,
   findIdentityTypeRule,
   maxLengthFromValidationRegex,
+  optionalIsoDateSchema,
+  refineIssuanceAndExpiryDates,
   validateClientIdentifier,
   validateDocumentKeyAgainstIdentityRule,
   type ClientIdentifierIdentityTypeOption,

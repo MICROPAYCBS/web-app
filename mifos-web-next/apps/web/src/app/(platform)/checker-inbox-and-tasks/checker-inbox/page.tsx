@@ -23,6 +23,7 @@ export default async function CheckerInboxPage({
     loanId?: string;
     clientId?: string;
     resourceId?: string;
+    username?: string;
     tab?: string;
   }>;
 }) {
@@ -43,6 +44,9 @@ export default async function CheckerInboxPage({
   if (query.resourceId?.trim()) {
     serverFilters.resourceId = query.resourceId.trim();
   }
+  if (query.username?.trim()) {
+    serverFilters.username = query.username.trim();
+  }
 
   const [items, workflowRuntime] = await Promise.all([
     listCheckerInboxItems(serverFilters),
@@ -50,7 +54,8 @@ export default async function CheckerInboxPage({
   ]);
 
   const initialClientFilters = {
-    ...(query.resourceId?.trim() ? { resourceId: query.resourceId.trim() } : {})
+    ...(query.resourceId?.trim() ? { resourceId: query.resourceId.trim() } : {}),
+    ...(query.username?.trim() ? { username: query.username.trim() } : {})
   };
 
   return (

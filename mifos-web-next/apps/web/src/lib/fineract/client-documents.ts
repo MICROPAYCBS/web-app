@@ -11,21 +11,31 @@ import 'server-only';
 import type { FineractEntityDocument, FineractCommandProcessingResult } from '@mifos/api-client';
 import { FineractHttpError } from '@mifos/api-client';
 import { createFineractClient } from '@/lib/fineract/create-client';
+import { fineractApiDateToIso } from '@/lib/fineract/dates';
 import { buildFineractRequestInit, fineractUrl } from '@/lib/fineract/fineract-fetch';
+
+function normalizeEntityDocument(raw: FineractEntityDocument): FineractEntityDocument {
+  return {
+    ...raw,
+    issuanceDate: fineractApiDateToIso(raw.issuanceDate) ?? undefined,
+    expiryDate: fineractApiDateToIso(raw.expiryDate) ?? undefined
+  };
+}
 
 export async function getClientDocuments(
   clientId: string | number
 ): Promise<FineractEntityDocument[]> {
   const fineract = await createFineractClient();
   const data = await fineract.get<FineractEntityDocument[]>(`/clients/${clientId}/documents`);
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(data) ? data.map(normalizeEntityDocument) : [];
 }
 
 export async function uploadClientDocument(
   clientId: string | number,
   file: File,
   name: string,
-  description?: string
+  description?: string,
+  dates?: { issuanceDate?: string; expiryDate?: string }
 ): Promise<FineractCommandProcessingResult> {
   const { urlBase, init } = await buildFineractRequestInit({ method: 'POST' });
   const formData = new FormData();
@@ -33,6 +43,12 @@ export async function uploadClientDocument(
   formData.append('file', file);
   if (description?.trim()) {
     formData.append('description', description.trim());
+  }
+  if (dates?.issuanceDate) {
+    formData.append('issuanceDate', dates.issuanceDate);
+  }
+  if (dates?.expiryDate) {
+    formData.append('expiryDate', dates.expiryDate);
   }
 
   const headers = new Headers(init.headers);

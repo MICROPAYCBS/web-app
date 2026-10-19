@@ -12,6 +12,7 @@ import type { CollectionDetailMode } from '@/components/composites';
 import { CollectionItemFieldDetails, DetailField, DetailFieldGrid, TextValue } from '@/components/composites';
 import { DocumentAttachmentActions } from '@/components/clients/shared/document-attachment-actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatFineractDateValue, todayIsoDate } from '@/lib/fineract/dates';
 import { cn } from '@/lib/utils';
 
 export function formatDocumentSummary(document: FineractEntityDocument): string {
@@ -19,6 +20,7 @@ export function formatDocumentSummary(document: FineractEntityDocument): string 
 }
 
 export function ClientDocumentSections({ document }: { document: FineractEntityDocument }) {
+  const expired = Boolean(document.expiryDate && document.expiryDate < todayIsoDate());
   return (
     <DetailFieldGrid>
       <DetailField label="Name">
@@ -29,6 +31,17 @@ export function ClientDocumentSections({ document }: { document: FineractEntityD
       </DetailField>
       <DetailField label="Description">
         <TextValue value={document.description} />
+      </DetailField>
+      <DetailField label="Issued on">
+        <TextValue value={formatFineractDateValue(document.issuanceDate)} />
+      </DetailField>
+      <DetailField label="Expires on">
+        <span className="text-sm">
+          {formatFineractDateValue(document.expiryDate) ?? '—'}
+          {expired ? (
+            <span className="ml-2 text-muted-foreground">Expired</span>
+          ) : null}
+        </span>
       </DetailField>
     </DetailFieldGrid>
   );

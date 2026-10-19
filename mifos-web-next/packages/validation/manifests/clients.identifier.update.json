@@ -1,0 +1,27 @@
+{
+  "command": "clients.identifier.update",
+  "fineractSources": [
+    "org.apache.fineract.portfolio.client.api.ClientIdentifiersApiResource",
+    "org.apache.fineract.portfolio.client.command.ClientIdentifierCommand",
+    "org.apache.fineract.portfolio.client.data.ClientIdentifierRequest",
+    "org.apache.fineract.portfolio.client.serialization.ClientIdentifierCommandFromApiJsonDeserializer"
+  ],
+  "fields": {
+    "documentTypeId": { "required": false },
+    "documentKey": { "required": false, "maxLength": 100 },
+    "status": { "required": false, "values": ["Active", "Inactive"] },
+    "description": { "required": false },
+    "issuanceDate": {
+      "required": false,
+      "format": "yyyy-MM-dd",
+      "notes": "Omitted keys are not updated. Explicit null clears the stored date."
+    },
+    "expiryDate": {
+      "required": false,
+      "format": "yyyy-MM-dd",
+      "notes": "Omitted keys are not updated. Explicit null clears the stored date."
+    },
+    "dateFormat": { "requiredWhen": "issuanceDate or expiryDate is a formatted date" },
+    "locale": { "requiredWhen": "issuanceDate or expiryDate is a formatted date" }
+  }
+}

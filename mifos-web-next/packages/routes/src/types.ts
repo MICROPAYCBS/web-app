@@ -19,7 +19,9 @@ export type NavGroupId =
 
 export interface RouteParity {
   status: ParityStatus;
+  /** Historical openMF path. Optional; do not require on new routes. */
   webAppRef?: string;
+  /** Fineract resource this screen calls. Required on new routes. */
   fineractApi?: string;
   schemaId?: string;
   notes?: string;

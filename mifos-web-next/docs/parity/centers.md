@@ -1,5 +1,7 @@
 # Parity: Centers
 
+> **Frozen 2026-10-19.** Angular is not a living spec. Keep vs drop: [FROZEN.md](FROZEN.md).
+
 Reference: `openMF/web-app` → `src/app/centers/`
 
 User-facing label for offices: **Branch** (route path unchanged for legacy parity).

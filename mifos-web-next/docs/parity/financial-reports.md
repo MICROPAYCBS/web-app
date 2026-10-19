@@ -1,5 +1,7 @@
 # Financial reports — parity (mifos-web-next)
 
+> **Frozen 2026-10-19.** Angular is not a living spec. Keep vs drop: [FROZEN.md](FROZEN.md).
+
 Dedicated sidebar entry points for core financial statement stretchy reports.
 They resolve by **exact Fineract report name** (not tenant report id), run through
 `ReportRunPageContent`, then render a statement preview (print, PDF, CSV) from

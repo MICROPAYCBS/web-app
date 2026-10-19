@@ -1,0 +1,14 @@
+{
+  "command": "clients.document.create",
+  "fineractSources": [
+    "org.apache.fineract.infrastructure.documentmanagement.api.DocumentManagementApiResource",
+    "org.apache.fineract.infrastructure.documentmanagement.data.DocumentData",
+    "org.apache.fineract.infrastructure.documentmanagement.command.DocumentCommand"
+  ],
+  "fields": {
+    "name": { "required": true, "maxLength": 250 },
+    "description": { "required": false, "maxLength": 500 },
+    "issuanceDate": { "required": false, "format": "yyyy-MM-dd" },
+    "expiryDate": { "required": false, "format": "yyyy-MM-dd" }
+  }
+}

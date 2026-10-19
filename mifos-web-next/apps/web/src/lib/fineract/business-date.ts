@@ -32,6 +32,7 @@ import {
 } from '@/lib/fineract/business-date-context';
 
 export const ENABLE_BUSINESS_DATE_CONFIG_NAME = 'enable-business-date';
+export const DISALLOW_BACKDATED_TRANSACTIONS_CONFIG_NAME = 'disallow-backdated-transactions';
 
 const BUSINESS_DATE_PATH = '/businessdate';
 
@@ -142,28 +143,42 @@ function formatBusinessDateDisplayLabel(formDate: string): string | null {
   }).format(parsed);
 }
 
+async function loadDisallowBackdatedTransactions(): Promise<boolean> {
+  const config = await getGlobalConfigurationByName(
+    DISALLOW_BACKDATED_TRANSACTIONS_CONFIG_NAME
+  ).catch(() => null);
+  return config?.enabled === true;
+}
+
 export async function getBusinessDateContext(): Promise<BusinessDateContextValue> {
-  const configuration = await getGlobalConfigurationByName(ENABLE_BUSINESS_DATE_CONFIG_NAME);
+  const [configuration, disallowBackdatedTransactions] = await Promise.all([
+    getGlobalConfigurationByName(ENABLE_BUSINESS_DATE_CONFIG_NAME),
+    loadDisallowBackdatedTransactions()
+  ]);
   if (!configuration?.enabled) {
-    return EMPTY_BUSINESS_DATE_CONTEXT;
+    return {
+      ...EMPTY_BUSINESS_DATE_CONTEXT,
+      disallowBackdatedTransactions
+    };
   }
 
   const entries = await listBusinessDates();
   const businessDateEntry = entries.find((entry) => entry.type === BUSINESS_DATE_TYPE);
   if (!businessDateEntry) {
-    return { enabled: true };
+    return { enabled: true, disallowBackdatedTransactions };
   }
 
   const formDate = fineractApiDateToFormString(businessDateEntry.date);
   if (!formDate) {
-    return { enabled: true };
+    return { enabled: true, disallowBackdatedTransactions };
   }
 
   return {
     enabled: true,
     date: formDate,
     displayLabel: formatBusinessDateDisplayLabel(formDate) ?? formDate,
-    isNotToday: isBusinessDateNotToday(formDate)
+    isNotToday: isBusinessDateNotToday(formDate),
+    disallowBackdatedTransactions
   };
 }
 

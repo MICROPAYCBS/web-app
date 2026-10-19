@@ -1,14 +1,5 @@
-# Parity: &lt;Domain&gt;
+# Domain notes (do not start new Angular tables)
 
-Reference: `openMF/web-app` → `src/app/&lt;domain&gt;/`
+Angular parity is frozen. See [README.md](README.md) and [FROZEN.md](FROZEN.md).
 
-## Routes
-
-| Route | Method | web-app screen | Fineract API | Schema ID | E2E | Status |
-|-------|--------|----------------|--------------|-----------|-----|--------|
-| `/example` | GET | ExampleComponent | `GET /example` | — | — | todo |
-
-## Notes
-
-- Fineract version tested:
-- Known gaps:
+For new staff screens, document the Fineract API and Zod `schemaId` on the `APP_ROUTES` entry, and update operator docs in the sibling `documentation` repo.

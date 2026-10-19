@@ -13,6 +13,7 @@ import type {
 } from '@mifos/validation';
 import { LEGAL_FORM_ENTITY } from '@mifos/validation';
 import { buildOtherBankAccountsForApi } from '@/lib/fineract/compliance-profile-payload';
+import { toFineractClientIdentifierBody } from '@/lib/fineract/client-identifier-payload';
 import { FINERACT_DATE_FORMAT, FINERACT_LOCALE } from '@/lib/fineract/dates';
 
 function stripEmpty<T extends Record<string, unknown>>(obj: T): T {
@@ -75,7 +76,11 @@ export function buildCreateClientPayload(input: CreateClientBodyInput): Record<s
   }
 
   if ('clientIdentifiers' in input && input.clientIdentifiers?.length) {
-    base.clientIdentifiers = input.clientIdentifiers.map((identifier) => stripEmpty(identifier));
+    base.clientIdentifiers = input.clientIdentifiers.map((identifier) =>
+      stripEmpty(
+        toFineractClientIdentifierBody(identifier, 'create', { dateFormat, locale })
+      )
+    );
   } else {
     delete base.clientIdentifiers;
   }

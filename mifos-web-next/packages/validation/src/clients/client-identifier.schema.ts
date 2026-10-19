@@ -11,12 +11,37 @@ import { z } from 'zod';
 /** Schema fallback when an identity type has no parseable length limit. */
 export const CLIENT_IDENTIFIER_DOCUMENT_KEY_MAX_LENGTH = 100;
 
-export const clientIdentifierSchema = z.object({
-  documentTypeId: z.number().int().positive(),
-  status: z.enum(['Active', 'Inactive']),
-  documentKey: z.string().trim().min(1).max(CLIENT_IDENTIFIER_DOCUMENT_KEY_MAX_LENGTH),
-  description: z.string().trim().max(500).optional()
-});
+const ISO_CALENDAR_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Optional calendar date (`yyyy-MM-dd`). Empty strings become undefined. */
+export const optionalIsoDateSchema = z
+  .union([z.string().regex(ISO_CALENDAR_DATE, 'Enter a valid date.'), z.literal(''), z.undefined()])
+  .transform((value) => (value ? value : undefined));
+
+/** When both dates are set, expiry must be on or after issuance (FINERACT-2759). */
+export function refineIssuanceAndExpiryDates(
+  data: { issuanceDate?: string; expiryDate?: string },
+  ctx: z.RefinementCtx
+) {
+  if (data.issuanceDate && data.expiryDate && data.expiryDate < data.issuanceDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['expiryDate'],
+      message: 'Expires on must be on or after Issued on.'
+    });
+  }
+}
+
+export const clientIdentifierSchema = z
+  .object({
+    documentTypeId: z.number().int().positive(),
+    status: z.enum(['Active', 'Inactive']),
+    documentKey: z.string().trim().min(1).max(CLIENT_IDENTIFIER_DOCUMENT_KEY_MAX_LENGTH),
+    description: z.string().trim().max(500).optional(),
+    issuanceDate: optionalIsoDateSchema,
+    expiryDate: optionalIsoDateSchema
+  })
+  .superRefine(refineIssuanceAndExpiryDates);
 
 export type ClientIdentifierInput = z.infer<typeof clientIdentifierSchema>;
 

@@ -15,7 +15,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import {
   createClientIdentifierAction,
-  deleteClientIdentifierAction
+  deleteClientIdentifierAction,
+  updateClientIdentifierAction
 } from '@/actions/client-identifier';
 import { ClientIdentifierListItem } from '@/components/clients/detail/client-identifier-sections';
 import { ClientDetailResourceView } from '@/components/clients/detail/client-detail-resource-view';
@@ -36,6 +37,7 @@ export function ClientIdentitiesView({
   documentTypes,
   identityTypeOptions = [],
   canCreate,
+  canUpdate,
   canDelete
 }: {
   clientId: string;
@@ -43,16 +45,42 @@ export function ClientIdentitiesView({
   documentTypes: { id: number; name: string }[];
   identityTypeOptions?: ClientIdentifierIdentityTypeOption[];
   canCreate: boolean;
+  canUpdate: boolean;
   canDelete: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<FineractClientIdentifier | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FineractClientIdentifier | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   function refresh() {
     router.refresh();
+  }
+
+  function identifierToForm(identifier: FineractClientIdentifier): ClientIdentifierInput {
+    const statusLabel = identifier.status.toLowerCase().includes('inactive')
+      ? 'Inactive'
+      : 'Active';
+    return {
+      documentTypeId: identifier.documentType.id,
+      documentKey: identifier.documentKey,
+      status: statusLabel,
+      description: identifier.description,
+      issuanceDate: identifier.issuanceDate,
+      expiryDate: identifier.expiryDate
+    };
+  }
+
+  function openAdd() {
+    setEditTarget(null);
+    setSheetOpen(true);
+  }
+
+  function openEdit(identifier: FineractClientIdentifier) {
+    setEditTarget(identifier);
+    setSheetOpen(true);
   }
 
   function handleSave(
@@ -61,7 +89,9 @@ export function ClientIdentitiesView({
     fileName: string
   ) {
     return (async () => {
-      const result = await createClientIdentifierAction(clientId, input);
+      const result = editTarget
+        ? await updateClientIdentifierAction(clientId, editTarget.id, input)
+        : await createClientIdentifierAction(clientId, input);
       if (!result.ok) {
         return {
           ok: false as const,
@@ -70,11 +100,18 @@ export function ClientIdentitiesView({
         };
       }
 
-      if (file && result.resourceId) {
+      const resourceId = editTarget?.id ?? result.resourceId;
+      if (file && resourceId) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('name', fileName || file.name);
-        const uploadRes = await fetch(`/api/client-identifiers/${result.resourceId}/documents`, {
+        if (input.issuanceDate) {
+          formData.append('issuanceDate', input.issuanceDate);
+        }
+        if (input.expiryDate) {
+          formData.append('expiryDate', input.expiryDate);
+        }
+        const uploadRes = await fetch(`/api/client-identifiers/${resourceId}/documents`, {
           method: 'POST',
           body: formData
         });
@@ -115,7 +152,7 @@ export function ClientIdentitiesView({
         description="Official IDs and reference numbers on file."
         toolbar={
           canCreate ? (
-            <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>
+            <Button type="button" size="sm" disabled={pending} onClick={openAdd}>
               <Plus className="mr-2 size-4" />
               Add identifier
             </Button>
@@ -128,7 +165,7 @@ export function ClientIdentitiesView({
         emptyDescription="Add passport, national ID, or other reference numbers for this customer."
         emptyAction={
           canCreate ? (
-            <Button type="button" size="sm" disabled={pending} onClick={() => setSheetOpen(true)}>
+            <Button type="button" size="sm" disabled={pending} onClick={openAdd}>
               <Plus className="mr-2 size-4" />
               Add identifier
             </Button>
@@ -140,7 +177,9 @@ export function ClientIdentitiesView({
             <ClientIdentifierListItem
               key={identifier.id}
               identifier={identifier}
+              canUpdate={canUpdate}
               canDelete={canDelete}
+              onEdit={() => openEdit(identifier)}
               onDelete={() => setDeleteTarget(identifier)}
             />
           ))}
@@ -149,9 +188,15 @@ export function ClientIdentitiesView({
 
       <ClientIdentifierFormSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(open) => {
+          setSheetOpen(open);
+          if (!open) {
+            setEditTarget(null);
+          }
+        }}
         documentTypes={documentTypes}
         identityTypeOptions={identityTypeOptions}
+        identifier={editTarget ? identifierToForm(editTarget) : undefined}
         onSave={handleSave}
         submitLoading={false}
       />

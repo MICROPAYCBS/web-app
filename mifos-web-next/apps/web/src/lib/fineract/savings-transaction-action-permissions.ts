@@ -19,7 +19,7 @@ export function savingsTransactionActionPermissions(
     undoTransaction:
       can(session, 'ADJUSTTRANSACTION_SAVINGSACCOUNT') ||
       can(session, 'UNDOTRANSACTION_SAVINGSACCOUNT'),
-    undoTransfer: can(session, 'ADJUST_ACCOUNTTRANSFER'),
+    undoTransfer: can(session, 'UNDO_ACCOUNTTRANSFER'),
     modifyTransaction: can(session, 'ADJUSTTRANSACTION_SAVINGSACCOUNT'),
     viewJournal: can(session, resolvePermission('accounting.journal'))
   };
