@@ -1,5 +1,7 @@
 # AGENTS.md - Mifos® X Web App Guidelines
 
+> **Does not apply to `mifos-web-next/`.** That tree is a separate Next.js staff UI. Follow `mifos-web-next/AGENTS.md` only. Open `mifos-web-next` (or `mifos-web-next.code-workspace`) as the Cursor workspace when working on it.
+
 Welcome, AI Coding Agent! This file provides the necessary context and strict instructions required to successfully assist in the development of the [Mifos® X Web App](https://github.com/openMF/web-app), built alongside the Apache Fineract® platform.
 
 Your goal is to ensure high-quality, perfectly formatted Angular code that aligns with our strict contribution workflows.

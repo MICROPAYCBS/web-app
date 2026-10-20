@@ -1,3 +1,4 @@
+# Nested layout only. After extract, use mifos-web-next/.github/workflows/ci.yml and delete this file.
 name: mifos-web-next CI
 
 on:

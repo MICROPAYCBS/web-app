@@ -1,6 +1,6 @@
 ---
 name: Mifos Web App Agent Skills
-description: Core capabilities and rules for AI agents contributing to the MifosX Web App (Angular).
+description: Core capabilities and rules for AI agents contributing to the MifosX Web App (Angular). Does not apply to mifos-web-next/.
 ---
 
 # Mifos Web App Skills
